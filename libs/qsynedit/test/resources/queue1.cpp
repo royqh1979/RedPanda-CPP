@@ -68,7 +68,7 @@ int main()
     ThreadPool pool(3);
     for (int i = 0;i < 9; i ++)
     {
-        pool.addTask([i]{
+        pool.addTask([i]{         
             std::printf("task %d start\n",i);
             std::this_thread::sleep_for(std::chrono::seconds(1));
             std::printf("task %d over\n",i);

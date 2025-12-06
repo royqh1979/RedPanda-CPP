@@ -91,76 +91,12 @@ FontStyles getFontStyles(const QFont &font)
     return styles;
 }
 
-bool isWordChar(const QChar& ch) {
-    return (ch == '_') || ch.isLetterOrNumber();
-}
-
-int findWordChar(const QString &s, int startPos)
-{
-    for (int i=startPos;i<s.length();i++) {
-        if (isWordChar(s[i])) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int findNonWordChar(const QString &s, int startPos)
-{
-    for (int i=startPos;i<s.length();i++) {
-        if (!isWordChar(s[i])) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int findLastWordChar(const QString &s, int startPos)
-{
-    int i = startPos-1;
-    while (i>=0) {
-        if (isWordChar(s[i]))
-            return i;
-        i--;
-    }
-    return -1;
-}
-
-int findLastNonWordChar(const QString &s, int startPos)
-{
-    int i = startPos-1;
-    while (i>=0) {
-        if (!isWordChar(s[i]))
-            return i;
-        i--;
-    }
-    return -1;
-}
-
 void ensureNotAfter(CharPos &cord1, CharPos &cord2)
 {
     if((cord1.line > cord2.line) || (
                 cord1.line == cord2.line &&
                 cord1.ch > cord2.ch)) {
         std::swap(cord1,cord2);
-    }
-}
-
-const CharPos &minBufferCoord(const CharPos &P1, const CharPos &P2)
-{
-    if ( (P2.line < P1.line) || ( (P2.line == P1.line) && (P2.ch < P1.ch)) ) {
-      return P2;
-    } else {
-      return P1;
-    }
-}
-
-const CharPos &maxBufferCoord(const CharPos &P1, const CharPos &P2)
-{
-    if ( (P2.line > P1.line) || ( (P2.line == P1.line) && (P2.ch > P1.ch)) ) {
-      return P2;
-    } else {
-      return P1;
     }
 }
 

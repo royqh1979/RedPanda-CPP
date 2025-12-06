@@ -11,7 +11,7 @@ class TestQSyneditCpp : public QObject
 private:
     std::shared_ptr<QSynEdit> mEdit;
 private slots:
-    void init();
+    void initEdit();
 
     void test_get_token_data();
     void test_get_token();
@@ -24,12 +24,17 @@ private slots:
     void test_move_caret_x();
     void test_move_caret_y_data();
     void test_move_caret_y();
+    void test_move_caret_to_line_start_data();
+    void test_move_caret_to_line_start();
+    void test_move_caret_to_line_end_data();
+    void test_move_caret_to_line_end();
     void test_previous_word_begin_data();
     void test_previous_word_begin();
     void test_next_word_begin_data();
     void test_next_word_begin();
     void test_prev_word_end_data();
     void test_prev_word_end();
+
 };
 
 }

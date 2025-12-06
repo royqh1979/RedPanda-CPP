@@ -37,8 +37,6 @@ class QColor;
 namespace QSynedit {
 
 int minMax(int x, int mi, int ma);
-const CharPos &maxBufferCoord(const CharPos& P1, const CharPos& P2);
-const CharPos &minBufferCoord(const CharPos& P1, const CharPos& P2);
 
 int getEOL(const QString& Line, int start);
 
@@ -61,6 +59,5 @@ FontStyles getFontStyles(const QFont& font);
 
 void ensureNotAfter(CharPos& cord1, CharPos& cord2);
 
-bool isWordChar(const QChar& ch);
 }
 #endif // MISCPROCS_H

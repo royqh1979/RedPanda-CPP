@@ -254,6 +254,7 @@ public:
     virtual bool needsLineState() override;
     bool handleLastBackSlash() const;
     void setHandleLastBackSlash(bool newHandleLastBackSlash);
+    bool isSpaceChar(const QChar& ch) const override { return ch == ' ' || ch == '\t'; }
 };
 
 }

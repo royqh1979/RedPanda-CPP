@@ -146,8 +146,6 @@ class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
     enum  class CharType {
-        WordChar,
-        NonWordChar,
         SpaceChar,
         NonSpaceChar
     };
@@ -241,12 +239,8 @@ public:
     bool inSelection(const CharPos& pos) const;
     CharPos findNextChar(const CharPos &pos, CharType type) const;
     CharPos findPrevChar(const CharPos &pos, CharType type) const;
-    CharPos nextWordChar(const CharPos &pos) const { return findNextChar(pos, CharType::WordChar); }
-    CharPos nextNonWordChar(const CharPos &pos) const { return findNextChar(pos, CharType::NonWordChar); }
     CharPos nextSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::SpaceChar); }
     CharPos nextNonSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::NonSpaceChar); }
-    CharPos prevWordChar(const CharPos &pos) const { return findPrevChar(pos, CharType::WordChar); }
-    CharPos prevNonWordChar(const CharPos &pos) const { return findPrevChar(pos, CharType::NonWordChar); }
     CharPos prevSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::SpaceChar); }
     CharPos prevNonSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::NonSpaceChar); }
 
@@ -258,6 +252,8 @@ public:
     CharPos prevWordBegin(const CharPos& pos) const;
     CharPos prevWordEnd(const CharPos &pos) const;
     CharPos nextWordBegin(const CharPos & pos) const;
+    CharPos fileBegin() const { return CharPos{0,0}; }
+    CharPos fileEnd() const;
 
     //Caret
     void showCaret();
@@ -301,6 +297,8 @@ public:
       int &start, PTokenAttribute& attri) const;
     bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
+
+    void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri);
 
     void addGroupBreak();
     void beginEditing();
@@ -350,6 +348,7 @@ public:
     bool pointToLine(const QPoint& point, int& line) const;
     bool isIdentChar(const QChar& ch) const;
     bool isIdentStartChar(const QChar& ch) const;
+    bool isSpaceChar(const QChar& ch) const;
 
     void setRainbowAttrs(const PTokenAttribute &attr0,
                          const PTokenAttribute &attr1,
@@ -535,6 +534,7 @@ protected:
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
+
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);

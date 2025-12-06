@@ -303,6 +303,22 @@ bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &st
     return false;
 }
 
+void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri)
+{
+    lstToken.clear();
+    lstPos.clear();
+    lstAttri.clear();
+    if ((line >= 0) && (line < mDocument->count())) {
+        prepareSyntaxerState(*mSyntaxer, line, mDocument->getLine(line), mDocument->getLineSeq(line));
+        while (!mSyntaxer->eol()) {
+            lstPos.append(mSyntaxer->getTokenPos());
+            lstToken.append(mSyntaxer->getToken());
+            lstAttri.append(mSyntaxer->getTokenAttribute());
+            mSyntaxer->next();
+        }
+    }
+}
+
 void QSynEdit::addGroupBreak()
 {
     mUndoList->addGroupBreak();
@@ -945,7 +961,7 @@ QChar QSynEdit::nextNonSpaceChar(int line, int ch) const
     int x=ch;
     while (x<s.length()) {
         QChar ch = s[x];
-        if (!ch.isSpace())
+        if (!isSpaceChar(ch))
             return ch;
         x++;
     }
@@ -961,7 +977,7 @@ QChar QSynEdit::lastNonSpaceChar(int line, int ch) const
     while (line>=0) {
         while (x>=0) {
             QChar c = s[x];
-            if (!c.isSpace())
+            if (!isSpaceChar(c))
                 return c;
             x--;
         }
@@ -1132,22 +1148,18 @@ CharPos QSynEdit::findNextChar(const CharPos &pos, CharType type) const
     int ch = pos.ch+1;
     int line = pos.line;
     if (mDocument->count()<=0)
-        return CharPos{0,0};
+        return CharPos{};
     if (line<0)
         line = 0;
     if (line>=mDocument->count())
-        return CharPos{0,0};
+        return CharPos{};
     while (line < mDocument->count()) {
         QString s = mDocument->getLine(line);
         int lineLen = s.length();
         while (ch<lineLen) {
-            if (type==CharType::WordChar && isWordChar(s[ch]))
+            if (type == CharType::SpaceChar && isSpaceChar(s[ch]))
                 return CharPos{ch,line};
-            else if (type == CharType::NonWordChar && !isWordChar(s[ch]))
-                return CharPos{ch,line};
-            else if (type == CharType::SpaceChar && s[ch].isSpace())
-                return CharPos{ch,line};
-            else if (type == CharType::NonSpaceChar && !s[ch].isSpace())
+            else if (type == CharType::NonSpaceChar && !isSpaceChar(s[ch]))
                 return CharPos{ch,line};
             ch++;
         }
@@ -1155,7 +1167,7 @@ CharPos QSynEdit::findNextChar(const CharPos &pos, CharType type) const
         ch = 0;
         continue;
     }
-    return pos;
+    return CharPos{};
 }
 
 CharPos QSynEdit::findPrevChar(const CharPos &pos, CharType type) const
@@ -1165,17 +1177,13 @@ CharPos QSynEdit::findPrevChar(const CharPos &pos, CharType type) const
     if (line>=mDocument->count())
        line = mDocument->count()-1;
     if (line<0)
-        return CharPos{0,0};
+        return CharPos{};
     QString s = mDocument->getLine(line);
     while (line >=0 ) {
         while (ch>=0) {
-            if (type==CharType::WordChar && isWordChar(s[ch]))
+            if (type == CharType::SpaceChar && isSpaceChar(s[ch]))
                 return CharPos{ch,line};
-            else if (type == CharType::NonWordChar && !isWordChar(s[ch]))
-                return CharPos{ch,line};
-            else if (type == CharType::SpaceChar && s[ch].isSpace())
-                return CharPos{ch,line};
-            else if (type == CharType::NonSpaceChar && !s[ch].isSpace())
+            else if (type == CharType::NonSpaceChar && !isSpaceChar(s[ch]))
                 return CharPos{ch,line};
             ch--;
         }
@@ -1185,12 +1193,12 @@ CharPos QSynEdit::findPrevChar(const CharPos &pos, CharType type) const
             ch = s.length()-1;
         }
     }
-    return pos;
+    return CharPos{};
 }
 
 bool QSynEdit::inWord(const CharPos &pos) const
 {
-    return isWordChar(charAt(pos));
+    return !isSpaceChar(charAt(pos));
 }
 
 CharPos QSynEdit::getTokenStart(const CharPos &pos) const
@@ -1221,31 +1229,40 @@ CharPos QSynEdit::getTokenEnd(const CharPos &pos) const
 CharPos QSynEdit::prevWordBegin(const CharPos &pos) const
 {
     if (mDocument->count() == 0 || !pos.isValid())
-        return CharPos{0,0};
+        return fileBegin();
     if (pos.line>=mDocument->count()) {
-        int line = mDocument->count()-1;
-        return CharPos{mDocument->getLine(line).length(),line};
+        return fileEnd();
     }
     if (pos.ch == 0 && pos.line ==0)
         return pos;
 
     if (pos.ch == 0
             || pos.ch >= mDocument->getLine(pos.line).length()
-            || charAt(pos).isSpace()
-            || charAt(CharPos{pos.ch-1,pos.line}).isSpace()) {
-        return getTokenStart(prevNonSpaceChar(pos));
+            || isSpaceChar(charAt(pos))) {
+        CharPos p = prevNonSpaceChar(pos);
+        if (p.isValid())
+            return getTokenStart(p);
+        else
+            return fileBegin();
     } else {
-        return getTokenStart(pos);
+        CharPos p=getTokenStart(pos);
+        if (p==pos) {// pos at word start
+            p = prevNonSpaceChar(pos);
+            if (p.isValid())
+                return getTokenStart(p);
+            else
+                return fileBegin();
+         } else
+            return p;
     }
 }
 
 CharPos QSynEdit::prevWordEnd(const CharPos &pos) const
 {
     if (mDocument->count() == 0 || !pos.isValid())
-        return CharPos{0,0};
+        return fileBegin();
     if (pos.line>=mDocument->count()) {
-        int line = mDocument->count()-1;
-        return CharPos{mDocument->getLine(line).length(),line};
+        return fileEnd();
     }
     if (pos.ch == 0 && pos.line ==0)
         return pos;
@@ -1254,12 +1271,18 @@ CharPos QSynEdit::prevWordEnd(const CharPos &pos) const
     if (pos.ch == 0) {
         p = prevNonSpaceChar(pos);
     } else if (pos.ch >= mDocument->getLine(pos.line).length()) {
-        p = prevNonSpaceChar(prevSpaceChar(CharPos{mDocument->getLine(pos.line).length()-1,pos.line}));
-    } else if (charAt(CharPos{pos.ch-1,pos.line}).isSpace()){
+        p = prevSpaceChar(CharPos{mDocument->getLine(pos.line).length()-1,pos.line});
+        if (p.isValid())
+            p = prevNonSpaceChar(p);
+    } else if (isSpaceChar(charAt(CharPos{pos.ch-1,pos.line}))){
         p = prevNonSpaceChar(pos);
     } else {
-        p = prevNonSpaceChar(prevSpaceChar(pos));
+        p = prevSpaceChar(pos);
+        if (p.isValid())
+            p = prevNonSpaceChar(p);
     }
+    if (!p.isValid())
+        return fileBegin();
     p.ch++;
     return p;
 }
@@ -1267,17 +1290,30 @@ CharPos QSynEdit::prevWordEnd(const CharPos &pos) const
 CharPos QSynEdit::nextWordBegin(const CharPos &pos) const
 {
     if (mDocument->count() == 0 || !pos.isValid())
-        return CharPos{0,0};
+        return fileBegin();
     if (pos.line>=mDocument->count()) {
-        int line = mDocument->count()-1;
-        return CharPos{mDocument->getLine(line).length(),line};
+        return fileEnd();
     }
+    CharPos p;
     if (pos.ch>=mDocument->getLine(pos.line).length()
-            || charAt(pos).isSpace()) {
-        return nextNonSpaceChar(pos);
+            || isSpaceChar(charAt(pos))) {
+        p = nextNonSpaceChar(pos);
     } else {
-        return nextNonSpaceChar(nextSpaceChar(pos));
+        p = getTokenEnd(pos);
+        if (p.isValid()) {
+            if (isSpaceChar(charAt(p)))
+                p = nextNonSpaceChar(p);
+        }
     }
+    return (p.isValid())?p:fileEnd();
+}
+
+CharPos QSynEdit::fileEnd() const
+{
+    if (mDocument->count()==0)
+        return fileBegin();
+    int line = mDocument->count()-1;
+    return CharPos{mDocument->getLine(line).length(),line};
 }
 
 void QSynEdit::setSelWord()
@@ -1806,7 +1842,7 @@ void QSynEdit::doDeleteToWordStart()
     CharPos start = getTokenStart(caretXY());
     CharPos end = caretXY();
     if (start==end) {
-        start = prevWordChar(start);
+        start = prevWordEnd(start);
     }
     deleteFromTo(start,end);
 }
@@ -1821,7 +1857,7 @@ void QSynEdit::doDeleteToWordEnd()
     CharPos start = caretXY();
     CharPos end = getTokenEnd(caretXY());
     if (start == end) {
-        end = nextWordChar(end);
+        end = nextWordBegin(end);
     }
     deleteFromTo(start,end);
 }
@@ -2471,14 +2507,14 @@ void QSynEdit::doAddChar(const QChar& ch)
             mUndoList->addGroupBreak();
         }
         doSetSelText(ch);
-    } else if (ch.isSpace()) {
+    } else if (isSpaceChar(ch)) {
         // break group undo chain
-        if (!lastCh.isSpace()) {
+        if (!isSpaceChar(lastCh)) {
             mUndoList->addGroupBreak();
         }
         doSetSelText(ch);
     } else {
-        if (lastCh.isSpace() || isIdentChar(lastCh)) {
+        if (isSpaceChar(lastCh) || isIdentChar(lastCh)) {
             mUndoList->addGroupBreak();
         }
         beginEditing();
@@ -4388,6 +4424,11 @@ void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
     onCommandProcessed(Command, AChar, pData);
 }
 
+bool QSynEdit::isSpaceChar(const QChar &ch) const
+{
+    return mSyntaxer->isSpaceChar(ch);
+}
+
 void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const
 {
     if (lineIndex == 0) {
@@ -4584,10 +4625,9 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
         int vMinX = 0;
         while ((vLastNonBlank >= vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
             vLastNonBlank--;
-        vLastNonBlank++;
         vNewX = mCaretX;
         if ((vNewX <= vLastNonBlank) || (vNewX == vText.length()))
-            vNewX = vLastNonBlank;
+            vNewX = vLastNonBlank+1;
         else
             vNewX = vText.length();
     } else

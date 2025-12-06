@@ -13,11 +13,12 @@ template <>inline char *QTest::toString(const QSynedit::CharPos &pos) {
 
 namespace QSynedit {
 
-void TestQSyneditCpp::init()
+void TestQSyneditCpp::initEdit()
 {
     mEdit = std::make_shared<QSynEdit>();
     QSynedit::EditorOptions options = QSynedit::EditorOption::AltSetsColumnMode
             | QSynedit::EditorOption::DragDropEditing | QSynedit::EditorOption::DropFiles
+            | QSynedit::EditorOption::EnhanceHomeKey | QSynedit::EditorOption::EnhanceEndKey
             | QSynedit::EditorOption::RightMouseMovesCursor
             | QSynedit::EditorOption::TabIndent
             | QSynedit::EditorOption::GroupUndo
@@ -32,7 +33,7 @@ void TestQSyneditCpp::init()
 
 void TestQSyneditCpp::test_get_token_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<QString>("word");
     QTest::addColumn<QString>("expect");
 
@@ -55,7 +56,7 @@ void TestQSyneditCpp::test_get_token()
 
 void TestQSyneditCpp::test_token_start_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("start");
     QTest::addColumn<CharPos>("expect");
 
@@ -75,7 +76,7 @@ void TestQSyneditCpp::test_token_start()
 
 void TestQSyneditCpp::test_token_end_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("end");
     QTest::addColumn<CharPos>("expect");
 
@@ -95,7 +96,7 @@ void TestQSyneditCpp::test_token_end()
 
 void TestQSyneditCpp::test_move_caret_x_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
     {
@@ -139,7 +140,7 @@ void TestQSyneditCpp::test_move_caret_x()
 
 void TestQSyneditCpp::test_move_caret_y_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
     {
@@ -191,9 +192,96 @@ void TestQSyneditCpp::test_move_caret_y()
     QCOMPARE(pos, expect);
 }
 
+void TestQSyneditCpp::test_move_caret_to_line_start_data()
+{
+    initEdit();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+    {
+        mEdit->setCaretXY(CharPos{0,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("begin of line")<<mEdit->caretXY()<<CharPos{4,15};
+    }
+    {
+        mEdit->setCaretXY(CharPos{2,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("in leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+    }
+    {
+        mEdit->setCaretXY(CharPos{4,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("end of leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+    }
+    {
+        mEdit->setCaretXY(CharPos{3,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("end of leading spaces - 1")<<mEdit->caretXY()<<CharPos{0,15};
+    }
+    {
+        mEdit->setCaretXY(CharPos{5,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("end of leading spaces + 1")<<mEdit->caretXY()<<CharPos{4,15};
+    }
+    {
+        mEdit->setCaretXY(CharPos{10,15});
+        mEdit->moveCaretToLineStart(false);
+        QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{4,15};
+    }
+}
+
+void TestQSyneditCpp::test_move_caret_to_line_start()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
+void TestQSyneditCpp::test_move_caret_to_line_end_data()
+{
+    initEdit();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+    {
+        mEdit->setCaretXY(CharPos{25,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("start of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+    }
+    {
+        mEdit->setCaretXY(CharPos{26,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("start of trailing spaces + 1")<<mEdit->caretXY()<<CharPos{34,70};
+    }
+    {
+        mEdit->setCaretXY(CharPos{24,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("start of trailing spaces - 1")<<mEdit->caretXY()<<CharPos{25,70};
+    }
+    {
+        mEdit->setCaretXY(CharPos{29,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("middle of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+    }
+    {
+        mEdit->setCaretXY(CharPos{15,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{25,70};
+    }
+    {
+        mEdit->setCaretXY(CharPos{34,70});
+        mEdit->moveCaretToLineEnd(false);
+        QTest::newRow("end of line")<<mEdit->caretXY()<<CharPos{25,70};
+    }
+}
+
+void TestQSyneditCpp::test_move_caret_to_line_end()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
 void TestQSyneditCpp::test_previous_word_begin_data()
 {
-    init();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 
@@ -205,6 +293,10 @@ void TestQSyneditCpp::test_previous_word_begin_data()
     QTest::newRow("end of first word in line")<<mEdit->prevWordBegin(CharPos{8,10})<<CharPos{0,10};
     QTest::newRow("line start")<<mEdit->prevWordBegin(CharPos{0,10})<<CharPos{16,8};
     QTest::newRow("in space")<<mEdit->prevWordBegin(CharPos{4,19})<<CharPos{39,18};
+    QTest::newRow("start of word after symbol")<<mEdit->prevWordBegin(CharPos{25,21})<<CharPos{23,21};
+    QTest::newRow("mid of word after symbol")<<mEdit->prevWordBegin(CharPos{26,21})<<CharPos{25,21};
+    QTest::newRow("start of symbol after word")<<mEdit->prevWordBegin(CharPos{58,21})<<CharPos{54,21};
+    QTest::newRow("mid of symbol after word")<<mEdit->prevWordBegin(CharPos{59,21})<<CharPos{58,21};
 }
 
 void TestQSyneditCpp::test_previous_word_begin()
@@ -216,7 +308,7 @@ void TestQSyneditCpp::test_previous_word_begin()
 
 void TestQSyneditCpp::test_next_word_begin_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 
@@ -228,6 +320,10 @@ void TestQSyneditCpp::test_next_word_begin_data()
     QTest::newRow("word mid")<<mEdit->nextWordBegin(CharPos{10,10})<<CharPos{13,10};
     QTest::newRow("word end")<<mEdit->nextWordBegin(CharPos{12,10})<<CharPos{13,10};
     QTest::newRow("in space")<<mEdit->nextWordBegin(CharPos{4,19})<<CharPos{16,19};
+    QTest::newRow("start of word before symbol")<<mEdit->nextWordBegin(CharPos{37,21})<<CharPos{40,21};
+    QTest::newRow("mid of word before symbol")<<mEdit->nextWordBegin(CharPos{38,21})<<CharPos{40,21};
+    QTest::newRow("start of symbol before word")<<mEdit->nextWordBegin(CharPos{40,21})<<CharPos{42,21};
+    QTest::newRow("mid of symbol before word")<<mEdit->nextWordBegin(CharPos{41,21})<<CharPos{42,21};
 }
 
 void TestQSyneditCpp::test_next_word_begin()
@@ -239,7 +335,7 @@ void TestQSyneditCpp::test_next_word_begin()
 
 void TestQSyneditCpp::test_prev_word_end_data()
 {
-    init();
+    initEdit();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 

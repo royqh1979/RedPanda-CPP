@@ -172,8 +172,8 @@ public:
     virtual QString foldString(QString startLine);
 
     virtual bool supportBraceLevel();
-    virtual bool isSpaceChar(const QChar& ch);
-    virtual bool isWordBreakChar(const QChar& ch);
+    virtual bool isSpaceChar(const QChar& ch) const;
+    virtual bool isWordBreakChar(const QChar& ch) const;
     virtual PTokenAttribute getAttribute(const QString& name) const;
     virtual QString commentSymbol();
     virtual QString blockCommentBeginSymbol();

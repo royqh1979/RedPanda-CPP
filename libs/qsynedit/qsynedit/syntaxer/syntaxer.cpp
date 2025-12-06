@@ -85,12 +85,12 @@ bool Syntaxer::supportBraceLevel()
     return false;
 }
 
-bool Syntaxer::isSpaceChar(const QChar &ch)
+bool Syntaxer::isSpaceChar(const QChar &ch) const
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch.isSpace();
 }
 
-bool Syntaxer::isWordBreakChar(const QChar &ch)
+bool Syntaxer::isWordBreakChar(const QChar &ch) const
 {
     switch (ch.unicode()) {
     case '.':
