@@ -354,5 +354,62 @@ void TestQSyneditCpp::test_prev_word_end()
     QCOMPARE(pos, expect);
 }
 
+void TestQSyneditCpp::test_enter_chars_data()
+{
+    QTest::addColumn<QString>("afterEdit");
+    QTest::addColumn<QString>("expect_afterEdit");
+
+    QTest::addColumn<QString>("afterUndo");
+    QTest::addColumn<QString>("expect_afterUndo");
+
+    QTest::addColumn<QString>("afterRedo");
+    QTest::addColumn<QString>("expect_afterRedo");
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{0,0});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("file begin")<<mEdit->lineText(0)<<"abc#include <iostream>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(0)<<"abc#include <iostream>";
+        QVERIFY(mEdit->canUndo());
+    }
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{2,1});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("mid of line")<<mEdit->lineText(1)<<"#iabcnclude <mutex>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(1)<<"#include <mutex>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(1)<<"#iabcnclude <mutex>";
+        QVERIFY(mEdit->canUndo());
+    }
+}
+
+void TestQSyneditCpp::test_enter_chars()
+{
+    QFETCH(QString, afterEdit);
+    QFETCH(QString, expect_afterEdit);
+    QFETCH(QString, afterUndo);
+    QFETCH(QString, expect_afterUndo);
+    QFETCH(QString, afterRedo);
+    QFETCH(QString, expect_afterRedo);
+    QCOMPARE(afterEdit, expect_afterEdit);
+    QCOMPARE(afterUndo, expect_afterUndo);
+    QCOMPARE(afterRedo, expect_afterRedo);
+}
+
 }
 

@@ -35,6 +35,8 @@ private slots:
     void test_prev_word_end_data();
     void test_prev_word_end();
 
+    void test_enter_chars_data();
+    void test_enter_chars();
 };
 
 }

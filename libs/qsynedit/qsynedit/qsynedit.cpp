@@ -5034,7 +5034,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
                 + mDocument->getLine(endPos.line).mid(endPos.ch);
             // Delete all lines in the selection range.
             mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
-            properSetLine(startPos.line-1,TempString);
+            properSetLine(startPos.line,TempString);
             internalSetCaretXY(startPos);
             doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
         }

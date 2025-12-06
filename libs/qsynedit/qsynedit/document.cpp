@@ -49,6 +49,7 @@ Document::Document(const QFont& font, QObject *parent):
 }
 
 static void listIndexOutOfBounds(int index) {
+    Q_ASSERT(false); // let debugger stops here
     throw IndexOutOfRange(index);
 }
 
