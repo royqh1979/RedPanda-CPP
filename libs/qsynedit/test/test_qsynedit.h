@@ -10,7 +10,13 @@ class TestQSyneditCpp : public QObject
     Q_OBJECT
 private:
     std::shared_ptr<QSynEdit> mEdit;
+    QList<int> mDeleteStartLines;
+    QList<int> mDeleteLineCounts;
+    QList<int> mInsertStartLines;
+    QList<int> mInsertLineCounts;
 private slots:
+    void onLinesDeleted(int line, int count);
+    void onLinesInserted(int line, int count);
     void initEdit();
 
     void test_get_token_data();
