@@ -758,7 +758,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         QSynedit::BufferCoord p = caretXY();
                         setSelBegin(p);
                         p.ch = lineText().length()+1;
-                        setBlockEnd(p);
+                        setSelEnd(p);
                         setSelText("");
                     }
                     handled = true;
@@ -809,7 +809,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape: // Update function tip
         if (mTabStopBegin>=0) {
             mTabStopBegin = -1;
-            setBlockEnd(caretXY());
+            setSelEnd(caretXY());
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         }
@@ -3876,7 +3876,7 @@ void Editor::headerCompletionInsert()
     p.ch = posBegin+1;
     setSelBegin(p);
     p.ch = posEnd+1;
-    setBlockEnd(p);
+    setSelEnd(p);
 
     setSelText(headerName);
 
@@ -4444,7 +4444,7 @@ void Editor::popUserCodeInTabStops()
         setCaretXY(newCursorPos);
         setSelBegin(newCursorPos);
         newCursorPos.ch = tabStopEnd;
-        setBlockEnd(newCursorPos);
+        setSelEnd(newCursorPos);
 
         mTabStopBegin = tabStopBegin;
         mTabStopEnd = tabStopEnd;

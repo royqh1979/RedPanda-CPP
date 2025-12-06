@@ -403,13 +403,67 @@ void TestQSyneditCpp::test_enter_chars_data()
         QTest::keyPress(mEdit.get(),Qt::Key_A);
         QTest::keyPress(mEdit.get(),Qt::Key_B);
         QTest::keyPress(mEdit.get(),Qt::Key_C);
-        QTestData& td = QTest::newRow("endoffile")<<mEdit->lineText(76)<<"}abc";
+        QTestData& td = QTest::newRow("end of file")<<mEdit->lineText(76)<<"}abc";
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(76)<<"}";
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(76)<<"}abc";
+        QVERIFY(mEdit->canUndo());
+    }
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{8,0});
+        mEdit->setSelBegin(CharPos{0,0});
+        mEdit->setSelEnd(CharPos{8,0});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("selection at file begin")<<mEdit->lineText(0)<<"abc <iostream>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(0)<<"abc <iostream>";
+        QVERIFY(mEdit->canUndo());
+    }
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{1,1});
+        mEdit->setSelBegin(CharPos{8,0});
+        mEdit->setSelEnd(CharPos{1,1});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("selection spanning lines")<<mEdit->lineText(0)<<"#includeabcinclude <mutex>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(0)<<"#includeabcinclude <mutex>";
+        QVERIFY(mEdit->canUndo());
+    }
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{1,1});
+        mEdit->setSelBegin(CharPos{8,0});
+        mEdit->setSelEnd(CharPos{1,1});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("selection spanning lines 2")<<mEdit->lineText(1)<<"#include <condition_variable>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(1)<<"#include <mutex>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(1)<<"#include <condition_variable>";
         QVERIFY(mEdit->canUndo());
     }
 }

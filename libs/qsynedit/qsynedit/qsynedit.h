@@ -375,7 +375,7 @@ public:
 
     void clearSelection();
     void setSelBegin(CharPos value);
-    void setBlockEnd(CharPos Value);
+    void setSelEnd(CharPos Value);
 
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);

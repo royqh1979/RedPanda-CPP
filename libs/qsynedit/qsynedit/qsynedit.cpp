@@ -185,7 +185,7 @@ void QSynEdit::setCaretXY(const CharPos &pos)
         decPaintLock();
     });
     setSelBegin(pos);
-    setBlockEnd(pos);
+    setSelEnd(pos);
     internalSetCaretXY(pos, true);
 }
 
@@ -196,7 +196,7 @@ void QSynEdit::setCaretXYCentered(const CharPos &pos)
         decPaintLock();
     });
     setSelBegin(pos);
-    setBlockEnd(pos);
+    setSelEnd(pos);
     internalSetCaretXY(pos, false);
     ensureCaretVisibleEx(true); // but here after block has been set
 }
@@ -996,7 +996,7 @@ void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posS
     internalSetCaretXY(posCaret);
     setActiveSelectionMode(SelectionMode::Normal);
     setSelBegin(posSelBegin);
-    setBlockEnd(posSelEnd);
+    setSelEnd(posSelEnd);
     decPaintLock();
 }
 
@@ -1610,9 +1610,9 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         // if MouseCapture is True we're changing selection. otherwise we're dragging
         if (isDragging) {
             setSelBegin(mDragSelBeginSave);
-            setBlockEnd(mDragSelEndSave);
+            setSelEnd(mDragSelEndSave);
         } else
-            setBlockEnd(caretXY());
+            setSelEnd(caretXY());
 
         if (mOptions.testFlag(EditorOption::GroupUndo))
             mUndoList->addGroupBreak();
@@ -1681,7 +1681,7 @@ void QSynEdit::doDeleteLastChar()
         if (!selAvail()) {
             start.ch--;
             setSelBegin(start);
-            setBlockEnd(end);
+            setSelEnd(end);
         }
         setSelectedTextEmpty();
         return;
@@ -1750,7 +1750,7 @@ void QSynEdit::doDeleteCurrentChar()
         if (!selAvail()) {
             end.ch++;
             setSelBegin(start);
-            setBlockEnd(end);
+            setSelEnd(end);
         }
         setSelectedTextEmpty();
         return;
@@ -2179,7 +2179,7 @@ void QSynEdit::insertLine(bool moveCaret)
 
     doLinesInserted(mCaretY - insDelta, nLinesInserted);
     setSelBegin(caretXY());
-    setBlockEnd(caretXY());
+    setSelEnd(caretXY());
     ensureCaretVisible();
     updateLastCaretX();
 }
@@ -2480,7 +2480,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                 std::swap(start,end);
             start.ch++; // make sure we select a whole char in the start line
             setSelBegin(start);
-            setBlockEnd(end);
+            setSelEnd(end);
         }
             break;
         default:
@@ -2537,7 +2537,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                         mDocument->putLine(oldCaretY,newLine);
                         internalSetCaretXY(CharPos{newLine.length(),oldCaretY});
                         setSelBegin(caretXY());
-                        setBlockEnd(caretXY());
+                        setSelEnd(caretXY());
                         mUndoList->addChange(
                                     ChangeReason::Delete,
                                     CharPos{0, oldCaretY},
@@ -2563,7 +2563,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                         mDocument->putLine(oldCaretY,newLine);
                         internalSetCaretXY(CharPos{newLine.length(), oldCaretY});
                         setSelBegin(caretXY());
-                        setBlockEnd(caretXY());
+                        setSelEnd(caretXY());
                         mUndoList->addChange(
                                     ChangeReason::Delete,
                                     CharPos{0, oldCaretY},
@@ -2592,7 +2592,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                         mDocument->putLine(oldCaretY,newLeft+right);
                         internalSetCaretXY(CharPos{newLeft.length(),oldCaretY});
                         setSelBegin(caretXY());
-                        setBlockEnd(caretXY());
+                        setSelEnd(caretXY());
                         mUndoList->addChange(
                                     ChangeReason::Delete,
                                     CharPos{0, oldCaretY},
@@ -3745,7 +3745,7 @@ void QSynEdit::setOptions(const EditorOptions &value)
         internalSetCaretXY(caretXY());
         if (mOptions.testFlag(EditorOption::ScrollPastEol)) {
             setSelBegin(selBegin());
-            setBlockEnd(selEnd());
+            setSelEnd(selEnd());
         }
         updateHScrollbar();
         updateVScrollbar();
@@ -3772,7 +3772,7 @@ void QSynEdit::doAddStr(const QString &s)
                 std::swap(start,end);
             start.ch+=s.length(); // make sure we select a whole char in the start line
             setSelBegin(start);
-            setBlockEnd(end);
+            setSelEnd(end);
         }
             break;
         default:
@@ -3901,7 +3901,7 @@ void QSynEdit::doUndoItem()
             break;
         case ChangeReason::MoveSelectionUp:
             setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line-1});
-            setBlockEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line-1});
+            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line-1});
             doMoveSelDown();
             mRedoList->addRedo(
                         item->changeReason(),
@@ -3913,7 +3913,7 @@ void QSynEdit::doUndoItem()
             break;
         case ChangeReason::MoveSelectionDown:
             setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line+1});
-            setBlockEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line+1});
+            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line+1});
             doMoveSelUp();
             mRedoList->addRedo(
                         item->changeReason(),
@@ -4086,7 +4086,7 @@ void QSynEdit::doRedoItem()
             break;
         case ChangeReason::MoveSelectionUp:
             setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line});
-            setBlockEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
+            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
             doMoveSelUp();
             mUndoList->restoreChange(
                         item->changeReason(),
@@ -4098,7 +4098,7 @@ void QSynEdit::doRedoItem()
             break;
         case ChangeReason::MoveSelectionDown:
             setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line});
-            setBlockEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
+            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
             doMoveSelDown();
             mUndoList->restoreChange(
                         item->changeReason(),
@@ -4585,7 +4585,7 @@ void QSynEdit::moveCaretAndSelection(const CharPos &ptBefore, const CharPos &ptA
     if (isSelection) {
         if (!selAvail())
           setSelBegin(ptBefore);
-        setBlockEnd(ptAfter);
+        setSelEnd(ptAfter);
     } else
         setSelBegin(ptAfter);
     internalSetCaretXY(ptAfter,ensureCaretVisible);
@@ -4744,7 +4744,7 @@ void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text
             startPos.ch = xposToGlyphStartChar(startPos.line, x);
             endPos.ch = xposToGlyphStartChar(endPos.line, x);
             setSelBegin(startPos);
-            setBlockEnd(endPos);
+            setSelEnd(endPos);
         } else
             internalSetCaretXY(startPos);
     }
@@ -4774,10 +4774,10 @@ void QSynEdit::doSetSelText(const QString &value)
     }
 //    } else if (!colSelAvail())
 //        setActiveSelectionMode(selectionMode());
-    CharPos StartOfBlock = selBegin();
-    CharPos EndOfBlock = selEnd();
-    mSelectionBegin = StartOfBlock;
-    mSelectionEnd = EndOfBlock;
+    CharPos startOfBlock = selBegin();
+    CharPos endOfBlock = selEnd();
+    mSelectionBegin = startOfBlock;
+    mSelectionEnd = endOfBlock;
     setSelTextPrimitive(splitStrings(value));
 }
 
@@ -4911,7 +4911,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 ptCurrent.ch = nFound;
                 setSelBegin(ptCurrent);
                 ptCurrent.ch += nSearchLen;
-                setBlockEnd(ptCurrent);
+                setSelEnd(ptCurrent);
 
                 if (bBackward)
                     internalSetCaretXY(selBegin(), false);
@@ -4950,7 +4950,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                             iResultOffset += nReplaceLen - nSearchLen;
                             if ((mActiveSelectionMode != SelectionMode::Column) && (caretY() == ptEnd.line)) {
                                 ptEnd.ch+=nReplaceLen - nSearchLen;
-                                setBlockEnd(ptEnd);
+                                setSelEnd(ptEnd);
                             }
                         }
                     }
@@ -4991,12 +4991,14 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
 
 void QSynEdit::doLinesDeleted(int firstLine, int count)
 {
-    emit linesDeleted(firstLine, count);
+    if (count>0)
+        emit linesDeleted(firstLine, count);
 }
 
 void QSynEdit::doLinesInserted(int firstLine, int count)
 {
-    emit linesInserted(firstLine, count);
+    if (count>0)
+        emit linesInserted(firstLine, count);
 }
 
 void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
@@ -5065,7 +5067,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         newEndPos.ch = xposToGlyphStartChar(newEndPos.line, xFrom);
         internalSetCaretXY(newStartPos);
         setSelBegin(newStartPos);
-        setBlockEnd(newEndPos);
+        setSelEnd(newEndPos);
         // Column deletion never removes a line entirely, so no mark
         // updating is needed here.
         break;
@@ -5117,7 +5119,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
             be.ch+=textLen;
             internalSetCaretXY(bb);
             setSelBegin(bb);
-            setBlockEnd(be);
+            setSelEnd(be);
             ensureCaretVisible();
         }
     }
@@ -5270,7 +5272,7 @@ void QSynEdit::deleteFromTo(const CharPos &start, const CharPos &end)
         addCaretToUndo();
         addSelectionToUndo();
         setSelBegin(start);
-        setBlockEnd(end);
+        setSelEnd(end);
         doDeleteText(start,end,SelectionMode::Normal);
         endEditing();
         internalSetCaretXY(start);
@@ -5781,7 +5783,7 @@ void QSynEdit::keyPressEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Escape && mActiveSelectionMode != SelectionMode::Normal) {
         setActiveSelectionMode(SelectionMode::Normal);
         setSelBegin(caretXY());
-        setBlockEnd(caretXY());
+        setSelEnd(caretXY());
         event->accept();
     } else {
         EditCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
@@ -5842,7 +5844,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             if (event->modifiers() == Qt::ShiftModifier) {
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
-                setBlockEnd(caretXY());
+                setSelEnd(caretXY());
             } else if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
@@ -5880,7 +5882,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         computeCaret();
         if (! (event->modifiers() & Qt::ShiftModifier))
             setSelBegin(caretXY());
-        setBlockEnd(caretXY());
+        setSelEnd(caretXY());
         mStateFlags.setFlag(StateFlag::WaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::DblClicked,false);
@@ -6053,7 +6055,7 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
                                                                         event->pos().y()));
         internalSetCaretXY(coord);
         setSelBegin(mDragSelBeginSave);
-        setBlockEnd(mDragSelEndSave);
+        setSelEnd(mDragSelEndSave);
         mDocument->addLine(""); //add a line to handle drag to the last
         showCaret();
         computeScroll(true);
@@ -6177,7 +6179,7 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
     CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(x,y));
     internalSetCaretXY(coord);
     setSelBegin(mDragSelBeginSave);
-    setBlockEnd(mDragSelEndSave);
+    setSelEnd(mDragSelEndSave);
     showCaret();
 }
 
@@ -6259,7 +6261,7 @@ void QSynEdit::onLinesChanged()
         oldBlockStart.ch = xposToGlyphStartChar(oldBlockStart.line,xEnd);
         oldBlockEnd.ch = xposToGlyphStartChar(oldBlockEnd.line,xEnd);
         setSelBegin(oldBlockStart);
-        setBlockEnd(oldBlockEnd);
+        setSelEnd(oldBlockEnd);
     } else {
         vOldMode = mActiveSelectionMode;
         setSelBegin(caretXY());
@@ -6382,7 +6384,7 @@ void QSynEdit::clearSelection()
     setSelBegin(caretXY());
 }
 
-void QSynEdit::setBlockEnd(CharPos value)
+void QSynEdit::setSelEnd(CharPos value)
 {
     incPaintLock();
     auto action = finally([this](){
