@@ -396,6 +396,22 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->lineText(1)<<"#iabcnclude <mutex>";
         QVERIFY(mEdit->canUndo());
     }
+    {
+        initEdit();
+        mEdit->clearUndo();
+        mEdit->setCaretXY(CharPos{1,76});
+        QTest::keyPress(mEdit.get(),Qt::Key_A);
+        QTest::keyPress(mEdit.get(),Qt::Key_B);
+        QTest::keyPress(mEdit.get(),Qt::Key_C);
+        QTestData& td = QTest::newRow("endoffile")<<mEdit->lineText(76)<<"}abc";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(76)<<"}";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(76)<<"}abc";
+        QVERIFY(mEdit->canUndo());
+    }
 }
 
 void TestQSyneditCpp::test_enter_chars()
