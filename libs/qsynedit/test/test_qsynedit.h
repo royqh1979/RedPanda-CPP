@@ -45,6 +45,7 @@ private slots:
     void test_delete_text_normal_data();
     void test_delete_text_normal();
     void test_copy_paste_data();
+    void test_copy_paste();
     void test_enter_chars_data();
     void test_enter_chars();
     void test_press_delete_data();

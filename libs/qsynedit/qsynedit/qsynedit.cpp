@@ -5111,7 +5111,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
     switch(mode){
     case SelectionMode::Normal:
         insertedLines = doInsertTextByNormalMode(pos,text, newPos);
-        noftifyLinesInserted(pos.line+1, insertedLines);
+        noftifyLinesInserted(pos.line, insertedLines);
         internalSetCaretXY(newPos);
         setSelBegin(newPos);
         ensureCaretVisible();
@@ -6308,7 +6308,6 @@ void QSynEdit::onLinesInserted(int line, int count)
         // new lines should be parsed
         reparseLines(line, line + count);
     }
-    emit linesInserted(line,count);
     invalidateLines(line, INT_MAX);
 }
 

@@ -589,14 +589,46 @@ void TestQSyneditCpp::test_copy_paste_data()
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
-        td<<mEdit->lineText(0)<<"#include <mutex>";
+        td<<mEdit->lineText(1)<<"#include <mutex>";
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
-        td<<mEdit->lineText(0)<<"##include <iostream>";
+        td<<mEdit->lineText(1)<<"##include <iostream>";
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
-        td<<mEdit->lineText(0)<<"#include <mutex>";
+        td<<mEdit->lineText(1)<<"#include <mutex>";
     }
+}
+
+void TestQSyneditCpp::test_copy_paste()
+{
+    QFETCH(QString, afterEdit);
+    QFETCH(QString, expect_afterEdit);
+    QFETCH(CharPos, caret_pos);
+    QFETCH(CharPos, expect_caret_pos);
+    QFETCH(QList<int>, insert_starts);
+    QFETCH(QList<int>, expect_insert_starts);
+    QFETCH(QList<int>, insert_counts);
+    QFETCH(QList<int>, expect_insert_counts);
+    QFETCH(QList<int>, delete_starts);
+    QFETCH(QList<int>, expect_delete_starts);
+    QFETCH(QList<int>, delete_counts);
+    QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QString, afterUndo);
+    QFETCH(QString, expect_afterUndo);
+    QFETCH(QString, afterRedo);
+    QFETCH(QString, expect_afterRedo);
+    QFETCH(QString, afterUndo2);
+    QFETCH(QString, expect_afterUndo2);
+
+    QCOMPARE(afterEdit, expect_afterEdit);
+    QCOMPARE(caret_pos, expect_caret_pos);
+    QCOMPARE(insert_starts, expect_insert_starts);
+    QCOMPARE(insert_counts, expect_insert_counts);
+    QCOMPARE(delete_starts, expect_delete_starts);
+    QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(afterUndo, expect_afterUndo);
+    QCOMPARE(afterRedo, expect_afterRedo);
+    QCOMPARE(afterUndo2, expect_afterUndo2);
 }
 
 void TestQSyneditCpp::test_enter_chars_data()
