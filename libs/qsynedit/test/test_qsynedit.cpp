@@ -395,6 +395,9 @@ void TestQSyneditCpp::test_enter_chars_data()
 
     QTest::addColumn<QString>("afterRedo");
     QTest::addColumn<QString>("expect_afterRedo");
+
+    QTest::addColumn<QString>("afterUndo2");
+    QTest::addColumn<QString>("expect_afterUndo2");
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,0});
@@ -410,7 +413,9 @@ void TestQSyneditCpp::test_enter_chars_data()
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(0)<<"abc#include <iostream>";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
     }
     {
         initEdit();
@@ -428,7 +433,9 @@ void TestQSyneditCpp::test_enter_chars_data()
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(1)<<"#iabcnclude <mutex>";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(1)<<"#include <mutex>";
     }
     {
         initEdit();
@@ -446,7 +453,9 @@ void TestQSyneditCpp::test_enter_chars_data()
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(76)<<"}abc";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(76)<<"}";
     }
     {
         initEdit();
@@ -466,7 +475,9 @@ void TestQSyneditCpp::test_enter_chars_data()
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(0)<<"abc <iostream>";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
     }
     {
         initEdit();
@@ -479,14 +490,16 @@ void TestQSyneditCpp::test_enter_chars_data()
         QTest::keyPress(mEdit.get(),Qt::Key_C);
         QTestData& td = QTest::newRow("selection spanning lines")<<mEdit->lineText(0)<<"#includeabcinclude <mutex>";
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
-        td<<mDeleteStartLines<<QList<int>{0}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(0)<<"#includeabcinclude <mutex>";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
     }
     {
         initEdit();
@@ -499,14 +512,16 @@ void TestQSyneditCpp::test_enter_chars_data()
         QTest::keyPress(mEdit.get(),Qt::Key_C);
         QTestData& td = QTest::newRow("selection spanning lines 2")<<mEdit->lineText(1)<<"#include <condition_variable>";
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
-        td<<mDeleteStartLines<<QList<int>{0}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
         mEdit->redo();
         QVERIFY(!mEdit->canRedo());
         td<<mEdit->lineText(1)<<"#include <condition_variable>";
-        QVERIFY(mEdit->canUndo());
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(1)<<"#include <mutex>";
     }
 }
 
@@ -526,6 +541,8 @@ void TestQSyneditCpp::test_enter_chars()
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
     QFETCH(QString, expect_afterRedo);
+    QFETCH(QString, afterUndo2);
+    QFETCH(QString, expect_afterUndo2);
     QCOMPARE(afterEdit, expect_afterEdit);
     QCOMPARE(insert_starts, expect_insert_starts);
     QCOMPARE(insert_counts, expect_insert_counts);
@@ -533,6 +550,7 @@ void TestQSyneditCpp::test_enter_chars()
     QCOMPARE(delete_counts, expect_delete_counts);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
+    QCOMPARE(afterUndo2, expect_afterUndo2);
 }
 
 }

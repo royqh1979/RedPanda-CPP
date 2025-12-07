@@ -603,10 +603,8 @@ private:
     void doGotoBlockEnd(bool isSelection);
     void doGotoEditorStart(bool isSelection);
     void doGotoEditorEnd(bool isSelection);
-    void setSelectedTextEmpty();
+    void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void setSelTextPrimitiveEx(SelectionMode mode,
-                               const QStringList& text);
     void doLinesDeleted(int firstLine, int count);
     void doLinesInserted(int firstLine, int count);
     void properSetLine(int line, const QString& sLineText, bool notify = true);

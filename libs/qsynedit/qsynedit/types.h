@@ -48,10 +48,14 @@ struct CharPos {
     int line; // starts from 0
 
     CharPos(): ch{-1}, line{-1} {}
-    CharPos(const CharPos& pos): ch{pos.ch}, line{pos.line} {}
+    CharPos(const CharPos &pos): ch{pos.ch}, line{pos.line} {}
     constexpr CharPos(int ch_, int line_) : ch{ch_}, line{line_} {}
 
-    const CharPos& operator=(const CharPos &coord);
+    const CharPos& operator=(const CharPos &coord) {
+        ch=coord.ch;
+        line=coord.line;
+        return *this;
+    };
 
     bool operator==(const CharPos& coord) const;
     bool operator>=(const CharPos& coord) const;

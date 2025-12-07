@@ -1683,11 +1683,11 @@ void QSynEdit::doDeleteLastChar()
             setSelBegin(start);
             setSelEnd(end);
         }
-        setSelectedTextEmpty();
+        deleteSelection();
         return;
     }
     if (selAvail()) {
-        setSelectedTextEmpty();
+        deleteSelection();
         return;
     }
     bool shouldAddGroupBreak=false;
@@ -1752,11 +1752,11 @@ void QSynEdit::doDeleteCurrentChar()
             setSelBegin(start);
             setSelEnd(end);
         }
-        setSelectedTextEmpty();
+        deleteSelection();
         return;
     }
     if (selAvail())
-        setSelectedTextEmpty();
+        deleteSelection();
     else {
         bool shouldAddGroupBreak=false;
         // Call UpdateLastCaretX. Even though the caret doesn't move, the
@@ -2082,7 +2082,7 @@ void QSynEdit::insertLine(bool moveCaret)
     QString helper;
     if (selAvail()) {
         helper = selText();
-        setSelectedTextEmpty();
+        deleteSelection();
     }
 
     QString temp = lineText();
@@ -2197,7 +2197,7 @@ void QSynEdit::doTabKey()
     }
     beginEditing();
     if (selAvail()) {
-        setSelectedTextEmpty();
+        deleteSelection();
     }
     QString Spaces;
     if (mOptions.testFlag(EditorOption::TabsToSpaces)) {
@@ -2628,7 +2628,7 @@ void QSynEdit::doCutToClipboard()
         doSelectLine();
     }
     internalDoCopyToClipboard(selText());
-    setSelectedTextEmpty();
+    deleteSelection();
     endEditing();
     mUndoList->addGroupBreak();
 }
@@ -4686,7 +4686,7 @@ void QSynEdit::doGotoBlockEnd(bool isSelection)
 
 void QSynEdit::doGotoEditorStart(bool isSelection)
 {
-    CharPos newPos{0,0};
+    CharPos newPos{fileBegin()};
     if (!isSelection)
         setCaretXY(newPos);
     else
@@ -4696,8 +4696,7 @@ void QSynEdit::doGotoEditorStart(bool isSelection)
 void QSynEdit::doGotoEditorEnd(bool isSelection)
 {
     if (!mDocument->empty()) {
-        int lastLine = mDocument->count()-1;
-        CharPos newPos{mDocument->getLine(lastLine).length(),lastLine};
+        CharPos newPos{fileEnd()};
         if (!isSelection)
             setCaretXY(newPos);
         else
@@ -4705,7 +4704,7 @@ void QSynEdit::doGotoEditorEnd(bool isSelection)
     }
 }
 
-void QSynEdit::setSelectedTextEmpty()
+void QSynEdit::deleteSelection()
 {
     CharPos startPos=selBegin();
     CharPos endPos=selEnd();
@@ -4715,11 +4714,7 @@ void QSynEdit::setSelectedTextEmpty()
 
 void QSynEdit::setSelTextPrimitive(const QStringList &text)
 {
-    setSelTextPrimitiveEx(mActiveSelectionMode, text);
-}
-
-void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
-{
+    SelectionMode mode = mActiveSelectionMode;
     incPaintLock();
     bool groupUndo=false;
     CharPos startPos = selBegin();
@@ -5008,7 +5003,6 @@ void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
 {
-    int MarkOffset = 0;
     if (mode == SelectionMode::Normal) {
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(endPos.line);
@@ -5035,10 +5029,10 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
             QString TempString = mDocument->getLine(startPos.line).left(startPos.ch)
                 + mDocument->getLine(endPos.line).mid(endPos.ch);
             // Delete all lines in the selection range.
-            mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
-            doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
             properSetLine(startPos.line,TempString);
             internalSetCaretXY(startPos);
+            mDocument->deleteLines(startPos.line+1, endPos.line - startPos.line);
+            doLinesDeleted(startPos.line+1, endPos.line - startPos.line);
         }
         break;
     case SelectionMode::Column:
@@ -5387,11 +5381,11 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     }
     case EditCommand::PageTop:
     case EditCommand::SelPageTop:
-        moveCaretVert(yposToRow(0)-mCaretY, command == EditCommand::SelPageTop);
+        moveCaretVert(yposToRow(0)-lineToRow(mCaretY), command == EditCommand::SelPageTop);
         break;
     case EditCommand::PageBottom:
     case EditCommand::SelPageBottom:
-        moveCaretVert(yposToRow(0)+mLinesInWindow-1-mCaretY, command == EditCommand::SelPageBottom);
+        moveCaretVert(yposToRow(0) + mLinesInWindow-1-lineToRow(mCaretY), command == EditCommand::SelPageBottom);
         break;
     case EditCommand::FileStart:
     case EditCommand::SelFileStart:

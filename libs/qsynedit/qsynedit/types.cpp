@@ -20,13 +20,6 @@
 
 namespace QSynedit {
 
-const CharPos &CharPos::operator=(const CharPos &coord)
-{
-    ch=coord.ch;
-    line=coord.line;
-    return *this;
-}
-
 bool CharPos::operator==(const CharPos &coord) const
 {
     return coord.ch == ch && coord.line == line;
