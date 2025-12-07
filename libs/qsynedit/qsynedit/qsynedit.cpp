@@ -1667,7 +1667,7 @@ void QSynEdit::updateHScrollBarLater()
     qApp->postEvent(this,event);
 }
 
-void QSynEdit::doDeleteLastChar()
+void QSynEdit::doDeletePrevChar()
 {
     if (mReadOnly)
         return ;
@@ -1693,7 +1693,7 @@ void QSynEdit::doDeleteLastChar()
     bool shouldAddGroupBreak=false;
     QString tempStr = lineText();
     int tempStrLen = tempStr.length();
-    CharPos caretBackup = caretXY();
+    CharPos caretBackup{caretXY()};
     QStringList helper;
     if (mCaretX > tempStrLen ) {
         // only move caret one column
@@ -1701,11 +1701,16 @@ void QSynEdit::doDeleteLastChar()
     } else if (mCaretX == 0) {
         // join this line with the last line if possible
         if (mCaretY > 0) {
-            QString lastLine = mDocument->getLine(mCaretY);
-            mDocument->deleteLine(mCaretY);
-            notifyLinesDeleted(mCaretY, 1);
+            QString lastLine = mDocument->getLine(mCaretY-1);
+            if (lastLine.trimmed().isEmpty()) {
+                mDocument->deleteLine(mCaretY-1);
+                notifyLinesDeleted(mCaretY-1, 1);
+            } else {
+                mDocument->deleteLine(mCaretY);
+                notifyLinesDeleted(mCaretY, 1);
+            }
+            properSetLine(mCaretY-1, lastLine+tempStr);
             internalSetCaretXY(CharPos{lastLine.length(), mCaretY - 1});
-            setLineText(lastLine + tempStr);
             helper.append("");
             helper.append("");
             shouldAddGroupBreak=true;
@@ -5445,7 +5450,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         doShrinkSelection(caretXY());
         break;
     case EditCommand::DeleteLastChar:
-        doDeleteLastChar();
+        doDeletePrevChar();
         break;
     case EditCommand::DeleteChar:
         doDeleteCurrentChar();

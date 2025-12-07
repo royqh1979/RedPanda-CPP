@@ -45,6 +45,8 @@ private slots:
     void test_enter_chars();
     void test_press_delete_data();
     void test_press_delete();
+    void test_press_backspace_data();
+    void test_press_backspace();
 //    void test_press_delete();
 };
 

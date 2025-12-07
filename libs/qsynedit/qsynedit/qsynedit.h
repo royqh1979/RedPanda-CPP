@@ -636,7 +636,7 @@ private:
     QRect calculateInputCaretRect() const;
 
     //Commands
-    void doDeleteLastChar();
+    void doDeletePrevChar();
     void doDeleteCurrentChar();
     void doDeleteWord();
     void doDeleteToEOL();
