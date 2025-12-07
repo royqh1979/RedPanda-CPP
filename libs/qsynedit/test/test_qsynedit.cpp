@@ -553,5 +553,86 @@ void TestQSyneditCpp::test_enter_chars()
     QCOMPARE(afterUndo2, expect_afterUndo2);
 }
 
+void TestQSyneditCpp::test_press_delete_data()
+{
+    QTest::addColumn<QString>("afterEdit");
+    QTest::addColumn<QString>("expect_afterEdit");
+
+    QTest::addColumn<QList<int>>("insert_starts");
+    QTest::addColumn<QList<int>>("expect_insert_starts");
+    QTest::addColumn<QList<int>>("insert_counts");
+    QTest::addColumn<QList<int>>("expect_insert_counts");
+    QTest::addColumn<QList<int>>("delete_starts");
+    QTest::addColumn<QList<int>>("expect_delete_starts");
+    QTest::addColumn<QList<int>>("delete_counts");
+    QTest::addColumn<QList<int>>("expect_delete_counts");
+
+    QTest::addColumn<QString>("afterUndo");
+    QTest::addColumn<QString>("expect_afterUndo");
+
+    QTest::addColumn<QString>("afterRedo");
+    QTest::addColumn<QString>("expect_afterRedo");
+
+    QTest::addColumn<QString>("afterUndo2");
+    QTest::addColumn<QString>("expect_afterUndo2");
+    {
+        initEdit();
+        mEdit->setCaretXY(CharPos{0,0});
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+        QTestData& td = QTest::newRow("file begin")<<mEdit->lineText(0)<<"include <iostream>";
+        td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
+        td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        mEdit->redo();
+        QVERIFY(!mEdit->canRedo());
+        td<<mEdit->lineText(0)<<"include <iostream>";
+        mEdit->undo();
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+    }
+    {
+        initEdit();
+        mEdit->setCaretXY(mEdit->fileEnd());
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+        QTestData& td = QTest::newRow("file End")<<mEdit->lineText(76)<<"}";
+        td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
+        td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(76)<<"}";
+        td<<mEdit->lineText(76)<<"}";
+        td<<mEdit->lineText(76)<<"}";
+    }
+}
+
+void TestQSyneditCpp::test_press_delete()
+{
+    QFETCH(QString, afterEdit);
+    QFETCH(QString, expect_afterEdit);
+    QFETCH(QList<int>, insert_starts);
+    QFETCH(QList<int>, expect_insert_starts);
+    QFETCH(QList<int>, insert_counts);
+    QFETCH(QList<int>, expect_insert_counts);
+    QFETCH(QList<int>, delete_starts);
+    QFETCH(QList<int>, expect_delete_starts);
+    QFETCH(QList<int>, delete_counts);
+    QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QString, afterUndo);
+    QFETCH(QString, expect_afterUndo);
+    QFETCH(QString, afterRedo);
+    QFETCH(QString, expect_afterRedo);
+    QFETCH(QString, afterUndo2);
+    QFETCH(QString, expect_afterUndo2);
+    QCOMPARE(afterEdit, expect_afterEdit);
+    QCOMPARE(insert_starts, expect_insert_starts);
+    QCOMPARE(insert_counts, expect_insert_counts);
+    QCOMPARE(delete_starts, expect_delete_starts);
+    QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(afterUndo, expect_afterUndo);
+    QCOMPARE(afterRedo, expect_afterRedo);
+    QCOMPARE(afterUndo2, expect_afterUndo2);
+}
+
 }
 

@@ -1736,7 +1736,7 @@ void QSynEdit::doDeleteLastChar()
 void QSynEdit::doDeleteCurrentChar()
 {
     QStringList helper;
-    CharPos newCaret;
+    CharPos newCaret{};
     if (mReadOnly) {
         return;
     }
@@ -1782,19 +1782,21 @@ void QSynEdit::doDeleteCurrentChar()
             // join line with the line after
             if (mCaretY+1 < mDocument->count()) {
                 shouldAddGroupBreak=true;
-                properSetLine(mCaretY, tempStr + mDocument->getLine(mCaretY+1));
                 newCaret.ch = 0;
                 newCaret.line = mCaretY + 1;
                 helper.append("");
                 helper.append("");
-                mDocument->deleteLine(mCaretY + 1);
-                if (mCaretX==0)
+                if (tempStr.trimmed().isEmpty()) {
+                    mDocument->deleteLine(mCaretY);
                     doLinesDeleted(mCaretY, 1);
-                else
+                } else {
+                    mDocument->deleteLine(mCaretY + 1);
                     doLinesDeleted(mCaretY + 1, 1);
+                }
+                properSetLine(mCaretY, tempStr + mDocument->getLine(mCaretY+1));
             }
         }
-        if ((newCaret.ch != mCaretX) || (newCaret.line != mCaretY)) {
+        if (newCaret.isValid()) {
             mUndoList->addChange(ChangeReason::Delete, caretXY(), newCaret,
                   helper, mActiveSelectionMode);
             if (shouldAddGroupBreak)
@@ -5026,13 +5028,18 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
             // Create a string that contains everything on the first line up
             // to the selection mark, and everything on the last line after
             // the selection mark.
-            QString TempString = mDocument->getLine(startPos.line).left(startPos.ch)
-                + mDocument->getLine(endPos.line).mid(endPos.ch);
+            QString startLineLeft = mDocument->getLine(startPos.line).left(startPos.ch);
+            QString newString = startLineLeft + mDocument->getLine(endPos.line).mid(endPos.ch);
             // Delete all lines in the selection range.
-            properSetLine(startPos.line,TempString);
+            if (startLineLeft.trimmed().isEmpty()) {
+                mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
+                doLinesDeleted(startPos.line, endPos.line - startPos.line);
+            } else {
+                mDocument->deleteLines(startPos.line+1, endPos.line - startPos.line);
+                doLinesDeleted(startPos.line+1, endPos.line - startPos.line);
+            }
+            properSetLine(startPos.line,newString);
             internalSetCaretXY(startPos);
-            mDocument->deleteLines(startPos.line+1, endPos.line - startPos.line);
-            doLinesDeleted(startPos.line+1, endPos.line - startPos.line);
         }
         break;
     case SelectionMode::Column:
