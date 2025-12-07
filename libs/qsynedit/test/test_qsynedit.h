@@ -17,6 +17,7 @@ private:
 private slots:
     void onLinesDeleted(int line, int count);
     void onLinesInserted(int line, int count);
+
     void initEdit();
 
     void test_get_token_data();
@@ -41,6 +42,8 @@ private slots:
     void test_prev_word_end_data();
     void test_prev_word_end();
 
+    void test_delete_text_normal_data();
+    void test_delete_text_normal();
     void test_enter_chars_data();
     void test_enter_chars();
     void test_press_delete_data();

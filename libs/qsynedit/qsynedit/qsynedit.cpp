@@ -5011,6 +5011,8 @@ void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
 {
+    if (startPos == endPos)
+        return;
     if (mode == SelectionMode::Normal) {
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(endPos.line);

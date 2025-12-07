@@ -376,6 +376,80 @@ void TestQSyneditCpp::test_prev_word_end()
     QCOMPARE(pos, expect);
 }
 
+void TestQSyneditCpp::test_delete_text_normal_data()
+{
+    QTest::addColumn<QString>("afterEdit");
+    QTest::addColumn<QString>("expect_afterEdit");
+
+    QTest::addColumn<CharPos>("caret_pos");
+    QTest::addColumn<CharPos>("expect_caret_pos");
+
+    QTest::addColumn<QList<int>>("insert_starts");
+    QTest::addColumn<QList<int>>("expect_insert_starts");
+    QTest::addColumn<QList<int>>("insert_counts");
+    QTest::addColumn<QList<int>>("expect_insert_counts");
+    QTest::addColumn<QList<int>>("delete_starts");
+    QTest::addColumn<QList<int>>("expect_delete_starts");
+    QTest::addColumn<QList<int>>("delete_counts");
+    QTest::addColumn<QList<int>>("expect_delete_counts");
+
+    QTest::addColumn<QString>("afterUndo");
+    QTest::addColumn<QString>("expect_afterUndo");
+
+    QTest::addColumn<QString>("afterRedo");
+    QTest::addColumn<QString>("expect_afterRedo");
+
+    QTest::addColumn<QString>("afterUndo2");
+    QTest::addColumn<QString>("expect_afterUndo2");
+    {
+        initEdit();
+        mEdit->setCaretXY(CharPos{0,0});
+        mEdit->clearSelection();
+        QVERIFY(!mEdit->selAvail());
+        mEdit->deleteSelection();
+        QTestData& td = QTest::newRow("empty")<<mEdit->lineText(0)<<"#include <iostream>";
+        td<<mEdit->caretXY()<<CharPos{0,0};
+        td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
+        td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        QVERIFY(!mEdit->canUndo());
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+        td<<mEdit->lineText(0)<<"#include <iostream>";
+    }
+}
+
+void TestQSyneditCpp::test_delete_text_normal()
+{
+    QFETCH(QString, afterEdit);
+    QFETCH(QString, expect_afterEdit);
+    QFETCH(CharPos, caret_pos);
+    QFETCH(CharPos, expect_caret_pos);
+    QFETCH(QList<int>, insert_starts);
+    QFETCH(QList<int>, expect_insert_starts);
+    QFETCH(QList<int>, insert_counts);
+    QFETCH(QList<int>, expect_insert_counts);
+    QFETCH(QList<int>, delete_starts);
+    QFETCH(QList<int>, expect_delete_starts);
+    QFETCH(QList<int>, delete_counts);
+    QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QString, afterUndo);
+    QFETCH(QString, expect_afterUndo);
+    QFETCH(QString, afterRedo);
+    QFETCH(QString, expect_afterRedo);
+    QFETCH(QString, afterUndo2);
+    QFETCH(QString, expect_afterUndo2);
+
+    QCOMPARE(afterEdit, expect_afterEdit);
+    QCOMPARE(caret_pos, expect_caret_pos);
+    QCOMPARE(insert_starts, expect_insert_starts);
+    QCOMPARE(insert_counts, expect_insert_counts);
+    QCOMPARE(delete_starts, expect_delete_starts);
+    QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(afterUndo, expect_afterUndo);
+    QCOMPARE(afterRedo, expect_afterRedo);
+    QCOMPARE(afterUndo2, expect_afterUndo2);
+}
+
 void TestQSyneditCpp::test_enter_chars_data()
 {
     QTest::addColumn<QString>("afterEdit");
@@ -594,7 +668,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,0});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("file begin")<<mEdit->lineText(0)<<"include <iostream>";
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -612,7 +686,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(mEdit->fileEnd());
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("file End")<<mEdit->lineText(76)<<"}";
         td<<mEdit->caretXY()<<CharPos{1,76};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -625,7 +699,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{19,0});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("line end")<<mEdit->lineText(0)<<"#include <iostream>#include <mutex>";
         td<<mEdit->caretXY()<<CharPos{19,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -643,7 +717,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{19,0});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("line end 2")<<mEdit->lineText(1)<<"#include <condition_variable>";
         td<<mEdit->caretXY()<<CharPos{19,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -661,7 +735,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{4,47});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("end of empty line")<<mEdit->lineText(47)<<"        ~ThreadPool(){";
         td<<mEdit->caretXY()<<CharPos{4,47};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -679,7 +753,7 @@ void TestQSyneditCpp::test_press_delete_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{4,47});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("end of empty line 2")<<mEdit->lineText(48)<<"        stop.store(true);";
         td<<mEdit->caretXY()<<CharPos{4,47};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -699,7 +773,7 @@ void TestQSyneditCpp::test_press_delete_data()
         mEdit->setCaretXY(CharPos{11,0});
         mEdit->setSelBegin(CharPos{3,0});
         mEdit->setSelEnd(CharPos{11,0});
-        mEdit->doDeleteCurrentChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Delete);
         QTestData& td = QTest::newRow("selection")<<mEdit->lineText(0)<<"#inostream>";
         td<<mEdit->caretXY()<<CharPos{3,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -736,6 +810,7 @@ void TestQSyneditCpp::test_press_delete()
     QFETCH(QString, expect_afterRedo);
     QFETCH(QString, afterUndo2);
     QFETCH(QString, expect_afterUndo2);
+
     QCOMPARE(afterEdit, expect_afterEdit);
     QCOMPARE(caret_pos, expect_caret_pos);
     QCOMPARE(insert_starts, expect_insert_starts);
@@ -775,7 +850,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,0});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("file begin")<<mEdit->lineText(0)<<"#include <iostream>";
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -788,7 +863,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{1,76});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("file end")<<mEdit->lineText(76)<<"";
         td<<mEdit->caretXY()<<CharPos{0,76};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -806,7 +881,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,8});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (no empty line)-1")<<mEdit->lineText(7)<<"#include <functional>#include <vector>";
         td<<mEdit->caretXY()<<CharPos{21,7};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -824,7 +899,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,8});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (no empty line)-2")<<mEdit->lineText(8)<<"";
         td<<mEdit->caretXY()<<CharPos{21,7};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -842,7 +917,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,11});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (current line empty)-1")<<mEdit->lineText(10)<<"#define TEST 123";
         td<<mEdit->caretXY()<<CharPos{16,10};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -860,7 +935,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,11});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (current line empty)-2)")<<mEdit->lineText(11)<<"class ThreadPool";
         td<<mEdit->caretXY()<<CharPos{16,10};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -878,7 +953,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,10});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (previous line empty)-1")<<mEdit->lineText(9)<<"#define TEST 123";
         td<<mEdit->caretXY()<<CharPos{0,9};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -896,7 +971,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{0,10});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("begin of line (previous line empty)-2")<<mEdit->lineText(10)<<"";
         td<<mEdit->caretXY()<<CharPos{0,9};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -914,7 +989,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{10,12});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("mid of line")<<mEdit->lineText(12)<<"class ThradPool";
         td<<mEdit->caretXY()<<CharPos{9,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -932,7 +1007,7 @@ void TestQSyneditCpp::test_press_backspace_data()
     {
         initEdit();
         mEdit->setCaretXY(CharPos{16,12});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("end of line")<<mEdit->lineText(12)<<"class ThreadPoo";
         td<<mEdit->caretXY()<<CharPos{15,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -952,7 +1027,7 @@ void TestQSyneditCpp::test_press_backspace_data()
         mEdit->setCaretXY(CharPos{12,12});
         mEdit->setSelBegin(CharPos{8,12});
         mEdit->setSelEnd(CharPos{12,12});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("selection")<<mEdit->lineText(12)<<"class ThPool";
         td<<mEdit->caretXY()<<CharPos{8,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -972,7 +1047,7 @@ void TestQSyneditCpp::test_press_backspace_data()
         mEdit->setCaretXY(CharPos{4,0});
         mEdit->setSelBegin(CharPos{4,0});
         mEdit->setSelEnd(CharPos{6,2});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("multi line selection 1")<<mEdit->lineText(0)<<"#incde <condition_variable>";
         td<<mEdit->caretXY()<<CharPos{4,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -992,7 +1067,7 @@ void TestQSyneditCpp::test_press_backspace_data()
         mEdit->setCaretXY(CharPos{4,0});
         mEdit->setSelBegin(CharPos{4,0});
         mEdit->setSelEnd(CharPos{6,2});
-        mEdit->doDeletePrevChar();
+        QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
         QTestData& td = QTest::newRow("multi line selection 2")<<mEdit->lineText(2)<<"#include <queue>";
         td<<mEdit->caretXY()<<CharPos{4,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
@@ -1029,6 +1104,7 @@ void TestQSyneditCpp::test_press_backspace()
     QFETCH(QString, expect_afterRedo);
     QFETCH(QString, afterUndo2);
     QFETCH(QString, expect_afterUndo2);
+
     QCOMPARE(afterEdit, expect_afterEdit);
     QCOMPARE(caret_pos, expect_caret_pos);
     QCOMPARE(insert_starts, expect_insert_starts);
