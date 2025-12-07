@@ -605,8 +605,8 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void doLinesDeleted(int firstLine, int count);
-    void doLinesInserted(int firstLine, int count);
+    void notifyLinesDeleted(int firstLine, int count);
+    void noftifyLinesInserted(int firstLine, int count);
     void properSetLine(int line, const QString& sLineText, bool notify = true);
 
     //primitive edit operations
