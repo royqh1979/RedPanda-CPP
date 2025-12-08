@@ -410,7 +410,7 @@ public:
 
     int findPrevLineBySeq(int startLine, size_t lineSeq) const;
 
-    const PDocument& document() const;
+    const std::shared_ptr<const Document> document() const;
     bool empty();
 
     QString selText() const;
@@ -522,6 +522,7 @@ protected:
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
+    void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
@@ -605,14 +606,12 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void notifyLinesDeleted(int firstLine, int count);
-    void noftifyLinesInserted(int firstLine, int count);
     void properSetLine(int line, const QString& sLineText, bool notify = true);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
     void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
-    int doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
+    void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
     void doTrimTrailingSpaces();

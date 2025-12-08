@@ -69,13 +69,13 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mUndoing = false;
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
-    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
-    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
+//    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
+//    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
     connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
-    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
-    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
+//    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
+//    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
 
     mGutterWidth = 0;
 
@@ -1000,6 +1000,15 @@ void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posS
     decPaintLock();
 }
 
+void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
+{
+    incPaintLock();
+    clearAll();
+    mDocument->loadFromFile(filename, encoding, realEncoding);
+    onLinesInserted(0, mDocument->count());
+    decPaintLock();
+}
+
 void QSynEdit::collapseAll()
 {
     incPaintLock();
@@ -1704,10 +1713,10 @@ void QSynEdit::doDeletePrevChar()
             QString lastLine = mDocument->getLine(mCaretY-1);
             if (lastLine.trimmed().isEmpty()) {
                 mDocument->deleteLine(mCaretY-1);
-                notifyLinesDeleted(mCaretY-1, 1);
+                onLinesDeleted(mCaretY-1, 1);
             } else {
                 mDocument->deleteLine(mCaretY);
-                notifyLinesDeleted(mCaretY, 1);
+                onLinesDeleted(mCaretY, 1);
             }
             properSetLine(mCaretY-1, lastLine+tempStr);
             internalSetCaretXY(CharPos{lastLine.length(), mCaretY - 1});
@@ -1794,10 +1803,10 @@ void QSynEdit::doDeleteCurrentChar()
                 QString newString = tempStr + mDocument->getLine(mCaretY+1);
                 if (tempStr.trimmed().isEmpty()) {
                     mDocument->deleteLine(mCaretY);
-                    notifyLinesDeleted(mCaretY, 1);
+                    onLinesDeleted(mCaretY, 1);
                 } else {
                     mDocument->deleteLine(mCaretY + 1);
-                    notifyLinesDeleted(mCaretY + 1, 1);
+                    onLinesDeleted(mCaretY + 1, 1);
                 }
                 properSetLine(mCaretY, newString);
             }
@@ -1959,7 +1968,7 @@ void QSynEdit::doDuplicateLine()
         QString s = lineText();
         beginEditing();
         mDocument->insertLine(mCaretY, lineText());
-        noftifyLinesInserted(mCaretY, 1);
+        onLinesInserted(mCaretY, 1);
         addCaretToUndo();
         mUndoList->addChange(ChangeReason::LineBreak,
                              CharPos{s.length(),mCaretY},
@@ -1999,11 +2008,11 @@ void QSynEdit::doMoveSelUp()
         // Delete line above selection
         QString s = mDocument->getLine(origBlockBeginLine - 1); // before start, 0 based
         mDocument->deleteLine(origBlockBeginLine - 1); // before start, 0 based
-        notifyLinesDeleted(origBlockBeginLine - 1, 1); // before start, 0 based
+        onLinesDeleted(origBlockBeginLine - 1, 1); // before start, 0 based
 
         // Insert line below selection
         mDocument->insertLine(origBlockEndLine, s);
-        noftifyLinesInserted(origBlockEndLine, 1);
+        onLinesInserted(origBlockEndLine, 1);
         // Restore caret and selection
         setCaretAndSelection(
                   CharPos{mCaretX, origBlockBeginLine - 1},
@@ -2043,11 +2052,11 @@ void QSynEdit::doMoveSelDown()
         // Delete line below selection
         QString s = mDocument->getLine(origBlockEndLine + 1); // after end, 0 based
         mDocument->deleteLine(origBlockEndLine + 1); // after end, 0 based
-        notifyLinesDeleted(origBlockEndLine + 1, 1);
+        onLinesDeleted(origBlockEndLine + 1, 1);
 
         // Insert line above selection
         mDocument->insertLine(origBlockBeginLine, s);
-        noftifyLinesInserted(origBlockBeginLine , 1);
+        onLinesInserted(origBlockBeginLine , 1);
 
         // Restore caret and selection
         setCaretAndSelection(
@@ -2070,10 +2079,12 @@ void QSynEdit::doMoveSelDown()
 
 void QSynEdit::clearAll()
 {
+    incPaintLock();
+    onLinesDeleted(0,mDocument->count());
     mDocument->clear();
-    mUndoList->clear();
-    mRedoList->clear();
+    clearUndo();
     setModified(false);
+    decPaintLock();
 }
 
 void QSynEdit::insertLine(bool moveCaret)
@@ -2118,7 +2129,6 @@ void QSynEdit::insertLine(bool moveCaret)
 
     // This is sloppy, but the Right Thing would be to track the column of markers
     // too, so they could be moved depending on whether they are after the caret...
-    int insDelta = (mCaretX == 0)?1:0;
     QString leftLineText = lineText().mid(0, mCaretX);
     QString rightLineText = lineText().mid(mCaretX);
     if (!mUndoing)
@@ -2182,10 +2192,14 @@ void QSynEdit::insertLine(bool moveCaret)
                     SelectionMode::Normal);
         }
     }
+    if (leftLineText.trimmed().isEmpty()) {
+        onLinesInserted(mCaretY, nLinesInserted);
+    } else {
+        onLinesInserted(mCaretY+1, nLinesInserted);
+    }
+
     if (moveCaret)
         internalSetCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
-
-    noftifyLinesInserted(mCaretY - insDelta, nLinesInserted);
     setSelBegin(caretXY());
     setSelEnd(caretXY());
     ensureCaretVisible();
@@ -3969,13 +3983,18 @@ void QSynEdit::doUndoItem()
             // If there's no selection, we have to set
             // the Caret's position manualy.
             internalSetCaretXY(item->changeStartPos());
-            if (mCaretY > 0) {
-                QString TmpStr = mDocument->getLine(mCaretY);
-                if ( (mCaretX > TmpStr.length()) && (leftSpaces(s) == 0))
-                    TmpStr = TmpStr + QString(mCaretX - TmpStr.length(), ' ');
-                properSetLine(mCaretY, TmpStr + s);
-                mDocument->deleteLine(mCaretY+1);
-                notifyLinesDeleted(mCaretY+1, 1);
+            if (mCaretY >= 0) {
+                QString tmpStr = mDocument->getLine(mCaretY);
+                if ( (mCaretX > tmpStr.length()) && (leftSpaces(s) == 0))
+                    tmpStr = tmpStr + QString(mCaretX - tmpStr.length(), ' ');
+                if (tmpStr.trimmed().isEmpty()) {
+                    mDocument->deleteLine(mCaretY);
+                    onLinesDeleted(mCaretY, 1);
+                } else {
+                    mDocument->deleteLine(mCaretY+1);
+                    onLinesDeleted(mCaretY+1, 1);
+                }
+                properSetLine(mCaretY, tmpStr + s);
             }
             mRedoList->addRedo(
                         item->changeReason(),
@@ -4413,7 +4432,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
     invalidate();
 }
 
-const PDocument& QSynEdit::document() const
+const std::shared_ptr<const Document> QSynEdit::document() const
 {
     return mDocument;
 }
@@ -4992,18 +5011,6 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
     return result;
 }
 
-void QSynEdit::notifyLinesDeleted(int firstLine, int count)
-{
-    if (count>0)
-        emit linesDeleted(firstLine, count);
-}
-
-void QSynEdit::noftifyLinesInserted(int firstLine, int count)
-{
-    if (count>0)
-        emit linesInserted(firstLine, count);
-}
-
 void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
 {
     mDocument->putLine(line,sLineText,notify);
@@ -5041,10 +5048,10 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
             // Delete all lines in the selection range.
             if (startLineLeft.trimmed().isEmpty()) {
                 mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
-                notifyLinesDeleted(startPos.line, endPos.line - startPos.line);
+                onLinesDeleted(startPos.line, endPos.line - startPos.line);
             } else {
                 mDocument->deleteLines(startPos.line+1, endPos.line - startPos.line);
-                notifyLinesDeleted(startPos.line+1, endPos.line - startPos.line);
+                onLinesDeleted(startPos.line+1, endPos.line - startPos.line);
             }
             properSetLine(startPos.line,newString);
             internalSetCaretXY(startPos);
@@ -5110,8 +5117,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
     CharPos newPos;
     switch(mode){
     case SelectionMode::Normal:
-        insertedLines = doInsertTextByNormalMode(pos,text, newPos);
-        noftifyLinesInserted(pos.line, insertedLines);
+        doInsertTextByNormalMode(pos,text, newPos);
         internalSetCaretXY(newPos);
         setSelBegin(newPos);
         ensureCaretVisible();
@@ -5121,7 +5127,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
         CharPos be=selEnd();
         int lenBefore = mDocument->getLine(be.line).length();
         insertedLines = doInsertTextByColumnMode(pos, text, startLine,endLine);
-        noftifyLinesInserted(endLine-insertedLines+1,insertedLines);
+        onLinesInserted(endLine-insertedLines+1,insertedLines);
         if (!text.isEmpty()) {
             int textLen = mDocument->getLine(be.line).length()-lenBefore;
             bb.ch+=textLen;
@@ -5137,7 +5143,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
 
 }
 
-int QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos)
+void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos)
 {
     QString sLeftSide;
     QString sRightSide;
@@ -5145,7 +5151,6 @@ int QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& te
     QElapsedTimer timer;
     bool bChangeScroll;
 //    int SpaceCount;
-    int result = 0;
     QString line=mDocument->getLine(pos.line);
     sLeftSide = line.left(pos.ch);
     sRightSide = line.mid(pos.ch);
@@ -5161,8 +5166,14 @@ int QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& te
             str = sLeftSide + s;
         } else
             str = sLeftSide + text[0];
+        if (sLeftSide.trimmed().isEmpty()) {
+            mDocument->insertLines(caretY, text.length()-1);
+            onLinesInserted(caretY, text.length()-1);
+        } else {
+            mDocument->insertLines(caretY+1, text.length()-1);
+            onLinesInserted(caretY+1, text.length()-1);
+        }
         properSetLine(caretY, str, false);
-        mDocument->insertLines(caretY+1, text.length()-1);
     } else {
         str = sLeftSide + text[0] + sRightSide;
         properSetLine(caretY, str, false);
@@ -5190,7 +5201,6 @@ int QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& te
         }
         properSetLine(caretY, str,false);
         reparseLines(caretY,caretY+1, false, false);
-        result++;
     }
     reparseLines(caretY, caretY+1);
     bChangeScroll = !mOptions.testFlag(EditorOption::ScrollPastEol);
@@ -5206,8 +5216,7 @@ int QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& te
                     ChangeReason::Insert,
                     pos,newPos,
                     QStringList(),SelectionMode::Normal);
-    }
-    return result;
+    }  
 }
 
 int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine)
@@ -6289,6 +6298,8 @@ void QSynEdit::onLinesChanging()
 
 void QSynEdit::onLinesDeleted(int line, int count)
 {
+    if (count<=0)
+        return;
     bool needRescanFold = false;
     if (useCodeFolding())
         foldOnLinesDeleted(line, count, needRescanFold);
@@ -6296,10 +6307,14 @@ void QSynEdit::onLinesDeleted(int line, int count)
         reparseLines(line, line + count, needRescanFold);
     }
     invalidateLines(line, INT_MAX);
+    updateVScrollbar();
+    emit linesDeleted(line,count);
 }
 
 void QSynEdit::onLinesInserted(int line, int count)
 {
+    if (count<=0)
+        return;
     if (useCodeFolding())
         foldOnLinesInserted(line, count);
     if (mSyntaxer->needsLineState()) {
@@ -6309,6 +6324,8 @@ void QSynEdit::onLinesInserted(int line, int count)
         reparseLines(line, line + count);
     }
     invalidateLines(line, INT_MAX);
+    updateVScrollbar();
+    emit linesInserted(line, count);
 }
 
 void QSynEdit::onLinesPutted(int line)

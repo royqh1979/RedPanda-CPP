@@ -48,11 +48,12 @@ private slots:
     void test_copy_paste();
     void test_enter_chars_data();
     void test_enter_chars();
-    void test_press_delete_data();
-    void test_press_delete();
-    void test_press_backspace_data();
-    void test_press_backspace();
-//    void test_press_delete();
+    void test_delete_char_data();
+    void test_delete_char();
+    void test_backspace_data();
+    void test_backspace();
+    void test_line_break_data();
+    void test_line_break();
 };
 
 }
