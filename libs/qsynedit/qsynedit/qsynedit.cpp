@@ -1921,7 +1921,10 @@ void QSynEdit::doDeleteLine()
     }
     doDeleteText(startPos, endPos, SelectionMode::Normal);
     endEditing();
-    internalSetCaretXY(CharPos{0, oldCaretY});
+    if (isLastLine) {
+        internalSetCaretXY(fileEnd());
+    } else
+        internalSetCaretXY(CharPos{0, oldCaretY});
 }
 
 void QSynEdit::doSelectLine()
@@ -5502,7 +5505,8 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         addLeftTopToUndo();
         addCaretToUndo();
         addSelectionToUndo();
-        moveCaretToLineEnd(false, false);
+        if (mCaretY>=0 && mCaretY<mDocument->count())
+            mCaretX = mDocument->getLine(mCaretY).length();
         doBreakLine();
         endEditing();
         break;
