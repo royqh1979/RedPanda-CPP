@@ -252,6 +252,7 @@ public:
     CharPos prevWordBegin(const CharPos& pos) const;
     CharPos prevWordEnd(const CharPos &pos) const;
     CharPos nextWordBegin(const CharPos & pos) const;
+    CharPos nextWordEnd(const CharPos &pos) const;
     CharPos fileBegin() const { return CharPos{0,0}; }
     CharPos fileEnd() const;
 
@@ -637,8 +638,11 @@ private:
     //Commands
     void doDeletePrevChar();
     void doDeleteCurrentChar();
-    void doDeleteWord();
     void doDeleteToEOL();
+    void doDeleteCurrentToken();
+    void doDeleteToNextWordBegin();
+    void doDeleteToNextWordEnd();
+
     void doDeleteToWordStart();
     void doDeleteToWordEnd();
     void doDeleteFromBOL();

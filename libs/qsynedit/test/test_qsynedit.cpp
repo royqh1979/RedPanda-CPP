@@ -355,6 +355,33 @@ void TestQSyneditCpp::test_next_word_begin()
     QCOMPARE(pos, expect);
 }
 
+void TestQSyneditCpp::test_next_word_end_data()
+{
+    initEdit();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+
+    QTest::newRow("file end")<<mEdit->nextWordEnd(CharPos{100,100})<<CharPos{1,76};
+    QTest::newRow("file start")<<mEdit->nextWordEnd(CharPos{0,0})<<CharPos{8,0};
+    QTest::newRow("line end")<<mEdit->nextWordEnd(CharPos{17,8})<<CharPos{7,10};
+    QTest::newRow("line start")<<mEdit->nextWordEnd(CharPos{0,10})<<CharPos{7,10};
+    QTest::newRow("word start")<<mEdit->nextWordEnd(CharPos{8,10})<<CharPos{12,10};
+    QTest::newRow("word mid")<<mEdit->nextWordEnd(CharPos{10,10})<<CharPos{12,10};
+    QTest::newRow("word end")<<mEdit->nextWordEnd(CharPos{12,10})<<CharPos{16,10};
+    QTest::newRow("in space")<<mEdit->nextWordEnd(CharPos{4,19})<<CharPos{21,19};
+    QTest::newRow("start of word before symbol")<<mEdit->nextWordEnd(CharPos{37,21})<<CharPos{40,21};
+    QTest::newRow("mid of word before symbol")<<mEdit->nextWordEnd(CharPos{38,21})<<CharPos{40,21};
+    QTest::newRow("start of symbol before word")<<mEdit->nextWordEnd(CharPos{40,21})<<CharPos{42,21};
+    QTest::newRow("mid of symbol before word")<<mEdit->nextWordEnd(CharPos{41,21})<<CharPos{42,21};
+}
+
+void TestQSyneditCpp::test_next_word_end()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
 void TestQSyneditCpp::test_prev_word_end_data()
 {
     initEdit();

@@ -1317,6 +1317,25 @@ CharPos QSynEdit::nextWordBegin(const CharPos &pos) const
     return (p.isValid())?p:fileEnd();
 }
 
+CharPos QSynEdit::nextWordEnd(const CharPos &pos) const
+{
+    if (mDocument->count() == 0 || !pos.isValid())
+        return fileBegin();
+    if (pos.line>=mDocument->count()) {
+        return fileEnd();
+    }
+    CharPos p;
+    if (pos.ch>=mDocument->getLine(pos.line).length()
+            || isSpaceChar(charAt(pos))) {
+        p = nextNonSpaceChar(pos);
+        if (p.isValid())
+            p = getTokenEnd(p);
+    } else {
+        p = getTokenEnd(pos);
+    }
+    return (p.isValid())?p:fileEnd();
+}
+
 CharPos QSynEdit::fileEnd() const
 {
     if (mDocument->count()==0)
@@ -1820,11 +1839,11 @@ void QSynEdit::doDeleteCurrentChar()
     }
 }
 
-void QSynEdit::doDeleteWord()
+void QSynEdit::doDeleteCurrentToken()
 {
     if (mReadOnly)
         return;
-    if (mCaretX>lineText().length()+1)
+    if (mCaretX>lineText().length())
         return;
     CharPos pos{caretXY()};
     int start;
@@ -1837,6 +1856,23 @@ void QSynEdit::doDeleteWord()
             deleteFromTo(wordStart, wordEnd);
         }
     }
+}
+
+void QSynEdit::doDeleteToNextWordBegin()
+{
+    if (mReadOnly)
+        return;
+    CharPos pos{caretXY()};
+    deleteFromTo(pos, nextWordBegin(pos));
+}
+
+void QSynEdit::doDeleteToNextWordEnd()
+{
+    if (mReadOnly)
+        return;
+    CharPos pos{caretXY()};
+    deleteFromTo(pos, nextWordEnd(pos));
+
 }
 
 void QSynEdit::doDeleteToEOL()
@@ -1856,11 +1892,8 @@ void QSynEdit::doDeleteToWordStart()
     if (mCaretX>lineText().length()+1)
         return;
 
-    CharPos start = getTokenStart(caretXY());
+    CharPos start = prevWordBegin(caretXY());
     CharPos end = caretXY();
-    if (start==end) {
-        start = prevWordEnd(start);
-    }
     deleteFromTo(start,end);
 }
 
@@ -5467,7 +5500,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         doDeleteCurrentChar();
         break;
     case EditCommand::DeleteWord:
-        doDeleteWord();
+        doDeleteCurrentToken();
         break;
     case EditCommand::DeleteEOL:
         doDeleteToEOL();
