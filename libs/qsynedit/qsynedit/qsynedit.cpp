@@ -2087,7 +2087,7 @@ void QSynEdit::clearAll()
     decPaintLock();
 }
 
-void QSynEdit::insertLine(bool moveCaret)
+void QSynEdit::doBreakLine()
 {
     if (mReadOnly)
         return;
@@ -2105,7 +2105,6 @@ void QSynEdit::insertLine(bool moveCaret)
     }
 
     QString temp = lineText();
-
     if (mCaretX>lineText().length()) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
@@ -2198,8 +2197,7 @@ void QSynEdit::insertLine(bool moveCaret)
         onLinesInserted(mCaretY+1, nLinesInserted);
     }
 
-    if (moveCaret)
-        internalSetCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
+    internalSetCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
     setSelBegin(caretXY());
     setSelEnd(caretXY());
     ensureCaretVisible();
@@ -5496,11 +5494,8 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::ClearAll:
         clearAll();
         break;
-    case EditCommand::InsertLine:
-        insertLine(false);
-        break;
     case EditCommand::LineBreak:
-        insertLine(true);
+        doBreakLine();
         break;
     case EditCommand::LineBreakAtEnd:
         beginEditing();
@@ -5508,7 +5503,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         addCaretToUndo();
         addSelectionToUndo();
         moveCaretToLineEnd(false, false);
-        insertLine(true);
+        doBreakLine();
         endEditing();
         break;
     case EditCommand::Tab:

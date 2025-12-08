@@ -119,7 +119,6 @@ enum class EditCommand {
     DeleteLine      = 507,  // Delete current line
     ClearAll        = 508,  // Delete everything
     LineBreak       = 509,  // Break line at current position, move caret to new line
-    InsertLine      = 510,  // Break line at current position, leave caret
     Char            = 511,  // Insert a character at current position
     DuplicateLine   = 512,  // Duplicate current line
     MoveSelUp       = 513,  // Move selection up

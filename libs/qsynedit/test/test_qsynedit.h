@@ -52,8 +52,10 @@ private slots:
     void test_delete_char();
     void test_backspace_data();
     void test_backspace();
-    void test_line_break_data();
-    void test_line_break();
+    void test_break_line_data();
+    void test_break_line();
+    void test_break_line_at_end_data();
+    void test_break_line_at_end();
 };
 
 }

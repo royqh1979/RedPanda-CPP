@@ -648,7 +648,7 @@ private:
     void doMoveSelUp();
     void doMoveSelDown();
     void clearAll();
-    void insertLine(bool moveCaret);
+    void doBreakLine();
     void doTabKey();
     void doShiftTabKey();
     void doBlockIndent();
