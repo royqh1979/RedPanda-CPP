@@ -640,11 +640,10 @@ private:
     void doDeleteCurrentChar();
     void doDeleteToEOL();
     void doDeleteCurrentToken();
-    void doDeleteToNextWordBegin();
-    void doDeleteToNextWordEnd();
 
     void doDeleteToWordStart();
     void doDeleteToWordEnd();
+    void doDeleteCurrentTokenAndTralingSpaces();
     void doDeleteFromBOL();
     void doDeleteLine();
 

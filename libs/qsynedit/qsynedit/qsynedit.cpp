@@ -1858,23 +1858,6 @@ void QSynEdit::doDeleteCurrentToken()
     }
 }
 
-void QSynEdit::doDeleteToNextWordBegin()
-{
-    if (mReadOnly)
-        return;
-    CharPos pos{caretXY()};
-    deleteFromTo(pos, nextWordBegin(pos));
-}
-
-void QSynEdit::doDeleteToNextWordEnd()
-{
-    if (mReadOnly)
-        return;
-    CharPos pos{caretXY()};
-    deleteFromTo(pos, nextWordEnd(pos));
-
-}
-
 void QSynEdit::doDeleteToEOL()
 {
     if (mReadOnly)
@@ -1892,8 +1875,11 @@ void QSynEdit::doDeleteToWordStart()
     if (mCaretX>lineText().length()+1)
         return;
 
-    CharPos start = prevWordBegin(caretXY());
     CharPos end = caretXY();
+    CharPos start = getTokenStart(end);
+    if (start==end)
+        start = prevWordEnd(end);
+    if (start.isValid() && end.isValid())
     deleteFromTo(start,end);
 }
 
@@ -1905,11 +1891,22 @@ void QSynEdit::doDeleteToWordEnd()
         return;
 
     CharPos start = caretXY();
-    CharPos end = getTokenEnd(caretXY());
-    if (start == end) {
-        end = nextWordBegin(end);
-    }
-    deleteFromTo(start,end);
+    CharPos end = getTokenEnd(start);
+    if (start.isValid() && end.isValid())
+        deleteFromTo(start,end);
+}
+
+void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
+{
+    if (mReadOnly)
+        return;
+    if (mCaretX>lineText().length()+1)
+        return;
+
+    CharPos start = getTokenStart(caretXY());
+    CharPos end = nextWordBegin(caretXY());
+    if (start.isValid() && end.isValid())
+        deleteFromTo(start,end);
 }
 
 void QSynEdit::doDeleteFromBOL()
