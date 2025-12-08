@@ -58,6 +58,9 @@ private slots:
     void test_break_line_at_end();
     void test_delete_current_line_data();
     void test_delete_current_line();
+    void test_duplicate_current_line_data();
+    void test_duplicate_current_line();
+
 };
 
 }

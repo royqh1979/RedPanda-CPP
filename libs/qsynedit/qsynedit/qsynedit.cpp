@@ -1970,8 +1970,8 @@ void QSynEdit::doDuplicateLine()
             return;
         QString s = lineText();
         beginEditing();
-        mDocument->insertLine(mCaretY, lineText());
-        onLinesInserted(mCaretY, 1);
+        mDocument->insertLine(mCaretY+1, lineText());
+        onLinesInserted(mCaretY+1, 1);
         addCaretToUndo();
         mUndoList->addChange(ChangeReason::LineBreak,
                              CharPos{s.length(),mCaretY},
@@ -1980,7 +1980,7 @@ void QSynEdit::doDuplicateLine()
                              CharPos{0,mCaretY+1},
                              CharPos{s.length(),mCaretY+1}, QStringList(), SelectionMode::Normal);
         endEditing();
-        internalSetCaretXY(CharPos{0, mCaretY}); // like seen in the Delphi editor
+        internalSetCaretXY(CharPos{0, mCaretY});
     }
 }
 
