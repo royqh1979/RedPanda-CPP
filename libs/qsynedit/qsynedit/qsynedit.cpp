@@ -1951,7 +1951,10 @@ void QSynEdit::doDeleteLine()
     }
     doDeleteText(startPos, endPos, SelectionMode::Normal);
     endEditing();
-    internalSetCaretXY(CharPos{0, oldCaretY});
+    if (isLastLine) {
+        internalSetCaretXY(fileEnd());
+    } else
+        internalSetCaretXY(CharPos{0, oldCaretY});
 }
 
 void QSynEdit::doSelectLine()
@@ -1997,8 +2000,8 @@ void QSynEdit::doDuplicateLine()
             return;
         QString s = lineText();
         beginEditing();
-        mDocument->insertLine(mCaretY, lineText());
-        onLinesInserted(mCaretY, 1);
+        mDocument->insertLine(mCaretY+1, lineText());
+        onLinesInserted(mCaretY+1, 1);
         addCaretToUndo();
         mUndoList->addChange(ChangeReason::LineBreak,
                              CharPos{s.length(),mCaretY},
@@ -2007,7 +2010,7 @@ void QSynEdit::doDuplicateLine()
                              CharPos{0,mCaretY+1},
                              CharPos{s.length(),mCaretY+1}, QStringList(), SelectionMode::Normal);
         endEditing();
-        internalSetCaretXY(CharPos{0, mCaretY}); // like seen in the Delphi editor
+        internalSetCaretXY(CharPos{0, mCaretY});
     }
 }
 
@@ -2117,7 +2120,7 @@ void QSynEdit::clearAll()
     decPaintLock();
 }
 
-void QSynEdit::insertLine(bool moveCaret)
+void QSynEdit::doBreakLine()
 {
     if (mReadOnly)
         return;
@@ -2135,7 +2138,6 @@ void QSynEdit::insertLine(bool moveCaret)
     }
 
     QString temp = lineText();
-
     if (mCaretX>lineText().length()) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
@@ -2228,8 +2230,7 @@ void QSynEdit::insertLine(bool moveCaret)
         onLinesInserted(mCaretY+1, nLinesInserted);
     }
 
-    if (moveCaret)
-        internalSetCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
+    internalSetCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
     setSelBegin(caretXY());
     setSelEnd(caretXY());
     ensureCaretVisible();
@@ -5526,19 +5527,17 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::ClearAll:
         clearAll();
         break;
-    case EditCommand::InsertLine:
-        insertLine(false);
-        break;
     case EditCommand::LineBreak:
-        insertLine(true);
+        doBreakLine();
         break;
     case EditCommand::LineBreakAtEnd:
         beginEditing();
         addLeftTopToUndo();
         addCaretToUndo();
         addSelectionToUndo();
-        moveCaretToLineEnd(false, false);
-        insertLine(true);
+        if (mCaretY>=0 && mCaretY<mDocument->count())
+            mCaretX = mDocument->getLine(mCaretY).length();
+        doBreakLine();
         endEditing();
         break;
     case EditCommand::Tab:
