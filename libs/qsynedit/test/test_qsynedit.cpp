@@ -735,6 +735,11 @@ void TestQSyneditCpp::test_enter_chars_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -753,6 +758,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{3,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -774,6 +780,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{5,1};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -795,6 +802,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{4,76};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(76)<<"}";
@@ -818,6 +826,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{3,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -841,6 +850,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{11,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -864,6 +874,7 @@ void TestQSyneditCpp::test_enter_chars_data()
         td<<mEdit->caretXY()<<CharPos{11,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -890,6 +901,10 @@ void TestQSyneditCpp::test_enter_chars()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -903,6 +918,8 @@ void TestQSyneditCpp::test_enter_chars()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -925,6 +942,11 @@ void TestQSyneditCpp::test_delete_char_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -941,6 +963,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -959,6 +982,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{1,76};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
@@ -972,6 +996,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{19,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -990,6 +1015,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{19,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -1008,6 +1034,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{4,47};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{47}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(47)<<"    ";
@@ -1026,6 +1053,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{4,47};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{47}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(48)<<"    ~ThreadPool(){";
@@ -1046,6 +1074,7 @@ void TestQSyneditCpp::test_delete_char_data()
         td<<mEdit->caretXY()<<CharPos{3,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -1072,6 +1101,10 @@ void TestQSyneditCpp::test_delete_char()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1085,6 +1118,8 @@ void TestQSyneditCpp::test_delete_char()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -1107,6 +1142,11 @@ void TestQSyneditCpp::test_backspace_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -1123,6 +1163,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -1136,6 +1177,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{0,76};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(76)<<"}";
@@ -1154,6 +1196,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{21,7};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{8}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(7)<<"#include <functional>";
@@ -1172,6 +1215,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{21,7};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{8}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(8)<<"#include <vector>";
@@ -1190,6 +1234,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{16,10};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{11}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(10)<<"#define TEST 123";
@@ -1208,6 +1253,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{16,10};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{11}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(11)<<"";
@@ -1226,6 +1272,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{0,9};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{9}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(9)<<"";
@@ -1244,6 +1291,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{0,9};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{9}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(10)<<"#define TEST 123";
@@ -1262,6 +1310,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{9,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(12)<<"class ThreadPool";
@@ -1280,6 +1329,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{15,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(12)<<"class ThreadPool";
@@ -1300,6 +1350,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{8,12};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(12)<<"class ThreadPool";
@@ -1320,6 +1371,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{4,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{2};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -1340,6 +1392,7 @@ void TestQSyneditCpp::test_backspace_data()
         td<<mEdit->caretXY()<<CharPos{4,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{1}<<mDeleteLineCounts<<QList<int>{2};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(2)<<"#include <condition_variable>";
@@ -1366,6 +1419,10 @@ void TestQSyneditCpp::test_backspace()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1379,6 +1436,8 @@ void TestQSyneditCpp::test_backspace()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -1401,6 +1460,11 @@ void TestQSyneditCpp::test_break_line_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -1417,6 +1481,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,1};
         td<<mInsertStartLines<<QList<int>{0}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -1435,6 +1500,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,77};
         td<<mInsertStartLines<<QList<int>{77}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
@@ -1456,6 +1522,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,28};
         td<<mInsertStartLines<<QList<int>{27}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(27)<<"                        return;";
@@ -1474,6 +1541,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,28};
         td<<mInsertStartLines<<QList<int>{27}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(28)<<"                    ";
@@ -1492,6 +1560,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,16};
         td<<mInsertStartLines<<QList<int>{16}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(15)<<"    ThreadPool(uint32_t num):stop{false}";
@@ -1510,6 +1579,7 @@ void TestQSyneditCpp::test_break_line_data()
         td<<mEdit->caretXY()<<CharPos{0,16};
         td<<mInsertStartLines<<QList<int>{16}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(16)<<"    {";
@@ -1536,6 +1606,10 @@ void TestQSyneditCpp::test_break_line()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1549,6 +1623,8 @@ void TestQSyneditCpp::test_break_line()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -1571,6 +1647,11 @@ void TestQSyneditCpp::test_break_line_at_end_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -1587,6 +1668,7 @@ void TestQSyneditCpp::test_break_line_at_end_data()
         td<<mEdit->caretXY()<<CharPos{0,1};
         td<<mInsertStartLines<<QList<int>{1}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -1605,6 +1687,7 @@ void TestQSyneditCpp::test_break_line_at_end_data()
         td<<mEdit->caretXY()<<CharPos{0,77};
         td<<mInsertStartLines<<QList<int>{77}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
@@ -1626,6 +1709,7 @@ void TestQSyneditCpp::test_break_line_at_end_data()
         td<<mEdit->caretXY()<<CharPos{0,16};
         td<<mInsertStartLines<<QList<int>{16}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(15)<<"    ThreadPool(uint32_t num):stop{false}";
@@ -1644,6 +1728,7 @@ void TestQSyneditCpp::test_break_line_at_end_data()
         td<<mEdit->caretXY()<<CharPos{0,16};
         td<<mInsertStartLines<<QList<int>{16}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(16)<<"    {";
@@ -1670,6 +1755,10 @@ void TestQSyneditCpp::test_break_line_at_end()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1683,6 +1772,8 @@ void TestQSyneditCpp::test_break_line_at_end()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -1705,6 +1796,11 @@ void TestQSyneditCpp::test_delete_current_line_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -1721,6 +1817,7 @@ void TestQSyneditCpp::test_delete_current_line_data()
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{0}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(0)<<"#include <iostream>";
@@ -1739,6 +1836,7 @@ void TestQSyneditCpp::test_delete_current_line_data()
         td<<mEdit->caretXY()<<CharPos{7,75};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{76}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         td<<mEdit->lineText(75)<<"    }  ";
         td<<mEdit->lineText(75)<<"    }  ";
         td<<mEdit->lineText(75)<<"    }  ";
@@ -1760,6 +1858,7 @@ void TestQSyneditCpp::test_delete_current_line_data()
         td<<mEdit->caretXY()<<CharPos{0,60};
         td<<mInsertStartLines<<QList<int>{}<<mInsertLineCounts<<QList<int>{};
         td<<mDeleteStartLines<<QList<int>{60}<<mDeleteLineCounts<<QList<int>{1};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(60)<<"    std::condition_variable conv;";
@@ -1786,6 +1885,10 @@ void TestQSyneditCpp::test_delete_current_line()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1799,6 +1902,8 @@ void TestQSyneditCpp::test_delete_current_line()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
@@ -1821,6 +1926,11 @@ void TestQSyneditCpp::test_duplicate_current_line_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -1837,6 +1947,7 @@ void TestQSyneditCpp::test_duplicate_current_line_data()
         td<<mEdit->caretXY()<<CharPos{0,0};
         td<<mInsertStartLines<<QList<int>{1}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -1855,6 +1966,7 @@ void TestQSyneditCpp::test_duplicate_current_line_data()
         td<<mEdit->caretXY()<<CharPos{0,76};
         td<<mInsertStartLines<<QList<int>{77}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
         td<<mEdit->lineText(76)<<"}";
@@ -1876,6 +1988,7 @@ void TestQSyneditCpp::test_duplicate_current_line_data()
         td<<mEdit->caretXY()<<CharPos{0,61};
         td<<mInsertStartLines<<QList<int>{62}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(62)<<"    std::vector<std::thread> threads;";
@@ -1902,6 +2015,10 @@ void TestQSyneditCpp::test_duplicate_current_line()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -1915,6 +2032,8 @@ void TestQSyneditCpp::test_duplicate_current_line()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);

@@ -486,8 +486,7 @@ void Document::putLine(int index, const QString &s, bool notify) {
         if (index<0 || index>=mLines.count()) {
             listIndexOutOfBounds(index);
         }
-        if (notify)
-            beginUpdate();
+        beginUpdate();
         mLines[index]->setLineText(s);
         if (mIndexOfLongestLine == index) {
             // width is invalidated, so we must recalculate longest line
@@ -495,8 +494,7 @@ void Document::putLine(int index, const QString &s, bool notify) {
         }
         if (notify)
             emit putted(index);
-        if (notify)
-            endUpdate();
+        endUpdate();
     }
 }
 

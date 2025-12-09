@@ -71,7 +71,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
 //    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
 //    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
-    connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
+//    connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinePutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
 //    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
@@ -1005,7 +1005,25 @@ void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding,
     incPaintLock();
     clearAll();
     mDocument->loadFromFile(filename, encoding, realEncoding);
-    onLinesInserted(0, mDocument->count());
+    reparseDocument();
+    decPaintLock();
+}
+
+void QSynEdit::setContent(const QString &text)
+{
+    incPaintLock();
+    clearAll();
+    mDocument->setText(text);
+    reparseDocument();
+    decPaintLock();
+}
+
+void QSynEdit::setContent(const QStringList &text)
+{
+    incPaintLock();
+    clearAll();
+    mDocument->setContents(text);
+    reparseDocument();
     decPaintLock();
 }
 
@@ -1737,11 +1755,12 @@ void QSynEdit::doDeletePrevChar()
                 mDocument->deleteLine(mCaretY);
                 onLinesDeleted(mCaretY, 1);
             }
-            properSetLine(mCaretY-1, lastLine+tempStr);
+            properSetLine(mCaretY-1, lastLine+tempStr,false);
             internalSetCaretXY(CharPos{lastLine.length(), mCaretY - 1});
             helper.append("");
             helper.append("");
             shouldAddGroupBreak=true;
+
         }
     } else {
         // delete char
@@ -4166,6 +4185,7 @@ void QSynEdit::doRedoItem()
                         item->changeSelMode(),
                         item->changeNumber());
         }
+            break;
         case ChangeReason::ReplaceLine:
             mUndoList->restoreChange(
                         item->changeReason(),
@@ -5042,9 +5062,11 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
     return result;
 }
 
-void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
+void QSynEdit::properSetLine(int line, const QString &sLineText, bool reparse)
 {
-    mDocument->putLine(line,sLineText,notify);
+    mDocument->putLine(line,sLineText,false);
+    if (reparse)
+        onLinePutted(line);
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -6376,7 +6398,7 @@ void QSynEdit::onLineMoved(int from, int to)
     emit lineMoved(from, to);
 }
 
-void QSynEdit::onLinesPutted(int line)
+void QSynEdit::onLinePutted(int line)
 {
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, line + 1);

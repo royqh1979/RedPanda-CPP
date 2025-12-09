@@ -525,6 +525,8 @@ protected:
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
+    void setContent(const QString& text);
+    void setContent(const QStringList& text);
     void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
@@ -537,7 +539,6 @@ protected:
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
-
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
@@ -571,7 +572,7 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatusForUndoRedo();
-    int reparseLines(int startLine, int endLine, bool needRescanFolds = true,  bool toDocumentEnd = true);
+    int reparseLines(int startLine, int endLine, bool needRescanFolds = true, bool toDocumentEnd = true);
     //void reparseLine(int line);
     void uncollapse(PCodeFoldingRange foldRange);
     void collapse(PCodeFoldingRange foldRange);
@@ -609,7 +610,7 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void properSetLine(int line, const QString& sLineText, bool notify = true);
+    void properSetLine(int line, const QString& sLineText, bool reparse = true);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
@@ -679,6 +680,11 @@ private:
 
     QString getDisplayStringAtLine(int line) const;
 
+    void onLinesDeleted(int line, int count);
+    void onLinesInserted(int line, int count);
+    void onLineMoved(int from, int to);
+    void onLinePutted(int line);
+
 private slots:
     void onMaxLineWidthChanged();
     void updateHScrollBarLater();
@@ -686,10 +692,6 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onLinesDeleted(int line, int count);
-    void onLinesInserted(int line, int count);
-    void onLineMoved(int from, int to);
-    void onLinesPutted(int line);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();
