@@ -484,9 +484,9 @@ public:
      *
      * @return
      */
-    QStringList contents() const;
+    QStringList content() const;
 
-    void putLine(int index, const QString& s, bool notify=true);
+    void putLine(int index, const QString& s);
 
     void beginUpdate();
     void endUpdate();
@@ -626,9 +626,6 @@ public slots:
 signals:
     void changed();
     void changing();
-    void deleted(int startLine, int count);
-    void inserted(int startLine, int count);
-    void putted(int line);
     void maxLineWidthChanged();
 protected:
     QString getTextStr() const;

@@ -341,7 +341,7 @@ public:
     void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const;
     void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const;
 
-    QStringList contents();
+    QStringList content();
     QString text();
 
     bool getPositionOfMouse(CharPos& aPos) const;
@@ -511,6 +511,10 @@ signals:
     void statusChanged(QSynedit::StatusChanges changes);
     void fontChanged();
     void tabSizeChanged();
+#ifdef QSYNEDIT_TEST
+    void foldsRescaned(); // for test
+    void linesReparesd(int start, int count);
+#endif
 protected:
     virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
@@ -573,14 +577,14 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatusForUndoRedo();
-    int reparseLines(int startLine, int endLine, bool needRescanFolds = true, bool toDocumentEnd = true);
+    int reparseLines(int startLine, int endLine, bool toDocumentEnd);
     //void reparseLine(int line);
     void uncollapse(PCodeFoldingRange foldRange);
     void collapse(PCodeFoldingRange foldRange);
 
-    void foldOnLinesInserted(int line, int count);
-    void foldOnLinesDeleted(int line, int count, bool &needRescan);
-    void foldOnLineMoved(int from, int to);
+    void processFoldsOnLinesInserted(int line, int count);
+    void processFoldsOnLinesDeleted(int line, int count);
+    void processFoldsOnLineMoved(int from, int to);
     void clearFoldRanges();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
@@ -611,7 +615,12 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void properSetLine(int line, const QString& sLineText, bool reparse = true);
+    void properSetLine(int line, const QString& sLineText, bool notify);
+    void properInsertLine(int line, const QString& sLineText, bool notify);
+    void properDeleteLines(int line, int count, bool notify);
+    void properDeleteLine(int line, bool notify) { properDeleteLines(line, 0, notify); }
+    void properInsertLines(int line, int count, bool notify);
+    void properMoveLine(int from, int to, bool notify);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
@@ -619,7 +628,6 @@ private:
     void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
-    void doTrimTrailingSpaces();
     void deleteFromTo(const CharPos& start, const CharPos& end);
     void setSelWord();
     void setWordBlock(const CharPos &pos);
@@ -640,6 +648,7 @@ private:
     QRect calculateInputCaretRect() const;
 
     //Commands
+    void doTrimTrailingSpaces();
     void doDeletePrevChar();
     void doDeleteCurrentChar();
     void doDeleteToEOL();

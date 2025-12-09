@@ -28,11 +28,6 @@ public:
     TestDocument();
     ~TestDocument();
 private:
-    QList<int> mPuttedLines;
-    QList<int> mInsertedLines;
-    QList<int> mInsertedLineCounts;
-    QList<int> mDeletedLines;
-    QList<int> mDeletedLineCounts;
     int mChangedCount;
     std::shared_ptr<Document> mDoc;
 private slots:
@@ -67,9 +62,6 @@ private slots:
     void test_find_last_line_by_seq();
 
     void initSignalTest();
-    void onLinesPutted(int line);
-    void onLinesInserted(int startLine, int count);
-    void onLinesDeleted(int startLine, int count);
     void onChanged();
 };
 }

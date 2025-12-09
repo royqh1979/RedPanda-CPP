@@ -8,6 +8,8 @@ CONFIG += file_copies
 
 TEMPLATE = app
 
+DEFINES += QSYNEDIT_TEST
+
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type

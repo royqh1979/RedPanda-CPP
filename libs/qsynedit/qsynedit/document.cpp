@@ -287,7 +287,6 @@ void Document::setText(const QString &text)
                 pos++;
         }
         mIndexOfLongestLine = -1;
-        emit inserted(0,mLines.count());
     }
 }
 
@@ -304,11 +303,10 @@ void Document::setContents(const QStringList &text)
             addItem(s);
         }
         mIndexOfLongestLine = -1;
-        emit inserted(0,text.count());
     }
 }
 
-QStringList Document::contents() const
+QStringList Document::content() const
 {
     QMutexLocker locker(&mMutex);
     QStringList result;
@@ -344,7 +342,6 @@ int Document::addLine(const QString &s)
     beginUpdate();
     int Result = mLines.count();
     insertItem(Result, s);
-    emit inserted(Result,1);
     endUpdate();
     return Result;
 }
@@ -362,7 +359,6 @@ void Document::addLines(const QStringList &strings)
             addItem(s);
         }
         mIndexOfLongestLine = -1;
-        emit inserted(FirstAdded,strings.count());
     }
 }
 
@@ -411,7 +407,6 @@ void Document::deleteLines(int index, int numLines)
        numLines = mLines.count() - index;
     }
     mLines.remove(index,numLines);
-    emit deleted(index,numLines);
 }
 
 void Document::exchange(int index1, int index2)
@@ -444,7 +439,6 @@ void Document::insertLine(int index, const QString &s)
     }
     beginUpdate();
     insertItem(index, s);
-    emit inserted(index,1);
     endUpdate();
 }
 
@@ -460,7 +454,6 @@ void Document::deleteLine(int index)
     else if (mIndexOfLongestLine>index)
         mIndexOfLongestLine -= 1;
     mLines.removeAt(index);
-    emit deleted(index,1);
     endUpdate();
 }
 
@@ -478,7 +471,7 @@ QString Document::getTextStr() const
     return result;
 }
 
-void Document::putLine(int index, const QString &s, bool notify) {
+void Document::putLine(int index, const QString &s) {
     QMutexLocker locker(&mMutex);
     if (index == mLines.count()) {
         addLine(s);
@@ -492,8 +485,6 @@ void Document::putLine(int index, const QString &s, bool notify) {
             // width is invalidated, so we must recalculate longest line
             mIndexOfLongestLine = -1;
         }
-        if (notify)
-            emit putted(index);
         endUpdate();
     }
 }
@@ -516,7 +507,6 @@ void Document::insertLines(int index, int numLines)
         mLines[i] = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
     }
     mIndexOfLongestLine = -1;
-    emit inserted(index,numLines);
 }
 
 void Document::moveLineTo(int oldIdx, int newIdx)
@@ -657,8 +647,6 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     beginUpdate();
     internalClear();
     auto action = finally([this]{
-        if (mLines.count()>0)
-            emit inserted(0,mLines.count());
         endUpdate();
     });
     //test for utf8 / utf 8 bom
@@ -1159,7 +1147,6 @@ void Document::internalClear()
         int oldCount = mLines.count();
         mLines.clear();
         mIndexOfLongestLine = -1;
-        emit deleted(0,oldCount);
         endUpdate();
     }
 }

@@ -47,7 +47,7 @@ void TestDocument::test_load_from_file()
 
     mDoc->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
     QCOMPARE(mDoc->count(),6);
-    QCOMPARE(mDoc->contents(), QStringList({"#include <stdio.h>",
+    QCOMPARE(mDoc->content(), QStringList({"#include <stdio.h>",
                                            "",
                                            "int main() {",
                                            "\tprintf(\"lala\\n\");",
@@ -92,8 +92,6 @@ void TestDocument::test_set_text()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {0});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_set_contents()
@@ -107,8 +105,6 @@ void TestDocument::test_set_contents()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {0});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_add_line()
@@ -119,15 +115,13 @@ void TestDocument::test_add_line()
     mDoc->addLine("int z;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int x1;",
                           "int y1;",
                           "int z;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {2});
-    QCOMPARE(mInsertedLineCounts, {1});
 }
 
 void TestDocument::test_add_lines()
@@ -138,7 +132,7 @@ void TestDocument::test_add_lines()
     mDoc->addLines({"int z;","int q;"});
 
     QCOMPARE(mDoc->count(),4);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int x1;",
                           "int y1;",
                           "int z;",
@@ -146,8 +140,6 @@ void TestDocument::test_add_lines()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {2});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_insert_line()
@@ -158,15 +150,13 @@ void TestDocument::test_insert_line()
     mDoc->insertLine(0,"int p;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int p;",
                           "int x1;",
                           "int y1;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {0});
-    QCOMPARE(mInsertedLineCounts, {1});
 }
 
 void TestDocument::test_insert_line1()
@@ -177,15 +167,13 @@ void TestDocument::test_insert_line1()
     mDoc->insertLine(1,"int p;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int x1;",
                           "int p;",
                           "int y1;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {1});
-    QCOMPARE(mInsertedLineCounts, {1});
 }
 
 void TestDocument::test_insert_line2()
@@ -202,8 +190,6 @@ void TestDocument::test_insert_line2()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {2});
-    QCOMPARE(mInsertedLineCounts, {1});
 }
 
 void TestDocument::test_insert_lines()
@@ -221,8 +207,6 @@ void TestDocument::test_insert_lines()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {0});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_insert_lines1()
@@ -240,8 +224,6 @@ void TestDocument::test_insert_lines1()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {1});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_insert_lines2()
@@ -259,8 +241,6 @@ void TestDocument::test_insert_lines2()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mInsertedLines, {2});
-    QCOMPARE(mInsertedLineCounts, {2});
 }
 
 void TestDocument::test_delete_line()
@@ -276,8 +256,6 @@ void TestDocument::test_delete_line()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mDeletedLines, {0});
-    QCOMPARE(mDeletedLineCounts, {1});
 }
 
 void TestDocument::test_delete_line1()
@@ -293,8 +271,6 @@ void TestDocument::test_delete_line1()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mDeletedLines, {1});
-    QCOMPARE(mDeletedLineCounts, {1});
 }
 
 void TestDocument::test_delete_line2()
@@ -310,8 +286,6 @@ void TestDocument::test_delete_line2()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mDeletedLines, {2});
-    QCOMPARE(mDeletedLineCounts, {1});
 }
 
 void TestDocument::test_delete_lines()
@@ -326,8 +300,6 @@ void TestDocument::test_delete_lines()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mDeletedLines, {0});
-    QCOMPARE(mDeletedLineCounts, {2});
 }
 
 void TestDocument::test_delete_lines1()
@@ -342,8 +314,6 @@ void TestDocument::test_delete_lines1()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mDeletedLines, {1});
-    QCOMPARE(mDeletedLineCounts, {2});
 }
 
 void TestDocument::test_put_line()
@@ -360,7 +330,6 @@ void TestDocument::test_put_line()
 
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mPuttedLines, {0});
 }
 
 void TestDocument::test_put_line1()
@@ -376,7 +345,6 @@ void TestDocument::test_put_line1()
     QCOMPARE(mDoc->getLine(2),"test");
     //signals
     QCOMPARE(mChangedCount,1);
-    QCOMPARE(mPuttedLines, {2});
 }
 
 void TestDocument::test_move_line_to1()
@@ -387,7 +355,7 @@ void TestDocument::test_move_line_to1()
     mDoc->moveLineTo(2,4);
 
     QCOMPARE(mDoc->count(),5);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int a;",
                           "int b;",
                           "int d;",
@@ -405,7 +373,7 @@ void TestDocument::test_move_line_to2()
     mDoc->moveLineTo(4,2);
 
     QCOMPARE(mDoc->count(),5);
-    QCOMPARE(mDoc->contents(),
+    QCOMPARE(mDoc->content(),
              QStringList({"int a;",
                           "int b;",
                           "int e;",
@@ -422,15 +390,12 @@ void TestDocument::test_clear()
 
     mDoc->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    int count = mDoc->count();
     initSignalTest();
     mDoc->clear();
 
     QVERIFY(mDoc->count()==0);
 
     QCOMPARE(mChangedCount, 1);
-    QCOMPARE(mDeletedLines, {0});
-    QCOMPARE(mDeletedLineCounts, {count});
 }
 
 void TestDocument::test_find_last_line_by_seq()
@@ -446,33 +411,8 @@ void TestDocument::test_find_last_line_by_seq()
 
 void TestDocument::initSignalTest()
 {
-    mPuttedLines.clear();
-    mInsertedLines.clear();
-    mInsertedLineCounts.clear();
-    mDeletedLines.clear();
-    mDeletedLineCounts.clear();
     mChangedCount=0;
     connect(mDoc.get(), &Document::changed, this, &TestDocument::onChanged);
-    connect(mDoc.get(), &Document::deleted, this, &TestDocument::onLinesDeleted);
-    connect(mDoc.get(), &Document::inserted, this, &TestDocument::onLinesInserted);
-    connect(mDoc.get(), &Document::putted, this, &TestDocument::onLinesPutted);
-}
-
-void TestDocument::onLinesPutted(int line)
-{
-    mPuttedLines.append(line);
-}
-
-void TestDocument::onLinesInserted(int startLine, int count)
-{
-    mInsertedLines.append(startLine);
-    mInsertedLineCounts.append(count);
-}
-
-void TestDocument::onLinesDeleted(int startLine, int count)
-{
-    mDeletedLines.append(startLine);
-    mDeletedLineCounts.append(count);
 }
 
 void TestDocument::onChanged()
