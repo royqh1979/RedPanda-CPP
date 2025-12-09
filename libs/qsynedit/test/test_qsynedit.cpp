@@ -619,6 +619,11 @@ void TestQSyneditCpp::test_copy_paste_data()
     QTest::addColumn<QList<int>>("delete_counts");
     QTest::addColumn<QList<int>>("expect_delete_counts");
 
+    QTest::addColumn<QList<int>>("move_line_from");
+    QTest::addColumn<QList<int>>("expect_move_line_from");
+    QTest::addColumn<QList<int>>("move_line_to");
+    QTest::addColumn<QList<int>>("expect_move_line_to");
+
     QTest::addColumn<QString>("afterUndo");
     QTest::addColumn<QString>("expect_afterUndo");
 
@@ -639,6 +644,7 @@ void TestQSyneditCpp::test_copy_paste_data()
         td<<mEdit->caretXY()<<CharPos{1,1};
         td<<mInsertStartLines<<QList<int>{0}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(1)<<"#include <mutex>";
@@ -661,6 +667,7 @@ void TestQSyneditCpp::test_copy_paste_data()
         td<<mEdit->caretXY()<<CharPos{1,77};
         td<<mInsertStartLines<<QList<int>{77}<<mInsertLineCounts<<QList<int>{1};
         td<<mDeleteStartLines<<QList<int>{}<<mDeleteLineCounts<<QList<int>{};
+        td<<mLineMovedFroms<<QList<int>{}<<mLineMovedTos<<QList<int>{};
         mEdit->undo();
         QVERIFY(!mEdit->canUndo());
         td<<mEdit->lineText(76)<<"}";
@@ -687,6 +694,10 @@ void TestQSyneditCpp::test_copy_paste()
     QFETCH(QList<int>, expect_delete_starts);
     QFETCH(QList<int>, delete_counts);
     QFETCH(QList<int>, expect_delete_counts);
+    QFETCH(QList<int>, move_line_from);
+    QFETCH(QList<int>, expect_move_line_from);
+    QFETCH(QList<int>, move_line_to);
+    QFETCH(QList<int>, expect_move_line_to);
     QFETCH(QString, afterUndo);
     QFETCH(QString, expect_afterUndo);
     QFETCH(QString, afterRedo);
@@ -700,6 +711,8 @@ void TestQSyneditCpp::test_copy_paste()
     QCOMPARE(insert_counts, expect_insert_counts);
     QCOMPARE(delete_starts, expect_delete_starts);
     QCOMPARE(delete_counts, expect_delete_counts);
+    QCOMPARE(move_line_from, expect_move_line_from);
+    QCOMPARE(move_line_to, expect_move_line_to);
     QCOMPARE(afterUndo, expect_afterUndo);
     QCOMPARE(afterRedo, expect_afterRedo);
     QCOMPARE(afterUndo2, expect_afterUndo2);
