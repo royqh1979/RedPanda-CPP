@@ -322,7 +322,7 @@ QStringList Document::contents() const
 void Document::beginUpdate()
 {
     if (mUpdateCount == 0) {
-        setUpdateState(true);
+        emit changing();
         beginSetLinesWidth();
     }
     mUpdateCount++;
@@ -332,7 +332,7 @@ void Document::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
-        setUpdateState(false);
+        emit changed();
         endSetLinesWidth();
     }
 }
@@ -500,14 +500,6 @@ void Document::putLine(int index, const QString &s, bool notify) {
     }
 }
 
-void Document::setUpdateState(bool Updating)
-{
-    if (Updating)
-        emit changing();
-    else
-        emit changed();
-}
-
 void Document::insertLines(int index, int numLines)
 {
     QMutexLocker locker(&mMutex);
@@ -527,6 +519,35 @@ void Document::insertLines(int index, int numLines)
     }
     mIndexOfLongestLine = -1;
     emit inserted(index,numLines);
+}
+
+void Document::moveLineTo(int oldIdx, int newIdx)
+{
+    QMutexLocker locker(&mMutex);
+    if ((oldIdx < 0) || (oldIdx >= mLines.count())) {
+        listIndexOutOfBounds(oldIdx);
+    }
+    if ((newIdx < 0) || (newIdx >= mLines.count())) {
+        listIndexOutOfBounds(newIdx);
+    }
+    if (oldIdx == newIdx)
+        return;
+    beginUpdate();
+    PDocumentLine line = mLines[oldIdx];
+    mLines.remove(oldIdx);
+    mLines.insert(newIdx, line);
+    if (mIndexOfLongestLine == oldIdx) {
+        mIndexOfLongestLine = newIdx;
+    } else if (newIdx < oldIdx
+               && newIdx <= mIndexOfLongestLine
+               && mIndexOfLongestLine < oldIdx) {
+        mIndexOfLongestLine++;
+    } else if (oldIdx < newIdx
+               && oldIdx <= mIndexOfLongestLine
+               && mIndexOfLongestLine < newIdx) {
+        mIndexOfLongestLine++;
+    }
+    endUpdate();
 }
 
 

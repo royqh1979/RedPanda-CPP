@@ -502,8 +502,9 @@ public:
     const PFormatter &formatter() const;
     void setFormatter(const PFormatter &newFormatter);
 signals:
-    void linesDeleted(int FirstLine, int Count);
-    void linesInserted(int FirstLine, int Count);
+    void linesDeleted(int firstLine, int count);
+    void linesInserted(int firstLine, int count);
+    void lineMoved(int from, int to);
     void changed();
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
     void statusChanged(QSynedit::StatusChanges changes);
@@ -577,6 +578,7 @@ private:
 
     void foldOnLinesInserted(int line, int count);
     void foldOnLinesDeleted(int line, int count, bool &needRescan);
+    void foldOnLineMoved(int from, int to);
     void clearFoldRanges();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
@@ -686,6 +688,7 @@ private slots:
     void onLinesChanging();
     void onLinesDeleted(int line, int count);
     void onLinesInserted(int line, int count);
+    void onLineMoved(int from, int to);
     void onLinesPutted(int line);
     //void onRedoAdded();
     void onScrollTimeout();

@@ -14,9 +14,12 @@ private:
     QList<int> mDeleteLineCounts;
     QList<int> mInsertStartLines;
     QList<int> mInsertLineCounts;
+    QList<int> mLineMovedFroms;
+    QList<int> mLineMovedTos;
 private slots:
     void onLinesDeleted(int line, int count);
     void onLinesInserted(int line, int count);
+    void onLineMoved(int from, int to);
 
     void initEdit();
 

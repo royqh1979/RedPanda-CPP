@@ -1447,7 +1447,7 @@ void QSynEdit::doComment()
     QString commentSymbol = mSyntaxer->commentSymbol();
     int symbolLen = commentSymbol.length();
     for (int i = origBlockBegin.line; i<=endLine; i++) {
-        mDocument->putLine(i, commentSymbol + mDocument->getLine(i));
+        properSetLine(i, commentSymbol + mDocument->getLine(i));
         mUndoList->addChange(ChangeReason::Insert,
               CharPos{0, i},
               CharPos{symbolLen, i},
@@ -1502,7 +1502,7 @@ void QSynEdit::doUncomment()
         while ((j+1 < s.length()) && (s[j] == ' ' || s[j] == '\t'))
             j++;
         s.remove(j,symbolLen);
-        mDocument->putLine(i,s);
+        properSetLine(i,s);
         mUndoList->addChange(ChangeReason::Delete,
                              CharPos{j, i},
                              CharPos{j+symbolLen, i},
@@ -2038,24 +2038,20 @@ void QSynEdit::doMoveSelUp()
 //                return;
 //        }
 
-        // Delete line above selection
-        QString s = mDocument->getLine(origBlockBeginLine - 1); // before start, 0 based
-        mDocument->deleteLine(origBlockBeginLine - 1); // before start, 0 based
-        onLinesDeleted(origBlockBeginLine - 1, 1); // before start, 0 based
+        // Move line above selection to below selection
+        mDocument->moveLineTo(origBlockBeginLine-1, origBlockEndLine);
+        onLineMoved(origBlockBeginLine-1, origBlockEndLine);
 
-        // Insert line below selection
-        mDocument->insertLine(origBlockEndLine, s);
-        onLinesInserted(origBlockEndLine, 1);
         // Restore caret and selection
         setCaretAndSelection(
                   CharPos{mCaretX, origBlockBeginLine - 1},
-                  CharPos{origBlockBegin.ch, origBlockBegin.line - 1},
-                  CharPos{origBlockEnd.ch, origBlockEnd.line - 1}
+                  CharPos{origBlockBegin.ch, origBlockBeginLine-1},
+                  CharPos{origBlockEnd.ch, origBlockEndLine}
         );
         if (!mUndoing) {
-            mUndoList->addChange(ChangeReason::MoveSelectionUp,
-                    origBlockBegin,
-                    origBlockEnd,
+            mUndoList->addChange(ChangeReason::MoveLine,
+                    CharPos{0, origBlockBegin.line - 1},
+                    CharPos{0,origBlockEnd.line},
                     QStringList(),
                     SelectionMode::Normal);
             endEditing();
@@ -2067,7 +2063,7 @@ void QSynEdit::doMoveSelDown()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
-    if (!mReadOnly && (mDocument->count() > 0) && (selEnd().line < mDocument->count())) {
+    if (!mReadOnly && (mDocument->count() > 0) && (selEnd().line+1 < mDocument->count())) {
         if (!mUndoing) {
             beginEditing();
             addCaretToUndo();
@@ -2082,14 +2078,9 @@ void QSynEdit::doMoveSelDown()
         if (foldRange && foldRange->collapsed)
             return;
 
-        // Delete line below selection
-        QString s = mDocument->getLine(origBlockEndLine + 1); // after end, 0 based
-        mDocument->deleteLine(origBlockEndLine + 1); // after end, 0 based
-        onLinesDeleted(origBlockEndLine + 1, 1);
-
-        // Insert line above selection
-        mDocument->insertLine(origBlockBeginLine, s);
-        onLinesInserted(origBlockBeginLine , 1);
+        // Move line below selection to above selection
+        mDocument->moveLineTo(origBlockEndLine + 1, origBlockBeginLine);
+        onLineMoved(origBlockEndLine + 1, origBlockBeginLine);
 
         // Restore caret and selection
         setCaretAndSelection(
@@ -2099,9 +2090,9 @@ void QSynEdit::doMoveSelDown()
                     );
 
         if (!mUndoing) {
-            mUndoList->addChange(ChangeReason::MoveSelectionDown,
-                    origBlockBegin,
-                    origBlockEnd,
+            mUndoList->addChange(ChangeReason::MoveLine,
+                    CharPos{0, origBlockEndLine + 1},
+                    CharPos{0, origBlockBeginLine},
                     QStringList(),
                     SelectionMode::Normal);
             endEditing();
@@ -2498,7 +2489,7 @@ void QSynEdit::doBlockUnindent()
         if (i==oldCaretPos.line)
             caretLineIndent = charsToDelete;
         QString tempString = line.mid(charsToDelete);
-        mDocument->putLine(i,tempString);
+        properSetLine(i,tempString);
         mUndoList->addChange(ChangeReason::Delete,
                              CharPos{0,i},
                              CharPos{charsToDelete,i},
@@ -2587,7 +2578,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                     int indentSpaces = calcIndentSpaces(oldCaretY,line, true);
                     if (indentSpaces != leftSpaces(line)) {
                         QString newLine = genSpaces(indentSpaces) + trimLeft(line);
-                        mDocument->putLine(oldCaretY,newLine);
+                        properSetLine(oldCaretY,newLine);
                         internalSetCaretXY(CharPos{newLine.length(),oldCaretY});
                         setSelBegin(caretXY());
                         setSelEnd(caretXY());
@@ -2613,7 +2604,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                     int indentSpaces = calcIndentSpaces(oldCaretY,line+"*", true);
                     if (indentSpaces != leftSpaces(line)) {
                         QString newLine = genSpaces(indentSpaces) + trimLeft(line);
-                        mDocument->putLine(oldCaretY,newLine);
+                        properSetLine(oldCaretY,newLine);
                         internalSetCaretXY(CharPos{newLine.length(), oldCaretY});
                         setSelBegin(caretXY());
                         setSelEnd(caretXY());
@@ -2642,7 +2633,7 @@ void QSynEdit::doAddChar(const QChar& ch)
                     if (indentSpaces != leftSpaces(left)) {
                         QString right = mDocument->getLine(oldCaretY).mid(oldCaretX);
                         QString newLeft = genSpaces(indentSpaces);
-                        mDocument->putLine(oldCaretY,newLeft+right);
+                        properSetLine(oldCaretY,newLeft+right);
                         internalSetCaretXY(CharPos{newLeft.length(),oldCaretY});
                         setSelBegin(caretXY());
                         setSelEnd(caretXY());
@@ -3211,9 +3202,6 @@ void QSynEdit::foldOnLinesInserted(int line, int count)
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
         PCodeFoldingRange range = (*mAllFoldRanges)[i];
-//        if (range->fromLine == line) {// insertion starts at fold line
-//            if (range->collapsed)
-//                uncollapse(range);
         if (range->fromLine >= line) // insertion of count lines above FromLine
             range->move(count);
         else if (range->toLine >= line)
@@ -3240,9 +3228,39 @@ void QSynEdit::foldOnLinesDeleted(int line, int count, bool &needRescan)
             range->move(-count);
         } else if (range->toLine >= line + count) {
             range->toLine -= count;
+            if (range->toLine <= range->fromLine)
+                mAllFoldRanges->remove(i);
         }
     }
 
+}
+
+void QSynEdit::foldOnLineMoved(int from, int to)
+{
+    for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
+        if (from<to) {
+            if (range->fromLine == from)
+                range->fromLine = to;
+            else if (from < range->fromLine && range->fromLine <= to)
+                range->fromLine -=1;
+            if (range->toLine == from)
+                range->toLine = to;
+            else if (from < range->toLine && range->toLine <= to)
+                range->toLine -= 1;
+        } else if (to > from) {
+            if (range->fromLine == from)
+                range->fromLine = to;
+            else if (to <= range->fromLine && range->fromLine < from)
+                range->fromLine +=1;
+            if (range->toLine == from)
+                range->toLine = to;
+            else if (to <= range->toLine && range->toLine < from)
+                range->toLine +=1;
+        }
+        if (range->toLine<=range->fromLine)
+            mAllFoldRanges->remove(i);
+    }
 }
 
 void QSynEdit::clearFoldRanges()
@@ -3946,13 +3964,17 @@ void QSynEdit::doUndoItem()
                         item->changeReason(),
                         item->changeStartPos(),
                         item->changeEndPos(),
-                        QStringList(mDocument->getLine(item->changeStartPos().line-1)),
+                        QStringList(mDocument->getLine(item->changeStartPos().line)),
                         item->changeSelMode(),
                         item->changeNumber()
                         );
-            mDocument->putLine(item->changeStartPos().line-1,item->changeText()[0]);
+            properSetLine(item->changeStartPos().line,item->changeText()[0]);
             break;
-        case ChangeReason::MoveSelectionUp:
+        case ChangeReason::MoveLine: {
+            int fromLine = item->changeEndPos().line;
+            int toLine = item->changeStartPos().line;
+            mDocument->moveLineTo(fromLine, toLine);
+            onLineMoved(fromLine, toLine);
             setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line-1});
             setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line-1});
             doMoveSelDown();
@@ -3963,18 +3985,7 @@ void QSynEdit::doUndoItem()
                         item->changeText(),
                         item->changeSelMode(),
                         item->changeNumber());
-            break;
-        case ChangeReason::MoveSelectionDown:
-            setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line+1});
-            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line+1});
-            doMoveSelUp();
-            mRedoList->addRedo(
-                        item->changeReason(),
-                        item->changeStartPos(),
-                        item->changeEndPos(),
-                        item->changeText(),
-                        item->changeSelMode(),
-                        item->changeNumber());
+        }
             break;
         case ChangeReason::Delete: {
             // If there's no selection, we have to set
@@ -4142,30 +4153,19 @@ void QSynEdit::doRedoItem()
                         item->changeStartPos(),
                         item->changeEndPos());
             break;
-        case ChangeReason::MoveSelectionUp:
-            setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line});
-            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
-            doMoveSelUp();
-            mUndoList->restoreChange(
+        case ChangeReason::MoveLine: {
+            int fromLine = item->changeStartPos().line;
+            int toLine = item->changeEndPos().line;
+            mDocument->moveLineTo(fromLine, toLine);
+            onLineMoved(fromLine, toLine);
+            mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),
                         item->changeEndPos(),
                         item->changeText(),
                         item->changeSelMode(),
                         item->changeNumber());
-            break;
-        case ChangeReason::MoveSelectionDown:
-            setSelBegin(CharPos{item->changeStartPos().ch, item->changeStartPos().line});
-            setSelEnd(CharPos{item->changeEndPos().ch, item->changeEndPos().line});
-            doMoveSelDown();
-            mUndoList->restoreChange(
-                        item->changeReason(),
-                        item->changeStartPos(),
-                        item->changeEndPos(),
-                        item->changeText(),
-                        item->changeSelMode(),
-                        item->changeNumber());
-            break;
+        }
         case ChangeReason::ReplaceLine:
             mUndoList->restoreChange(
                         item->changeReason(),
@@ -4175,7 +4175,7 @@ void QSynEdit::doRedoItem()
                         item->changeSelMode(),
                         item->changeNumber()
                         );
-            mDocument->putLine(item->changeStartPos().line,item->changeText()[0]);
+            properSetLine(item->changeStartPos().line,item->changeText()[0]);
             break;
         case ChangeReason::Insert:
             setCaretAndSelection(
@@ -4428,7 +4428,7 @@ QString QSynEdit::lineText(int line) const
 void QSynEdit::setLineText(const QString s)
 {
     if (mCaretY >= 0 && mCaretY < mDocument->count())
-        mDocument->putLine(mCaretY,s);
+        properSetLine(mCaretY,s);
 }
 
 size_t QSynEdit::lineSeq(int line) const
@@ -6357,6 +6357,25 @@ void QSynEdit::onLinesInserted(int line, int count)
     emit linesInserted(line, count);
 }
 
+void QSynEdit::onLineMoved(int from, int to)
+{
+    if (from == to)
+        return;
+    if (useCodeFolding())
+        foldOnLineMoved(from, to);
+    int minLine = std::min(from,to);
+    int maxLine = std::max(from,to);
+    if (mSyntaxer->needsLineState()) {
+        reparseLines(minLine, maxLine+1);
+    } else {
+        // new lines should be parsed
+        reparseLines(minLine, maxLine+1);
+    }
+    invalidateLines(minLine, INT_MAX);
+    updateVScrollbar();
+    emit lineMoved(from, to);
+}
+
 void QSynEdit::onLinesPutted(int line)
 {
     if (mSyntaxer->needsLineState()) {
@@ -6534,7 +6553,7 @@ void QSynEdit::replaceLine(int line, const QString &lineText)
     pos.line=line;
     pos.ch=0;
     mUndoList->addChange(ChangeReason::ReplaceLine,pos,pos,QStringList(mDocument->getLine(line)),SelectionMode::Normal);
-    mDocument->putLine(line,lineText);
+    properSetLine(line, lineText);
 }
 
 CharPos QSynEdit::selBegin() const

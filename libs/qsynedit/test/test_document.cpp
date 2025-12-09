@@ -16,7 +16,7 @@ TestDocument::~TestDocument()
 
 void TestDocument::init()
 {
-    mDoc=std::make_shared<Document>(QFont{});
+    mDoc=std::make_shared<Document>(QFont{"monospace"});
 }
 
 void TestDocument::cleanup()
@@ -47,15 +47,15 @@ void TestDocument::test_load_from_file()
 
     mDoc->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
     QCOMPARE(mDoc->count(),6);
-    QCOMPARE(mDoc->getLine(0),"#include <stdio.h>");
-    QCOMPARE(mDoc->getLine(1),"");
-    QCOMPARE(mDoc->getLine(2),"int main() {");
-    QCOMPARE(mDoc->getLine(3),"\tprintf(\"lala\\n\");");
-    QCOMPARE(mDoc->getLine(4),"\treturn 0;");
-    QCOMPARE(mDoc->getLine(5),"}");
+    QCOMPARE(mDoc->contents(), QStringList({"#include <stdio.h>",
+                                           "",
+                                           "int main() {",
+                                           "\tprintf(\"lala\\n\");",
+                                           "\treturn 0;",
+                                           "}"}));
 }
 
-void TestDocument::test_load_emoji_file()
+void TestDocument::test_emoji_glyphs()
 {
     QByteArray encoding;
     mDoc->loadFromFile("resources/emoji.txt",ENCODING_AUTO_DETECT,encoding);
@@ -119,7 +119,10 @@ void TestDocument::test_add_line()
     mDoc->addLine("int z;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->getLine(2),"int z;");
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int x1;",
+                          "int y1;",
+                          "int z;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
@@ -135,8 +138,11 @@ void TestDocument::test_add_lines()
     mDoc->addLines({"int z;","int q;"});
 
     QCOMPARE(mDoc->count(),4);
-    QCOMPARE(mDoc->getLine(2),"int z;");
-    QCOMPARE(mDoc->getLine(3),"int q;");
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int x1;",
+                          "int y1;",
+                          "int z;",
+                          "int q;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
@@ -152,9 +158,10 @@ void TestDocument::test_insert_line()
     mDoc->insertLine(0,"int p;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->getLine(0),"int p;");
-    QCOMPARE(mDoc->getLine(1),"int x1;");
-    QCOMPARE(mDoc->getLine(2),"int y1;");
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int p;",
+                          "int x1;",
+                          "int y1;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
@@ -170,9 +177,10 @@ void TestDocument::test_insert_line1()
     mDoc->insertLine(1,"int p;");
 
     QCOMPARE(mDoc->count(),3);
-    QCOMPARE(mDoc->getLine(0),"int x1;");
-    QCOMPARE(mDoc->getLine(1),"int p;");
-    QCOMPARE(mDoc->getLine(2),"int y1;");
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int x1;",
+                          "int p;",
+                          "int y1;"}));
 
     //signals
     QCOMPARE(mChangedCount,1);
@@ -366,10 +374,46 @@ void TestDocument::test_put_line1()
     QCOMPARE(mDoc->getLine(0),"int x1;");
     QCOMPARE(mDoc->getLine(1),"int y1;");
     QCOMPARE(mDoc->getLine(2),"test");
-
     //signals
     QCOMPARE(mChangedCount,1);
     QCOMPARE(mPuttedLines, {2});
+}
+
+void TestDocument::test_move_line_to1()
+{
+    mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
+
+    initSignalTest();
+    mDoc->moveLineTo(2,4);
+
+    QCOMPARE(mDoc->count(),5);
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int a;",
+                          "int b;",
+                          "int d;",
+                          "int e;",
+                          "int c;"}));
+    //signals
+    QCOMPARE(mChangedCount,1);
+}
+
+void TestDocument::test_move_line_to2()
+{
+    mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
+
+    initSignalTest();
+    mDoc->moveLineTo(4,2);
+
+    QCOMPARE(mDoc->count(),5);
+    QCOMPARE(mDoc->contents(),
+             QStringList({"int a;",
+                          "int b;",
+                          "int e;",
+                          "int c;",
+                          "int d;",
+                          }));
+    //signals
+    QCOMPARE(mChangedCount,1);
 }
 
 void TestDocument::test_clear()

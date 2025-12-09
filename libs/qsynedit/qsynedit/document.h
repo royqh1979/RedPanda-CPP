@@ -373,7 +373,7 @@ public:
     int blockEnded(int line) const;
 
     /**
-     * @brief get index of the longest line (has the max width)
+     * @brief get width of the longest line (has the max width)
      *
      * It's thread safe.
      *
@@ -468,7 +468,6 @@ public:
      */
     void setText(const QString& text);
 
-
     /**
      * @brief set the text of the document
      *
@@ -502,6 +501,7 @@ public:
     void exchange(int index1, int index2);
     void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
+    void moveLineTo(int oldIdx, int newIdx);
 
     int findPrevLineBySeq(int startLine, size_t lineSeq) const;
 
@@ -632,7 +632,6 @@ signals:
     void maxLineWidthChanged();
 protected:
     QString getTextStr() const;
-    void setUpdateState(bool Updating);
     void insertItem(int line, const QString& s);
     void addItem(const QString& s);
     void internalClear();
@@ -683,8 +682,7 @@ enum class ChangeReason {
     GroupBreak,
     LeftTop,
     LineBreak,
-    MoveSelectionUp,
-    MoveSelectionDown,
+    MoveLine,
     ReplaceLine,
     Nothing // undo list empty
   };
