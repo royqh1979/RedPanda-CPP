@@ -366,24 +366,16 @@ void QSynEdit::doTrimTrailingSpaces()
                 QString newLine = trimRight(oldLine);
                 if (newLine.isEmpty())
                     continue;
-                properSetLine(line,newLine);
+                properSetLine(line,newLine,false);
                 mUndoList->addChange(
                             ChangeReason::Delete,
-                            CharPos{0,line},
+                            CharPos{newLine.length(), line},
                             CharPos{oldLine.length(), line},
                             QStringList(oldLine),
                             SelectionMode::Normal
                             );
-                mUndoList->addChange(
-                            ChangeReason::Insert,
-                            CharPos{0, line},
-                            CharPos{newLine.length(), line},
-                            QStringList(),
-                            SelectionMode::Normal
-                            );
         }
-    }
-    mUndoList->endBlock();    
+    } 
 }
 
 CharPos QSynEdit::getMatchingBracket()
@@ -1465,14 +1457,16 @@ void QSynEdit::doComment()
     QString commentSymbol = mSyntaxer->commentSymbol();
     int symbolLen = commentSymbol.length();
     for (int i = origBlockBegin.line; i<=endLine; i++) {
-        properSetLine(i, commentSymbol + mDocument->getLine(i));
+        properSetLine(i, commentSymbol + mDocument->getLine(i),false);
         mUndoList->addChange(ChangeReason::Insert,
               CharPos{0, i},
               CharPos{symbolLen, i},
               QStringList(), SelectionMode::Normal);
     }
+    reparseLines(origBlockBegin.line, endLine+1,true,true);
+    invalidateLines(origBlockBegin.line, INT_MAX);
     // When grouping similar commands, process one comment action per undo/redo
-    mUndoList->addGroupBreak();
+//    mUndoList->addGroupBreak();
     // Move begin of selection
     if (origBlockBegin.ch > 0)
         origBlockBegin.ch+=2;
@@ -1520,7 +1514,7 @@ void QSynEdit::doUncomment()
         while ((j+1 < s.length()) && (s[j] == ' ' || s[j] == '\t'))
             j++;
         s.remove(j,symbolLen);
-        properSetLine(i,s);
+        properSetLine(i,s,false);
         mUndoList->addChange(ChangeReason::Delete,
                              CharPos{j, i},
                              CharPos{j+symbolLen, i},
@@ -1536,7 +1530,9 @@ void QSynEdit::doUncomment()
             origCaret.ch-=symbolLen;
     }
     // When grouping similar commands, process one uncomment action per undo/redo
-    mUndoList->addGroupBreak();
+//    mUndoList->addGroupBreak();
+    reparseLines(origBlockBegin.line, endLine+1,true,true);
+    invalidateLines(origBlockBegin.line, INT_MAX);
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
 }
 

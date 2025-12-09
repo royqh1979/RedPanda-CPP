@@ -304,6 +304,7 @@ public:
     void addGroupBreak();
     void beginEditing();
     void endEditing();
+    bool editing() const {return mEditingCount!=0;} // for testing
     void beginSetting();
     void endSetting();
     void addCaretToUndo();
