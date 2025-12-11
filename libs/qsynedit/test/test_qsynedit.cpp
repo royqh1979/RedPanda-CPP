@@ -102,25 +102,17 @@ void TestQSyneditCpp::test_get_token_data()
 
     clearContent();
     QTest::newRow("empty document 1")<<mEdit->tokenAt(CharPos{0,0})<<"";
-    QTest::newRow("empty document 2")<<mEdit->tokenAt(CharPos{0,76})<<"";
-    QTest::newRow("empty document 3")<<mEdit->tokenAt(CharPos{5,10})<<"";
 
     loadDemoFile();
-    QTest::newRow("before document begin")<<mEdit->tokenAt(CharPos{0,-1})<<"";
     QTest::newRow("document begin")<<mEdit->tokenAt(CharPos{0,0})<<"#include";
     QTest::newRow("after document begin")<<mEdit->tokenAt(CharPos{1,0})<<"#include";
-
     QTest::newRow("before document end")<<mEdit->tokenAt(CharPos{0,76})<<"}";
     QTest::newRow("document end")<<mEdit->tokenAt(CharPos{1,76})<<"";
-    QTest::newRow("after document end")<<mEdit->tokenAt(CharPos{0,77})<<"";
-
-    QTest::newRow("before line begin")<<mEdit->tokenAt(CharPos{-1,10})<<"";
     QTest::newRow("line begin")<<mEdit->tokenAt(CharPos{0,10})<<"#define";
     QTest::newRow("before word")<<mEdit->tokenAt(CharPos{5,12})<<" ";
     QTest::newRow("word begin")<<mEdit->tokenAt(CharPos{6,12})<<"ThreadPool";
     QTest::newRow("word end")<<mEdit->tokenAt(CharPos{15,12})<<"ThreadPool";
     QTest::newRow("line end")<<mEdit->tokenAt(CharPos{16,12})<<"";
-    QTest::newRow("after line end")<<mEdit->tokenAt(CharPos{17,12})<<"";
 }
 
 void TestQSyneditCpp::test_get_token()
@@ -137,23 +129,18 @@ void TestQSyneditCpp::test_token_begin_data()
     QTest::addColumn<CharPos>("expect");
 
     clearContent();
-    QTest::newRow("empty doc 1")<<mEdit->getTokenBegin(CharPos{0,0})<<CharPos{0,0};
-    QTest::newRow("empty doc 2")<<mEdit->getTokenBegin(CharPos{3,15})<<CharPos{0,0};
+    QTest::newRow("empty doc")<<mEdit->getTokenBegin(CharPos{0,0})<<CharPos{0,0};
 
     loadDemoFile();
-    QTest::newRow("before doc begin")<<mEdit->getTokenBegin(CharPos{0,-1})<<CharPos{0,0};
     QTest::newRow("doc begin")<<mEdit->getTokenBegin(CharPos{0,0})<<CharPos{0,0};
     QTest::newRow("after doc begin")<<mEdit->getTokenBegin(CharPos{1,0})<<CharPos{0,0};
-    QTest::newRow("before doc end")<<mEdit->getTokenBegin(CharPos{0,76})<<CharPos{1,76};
+    QTest::newRow("before doc end")<<mEdit->getTokenBegin(CharPos{0,76})<<CharPos{0,76};
     QTest::newRow("doc end")<<mEdit->getTokenBegin(CharPos{1,76})<<CharPos{1,76};
-    QTest::newRow("after doc end")<<mEdit->getTokenBegin(CharPos{0,77})<<CharPos{1,76};
 
-    QTest::newRow("before line begin")<<mEdit->getTokenBegin(CharPos{-1,10})<<CharPos{0,10};
     QTest::newRow("line begin")<<mEdit->getTokenBegin(CharPos{0,10})<<CharPos{0,10};
     QTest::newRow("after line begin")<<mEdit->getTokenBegin(CharPos{1,10})<<CharPos{0,10};
     QTest::newRow("before line end")<<mEdit->getTokenBegin(CharPos{15,10})<<CharPos{13,10};
     QTest::newRow("line end")<<mEdit->getTokenBegin(CharPos{16,10})<<CharPos{16,10};
-    QTest::newRow("after line end")<<mEdit->getTokenBegin(CharPos{17,10})<<CharPos{16,10};
     QTest::newRow("before word begin")<<mEdit->getTokenBegin(CharPos{3,15})<<CharPos{0,15};
     QTest::newRow("at word begin")<<mEdit->getTokenBegin(CharPos{4,15})<<CharPos{4,15};
     QTest::newRow("in word")<<mEdit->getTokenBegin(CharPos{10,15})<<CharPos{4,15};
@@ -174,20 +161,15 @@ void TestQSyneditCpp::test_token_end_data()
     QTest::addColumn<CharPos>("expect");
 
     clearContent();
-    QTest::newRow("empty doc 1")<<mEdit->getTokenEnd(CharPos{0,0})<<CharPos{0,0};
-    QTest::newRow("empty doc 2")<<mEdit->getTokenEnd(CharPos{3,15})<<CharPos{3,15};
+    QTest::newRow("empty doc")<<mEdit->getTokenEnd(CharPos{0,0})<<CharPos{0,0};
 
     loadDemoFile();
-    QTest::newRow("before doc begin")<<mEdit->getTokenEnd(CharPos{0,-1})<<CharPos{0,0};
     QTest::newRow("doc begin")<<mEdit->getTokenEnd(CharPos{0,0})<<CharPos{8,0};
     QTest::newRow("after doc begin")<<mEdit->getTokenEnd(CharPos{1,0})<<CharPos{8,0};
     QTest::newRow("before doc end")<<mEdit->getTokenEnd(CharPos{0,76})<<CharPos{1,76};
     QTest::newRow("doc end")<<mEdit->getTokenEnd(CharPos{1,76})<<CharPos{1,76};
-    QTest::newRow("after end")<<mEdit->getTokenEnd(CharPos{0,77})<<CharPos{1,76};
-    QTest::newRow("before line begin")<<mEdit->getTokenEnd(CharPos{-1,10})<<CharPos{0,10};
     QTest::newRow("line begin")<<mEdit->getTokenEnd(CharPos{0,10})<<CharPos{7,10};
     QTest::newRow("line end")<<mEdit->getTokenEnd(CharPos{16,10})<<CharPos{16,10};
-    QTest::newRow("after line end")<<mEdit->getTokenEnd(CharPos{17,10})<<CharPos{16,10};
     QTest::newRow("before word begin")<<mEdit->getTokenEnd(CharPos{3,15})<<CharPos{4,15};
     QTest::newRow("at word begin")<<mEdit->getTokenEnd(CharPos{4,15})<<CharPos{14,15};
     QTest::newRow("in word")<<mEdit->getTokenEnd(CharPos{10,15})<<CharPos{14,15};
@@ -208,21 +190,23 @@ void TestQSyneditCpp::test_previous_word_begin_data()
     QTest::addColumn<CharPos>("expect");
 
     clearContent();
-    QTest::newRow("empty doc 1")<<mEdit->prevWordBegin(CharPos{0,0})<<CharPos{0,0};
-    QTest::newRow("empty doc 2")<<mEdit->prevWordBegin(CharPos{3,15})<<CharPos{0,0};
+    QTest::newRow("empty doc")<<mEdit->prevWordBegin(CharPos{0,0})<<CharPos{0,0};
 
     loadDemoFile();
-    QTest::newRow("at file start")<<mEdit->prevWordBegin(CharPos{0,0})<<CharPos{0,0};
-    QTest::newRow("line end")<<mEdit->prevWordBegin(CharPos{16,10})<<CharPos{13,10};
-    QTest::newRow("word start")<<mEdit->prevWordBegin(CharPos{13,10})<<CharPos{8,10};
+    QTest::newRow("doc begin")<<mEdit->prevWordBegin(CharPos{0,0})<<CharPos{0,0};
+    QTest::newRow("after doc begin")<<mEdit->prevWordBegin(CharPos{1,0})<<CharPos{0,0};
+    QTest::newRow("before doc end")<<mEdit->prevWordBegin(CharPos{0,76})<<CharPos{4,75};
+    QTest::newRow("doc end")<<mEdit->prevWordBegin(CharPos{1,76})<<CharPos{0,76};
+    QTest::newRow("line begin")<<mEdit->prevWordBegin(CharPos{0,10})<<CharPos{16,8};
+    QTest::newRow("word begin")<<mEdit->prevWordBegin(CharPos{13,10})<<CharPos{8,10};
     QTest::newRow("word end")<<mEdit->prevWordBegin(CharPos{12,10})<<CharPos{8,10};
     QTest::newRow("word mid")<<mEdit->prevWordBegin(CharPos{11,10})<<CharPos{8,10};
     QTest::newRow("end of first word in line")<<mEdit->prevWordBegin(CharPos{8,10})<<CharPos{0,10};
-    QTest::newRow("line start")<<mEdit->prevWordBegin(CharPos{0,10})<<CharPos{16,8};
+    QTest::newRow("line end")<<mEdit->prevWordBegin(CharPos{16,10})<<CharPos{13,10};
     QTest::newRow("in space")<<mEdit->prevWordBegin(CharPos{4,19})<<CharPos{39,18};
-    QTest::newRow("start of word after symbol")<<mEdit->prevWordBegin(CharPos{25,21})<<CharPos{23,21};
+    QTest::newRow("begin of word after symbol")<<mEdit->prevWordBegin(CharPos{25,21})<<CharPos{23,21};
     QTest::newRow("mid of word after symbol")<<mEdit->prevWordBegin(CharPos{26,21})<<CharPos{25,21};
-    QTest::newRow("start of symbol after word")<<mEdit->prevWordBegin(CharPos{58,21})<<CharPos{54,21};
+    QTest::newRow("begin of symbol after word")<<mEdit->prevWordBegin(CharPos{58,21})<<CharPos{54,21};
     QTest::newRow("mid of symbol after word")<<mEdit->prevWordBegin(CharPos{59,21})<<CharPos{58,21};
 }
 
@@ -238,12 +222,15 @@ void TestQSyneditCpp::test_next_word_begin_data()
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 
+    clearContent();
+    QTest::newRow("empty doc")<<mEdit->nextWordBegin(CharPos{0,0})<<CharPos{0,0};
+
     loadDemoFile();
-    QTest::newRow("file end")<<mEdit->nextWordBegin(CharPos{100,100})<<CharPos{1,76};
-    QTest::newRow("file start")<<mEdit->nextWordBegin(CharPos{0,0})<<CharPos{9,0};
+    QTest::newRow("doc begin")<<mEdit->nextWordBegin(CharPos{0,0})<<CharPos{9,0};
+    QTest::newRow("doc end")<<mEdit->nextWordBegin(CharPos{1,76})<<CharPos{1,76};
+    QTest::newRow("line begin")<<mEdit->nextWordBegin(CharPos{0,10})<<CharPos{8,10};
     QTest::newRow("line end")<<mEdit->nextWordBegin(CharPos{17,8})<<CharPos{0,10};
-    QTest::newRow("line start")<<mEdit->nextWordBegin(CharPos{0,10})<<CharPos{8,10};
-    QTest::newRow("word start")<<mEdit->nextWordBegin(CharPos{8,10})<<CharPos{13,10};
+    QTest::newRow("word begin")<<mEdit->nextWordBegin(CharPos{8,10})<<CharPos{13,10};
     QTest::newRow("word mid")<<mEdit->nextWordBegin(CharPos{10,10})<<CharPos{13,10};
     QTest::newRow("word end")<<mEdit->nextWordBegin(CharPos{12,10})<<CharPos{13,10};
     QTest::newRow("in space")<<mEdit->nextWordBegin(CharPos{4,19})<<CharPos{16,19};
@@ -262,14 +249,17 @@ void TestQSyneditCpp::test_next_word_begin()
 
 void TestQSyneditCpp::test_next_word_end_data()
 {
-    loadDemoFile();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 
-    QTest::newRow("file end")<<mEdit->nextWordEnd(CharPos{100,100})<<CharPos{1,76};
-    QTest::newRow("file start")<<mEdit->nextWordEnd(CharPos{0,0})<<CharPos{8,0};
+    clearContent();
+    QTest::newRow("empty doc")<<mEdit->nextWordEnd(CharPos{0,0})<<CharPos{0,0};
+
+    loadDemoFile();
+    QTest::newRow("doc begin")<<mEdit->nextWordEnd(CharPos{0,0})<<CharPos{8,0};
+    QTest::newRow("doc end")<<mEdit->nextWordEnd(CharPos{1,76})<<CharPos{1,76};
+    QTest::newRow("line begin")<<mEdit->nextWordEnd(CharPos{0,10})<<CharPos{7,10};
     QTest::newRow("line end")<<mEdit->nextWordEnd(CharPos{17,8})<<CharPos{7,10};
-    QTest::newRow("line start")<<mEdit->nextWordEnd(CharPos{0,10})<<CharPos{7,10};
     QTest::newRow("word start")<<mEdit->nextWordEnd(CharPos{8,10})<<CharPos{12,10};
     QTest::newRow("word mid")<<mEdit->nextWordEnd(CharPos{10,10})<<CharPos{12,10};
     QTest::newRow("word end")<<mEdit->nextWordEnd(CharPos{12,10})<<CharPos{16,10};
@@ -293,8 +283,14 @@ void TestQSyneditCpp::test_prev_word_end_data()
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
 
-    QTest::newRow("at file start")<<mEdit->prevWordEnd(CharPos{0,0})<<CharPos{0,0};
-    QTest::newRow("at line end")<<mEdit->prevWordEnd(CharPos{16,10})<<CharPos{12,10};
+    clearContent();
+    QTest::newRow("empty doc")<<mEdit->prevWordEnd(CharPos{0,0})<<CharPos{0,0};
+
+    loadDemoFile();
+    QTest::newRow("doc begin")<<mEdit->prevWordEnd(CharPos{0,0})<<CharPos{0,0};
+    QTest::newRow("doc end")<<mEdit->prevWordEnd(CharPos{1,76})<<CharPos{5,75};
+    QTest::newRow("line begin")<<mEdit->prevWordEnd(CharPos{0,10})<<CharPos{17,8};
+    QTest::newRow("line end")<<mEdit->prevWordEnd(CharPos{16,10})<<CharPos{12,10};
     QTest::newRow("word mid")<<mEdit->prevWordEnd(CharPos{15,10})<<CharPos{12,10};
     QTest::newRow("word begin")<<mEdit->prevWordEnd(CharPos{13,10})<<CharPos{12,10};
     QTest::newRow("word end")<<mEdit->prevWordEnd(CharPos{12,10})<<CharPos{7,10};
@@ -313,35 +309,50 @@ void TestQSyneditCpp::test_move_caret_x_data()
     loadDemoFile();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
+    QTest::addColumn<QList<StatusChanges>>("statusChanges");
+    QTest::addColumn<QList<StatusChanges>>("expect_statusChange");
+
     {
         mEdit->setCaretXY(CharPos{0,0});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(-1,false);
-        QTest::newRow("backward at file start")<<mEdit->caretXY()<<CharPos{0,0};
+        QTestData& td = QTest::newRow("backward at file start")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{1,76});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(1,false);
-        QTest::newRow("forward at file end")<<mEdit->caretXY()<<CharPos{1,76};
+        QTestData& td = QTest::newRow("forward at file end")<<mEdit->caretXY()<<CharPos{1,76};
+        td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,15});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(-1,false);
-        QTest::newRow("backward at line start")<<mEdit->caretXY()<<CharPos{7,14};
+        QTestData& td = QTest::newRow("backward at line start")<<mEdit->caretXY()<<CharPos{7,14};
+        td << mStatusChanges << QList<StatusChanges>{(StatusChange::CaretX | StatusChange::CaretY)};
     }
     {
         mEdit->setCaretXY(CharPos{0,15});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(1,false);
-        QTest::newRow("forward at line start")<<mEdit->caretXY()<<CharPos{1,15};
+        QTestData& td = QTest::newRow("forward at line start")<<mEdit->caretXY()<<CharPos{1,15};
+        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{40,15});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(-1,false);
-        QTest::newRow("backward at line end")<<mEdit->caretXY()<<CharPos{39,15};
+        QTestData& td = QTest::newRow("backward at line end")<<mEdit->caretXY()<<CharPos{39,15};
+        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{40,15});
+        mStatusChanges.clear();
         mEdit->moveCaretHorz(1,false);
-        QTest::newRow("forward at line end")<<mEdit->caretXY()<<CharPos{0,16};
+        QTestData& td = QTest::newRow("forward at line end")<<mEdit->caretXY()<<CharPos{0,16};
+        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY};
     }
 }
 
@@ -349,7 +360,10 @@ void TestQSyneditCpp::test_move_caret_x()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);
+    QFETCH(QList<StatusChanges>, statusChanges);
+    QFETCH(QList<StatusChanges>, expect_statusChange);
     QCOMPARE(pos, expect);
+    QCOMPARE(statusChanges, expect_statusChange);
 }
 
 void TestQSyneditCpp::test_move_caret_y_data()

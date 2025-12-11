@@ -48,13 +48,6 @@ Document::Document(const QFont& font, QObject *parent):
         std::placeholders::_3);
 }
 
-static void listIndexOutOfBounds(int index) {
-    Q_ASSERT(false); // let debugger stops here
-    throw IndexOutOfRange(index);
-}
-
-
-
 int Document::parenthesisLevel(int line) const
 {
     QMutexLocker locker(&mMutex);
@@ -162,12 +155,8 @@ QString Document::lineBreak() const
 PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState();
-    } else {
-         listIndexOutOfBounds(line);
-    }
-    return PSyntaxState();
+    Q_ASSERT(line>=0 && line < mLines.size());
+    return mLines[line]->syntaxState();
 }
 
 void Document::insertItem(int line, const QString &s)
@@ -205,36 +194,28 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
 void Document::setSyntaxState(int line, const PSyntaxState& state)
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        listIndexOutOfBounds(line);
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     mLines[line]->setSyntaxState(state);
 }
 
 QString Document::getLine(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return QString();
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->lineText();
 }
 
 size_t Document::getLineSeq(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return 0;
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->lineSeq();
 }
 
 int Document::getLineGlyphsCount(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return 0;
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->glyphsCount();
 }
 
@@ -385,11 +366,8 @@ void Document::clear()
 void Document::deleteLines(int index, int numLines)
 {
     QMutexLocker locker(&mMutex);
-    if (numLines<=0)
-        return;
-    if ((index < 0) || (index >= mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(numLines>0);
+    Q_ASSERT(index >= 0 && index < mLines.count());
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
@@ -411,12 +389,8 @@ void Document::deleteLines(int index, int numLines)
 void Document::moveLine(int from, int to)
 {
     QMutexLocker locker(&mMutex);
-    if ((from < 0) || (from >= mLines.count())) {
-        listIndexOutOfBounds(from);
-    }
-    if ((to < 0) || (to >= mLines.count())) {
-        listIndexOutOfBounds(to);
-    }
+    Q_ASSERT(from >= 0 && from < mLines.count());
+    Q_ASSERT(to >= 0 && to < mLines.count());
     beginUpdate();
     PDocumentLine temp = mLines[from];
     mLines.remove(from);
@@ -440,9 +414,7 @@ void Document::moveLine(int from, int to)
 void Document::insertLine(int index, const QString &s)
 {
     QMutexLocker locker(&mMutex);
-    if ((index < 0) || (index > mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(index>=0 && index<=mLines.count());
     beginUpdate();
     insertItem(index, s);
     endUpdate();
@@ -451,9 +423,7 @@ void Document::insertLine(int index, const QString &s)
 void Document::deleteLine(int index)
 {
     QMutexLocker locker(&mMutex);
-    if ((index < 0) || (index >= mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(index>=0 && index<mLines.count());
     beginUpdate();
     if (mIndexOfLongestLine == index)
         mIndexOfLongestLine = -1;
@@ -479,12 +449,10 @@ QString Document::getTextStr() const
 
 void Document::putLine(int index, const QString &s) {
     QMutexLocker locker(&mMutex);
+    Q_ASSERT(index>=0 && index < mLines.count());
     if (index == mLines.count()) {
         addLine(s);
     } else {
-        if (index<0 || index>=mLines.count()) {
-            listIndexOutOfBounds(index);
-        }
         beginUpdate();
         mLines[index]->setLineText(s);
         if (mIndexOfLongestLine == index) {
@@ -498,11 +466,8 @@ void Document::putLine(int index, const QString &s) {
 void Document::insertLines(int index, int numLines)
 {
     QMutexLocker locker(&mMutex);
-    if (index<0 || index>mLines.count()) {
-        listIndexOutOfBounds(index);
-    }
-    if (numLines<=0)
-        return;
+    Q_ASSERT(index>=0 && index<=mLines.count());
+    Q_ASSERT(numLines>0);
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
@@ -590,6 +555,7 @@ int Document::findPrevLineBySeq(int startLine, size_t lineSeq) const
 {
     //starts at 0
     //-1 not found
+    Q_ASSERT(startLine>=0 && startLine <= mLines.count());
     QMutexLocker locker(&mMutex);
     for (int i = std::min(startLine, mLines.count()-1); i>=0;i--) {
         if (mLines[i]->lineSeq() == lineSeq)

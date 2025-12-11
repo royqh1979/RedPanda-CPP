@@ -207,8 +207,8 @@ public:
 
     int leftSpaces(const QString& line) const;
     QString genSpaces(int charCount) const;
-    int charToGlyphLeft(int line, int charPos) const;
-    int charToGlyphLeft(int line, const QString& s, int charPos) const;
+    int charToGlyphLeft(int line, int ch) const;
+    int charToGlyphLeft(int line, const QString& s, int ch) const;
     //int charToColumn(const QString& s, int aChar) const;
     int xposToGlyphStartChar(int line, int xpos) const;
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
@@ -249,7 +249,7 @@ public:
     CharPos getTokenBegin(const CharPos& pos) const;
     CharPos getTokenEnd(const CharPos& pos) const;
 
-    CharPos prevWordBegin(const CharPos& pos) const;
+    CharPos prevWordBegin(CharPos) const;
     CharPos prevWordEnd(const CharPos &pos) const;
     CharPos nextWordBegin(const CharPos & pos) const;
     CharPos nextWordEnd(const CharPos &pos) const;
@@ -344,6 +344,9 @@ public:
     QStringList content();
     QString text();
 
+    bool validLine(int line) const;
+    bool validInDoc(int line, int ch) const;
+    bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
     bool getPositionOfMouse(CharPos& aPos) const;
     bool getLineOfMouse(int& line) const;
     bool pointToCharLine(const QPoint& point, CharPos& coord) const;
@@ -370,14 +373,14 @@ public:
     int leftPos() const;
     void setLeftPos(int value);
 
-    CharPos selBegin() const;
-    CharPos selEnd() const;
+    const CharPos &selBegin() const;
+    const CharPos &selEnd() const;
     int selectionBeginLine() const;
     int selectionEndLine() const;
 
     void clearSelection();
-    void setSelBegin(CharPos value);
-    void setSelEnd(CharPos Value);
+    void setSelBegin(const CharPos &value);
+    void setSelEnd(const CharPos &Value);
 
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);
@@ -547,7 +550,7 @@ protected:
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    CharPos ensureBufferCoordValid(const CharPos& coord);
+    // CharPos ensureBufferCoordValid(const CharPos& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
@@ -560,7 +563,7 @@ private:
 
     void updateLastCaretX();
     void ensureCaretVisible();
-    void ensureCaretVisibleEx(bool ForceToMiddle);
+    void ensureCaretVisible(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);
@@ -628,8 +631,8 @@ private:
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
     void deleteFromTo(const CharPos& start, const CharPos& end);
-    void setSelWord();
-    void setWordBlock(const CharPos &pos);
+    void selCurrentToken();
+    void selTokenAt(const CharPos &pos);
 
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
@@ -640,7 +643,6 @@ private:
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    CharPos getPreviousLeftBrace(int ch,int line);
     bool canDoBlockIndent() const;
 
     QRect calculateCaretRect() const;
@@ -837,4 +839,6 @@ protected:
 };
 
 }
+
+Q_DECLARE_METATYPE(QSynedit::StatusChanges);
 #endif // QSYNEDIT_H
