@@ -42,7 +42,7 @@ enum class EditCaretType {
     VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
 };
 
-enum class StatusChange {
+enum StatusChange {
     None = 0,
     AllCleared = 0x0001,
     CaretX = 0x0002,

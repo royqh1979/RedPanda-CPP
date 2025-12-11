@@ -2063,6 +2063,7 @@ void QSynEdit::doMoveSelDown()
 void QSynEdit::clearAll()
 {
     beginInternalChanges();
+    setCaretXY(fileBegin());
     mDocument->clear();
     onLinesDeleted(0,mDocument->count());
     clearUndo();
@@ -4517,7 +4518,7 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
     }
     // set caret and block begin / end
     beginInternalChanges();
-    ensureCaretVisible();
+    //ensureCaretVisible();
     moveCaretAndSelection(mSelectionBegin, ptDst, isSelection);
     endInternalChanges();
 }
@@ -4579,7 +4580,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
     // set caret and block begin / end
     beginInternalChanges();
-    ensureCaretVisible();
+    //ensureCaretVisible();
     moveCaretAndSelection(mSelectionBegin, vDstLineChar, isSelection);
     endInternalChanges();
 
@@ -6533,7 +6534,6 @@ void QSynEdit::setSelBegin(const CharPos &value)
         endInternalChanges();
     });
     int nInval1, nInval2;
-    bool selChanged = false;
     if (selAvail()) {
         if (mSelectionBegin.line < mSelectionEnd.line) {
             nInval1 = std::min(value.line, mSelectionBegin.line);
@@ -6545,10 +6545,11 @@ void QSynEdit::setSelBegin(const CharPos &value)
         mSelectionBegin = value;
         mSelectionEnd = value;
         invalidateLines(nInval1, nInval2+1);
-        selChanged = true;
-    }
-    if (selChanged)
         setStatusChanged(StatusChange::Selection);
+    } else {
+        mSelectionBegin = value;
+        mSelectionEnd = value;
+    }
 }
 
 int QSynEdit::leftPos() const
