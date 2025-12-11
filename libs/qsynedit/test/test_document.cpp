@@ -352,7 +352,7 @@ void TestDocument::test_move_line_to1()
     mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
 
     initSignalTest();
-    mDoc->moveLineTo(2,4);
+    mDoc->moveLine(2,4);
 
     QCOMPARE(mDoc->count(),5);
     QCOMPARE(mDoc->content(),
@@ -370,7 +370,7 @@ void TestDocument::test_move_line_to2()
     mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
 
     initSignalTest();
-    mDoc->moveLineTo(4,2);
+    mDoc->moveLine(4,2);
 
     QCOMPARE(mDoc->count(),5);
     QCOMPARE(mDoc->content(),

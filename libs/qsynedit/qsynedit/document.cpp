@@ -354,7 +354,6 @@ void Document::addLines(const QStringList &strings)
         auto action = finally([this]{
             endUpdate();
         });
-        int FirstAdded = mLines.count();
         for (const QString& s:strings) {
             addItem(s);
         }
@@ -409,24 +408,31 @@ void Document::deleteLines(int index, int numLines)
     mLines.remove(index,numLines);
 }
 
-void Document::exchange(int index1, int index2)
+void Document::moveLine(int from, int to)
 {
     QMutexLocker locker(&mMutex);
-    if ((index1 < 0) || (index1 >= mLines.count())) {
-        listIndexOutOfBounds(index1);
+    if ((from < 0) || (from >= mLines.count())) {
+        listIndexOutOfBounds(from);
     }
-    if ((index2 < 0) || (index2 >= mLines.count())) {
-        listIndexOutOfBounds(index2);
+    if ((to < 0) || (to >= mLines.count())) {
+        listIndexOutOfBounds(to);
     }
     beginUpdate();
-    PDocumentLine temp = mLines[index1];
-    mLines[index1]=mLines[index2];
-    mLines[index2]=temp;
-    //mList.swapItemsAt(Index1,Index2);
-    if (mIndexOfLongestLine == index1) {
-        mIndexOfLongestLine = index2;
-    } else if (mIndexOfLongestLine == index2) {
-        mIndexOfLongestLine = index1;
+    PDocumentLine temp = mLines[from];
+    mLines.remove(from);
+    mLines.insert(to, temp);
+    if (from<to) {
+        if (mIndexOfLongestLine == from) {
+            mIndexOfLongestLine = to;
+        } else if (from < mIndexOfLongestLine && mIndexOfLongestLine <= to) {
+            --mIndexOfLongestLine;
+        }
+    } else {
+        if (mIndexOfLongestLine == from) {
+            mIndexOfLongestLine = to;
+        } else if (to < mIndexOfLongestLine && mIndexOfLongestLine <= from) {
+            ++mIndexOfLongestLine;
+        }
     }
     endUpdate();
 }
@@ -508,36 +514,6 @@ void Document::insertLines(int index, int numLines)
     }
     mIndexOfLongestLine = -1;
 }
-
-void Document::moveLineTo(int oldIdx, int newIdx)
-{
-    QMutexLocker locker(&mMutex);
-    if ((oldIdx < 0) || (oldIdx >= mLines.count())) {
-        listIndexOutOfBounds(oldIdx);
-    }
-    if ((newIdx < 0) || (newIdx >= mLines.count())) {
-        listIndexOutOfBounds(newIdx);
-    }
-    if (oldIdx == newIdx)
-        return;
-    beginUpdate();
-    PDocumentLine line = mLines[oldIdx];
-    mLines.remove(oldIdx);
-    mLines.insert(newIdx, line);
-    if (mIndexOfLongestLine == oldIdx) {
-        mIndexOfLongestLine = newIdx;
-    } else if (newIdx < oldIdx
-               && newIdx <= mIndexOfLongestLine
-               && mIndexOfLongestLine < oldIdx) {
-        mIndexOfLongestLine++;
-    } else if (oldIdx < newIdx
-               && oldIdx <= mIndexOfLongestLine
-               && mIndexOfLongestLine < newIdx) {
-        mIndexOfLongestLine++;
-    }
-    endUpdate();
-}
-
 
 bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     TextDecoder decoder(encodingName);
@@ -1144,7 +1120,6 @@ void Document::internalClear()
 {
     if (!mLines.isEmpty()) {
         beginUpdate();
-        int oldCount = mLines.count();
         mLines.clear();
         mIndexOfLongestLine = -1;
         endUpdate();

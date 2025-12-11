@@ -498,10 +498,9 @@ public:
     void clear();
     void deleteLine(int index);
     void deleteLines(int index, int numLines);
-    void exchange(int index1, int index2);
+    void moveLine(int from, int to);
     void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
-    void moveLineTo(int oldIdx, int newIdx);
 
     int findPrevLineBySeq(int startLine, size_t lineSeq) const;
 

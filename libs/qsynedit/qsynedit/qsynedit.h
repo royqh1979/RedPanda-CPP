@@ -246,7 +246,7 @@ public:
 
     bool inWord(const CharPos& pos) const;
 
-    CharPos getTokenStart(const CharPos& pos) const;
+    CharPos getTokenBegin(const CharPos& pos) const;
     CharPos getTokenEnd(const CharPos& pos) const;
 
     CharPos prevWordBegin(const CharPos& pos) const;
@@ -407,7 +407,6 @@ public:
     QString displayLineText();
     QString lineText() const;
     QString lineText(int line) const;
-    void setLineText(const QString s);
     size_t lineSeq(int line) const;
 
     int findPrevLineBySeq(int startLine, size_t lineSeq) const;
@@ -539,8 +538,8 @@ protected:
     int clientLeft() const;
     QRect clientRect() const;
     void doSelectLine();
-    void incPaintLock();
-    void decPaintLock();
+    void beginInternalChanges();
+    void endInternalChanges();
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
@@ -569,7 +568,7 @@ private:
     void internalSetCaretX(int value);
     void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
-    void doOnStatusChange(StatusChanges changes);
+    void notifyStatusChange(StatusChanges changes);
     void updateHScrollbar();
     void doUpdateHScrollbar();
     void updateVScrollbar();
@@ -615,12 +614,12 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void deleteSelection();
     void setSelTextPrimitive(const QStringList& text);
-    void properSetLine(int line, const QString& sLineText, bool notify);
-    void properInsertLine(int line, const QString& sLineText, bool notify);
-    void properDeleteLines(int line, int count, bool notify);
-    void properDeleteLine(int line, bool notify) { properDeleteLines(line, 0, notify); }
-    void properInsertLines(int line, int count, bool notify);
-    void properMoveLine(int from, int to, bool notify);
+    void properSetLine(int line, const QString& sLineText, bool parseToEnd);
+    void properInsertLine(int line, const QString& sLineText, bool parseToEnd);
+    void properDeleteLines(int line, int count, bool parseToEnd);
+    void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 0, parseToEnd); }
+    void properInsertLines(int line, int count, bool parseToEnd);
+    void properMoveLine(int from, int to, bool parseToEnd);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
@@ -693,7 +692,6 @@ private:
     void onLinesDeleted(int line, int count);
     void onLinesInserted(int line, int count);
     void onLineMoved(int from, int to);
-    void onLinePutted(int line);
 
 private slots:
     void onMaxLineWidthChanged();
