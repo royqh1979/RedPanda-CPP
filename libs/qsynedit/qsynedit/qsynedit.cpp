@@ -222,7 +222,7 @@ void QSynEdit::setInsertMode(bool value)
     if (mInserting != value) {
         mInserting = value;
         updateCaret();
-        emit statusChanged(StatusChange::InsertMode);
+        setStatusChanged(StatusChange::InsertMode);
     }
 }
 
@@ -3684,7 +3684,7 @@ void QSynEdit::setReadOnly(bool readOnly)
 {
     if (mReadOnly != readOnly) {
         mReadOnly = readOnly;
-        emit statusChanged(StatusChange::ReadOnlyChanged);
+        setStatusChanged(StatusChange::ReadOnlyChanged);
     }
 }
 
@@ -4742,6 +4742,7 @@ void QSynEdit::setSelTextPrimitive(const QStringList &text)
     bool groupUndo=false;
     CharPos startPos = selBegin();
     CharPos endPos = selEnd();
+    bool selChanged = false;
     if (selAvail()) {
         if (!mUndoing && !text.isEmpty()) {
             beginEditing();
@@ -4765,6 +4766,7 @@ void QSynEdit::setSelTextPrimitive(const QStringList &text)
             setSelEnd(endPos);
         } else
             internalSetCaretXY(startPos);
+        selChanged = true;
     }
     if (!text.isEmpty()) {
         doInsertText(caretXY(),text,mode,mSelectionBegin.line,mSelectionEnd.line);
@@ -4772,7 +4774,8 @@ void QSynEdit::setSelTextPrimitive(const QStringList &text)
     if (groupUndo) {
         endEditing();
     }
-    setStatusChanged(StatusChange::Selection);
+    if (selChanged)
+        setStatusChanged(StatusChange::Selection);
     endInternalChanges();
 }
 
@@ -5144,8 +5147,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
         return;
     if (startLine>endLine)
         std::swap(startLine,endLine);
-
-    if (mode == SelectionMode::Normal) {
+    if (mode == SelectionMode::Normal && !mDocument->empty()) {
         PCodeFoldingRange foldRange = foldStartAtLine(pos.line);
         QString s = mDocument->getLine(pos.line);
         if ((foldRange) && foldRange->collapsed && pos.ch>s.length()+1)
@@ -5188,7 +5190,9 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
     QString str;
     bool bChangeScroll;
 //    int SpaceCount;
-    QString line=mDocument->getLine(pos.line);
+    if (mDocument->empty())
+        properInsertLine(0,"",false);
+    QString line = mDocument->getLine(pos.line);
     sLeftSide = line.left(pos.ch);
     sRightSide = line.mid(pos.ch);
     int caretY=pos.line;
@@ -6263,7 +6267,7 @@ void QSynEdit::setModified(bool value, bool skipUndo)
 {
     if (value) {
         mLastModifyTime = QDateTime::currentDateTime();
-        emit statusChanged(StatusChange::Modified);
+        setStatusChanged(StatusChange::Modified);
     }
     if (value != mModified) {
         mModified = value;
@@ -6279,7 +6283,7 @@ void QSynEdit::setModified(bool value, bool skipUndo)
                 mUndoList->setInitialState();
             }
         }
-        emit statusChanged(StatusChange::ModifyChanged);
+        setStatusChanged(StatusChange::ModifyChanged);
     }
 }
 

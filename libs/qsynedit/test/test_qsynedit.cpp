@@ -477,38 +477,67 @@ void TestQSyneditCpp::test_move_caret_y()
 
 void TestQSyneditCpp::test_move_caret_to_line_start_data()
 {
-    loadDemoFile();
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
+    QTest::addColumn<QList<StatusChanges>>("statusChanges");
+    QTest::addColumn<QList<StatusChanges>>("expect_statusChange");
+
+    loadDemoFile();
+    {
+        mEdit->setCaretXY(CharPos{0,0});
+        mStatusChanges.clear();
+        mEdit->moveCaretToLineStart(false);
+        QTestData& td = QTest::newRow("doc begin")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{1,76});
+        mStatusChanges.clear();
+        mEdit->moveCaretToLineStart(false);
+        QTestData& td = QTest::newRow("doc end")<<mEdit->caretXY()<<CharPos{0,76};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX };
+    }
     {
         mEdit->setCaretXY(CharPos{0,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("begin of line")<<mEdit->caretXY()<<CharPos{4,15};
+        QTestData& td = QTest::newRow("begin of line")<<mEdit->caretXY()<<CharPos{4,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{2,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("in leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+        QTestData& td = QTest::newRow("in leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{4,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("end of leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+        QTestData& td = QTest::newRow("end of leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{3,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("end of leading spaces - 1")<<mEdit->caretXY()<<CharPos{0,15};
+        QTestData& td = QTest::newRow("end of leading spaces - 1")<<mEdit->caretXY()<<CharPos{0,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{5,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("end of leading spaces + 1")<<mEdit->caretXY()<<CharPos{4,15};
+        QTestData& td = QTest::newRow("end of leading spaces + 1")<<mEdit->caretXY()<<CharPos{4,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{10,15});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineStart(false);
-        QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{4,15};
+        QTestData& td = QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{4,15};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
 }
 
@@ -516,42 +545,61 @@ void TestQSyneditCpp::test_move_caret_to_line_start()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);
+    QFETCH(QList<StatusChanges>, statusChanges);
+    QFETCH(QList<StatusChanges>, expect_statusChange);
     QCOMPARE(pos, expect);
+    QCOMPARE(statusChanges, expect_statusChange);
 }
 
 void TestQSyneditCpp::test_move_caret_to_line_end_data()
 {
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
+    QTest::addColumn<QList<StatusChanges>>("statusChanges");
+    QTest::addColumn<QList<StatusChanges>>("expect_statusChange");
+
+    loadDemoFile();
     {
         mEdit->setCaretXY(CharPos{25,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("start of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+        QTestData& td = QTest::newRow("start of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{26,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("start of trailing spaces + 1")<<mEdit->caretXY()<<CharPos{34,70};
+        QTestData& td = QTest::newRow("start of trailing spaces + 1")<<mEdit->caretXY()<<CharPos{34,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{24,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("start of trailing spaces - 1")<<mEdit->caretXY()<<CharPos{25,70};
+        QTestData& td = QTest::newRow("start of trailing spaces - 1")<<mEdit->caretXY()<<CharPos{25,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{29,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("middle of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+        QTestData& td = QTest::newRow("middle of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{15,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{25,70};
+        QTestData& td = QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{25,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{34,70});
+        mStatusChanges.clear();
         mEdit->moveCaretToLineEnd(false);
-        QTest::newRow("end of line")<<mEdit->caretXY()<<CharPos{25,70};
+        QTestData& td = QTest::newRow("end of line")<<mEdit->caretXY()<<CharPos{25,70};
+        td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
 }
 
@@ -559,8 +607,46 @@ void TestQSyneditCpp::test_move_caret_to_line_end()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);
+    QFETCH(QList<StatusChanges>, statusChanges);
+    QFETCH(QList<StatusChanges>, expect_statusChange);
     QCOMPARE(pos, expect);
+    QCOMPARE(statusChanges, expect_statusChange);
 }
+
+void QSynedit::TestQSyneditCpp::test_input_chars_in_empty_doc()
+{
+    clearContent();
+    QTest::keyPress(mEdit.get(),'a');
+    QCOMPARE(mInsertStartLines, QList<int>{0});
+    QCOMPARE(mInsertLineCounts, QList<int>{1});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
+             }));
+    QTest::keyPress(mEdit.get(),'b');
+    QTest::keyPress(mEdit.get(),'c');
+    QTest::keyPress(mEdit.get(),' ');
+    QTest::keyPress(mEdit.get(),'a');
+    QTest::keyPress(mEdit.get(),'b');
+    QTest::keyPress(mEdit.get(),'c');
+    QCOMPARE(mEdit->content(),QStringList{"abc abc"});
+    QCOMPARE(mEdit->caretXY(),CharPos(7,0));
+    QCOMPARE(mInsertStartLines, QList<int>{0});
+    QCOMPARE(mInsertLineCounts, QList<int>{1});
+    QCOMPARE(mDeleteStartLines, QList<int>{});
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::Modified),
+             }));
+}
+
 
 
 /*
