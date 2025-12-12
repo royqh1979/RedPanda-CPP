@@ -380,7 +380,8 @@ public:
 
     void clearSelection();
     void setSelBegin(const CharPos &value);
-    void setSelEnd(const CharPos &Value);
+    void setSelEnd(const CharPos &value);
+    void setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos);
 
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);

@@ -6457,6 +6457,14 @@ void QSynEdit::setSelEnd(const CharPos &value)
     }
 }
 
+void QSynEdit::setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos)
+{
+    beginInternalChanges();
+    setSelBegin(beginPos);
+    setSelEnd(endPos);
+    endInternalChanges();
+}
+
 void QSynEdit::setSelLength(int len)
 {
     if (mSelectionBegin.line>mDocument->count() || mSelectionBegin.line<=0)

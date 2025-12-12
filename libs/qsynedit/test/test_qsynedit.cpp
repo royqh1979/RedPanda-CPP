@@ -616,6 +616,69 @@ void TestQSyneditCpp::test_move_caret_to_line_end()
     QCOMPARE(statusChanges, expect_statusChange);
 }
 
+void TestQSyneditCpp::test_select_data()
+{
+    QTest::addColumn<CharPos>("selBegin");
+    QTest::addColumn<CharPos>("expect_selBegin");
+    QTest::addColumn<CharPos>("selEnd");
+    QTest::addColumn<CharPos>("expect_selEnd");
+    QTest::addColumn<int>("selCount");
+    QTest::addColumn<int>("expect_selCount");
+    {
+        clearContent();
+        mEdit->clearSelection();
+        QTestData& td = QTest::addRow("empty doc 1")<<mEdit->selBegin()<<CharPos{0,0};
+        td<<mEdit->selEnd()<<CharPos{0,0};
+        td<<mEdit->selCount()<<0;
+    }
+    {
+        clearContent();
+        mEdit->setSelBeginEnd(mEdit->fileBegin(),mEdit->fileBegin());
+        QTestData& td = QTest::addRow("empty doc 2")<<mEdit->selBegin()<<CharPos{0,0};
+        td<<mEdit->selEnd()<<CharPos{0,0};
+        td<<mEdit->selCount()<<0;
+    }
+    {
+        loadDemoFile();
+        mEdit->setCaretXY(mEdit->fileBegin());
+        mEdit->clearSelection();
+        QTestData& td = QTest::addRow("clear in doc begin")<<mEdit->selBegin()<<CharPos{0,0};
+        td<<mEdit->selEnd()<<CharPos{0,0};
+        td<<mEdit->selCount()<<0;
+    }
+    {
+        loadDemoFile();
+        mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
+        mEdit->setCaretXY(mEdit->fileEnd());
+        mEdit->clearSelection();
+        QTestData& td = QTest::addRow("clear in doc end")<<mEdit->selBegin()<<mEdit->caretXY();
+        td<<mEdit->selEnd()<<mEdit->caretXY();
+        td<<mEdit->selCount()<<0;
+    }
+    {
+        loadDemoFile();
+        mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
+        mEdit->setCaretXY(mEdit->fileEnd());
+        mEdit->clearSelection();
+        QTestData& td = QTest::addRow("clear in doc end")<<mEdit->selBegin()<<mEdit->caretXY();
+        td<<mEdit->selEnd()<<mEdit->caretXY();
+        td<<mEdit->selCount()<<0;
+    }
+}
+
+void TestQSyneditCpp::test_select()
+{
+    QFETCH(CharPos, selBegin);
+    QFETCH(CharPos, expect_selBegin);
+    QFETCH(CharPos, selEnd);
+    QFETCH(CharPos, expect_selEnd);
+    QFETCH(int, selCount);
+    QFETCH(int, expect_selCount);
+    QCOMPARE(selBegin, expect_selBegin);
+    QCOMPARE(selEnd, expect_selEnd);
+    QCOMPARE(selCount, expect_selCount);
+}
+
 void QSynedit::TestQSyneditCpp::test_input_chars_in_empty_doc()
 {
     clearContent();
@@ -819,6 +882,11 @@ void QSynedit::TestQSyneditCpp::test_input_chars_in_empty_doc()
                                   }));
     QCOMPARE(mReparseStarts, QList<int>({0,0,0}));
     QCOMPARE(mReparseCounts, QList<int>({1,1,1}));
+
+}
+
+void QSynedit::TestQSyneditCpp::test_input_chars_in_doc_without_selection()
+{
 
 }
 

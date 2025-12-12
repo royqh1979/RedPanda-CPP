@@ -55,7 +55,11 @@ private slots:
     void test_move_caret_to_line_end_data();
     void test_move_caret_to_line_end();
 
+    void test_select_data();
+    void test_select();
+
     void test_input_chars_in_empty_doc();
+    void test_input_chars_in_doc_without_selection();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();
