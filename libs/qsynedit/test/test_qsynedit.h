@@ -26,6 +26,8 @@ private slots:
     void onReparsed(int start, int count);
 
     void initTestCase();
+    void clearReparseDatas();
+    void clearSignalDatas();
     void loadDemoFile();
     void clearContent();
 

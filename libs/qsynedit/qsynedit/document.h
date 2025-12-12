@@ -671,6 +671,7 @@ private:
 };
 
 enum class ChangeReason {
+    InsertLine,
     Insert,
     Delete,
     Caret, //just restore the Caret, allowing better Undo behavior

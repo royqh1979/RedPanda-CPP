@@ -53,7 +53,7 @@ enum StatusChange {
     ModifyChanged = 0x0040,
     Selection = 0x0080,
     ReadOnlyChanged = 0x0100,
-    Modified = 0x0200
+    Modified = 0x0200,
 };
 
 Q_DECLARE_FLAGS(StatusChanges, StatusChange)
@@ -550,7 +550,7 @@ protected:
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    // CharPos ensureBufferCoordValid(const CharPos& coord);
+    CharPos ensureCharPosValid(const CharPos& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
@@ -567,9 +567,7 @@ private:
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);
-    void internalSetCaretXY(int x, int y, bool ensureVisible = true);
     void internalSetCaretX(int value);
-    void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
     void notifyStatusChange(StatusChanges changes);
     void updateHScrollbar();
@@ -620,7 +618,7 @@ private:
     void properSetLine(int line, const QString& sLineText, bool parseToEnd);
     void properInsertLine(int line, const QString& sLineText, bool parseToEnd);
     void properDeleteLines(int line, int count, bool parseToEnd);
-    void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 0, parseToEnd); }
+    void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 1, parseToEnd); }
     void properInsertLines(int line, int count, bool parseToEnd);
     void properMoveLine(int from, int to, bool parseToEnd);
 
