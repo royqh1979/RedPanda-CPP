@@ -396,74 +396,138 @@ void TestQSyneditCpp::test_move_caret_y_data()
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(-1,false);
-        QTestData& td = QTest::newRow("backward in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
+        mEdit->executeCommand(EditCommand::Up, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Up in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(1,false);
-        QTestData& td = QTest::newRow("forward in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Down in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,0});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageUp, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Up in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,0});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageDown, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Down in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
         td << mStatusChanges << QList<StatusChanges>{};
     }
 
     loadDemoFile();
+    //up/down
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(-1,false);
-        QTestData& td = QTest::newRow("backward at file start")<<mEdit->caretXY()<<CharPos{0,0};
+        mEdit->executeCommand(EditCommand::Up, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Up at file start")<<mEdit->caretXY()<<CharPos{0,0};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{4,0});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(-1,false);
-        QTestData& td = QTest::newRow("backward at first line")<<mEdit->caretXY()<<CharPos{4,0};
+        mEdit->executeCommand(EditCommand::Up, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Up at first line")<<mEdit->caretXY()<<CharPos{4,0};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{4,15});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(-1,false);
-        QTestData& td = QTest::newRow("normal backward")<<mEdit->caretXY()<<CharPos{4,14};
+        mEdit->executeCommand(EditCommand::Up, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Normal Up")<<mEdit->caretXY()<<CharPos{4,14};
         td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY};
     }
     {
         mEdit->setCaretXY(CharPos{10,15});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(-1,false);
-        QTestData& td = QTest::newRow("backward but prev line not long enough")<<mEdit->caretXY()<<CharPos{7,14};
+        mEdit->executeCommand(EditCommand::Up, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Up but prev line not long enough")<<mEdit->caretXY()<<CharPos{7,14};
         td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX | StatusChange::CaretY};
     }
     {
         mEdit->setCaretXY(CharPos{1,76});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(1,false);
-        QTestData& td = QTest::newRow("forward at file end")<<mEdit->caretXY()<<CharPos{1,76};
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Down at file end")<<mEdit->caretXY()<<CharPos{1,76};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,76});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(1,false);
-        QTestData& td = QTest::newRow("forward at lastline")<<mEdit->caretXY()<<CharPos{0,76};
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Down at lastline")<<mEdit->caretXY()<<CharPos{0,76};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{26,61});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(1,false);
-        QTestData& td = QTest::newRow("normal forward")<<mEdit->caretXY()<<CharPos{26,62};
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Normal Down")<<mEdit->caretXY()<<CharPos{26,62};
         td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY};
     }
     {
         mEdit->setCaretXY(CharPos{45,61});
         mStatusChanges.clear();
-        mEdit->moveCaretVert(1,false);
-        QTestData& td = QTest::newRow("forward but next line not long enough")<<mEdit->caretXY()<<CharPos{37,62};
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Down but next line not long enough")<<mEdit->caretXY()<<CharPos{37,62};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX | StatusChange::CaretY };
+    }
+    // page up/down
+    {
+        mEdit->setCaretXY(CharPos{0,0});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageUp, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Up at file start")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{4,0});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageUp, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Up at first line")<<mEdit->caretXY()<<CharPos{4,0};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,75});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageUp, QChar(0), nullptr);
+        CharPos newPos=CharPos{0,75-mEdit->linesInWindow()};
+        if (newPos.line<0)
+            newPos.line = 0;
+        QTestData& td = QTest::newRow("Normal Page Up")<<mEdit->caretXY()<<newPos;
+        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,1});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageDown, QChar(0), nullptr);
+        CharPos newPos=CharPos{0,1+mEdit->linesInWindow()};
+        if (newPos.line > 76)
+            newPos.line = 76;
+        QTestData& td = QTest::newRow("Normal Page Down")<<mEdit->caretXY()<<newPos;
+        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY};
+    }
+    {
+        mEdit->setCaretXY(CharPos{1,76});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::PageDown, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Down at file end")<<mEdit->caretXY()<<CharPos{1,76};
+        td << mStatusChanges << QList<StatusChanges>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,76});
+        mStatusChanges.clear();
+        mEdit->executeCommand(EditCommand::Down, QChar(0), nullptr);
+        QTestData& td = QTest::newRow("Page Down at lastline")<<mEdit->caretXY()<<CharPos{0,76};
+        td << mStatusChanges << QList<StatusChanges>{};
     }
 }
 
@@ -622,47 +686,61 @@ void TestQSyneditCpp::test_select_data()
     QTest::addColumn<CharPos>("expect_selBegin");
     QTest::addColumn<CharPos>("selEnd");
     QTest::addColumn<CharPos>("expect_selEnd");
+    QTest::addColumn<QString>("selText");
+    QTest::addColumn<QString>("expect_selText");
     QTest::addColumn<int>("selCount");
     QTest::addColumn<int>("expect_selCount");
+    QTest::addColumn<QList<QSynedit::StatusChanges>>("statusChanges");
+    QTest::addColumn<QList<QSynedit::StatusChanges>>("expect_statusChanges");
     {
         clearContent();
         mEdit->clearSelection();
         QTestData& td = QTest::addRow("empty doc 1")<<mEdit->selBegin()<<CharPos{0,0};
         td<<mEdit->selEnd()<<CharPos{0,0};
+        td<<mEdit->selText()<<"";
         td<<mEdit->selCount()<<0;
+        td<<mStatusChanges<<QList<StatusChanges>{};
     }
     {
         clearContent();
         mEdit->setSelBeginEnd(mEdit->fileBegin(),mEdit->fileBegin());
         QTestData& td = QTest::addRow("empty doc 2")<<mEdit->selBegin()<<CharPos{0,0};
         td<<mEdit->selEnd()<<CharPos{0,0};
+        td<<mEdit->selText()<<"";
         td<<mEdit->selCount()<<0;
+        td<<mStatusChanges<<QList<StatusChanges>{};
+    }
+    {
+        loadDemoFile();
+        mEdit->setCaretAndSelection(CharPos{5,0},CharPos{0,0}, CharPos{5,0});
+        QTestData& td = QTest::addRow("select in line")<<mEdit->selBegin()<<CharPos{0,0};
+        td<<mEdit->selEnd()<<CharPos{5,0};
+        td<<mEdit->selText()<<"#incl";
+        td<<mEdit->selCount()<<5;
+        td<<mStatusChanges<<QList<StatusChanges>{StatusChange::CaretX | StatusChange::Selection};
     }
     {
         loadDemoFile();
         mEdit->setCaretXY(mEdit->fileBegin());
+        mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
+        mStatusChanges.clear();
         mEdit->clearSelection();
-        QTestData& td = QTest::addRow("clear in doc begin")<<mEdit->selBegin()<<CharPos{0,0};
-        td<<mEdit->selEnd()<<CharPos{0,0};
+        QTestData& td = QTest::addRow("clear selection")<<mEdit->selBegin()<<mEdit->caretXY();
+        td<<mEdit->selEnd()<<mEdit->caretXY();
+        td<<mEdit->selText()<<"";
         td<<mEdit->selCount()<<0;
+        td<<mStatusChanges<<QList<StatusChanges>{StatusChange::Selection};
     }
     {
         loadDemoFile();
         mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
-        mEdit->setCaretXY(mEdit->fileEnd());
-        mEdit->clearSelection();
-        QTestData& td = QTest::addRow("clear in doc end")<<mEdit->selBegin()<<mEdit->caretXY();
-        td<<mEdit->selEnd()<<mEdit->caretXY();
+        mStatusChanges.clear();
+        mEdit->setCaretXY(CharPos{0,10});
+        QTestData& td = QTest::addRow("set caret would clear selection")<<mEdit->selBegin()<<CharPos{0,10};
+        td<<mEdit->selEnd()<<CharPos{0,10};
+        td<<mEdit->selText()<<"";
         td<<mEdit->selCount()<<0;
-    }
-    {
-        loadDemoFile();
-        mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
-        mEdit->setCaretXY(mEdit->fileEnd());
-        mEdit->clearSelection();
-        QTestData& td = QTest::addRow("clear in doc end")<<mEdit->selBegin()<<mEdit->caretXY();
-        td<<mEdit->selEnd()<<mEdit->caretXY();
-        td<<mEdit->selCount()<<0;
+        td<<mStatusChanges<<QList<StatusChanges>{StatusChange::Selection | StatusChange::CaretY};
     }
 }
 
@@ -672,11 +750,17 @@ void TestQSyneditCpp::test_select()
     QFETCH(CharPos, expect_selBegin);
     QFETCH(CharPos, selEnd);
     QFETCH(CharPos, expect_selEnd);
+    QFETCH(QString, selText);
+    QFETCH(QString, expect_selText);
     QFETCH(int, selCount);
     QFETCH(int, expect_selCount);
+    QFETCH(QList<QSynedit::StatusChanges>, statusChanges);
+    QFETCH(QList<QSynedit::StatusChanges>, expect_statusChanges);
     QCOMPARE(selBegin, expect_selBegin);
     QCOMPARE(selEnd, expect_selEnd);
+    QCOMPARE(selText, expect_selText);
     QCOMPARE(selCount, expect_selCount);
+    QCOMPARE(statusChanges, expect_statusChanges);
 }
 
 void QSynedit::TestQSyneditCpp::test_input_chars_in_empty_doc()

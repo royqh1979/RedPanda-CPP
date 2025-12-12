@@ -510,7 +510,7 @@ bool QSynEdit::validInDoc(int line, int ch) const
         return false;
     if (ch<0)
         return false;
-    return ch<= getDisplayStringAtLine(line).length();
+    return ch<= mDocument->getLine(line).length();
 }
 
 
@@ -1377,15 +1377,7 @@ void QSynEdit::doSelectAll()
     auto action = finally([this](){
         endInternalChanges();
     });
-    CharPos lastPt;
-    lastPt.ch = 0;
-    if (mDocument->empty()) {
-        lastPt.line = 0;
-    } else {
-        lastPt.line = mDocument->count() - 1;
-        lastPt.ch = mDocument->getLine(lastPt.line-1).length();
-    }
-    setCaretAndSelection(caretXY(), CharPos{0, 0}, lastPt);
+    setCaretAndSelection(caretXY(), fileBegin(), fileEnd());
 }
 
 void QSynEdit::doComment()
@@ -1928,7 +1920,7 @@ void QSynEdit::doSelectLine()
     setCaretAndSelection(ptBegin,ptBegin,ptEnd);
 }
 
-CharPos QSynEdit::ensureCharPosValid(const CharPos &coord)
+CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
 {
     if (mDocument->empty())
         return fileBegin();
@@ -1939,7 +1931,7 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &coord)
     if (value.line < 0)
         value.line = 0;
     if (mActiveSelectionMode!=SelectionMode::Column) {
-        nMaxX = getDisplayStringAtLine(value.line).length();
+        nMaxX = mDocument->getLine(value.line).length();
         value.ch = std::min(value.ch, nMaxX);
     }
     value.ch = std::max(value.ch,0);

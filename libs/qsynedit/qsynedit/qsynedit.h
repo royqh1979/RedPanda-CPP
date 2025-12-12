@@ -344,6 +344,7 @@ public:
     QStringList content();
     QString text();
 
+    CharPos ensureCharPosValid(const CharPos& coord) const;
     bool validLine(int line) const;
     bool validInDoc(int line, int ch) const;
     bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
@@ -551,7 +552,6 @@ protected:
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    CharPos ensureCharPosValid(const CharPos& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
