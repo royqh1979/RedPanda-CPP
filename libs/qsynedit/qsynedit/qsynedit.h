@@ -140,6 +140,8 @@ class RedoList;
 using PUndoList = std::shared_ptr<UndoList>;
 using PRedoList = std::shared_ptr<RedoList>;
 
+enum class ChangeReason;
+
 class TestQSyneditCpp;
 
 class QSynEdit : public QAbstractScrollArea
@@ -622,6 +624,10 @@ private:
     void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 1, parseToEnd); }
     void properInsertLines(int line, int count, bool parseToEnd);
     void properMoveLine(int from, int to, bool parseToEnd);
+
+    void properAddChange(ChangeReason reason, const CharPos &startPos,
+                         const CharPos &endPos, const QStringList& changeText,
+                         SelectionMode selMode);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);

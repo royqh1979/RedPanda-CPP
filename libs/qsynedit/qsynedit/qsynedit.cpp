@@ -324,12 +324,16 @@ void QSynEdit::addGroupBreak()
 
 void QSynEdit::addCaretToUndo()
 {
+    if (mUndoing)
+        return;
     CharPos p=caretXY();
     mUndoList->addChange(ChangeReason::Caret,p,p,QStringList(), mActiveSelectionMode);
 }
 
 void QSynEdit::addLeftTopToUndo()
 {
+    if (mUndoing)
+        return;
     CharPos p;
     //todo: use buffer coord to save left/top pos is ugly
     p.ch = leftPos();
@@ -339,6 +343,8 @@ void QSynEdit::addLeftTopToUndo()
 
 void QSynEdit::addSelectionToUndo()
 {
+    if (mUndoing)
+        return;
     mUndoList->addChange(ChangeReason::Selection,mSelectionBegin,
                          mSelectionEnd,QStringList(),mActiveSelectionMode);
 }
@@ -1609,8 +1615,11 @@ void QSynEdit::beginEditing()
 {
     beginInternalChanges();
     if (mEditingCount==0) {
-        if (!mUndoing)
+        if (!mUndoing) {
             mUndoList->beginBlock();
+            addCaretToUndo();
+            addSelectionToUndo();
+        }
     }
     mEditingCount++;
 }
@@ -5047,6 +5056,13 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     int maxLine = std::max(from,to);
     reparseLines(minLine, maxLine+1, parseToEnd && mSyntaxer->needsLineState());
     emit lineMoved(from, to);
+}
+
+void QSynEdit::properAddChange(ChangeReason reason, const CharPos &startPos, const CharPos &endPos, const QStringList &changeText, SelectionMode selMode)
+{
+    if (mUndoing)
+        return;
+    mUndoList->addChange(reason, startPos, endPos,changeText, selMode);
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)

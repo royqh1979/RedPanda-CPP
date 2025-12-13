@@ -60,6 +60,7 @@ private slots:
 
     void test_input_chars_in_empty_doc();
     void test_input_chars_in_doc_without_selection();
+    void test_delete_chars();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();

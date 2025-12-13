@@ -681,6 +681,9 @@ enum class ChangeReason {
     LineBreak,
     MoveLine,
     ReplaceLine,
+    AddChar,
+    DeleteChar,
+    DeletePreviousChar,
     Nothing // undo list empty
   };
 
