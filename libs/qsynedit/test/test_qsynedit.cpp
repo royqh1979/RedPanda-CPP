@@ -721,6 +721,42 @@ void TestQSyneditCpp::test_select_data()
     }
     {
         loadDemoFile();
+        mEdit->setCaretAndSelection(CharPos{16,1},CharPos{0,1}, CharPos{16,1});
+        QTestData& td = QTest::addRow("select from line begin to end")<<mEdit->selBegin()<<CharPos{0,1};
+        td<<mEdit->selEnd()<<CharPos{16,1};
+        td<<mEdit->selText()<<"#include <mutex>";
+        td<<mEdit->selCount()<<16;
+        td<<mStatusChanges<<QList<StatusChanges>{StatusChange::CaretX | StatusChange::CaretY | StatusChange::Selection};
+    }
+    {
+        loadDemoFile();
+        mEdit->setCaretAndSelection(CharPos{0,2},CharPos{0,1}, CharPos{0,2});
+        QTestData& td = QTest::addRow("select one whole line")<<mEdit->selBegin()<<CharPos{0,1};
+        td<<mEdit->selEnd()<<CharPos{0,2};
+        td<<mEdit->selText()<<"#include <mutex>" + mEdit->lineBreak();
+        td<<mEdit->selCount()<<16+mEdit->lineBreak().length();
+        td<<mStatusChanges<<QList<StatusChanges>{ StatusChange::CaretY | StatusChange::Selection};
+    }
+    {
+        loadDemoFile();
+        mEdit->setCaretAndSelection(CharPos{11,1},CharPos{4,0}, CharPos{11,1});
+        QTestData& td = QTest::addRow("select two lines")<<mEdit->selBegin()<<CharPos{4,0};
+        td<<mEdit->selEnd()<<CharPos{11,1};
+        td<<mEdit->selText()<<"lude <iostream>" + mEdit->lineBreak() + "#include <m";
+        td<<mEdit->selCount()<<15+mEdit->lineBreak().length()+11;
+        td<<mStatusChanges<<QList<StatusChanges>{StatusChange::CaretX | StatusChange::CaretY | StatusChange::Selection};
+    }
+    {
+        loadDemoFile();
+        mEdit->selectAll();
+        QTestData& td = QTest::addRow("select whole doc")<<mEdit->selBegin()<<mEdit->fileBegin();
+        td<<mEdit->selEnd()<<mEdit->fileEnd();
+        td<<mEdit->selText()<<mEdit->text();
+        td<<mEdit->selCount()<<mEdit->text().length();
+        td<<mStatusChanges<<QList<StatusChanges>{ StatusChange::Selection};
+    }
+    {
+        loadDemoFile();
         mEdit->setCaretXY(mEdit->fileBegin());
         mEdit->setSelBeginEnd(CharPos{0,0}, CharPos{0,5});
         mStatusChanges.clear();
