@@ -46,6 +46,7 @@ Document::Document(const QFont& font, QObject *parent):
         std::placeholders::_1,
         std::placeholders::_2,
         std::placeholders::_3);
+    ensureHasLine();
 }
 
 int Document::parenthesisLevel(int line) const
@@ -269,15 +270,13 @@ void Document::setText(const QString &text)
         }
         mIndexOfLongestLine = -1;
     }
+    ensureHasLine();
 }
 
 void Document::setContents(const QStringList &text)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
     internalClear();
     if (text.count() > 0) {
         foreach (const QString& s,text) {
@@ -285,6 +284,8 @@ void Document::setContents(const QStringList &text)
         }
         mIndexOfLongestLine = -1;
     }
+    ensureHasLine();
+    endUpdate();
 }
 
 QStringList Document::content() const
@@ -360,7 +361,10 @@ int Document::getTextLength() const
 void Document::clear()
 {
     QMutexLocker locker(&mMutex);
+    beginUpdate();
     internalClear();
+    ensureHasLine();
+    endUpdate();
 }
 
 void Document::deleteLines(int index, int numLines)
@@ -369,9 +373,6 @@ void Document::deleteLines(int index, int numLines)
     Q_ASSERT(numLines>0);
     Q_ASSERT(index >= 0 && index < mLines.count());
     beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
     if (mIndexOfLongestLine>=index) {
         if (mIndexOfLongestLine <index+numLines) {
             mIndexOfLongestLine = -1;
@@ -384,6 +385,8 @@ void Document::deleteLines(int index, int numLines)
        numLines = mLines.count() - index;
     }
     mLines.remove(index,numLines);
+    ensureHasLine();
+    endUpdate();
 }
 
 void Document::moveLine(int from, int to)
@@ -430,6 +433,7 @@ void Document::deleteLine(int index)
     else if (mIndexOfLongestLine>index)
         mIndexOfLongestLine -= 1;
     mLines.removeAt(index);
+    ensureHasLine();
     endUpdate();
 }
 
@@ -589,6 +593,7 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     beginUpdate();
     internalClear();
     auto action = finally([this]{
+        ensureHasLine();
         endUpdate();
     });
     //test for utf8 / utf 8 bom
@@ -1084,12 +1089,16 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos) con
 
 void Document::internalClear()
 {
-    if (!mLines.isEmpty()) {
-        beginUpdate();
-        mLines.clear();
-        mIndexOfLongestLine = -1;
-        endUpdate();
-    }
+    beginUpdate();
+    mLines.clear();
+    mIndexOfLongestLine = -1;
+    endUpdate();
+}
+
+void Document::ensureHasLine()
+{
+    if (mLines.isEmpty())
+        insertItem(0,"");
 }
 
 bool Document::lineWidthValid(int line)
@@ -1215,7 +1224,7 @@ void Document::setNewlineType(const NewlineType &fileEndingType)
 bool Document::empty() const
 {
     QMutexLocker locker(&mMutex);
-    return mLines.count()==0;
+    return mLines.count()==1 && mLines[0]->lineText().length()==0;
 }
 
 void Document::invalidateAllLineWidth()

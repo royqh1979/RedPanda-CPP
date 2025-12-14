@@ -393,7 +393,7 @@ void TestDocument::test_clear()
     initSignalTest();
     mDoc->clear();
 
-    QVERIFY(mDoc->count()==0);
+    QVERIFY(mDoc->empty());
 
     QCOMPARE(mChangedCount, 1);
 }

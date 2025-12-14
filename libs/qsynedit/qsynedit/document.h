@@ -632,6 +632,7 @@ protected:
     void addItem(const QString& s);
     void internalClear();
 private:
+    void ensureHasLine();
     void invalidateAllLineWidth();
     bool lineWidthValid(int line);
     void beginSetLinesWidth();

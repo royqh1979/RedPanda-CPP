@@ -665,7 +665,7 @@ private:
     void doDuplicateLine();
     void doMoveSelUp();
     void doMoveSelDown();
-    void clearAll();
+    void doClearAll();
     void doBreakLine();
     void doTabKey();
     void doShiftTabKey();
