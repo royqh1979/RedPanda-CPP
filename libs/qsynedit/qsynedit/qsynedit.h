@@ -303,7 +303,6 @@ public:
 
     void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri);
 
-    void addGroupBreak();
     void beginEditing();
     void endEditing();
     bool editing() const {return mEditingCount!=0;} // for testing
@@ -626,10 +625,6 @@ private:
     void properInsertLines(int line, int count, bool parseToEnd);
     void properMoveLine(int from, int to, bool parseToEnd);
 
-    void properAddChange(ChangeReason reason, const CharPos &startPos,
-                         const CharPos &endPos, const QStringList& changeText,
-                         SelectionMode selMode);
-
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
     void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
@@ -702,6 +697,9 @@ private:
     void onLinesInserted(int line, int count);
     void onLineMoved(int from, int to);
 
+    void addGroupUndoBreak();
+    void addChangeToUndo(ChangeReason reason, const CharPos& start, const CharPos& end,
+                 const QStringList& changeText, SelectionMode selMode);
 private slots:
     void onMaxLineWidthChanged();
     void updateHScrollBarLater();
