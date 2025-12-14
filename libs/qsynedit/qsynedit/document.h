@@ -684,6 +684,8 @@ enum class ChangeReason {
     AddChar,
     DeleteChar,
     DeletePreviousChar,
+    MergeWithPrevLine,
+    MergeWithNextLine,
     Nothing // undo list empty
   };
 
@@ -754,6 +756,7 @@ signals:
 protected:
     bool inBlock();
     unsigned int getNextChangeNumber();
+
 protected:
     size_t mBlockChangeNumber;
     int mBlockLock;

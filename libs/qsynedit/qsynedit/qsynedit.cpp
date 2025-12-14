@@ -67,6 +67,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
     mUndoing = false;
+    mMergeCaretStatusChangeLock = 0;
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
 //    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
@@ -319,7 +320,8 @@ void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &ls
 
 void QSynEdit::addGroupBreak()
 {
-    mUndoList->addGroupBreak();
+    if (!mUndoing && mOptions.testFlag(EditorOption::GroupUndo))
+        mUndoList->addGroupBreak();
 }
 
 void QSynEdit::addCaretToUndo()
@@ -1416,8 +1418,6 @@ void QSynEdit::doComment()
               QStringList(), SelectionMode::Normal);
     }
     reparseLines(origBlockBegin.line, endLine+1,true);
-    // When grouping similar commands, process one comment action per undo/redo
-//    mUndoList->addGroupBreak();
     // Move begin of selection
     if (origBlockBegin.ch > 0)
         origBlockBegin.ch+=2;
@@ -1601,8 +1601,6 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         } else
             setSelEnd(caretXY());
 
-        if (mOptions.testFlag(EditorOption::GroupUndo))
-            mUndoList->addGroupBreak();
     }
     if (isDragging) {
         mScrollTimer->singleShot(20,this,&QSynEdit::onDraggingScrollTimeout);
@@ -1617,8 +1615,6 @@ void QSynEdit::beginEditing()
     if (mEditingCount==0) {
         if (!mUndoing) {
             mUndoList->beginBlock();
-            addCaretToUndo();
-            addSelectionToUndo();
         }
     }
     mEditingCount++;
@@ -1681,7 +1677,6 @@ void QSynEdit::doDeletePrevChar()
         deleteSelection();
         return;
     }
-    bool shouldAddGroupBreak=false;
     QString tempStr = lineText();
     int tempStrLen = tempStr.length();
     CharPos caretBackup{caretXY()};
@@ -1692,6 +1687,7 @@ void QSynEdit::doDeletePrevChar()
     } else if (mCaretX == 0) {
         // join this line with the last line if possible
         if (mCaretY > 0) {
+            mUndoList->beginBlock();
             beginEditing();
             QString lastLine = mDocument->getLine(mCaretY-1);
             if (lastLine.trimmed().isEmpty()) {
@@ -1704,10 +1700,26 @@ void QSynEdit::doDeletePrevChar()
             setCaretXY(CharPos{lastLine.length(), mCaretY - 1});
             helper.append("");
             helper.append("");
-            shouldAddGroupBreak=true;
+            mUndoList->addChange(ChangeReason::MergeWithPrevLine, caretXY(), caretBackup, helper,
+                            mActiveSelectionMode);
+            mUndoList->endBlock();
         }
     } else {
         // delete char
+        QChar lastDelCh{0};
+        bool shouldAddGroupBreak = false;
+        if (!mUndoing && mOptions.testFlag(EditorOption::GroupUndo)) {
+            PUndoItem undoItem = mUndoList->peekItem();
+            if (undoItem &&
+                    (undoItem->changeReason() ==ChangeReason::DeletePreviousChar
+                    && undoItem->changeStartPos().line == mCaretY
+                    && undoItem->changeStartPos().ch == mCaretX
+                    ))
+                lastDelCh = undoItem->changeText()[0][0];
+            else
+                shouldAddGroupBreak = true;
+        }
+
         int glyphIndex = mDocument->charToGlyphIndex(mCaretY,mCaretX);
         Q_ASSERT(glyphIndex>0);
         int oldCaretX = mCaretX;
@@ -1715,18 +1727,26 @@ void QSynEdit::doDeletePrevChar()
         //qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretY;
         QString s = tempStr.mid(newCaretX, oldCaretX-newCaretX);
         setCaretX(newCaretX);
-        if (s==' ' || s=='\t')
-            shouldAddGroupBreak=true;
+        if (!shouldAddGroupBreak) {
+            if (isSpaceChar(s[0]))
+                shouldAddGroupBreak = !isSpaceChar(lastDelCh);
+            else if (isIdentChar(s[0]))
+                shouldAddGroupBreak = !isIdentChar(lastDelCh);
+            else
+                shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+        }
+
         helper.append(s);
         tempStr.remove(newCaretX, oldCaretX-newCaretX);
         properSetLine(mCaretY, tempStr, true);
+        if ((caretBackup.ch != mCaretX) || (caretBackup.line != mCaretY)) {
+            if (shouldAddGroupBreak)
+                addGroupBreak();
+            mUndoList->addChange(ChangeReason::DeletePreviousChar, caretXY(), caretBackup, helper,
+                            mActiveSelectionMode);
+        }
     }
-    if ((caretBackup.ch != mCaretX) || (caretBackup.line != mCaretY)) {
-        mUndoList->addChange(ChangeReason::Delete, caretXY(), caretBackup, helper,
-                        mActiveSelectionMode);
-        if (shouldAddGroupBreak)
-            mUndoList->addGroupBreak();
-    }
+
 }
 
 void QSynEdit::doDeleteCurrentChar()
@@ -1754,7 +1774,6 @@ void QSynEdit::doDeleteCurrentChar()
     if (selAvail())
         deleteSelection();
     else {
-        bool shouldAddGroupBreak=false;
         // Call UpdateLastCaretX. Even though the caret doesn't move, the
         // current caret position should "stick" whenever text is modified.
         updateLastCaretX();
@@ -1763,21 +1782,49 @@ void QSynEdit::doDeleteCurrentChar()
         if (mCaretX>tempStrLen) {
             return;
         } else if (mCaretX < tempStrLen) {
+            QChar lastDelCh{0};
+            bool shouldAddGroupBreak = false;
+            if (!mUndoing && mOptions.testFlag(EditorOption::GroupUndo)) {
+                PUndoItem undoItem = mUndoList->peekItem();
+                if (undoItem &&
+                        (undoItem->changeReason() ==ChangeReason::DeleteChar
+                        && undoItem->changeStartPos().line == mCaretY
+                        && undoItem->changeStartPos().ch == mCaretX
+                        ))
+                    lastDelCh = undoItem->changeText()[0][0];
+                else
+                    shouldAddGroupBreak = true;
+            }
+
             int glyphIndex = mDocument->charToGlyphIndex(mCaretY,mCaretX);
             int glyphLen = mDocument->glyphLength(mCaretY,glyphIndex);
             QString s = tempStr.mid(mCaretX,glyphLen);
-            if (s==' ' || s=='\t')
-                shouldAddGroupBreak=true;
+            if (!shouldAddGroupBreak) {
+                if (isSpaceChar(s[0]))
+                    shouldAddGroupBreak = !isSpaceChar(lastDelCh);
+                else if (isIdentChar(s[0]))
+                    shouldAddGroupBreak = !isIdentChar(lastDelCh);
+                else
+                    shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+            }
+
             // delete char
             helper.append(s);
             newCaret.ch = mCaretX + glyphLen;
             newCaret.line = mCaretY;
             tempStr.remove(mCaretX, glyphLen);
             properSetLine(mCaretY, tempStr, true);
+            if (!mUndoing) {
+                if (shouldAddGroupBreak)
+                    addGroupBreak();
+                mUndoList->addChange(ChangeReason::DeleteChar, caretXY(), newCaret,
+                      helper, mActiveSelectionMode);
+            }
         } else {
             // join line with the line after
             if (mCaretY+1 < mDocument->count()) {
-                shouldAddGroupBreak=true;
+                if (!mUndoing)
+                    mUndoList->beginBlock();
                 newCaret.ch = 0;
                 newCaret.line = mCaretY + 1;
                 helper.append("");
@@ -1789,13 +1836,12 @@ void QSynEdit::doDeleteCurrentChar()
                     properDeleteLine(mCaretY + 1, false);
                 }
                 properSetLine(mCaretY, newString, true);
+                if (!mUndoing) {
+                    mUndoList->addChange(ChangeReason::MergeWithNextLine, caretXY(), newCaret,
+                          helper, mActiveSelectionMode);
+                    mUndoList->endBlock();
+                }
             }
-        }
-        if (newCaret.isValid()) {
-            mUndoList->addChange(ChangeReason::Delete, caretXY(), newCaret,
-                  helper, mActiveSelectionMode);
-            if (shouldAddGroupBreak)
-                mUndoList->addGroupBreak();
         }
     }
 }
@@ -2450,6 +2496,44 @@ void QSynEdit::doBlockUnindent()
     endEditing();
 }
 
+void QSynEdit::internalAddChar(const QChar& ch)
+{
+    if ((mActiveSelectionMode != SelectionMode::Normal)
+            || selAvail()) {
+        doSetSelText(ch);
+        return;
+    }
+    bool undoBlockBeginned = false;
+    beginInternalChanges();
+    if (mDocument->empty()) {
+        properInsertLine(0,"",false);
+        if (!mUndoing) {
+            undoBlockBeginned = true;
+            mUndoList->beginBlock();
+            mUndoList->addChange(
+                        ChangeReason::InsertLine,
+                        fileBegin(),fileBegin(),
+                        QStringList(),SelectionMode::Normal);
+        }
+    }
+    QString s = lineText();
+    QString newS = s.left(mCaretX)+ch+s.mid(mCaretX);
+    properSetLine(mCaretY,newS,true);
+    if (!mUndoing) {
+        mUndoList->addChange(
+                    ChangeReason::AddChar,
+                    CharPos{mCaretX, mCaretY},
+                    CharPos{mCaretX+1, mCaretY},
+                    QStringList(),
+                    SelectionMode::Normal
+                    );
+        if (undoBlockBeginned)
+            mUndoList->endBlock();
+    }
+    setCaretX(mCaretX+1);
+    endInternalChanges();
+}
+
 void QSynEdit::doAddChar(const QChar& ch)
 {
     if (mReadOnly)
@@ -2479,7 +2563,7 @@ void QSynEdit::doAddChar(const QChar& ch)
     QChar lastCh{0};
     if (!selAvail()) {
         PUndoItem undoItem = mUndoList->peekItem();
-        if (undoItem && undoItem->changeReason()==ChangeReason::Insert
+        if (undoItem && undoItem->changeReason()==ChangeReason::AddChar
                 && undoItem->changeEndPos().line == mCaretY
                 && undoItem->changeEndPos().ch == mCaretX
                 && undoItem->changeStartPos().line == mCaretY
@@ -2492,21 +2576,21 @@ void QSynEdit::doAddChar(const QChar& ch)
     }
     if (isIdentChar(ch)) {
         if (!isIdentChar(lastCh)) {
-            mUndoList->addGroupBreak();
+            addGroupBreak();
         }
-        doSetSelText(ch);
+        internalAddChar(ch);
     } else if (isSpaceChar(ch)) {
         // break group undo chain
         if (!isSpaceChar(lastCh)) {
-            mUndoList->addGroupBreak();
+            addGroupBreak();
         }
-        doSetSelText(ch);
+        internalAddChar(ch);
     } else {
         if (isSpaceChar(lastCh) || isIdentChar(lastCh)) {
-            mUndoList->addGroupBreak();
+            addGroupBreak();
         }
         beginEditing();
-        doSetSelText(ch);
+        internalAddChar(ch);
         int oldCaretX=mCaretX-1;
         int oldCaretY=mCaretY;
         // auto
@@ -2612,7 +2696,6 @@ void QSynEdit::doCutToClipboard()
     internalDoCopyToClipboard(selText());
     deleteSelection();
     endEditing();
-    mUndoList->addGroupBreak();
 }
 
 void QSynEdit::doCopyToClipboard()
@@ -2663,6 +2746,25 @@ void QSynEdit::endInternalChanges()
         }
         if (mStatusChanges!=0)
             notifyStatusChange(mStatusChanges);
+    }
+}
+
+void QSynEdit::beginMergeCaretStatusChange()
+{
+    if (mMergeCaretStatusChangeLock == 0) {
+        mCaretBeforeMerging = caretXY();
+    }
+    ++mMergeCaretStatusChangeLock;
+}
+
+void QSynEdit::endMergeCaretStatusChange()
+{
+    --mMergeCaretStatusChangeLock;
+    if (mMergeCaretStatusChangeLock == 0) {
+        if (mCaretBeforeMerging.ch != mCaretX)
+            setStatusChanged(StatusChange::CaretX);
+        if (mCaretBeforeMerging.line != mCaretY)
+            setStatusChanged(StatusChange::CaretY);
     }
 }
 
@@ -2861,6 +2963,8 @@ void QSynEdit::internalSetCaretX(int value)
 
 void QSynEdit::setStatusChanged(StatusChanges changes)
 {
+    if (mMergeCaretStatusChangeLock>0)
+        changes &= ~(StatusChange::CaretX | StatusChange::CaretY);
     mStatusChanges = mStatusChanges | changes;
     if (mPaintLock == 0)
         notifyStatusChange(mStatusChanges);
@@ -3792,6 +3896,12 @@ void QSynEdit::doAddStr(const QString &s)
     endEditing();
 }
 
+inline bool isGroupChange(ChangeReason reason){
+    return (reason == ChangeReason::AddChar
+            || reason == ChangeReason::DeleteChar
+            || reason == ChangeReason::DeletePreviousChar);
+}
+
 void QSynEdit::doUndo()
 {
     if (mReadOnly)
@@ -3818,8 +3928,9 @@ void QSynEdit::doUndo()
                     if (item->changeNumber() == oldChangeNumber)
                         keepGoing = true;
                     else {
-                        keepGoing = (mOptions.testFlag(EditorOption::GroupUndo) &&
-                            (lastChange == item->changeReason()) );
+                        keepGoing = (mOptions.testFlag(EditorOption::GroupUndo)
+                                     && (lastChange == item->changeReason())
+                                     && (isGroupChange(item->changeReason())));
                     }
                     oldChangeNumber=item->changeNumber();
                     lastChange = item->changeReason();
@@ -3895,7 +4006,9 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
+        case ChangeReason::AddChar:
         case ChangeReason::Insert: {
+            beginMergeCaretStatusChange();
             QStringList tmpText = getContent(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mRedoList->addRedo(
@@ -3906,6 +4019,7 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             setCaretXY(item->changeStartPos());
+            endMergeCaretStatusChange();
             break;
         }
         case ChangeReason::ReplaceLine:
@@ -3935,6 +4049,10 @@ void QSynEdit::doUndoItem()
                         item->changeNumber());
         }
             break;
+        case ChangeReason::DeleteChar:
+        case ChangeReason::DeletePreviousChar:
+        case ChangeReason::MergeWithNextLine:
+        case ChangeReason::MergeWithPrevLine:
         case ChangeReason::Delete: {
             // If there's no selection, we have to set
             // the Caret's position manualy.
@@ -3950,10 +4068,16 @@ void QSynEdit::doUndoItem()
                     std::swap(xFrom, xTo);
                 startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
             }
+            beginMergeCaretStatusChange();
             doInsertText(startPos,item->changeText(),item->changeSelMode(),
                          startPos.line,
                          endPos.line);
-            setCaretXY(item->changeEndPos());
+            if (item->changeReason() == ChangeReason::DeleteChar
+                    || item->changeReason() == ChangeReason::MergeWithNextLine)
+                setCaretXY(item->changeStartPos());
+            else
+                setCaretXY(item->changeEndPos());
+            endMergeCaretStatusChange();
             mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),
@@ -4133,6 +4257,7 @@ void QSynEdit::doRedoItem()
                         );
             properSetLine(item->changeStartPos().line,item->changeText()[0], true);
             break;
+        case ChangeReason::AddChar:
         case ChangeReason::Insert:
             setCaretAndSelection(
                         item->changeStartPos(),
@@ -4149,14 +4274,17 @@ void QSynEdit::doRedoItem()
                                  item->changeSelMode(),
                                  item->changeNumber());
             break;
-        case ChangeReason::Delete: {
+        case ChangeReason::DeleteChar:
+        case ChangeReason::DeletePreviousChar:
+        case ChangeReason::MergeWithNextLine:
+        case ChangeReason::MergeWithPrevLine:
+        case ChangeReason::Delete:
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
             setCaretXY(item->changeStartPos());
             break;
-        };
         case ChangeReason::LineBreak: {
             CharPos CaretPt = item->changeStartPos();
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
@@ -4587,10 +4715,6 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
 void QSynEdit::moveCaretAndSelection(const CharPos &ptBefore, const CharPos &ptAfter, bool isSelection, bool ensureCaretVisible)
 {
-    if (mOptions.testFlag(EditorOption::GroupUndo)) {
-        mUndoList->addGroupBreak();
-    }
-
     beginInternalChanges();
     if (isSelection) {
         if (!selAvail())
@@ -5881,7 +6005,6 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 
     QAbstractScrollArea::mousePressEvent(event);
 
-    CharPos oldCaret=caretXY();
     if (button == Qt::RightButton) {
         if (mOptions.testFlag(EditorOption::RightMouseMovesCursor) &&
                 ( (selAvail() && ! inSelection(displayToBufferPos(pixelsToGlyphPos(x, y))))
@@ -5922,10 +6045,6 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             computeScroll(false);
         }
     }
-    if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(EditorOption::GroupUndo))
-            mUndoList->addGroupBreak();
-    }
 }
 
 void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
@@ -5942,7 +6061,6 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         processGutterClick(event);
     }
 
-    CharPos oldCaret=caretXY();
     if (mStateFlags.testFlag(StateFlag::WaitForDragging) &&
             !mStateFlags.testFlag(StateFlag::DblClicked)) {
         computeCaret();
@@ -5954,10 +6072,6 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     mStateFlags.setFlag(StateFlag::DblClicked,false);
     ensureLineAlignedWithTop();
     ensureCaretVisible();
-    if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(EditorOption::GroupUndo))
-            mUndoList->addGroupBreak();
-    }
 }
 
 void QSynEdit::mouseMoveEvent(QMouseEvent *event)
@@ -6287,9 +6401,6 @@ void QSynEdit::setModified(bool value, bool skipUndo)
                 mUndoList->clear();
                 mRedoList->clear();
             } else {
-                if (mOptions.testFlag(EditorOption::GroupUndo)) {
-                    mUndoList->addGroupBreak();
-                }
                 mUndoList->setInitialState();
             }
         }

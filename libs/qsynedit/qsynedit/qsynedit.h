@@ -307,8 +307,6 @@ public:
     void beginEditing();
     void endEditing();
     bool editing() const {return mEditingCount!=0;} // for testing
-    void beginSetting();
-    void endSetting();
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
@@ -547,6 +545,9 @@ protected:
     void doSelectLine();
     void beginInternalChanges();
     void endInternalChanges();
+    void beginMergeCaretStatusChange();
+    void endMergeCaretStatusChange();
+
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
@@ -675,6 +676,7 @@ private:
     void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
+    void internalAddChar(const QChar& ch);
     void doAddChar(const QChar& ch);
     void doCutToClipboard();
     void doCopyToClipboard();
@@ -780,9 +782,9 @@ private:
 
     PSynEdit  fChainedEditor;
 
-    int mPaintTransientLock;
     bool mIsScrolling;
-    int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
+    int mMergeCaretStatusChangeLock;
+    CharPos mCaretBeforeMerging;
     bool mUndoing;
     int mGutterWidth;
     //caret blink related
