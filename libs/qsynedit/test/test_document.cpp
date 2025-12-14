@@ -55,6 +55,17 @@ void TestDocument::test_load_from_file()
                                            "}"}));
 }
 
+void TestDocument::test_load_from_empty_file()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile("resources/empty.txt",ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(mDoc->count(),1);
+    QCOMPARE(mDoc->content(), QStringList({""}));
+
+    QVERIFY(mDoc->empty());
+}
+
 void TestDocument::test_emoji_glyphs()
 {
     QByteArray encoding;
@@ -94,6 +105,20 @@ void TestDocument::test_set_text()
     QCOMPARE(mChangedCount,1);
 }
 
+void TestDocument::test_set_empty_text()
+{
+    initSignalTest();
+    mDoc->setText("");
+
+    QCOMPARE(mDoc->count(),1);
+    QCOMPARE(mDoc->getLine(0),"");
+
+    QVERIFY(mDoc->empty());
+
+    //signals
+    QCOMPARE(mChangedCount,1);
+}
+
 void TestDocument::test_set_contents()
 {
     initSignalTest();
@@ -102,6 +127,20 @@ void TestDocument::test_set_contents()
     QCOMPARE(mDoc->count(),2);
     QCOMPARE(mDoc->getLine(0),"int x1;");
     QCOMPARE(mDoc->getLine(1),"int y1;");
+
+    //signals
+    QCOMPARE(mChangedCount,1);
+}
+
+void TestDocument::test_set_empty_contents()
+{
+    initSignalTest();
+    mDoc->setContents({});
+
+    QCOMPARE(mDoc->count(),1);
+    QCOMPARE(mDoc->getLine(0),"");
+
+    QVERIFY(mDoc->empty());
 
     //signals
     QCOMPARE(mChangedCount,1);
@@ -316,6 +355,22 @@ void TestDocument::test_delete_lines1()
     QCOMPARE(mChangedCount,1);
 }
 
+void TestDocument::test_delete_all()
+{
+    mDoc->setContents({"int x1;","int y1;","int z1;"});
+
+    initSignalTest();
+    mDoc->deleteLines(0,3);
+
+    QCOMPARE(mDoc->count(),1);
+    QCOMPARE(mDoc->getLine(0),"");
+
+    QVERIFY(mDoc->empty());
+
+    //signals
+    QCOMPARE(mChangedCount,1);
+}
+
 void TestDocument::test_put_line()
 {
     mDoc->setContents({"int x1;","int y1;","int z1;"});
@@ -392,6 +447,8 @@ void TestDocument::test_clear()
 
     initSignalTest();
     mDoc->clear();
+
+    QCOMPARE(1, mDoc->count());
 
     QVERIFY(mDoc->empty());
 
