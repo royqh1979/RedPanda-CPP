@@ -50,8 +50,8 @@ private slots:
     void test_move_caret_x();
     void test_move_caret_y_data();
     void test_move_caret_y();
-    void test_move_caret_to_line_start_data();
-    void test_move_caret_to_line_start();
+    void test_move_caret_to_line_begin_data();
+    void test_move_caret_to_line_begin();
     void test_move_caret_to_line_end_data();
     void test_move_caret_to_line_end();
 
@@ -71,6 +71,10 @@ private slots:
     void test_delete_chars_at_file_begin_end();
 
     void test_delete_prev_chars_at_file_begin_end();
+
+    void test_break_line_in_empty_file();
+
+    void test_break_lines();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();

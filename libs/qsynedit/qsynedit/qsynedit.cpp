@@ -1392,13 +1392,12 @@ void QSynEdit::doComment()
     QString commentSymbol = mSyntaxer->commentSymbol();
     int symbolLen = commentSymbol.length();
     for (int i = origBlockBegin.line; i<=endLine; i++) {
-        properSetLine(i, commentSymbol + mDocument->getLine(i),false);
+        properSetLine(i, commentSymbol + mDocument->getLine(i), i==endLine);
         addChangeToUndo(ChangeReason::Insert,
               CharPos{0, i},
               CharPos{symbolLen, i},
               QStringList(), SelectionMode::Normal);
     }
-    reparseLines(origBlockBegin.line, endLine+1,true);
     // Move begin of selection
     if (origBlockBegin.ch > 0)
         origBlockBegin.ch+=2;
@@ -1446,7 +1445,7 @@ void QSynEdit::doUncomment()
         while ((j+1 < s.length()) && (s[j] == ' ' || s[j] == '\t'))
             j++;
         s.remove(j,symbolLen);
-        properSetLine(i,s,false);
+        properSetLine(i,s, i==endLine);
         addChangeToUndo(ChangeReason::Delete,
                              CharPos{j, i},
                              CharPos{j+symbolLen, i},
@@ -1461,8 +1460,6 @@ void QSynEdit::doUncomment()
         if ((i == origCaret.line) && (origCaret.ch > 0))
             origCaret.ch-=symbolLen;
     }
-    // When grouping similar commands, process one uncomment action per undo/redo
-    reparseLines(origBlockBegin.line, endLine+1,true);
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
 }
 
@@ -2088,7 +2085,6 @@ void QSynEdit::doBreakLine()
 {
     if (mReadOnly)
         return;
-    int nLinesInserted=0;
     if (!mUndoing)
         beginEditing();
     auto action = finally([this] {
@@ -2143,7 +2139,6 @@ void QSynEdit::doBreakLine()
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
     properSetLine(mCaretY, leftLineText, false);
-    reparseLines(mCaretY, mCaretY+1, false);
 
     notInComment = !mSyntaxer->isCommentNotFinished(
                 mSyntaxer->getState())
@@ -2158,37 +2153,33 @@ void QSynEdit::doBreakLine()
                                             );
     }
     QString indentSpacesForRightLineText = genSpaces(indentSpaces);
-    properInsertLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, false);
-    nLinesInserted++;
+    properInsertLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
 
     if (!mUndoing) {
         //insert new line in middle of "/*" and "*/"
         if (!notInComment && (!syntaxer()->blockCommentBeginSymbol().isEmpty())
                 && (!syntaxer()->blockCommentEndSymbol().isEmpty())
-                && ( leftLineText.endsWith(syntaxer()->blockCommentBeginSymbol())
-                     && rightLineText.startsWith(syntaxer()->blockCommentEndSymbol())
+                && ( leftLineText.trimmed().endsWith(syntaxer()->blockCommentBeginSymbol())
+                     && rightLineText.trimmed().startsWith(syntaxer()->blockCommentEndSymbol())
                  )) {
             indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(EditorOption::AutoIndent));
             indentSpacesForRightLineText = genSpaces(indentSpaces);
             properInsertLine(mCaretY+1, indentSpacesForRightLineText ,false);
-            nLinesInserted++;
             addChangeToUndo(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
                     SelectionMode::Normal);
         }
         //insert new line in middle of "{" and "}"
         if (notInComment &&
-                ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
+                ( leftLineText.trimmed().endsWith('{') && rightLineText.trimmed().startsWith('}')
                  )) {
             indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(EditorOption::AutoIndent)
                                                                    && notInComment);
             indentSpacesForRightLineText = genSpaces(indentSpaces);
             properInsertLine(mCaretY+1, indentSpacesForRightLineText, false);
-            nLinesInserted++;
             addChangeToUndo(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(),
                     SelectionMode::Normal);
         }
     }
-    onLinesInserted(mCaretY+1, nLinesInserted);
     setCaretXY(CharPos{indentSpacesForRightLineText.length(),mCaretY + 1});
     updateLastCaretX();
 }
@@ -4038,17 +4029,15 @@ void QSynEdit::doUndoItem()
             // If there's no selection, we have to set
             // the Caret's position manualy.
             setCaretXY(item->changeStartPos());
-            if (mCaretY >= 0) {
-                QString tmpStr = mDocument->getLine(mCaretY);
-                if ( (mCaretX > tmpStr.length()) && (leftSpaces(s) == 0))
-                    tmpStr = tmpStr + QString(mCaretX - tmpStr.length(), ' ');
-                if (tmpStr.trimmed().isEmpty()) {
-                    properDeleteLine(mCaretY, false);
-                } else {
-                    properDeleteLine(mCaretY+1, false);
-                }
-                properSetLine(mCaretY, tmpStr+s, true);
+            QString tmpStr = mDocument->getLine(mCaretY);
+            if ( (mCaretX > tmpStr.length()) && (leftSpaces(s) == 0))
+                tmpStr = tmpStr + QString(mCaretX - tmpStr.length(), ' ');
+            if (tmpStr.trimmed().isEmpty()) {
+                properDeleteLine(mCaretY, false);
+            } else {
+                properDeleteLine(mCaretY+1, false);
             }
+            properSetLine(mCaretY, tmpStr+s, true);
             mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),
@@ -4090,8 +4079,9 @@ void QSynEdit::doRedo()
         if (item->changeNumber() == oldChangeNumber)
             keepGoing = true;
         else {
-            keepGoing = (mOptions.testFlag(EditorOption::GroupUndo) &&
-            (lastChange == item->changeReason()));
+            keepGoing = (mOptions.testFlag(EditorOption::GroupUndo)
+                         && (lastChange == item->changeReason())
+                         && (isGroupChange(item->changeReason())));
         }
         oldChangeNumber=item->changeNumber();
         lastChange = item->changeReason();
@@ -5305,7 +5295,7 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
         if (line > mDocument->count()) {
             result++;
             tempString = QString(startGlyph,' ') + str;
-            mDocument->addLine("");
+            properInsertLine(mDocument->count(), "", false);
             if (!mUndoing) {
                 result++;
                 lineBreakPos.line = line - 1;
@@ -5326,7 +5316,7 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
                 tempString.insert(insertPos,str);
             }
         }
-        properSetLine(line, tempString, false);
+        properSetLine(line, tempString, line==endLine);
         // Add undo change here from PasteFromClipboard
         if (!mUndoing) {
             addChangeToUndo(ChangeReason::Insert,
@@ -6115,7 +6105,7 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
         internalSetCaretXY(coord);
         setSelBegin(mDragSelBeginSave);
         setSelEnd(mDragSelEndSave);
-        mDocument->addLine(""); //add a line to handle drag to the last
+        properInsertLine(mDocument->count(),"",true); //add a line to handle drag to the last
         showCaret();
         computeScroll(true);
     }
@@ -6180,8 +6170,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
                 int line=mDocument->count();
                 QString s=mDocument->getLine(line);
                 beginEditing();
-                mDocument->addLine("");
-
+                properInsertLine(mDocument->count(),"",true);
                 addChangeToUndo(ChangeReason::LineBreak,
                                      CharPos{s.length()+1,line},
                                      CharPos{s.length()+1,line}, QStringList(), SelectionMode::Normal);
