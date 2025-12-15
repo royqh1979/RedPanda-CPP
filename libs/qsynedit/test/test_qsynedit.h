@@ -69,6 +69,8 @@ private slots:
 
     void test_delete_chars_in_file();
     void test_delete_chars_at_file_begin_end();
+
+    void test_delete_prev_chars_at_file_begin_end();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();
