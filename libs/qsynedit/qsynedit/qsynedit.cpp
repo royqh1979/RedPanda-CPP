@@ -1024,7 +1024,6 @@ void QSynEdit::setContent(const QString &text)
     mDocument->setText(text);
     reparseDocument();
     emit linesInserted(0, mDocument->count());
-    endInternalChanges();
     endEditing();
 }
 
@@ -1652,11 +1651,11 @@ void QSynEdit::doDeletePrevChar()
             setSelBegin(start);
             setSelEnd(end);
         }
-        deleteSelection();
+        doDeleteSelection();
         return;
     }
     if (selAvail()) {
-        deleteSelection();
+        doDeleteSelection();
         return;
     }
     QString tempStr = lineText();
@@ -1746,11 +1745,11 @@ void QSynEdit::doDeleteCurrentChar()
             setSelBegin(start);
             setSelEnd(end);
         }
-        deleteSelection();
+        doDeleteSelection();
         return;
     }
     if (selAvail())
-        deleteSelection();
+        doDeleteSelection();
     else {
         // Call UpdateLastCaretX. Even though the caret doesn't move, the
         // current caret position should "stick" whenever text is modified.
@@ -1835,7 +1834,7 @@ void QSynEdit::doDeleteCurrentToken()
         if (!token.isEmpty()) {
             CharPos wordStart{start, pos.line};
             CharPos wordEnd{start+token.length(), pos.line};
-            deleteFromTo(wordStart, wordEnd);
+            doDeleteFromTo(wordStart, wordEnd);
         }
     }
 }
@@ -1847,7 +1846,7 @@ void QSynEdit::doDeleteToEOL()
     if (mCaretX>lineText().length())
         return;
 
-    deleteFromTo(caretXY(),CharPos{lineText().length(),mCaretY});
+    doDeleteFromTo(caretXY(),CharPos{lineText().length(),mCaretY});
 }
 
 void QSynEdit::doDeleteToWordStart()
@@ -1862,7 +1861,7 @@ void QSynEdit::doDeleteToWordStart()
     if (start==end)
         start = prevWordEnd(end);
     if (start.isValid() && end.isValid())
-    deleteFromTo(start,end);
+    doDeleteFromTo(start,end);
 }
 
 void QSynEdit::doDeleteToWordEnd()
@@ -1875,7 +1874,7 @@ void QSynEdit::doDeleteToWordEnd()
     CharPos start = caretXY();
     CharPos end = getTokenEnd(start);
     if (start.isValid() && end.isValid())
-        deleteFromTo(start,end);
+        doDeleteFromTo(start,end);
 }
 
 void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
@@ -1888,14 +1887,14 @@ void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
     CharPos start = getTokenBegin(caretXY());
     CharPos end = nextWordBegin(caretXY());
     if (start.isValid() && end.isValid())
-        deleteFromTo(start,end);
+        doDeleteFromTo(start,end);
 }
 
 void QSynEdit::doDeleteFromBOL()
 {
     if (mReadOnly)
         return;
-    deleteFromTo(CharPos{0,mCaretY},caretXY());
+    doDeleteFromTo(CharPos{0,mCaretY},caretXY());
 }
 
 void QSynEdit::doDeleteLine()
@@ -2078,9 +2077,10 @@ void QSynEdit::doClearAll()
     setCaretXY(fileBegin());
     int oldCount = mDocument->count();
     mDocument->clear();
-    onLinesDeleted(0,oldCount);
     emit linesDeleted(0, oldCount);
+    reparseDocument();
     setModified(false);
+    clearUndo();
     endEditing();
 }
 
@@ -2098,7 +2098,7 @@ void QSynEdit::doBreakLine()
     QString helper;
     if (selAvail()) {
         helper = selText();
-        deleteSelection();
+        doDeleteSelection();
     }
 
     QString temp = lineText();
@@ -2206,7 +2206,7 @@ void QSynEdit::doTabKey()
     }
     beginEditing();
     if (selAvail()) {
-        deleteSelection();
+        doDeleteSelection();
     }
     QString Spaces;
     if (mOptions.testFlag(EditorOption::TabsToSpaces)) {
@@ -2216,7 +2216,7 @@ void QSynEdit::doTabKey()
     } else {
         Spaces = '\t';
     }
-    setSelTextPrimitive(QStringList(Spaces));
+    doSetSelTextPrimitive(QStringList(Spaces));
     endEditing();
 }
 
@@ -2291,11 +2291,6 @@ QRect QSynEdit::calculateInputCaretRect() const
     }
     return QRect(caretPos.x(),caretPos.y(),caretWidth,
                  mTextHeight);
-}
-
-void QSynEdit::clearAreaList(EditingAreaList areaList)
-{
-    areaList.clear();
 }
 
 void QSynEdit::computeCaret()
@@ -2644,7 +2639,7 @@ void QSynEdit::doCutToClipboard()
         doSelectLine();
     }
     internalDoCopyToClipboard(selText());
-    deleteSelection();
+    doDeleteSelection();
     endEditing();
 }
 
@@ -2674,7 +2669,7 @@ void QSynEdit::doPasteFromClipboard()
     if (text.isEmpty())
         return;
     beginEditing();
-    setSelTextPrimitive(splitStrings(text));
+    doSetSelTextPrimitive(splitStrings(text));
     endEditing();
 }
 
@@ -4706,7 +4701,6 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
             vNewX = vText.length();
     } else
         vNewX = displayLineText().length();
-
     moveCaretAndSelection(caretXY(), CharPos{vNewX, mCaretY}, isSelection, ensureCaretVisible);
 }
 
@@ -4772,7 +4766,7 @@ void QSynEdit::doGotoEditorEnd(bool isSelection)
         setCaretAndSelection(newPos, newPos, caretXY());
 }
 
-void QSynEdit::deleteSelection()
+void QSynEdit::doDeleteSelection()
 {
     if (readOnly())
         return;
@@ -4782,8 +4776,10 @@ void QSynEdit::deleteSelection()
     setCaretXY(startPos);
 }
 
-void QSynEdit::setSelTextPrimitive(const QStringList &text)
+void QSynEdit::doSetSelTextPrimitive(const QStringList &text)
 {
+    if (readOnly())
+        return;
     SelectionMode mode = mActiveSelectionMode;
     beginInternalChanges();
     bool groupUndo=false;
@@ -4841,7 +4837,7 @@ void QSynEdit::doSetSelText(const QString &value)
     CharPos endOfBlock = selEnd();
     mSelectionBegin = startOfBlock;
     mSelectionEnd = endOfBlock;
-    setSelTextPrimitive(splitStrings(value));
+    doSetSelTextPrimitive(splitStrings(value));
 }
 
 int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, PSynSearchBase searchEngine,
@@ -5125,7 +5121,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         }
     }
     QStringList deleted=getContent(startPos,endPos,mode);
-    beginEditingWithoutUndo();
+    beginEditing();
     switch(mode) {
     case SelectionMode::Normal:
         if (mDocument->count() > 0) {
@@ -5174,7 +5170,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         break;
     }
     }
-    endEditingWithoutUndo();
+    endEditing();
     addChangeToUndo(ChangeReason::Delete,
             startPos,
             endPos,
@@ -5350,7 +5346,7 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
     return result;
 }
 
-void QSynEdit::deleteFromTo(const CharPos &start, const CharPos &end)
+void QSynEdit::doDeleteFromTo(const CharPos &start, const CharPos &end)
 {
     if (mReadOnly)
         return;
@@ -5667,22 +5663,6 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     default:
         break;
     }
-}
-
-void QSynEdit::beginEditingWithoutUndo()
-{
-    beginInternalChanges();
-    mEditingCount++;
-}
-
-void QSynEdit::endEditingWithoutUndo()
-{
-    mEditingCount--;
-    Q_ASSERT(mEditingCount>=0);
-    if (mEditingCount==0) {
-        rescanFolds();
-    }
-    endInternalChanges();
 }
 
 bool QSynEdit::isIdentChar(const QChar &ch) const

@@ -142,8 +142,6 @@ using PRedoList = std::shared_ptr<RedoList>;
 
 enum class ChangeReason;
 
-class TestQSyneditCpp;
-
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
@@ -309,6 +307,9 @@ public:
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
+
+    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+
     void trimTrailingSpaces() {
         processCommand(EditCommand::TrimTrailingSpaces);
     }
@@ -417,6 +418,10 @@ public:
 
     const std::shared_ptr<const Document> document() const;
     bool empty();
+
+    void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
+    void setContent(const QString& text);
+    void setContent(const QStringList& text);
 
     QString selText() const;
     int selCount() const;
@@ -532,9 +537,6 @@ protected:
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
-    void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
-    void setContent(const QString& text);
-    void setContent(const QStringList& text);
     void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
@@ -548,17 +550,15 @@ protected:
     void endMergeCaretStatusChange();
 
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
-    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    void beginEditingWithoutUndo();
-    void endEditingWithoutUndo();
-    void clearAreaList(EditingAreaList areaList);
     void computeCaret();
     void computeScroll(bool isDragging);
+    void selCurrentToken();
+    void selTokenAt(const CharPos &pos);
 
     void synFontChanged();
 
@@ -616,8 +616,8 @@ private:
     void doGotoBlockEnd(bool isSelection);
     void doGotoEditorStart(bool isSelection);
     void doGotoEditorEnd(bool isSelection);
-    void deleteSelection();
-    void setSelTextPrimitive(const QStringList& text);
+    void doDeleteSelection();
+    void doSetSelTextPrimitive(const QStringList& text);
     void properSetLine(int line, const QString& sLineText, bool parseToEnd);
     void properInsertLine(int line, const QString& sLineText, bool parseToEnd);
     void properDeleteLines(int line, int count, bool parseToEnd);
@@ -631,9 +631,7 @@ private:
     void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
-    void deleteFromTo(const CharPos& start, const CharPos& end);
-    void selCurrentToken();
-    void selTokenAt(const CharPos &pos);
+    void doDeleteFromTo(const CharPos& start, const CharPos& end);
 
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
@@ -839,8 +837,6 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dragLeaveEvent(QDragLeaveEvent *event) override;
-
-    friend class TestQSyneditCpp;
 };
 
 }

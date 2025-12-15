@@ -58,9 +58,17 @@ private slots:
     void test_select_data();
     void test_select();
 
-    void test_input_chars_in_empty_doc();
-    void test_input_chars_in_doc_without_selection();
-    void test_delete_chars();
+    void test_clear();
+    void test_load_file();
+    void test_set_content_qstring();
+    void test_set_content_qstringlist();
+
+    void test_input_chars_in_empty_file();
+    void test_input_chars_at_file_begin_end();
+    void test_input_chars_in_file();
+
+    void test_delete_chars_in_file();
+    void test_delete_chars_at_file_begin_end();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();
