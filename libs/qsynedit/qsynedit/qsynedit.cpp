@@ -1908,7 +1908,7 @@ void QSynEdit::doDeleteFromBOL()
     doDeleteFromTo(CharPos{0,mCaretY},caretXY());
 }
 
-void QSynEdit::doDeleteLine()
+void QSynEdit::doDeleteCurrentLine()
 {
     if (mReadOnly || mDocument->empty())
         return;
@@ -5644,7 +5644,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         doDeleteFromBOL();
         break;
     case EditCommand::DeleteLine:
-        doDeleteLine();
+        doDeleteCurrentLine();
         break;
     case EditCommand::DuplicateLine:
         doDuplicateLine();

@@ -660,7 +660,7 @@ private:
     void doDeleteToWordEnd();
     void doDeleteCurrentTokenAndTralingSpaces();
     void doDeleteFromBOL();
-    void doDeleteLine();
+    void doDeleteCurrentLine();
 
     void doDuplicateLine();
     void doMoveSelUp();
