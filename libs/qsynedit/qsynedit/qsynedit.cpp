@@ -212,6 +212,8 @@ PCodeFoldingRange QSynEdit::foldHidesLine(int line)
 
 void QSynEdit::setInsertMode(bool value)
 {
+    if (mReadOnly)
+        return;
     if (mInserting != value) {
         mInserting = value;
         updateCaret();
@@ -354,7 +356,7 @@ void QSynEdit::replaceAll(const QString &text)
 
 void QSynEdit::doTrimTrailingSpaces()
 {
-    if (mDocument->count()<=0)
+    if (mReadOnly || mDocument->empty())
         return;
     beginEditing();
     auto action=finally([this](){
@@ -1373,7 +1375,7 @@ void QSynEdit::doComment()
 {
     CharPos origBlockBegin, origBlockEnd, origCaret;
     int endLine;
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mSyntaxer->commentSymbol().isEmpty())
         return;
@@ -1416,7 +1418,7 @@ void QSynEdit::doUncomment()
     int endLine;
     QString s,s2;
     QStringList changeText;
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mSyntaxer->commentSymbol().isEmpty())
         return;
@@ -1469,7 +1471,7 @@ void QSynEdit::doToggleComment()
     int endLine;
     QString s;
     bool allCommented = true;
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mSyntaxer->commentSymbol().isEmpty())
         return;
@@ -1498,7 +1500,7 @@ void QSynEdit::doToggleComment()
 
 void QSynEdit::doToggleBlockComment()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mSyntaxer->blockCommentBeginSymbol().isEmpty())
         return;
@@ -1634,7 +1636,7 @@ void QSynEdit::updateHScrollBarLater()
 
 void QSynEdit::doDeletePrevChar()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return ;
     auto action = finally([this]{
         ensureCaretVisible();
@@ -1664,22 +1666,7 @@ void QSynEdit::doDeletePrevChar()
         return;
     } else if (mCaretX == 0) {
         // join this line with the last line if possible
-        if (mCaretY > 0) {
-            beginEditing();
-            QString lastLine = mDocument->getLine(mCaretY-1);
-            if (lastLine.trimmed().isEmpty()) {
-                properDeleteLine(mCaretY-1, false);
-            } else {
-                properDeleteLine(mCaretY, false);
-            }
-            properSetLine(mCaretY-1, lastLine+tempStr, true);
-            setCaretXY(CharPos{lastLine.length(), mCaretY - 1});
-            helper.append("");
-            helper.append("");
-            addChangeToUndo(ChangeReason::MergeWithPrevLine, caretXY(), caretBackup, helper,
-                            mActiveSelectionMode);
-            endEditing();
-        }
+        doMergeWithPrevLine();
     } else {
         // delete char
         QChar lastDelCh{0};
@@ -1727,9 +1714,8 @@ void QSynEdit::doDeleteCurrentChar()
 {
     QStringList helper;
     CharPos newCaret{};
-    if (mReadOnly) {
+    if (mReadOnly || mDocument->empty())
         return;
-    }
     auto action = finally([this]{
         ensureCaretVisible();
     });
@@ -1796,30 +1782,58 @@ void QSynEdit::doDeleteCurrentChar()
             }
         } else {
             // join line with the line after
-            if (mCaretY+1 < mDocument->count()) {
-                beginEditing();
-                newCaret.ch = 0;
-                newCaret.line = mCaretY + 1;
-                helper.append("");
-                helper.append("");
-                QString newString = tempStr + mDocument->getLine(mCaretY+1);
-                if (tempStr.trimmed().isEmpty()) {
-                    properDeleteLine(mCaretY, false);
-                } else {
-                    properDeleteLine(mCaretY + 1, false);
-                }
-                properSetLine(mCaretY, newString, true);
-                addChangeToUndo(ChangeReason::MergeWithNextLine, caretXY(), newCaret,
-                      helper, mActiveSelectionMode);
-                endEditing();
-            }
+            doMergeWithNextLine();
         }
     }
 }
 
+void QSynEdit::doMergeWithNextLine()
+{
+    if (mActiveSelectionMode != SelectionMode::Normal)
+        return;
+    if (mCaretY+1 < mDocument->count()) {
+        CharPos newCaret{0, mCaretY+1};
+        QString tempStr = lineText();
+        beginEditing();
+        QString newString = tempStr + mDocument->getLine(mCaretY+1);
+        if (tempStr.trimmed().isEmpty()) {
+            properDeleteLine(mCaretY, false);
+        } else {
+            properDeleteLine(mCaretY + 1, false);
+        }
+        properSetLine(mCaretY, newString, true);
+        addChangeToUndo(ChangeReason::MergeWithNextLine, caretXY(), newCaret,
+                        QStringList{}, mActiveSelectionMode);
+        endEditing();
+    }
+}
+
+void QSynEdit::doMergeWithPrevLine()
+{
+    if (mActiveSelectionMode!=SelectionMode::Normal)
+        return;
+    if (mCaretY > 0) {
+        CharPos caretBackup{caretXY()};
+        QString tempStr = lineText();
+        beginEditing();
+        QString lastLine = mDocument->getLine(mCaretY-1);
+        if (lastLine.trimmed().isEmpty()) {
+            properDeleteLine(mCaretY-1, false);
+        } else {
+            properDeleteLine(mCaretY, false);
+        }
+        properSetLine(mCaretY-1, lastLine+tempStr, true);
+        setCaretXY(CharPos{lastLine.length(), mCaretY - 1});
+        addChangeToUndo(ChangeReason::MergeWithPrevLine, caretXY(), caretBackup, QStringList{},
+                        mActiveSelectionMode);
+        endEditing();
+    }
+
+}
+
 void QSynEdit::doDeleteCurrentToken()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mCaretX>lineText().length())
         return;
@@ -1838,7 +1852,7 @@ void QSynEdit::doDeleteCurrentToken()
 
 void QSynEdit::doDeleteToEOL()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mCaretX>lineText().length())
         return;
@@ -1848,7 +1862,7 @@ void QSynEdit::doDeleteToEOL()
 
 void QSynEdit::doDeleteToWordStart()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mCaretX>lineText().length()+1)
         return;
@@ -1863,7 +1877,7 @@ void QSynEdit::doDeleteToWordStart()
 
 void QSynEdit::doDeleteToWordEnd()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mCaretX>lineText().length()+1)
         return;
@@ -1876,7 +1890,7 @@ void QSynEdit::doDeleteToWordEnd()
 
 void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if (mCaretX>lineText().length()+1)
         return;
@@ -1889,14 +1903,14 @@ void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
 
 void QSynEdit::doDeleteFromBOL()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     doDeleteFromTo(CharPos{0,mCaretY},caretXY());
 }
 
 void QSynEdit::doDeleteLine()
 {
-    if (mReadOnly || (mDocument->count() <= 0))
+    if (mReadOnly || mDocument->empty())
         return;
     PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
     if (foldRange && foldRange->collapsed)
@@ -1964,22 +1978,24 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
 
 void QSynEdit::doDuplicateLine()
 {
-    if (!mReadOnly && (mDocument->count() > 0)) {
+    if (!mReadOnly) {
         PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
         if (foldRange && foldRange->collapsed)
             return;
         QString s = lineText();
         beginEditing();
+        clearSelection();
         properInsertLine(mCaretY+1, lineText(), true);
-        addCaretToUndo();
-        addChangeToUndo(ChangeReason::LineBreak,
-                CharPos{s.length(),mCaretY},
-                CharPos{s.length(),mCaretY}, QStringList(), SelectionMode::Normal);
-        addChangeToUndo(ChangeReason::Insert,
-                CharPos{0,mCaretY+1},
-                CharPos{s.length(),mCaretY+1}, QStringList(), SelectionMode::Normal);
+        addChangeToUndo(ChangeReason::DuplicateLine,
+                        caretXY(),
+                        CharPos{0,mCaretY+1}, QStringList(), SelectionMode::Normal);
+//        addChangeToUndo(ChangeReason::LineBreak,
+//                CharPos{s.length(),mCaretY},
+//                CharPos{s.length(),mCaretY}, QStringList(), SelectionMode::Normal);
+//        addChangeToUndo(ChangeReason::Insert,
+//                CharPos{0,mCaretY+1},
+//                CharPos{s.length(),mCaretY+1}, QStringList(), SelectionMode::Normal);
         endEditing();
-        setCaretXY(CharPos{0, mCaretY});
     }
 }
 
@@ -1987,7 +2003,7 @@ void QSynEdit::doMoveSelUp()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
-    if (!mReadOnly && (mDocument->count() > 0) && (selBegin().line > 0)) {
+    if (!mReadOnly && (!mDocument->empty()) && (selBegin().line > 0)) {
         if (!mUndoing) {
             beginEditing();
             addCaretToUndo();
@@ -2031,7 +2047,7 @@ void QSynEdit::doMoveSelDown()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
-    if (!mReadOnly && (mDocument->count() > 0) && (selEnd().line+1 < mDocument->count())) {
+    if (!mReadOnly && (!mDocument->empty()) && (selEnd().line+1 < mDocument->count())) {
         if (!mUndoing) {
             beginEditing();
             addCaretToUndo();
@@ -2621,7 +2637,7 @@ void QSynEdit::doAddChar(const QChar& ch)
 
 void QSynEdit::doCutToClipboard()
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     beginEditing();
     addCaretToUndo();
@@ -3080,8 +3096,10 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool toDocumentEnd)
     maxLine = std::min(maxLine, mDocument->count());
 
 
-    if (startLine >= maxLine)
+    if (startLine >= maxLine) {
+        invalidateLines(startLine, INT_MAX);
         return startLine;
+    }
 
     if (startLine == 0) {
         mSyntaxer->resetState();
@@ -3808,6 +3826,8 @@ int QSynEdit::tabSize() const
 
 void QSynEdit::doAddStr(const QString &s)
 {
+    if (mReadOnly)
+        return;
     beginEditing();
     if (mInserting == false && !selAvail()) {
         switch(mActiveSelectionMode) {
@@ -3847,6 +3867,7 @@ void QSynEdit::doUndo()
         mRedoList->addRedo(item);
     }
 
+    beginMergeCaretStatusChange();
     PUndoItem item = mUndoList->peekItem();
     if (item) {
         size_t oldChangeNumber = item->changeNumber();
@@ -3872,6 +3893,7 @@ void QSynEdit::doUndo()
             } while (keepGoing);
         }
     }
+    endMergeCaretStatusChange();
     ensureCaretVisible();
     updateModifiedStatusForUndoRedo();
     onChanged();
@@ -3897,8 +3919,9 @@ void QSynEdit::doUndoItem()
         case ChangeReason::Caret:
             mRedoList->addRedo(
                         item->changeReason(),
-                        caretXY(),
-                        caretXY(), QStringList(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        QStringList(),
                         item->changeSelMode(),
                         item->changeNumber());
             internalSetCaretXY(item->changeStartPos());
@@ -3910,8 +3933,9 @@ void QSynEdit::doUndoItem()
             p.line = topPos();
             mRedoList->addRedo(
                         item->changeReason(),
-                        p,
-                        p, QStringList(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        QStringList(),
                         item->changeSelMode(),
                         item->changeNumber());
             setLeftPos(item->changeStartPos().ch);
@@ -3921,8 +3945,8 @@ void QSynEdit::doUndoItem()
         case ChangeReason::Selection:
             mRedoList->addRedo(
                         item->changeReason(),
-                        mSelectionBegin,
-                        mSelectionEnd,
+                        item->changeStartPos(),
+                        item->changeEndPos(),
                         QStringList(),
                         item->changeSelMode(),
                         item->changeNumber());
@@ -3983,10 +4007,58 @@ void QSynEdit::doUndoItem()
                         item->changeNumber());
         }
             break;
+        case ChangeReason::MergeWithNextLine: {
+            CharPos startPos = item->changeStartPos();
+            QString tempStr = mDocument->getLine(startPos.line);
+            QString leftStr = tempStr.left(startPos.ch);
+            QString rightStr = tempStr.mid(startPos.ch);
+            QStringList helper({"",""});
+            beginEditing();
+            if (leftStr.trimmed().isEmpty()) {
+                properInsertLine(startPos.line, leftStr,false);
+                properSetLine(startPos.line+1, rightStr, true);
+            } else {
+                properSetLine(startPos.line, leftStr, false);
+                properInsertLine(startPos.line+1, rightStr, true);
+            }
+            setCaretXY(item->changeStartPos());
+            endEditing();
+            mRedoList->addRedo(
+                        item->changeReason(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        item->changeText(),
+                        item->changeSelMode(),
+                        item->changeNumber());
+            break;
+        }
+        case ChangeReason::MergeWithPrevLine: {
+            CharPos startPos = item->changeStartPos();
+            QString tempStr = mDocument->getLine(startPos.line);
+            QString leftStr = tempStr.left(startPos.ch);
+            QString rightStr = tempStr.mid(startPos.ch);
+            QStringList helper({"",""});
+            beginEditing();
+            if (leftStr.trimmed().isEmpty()) {
+                properInsertLine(startPos.line, leftStr,false);
+                properSetLine(startPos.line+1, rightStr, true);
+            } else {
+                properSetLine(startPos.line, leftStr, false);
+                properInsertLine(startPos.line+1, rightStr, true);
+            }
+            setCaretXY(item->changeEndPos());
+            endEditing();
+            mRedoList->addRedo(
+                        item->changeReason(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        item->changeText(),
+                        item->changeSelMode(),
+                        item->changeNumber());
+            break;
+        }
         case ChangeReason::DeleteChar:
         case ChangeReason::DeletePreviousChar:
-        case ChangeReason::MergeWithNextLine:
-        case ChangeReason::MergeWithPrevLine:
         case ChangeReason::Delete: {
             // If there's no selection, we have to set
             // the Caret's position manualy.
@@ -4047,6 +4119,19 @@ void QSynEdit::doUndoItem()
                         item->changeNumber());
             break;
         }
+        case ChangeReason::DuplicateLine:{
+            QString s;
+            properDeleteLine(item->changeStartPos().line+1,true);
+            setCaretXY(item->changeStartPos());
+            mRedoList->addRedo(
+                        item->changeReason(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        item->changeText(),
+                        item->changeSelMode(),
+                        item->changeNumber());
+            break;
+        }
         default:
             break;
         }
@@ -4063,6 +4148,7 @@ void QSynEdit::doRedo()
         return;
     size_t oldChangeNumber = item->changeNumber();
 
+    beginMergeCaretStatusChange();
     //skip group chain breakers
     while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
         PUndoItem item = mRedoList->popItem();
@@ -4093,6 +4179,7 @@ void QSynEdit::doRedo()
         PUndoItem item = mRedoList->popItem();
         mUndoList->restoreChange(item);
     }
+    endMergeCaretStatusChange();
     ensureCaretVisible();
     updateModifiedStatusForUndoRedo();
     onChanged();
@@ -4119,12 +4206,12 @@ void QSynEdit::doRedoItem()
         case ChangeReason::Caret:
             mUndoList->restoreChange(
                         item->changeReason(),
-                        caretXY(),
-                        caretXY(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
                         QStringList(),
                         mActiveSelectionMode,
                         item->changeNumber());
-            setCaretXY(item->changeStartPos());
+            //setCaretXY(item->changeStartPos());
             break;
         case ChangeReason::LeftTop:
         {
@@ -4133,8 +4220,9 @@ void QSynEdit::doRedoItem()
             p.line = topPos();
             mUndoList->restoreChange(
                         item->changeReason(),
-                        p,
-                        p, QStringList(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        QStringList(),
                         item->changeSelMode(),
                         item->changeNumber());
             setLeftPos(item->changeStartPos().ch);
@@ -4144,15 +4232,15 @@ void QSynEdit::doRedoItem()
         case ChangeReason::Selection:
             mUndoList->restoreChange(
                         item->changeReason(),
-                        mSelectionBegin,
-                        mSelectionEnd,
+                        item->changeStartPos(),
+                        item->changeEndPos(),
                         QStringList(),
                         mActiveSelectionMode,
                         item->changeNumber());
-            setCaretAndSelection(
-                        caretXY(),
-                        item->changeStartPos(),
-                        item->changeEndPos());
+//            setCaretAndSelection(
+//                        caretXY(),
+//                        item->changeStartPos(),
+//                        item->changeEndPos());
             break;
         case ChangeReason::MoveLine: {
             int fromLine = item->changeStartPos().line;
@@ -4207,10 +4295,22 @@ void QSynEdit::doRedoItem()
                                  item->changeSelMode(),
                                  item->changeNumber());
             break;
+        case ChangeReason::MergeWithNextLine:
+            setCaretXY(item->changeStartPos());
+            doMergeWithNextLine();
+            mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
+                                 item->changeEndPos(),item->changeText(),
+                                 item->changeSelMode(),item->changeNumber());
+            break;
+        case ChangeReason::MergeWithPrevLine:
+            setCaretXY(item->changeEndPos());
+            doMergeWithPrevLine();
+            mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
+                                 item->changeEndPos(),item->changeText(),
+                                 item->changeSelMode(),item->changeNumber());
+            break;
         case ChangeReason::DeleteChar:
         case ChangeReason::DeletePreviousChar:
-        case ChangeReason::MergeWithNextLine:
-        case ChangeReason::MergeWithPrevLine:
         case ChangeReason::Delete:
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
@@ -4224,7 +4324,15 @@ void QSynEdit::doRedoItem()
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
             setCaretAndSelection(CaretPt, CaretPt, CaretPt);
-            processCommand(EditCommand::LineBreak);
+            doBreakLine();
+            break;
+        }
+        case ChangeReason::DuplicateLine: {
+            mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
+                                 item->changeEndPos(),item->changeText(),
+                                 item->changeSelMode(),item->changeNumber());
+            setCaretXY(item->changeStartPos());
+            doDuplicateLine();
             break;
         }
         default:
@@ -5338,7 +5446,7 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
 
 void QSynEdit::doDeleteFromTo(const CharPos &start, const CharPos &end)
 {
-    if (mReadOnly)
+    if (mReadOnly || mDocument->empty())
         return;
     if ((start.ch != end.ch) || (start.line != end.line)) {
         beginEditing();
@@ -5573,41 +5681,32 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         doAddChar(ch);
         break;
     case EditCommand::InsertMode:
-        if (!mReadOnly)
-            setInsertMode(true);
+        setInsertMode(true);
         break;
     case EditCommand::OverwriteMode:
-        if (!mReadOnly)
-            setInsertMode(false);
+        setInsertMode(false);
         break;
     case EditCommand::ToggleMode:
-        if (!mReadOnly) {
-            setInsertMode(!mInserting);
-        }
+        setInsertMode(!mInserting);
         break;
     case EditCommand::Cut:
-        if (!mReadOnly)
-            doCutToClipboard();
+        doCutToClipboard();
         break;
     case EditCommand::Copy:
         doCopyToClipboard();
         break;
     case EditCommand::Paste:
-        if (!mReadOnly)
-            doPasteFromClipboard();
+        doPasteFromClipboard();
         break;
     case EditCommand::ImeStr:
     case EditCommand::String:
-        if (!mReadOnly)
-            doAddStr(*((QString*)pData));
+        doAddStr(*((QString*)pData));
         break;
     case EditCommand::Undo:
-        if (!mReadOnly)
-            doUndo();
+        doUndo();
         break;
     case EditCommand::Redo:
-        if (!mReadOnly)
-            doRedo();
+        doRedo();
         break;
     case EditCommand::ZoomIn:
         doZoomIn();
@@ -5647,8 +5746,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         }
         break;
     case EditCommand::TrimTrailingSpaces:
-        if (!mReadOnly)
-            doTrimTrailingSpaces();
+        doTrimTrailingSpaces();
         break;
     default:
         break;
@@ -6337,12 +6435,7 @@ void QSynEdit::onLinesInserted(int line, int count)
     if (count<=0)
         return;
     processFoldsOnLinesInserted(line, count);
-    if (mSyntaxer->needsLineState()) {
-        reparseLines(line, line + count, false);
-    } else {
-        // new lines should be parsed
-        reparseLines(line, line + count, true);
-    }
+    reparseLines(line, line + count, mSyntaxer->needsLineState());
     updateVScrollbar();
 }
 

@@ -687,6 +687,7 @@ enum class ChangeReason {
     DeletePreviousChar,
     MergeWithPrevLine,
     MergeWithNextLine,
+    DuplicateLine,
     Nothing // undo list empty
   };
 

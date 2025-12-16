@@ -651,6 +651,8 @@ private:
     void doTrimTrailingSpaces();
     void doDeletePrevChar();
     void doDeleteCurrentChar();
+    void doMergeWithNextLine();
+    void doMergeWithPrevLine();
     void doDeleteToEOL();
     void doDeleteCurrentToken();
 
