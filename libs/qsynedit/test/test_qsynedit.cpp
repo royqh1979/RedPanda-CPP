@@ -1925,6 +1925,8 @@ void QSynedit::TestQSyneditCpp::test_delete_chars_at_file_begin_end()
                           "}"
                       });
     mEdit->setContent(text1);
+    QCOMPARE(mEdit->codeBlockCount(),1);
+    QVERIFY(mEdit->hasCodeBlock(1,3));
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_Delete);
     QTest::keyPress(mEdit.get(), Qt::Key_Delete);
@@ -2086,11 +2088,16 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
                           ""
                       });
     mEdit->setContent(text1);
+    QCOMPARE(mEdit->codeBlockCount(),1);
+    QVERIFY(mEdit->hasCodeBlock(1,3));
     clearSignalDatas();
-    QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
-    QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(), Qt::Key_Backspace); //done nothing
+    QTest::keyPress(mEdit.get(), Qt::Key_Backspace); //done nothing
+    QCOMPARE(mEdit->content(),text1);
+
     mEdit->setCaretXY(mEdit->fileEnd());
-    QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(), Qt::Key_Backspace); // delete last '}'
+    QCOMPARE(mEdit->codeBlockCount(),0);
     QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
     QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
     QCOMPARE(mEdit->content(),text2);
@@ -2168,6 +2175,8 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
     QCOMPARE(mReparseCounts, QList<int>({1}));
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+    QCOMPARE(mEdit->codeBlockCount(),1);
+    QVERIFY(mEdit->hasCodeBlock(1,3));
 
     //redo
     clearSignalDatas();
@@ -2187,6 +2196,7 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
              }));
     QCOMPARE(mReparseStarts, QList<int>({3}));
     QCOMPARE(mReparseCounts, QList<int>({1}));
+    QCOMPARE(mEdit->codeBlockCount(),0);
 
     clearSignalDatas();
     mEdit->redo();
@@ -2281,6 +2291,8 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
     QCOMPARE(mReparseCounts, QList<int>({1}));
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+    QCOMPARE(mEdit->codeBlockCount(),1);
+    QVERIFY(mEdit->hasCodeBlock(1,3));
 }
 
 void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()

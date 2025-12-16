@@ -1696,6 +1696,7 @@ void QSynEdit::doDeletePrevChar()
                 shouldAddGroupBreak = true;
         }
 
+        beginEditing();
         int glyphIndex = mDocument->charToGlyphIndex(mCaretY,mCaretX);
         Q_ASSERT(glyphIndex>0);
         int oldCaretX = mCaretX;
@@ -1715,6 +1716,7 @@ void QSynEdit::doDeletePrevChar()
         helper.append(s);
         tempStr.remove(newCaretX, oldCaretX-newCaretX);
         properSetLine(mCaretY, tempStr, true);
+        endEditing();
         if (shouldAddGroupBreak)
             addGroupUndoBreak();
         addChangeToUndo(ChangeReason::DeletePreviousChar, caretXY(), caretBackup, helper,
