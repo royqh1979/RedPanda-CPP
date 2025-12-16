@@ -34,9 +34,17 @@ CodeFoldingOptions::CodeFoldingOptions():
 }
 
 
-bool CodeFoldingRange::parentCollapsed()
+CodeBlock::CodeBlock(PCodeBlock parent, int fromLine, int toLine)
 {
-    PCodeFoldingRange parentFold = parent.lock();
+    this->parent = parent;
+    this->fromLine = fromLine;
+    this->toLine = toLine;
+    this->collapsed = false;
+}
+
+bool CodeBlock::parentCollapsed() const
+{
+    PCodeBlock parentFold = parent.lock();
     // Find first parent that is collapsed
     while (parentFold) {
         if (parentFold->collapsed) {
@@ -47,81 +55,10 @@ bool CodeFoldingRange::parentCollapsed()
     return false;
 }
 
-void CodeFoldingRange::move(int count)
+void CodeBlock::move(int count)
 {
     fromLine += count;
     toLine += count;
-}
-
-CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange parent,
-                                   int fromLine,
-                                   int toLine):
-    fromLine(fromLine),
-    toLine(toLine),
-    linesCollapsed(0),
-    collapsed(false),
-    parent(parent)
-{
-    subFoldRanges = std::make_shared<CodeFoldingRanges>();
-}
-
-
-PCodeFoldingRange CodeFoldingRanges::range(int index) const
-{
-    return mRanges[index];
-}
-
-void CodeFoldingRanges::clear()
-{
-    mRanges.clear();
-}
-
-int CodeFoldingRanges::count() const
-{
-    return mRanges.size();
-}
-
-CodeFoldingRanges::CodeFoldingRanges()
-{
-
-}
-
-PCodeFoldingRange CodeFoldingRanges::addByParts(PCodeFoldingRange parent,
-                                                PCodeFoldingRanges allFold,
-                                                int fromLine,
-                                                int toLine)
-{
-    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(parent, fromLine,toLine);
-    mRanges.append(range);
-    if (allFold && allFold.get()!=this) {
-        allFold->add(range);
-    }
-    return range;
-}
-
-void CodeFoldingRanges::insert(int index, PCodeFoldingRange range)
-{
-    mRanges.insert(index,range);
-}
-
-void CodeFoldingRanges::remove(int index)
-{
-    mRanges.remove(index);
-}
-
-void CodeFoldingRanges::add(PCodeFoldingRange foldRange)
-{
-    mRanges.push_back(foldRange);
-}
-
-PCodeFoldingRange CodeFoldingRanges::operator[](int index) const
-{
-    return mRanges[index];
-}
-
-const QVector<PCodeFoldingRange> &CodeFoldingRanges::ranges() const
-{
-    return mRanges;
 }
 
 }

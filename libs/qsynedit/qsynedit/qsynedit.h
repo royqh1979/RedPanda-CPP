@@ -282,10 +282,12 @@ public:
     bool collapse(int fromLine, int toLine);
     bool uncollapase(int fromLine, int toLine);
 #ifdef QSYNEDIT_TEST
-    int foldsCount() const;
-    bool hasFold(int fromLine, int toLine) const; // for testing
+    int codeBlockCount() const;
+    bool hasCodeBlock(int fromLine, int toLine) const; // for testing
+    int subBlockCounts(int fromLine, int toLine) const;
+    bool isCollapsed(int fromLine, int toLine) const;
 #endif
-    PCodeFoldingRange foldHidesLine(int line);
+    PCodeBlock foldHidesLine(int line);
     void setSelLength(int len);
     void setSelText(const QString& text);
 
@@ -586,21 +588,19 @@ private:
     void updateModifiedStatusForUndoRedo();
     int reparseLines(int startLine, int endLine, bool toDocumentEnd);
     //void reparseLine(int line);
-    void uncollapse(const PCodeFoldingRange &foldRange);
-    void collapse(const PCodeFoldingRange &foldRange);
+    void uncollapse(const PCodeBlock &foldRange);
+    void collapse(const PCodeBlock &foldRange);
     void processFoldsOnLinesInserted(int line, int count);
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);
-    void clearFoldRanges();
-    void rescanFolds(); // rescan for folds
-    void rescanForFoldRanges();
-    void scanForFoldRanges();
-    PCodeFoldingRange foldStartAtLine(int Line) const;
+    void rescanCodeBlocks(); // rescan for folds
+    void internalScanCodeBlocks();
+    PCodeBlock foldStartAtLine(int Line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
-    PCodeFoldingRange foldAroundLine(int line);
-    PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
-    PCodeFoldingRange checkFoldRange(PCodeFoldingRanges foldRangesToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PCodeFoldingRange foldEndAtLine(int line);
+    PCodeBlock foldAroundLine(int line);
+    PCodeBlock foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
+    PCodeBlock checkFoldRange(const QVector<PCodeBlock> &blocksToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeBlock foldEndAtLine(int line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset() const;
     EditCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
@@ -721,7 +721,7 @@ private slots:
 
 private:
     std::shared_ptr<QImage> mContentImage;
-    PCodeFoldingRanges mAllFoldRanges;
+    QVector<PCodeBlock> mCodeBlocks;
     CodeFoldingOptions mCodeFolding;
     int mEditingCount;
     bool mUseCodeFolding;

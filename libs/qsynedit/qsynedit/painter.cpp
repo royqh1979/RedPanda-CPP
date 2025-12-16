@@ -190,7 +190,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                               rcFold.top() + rcFold.height() / 2);
         }
         // Any fold ranges beginning on this line?
-          PCodeFoldingRange foldRange = mEdit->foldStartAtLine(line);
+          PCodeBlock foldRange = mEdit->foldStartAtLine(line);
         if (foldRange) {
             // Draw the bottom part of a line
             if (!foldRange->collapsed) {
@@ -907,12 +907,11 @@ void QSynEditPainter::paintFoldAttributes()
     // Paint collapsed lines using changed pen
     if (mEdit->mCodeFolding.showCollapsedLine) {
         mPainter->setPen(mEdit->mCodeFolding.collapsedLineColor);
-        for (int i=0; i< mEdit->mAllFoldRanges->count();i++) {
-            PCodeFoldingRange range = (*mEdit->mAllFoldRanges)[i];
-            if (range->collapsed && !range->parentCollapsed() &&
-                    (range->fromLine <= mLastLine) && (range->fromLine >= mFirstLine) ) {
+        foreach(const PCodeBlock& block, mEdit->mCodeBlocks) {
+            if (block->collapsed && !block->parentCollapsed() &&
+                    (block->fromLine <= mLastLine) && (block->fromLine >= mFirstLine) ) {
                 // Get starting and end points
-                int Y = (mEdit->lineToRow(range->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
+                int Y = (mEdit->lineToRow(block->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
                 mPainter->drawLine(mClip.left(),Y, mClip.right(),Y);
             }
         }
@@ -961,7 +960,7 @@ void QSynEditPainter::paintLines()
     int tokenLeft, tokenWidth;
     PTokenAttribute attr;
     EditingAreaList  areaList;
-    PCodeFoldingRange foldRange;
+    PCodeBlock foldRange;
     PTokenAttribute preeditAttr;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
