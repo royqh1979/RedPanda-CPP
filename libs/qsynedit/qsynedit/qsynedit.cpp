@@ -3168,6 +3168,7 @@ void QSynEdit::reparseDocument()
 
 void QSynEdit::uncollapse(const PCodeBlock &foldRange)
 {
+    beginInternalChanges();
     foldRange->collapsed = false;
 
     // Redraw the collapsed line
@@ -3177,10 +3178,13 @@ void QSynEdit::uncollapse(const PCodeBlock &foldRange)
     invalidateGutterLines(foldRange->fromLine, INT_MAX);
     updateHScrollbar();
     updateVScrollbar();
+    ensureCaretVisible();
+    endInternalChanges();
 }
 
 void QSynEdit::collapse(const PCodeBlock &foldRange)
 {
+    beginInternalChanges();
     foldRange->collapsed = true;
 
     // Extract caret from fold
@@ -3197,6 +3201,8 @@ void QSynEdit::collapse(const PCodeBlock &foldRange)
 
     updateHScrollbar();
     updateVScrollbar();
+    ensureCaretVisible();
+    endInternalChanges();
 }
 
 bool QSynEdit::collapse(int fromLine, int toLine)
@@ -4678,7 +4684,7 @@ void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QSt
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
     CharPos ptDst = caretXY();
-    QString s = displayLineText();
+    QString s = lineText();
     int nLineLen = s.length();
     if (!isSelection && selAvail() && (deltaX!=0)) {
         if (deltaX<0)
@@ -4841,7 +4847,7 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 {
     int vNewX;
     if (mOptions.testFlag(EditorOption::EnhanceEndKey)) {
-        QString vText = displayLineText();
+        QString vText = lineText();
         int vLastNonBlank = vText.length()-1;
         int vMinX = 0;
         while ((vLastNonBlank >= vMinX) && (vText[vLastNonBlank] == ' ' || vText[vLastNonBlank] =='\t'))
@@ -4852,7 +4858,7 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
         else
             vNewX = vText.length();
     } else
-        vNewX = displayLineText().length();
+        vNewX = lineText().length();
     moveCaretAndSelection(caretXY(), CharPos{vNewX, mCaretY}, isSelection, ensureCaretVisible);
 }
 

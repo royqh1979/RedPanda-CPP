@@ -553,56 +553,56 @@ void TestQSyneditCpp::test_move_caret_to_line_begin_data()
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("doc begin")<<mEdit->caretXY()<<CharPos{0,0};
         td << mStatusChanges << QList<StatusChanges>{};
     }
     {
         mEdit->setCaretXY(CharPos{1,76});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("doc end")<<mEdit->caretXY()<<CharPos{0,76};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX };
     }
     {
         mEdit->setCaretXY(CharPos{0,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("begin of line")<<mEdit->caretXY()<<CharPos{4,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{2,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("in leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{4,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("end of leading spaces")<<mEdit->caretXY()<<CharPos{0,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{3,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("end of leading spaces - 1")<<mEdit->caretXY()<<CharPos{0,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{5,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("end of leading spaces + 1")<<mEdit->caretXY()<<CharPos{4,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{10,15});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineStart, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineStart);
         QTestData& td = QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{4,15};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
@@ -629,42 +629,42 @@ void TestQSyneditCpp::test_move_caret_to_line_end_data()
     {
         mEdit->setCaretXY(CharPos{25,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("start of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{26,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("start of trailing spaces + 1")<<mEdit->caretXY()<<CharPos{34,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{24,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("start of trailing spaces - 1")<<mEdit->caretXY()<<CharPos{25,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{29,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("middle of trailing spaces")<<mEdit->caretXY()<<CharPos{34,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{15,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("mid of line")<<mEdit->caretXY()<<CharPos{25,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{34,70});
         mStatusChanges.clear();
-        mEdit->processCommand(EditCommand::LineEnd, QChar(0), nullptr);
+        mEdit->processCommand(EditCommand::LineEnd);
         QTestData& td = QTest::newRow("end of line")<<mEdit->caretXY()<<CharPos{25,70};
         td << mStatusChanges << QList<StatusChanges>{ StatusChange::CaretX};
     }
@@ -1545,6 +1545,46 @@ void QSynedit::TestQSyneditCpp::test_input_chars_in_file()
      QVERIFY(mEdit->hasCodeBlock(6,8));
 }
 
+void TestQSyneditCpp::test_input_char_at_end_of_first_line_of_collapsed_block()
+{
+    QStringList text1{
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    QCOMPARE(mEdit->codeBlockCount(),3);
+    QVERIFY(mEdit->hasCodeBlock(0,5));
+    QCOMPARE(mEdit->subBlockCounts(0,5),1);
+    QVERIFY(mEdit->hasCodeBlock(2,4));
+    QCOMPARE(mEdit->subBlockCounts(2,4),0);
+    QVERIFY(mEdit->hasCodeBlock(6,8));
+    QCOMPARE(mEdit->subBlockCounts(6,8),0);
+
+    mEdit->collapse(0,5);
+    mEdit->collapse(2,4);
+    QVERIFY(mEdit->isCollapsed(0,5));
+    QVERIFY(mEdit->isCollapsed(2,4));
+    QVERIFY(!mEdit->isCollapsed(6,8));
+
+    QTest::keyPress(mEdit.get(),Qt::Key_End);
+    QTest::keyPress(mEdit.get(),'}');
+    QCOMPARE(mEdit->codeBlockCount(),2);
+    QVERIFY(mEdit->hasCodeBlock(2,4));
+    QCOMPARE(mEdit->subBlockCounts(2,4),0);
+    QVERIFY(mEdit->hasCodeBlock(6,8));
+    QCOMPARE(mEdit->subBlockCounts(6,8),0);
+    QVERIFY(!mEdit->isCollapsed(0,5));
+    QVERIFY(mEdit->isCollapsed(2,4));
+    QVERIFY(!mEdit->isCollapsed(6,8));
+}
+
 void QSynedit::TestQSyneditCpp::test_delete_chars_in_file()
 {
     QStringList text1{
@@ -1568,12 +1608,13 @@ void QSynedit::TestQSyneditCpp::test_delete_chars_in_file()
         "\treturn 0;",
         "}"
     };
-    mEdit->setCaretXY(CharPos{4,3});
+    mEdit->setContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),3);
     QVERIFY(mEdit->hasCodeBlock(0,5));
     QVERIFY(mEdit->hasCodeBlock(2,4));
     QVERIFY(mEdit->hasCodeBlock(6,8));
 
+    mEdit->setCaretXY(CharPos{4,3});
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_Delete); //'+'
     QCOMPARE(mEdit->lineText(3),"\t\tx+;");
