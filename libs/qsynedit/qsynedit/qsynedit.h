@@ -278,6 +278,13 @@ public:
     void collapseAll();
     void unCollpaseAll();
     void uncollapseAroundLine(int line);
+    void uncollapseAroundLines(int startLine, int count);
+    bool collapse(int fromLine, int toLine);
+    bool uncollapase(int fromLine, int toLine);
+#ifdef QSYNEDIT_TEST
+    int foldsCount() const;
+    bool hasFold(int fromLine, int toLine) const; // for testing
+#endif
     PCodeFoldingRange foldHidesLine(int line);
     void setSelLength(int len);
     void setSelText(const QString& text);
@@ -533,9 +540,6 @@ protected:
     virtual void onPreparePaintHighlightToken(int line,
             int aChar, const QString& token, PTokenAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
-    virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
-    virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
-    virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
     void replaceAll(const QString& text);
     int clientWidth() const;
@@ -582,9 +586,8 @@ private:
     void updateModifiedStatusForUndoRedo();
     int reparseLines(int startLine, int endLine, bool toDocumentEnd);
     //void reparseLine(int line);
-    void uncollapse(PCodeFoldingRange foldRange);
-    void collapse(PCodeFoldingRange foldRange);
-
+    void uncollapse(const PCodeFoldingRange &foldRange);
+    void collapse(const PCodeFoldingRange &foldRange);
     void processFoldsOnLinesInserted(int line, int count);
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);

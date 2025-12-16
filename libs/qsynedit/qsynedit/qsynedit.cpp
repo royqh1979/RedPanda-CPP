@@ -205,6 +205,18 @@ void QSynEdit::uncollapseAroundLine(int line)
     }
 }
 
+void QSynEdit::uncollapseAroundLines(int startLine, int count)
+{
+    int endLine = startLine+count-1;
+    foreach(const PCodeFoldingRange &pFold, mAllFoldRanges->ranges()) {
+        if (pFold->fromLine <= startLine
+                && startLine <= pFold->toLine
+                && pFold->toLine <= endLine
+                && endLine <= pFold->toLine)
+            uncollapse(pFold);
+    }
+}
+
 PCodeFoldingRange QSynEdit::foldHidesLine(int line)
 {
     return foldAroundLineEx(line, true, false, true);
@@ -1912,9 +1924,9 @@ void QSynEdit::doDeleteCurrentLine()
 {
     if (mReadOnly || mDocument->empty())
         return;
-    PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
-    if (foldRange && foldRange->collapsed)
-        return;
+//    PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
+//    if (foldRange && foldRange->collapsed)
+//        return;
     beginEditing();
     addCaretToUndo();
     addSelectionToUndo();
@@ -1979,9 +1991,9 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
 void QSynEdit::doDuplicateLine()
 {
     if (!mReadOnly) {
-        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
-        if (foldRange && foldRange->collapsed)
-            return;
+//        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
+//        if (foldRange && foldRange->collapsed)
+//            return;
         QString s = lineText();
         beginEditing();
         clearSelection();
@@ -2014,9 +2026,9 @@ void QSynEdit::doMoveSelUp()
         CharPos origBlockBegin = selBegin();
         CharPos origBlockEnd = selEnd();
 
-        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
-        if (foldRange && foldRange->collapsed)
-            return;
+//        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
+//        if (foldRange && foldRange->collapsed)
+//            return;
 //        for (int line=origBlockBegin.Line;line<=origBlockEnd.Line;line++) {
 //            PSynEditFoldRange foldRange=foldStartAtLine(line);
 //            if (foldRange && foldRange->collapsed)
@@ -2058,9 +2070,9 @@ void QSynEdit::doMoveSelDown()
         CharPos origBlockBegin = selBegin();
         CharPos origBlockEnd = selEnd();
 
-        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
-        if (foldRange && foldRange->collapsed)
-            return;
+//        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
+//        if (foldRange && foldRange->collapsed)
+//            return;
 
         // Move line below selection to above selection
         properMoveLine(origBlockEndLine + 1, origBlockBeginLine, true);
@@ -2114,24 +2126,24 @@ void QSynEdit::doBreakLine()
     }
 
     QString temp = lineText();
-    if (mCaretX>lineText().length()) {
-        PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
-        if ((foldRange) && foldRange->collapsed) {
-            QString s = temp+mSyntaxer->foldString(temp);
-            if (mCaretX >= s.length()) {
-                if (!mUndoing) {
-                    addCaretToUndo();
-                    addSelectionToUndo();
-                }
-                mCaretY=foldRange->toLine;
-                if (mCaretY>=mDocument->count()) {
-                    mCaretY=mDocument->count()-1;
-                }
-                temp = lineText();
-                mCaretX=temp.length();
-            }
-        }
-    }
+//    if (mCaretX>lineText().length()) {
+//        PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
+//        if ((foldRange) && foldRange->collapsed) {
+//            QString s = temp+mSyntaxer->foldString(temp);
+//            if (mCaretX >= s.length()) {
+//                if (!mUndoing) {
+//                    addCaretToUndo();
+//                    addSelectionToUndo();
+//                }
+//                mCaretY=foldRange->toLine;
+//                if (mCaretY>=mDocument->count()) {
+//                    mCaretY=mDocument->count()-1;
+//                }
+//                temp = lineText();
+//                mCaretX=temp.length();
+//            }
+//        }
+//    }
 
     PTokenAttribute Attr;
 
@@ -3149,7 +3161,7 @@ void QSynEdit::reparseDocument()
     rescanFolds();
 }
 
-void QSynEdit::uncollapse(PCodeFoldingRange foldRange)
+void QSynEdit::uncollapse(const PCodeFoldingRange &foldRange)
 {
     foldRange->linesCollapsed = 0;
     foldRange->collapsed = false;
@@ -3163,7 +3175,7 @@ void QSynEdit::uncollapse(PCodeFoldingRange foldRange)
     updateVScrollbar();
 }
 
-void QSynEdit::collapse(PCodeFoldingRange foldRange)
+void QSynEdit::collapse(const PCodeFoldingRange &foldRange)
 {
     foldRange->linesCollapsed = foldRange->toLine - foldRange->fromLine;
     foldRange->collapsed = true;
@@ -3183,6 +3195,48 @@ void QSynEdit::collapse(PCodeFoldingRange foldRange)
     updateHScrollbar();
     updateVScrollbar();
 }
+
+bool QSynEdit::collapse(int fromLine, int toLine)
+{
+    foreach(const PCodeFoldingRange &fold, mAllFoldRanges->ranges()) {
+        if (fold->fromLine == fromLine
+                && fold->toLine == toLine) {
+            collapse(fold);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool QSynEdit::uncollapase(int fromLine, int toLine)
+{
+    foreach(const PCodeFoldingRange &fold, mAllFoldRanges->ranges()) {
+        if (fold->fromLine == fromLine
+                && fold->toLine == toLine) {
+            uncollapse(fold);
+            return true;
+        }
+    }
+    return false;
+}
+
+#ifdef QSYNEDIT_TEST
+int QSynEdit::foldsCount() const
+{
+    return mAllFoldRanges->count();
+}
+
+bool QSynEdit::hasFold(int fromLine, int toLine) const
+{
+    foreach(const PCodeFoldingRange &fold, mAllFoldRanges->ranges()) {
+        if (fold->fromLine == fromLine
+                && fold->toLine == toLine) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
 
 void QSynEdit::processFoldsOnLinesInserted(int line, int count)
 {
@@ -3307,7 +3361,7 @@ void QSynEdit::scanForFoldRanges()
         return;
 
     mAllFoldRanges->clear();
-    PCodeFoldingRanges& parentFoldRanges = mAllFoldRanges;
+    PCodeFoldingRanges parentFoldRanges = mAllFoldRanges;
     PCodeFoldingRange parent;
     int line = 0;
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
@@ -4373,15 +4427,15 @@ QString QSynEdit::selText() const
         case SelectionMode::Normal:{
             int charFrom = selBegin().ch;
             int charTo = selEnd().ch;
-            PCodeFoldingRange foldRange = foldStartAtLine(selEnd().line);
-            QString s = mDocument->getLine(lastLine);
-            if ((foldRange) && foldRange->collapsed && charTo>s.length()) {
-                s=s+mSyntaxer->foldString(s);
-                if (charTo>s.length()) {
-                    lastLine = foldRange->toLine;
-                    charTo = mDocument->getLine(lastLine).length();
-                }
-            }
+//            PCodeFoldingRange foldRange = foldStartAtLine(selEnd().line);
+//            QString s = mDocument->getLine(lastLine);
+//            if ((foldRange) && foldRange->collapsed && charTo>s.length()) {
+//                s=s+mSyntaxer->foldString(s);
+//                if (charTo>s.length()) {
+//                    lastLine = foldRange->toLine;
+//                    charTo = mDocument->getLine(lastLine).length();
+//                }
+//            }
             if (firstLine == lastLine)
                 return  mDocument->getLine(firstLine).mid(charFrom, charTo - charFrom);
             else {
@@ -4463,15 +4517,15 @@ QStringList QSynEdit::getContent(CharPos startPos, CharPos endPos, SelectionMode
     case SelectionMode::Normal:{
         int chFrom = startPos.ch;
         int chTo = endPos.ch;
-        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
-        QString s = mDocument->getLine(lastLine);
-        if ((foldRange) && foldRange->collapsed && chTo>s.length()) {
-            s=s+mSyntaxer->foldString(s);
-            if (chTo>s.length()) {
-                lastLine = foldRange->toLine;
-                chTo = s.length();
-            }
-        }
+//        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
+//        QString s = mDocument->getLine(lastLine);
+//        if ((foldRange) && foldRange->collapsed && chTo>s.length()) {
+//            s=s+mSyntaxer->foldString(s);
+//            if (chTo>s.length()) {
+//                lastLine = foldRange->toLine;
+//                chTo = s.length();
+//            }
+//        }
         if (firstLine == lastLine) {
             result.append(mDocument->getLine(firstLine).mid(chFrom, chTo - chFrom));
         } else {
@@ -4582,15 +4636,6 @@ const std::shared_ptr<const Document> QSynEdit::document() const
 bool QSynEdit::empty()
 {
     return mDocument->empty();
-}
-
-void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
-{
-    // first the program event handler gets a chance to process the command
-    onProcessCommand(Command, AChar, pData);
-    if (Command != EditCommand::None)
-        executeCommand(Command, AChar, pData);
-    onCommandProcessed(Command, AChar, pData);
 }
 
 bool QSynEdit::isSpaceChar(const QChar &ch) const
@@ -5201,23 +5246,25 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
 {
+    Q_ASSERT(validInDoc(startPos));
+    Q_ASSERT(validInDoc(endPos));
     if (startPos == endPos)
         return;
-    if (mode == SelectionMode::Normal) {
-        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
-        QString s = mDocument->getLine(endPos.line);
-        if ((foldRange) && foldRange->collapsed && endPos.ch>=s.length()) {
-            QString newS=s+mSyntaxer->foldString(s);
-            if ((startPos.ch<s.length() || startPos.line<endPos.line)
-                    && endPos.ch>=newS.length() ) {
-                //selection has whole block
-                endPos.line = foldRange->toLine;
-                endPos.ch = mDocument->getLine(endPos.line).length();
-            } else {
-                return;
-            }
-        }
-    }
+//    if (mode == SelectionMode::Normal) {
+//        PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
+//        QString s = mDocument->getLine(endPos.line);
+//        if ((foldRange) && foldRange->collapsed && endPos.ch>=s.length()) {
+//            QString newS=s+mSyntaxer->foldString(s);
+//            if ((startPos.ch<s.length() || startPos.line<endPos.line)
+//                    && endPos.ch>=newS.length() ) {
+//                //selection has whole block
+//                endPos.line = foldRange->toLine;
+//                endPos.ch = mDocument->getLine(endPos.line).length();
+//            } else {
+//                return;
+//            }
+//        }
+//    }
     QStringList deleted=getContent(startPos,endPos,mode);
     beginEditing();
     switch(mode) {
@@ -5283,12 +5330,12 @@ void QSynEdit::doInsertText(const CharPos& pos,
         return;
     if (startLine>endLine)
         std::swap(startLine,endLine);
-    if (mode == SelectionMode::Normal) {
-        PCodeFoldingRange foldRange = foldStartAtLine(pos.line);
-        QString s = mDocument->getLine(pos.line);
-        if ((foldRange) && foldRange->collapsed && pos.ch>s.length()+1)
-            return;
-    }
+//    if (mode == SelectionMode::Normal) {
+//        PCodeFoldingRange foldRange = foldStartAtLine(pos.line);
+//        QString s = mDocument->getLine(pos.line);
+//        if ((foldRange) && foldRange->collapsed && pos.ch>s.length()+1)
+//            return;
+//    }
     int insertedLines = 0;
     CharPos newPos;
     switch(mode){
@@ -5316,6 +5363,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
 
 void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos)
 {
+    Q_ASSERT(validInDoc(pos));
     QString sLeftSide;
     QString sRightSide;
     QString str;
@@ -5491,17 +5539,7 @@ void QSynEdit::onPreparePaintHighlightToken(int , int , const QString &,
 
 }
 
-void QSynEdit::onProcessCommand(EditCommand , QChar , void *)
-{
-
-}
-
-void QSynEdit::onCommandProcessed(EditCommand , QChar , void *)
-{
-
-}
-
-void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
+void QSynEdit::processCommand(EditCommand command, QChar ch, void *pData)
 {
     hideCaret();
     beginInternalChanges();

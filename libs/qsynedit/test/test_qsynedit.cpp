@@ -838,6 +838,8 @@ void TestQSyneditCpp::test_load_file()
     QVERIFY(mEdit->canRedo());
     QVERIFY(mEdit->modified());
 
+    QCOMPARE(mEdit->foldsCount(), 0);
+
     clearSignalDatas();
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -853,6 +855,19 @@ void TestQSyneditCpp::test_load_file()
     QVERIFY(!mEdit->canRedo());
     QVERIFY(!mEdit->modified());
     QVERIFY(!mEdit->empty());
+
+    QCOMPARE(mEdit->foldsCount(), 11);
+    QVERIFY(mEdit->hasFold(13, 63));
+    QVERIFY(mEdit->hasFold(16, 36));
+    QVERIFY(mEdit->hasFold(17, 35));
+    QVERIFY(mEdit->hasFold(18, 34));
+    QVERIFY(mEdit->hasFold(20, 33));
+    QVERIFY(mEdit->hasFold(22, 24));
+    QVERIFY(mEdit->hasFold(39, 46));
+    QVERIFY(mEdit->hasFold(48, 55));
+    QVERIFY(mEdit->hasFold(66, 76));
+    QVERIFY(mEdit->hasFold(69, 75));
+    QVERIFY(mEdit->hasFold(70, 74));
 }
 
 void TestQSyneditCpp::test_set_content_qstring()
@@ -898,7 +913,6 @@ void TestQSyneditCpp::test_set_content_qstringlist()
     QVERIFY(mEdit->modified());
 
     clearSignalDatas();
-    QByteArray encoding;
     mEdit->setContent({"123","456","789"});
     QCOMPARE(mEdit->content(),QStringList({"123","456","789"}));
     QCOMPARE(mInsertStartLines, QList<int>({0}));
@@ -1187,7 +1201,8 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end()
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0,3,3}));
     QCOMPARE(mReparseCounts, QList<int>({1,1,1,1}));
-
+    QCOMPARE(mEdit->foldsCount(),1);
+    QVERIFY(mEdit->hasFold(1,3));
     //undo
     clearSignalDatas();
     mEdit->undo();
@@ -1224,6 +1239,8 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end()
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+    QCOMPARE(mEdit->foldsCount(),1);
+    QVERIFY(mEdit->hasFold(1,3));
 
     //redo
     clearSignalDatas();
@@ -1261,7 +1278,8 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end()
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
     QVERIFY(!mEdit->canRedo());
-
+    QCOMPARE(mEdit->foldsCount(),1);
+    QVERIFY(mEdit->hasFold(1,3));
     //undo again
     clearSignalDatas();
     mEdit->undo();
@@ -1298,6 +1316,8 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end()
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+    QCOMPARE(mEdit->foldsCount(),1);
+    QVERIFY(mEdit->hasFold(1,3));
 }
 
 void QSynedit::TestQSyneditCpp::test_input_chars_in_file()
@@ -1325,6 +1345,11 @@ void QSynedit::TestQSyneditCpp::test_input_chars_in_file()
         "}"
     };
     mEdit->setContent(text1);
+    QCOMPARE(mEdit->foldsCount(),3);
+    QVERIFY(mEdit->hasFold(0,5));
+    QVERIFY(mEdit->hasFold(2,4));
+    QVERIFY(mEdit->hasFold(6,8));
+
     mEdit->setCaretXY(CharPos{12,0});
     clearSignalDatas();
     QTest::keyPress(mEdit.get(),'a');
