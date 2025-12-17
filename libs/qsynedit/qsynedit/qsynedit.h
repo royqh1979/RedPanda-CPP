@@ -590,7 +590,7 @@ private:
     //void reparseLine(int line);
     void uncollapse(const PCodeBlock &foldRange);
     void collapse(const PCodeBlock &foldRange);
-    void processFoldsOnLinesInserted(int line, int count);
+    void processCodeBlocksOnLinesInserted(int line, int count);
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);
     void rescanCodeBlocks(); // rescan for folds

@@ -2344,7 +2344,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretXY(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{1});
+    QCOMPARE(mInsertStartLines, QList<int>{0});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -2385,7 +2385,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretXY(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{1});
+    QCOMPARE(mInsertStartLines, QList<int>{0});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -2692,6 +2692,119 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_break_lines_with_collapsed_block()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\t",
+        "if (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text3{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\t",
+        "if (x>0)",
+        " {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,8));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(9,11));
+    mEdit->collapse(0,2);
+    mEdit->collapse(5,7);
+    mEdit->collapse(9,11);
+    QVERIFY(mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,8));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(9,11));
+
+
+    mEdit->setCaretXY(CharPos{1,5}); //caret between "\t" and "if (x>0) {"
+    clearSignalDatas();
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QCOMPARE(mEdit->content(), text2);
+    QCOMPARE(mEdit->caretXY(), CharPos(0,6));
+    QCOMPARE(mEdit->selBegin(), CharPos(0,6));
+    QCOMPARE(mEdit->selEnd(), CharPos(0,6));
+    QCOMPARE(mInsertStartLines, QList<int>({5}));
+    QCOMPARE(mInsertLineCounts, QList<int>({1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({ StatusChange::Modified | StatusChange::ModifyChanged | StatusChange::CaretX | StatusChange::CaretY}));
+    QCOMPARE(mReparseStarts, QList<int>({5,6}));
+    QCOMPARE(mReparseCounts, QList<int>({1,1}));
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(6,8));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->setCaretXY(CharPos{8,6}); //caret between "if (x>0)" and " {"
+    clearSignalDatas();
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QCOMPARE(mEdit->content(), text3);
+    QCOMPARE(mEdit->caretXY(), CharPos(0,7));
+    QCOMPARE(mEdit->selBegin(), CharPos(0,7));
+    QCOMPARE(mEdit->selEnd(), CharPos(0,7));
+    QCOMPARE(mInsertStartLines, QList<int>({7}));
+    QCOMPARE(mInsertLineCounts, QList<int>({1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({ StatusChange::Modified | StatusChange::CaretX | StatusChange::CaretY}));
+    QCOMPARE(mReparseStarts, QList<int>({6,7}));
+    QCOMPARE(mReparseCounts, QList<int>({1,1}));
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,10));
+    QVERIFY(mEdit->hasCodeBlock(7,9));
+    QVERIFY(mEdit->hasCodeBlock(11,13));
+    QVERIFY(mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,10));
+    QVERIFY(!mEdit->isCollapsed(7,9)); //auto uncollapsed
+    QVERIFY(mEdit->isCollapsed(11,13));
 }
 
 void TestQSyneditCpp::test_delete_current_line_in_empty_file()

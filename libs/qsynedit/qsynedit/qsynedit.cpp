@@ -1054,9 +1054,12 @@ void QSynEdit::collapseAll()
 {
     beginInternalChanges();
     foreach(const PCodeBlock &block, mCodeBlocks){
-        collapse(block);
+        block->collapsed=true;
     }
+    updateHScrollbar();
+    updateVScrollbar();
     ensureCaretVisible();
+    invalidate();
     endInternalChanges();
 }
 
@@ -1064,9 +1067,12 @@ void QSynEdit::unCollpaseAll()
 {
     beginInternalChanges();
     foreach(const PCodeBlock &block, mCodeBlocks){
-        uncollapse(block);
+        block->collapsed=false;
     }
+    updateHScrollbar();
+    updateVScrollbar();
     ensureCaretVisible();
+    invalidate();
     endInternalChanges();
 }
 
@@ -2171,7 +2177,15 @@ void QSynEdit::doBreakLine()
         QString indentSpacesForLeftLineText = genSpaces(indentSpaces);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
-    properSetLine(mCaretY, leftLineText, false);
+    bool lineInserted=false;
+    if (leftLineText.trimmed().isEmpty()) {
+        lineInserted = true;
+        properInsertLine(mCaretY,leftLineText,false);
+    } else {
+        properSetLine(mCaretY, leftLineText, false);
+        lineInserted = false;
+    }
+
 
     notInComment = !mSyntaxer->isCommentNotFinished(
                 mSyntaxer->getState())
@@ -2186,7 +2200,10 @@ void QSynEdit::doBreakLine()
                                             );
     }
     QString indentSpacesForRightLineText = genSpaces(indentSpaces);
-    properInsertLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
+    if (lineInserted)
+        properSetLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
+    else
+        properInsertLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
 
     if (!mUndoing) {
         //insert new line in middle of "/*" and "*/"
@@ -3269,25 +3286,40 @@ bool QSynEdit::hasCodeBlock(int fromLine, int toLine) const
 }
 #endif
 
-void QSynEdit::processFoldsOnLinesInserted(int line, int count)
+void QSynEdit::processCodeBlocksOnLinesInserted(int line, int count)
 {
     if (!useCodeFolding())
         return;
-    // Delete collapsed inside selection
+    beginInternalChanges();
+    bool collapseChanged=false;
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
         if (block->fromLine >= line) // insertion of count lines above FromLine
             block->move(count);
-        else if (block->toLine >= line)
+        else if (block->toLine >= line) {
             block->toLine += count;
+            if (block->collapsed) { // uncollapse it
+                collapseChanged = true;
+                block->collapsed = false;
+            }
+        }
     }
+    if (collapseChanged) {
+        updateHScrollbar();
+        updateVScrollbar();
+        ensureCaretVisible();
+        invalidate();
+    }
+    endInternalChanges();
 }
 
 void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
 {
     if (!useCodeFolding())
         return ;
-    // Delete collapsed inside selection
+
+    bool collapseChanged=false;
+    beginInternalChanges();
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
         if (block->fromLine >= line
@@ -3295,17 +3327,28 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
             mCodeBlocks.remove(i);
         } else if (block->toLine >= line
                    && block->toLine < line+count) {
-//            uncollapse(range);
             mCodeBlocks.remove(i);
         } else if (block->fromLine >= line + count) { // Move after affected area
             block->move(-count);
         } else if (block->toLine >= line + count) {
-            block->toLine -= count;
             if (block->toLine <= block->fromLine)
                 mCodeBlocks.remove(i);
+            else {
+                block->toLine -= count;
+                if (block->collapsed) { // uncollapse it
+                    collapseChanged = true;
+                    block->collapsed = false;
+                }
+            }
         }
     }
-
+    if (collapseChanged) {
+        updateHScrollbar();
+        updateVScrollbar();
+        ensureCaretVisible();
+        invalidate();
+    }
+    endInternalChanges();
 }
 
 void QSynEdit::processFoldsOnLineMoved(int from, int to)
@@ -5215,7 +5258,7 @@ void QSynEdit::properSetLine(int line, const QString &sLineText, bool parseToEnd
 void QSynEdit::properInsertLine(int line, const QString &sLineText, bool parseToEnd)
 {
     mDocument->insertLine(line, sLineText);
-    processFoldsOnLinesInserted(line,1);
+    processCodeBlocksOnLinesInserted(line,1);
     if (parseToEnd)
         onLinesInserted(line, 1);
     else
@@ -5239,7 +5282,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
     if (count<=0)
         return;
     mDocument->insertLines(line, count);
-    processFoldsOnLinesInserted(line, count);
+    processCodeBlocksOnLinesInserted(line, count);
     if (parseToEnd)
         onLinesInserted(line,count);
     else
@@ -5363,7 +5406,6 @@ void QSynEdit::doInsertText(const CharPos& pos,
         CharPos be=selEnd();
         int lenBefore = mDocument->getLine(be.line).length();
         insertedLines = doInsertTextByColumnMode(pos, text, startLine,endLine);
-        onLinesInserted(endLine-insertedLines+1,insertedLines);
         if (!text.isEmpty()) {
             int textLen = mDocument->getLine(be.line).length()-lenBefore;
             bb.ch+=textLen;
@@ -5466,7 +5508,7 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
         if (line > mDocument->count()) {
             result++;
             tempString = QString(startGlyph,' ') + str;
-            properInsertLine(mDocument->count(), "", false);
+            properInsertLine(mDocument->count(), tempString, line==endLine);
             if (!mUndoing) {
                 result++;
                 lineBreakPos.line = line - 1;
@@ -5486,8 +5528,8 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
                 insertPos = xposToGlyphStartChar(line,startGlyph);
                 tempString.insert(insertPos,str);
             }
+            properSetLine(line, tempString, line==endLine);
         }
-        properSetLine(line, tempString, line==endLine);
         // Add undo change here from PasteFromClipboard
         if (!mUndoing) {
             addChangeToUndo(ChangeReason::Insert,
@@ -6487,7 +6529,6 @@ void QSynEdit::onLinesInserted(int line, int count)
 {
     if (count<=0)
         return;
-    processFoldsOnLinesInserted(line, count);
     reparseLines(line, line + count, mSyntaxer->needsLineState());
     updateVScrollbar();
 }
