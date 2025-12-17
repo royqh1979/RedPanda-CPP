@@ -68,14 +68,19 @@ private slots:
     void test_input_chars_in_file();
     void test_input_char_at_end_of_first_line_of_collapsed_block();
 
+    void test_delete_chars_in_empty_file();
     void test_delete_chars_in_file();
     void test_delete_chars_at_file_begin_end();
+    void test_merge_with_next_line_with_collapsed_block();
 
+    void test_delete_prev_chars_in_empty_file();
     void test_delete_prev_chars_at_file_begin_end();
 
     void test_break_line_in_empty_file();
     void test_break_lines();
     void test_break_lines_with_collapsed_block();
+    void test_break_lines_with_collapsed_block2();
+    void test_break_lines_with_collapsed_block3();
     void test_if_else_indent();
 
     void test_delete_current_line_in_empty_file();
