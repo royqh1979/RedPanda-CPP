@@ -76,6 +76,7 @@ private slots:
     void test_break_line_in_empty_file();
     void test_break_lines();
     void test_break_lines_with_collapsed_block();
+    void test_if_else_indent();
 
     void test_delete_current_line_in_empty_file();
     void test_delete_current_line();

@@ -2344,7 +2344,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretXY(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{1});
+    QCOMPARE(mInsertStartLines, QList<int>{0});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -2385,7 +2385,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretXY(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{1});
+    QCOMPARE(mInsertStartLines, QList<int>{0});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -2441,7 +2441,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
                          "",
                          "*/",
                          "int main() { ",
-                         "",
+                         "\t",
                          "}",
                          "return 0;"
                       });
@@ -2450,7 +2450,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
                          "",
                          "*/",
                          "int main() { ",
-                         "",
+                         "\t",
                          "}",
                          "ret",
                          "urn 0;"
@@ -2481,9 +2481,9 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     clearSignalDatas();
     QTest::keyPress(mEdit.get(),Qt::Key_Enter);
     QCOMPARE(mEdit->content(), text3);
-    QCOMPARE(mEdit->caretXY(), CharPos(0,4));
-    QCOMPARE(mEdit->selBegin(), CharPos(0,4));
-    QCOMPARE(mEdit->selEnd(), CharPos(0,4));
+    QCOMPARE(mEdit->caretXY(), CharPos(1,4));
+    QCOMPARE(mEdit->selBegin(), CharPos(1,4));
+    QCOMPARE(mEdit->selEnd(), CharPos(1,4));
     QCOMPARE(mInsertStartLines, QList<int>({4,4}));
     QCOMPARE(mInsertLineCounts, QList<int>({1,1}));
     QCOMPARE(mDeleteStartLines, QList<int>({}));
@@ -2598,9 +2598,9 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     clearSignalDatas();
     mEdit->redo();
     QCOMPARE(mEdit->content(), text3);
-    QCOMPARE(mEdit->caretXY(), CharPos(0,4));
-    QCOMPARE(mEdit->selBegin(), CharPos(0,4));
-    QCOMPARE(mEdit->selEnd(), CharPos(0,4));
+    QCOMPARE(mEdit->caretXY(), CharPos(1,4));
+    QCOMPARE(mEdit->selBegin(), CharPos(1,4));
+    QCOMPARE(mEdit->selEnd(), CharPos(1,4));
     QCOMPARE(mInsertStartLines, QList<int>({4,4}));
     QCOMPARE(mInsertLineCounts, QList<int>({1,1}));
     QCOMPARE(mDeleteStartLines, QList<int>({}));
@@ -2608,7 +2608,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<StatusChanges>({
-                                      (StatusChange::CaretY | StatusChange::Modified),
+                                      (StatusChange::CaretY | StatusChange::CaretX | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,4,3,4}));
     QCOMPARE(mReparseCounts, QList<int>({1,1,1,1}));
@@ -2628,7 +2628,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<StatusChanges>({
-                                      (StatusChange::CaretY | StatusChange::Modified),
+                                      (StatusChange::CaretX | StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({6,7}));
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
@@ -2805,6 +2805,39 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(!mEdit->isCollapsed(3,10));
     QVERIFY(mEdit->isCollapsed(7,9)); //auto uncollapsed
     QVERIFY(mEdit->isCollapsed(11,13));
+}
+
+void TestQSyneditCpp::test_if_else_indent()
+{
+    QStringList text1({
+                          "int main() { int x; if (x>0) if (x<0) x++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text2({
+                          "int main() {",
+                          "\tint x; if (x>0) if (x<0) x++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text10({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++)",
+                          "\t\t\tx=10;",
+                          "\telse",
+                          "\t\ty=10;"
+                          "\treturn 0;"
+                          "}"
+                      });
+    mEdit->setContent(text1);
+    QCOMPARE(mEdit->codeBlockCount(),0);
+
+    mEdit->setCaretXY(CharPos{12,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text2);
 }
 
 void TestQSyneditCpp::test_delete_current_line_in_empty_file()

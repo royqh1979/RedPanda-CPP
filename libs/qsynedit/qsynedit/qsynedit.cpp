@@ -1357,6 +1357,8 @@ void QSynEdit::doShrinkSelection(const CharPos &pos)
 
 bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const
 {
+    if (line+1>=mDocument->count())
+        return false;
     if (newLineText2.trimmed().isEmpty())
         return true;
     PSyntaxState oldState = mDocument->getSyntaxState(line);
