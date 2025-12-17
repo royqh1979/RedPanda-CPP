@@ -1355,6 +1355,17 @@ void QSynEdit::doShrinkSelection(const CharPos &pos)
     //todo
 }
 
+bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const
+{
+    if (newLineText2.trimmed().isEmpty())
+        return true;
+    PSyntaxState oldState = mDocument->getSyntaxState(line);
+    PSyntaxState newState = calcSyntaxStateAtLine(line, newLineText);
+    if (newState->blockStarted == 0 && newState->blockEnded==0)
+        return false;
+    return true;
+}
+
 int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     line = std::min(line, mDocument->count());
@@ -2177,14 +2188,11 @@ void QSynEdit::doBreakLine()
         QString indentSpacesForLeftLineText = genSpaces(indentSpaces);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
-    bool lineInserted=false;
-    if (leftLineText.trimmed().isEmpty()) {
-        lineInserted = true;
-        properInsertLine(mCaretY,leftLineText,false);
-    } else {
+    bool insertAfter = shouldInsertAfterCurrentLine(mCaretY, leftLineText, rightLineText);
+    if (insertAfter)
         properSetLine(mCaretY, leftLineText, false);
-        lineInserted = false;
-    }
+    else
+        properInsertLine(mCaretY,leftLineText,false);
 
 
     notInComment = !mSyntaxer->isCommentNotFinished(
@@ -2200,10 +2208,10 @@ void QSynEdit::doBreakLine()
                                             );
     }
     QString indentSpacesForRightLineText = genSpaces(indentSpaces);
-    if (lineInserted)
-        properSetLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
-    else
+    if (insertAfter)
         properInsertLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
+    else
+        properSetLine(mCaretY+1, indentSpacesForRightLineText+rightLineText, true);
 
     if (!mUndoing) {
         //insert new line in middle of "/*" and "*/"
@@ -2754,7 +2762,7 @@ void QSynEdit::endMergeCaretStatusChange()
     }
 }
 
-PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash)
+PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash) const
 {
     bool oldHandleLastBackSlash = true;
     if (mSyntaxer->language() == ProgrammingLanguage::CPP) {

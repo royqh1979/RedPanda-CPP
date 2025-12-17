@@ -130,16 +130,16 @@ namespace QSynedit {
                     IndentInfo matchingIndents = rangeAfterFirstToken->lastUnindent;
                     int matchingLine = editor->findPrevLineBySeq(line-1, matchingIndents.lineSeq);
                     if (matchingLine>=0)
-                        indentSpaces = editor->leftSpaces(editor->lineText(matchingLine+1));
+                        indentSpaces = editor->leftSpaces(editor->lineText(matchingLine));
                 } else if (firstToken=="{") {
                     IndentInfo matchingIndents = rangeAfterFirstToken->getLastIndent();
                     int matchingLine = editor->findPrevLineBySeq(line-1, matchingIndents.lineSeq);
                     if (matchingLine>=0 && matchingLine!=line-1) {
-                        indentSpaces = editor->leftSpaces(editor->lineText(matchingLine+1));
+                        indentSpaces = editor->leftSpaces(editor->lineText(matchingLine));
                     } else if (rangeAfterFirstToken->indents.count()>=2){
                         IndentInfo info =  rangeAfterFirstToken->indents[rangeAfterFirstToken->indents.count()-2];                        
                         int infoLine = editor->findPrevLineBySeq(line-1, info.lineSeq);
-                        indentSpaces = editor->leftSpaces(editor->lineText(infoLine+1))+editor->tabSize();
+                        indentSpaces = editor->leftSpaces(editor->lineText(infoLine))+editor->tabSize();
                     } else
                         indentSpaces = 0;
                 } else if (firstToken=="else") {
@@ -148,7 +148,7 @@ namespace QSynedit {
                         if (rangeAfterFirstToken->indents.count()>=2){
                             IndentInfo info =  rangeAfterFirstToken->indents[rangeAfterFirstToken->indents.count()-2];
                             int infoLine = editor->findPrevLineBySeq(line-1, info.lineSeq);
-                            indentSpaces = editor->leftSpaces(editor->lineText(infoLine+1))+editor->tabSize();
+                            indentSpaces = editor->leftSpaces(editor->lineText(infoLine))+editor->tabSize();
                         } else {
                             indentSpaces = 0;
                         }
@@ -156,7 +156,7 @@ namespace QSynedit {
                 } else if (rangePreceeding->getLastIndentType()!=IndentType::None) {
                     IndentInfo matchingIndents = rangePreceeding->getLastIndent();
                     int matchingLine = editor->findPrevLineBySeq(line-1, matchingIndents.lineSeq);
-                    indentSpaces = editor->leftSpaces(editor->lineText(matchingLine+1))+editor->tabSize();
+                    indentSpaces = editor->leftSpaces(editor->lineText(matchingLine))+editor->tabSize();
                 } else {
                     indentSpaces = 0;
                 }

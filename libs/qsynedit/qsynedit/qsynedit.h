@@ -555,7 +555,7 @@ protected:
     void beginMergeCaretStatusChange();
     void endMergeCaretStatusChange();
 
-    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
+    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true) const;
     bool dragging() const { return mDragging; }
 
 private:
@@ -639,6 +639,7 @@ private:
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
 
+    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const;
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
