@@ -317,7 +317,7 @@ public:
     void addLeftTopToUndo();
     void addSelectionToUndo();
 
-    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    void processCommand(EditCommand Command, QVariant data=QVariant());
 
     void trimTrailingSpaces() {
         processCommand(EditCommand::TrimTrailingSpaces);
@@ -639,7 +639,7 @@ private:
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
 
-    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const;
+    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
