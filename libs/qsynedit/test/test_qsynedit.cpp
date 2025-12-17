@@ -2816,7 +2816,88 @@ void TestQSyneditCpp::test_if_else_indent()
                           "int main() {",
                           "\tint x; if (x>0) if (x<0) x++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
                       });
+    QStringList text3({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0) if (x<0) x++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text4({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0) x++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text5({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++; else	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text6({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse	y--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text7({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--; if (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text8({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0) for (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
+    QStringList text9({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++) x=10;	else y=10; return 0; }"
+                      });
     QStringList text10({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++)",
+                          "\t\t\tx=10;	else y=10; return 0; }"
+                      });
+    QStringList text11({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++)",
+                          "\t\t\tx=10;",
+                          "\telse y=10; return 0; }"
+                      });
+    QStringList text12({
                           "int main() {",
                           "\tint x;",
                           "\tif (x>0)",
@@ -2828,8 +2909,37 @@ void TestQSyneditCpp::test_if_else_indent()
                           "\t\tfor (int i=0;i<10;i++)",
                           "\t\t\tx=10;",
                           "\telse",
-                          "\t\ty=10;"
-                          "\treturn 0;"
+                          "\t\ty=10; return 0; }"
+                      });
+    QStringList text13({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++)",
+                          "\t\t\tx=10;",
+                          "\telse",
+                          "\t\ty=10;",
+                          "\treturn 0; }"
+                      });
+    QStringList text14({
+                          "int main() {",
+                          "\tint x;",
+                          "\tif (x>0)",
+                          "\t\tif (x<0)",
+                          "\t\t\tx++;",
+                          "\t\telse",
+                          "\t\t\ty--;",
+                          "\tif (y==0)",
+                          "\t\tfor (int i=0;i<10;i++)",
+                          "\t\t\tx=10;",
+                          "\telse",
+                          "\t\ty=10;",
+                          "\treturn 0;",
                           "}"
                       });
     mEdit->setContent(text1);
@@ -2838,6 +2948,144 @@ void TestQSyneditCpp::test_if_else_indent()
     mEdit->setCaretXY(CharPos{12,0});
     QTest::keyPress(mEdit.get(), Qt::Key_Return);
     QCOMPARE(mEdit->content(), text2);
+
+    mEdit->setCaretXY(CharPos{7,1});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text3);
+
+    mEdit->setCaretXY(CharPos{9,2});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text4);
+
+    mEdit->setCaretXY(CharPos{10,3});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text5);
+
+    mEdit->setCaretXY(CharPos{7,4});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text6);
+
+    mEdit->setCaretXY(CharPos{6,5});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text7);
+
+    mEdit->setCaretXY(CharPos{7,6});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text8);
+
+    mEdit->setCaretXY(CharPos{10,7});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text9);
+
+    mEdit->setCaretXY(CharPos{24,8});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text10);
+
+    mEdit->setCaretXY(CharPos{8,9});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text11);
+
+    mEdit->setCaretXY(CharPos{5,10});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text12);
+
+    mEdit->setCaretXY(CharPos{7,11});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text13);
+
+    mEdit->setCaretXY(CharPos{10,12});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), text14);
+
+    //undo
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text13);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text12);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text11);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text10);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text9);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text8);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text7);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text6);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text5);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text4);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text3);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text2);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text1);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text3);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text4);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text5);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text6);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text7);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text8);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text9);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text10);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text11);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text12);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text13);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text14);
+    QVERIFY(!mEdit->canRedo());
+
+    //undo
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text13);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text12);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text11);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text10);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text9);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text8);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text7);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text6);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text5);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text4);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text3);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text2);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text1);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
 }
 
 void TestQSyneditCpp::test_delete_current_line_in_empty_file()
