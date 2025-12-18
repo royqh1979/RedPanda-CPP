@@ -640,6 +640,7 @@ private:
     void doShrinkSelection(const CharPos& pos);
 
     bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
+    bool shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const;
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 

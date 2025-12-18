@@ -1373,6 +1373,17 @@ bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText
     return true;
 }
 
+bool QSynEdit::shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const
+{
+    Q_ASSERT(line+1<mDocument->count());
+    if (nextLineText.trimmed().isEmpty())
+        return true;
+    PSyntaxState prevLineState = mDocument->getSyntaxState(line);
+    if (prevLineState->blockStarted == 0 && prevLineState->blockEnded==0)
+        return false;
+    return true;
+}
+
 int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     line = std::min(line, mDocument->count());
@@ -1834,13 +1845,14 @@ void QSynEdit::doMergeWithNextLine()
         return;
     if (mCaretY+1 < mDocument->count()) {
         CharPos newCaret{0, mCaretY+1};
-        QString tempStr = lineText();
+        QString currentLineText = mDocument->getLine(mCaretY);
         beginEditing();
-        QString newString = tempStr + mDocument->getLine(mCaretY+1);
-        if (tempStr.trimmed().isEmpty()) {
-            properDeleteLine(mCaretY, false);
-        } else {
+        QString nextLineText = mDocument->getLine(mCaretY+1);
+        QString newString = currentLineText + nextLineText;
+        if (shouldDeleteNextLine(mCaretY, currentLineText, nextLineText)) {
             properDeleteLine(mCaretY + 1, false);
+        } else {
+            properDeleteLine(mCaretY, false);
         }
         properSetLine(mCaretY, newString, true);
         addChangeToUndo(ChangeReason::MergeWithNextLine, caretXY(), newCaret,
@@ -1858,10 +1870,10 @@ void QSynEdit::doMergeWithPrevLine()
         QString tempStr = lineText();
         beginEditing();
         QString lastLine = mDocument->getLine(mCaretY-1);
-        if (lastLine.trimmed().isEmpty()) {
-            properDeleteLine(mCaretY-1, false);
-        } else {
+        if (shouldDeleteNextLine(mCaretY-1, lastLine, tempStr)) {
             properDeleteLine(mCaretY, false);
+        } else {
+            properDeleteLine(mCaretY-1, false);
         }
         properSetLine(mCaretY-1, lastLine+tempStr, true);
         setCaretXY(CharPos{lastLine.length(), mCaretY - 1});
@@ -4141,12 +4153,12 @@ void QSynEdit::doUndoItem()
             QString rightStr = tempStr.mid(startPos.ch);
             QStringList helper({"",""});
             beginEditing();
-            if (leftStr.trimmed().isEmpty()) {
-                properInsertLine(startPos.line, leftStr,false);
-                properSetLine(startPos.line+1, rightStr, true);
-            } else {
+            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr, false)) {
                 properSetLine(startPos.line, leftStr, false);
                 properInsertLine(startPos.line+1, rightStr, true);
+            } else {
+                properInsertLine(startPos.line, leftStr,false);
+                properSetLine(startPos.line+1, rightStr, true);
             }
             setCaretXY(item->changeStartPos());
             endEditing();
@@ -4166,12 +4178,12 @@ void QSynEdit::doUndoItem()
             QString rightStr = tempStr.mid(startPos.ch);
             QStringList helper({"",""});
             beginEditing();
-            if (leftStr.trimmed().isEmpty()) {
-                properInsertLine(startPos.line, leftStr,false);
-                properSetLine(startPos.line+1, rightStr, true);
-            } else {
+            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr, false)) {
                 properSetLine(startPos.line, leftStr, false);
                 properInsertLine(startPos.line+1, rightStr, true);
+            } else {
+                properInsertLine(startPos.line, leftStr,false);
+                properSetLine(startPos.line+1, rightStr, true);
             }
             setCaretXY(item->changeEndPos());
             endEditing();

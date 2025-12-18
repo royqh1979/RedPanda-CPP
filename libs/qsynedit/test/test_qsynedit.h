@@ -72,9 +72,14 @@ private slots:
     void test_delete_chars_in_file();
     void test_delete_chars_at_file_begin_end();
     void test_merge_with_next_line_with_collapsed_block();
+    void test_merge_with_next_line_with_collapsed_block2();
+    void test_merge_with_next_line_with_collapsed_block3();
 
     void test_delete_prev_chars_in_empty_file();
     void test_delete_prev_chars_at_file_begin_end();
+    void test_merge_with_prev_line_with_collapsed_block();
+    void test_merge_with_prev_line_with_collapsed_block2();
+    void test_merge_with_prev_line_with_collapsed_block3();
 
     void test_break_line_in_empty_file();
     void test_break_lines();
