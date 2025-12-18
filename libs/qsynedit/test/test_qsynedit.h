@@ -60,6 +60,7 @@ private slots:
 
     void test_clear();
     void test_load_file();
+    void test_clear_all();
     void test_set_content_qstring();
     void test_set_content_qstringlist();
 
@@ -95,7 +96,11 @@ private slots:
     void test_duplicate_current_line();
 
     void test_delete_selection_in_empty_file();
-    void test_delete_all();
+    void test_delete_while_select_all();
+    void test_delete_selection_in_line();
+    void test_backspace_selection_in_empty_file();
+    void test_backspace_while_select_all();
+    void test_input_char_while_select_all();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();

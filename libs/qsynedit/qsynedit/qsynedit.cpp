@@ -5021,7 +5021,6 @@ void QSynEdit::doDeleteSelection()
     CharPos startPos=selBegin();
     CharPos endPos=selEnd();
     doDeleteText(startPos,endPos,mActiveSelectionMode);
-    setCaretXY(startPos);
 }
 
 void QSynEdit::doSetSelTextPrimitive(const QStringList &text)
@@ -5375,6 +5374,8 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
 //    }
     QStringList deleted=getContent(startPos,endPos,mode);
     beginEditing();
+    addCaretToUndo();
+    addSelectionToUndo();
     switch(mode) {
     case SelectionMode::Normal:
         if (mDocument->count() > 0) {
@@ -5423,12 +5424,12 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         break;
     }
     }
-    endEditing();
     addChangeToUndo(ChangeReason::Delete,
             startPos,
             endPos,
             deleted,
             mode);
+    endEditing();
 }
 
 void QSynEdit::doInsertText(const CharPos& pos,
