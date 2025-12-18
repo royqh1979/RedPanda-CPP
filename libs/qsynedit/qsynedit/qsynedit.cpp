@@ -1022,30 +1022,36 @@ void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posS
 
 void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
+    int oldCount = mDocument->count();
     beginEditing();
-    doClearAll();
+    internalClearAll();
     mDocument->loadFromFile(filename, encoding, realEncoding);
     reparseDocument();
+    emit linesDeleted(0, oldCount);
     emit linesInserted(0, mDocument->count());
     endEditing();
 }
 
 void QSynEdit::setContent(const QString &text)
 {
+    int oldCount = mDocument->count();
     beginEditing();
-    doClearAll();
+    internalClearAll();
     mDocument->setText(text);
     reparseDocument();
+    emit linesDeleted(0, oldCount);
     emit linesInserted(0, mDocument->count());
     endEditing();
 }
 
 void QSynEdit::setContent(const QStringList &text)
 {
+    int oldCount = mDocument->count();
     beginEditing();
-    doClearAll();
+    internalClearAll();
     mDocument->setContents(text);
     reparseDocument();
+    emit linesDeleted(0, oldCount);
     emit linesInserted(0, mDocument->count());
     endEditing();
 }
@@ -1375,6 +1381,7 @@ bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText
 
 bool QSynEdit::shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const
 {
+    Q_UNUSED(currentLineText);
     Q_ASSERT(line+1<mDocument->count());
     if (nextLineText.trimmed().isEmpty())
         return true;
@@ -1382,6 +1389,13 @@ bool QSynEdit::shouldDeleteNextLine(int line, const QString &currentLineText, co
     if (prevLineState->blockStarted == 0 && prevLineState->blockEnded==0)
         return false;
     return true;
+}
+
+bool QSynEdit::noBlockStartEndOnLine(int line) const
+{
+    Q_ASSERT(line<mDocument->count());
+    PSyntaxState state = mDocument->getSyntaxState(line);
+    return (state->blockStarted == 0 && state->blockEnded==0);
 }
 
 int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
@@ -1898,7 +1912,7 @@ void QSynEdit::doDeleteCurrentToken()
         if (!token.isEmpty()) {
             CharPos wordStart{start, pos.line};
             CharPos wordEnd{start+token.length(), pos.line};
-            doDeleteFromTo(wordStart, wordEnd);
+            doDeleteText(wordStart, wordEnd, SelectionMode::Normal);
         }
     }
 }
@@ -1910,7 +1924,7 @@ void QSynEdit::doDeleteToEOL()
     if (mCaretX>lineText().length())
         return;
 
-    doDeleteFromTo(caretXY(),CharPos{lineText().length(),mCaretY});
+    doDeleteText(caretXY(),CharPos{lineText().length(),mCaretY},SelectionMode::Normal);
 }
 
 void QSynEdit::doDeleteToWordStart()
@@ -1925,7 +1939,7 @@ void QSynEdit::doDeleteToWordStart()
     if (start==end)
         start = prevWordEnd(end);
     if (start.isValid() && end.isValid())
-    doDeleteFromTo(start,end);
+    doDeleteText(start,end,SelectionMode::Normal);
 }
 
 void QSynEdit::doDeleteToWordEnd()
@@ -1938,7 +1952,7 @@ void QSynEdit::doDeleteToWordEnd()
     CharPos start = caretXY();
     CharPos end = getTokenEnd(start);
     if (start.isValid() && end.isValid())
-        doDeleteFromTo(start,end);
+        doDeleteText(start,end,SelectionMode::Normal);
 }
 
 void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
@@ -1951,14 +1965,14 @@ void QSynEdit::doDeleteCurrentTokenAndTralingSpaces()
     CharPos start = getTokenBegin(caretXY());
     CharPos end = nextWordBegin(caretXY());
     if (start.isValid() && end.isValid())
-        doDeleteFromTo(start,end);
+        doDeleteText(start,end,SelectionMode::Normal);
 }
 
 void QSynEdit::doDeleteFromBOL()
 {
     if (mReadOnly || mDocument->empty())
         return;
-    doDeleteFromTo(CharPos{0,mCaretY},caretXY());
+    doDeleteText(CharPos{0,mCaretY},caretXY(),SelectionMode::Normal);
 }
 
 void QSynEdit::doDeleteCurrentLine()
@@ -2137,17 +2151,23 @@ void QSynEdit::doMoveSelDown()
     }
 }
 
-void QSynEdit::doClearAll()
+void QSynEdit::internalClearAll()
 {
     beginEditing();
     setCaretXY(fileBegin());
-    int oldCount = mDocument->count();
+    mCodeBlocks.clear();
     mDocument->clear();
-    emit linesDeleted(0, oldCount);
     reparseDocument();
     setModified(false);
     clearUndo();
     endEditing();
+}
+
+void QSynEdit::doClearAll()
+{
+    int oldCount = mDocument->count();
+    internalClearAll();
+    emit linesDeleted(0, oldCount-1);
 }
 
 void QSynEdit::doBreakLine()
@@ -5333,6 +5353,9 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
 {
     Q_ASSERT(validInDoc(startPos));
     Q_ASSERT(validInDoc(endPos));
+    Q_ASSERT(endPos >= startPos);
+    if (mReadOnly || mDocument->empty())
+        return;
     if (startPos == endPos)
         return;
 //    if (mode == SelectionMode::Normal) {
@@ -5366,8 +5389,8 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
             } else {
                 properDeleteLines(startPos.line+1, endPos.line - startPos.line, false);
             }
-            setCaretXY(startPos);
             properSetLine(startPos.line,newString,true);
+            setCaretXY(startPos);
         }
         break;
     case SelectionMode::Column:
@@ -5574,22 +5597,6 @@ int QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& te
         endEditing();
     }
     return result;
-}
-
-void QSynEdit::doDeleteFromTo(const CharPos &start, const CharPos &end)
-{
-    if (mReadOnly || mDocument->empty())
-        return;
-    if ((start.ch != end.ch) || (start.line != end.line)) {
-        beginEditing();
-        addCaretToUndo();
-        addSelectionToUndo();
-        setSelBegin(start);
-        setSelEnd(end);
-        doDeleteText(start,end,SelectionMode::Normal);
-        endEditing();
-        setCaretXY(start);
-    }
 }
 
 bool QSynEdit::onGetSpecialLineColors(int, QColor &, QColor &)

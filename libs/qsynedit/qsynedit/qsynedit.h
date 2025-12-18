@@ -634,13 +634,12 @@ private:
     void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
-    void doDeleteFromTo(const CharPos& start, const CharPos& end);
-
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
 
     bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
     bool shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const;
+    bool noBlockStartEndOnLine(int line) const;
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
@@ -677,6 +676,7 @@ private:
     void doBlockIndent();
     void doBlockUnindent();
     void internalAddChar(const QChar& ch);
+    void internalClearAll();
     void doAddChar(const QChar& ch);
     void doCutToClipboard();
     void doCopyToClipboard();

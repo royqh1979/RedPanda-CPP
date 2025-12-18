@@ -815,7 +815,7 @@ void TestQSyneditCpp::test_clear()
     mEdit->processCommand(EditCommand::ClearAll);
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{0});
-    QCOMPARE(mDeleteLineCounts, QList<int>{2});
+    QCOMPARE(mDeleteLineCounts, QList<int>{1});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mReparseStarts, QList<int>{0});
     QCOMPARE(mReparseCounts, QList<int>{1});
@@ -5339,6 +5339,58 @@ void TestQSyneditCpp::test_duplicate_current_line()
     QVERIFY(!mEdit->canUndo());
     QCOMPARE(mEdit->codeBlockCount(),1);
     QVERIFY(mEdit->hasCodeBlock(1,3));
+}
+
+void TestQSyneditCpp::test_delete_selection_in_empty_file()
+{
+    //delete
+    clearContent();
+    mEdit->selectAll();
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->canRedo());
+    QVERIFY(!mEdit->modified());
+    QVERIFY(mEdit->empty());
+
+    //backspace
+    clearContent();
+    mEdit->selectAll();
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->canRedo());
+    QVERIFY(!mEdit->modified());
+    QVERIFY(mEdit->empty());
+}
+
+void TestQSyneditCpp::test_delete_all()
+{
+    loadDemoFile();
+    QStringList contents = mEdit->content();
+
+    mEdit->setCaretXY(CharPos{3,5});
+
+    clearSignalDatas();
+    mEdit->selectAll();
+    QCOMPARE(mEdit->caretXY(), CharPos({3,5}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,76}));
+
+    clearSignalDatas();
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,0}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,0}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({0}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({76}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::ModifyChanged | StatusChange::CaretX | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
 }
 
 

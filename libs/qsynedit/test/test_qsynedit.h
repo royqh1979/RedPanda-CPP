@@ -93,6 +93,9 @@ private slots:
 
     void test_duplicate_current_line_in_empty_file();
     void test_duplicate_current_line();
+
+    void test_delete_selection_in_empty_file();
+    void test_delete_all();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();
