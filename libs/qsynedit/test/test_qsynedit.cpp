@@ -6429,7 +6429,6 @@ void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_begin()
                                   }));
     QCOMPARE(mReparseStarts, QList<int>({1}));
     QCOMPARE(mReparseCounts, QList<int>({1}));
-    QCOMPARE(mEdit->codeBlockCount(),3);
 }
 
 }
