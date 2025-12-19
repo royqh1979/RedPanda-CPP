@@ -553,8 +553,8 @@ protected:
     void doSelectLine();
     void beginInternalChanges();
     void endInternalChanges();
-    void beginMergeCaretStatusChange();
-    void endMergeCaretStatusChange();
+    void beginMergeCaretAndSelectionStatusChange();
+    void endMergeCaretAndSelectionStatusChange();
 
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true) const;
     bool dragging() const { return mDragging; }
@@ -791,6 +791,8 @@ private:
     bool mIsScrolling;
     int mMergeCaretStatusChangeLock;
     CharPos mCaretBeforeMerging;
+    CharPos mSelBeginBeforeMerging;
+    CharPos mSelEndBeforeMerging;
     bool mUndoing;
     int mGutterWidth;
     //caret blink related

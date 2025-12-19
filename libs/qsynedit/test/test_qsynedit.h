@@ -106,6 +106,10 @@ private slots:
     void test_toggle_comment_in_empty_file();
     void test_toggle_comment_at_file_begin();
     void test_toggle_comment_at_file_end();
+    void test_toggle_comment_select_line_end_to_line_begin();
+//    void test_toggle_comment_select_line_begin_to_line_end();
+//    void test_toggle_comment_select_line_begin_to_line_begin();
+//    void test_toggle_comment_select_line_end_to_line_end();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();

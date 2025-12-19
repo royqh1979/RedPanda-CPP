@@ -6380,5 +6380,57 @@ void TestQSyneditCpp::test_toggle_comment_at_file_end()
     QVERIFY(!mEdit->modified());
 }
 
+void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_begin()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        "// ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{0,2},CharPos{9,0},CharPos{0,2});
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,2}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,2}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QCOMPARE(mEdit->codeBlockCount(),3);
+}
+
 }
 

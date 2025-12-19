@@ -2032,7 +2032,7 @@ void QSynEdit::doDuplicateSelection()
         return;
     CharPos beginPos = selBegin();
     CharPos endPos = selEnd();
-    beginMergeCaretStatusChange();
+    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     addCaretToUndo();
     addSelectionToUndo();
@@ -2044,7 +2044,7 @@ void QSynEdit::doDuplicateSelection()
     CharPos newSelEnd{caretXY()};
     setCaretAndSelection(newSelEnd, newSelBegin, newSelEnd);
     endEditing();
-    endMergeCaretStatusChange();
+    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doSelectLine()
@@ -2796,15 +2796,17 @@ void QSynEdit::endInternalChanges()
     }
 }
 
-void QSynEdit::beginMergeCaretStatusChange()
+void QSynEdit::beginMergeCaretAndSelectionStatusChange()
 {
     if (mMergeCaretStatusChangeLock == 0) {
         mCaretBeforeMerging = caretXY();
+        mSelBeginBeforeMerging = selBegin();
+        mSelEndBeforeMerging = selEnd();
     }
     ++mMergeCaretStatusChangeLock;
 }
 
-void QSynEdit::endMergeCaretStatusChange()
+void QSynEdit::endMergeCaretAndSelectionStatusChange()
 {
     --mMergeCaretStatusChangeLock;
     if (mMergeCaretStatusChangeLock == 0) {
@@ -4040,7 +4042,7 @@ void QSynEdit::doUndo()
         mRedoList->addRedo(item);
     }
 
-    beginMergeCaretStatusChange();
+    beginMergeCaretAndSelectionStatusChange();
     PUndoItem item = mUndoList->peekItem();
     if (item) {
         size_t oldChangeNumber = item->changeNumber();
@@ -4066,7 +4068,7 @@ void QSynEdit::doUndo()
             } while (keepGoing);
         }
     }
-    endMergeCaretStatusChange();
+    endMergeCaretAndSelectionStatusChange();
     ensureCaretVisible();
     updateModifiedStatusForUndoRedo();
     onChanged();
@@ -4139,7 +4141,7 @@ void QSynEdit::doUndoItem()
             break;
         case ChangeReason::AddChar:
         case ChangeReason::Insert: {
-            beginMergeCaretStatusChange();
+            beginMergeCaretAndSelectionStatusChange();
             QStringList tmpText = getContent(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mRedoList->addRedo(
@@ -4150,7 +4152,7 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             setCaretXY(item->changeStartPos());
-            endMergeCaretStatusChange();
+            endMergeCaretAndSelectionStatusChange();
             break;
         }
         case ChangeReason::ReplaceLine:
@@ -4247,7 +4249,7 @@ void QSynEdit::doUndoItem()
                     std::swap(xFrom, xTo);
                 startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
             }
-            beginMergeCaretStatusChange();
+            beginMergeCaretAndSelectionStatusChange();
             doInsertText(startPos,item->changeText(),item->changeSelMode(),
                          startPos.line,
                          endPos.line);
@@ -4256,7 +4258,7 @@ void QSynEdit::doUndoItem()
                 setCaretXY(item->changeStartPos());
             else
                 setCaretXY(item->changeEndPos());
-            endMergeCaretStatusChange();
+            endMergeCaretAndSelectionStatusChange();
             mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),
@@ -4321,7 +4323,7 @@ void QSynEdit::doRedo()
         return;
     size_t oldChangeNumber = item->changeNumber();
 
-    beginMergeCaretStatusChange();
+    beginMergeCaretAndSelectionStatusChange();
     //skip group chain breakers
     while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
         PUndoItem item = mRedoList->popItem();
@@ -4352,7 +4354,7 @@ void QSynEdit::doRedo()
         PUndoItem item = mRedoList->popItem();
         mUndoList->restoreChange(item);
     }
-    endMergeCaretStatusChange();
+    endMergeCaretAndSelectionStatusChange();
     ensureCaretVisible();
     updateModifiedStatusForUndoRedo();
     onChanged();
@@ -5547,7 +5549,7 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
     int caretY=pos.line;
     if (text.length()>1) {
         // step1: insert the first line of Value into current line
-        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)) {
+        if (!mUndoing && mOptions.testFlag(EditorOption::AutoIndent)) {
             QString s = text[0];
             if (sLeftSide.isEmpty()) {
                 s=s.trimmed();
