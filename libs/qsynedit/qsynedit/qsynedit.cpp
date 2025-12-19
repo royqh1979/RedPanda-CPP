@@ -2032,18 +2032,19 @@ void QSynEdit::doDuplicateSelection()
         return;
     CharPos beginPos = selBegin();
     CharPos endPos = selEnd();
-    int chDelta = endPos.ch - beginPos.ch;
-    int lineDelta = endPos.line - beginPos.line;
     beginMergeCaretStatusChange();
     beginEditing();
     addCaretToUndo();
     addSelectionToUndo();
+    EditorOptions oldOptions = mOptions;
+    mOptions.setFlag(EditorOption::AutoIndent, false); //disable auto indent
     doInsertTextByNormalMode(endPos,selContent());
-    CharPos newSelBegin{caretXY()};
-    CharPos newSelEnd{newSelBegin.ch + chDelta, newSelBegin.line + lineDelta};
+    mOptions = oldOptions;
+    CharPos newSelBegin{endPos};
+    CharPos newSelEnd{caretXY()};
     setCaretAndSelection(newSelEnd, newSelBegin, newSelEnd);
     endEditing();
-    endInternalChanges();
+    endMergeCaretStatusChange();
 }
 
 void QSynEdit::doSelectLine()
