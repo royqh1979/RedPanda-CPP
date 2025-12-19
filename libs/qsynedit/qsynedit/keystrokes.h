@@ -120,7 +120,7 @@ enum class EditCommand {
     ClearAll        = 508,  // Delete everything
     LineBreak       = 509,  // Break line at current position, move caret to new line
     Char            = 511,  // Insert a character at current position
-    DuplicateLine   = 512,  // Duplicate current line
+    Duplicate   = 512,  // Duplicate current line
     MoveSelUp       = 513,  // Move selection up
     MoveSelDown     = 514,  // Move selection down
     ImeStr          = 550,  // Insert character(s) from IME

@@ -1426,7 +1426,7 @@ bool GLSLSyntaxer::supportBraceLevel()
     return true;
 }
 
-QString GLSLSyntaxer::commentSymbol()
+QString GLSLSyntaxer::lineCommentSymbol()
 {
     return "//";
 }

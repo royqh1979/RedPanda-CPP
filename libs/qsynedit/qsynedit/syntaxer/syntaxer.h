@@ -175,7 +175,7 @@ public:
     virtual bool isSpaceChar(const QChar& ch) const;
     virtual bool isWordBreakChar(const QChar& ch) const;
     virtual PTokenAttribute getAttribute(const QString& name) const;
-    virtual QString commentSymbol();
+    virtual QString lineCommentSymbol();
     virtual QString blockCommentBeginSymbol();
     virtual QString blockCommentEndSymbol();
 

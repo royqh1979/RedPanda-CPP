@@ -101,6 +101,10 @@ private slots:
     void test_backspace_selection_in_empty_file();
     void test_backspace_while_select_all();
     void test_input_char_while_select_all();
+
+    void test_toggle_comment_in_empty_file();
+    void test_toggle_comment_at_file_begin();
+    void test_toggle_comment_at_file_end();
 /*
     void test_delete_text_normal_data();
     void test_delete_text_normal();

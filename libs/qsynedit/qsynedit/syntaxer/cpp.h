@@ -247,7 +247,7 @@ public:
 
     bool supportBraceLevel() override;
 
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
     virtual bool supportFolding() override;

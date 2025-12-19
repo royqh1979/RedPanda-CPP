@@ -1391,11 +1391,25 @@ bool QSynEdit::shouldDeleteNextLine(int line, const QString &currentLineText, co
     return true;
 }
 
-bool QSynEdit::noBlockStartEndOnLine(int line) const
+void QSynEdit::calcEffectiveFromToLine(const CharPos &startPos, const CharPos &endPos, int &fromLine, int &toLine)
 {
-    Q_ASSERT(line<mDocument->count());
-    PSyntaxState state = mDocument->getSyntaxState(line);
-    return (state->blockStarted == 0 && state->blockEnded==0);
+    Q_ASSERT(validInDoc(startPos));
+    Q_ASSERT(validInDoc(endPos));
+    Q_ASSERT(startPos <= endPos);
+    fromLine = startPos.line;
+    toLine = endPos.line;
+    if (startPos.line == endPos.line) {
+        return;
+    }
+    if (endPos.ch == 0) {
+        toLine--;
+    }
+    if (startPos.ch >= mDocument->getLine(startPos.line).length()) {
+        fromLine++;
+    }
+    if (fromLine>toLine) {
+        fromLine = toLine;
+    }
 }
 
 int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
@@ -1435,119 +1449,102 @@ void QSynEdit::doSelectAll()
 
 void QSynEdit::doComment()
 {
-    CharPos origBlockBegin, origBlockEnd, origCaret;
-    int endLine;
+
     if (mReadOnly || mDocument->empty())
         return;
-    if (mSyntaxer->commentSymbol().isEmpty())
+    if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
     beginEditing();
-    auto action = finally([this]{
-        endEditing();
-    });
+    CharPos origBlockBegin, origBlockEnd, origCaret;
+    int fromLine, toLine;
     origBlockBegin = selBegin();
     origBlockEnd = selEnd();
     origCaret = caretXY();
-    // Ignore the last line the cursor is placed on
-    if (origBlockEnd.ch == 0)
-        endLine = std::max(origBlockBegin.line, origBlockEnd.line - 1);
-    else
-        endLine = origBlockEnd.line;
-    QString commentSymbol = mSyntaxer->commentSymbol();
-    int symbolLen = commentSymbol.length();
-    for (int i = origBlockBegin.line; i<=endLine; i++) {
-        properSetLine(i, commentSymbol + mDocument->getLine(i), i==endLine);
+    calcEffectiveFromToLine(origBlockBegin,origBlockEnd, fromLine, toLine);
+    QString lineCommentSymbol = mSyntaxer->lineCommentSymbol();
+    int symbolLen = lineCommentSymbol.length();
+    for (int i = fromLine; i<=toLine; i++) {
+        properSetLine(i, lineCommentSymbol + mDocument->getLine(i), i==toLine);
         addChangeToUndo(ChangeReason::Insert,
               CharPos{0, i},
               CharPos{symbolLen, i},
               QStringList(), SelectionMode::Normal);
+        // Move begin of selection
+        if (i == origBlockBegin.line)
+            origBlockBegin.ch+=symbolLen;
+        // Move end of selection
+        if (i == origBlockEnd.line)
+            origBlockEnd.ch+=symbolLen;
+        // Move caret
+        if (i == origCaret.line)
+            origCaret.ch+=symbolLen;
     }
-    // Move begin of selection
-    if (origBlockBegin.ch > 0)
-        origBlockBegin.ch+=2;
-    // Move end of selection
-    if (origBlockEnd.ch > 0)
-        origBlockEnd.ch+=2;
-    // Move caret
-    if (origCaret.ch > 0)
-          origCaret.ch+=2;
     setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
+    endEditing();
 }
 
 void QSynEdit::doUncomment()
 {
-    CharPos origBlockBegin, origBlockEnd, origCaret;
-    int endLine;
-    QString s,s2;
-    QStringList changeText;
     if (mReadOnly || mDocument->empty())
         return;
-    if (mSyntaxer->commentSymbol().isEmpty())
+    if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
-    QString commentSymbol=mSyntaxer->commentSymbol();
-    int symbolLen = commentSymbol.length();
-    changeText.append(commentSymbol);
     beginEditing();
-    auto action = finally([this]{
-        endEditing();
-    });
+    QString lineCommentSymbol=mSyntaxer->lineCommentSymbol();
+    int symbolLen = lineCommentSymbol.length();
+    QStringList changeText({lineCommentSymbol});
+    CharPos origBlockBegin, origBlockEnd, origCaret;
+    int fromLine,toLine;
     origBlockBegin = selBegin();
     origBlockEnd = selEnd();
     origCaret = caretXY();
-    // Ignore the last line the cursor is placed on
-    if (origBlockEnd.ch == 0)
-        endLine = std::max(origBlockBegin.line, origBlockEnd.line - 1);
-    else
-        endLine = origBlockEnd.line;
-    for (int i = origBlockBegin.line; i<= endLine; i++) {
-        s = mDocument->getLine(i);
-        s2=s.trimmed();
-        if (!s2.startsWith(commentSymbol))
+    calcEffectiveFromToLine(origBlockBegin,origBlockEnd, fromLine, toLine);
+    for (int i = fromLine; i<= toLine; i++) {
+        QString s = mDocument->getLine(i);
+        if (!s.trimmed().startsWith(lineCommentSymbol))
             continue;
-        // Find // after blanks only
+        // Find "//" after blanks only
         int j = 0;
         while ((j+1 < s.length()) && (s[j] == ' ' || s[j] == '\t'))
             j++;
         s.remove(j,symbolLen);
-        properSetLine(i,s, i==endLine);
+        properSetLine(i,s, i==toLine);
         addChangeToUndo(ChangeReason::Delete,
                              CharPos{j, i},
                              CharPos{j+symbolLen, i},
                              changeText, SelectionMode::Normal);
         // Move begin of selection
-        if ((i == origBlockBegin.line) && (origBlockBegin.ch > 0))
+        if (i == origBlockBegin.line && origBlockBegin.ch >= symbolLen)
             origBlockBegin.ch-=symbolLen;
         // Move end of selection
-        if ((i == origBlockEnd.line) && (origBlockEnd.ch > 0))
+        if (i == origBlockEnd.line && origBlockEnd.ch > symbolLen)
             origBlockEnd.ch-=symbolLen;
         // Move caret
-        if ((i == origCaret.line) && (origCaret.ch > 0))
+        if (i == origCaret.line && origCaret.ch >symbolLen)
             origCaret.ch-=symbolLen;
     }
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
+    endEditing();
 }
 
 void QSynEdit::doToggleComment()
 {
     CharPos origBlockBegin, origBlockEnd, origCaret;
-    int endLine;
+    int fromLine, toLine;
     QString s;
     bool allCommented = true;
     if (mReadOnly || mDocument->empty())
         return;
-    if (mSyntaxer->commentSymbol().isEmpty())
+    if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
-    QString commentSymbol=mSyntaxer->commentSymbol();
+    QString commentSymbol=mSyntaxer->lineCommentSymbol();
 
     origBlockBegin = selBegin();
     origBlockEnd = selEnd();
     origCaret = caretXY();
     // Ignore the last line the cursor is placed on
-    if (origBlockEnd.ch == 0)
-        endLine = std::max(origBlockBegin.line, origBlockEnd.line - 1);
-    else
-        endLine = origBlockEnd.line;
-    for (int i = origBlockBegin.line; i<= endLine; i++) {
+    calcEffectiveFromToLine(origBlockBegin, origBlockEnd, fromLine, toLine);
+    for (int i = fromLine; i<= toLine; i++) {
         s = mDocument->getLine(i).trimmed();
         if (!s.startsWith(commentSymbol)) {
             allCommented = false;
@@ -2016,6 +2013,39 @@ void QSynEdit::doDeleteCurrentLine()
         setCaretXY(CharPos{0, oldCaretY});
 }
 
+void QSynEdit::doDuplicate()
+{
+    if (mReadOnly)
+        return;
+    if (selAvail()) {
+        doDuplicateSelection();
+    } else {
+        doDuplicateCurrentLine();
+    }
+}
+
+void QSynEdit::doDuplicateSelection()
+{
+    if (mReadOnly)
+        return;
+    if (!selAvail())
+        return;
+    CharPos beginPos = selBegin();
+    CharPos endPos = selEnd();
+    int chDelta = endPos.ch - beginPos.ch;
+    int lineDelta = endPos.line - beginPos.line;
+    beginMergeCaretStatusChange();
+    beginEditing();
+    addCaretToUndo();
+    addSelectionToUndo();
+    doInsertTextByNormalMode(endPos,selContent());
+    CharPos newSelBegin{caretXY()};
+    CharPos newSelEnd{newSelBegin.ch + chDelta, newSelBegin.line + lineDelta};
+    setCaretAndSelection(newSelEnd, newSelBegin, newSelEnd);
+    endEditing();
+    endInternalChanges();
+}
+
 void QSynEdit::doSelectLine()
 {
     CharPos ptBegin{0,mCaretY};
@@ -2043,25 +2073,17 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
     return value;
 }
 
-void QSynEdit::doDuplicateLine()
+void QSynEdit::doDuplicateCurrentLine()
 {
     if (!mReadOnly) {
-//        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
-//        if (foldRange && foldRange->collapsed)
-//            return;
-        QString s = lineText();
         beginEditing();
-        clearSelection();
+        QString s = lineText();
+        addCaretToUndo();
         properInsertLine(mCaretY+1, lineText(), true);
         addChangeToUndo(ChangeReason::DuplicateLine,
                         caretXY(),
                         CharPos{0,mCaretY+1}, QStringList(), SelectionMode::Normal);
-//        addChangeToUndo(ChangeReason::LineBreak,
-//                CharPos{s.length(),mCaretY},
-//                CharPos{s.length(),mCaretY}, QStringList(), SelectionMode::Normal);
-//        addChangeToUndo(ChangeReason::Insert,
-//                CharPos{0,mCaretY+1},
-//                CharPos{s.length(),mCaretY+1}, QStringList(), SelectionMode::Normal);
+        setCaretY(mCaretY+1);
         endEditing();
     }
 }
@@ -2071,11 +2093,9 @@ void QSynEdit::doMoveSelUp()
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
     if (!mReadOnly && (!mDocument->empty()) && (selBegin().line > 0)) {
-        if (!mUndoing) {
-            beginEditing();
-            addCaretToUndo();
-            addSelectionToUndo();
-        }
+        beginEditing();
+        addCaretToUndo();
+        addSelectionToUndo();
         int origBlockBeginLine = selectionBeginLine();
         int origBlockEndLine = selectionEndLine();
         CharPos origBlockBegin = selBegin();
@@ -2099,14 +2119,12 @@ void QSynEdit::doMoveSelUp()
                   CharPos{origBlockBegin.ch, origBlockBeginLine-1},
                   CharPos{origBlockEnd.ch, origBlockEndLine}
         );
-        if (!mUndoing) {
-            addChangeToUndo(ChangeReason::MoveLine,
-                    CharPos{0, origBlockBegin.line - 1},
-                    CharPos{0,origBlockEnd.line},
-                    QStringList(),
-                    SelectionMode::Normal);
-            endEditing();
-        }
+        addChangeToUndo(ChangeReason::MoveLine,
+                CharPos{0, origBlockBegin.line - 1},
+                CharPos{0,origBlockEnd.line},
+                QStringList(),
+                SelectionMode::Normal);
+        endEditing();
     }
 }
 
@@ -2115,11 +2133,9 @@ void QSynEdit::doMoveSelDown()
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
     if (!mReadOnly && (!mDocument->empty()) && (selEnd().line+1 < mDocument->count())) {
-        if (!mUndoing) {
-            beginEditing();
-            addCaretToUndo();
-            addSelectionToUndo();
-        }
+        beginEditing();
+        addCaretToUndo();
+        addSelectionToUndo();
         int origBlockBeginLine = selectionBeginLine();
         int origBlockEndLine = selectionEndLine();
         CharPos origBlockBegin = selBegin();
@@ -2139,15 +2155,12 @@ void QSynEdit::doMoveSelDown()
                   CharPos{origBlockEnd.ch, origBlockEnd.line + 1}
                     );
 
-        if (!mUndoing) {
-            addChangeToUndo(ChangeReason::MoveLine,
-                    CharPos{0, origBlockEndLine + 1},
-                    CharPos{0, origBlockBeginLine},
-                    QStringList(),
-                    SelectionMode::Normal);
-            endEditing();
-        }
-
+        addChangeToUndo(ChangeReason::MoveLine,
+                CharPos{0, origBlockEndLine + 1},
+                CharPos{0, origBlockBeginLine},
+                QStringList(),
+                SelectionMode::Normal);
+        endEditing();
     }
 }
 
@@ -4491,7 +4504,7 @@ void QSynEdit::doRedoItem()
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
             setCaretXY(item->changeStartPos());
-            doDuplicateLine();
+            doDuplicateCurrentLine();
             break;
         }
         default:
@@ -4580,6 +4593,56 @@ QString QSynEdit::selText() const
         }
     }
     return "";
+}
+
+QStringList QSynEdit::selContent() const
+{
+    QStringList result;
+    if (!selAvail()) {
+        return result;
+    } else {
+        int firstLine = selBegin().line;
+        int lastLine = selEnd().line;
+
+        switch(mActiveSelectionMode) {
+        case SelectionMode::Normal:{
+            int charFrom = selBegin().ch;
+            int charTo = selEnd().ch;
+            if (firstLine == lastLine) {
+                result.append(mDocument->getLine(firstLine).mid(charFrom, charTo - charFrom));
+                return result;
+            } else {
+                result.append(mDocument->getLine(firstLine).mid(charFrom));
+                for (int i = firstLine + 1; i<=lastLine - 1; i++) {
+                    result += mDocument->getLine(i);
+                }
+                const QString &line = mDocument->getLine(lastLine);
+                result.append(line.left(charTo));
+                return result;
+            }
+        }
+        case SelectionMode::Column:
+        {
+            int xFrom, xTo;
+            firstLine = selBegin().line;
+            xFrom = charToGlyphLeft(selBegin().line, selBegin().ch);
+            lastLine = selEnd().line;
+            xTo = charToGlyphLeft(selEnd().line, selEnd().ch);
+            if (xFrom > xTo)
+              std::swap(xFrom, xTo);
+            if (firstLine>lastLine)
+              std::swap(firstLine,lastLine);
+            for (int i = firstLine; i <= lastLine; i++) {
+                int l = xposToGlyphStartChar(i,xFrom);
+                int r = xposToGlyphStartChar(i,xTo);
+                QString s = mDocument->getLine(i);
+                result.append(s.mid(l,r-l));
+            }
+            return result;
+        }
+        }
+    }
+    return result;
 }
 
 int QSynEdit::selCount() const
@@ -5449,8 +5512,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
     CharPos newPos;
     switch(mode){
     case SelectionMode::Normal:
-        doInsertTextByNormalMode(pos,text, newPos);
-        setCaretXY(newPos);
+        doInsertTextByNormalMode(pos,text);
         break;
     case SelectionMode::Column:{
         CharPos bb=selBegin();
@@ -5469,7 +5531,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
 
 }
 
-void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos)
+void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& text)
 {
     Q_ASSERT(validInDoc(pos));
     QString sLeftSide;
@@ -5531,11 +5593,12 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
         if (bChangeScroll)
             mOptions.setFlag(EditorOption::ScrollPastEol,false);
     });
-    newPos=CharPos{str.length() - sRightSide.length(),caretY};
+    CharPos newPos=CharPos{str.length() - sRightSide.length(),caretY};
     //onLinesPutted(startLine-1,result+1);
     addChangeToUndo(ChangeReason::Insert,
             pos,newPos,
             QStringList(),SelectionMode::Normal);
+    setCaretXY(newPos);
     endEditing();
 }
 
@@ -5776,8 +5839,8 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
     case EditCommand::DeleteLine:
         doDeleteCurrentLine();
         break;
-    case EditCommand::DuplicateLine:
-        doDuplicateLine();
+    case EditCommand::Duplicate:
+        doDuplicate();
         break;
     case EditCommand::MoveSelUp:
         doMoveSelUp();
@@ -5796,8 +5859,7 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
         addLeftTopToUndo();
         addCaretToUndo();
         addSelectionToUndo();
-        if (mCaretY>=0 && mCaretY<mDocument->count())
-            mCaretX = mDocument->getLine(mCaretY).length();
+        mCaretX = mDocument->getLine(mCaretY).length();
         doBreakLine();
         endEditing();
         break;

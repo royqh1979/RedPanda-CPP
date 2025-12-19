@@ -238,7 +238,7 @@ void EditKeyStrokes::setExtraKeyStrokes()
     add(EditCommand::DeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
     add(EditCommand::DeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
 
-    add(EditCommand::DuplicateLine, Qt::Key_D, Qt::ControlModifier);
+    add(EditCommand::Duplicate, Qt::Key_D, Qt::ControlModifier);
     add(EditCommand::DeleteLine, Qt::Key_E, Qt::ControlModifier);
 
     add(EditCommand::SelectAll, Qt::Key_A, Qt::ControlModifier);

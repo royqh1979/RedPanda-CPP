@@ -1737,7 +1737,7 @@ const PTokenAttribute &ASMSyntaxer::labelAttribute() const
     return mLabelAttribute;
 }
 
-QString ASMSyntaxer::commentSymbol()
+QString ASMSyntaxer::lineCommentSymbol()
 {
     return "#";
 }

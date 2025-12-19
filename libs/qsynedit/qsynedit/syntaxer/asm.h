@@ -122,7 +122,7 @@ public:
     bool needsLineState() override;
     QSet<QString> keywords() override;
 
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
     const PTokenAttribute &preprocessDirectiveAttribute() const;

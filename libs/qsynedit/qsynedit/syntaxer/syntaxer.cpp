@@ -144,7 +144,7 @@ PTokenAttribute Syntaxer::getAttribute(const QString& name) const
     return mAttributes.value(name,PTokenAttribute());
 }
 
-QString Syntaxer::commentSymbol()
+QString Syntaxer::lineCommentSymbol()
 {
     return QString();
 }

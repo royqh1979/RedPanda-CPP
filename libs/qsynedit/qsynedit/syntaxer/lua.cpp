@@ -968,7 +968,7 @@ void LuaSyntaxer::setUseXMakeLibs(bool newUseXMakeLibs)
     }
 }
 
-QString LuaSyntaxer::commentSymbol()
+QString LuaSyntaxer::lineCommentSymbol()
 {
     return "--";
 }

@@ -433,6 +433,7 @@ public:
     void setContent(const QStringList& text);
 
     QString selText() const;
+    QStringList selContent() const;
     int selCount() const;
 
     QStringList getContent(CharPos startPos, CharPos endPos, SelectionMode mode) const;
@@ -631,7 +632,7 @@ private:
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
     void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
-    void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
+    void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text);
     int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
     void doExpandSelection(const CharPos& pos);
@@ -639,7 +640,7 @@ private:
 
     bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
     bool shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const;
-    bool noBlockStartEndOnLine(int line) const;
+    void calcEffectiveFromToLine(const CharPos &beginPos, const CharPos &endPos, int &fromLine, int &toLine);
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
@@ -666,7 +667,9 @@ private:
     void doDeleteFromBOL();
     void doDeleteCurrentLine();
 
-    void doDuplicateLine();
+    void doDuplicate();
+    void doDuplicateSelection();
+    void doDuplicateCurrentLine();
     void doMoveSelUp();
     void doMoveSelDown();
     void doClearAll();

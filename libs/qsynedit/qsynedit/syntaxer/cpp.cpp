@@ -1486,7 +1486,7 @@ bool CppSyntaxer::supportBraceLevel()
     return true;
 }
 
-QString CppSyntaxer::commentSymbol()
+QString CppSyntaxer::lineCommentSymbol()
 {
     return "//";
 }
