@@ -115,6 +115,7 @@ private slots:
     void test_move_up_current_line_at_file_begin();
     void test_move_up_current_line_at_file_end();
     void test_move_up_select_line_end_to_line_begin();
+    void test_move_up_select_line_begin_to_line_end();
 };
 
 }
