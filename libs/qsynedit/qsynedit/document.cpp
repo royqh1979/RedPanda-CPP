@@ -1346,25 +1346,21 @@ UndoList::UndoList():QObject()
     mLastRestoredItemChangeNumber=0;
 }
 
-void UndoList::addChange(ChangeReason reason, const CharPos &startPos,
+PUndoItem UndoList::addChange(ChangeReason reason, const CharPos &startPos,
                                 const CharPos &endPos, const QStringList& changeText,
                                 SelectionMode selMode)
 {
-    int changeNumber;
-    if (inBlock()) {
-        changeNumber = mBlockChangeNumber;
-    } else {
-        changeNumber = getNextChangeNumber();
-    }
+    Q_ASSERT(inBlock());
     PUndoItem  newItem = std::make_shared<UndoItem>(
                 reason,
                 selMode,startPos,endPos,changeText,
-                changeNumber);
+                mBlockChangeNumber);
     mItems.append(newItem);
 
     if (reason!=ChangeReason::GroupBreak && !inBlock()) {
         emit addedUndo();
     }
+    return newItem;
 }
 
 void UndoList::restoreChange(ChangeReason reason, const CharPos &startPos,
@@ -1399,11 +1395,20 @@ void UndoList::addGroupBreak()
     }
 }
 
-void UndoList::beginBlock()
+void UndoList::beginBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
 {
 //    qDebug()<<"begin block";
-    if (mBlockLock==0)
+    if (mBlockLock==0) {
         mBlockChangeNumber = getNextChangeNumber();
+        mCaretInfoBeforeChange.insert(
+                    mBlockChangeNumber,
+                    std::make_shared<CaretAndSelectionInfo>(
+                        caret,
+                        selBegin,
+                        selEnd,
+                        selMode
+                        ));
+    }
     mBlockLock++;
 
 }
@@ -1416,9 +1421,11 @@ void UndoList::clear()
     mLastPoppedItemChangeNumber=0;
     mLastRestoredItemChangeNumber=0;
     mBlockLock=0;
+    mCaretInfoAfterChange.clear();
+    mCaretInfoBeforeChange.clear();
 }
 
-void UndoList::endBlock()
+void UndoList::endBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
 {
 //    qDebug()<<"end block";
     if (mBlockLock > 0) {
@@ -1427,10 +1434,44 @@ void UndoList::endBlock()
             size_t iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
             if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID) {
+                mCaretInfoAfterChange.insert(
+                            iBlockID,
+                            std::make_shared<CaretAndSelectionInfo>(
+                                caret,
+                                selBegin,
+                                selEnd,
+                                selMode
+                                ));
                 emit addedUndo();
             }
         }
     }
+}
+
+PCaretAndSelectionInfo UndoList::caretAndSelBeforeChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoBeforeChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+PCaretAndSelectionInfo UndoList::caretAndSelAfterChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoAfterChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+void UndoList::restoreCaretAndSelInfos(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo, const PCaretAndSelectionInfo &afterInfo)
+{
+    mCaretInfoBeforeChange.insert(changeNumber, beforeInfo);
+    mCaretInfoAfterChange.insert(changeNumber, afterInfo);
+}
+
+void UndoList::removeCaretAndSelInfo(size_t changeNumber)
+{
+    mCaretInfoAfterChange.remove(changeNumber);
+    mCaretInfoBeforeChange.remove(changeNumber);
 }
 
 bool UndoList::inBlock()
@@ -1584,9 +1625,37 @@ void RedoList::addRedo(PUndoItem item)
     mItems.append(item);
 }
 
+void RedoList::addCaretAndSelectionInfo(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo, const PCaretAndSelectionInfo &afterInfo)
+{
+    mCaretInfoBeforeChange.insert(changeNumber, beforeInfo);
+    mCaretInfoAfterChange.insert(changeNumber, afterInfo);
+}
+
+PCaretAndSelectionInfo RedoList::caretAndSelBeforeChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoBeforeChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+PCaretAndSelectionInfo RedoList::caretAndSelAfterChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoAfterChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+void RedoList::removeCaretAndSelInfo(size_t changeNumber)
+{
+    mCaretInfoBeforeChange.remove(changeNumber);
+    mCaretInfoAfterChange.remove(changeNumber);
+}
+
 void RedoList::clear()
 {
     mItems.clear();
+    mCaretInfoAfterChange.clear();
+    mCaretInfoBeforeChange.clear();
 }
 
 ChangeReason RedoList::lastChangeReason()
@@ -1751,6 +1820,14 @@ void GlyphCalculator::setFont(const QFont &newFont)
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
     mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
+}
+
+CaretAndSelectionInfo::CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
+{
+    this->caret=caret;
+    this->selBegin=selBegin;
+    this->selEnd=selEnd;
+    this->selMode = selMode;
 }
 
 }

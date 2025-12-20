@@ -694,6 +694,16 @@ enum class ChangeReason {
     Nothing // undo list empty
   };
 
+struct CaretAndSelectionInfo{
+    CharPos caret;
+    CharPos selBegin;
+    CharPos selEnd;
+    SelectionMode selMode;
+    CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin,const CharPos &selEnd, SelectionMode selMode);
+};
+
+using PCaretAndSelectionInfo = std::shared_ptr<CaretAndSelectionInfo>;
+
 class UndoItem {
 private:
     ChangeReason mChangeReason;
@@ -725,7 +735,7 @@ class UndoList : public QObject {
 public:
     explicit UndoList();
 
-    void addChange(ChangeReason reason, const CharPos& start, const CharPos& end,
+    PUndoItem addChange(ChangeReason reason, const CharPos& start, const CharPos& end,
       const QStringList& changeText, SelectionMode selMode);
 
     void restoreChange(ChangeReason reason, const CharPos& start, const CharPos& end,
@@ -734,8 +744,16 @@ public:
     void restoreChange(PUndoItem item);
 
     void addGroupBreak();
-    void beginBlock();
-    void endBlock();
+    void beginBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode);
+    void endBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode);
+
+    PCaretAndSelectionInfo caretAndSelBeforeChange(size_t changeNumber);
+    PCaretAndSelectionInfo caretAndSelAfterChange(size_t changeNumber);
+
+    void restoreCaretAndSelInfos(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo,
+                                 const PCaretAndSelectionInfo &afterInfo);
+
+    void removeCaretAndSelInfo(size_t changeNumber);
 
     void clear();
     ChangeReason lastChangeReason();
@@ -769,9 +787,11 @@ protected:
     size_t mLastRestoredItemChangeNumber;
     bool mFullUndoImposible;
     QVector<PUndoItem> mItems;
-    unsigned int mNextChangeNumber;
-    unsigned int mInitialChangeNumber;
+    size_t mNextChangeNumber;
+    size_t mInitialChangeNumber;
     bool mInsideRedo;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoBeforeChange;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoAfterChange;
 };
 
 class RedoList : public QObject {
@@ -783,6 +803,11 @@ public:
                  const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
     void addRedo(PUndoItem item);
 
+    void addCaretAndSelectionInfo(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo,
+                                  const PCaretAndSelectionInfo &afterInfo);
+    PCaretAndSelectionInfo caretAndSelBeforeChange(size_t changeNumber);
+    PCaretAndSelectionInfo caretAndSelAfterChange(size_t changeNumber);
+    void removeCaretAndSelInfo(size_t changeNumber);
     void clear();
     ChangeReason lastChangeReason();
     bool isEmpty();
@@ -794,6 +819,8 @@ public:
 
 protected:
     QVector<PUndoItem> mItems;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoBeforeChange;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoAfterChange;
 };
 
 
