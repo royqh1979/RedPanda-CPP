@@ -1454,6 +1454,7 @@ void QSynEdit::doComment()
         return;
     if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
+    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     CharPos origBlockBegin, origBlockEnd, origCaret;
     int fromLine, toLine;
@@ -1481,6 +1482,7 @@ void QSynEdit::doComment()
     }
     setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
     endEditing();
+    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doUncomment()
@@ -1489,6 +1491,7 @@ void QSynEdit::doUncomment()
         return;
     if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
+    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     QString lineCommentSymbol=mSyntaxer->lineCommentSymbol();
     int symbolLen = lineCommentSymbol.length();
@@ -1525,6 +1528,7 @@ void QSynEdit::doUncomment()
     }
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
     endEditing();
+    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doToggleComment()
@@ -2814,6 +2818,16 @@ void QSynEdit::endMergeCaretAndSelectionStatusChange()
             setStatusChanged(StatusChange::CaretX);
         if (mCaretBeforeMerging.line != mCaretY)
             setStatusChanged(StatusChange::CaretY);
+        CharPos selBeginNow = selBegin();
+        CharPos selEndNow = selEnd();
+        if (mSelBeginBeforeMerging == mSelEndBeforeMerging) {
+            if (selBeginNow != selEndNow)
+                setStatusChanged(StatusChange::Selection);
+        } else {
+            if (selBeginNow != mSelBeginBeforeMerging
+                    || selEndNow != mSelEndBeforeMerging)
+                setStatusChanged(StatusChange::Selection);
+        }
     }
 }
 
@@ -3013,7 +3027,7 @@ void QSynEdit::internalSetCaretX(int value)
 void QSynEdit::setStatusChanged(StatusChanges changes)
 {
     if (mMergeCaretStatusChangeLock>0)
-        changes &= ~(StatusChange::CaretX | StatusChange::CaretY);
+        changes &= ~(StatusChange::CaretX | StatusChange::CaretY | StatusChange::Selection);
     mStatusChanges = mStatusChanges | changes;
     if (mPaintLock == 0)
         notifyStatusChange(mStatusChanges);
