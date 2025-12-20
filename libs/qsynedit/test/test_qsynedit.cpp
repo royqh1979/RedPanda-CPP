@@ -6429,6 +6429,927 @@ void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_begin()
                                   }));
     QCOMPARE(mReparseStarts, QList<int>({1}));
     QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,2}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,2}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX | StatusChange::ModifyChanged
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    QVERIFY(!mEdit->canRedo());
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_toggle_comment_select_line_begin_to_line_end()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        "// ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{5,1},CharPos{0,1},CharPos{5,1});
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({7,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({7,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                     StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::Modified |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canRedo());
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_toggle_comment_select_line_begin_to_line_begin()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        "// ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{0,2},CharPos{0,1},CharPos{0,2});
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,2}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,2}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::Selection
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,2}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,2}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                     StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::Modified |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canRedo());
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_end()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        "// ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{5,1},CharPos{9,0},CharPos{5,1});
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({7,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({7,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->toggleComment();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::Selection | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                     StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::Modified |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canRedo());
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({2,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({2,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::Modified | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,1}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,1}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::CaretX
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({1}));
+    QCOMPARE(mReparseCounts, QList<int>({1}));
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_move_up_selection_in_empty_file()
+{
+    clearContent();
+    mEdit->processCommand(EditCommand::MoveSelUp);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_move_up_current_line_at_file_begin()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    clearSignalDatas();
+    mEdit->processCommand(EditCommand::MoveSelUp);
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_move_up_current_line_at_file_end()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}",
+    };
+    QStringList text2{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "}",
+        "\treturn 0;",
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretXY(mEdit->fileEnd());
+    clearSignalDatas();
+    mEdit->processCommand(EditCommand::MoveSelUp);
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({1,10}));
+    QCOMPARE(mEdit->selBegin(), CharPos({1,10}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,10}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{10});
+    QCOMPARE(mLineMovedTos, QList<int>{11});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged |StatusChange::Modified | StatusChange::CaretY
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({10}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({1,11}));
+    QCOMPARE(mEdit->selBegin(), CharPos({1,11}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,11}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{11});
+    QCOMPARE(mLineMovedTos, QList<int>{10});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged | StatusChange::CaretY
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({10}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({1,11}));
+    QCOMPARE(mEdit->selBegin(), CharPos({1,11}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,11}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{10});
+    QCOMPARE(mLineMovedTos, QList<int>{11});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged | StatusChange::Modified
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({10}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+    QVERIFY(!mEdit->canRedo());
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({1,11}));
+    QCOMPARE(mEdit->selBegin(), CharPos({1,11}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,11}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{11});
+    QCOMPARE(mLineMovedTos, QList<int>{10});
+    QList<StatusChanges>({
+                             StatusChange::ModifyChanged | StatusChange::CaretY
+                         });
+    QCOMPARE(mReparseStarts, QList<int>({10}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_move_up_select_line_end_to_line_begin()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        " ttt;",
+        "}",
+        "int t() {",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{0,3},CharPos{9,0},CharPos{0,3});
+    clearSignalDatas();
+    mEdit->moveSelUp();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,2}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,2}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{0});
+    QCOMPARE(mLineMovedTos, QList<int>{2});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretY | StatusChange::Selection
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({12}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,3}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,3}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{2});
+    QCOMPARE(mLineMovedTos, QList<int>{0});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretY | StatusChange::Selection
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({12}));
+
+    //undo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,3}));
+    QCOMPARE(mEdit->selBegin(), CharPos({9,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,3}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{2});
+    QCOMPARE(mLineMovedTos, QList<int>{0});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretY | StatusChange::Selection
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({12}));
 }
 
 }

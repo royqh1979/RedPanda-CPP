@@ -107,30 +107,14 @@ private slots:
     void test_toggle_comment_at_file_begin();
     void test_toggle_comment_at_file_end();
     void test_toggle_comment_select_line_end_to_line_begin();
-//    void test_toggle_comment_select_line_begin_to_line_end();
-//    void test_toggle_comment_select_line_begin_to_line_begin();
-//    void test_toggle_comment_select_line_end_to_line_end();
-/*
-    void test_delete_text_normal_data();
-    void test_delete_text_normal();
-    void test_copy_paste_data();
-    void test_copy_paste();
-    void test_enter_chars_data();
-    void test_enter_chars();
-    void test_delete_char_data();
-    void test_delete_char();
-    void test_backspace_data();
-    void test_backspace();
-    void test_break_line_data();
-    void test_break_line();
-    void test_break_line_at_end_data();
-    void test_break_line_at_end();
-    void test_delete_current_line_data();
-    void test_delete_current_line();
-    void test_duplicate_current_line_data();
-    void test_duplicate_current_line();
-    */
+    void test_toggle_comment_select_line_begin_to_line_end();
+    void test_toggle_comment_select_line_begin_to_line_begin();
+    void test_toggle_comment_select_line_end_to_line_end();
 
+    void test_move_up_selection_in_empty_file();
+    void test_move_up_current_line_at_file_begin();
+    void test_move_up_current_line_at_file_end();
+    void test_move_up_select_line_end_to_line_begin();
 };
 
 }
