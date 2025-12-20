@@ -167,6 +167,8 @@ void Document::insertItem(int line, const QString &s)
                 mUpdateDocumentLineWidthFunc);
     documentLine->setLineText(s);
     mLines.insert(line,documentLine);
+    mLineSeqIndice.insert(documentLine->lineSeq(), documentLine);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
     endUpdate();
 }
@@ -177,6 +179,8 @@ void Document::addItem(const QString &s)
     PDocumentLine line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
     line->setLineText(s);
     mLines.append(line);
+    mLineSeqIndice.insert(line->lineSeq(), line);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     endUpdate();
 }
 
@@ -384,7 +388,11 @@ void Document::deleteLines(int index, int numLines)
     if (LinesAfter < 0) {
        numLines = mLines.count() - index;
     }
+    for (int i=0;i<numLines;i++) {
+        mLineSeqIndice.remove(mLines[index+i]->lineSeq());
+    }
     mLines.remove(index,numLines);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     ensureHasLine();
     endUpdate();
 }
@@ -398,6 +406,7 @@ void Document::moveLine(int from, int to)
     PDocumentLine temp = mLines[from];
     mLines.remove(from);
     mLines.insert(to, temp);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     if (from<to) {
         if (mIndexOfLongestLine == from) {
             mIndexOfLongestLine = to;
@@ -432,7 +441,9 @@ void Document::deleteLine(int index)
         mIndexOfLongestLine = -1;
     else if (mIndexOfLongestLine>index)
         mIndexOfLongestLine -= 1;
+    mLineSeqIndice.remove(mLines[index]->lineSeq());
     mLines.removeAt(index);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     ensureHasLine();
     endUpdate();
 }
@@ -480,7 +491,9 @@ void Document::insertLines(int index, int numLines)
     mLines.insert(index,numLines,line);
     for (int i=index;i<index+numLines;i++) {
         mLines[i] = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
+        mLineSeqIndice.insert(mLines[i]->lineSeq(), mLines[i]);
     }
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
 }
 
@@ -555,17 +568,10 @@ void Document::saveUTF32File(QFile &file, TextEncoder &encoder) const
     file.write(encoder.encodeUnchecked(text));
 }
 
-int Document::findPrevLineBySeq(int startLine, size_t lineSeq) const
+PDocumentLine Document::findLineBySeq(size_t lineSeq) const
 {
-    //starts at 0
-    //-1 not found
-    Q_ASSERT(startLine>=0 && startLine <= mLines.count());
     QMutexLocker locker(&mMutex);
-    for (int i = std::min(startLine, mLines.count()-1); i>=0;i--) {
-        if (mLines[i]->lineSeq() == lineSeq)
-            return i;
-    }
-    return -1;
+    return mLineSeqIndice.value(lineSeq);
 }
 
 void Document::setTabSize(int newTabSize)
@@ -1089,8 +1095,10 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos) con
 
 void Document::internalClear()
 {
+    Q_ASSERT(mLines.count() == mLineSeqIndice.count());
     beginUpdate();
     mLines.clear();
+    mLineSeqIndice.clear();
     mIndexOfLongestLine = -1;
     endUpdate();
 }

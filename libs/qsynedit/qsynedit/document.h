@@ -62,6 +62,14 @@ public:
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
 
+    /**
+     * @brief get the line text
+     * @return the line text
+     */
+    const QString& lineText() const { return mLineText; }
+
+    size_t lineSeq() const { return mLineSeq; }
+
 private:
     /**
      * @brief get total count of the glyphs in the line text
@@ -119,11 +127,6 @@ private:
      */
     int glyphWidth(int i);
 
-    /**
-     * @brief get the line text
-     * @return the line text
-     */
-    const QString& lineText() const { return mLineText; }
 
     /**
      * @brief get the width (pixel) of the line text
@@ -131,7 +134,6 @@ private:
      */
     int width();
 
-    size_t lineSeq() const { return mLineSeq; }
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
@@ -502,7 +504,7 @@ public:
     void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
 
-    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
+    PDocumentLine findLineBySeq(size_t lineSeq) const;
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
@@ -654,6 +656,7 @@ private:
     void saveUTF32File(QFile& file, TextEncoder &encoder) const;
 private:
     DocumentLines mLines;
+    QMap<size_t,PDocumentLine> mLineSeqIndice;
 
     DocumentLine::UpdateWidthFunc mUpdateDocumentLineWidthFunc;
 

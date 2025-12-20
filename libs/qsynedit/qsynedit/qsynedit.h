@@ -423,7 +423,7 @@ public:
     QString lineText(int line) const;
     size_t lineSeq(int line) const;
 
-    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
+    bool findLineTextBySeq(size_t lineSeq, QString& text) const;
 
     const std::shared_ptr<const Document> document() const;
     bool empty();

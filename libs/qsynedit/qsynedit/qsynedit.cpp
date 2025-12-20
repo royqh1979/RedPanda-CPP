@@ -4772,11 +4772,15 @@ size_t QSynEdit::lineSeq(int line) const
     return mDocument->getLineSeq(line);
 }
 
-int QSynEdit::findPrevLineBySeq(int startLine, size_t lineSeq) const
+bool QSynEdit::findLineTextBySeq(size_t lineSeq,  QString& text) const
 {
-    //start at 0
-    //-1 not found
-    return mDocument->findPrevLineBySeq(startLine, lineSeq);
+    PDocumentLine line = mDocument->findLineBySeq(lineSeq);
+    if (!line)
+        return false;
+
+    Q_ASSERT(line->lineSeq() == lineSeq);
+    text = line->lineText();
+    return true;
 }
 
 PSyntaxer QSynEdit::syntaxer() const

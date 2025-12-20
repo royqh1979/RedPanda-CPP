@@ -462,8 +462,11 @@ void TestDocument::test_find_last_line_by_seq()
 
     mDoc->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
     QCOMPARE(mDoc->count(),6);
-    int seq = mDoc->getLineSeq(1);
-    QCOMPARE(mDoc->findPrevLineBySeq(5,seq),1);
+    size_t seq = mDoc->getLineSeq(1);
+    PDocumentLine line = mDoc->findLineBySeq(seq);
+    QVERIFY(line!=nullptr);
+    QCOMPARE(line->lineText(), mDoc->getLine(1));
+    QCOMPARE(line->lineSeq(), seq);
 }
 
 void TestDocument::initSignalTest()
