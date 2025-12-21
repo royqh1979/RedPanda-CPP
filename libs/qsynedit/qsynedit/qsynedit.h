@@ -793,6 +793,7 @@ private:
     CharPos mCaretBeforeMerging;
     CharPos mSelBeginBeforeMerging;
     CharPos mSelEndBeforeMerging;
+    SelectionMode mSelModeBeforeMerging;
     bool mUndoing;
     int mGutterWidth;
     //caret blink related

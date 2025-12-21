@@ -175,22 +175,18 @@ int QSynEdit::displayLineCount() const
 void QSynEdit::setCaretXY(const CharPos &pos)
 {
     beginInternalChanges();
-    auto action = finally([this](){
-        endInternalChanges();
-    });
     setSelBegin(pos);
     internalSetCaretXY(pos, true);
+    endInternalChanges();
 }
 
 void QSynEdit::setCaretXYCentered(const CharPos &pos)
 {
     beginInternalChanges();
-    auto action = finally([this] {
-        endInternalChanges();
-    });
     setSelBegin(pos);
     internalSetCaretXY(pos, false);
     ensureCaretVisible(true); // but here after block has been set
+    endInternalChanges();
 }
 
 void QSynEdit::uncollapseAroundLine(int line)
@@ -1454,7 +1450,6 @@ void QSynEdit::doComment()
         return;
     if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
-    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     CharPos origBlockBegin, origBlockEnd, origCaret;
     int fromLine, toLine;
@@ -1482,7 +1477,6 @@ void QSynEdit::doComment()
     }
     setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
     endEditing();
-    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doUncomment()
@@ -1491,7 +1485,6 @@ void QSynEdit::doUncomment()
         return;
     if (mSyntaxer->lineCommentSymbol().isEmpty())
         return;
-    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     QString lineCommentSymbol=mSyntaxer->lineCommentSymbol();
     int symbolLen = lineCommentSymbol.length();
@@ -1528,7 +1521,6 @@ void QSynEdit::doUncomment()
     }
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
     endEditing();
-    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doToggleComment()
@@ -2034,7 +2026,6 @@ void QSynEdit::doDuplicateSelection()
         return;
     //CharPos beginPos = selBegin();
     CharPos endPos = selEnd();
-    beginMergeCaretAndSelectionStatusChange();
     beginEditing();
     EditorOptions oldOptions = mOptions;
     mOptions.setFlag(EditorOption::AutoIndent, false); //disable auto indent
@@ -2044,7 +2035,6 @@ void QSynEdit::doDuplicateSelection()
     CharPos newSelEnd{caretXY()};
     setCaretAndSelection(newSelEnd, newSelBegin, newSelEnd);
     endEditing();
-    endMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::doSelectLine()
@@ -2769,11 +2759,13 @@ void QSynEdit::doPasteFromClipboard()
 void QSynEdit::beginInternalChanges()
 {
     mPaintLock ++ ;
+    beginMergeCaretAndSelectionStatusChange();
 }
 
 void QSynEdit::endInternalChanges()
 {
     Q_ASSERT(mPaintLock > 0);
+    endMergeCaretAndSelectionStatusChange();
     mPaintLock--;
     if (mPaintLock == 0 ) {
         if (mStateFlags.testFlag(StateFlag::HScrollbarChanged)) {
@@ -2793,6 +2785,7 @@ void QSynEdit::beginMergeCaretAndSelectionStatusChange()
         mCaretBeforeMerging = caretXY();
         mSelBeginBeforeMerging = selBegin();
         mSelEndBeforeMerging = selEnd();
+        mSelModeBeforeMerging = mActiveSelectionMode;
     }
     ++mMergeCaretStatusChangeLock;
 }
@@ -2807,6 +2800,8 @@ void QSynEdit::endMergeCaretAndSelectionStatusChange()
             setStatusChanged(StatusChange::CaretY);
         CharPos selBeginNow = selBegin();
         CharPos selEndNow = selEnd();
+        if (mSelModeBeforeMerging != mActiveSelectionMode)
+            setStatusChanged(StatusChange::Selection);
         if (mSelBeginBeforeMerging == mSelEndBeforeMerging) {
             if (selBeginNow != selEndNow)
                 setStatusChanged(StatusChange::Selection);
@@ -4038,6 +4033,8 @@ void QSynEdit::doUndo()
         return;
 
     QSet<size_t> undoedNumbers;
+
+    beginEditing();
     //Remove Group Break;
     while (mUndoList->lastChangeReason() ==  ChangeReason::GroupBreak) {
         PUndoItem item = mUndoList->popItem();
@@ -4046,7 +4043,6 @@ void QSynEdit::doUndo()
     }
 
     PCaretAndSelectionInfo endInfo;
-    beginMergeCaretAndSelectionStatusChange();
     PUndoItem item = mUndoList->peekItem();
     if (item) {
         size_t oldChangeNumber = item->changeNumber();
@@ -4081,9 +4077,8 @@ void QSynEdit::doUndo()
                     mUndoList->caretAndSelAfterChange(number));
         mUndoList->removeCaretAndSelInfo(number);
     }
-    endMergeCaretAndSelectionStatusChange();
-    ensureCaretVisible();
     updateModifiedStatusForUndoRedo();
+    endEditing();
     onChanged();
 }
 
@@ -4154,7 +4149,6 @@ void QSynEdit::doUndoItem()
             break;
         case ChangeReason::AddChar:
         case ChangeReason::Insert: {
-            beginMergeCaretAndSelectionStatusChange();
             QStringList tmpText = getContent(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             mRedoList->addRedo(
@@ -4165,7 +4159,6 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             setCaretXY(item->changeStartPos());
-            endMergeCaretAndSelectionStatusChange();
             break;
         }
         case ChangeReason::ReplaceLine:
@@ -4260,7 +4253,6 @@ void QSynEdit::doUndoItem()
                     std::swap(xFrom, xTo);
                 startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
             }
-            beginMergeCaretAndSelectionStatusChange();
             doInsertText(startPos,item->changeText(),item->changeSelMode(),
                          startPos.line,
                          endPos.line);
@@ -4269,7 +4261,6 @@ void QSynEdit::doUndoItem()
                 setCaretXY(item->changeStartPos());
             else
                 setCaretXY(item->changeEndPos());
-            endMergeCaretAndSelectionStatusChange();
             mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),
@@ -4336,7 +4327,7 @@ void QSynEdit::doRedo()
     size_t oldChangeNumber = item->changeNumber();
     QSet<size_t> redoedNumbers;
 
-    beginMergeCaretAndSelectionStatusChange();
+    beginEditing();
     //skip group chain breakers
     while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
         PUndoItem item = mRedoList->popItem();
@@ -4376,10 +4367,9 @@ void QSynEdit::doRedo()
     }
     setActiveSelectionMode(endInfo->selMode);
     setCaretAndSelection(endInfo->caret,endInfo->selBegin,endInfo->selEnd);
-    endMergeCaretAndSelectionStatusChange();
-    ensureCaretVisible();
-    updateModifiedStatusForUndoRedo();
+    updateModifiedStatusForUndoRedo();    
     onChanged();
+    endEditing();
 }
 
 void QSynEdit::doRedoItem()
@@ -6229,9 +6219,6 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     beginInternalChanges();
-    auto action = finally([this](){
-       endInternalChanges();
-    });
     QAbstractScrollArea::mouseReleaseEvent(event);
     int x=event->pos().x();
     /* int Y=event->pos().y(); */
@@ -6251,6 +6238,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     mStateFlags.setFlag(StateFlag::DblClicked,false);
     ensureLineAlignedWithTop();
     ensureCaretVisible();
+    endInternalChanges();
 }
 
 void QSynEdit::mouseMoveEvent(QMouseEvent *event)
@@ -6723,9 +6711,6 @@ void QSynEdit::setSelEnd(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
     beginInternalChanges();
-    auto action = finally([this](){
-        endInternalChanges();
-    });
     if (value.ch != mSelectionEnd.ch || value.line != mSelectionEnd.line) {
         if (mActiveSelectionMode == SelectionMode::Column && value.ch != mSelectionEnd.ch) {
             CharPos oldBlockEnd = mSelectionEnd;
@@ -6744,6 +6729,7 @@ void QSynEdit::setSelEnd(const CharPos &value)
         }
         setStatusChanged(StatusChange::Selection);
     }
+    endInternalChanges();
 }
 
 void QSynEdit::setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos)
@@ -6832,11 +6818,8 @@ void QSynEdit::setSelBegin(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
     beginInternalChanges();
-    auto action = finally([this](){
-        endInternalChanges();
-    });
-    int nInval1, nInval2;
     if (selAvail()) {
+        int nInval1, nInval2;
         if (mSelectionBegin.line < mSelectionEnd.line) {
             nInval1 = std::min(value.line, mSelectionBegin.line);
             nInval2 = std::max(value.line, mSelectionEnd.line);
@@ -6852,6 +6835,7 @@ void QSynEdit::setSelBegin(const CharPos &value)
         mSelectionBegin = value;
         mSelectionEnd = value;
     }
+    endInternalChanges();
 }
 
 int QSynEdit::leftPos() const
