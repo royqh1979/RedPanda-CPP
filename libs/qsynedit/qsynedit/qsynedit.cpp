@@ -3310,6 +3310,7 @@ bool QSynEdit::uncollapase(int fromLine, int toLine)
     return false;
 }
 
+#ifdef QSYNEDIT_TEST
 int QSynEdit::subBlockCounts(int fromLine, int toLine) const
 {
     foreach(const PCodeBlock &block, mCodeBlocks) {
@@ -3332,7 +3333,6 @@ bool QSynEdit::isCollapsed(int fromLine, int toLine) const
     return false;
 }
 
-#ifdef QSYNEDIT_TEST
 int QSynEdit::codeBlockCount() const
 {
     return mCodeBlocks.count();

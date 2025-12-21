@@ -145,11 +145,11 @@ enum class ChangeReason;
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
+public:
     enum  class CharType {
         SpaceChar,
         NonSpaceChar
     };
-public:
     explicit QSynEdit(QWidget* parent=nullptr);
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;

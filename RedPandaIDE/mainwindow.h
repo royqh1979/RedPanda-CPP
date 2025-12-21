@@ -271,7 +271,7 @@ public slots:
     void onTodoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void onWatchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
-    void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
+    void setActiveBreakpoint(QString fileName, int line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
     void onDebugFinished();
