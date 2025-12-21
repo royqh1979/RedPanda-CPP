@@ -1510,14 +1510,17 @@ void QSynEdit::doUncomment()
                              CharPos{j+symbolLen, i},
                              changeText, SelectionMode::Normal);
         // Move begin of selection
-        if (i == origBlockBegin.line && origBlockBegin.ch >= symbolLen)
-            origBlockBegin.ch-=symbolLen;
+        if (i == origBlockBegin.line) {
+            origBlockBegin.ch = std::max(0, origBlockBegin.ch-symbolLen);
+        }
         // Move end of selection
-        if (i == origBlockEnd.line && origBlockEnd.ch > symbolLen)
-            origBlockEnd.ch-=symbolLen;
+        if (i == origBlockEnd.line) {
+            origBlockEnd.ch = std::max(0, origBlockEnd.ch-symbolLen);
+        }
         // Move caret
-        if (i == origCaret.line && origCaret.ch >symbolLen)
-            origCaret.ch-=symbolLen;
+        if (i == origCaret.line) {
+            origCaret.ch = std::max(0, origCaret.ch-symbolLen);
+        }
     }
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
     endEditing();
@@ -2082,24 +2085,34 @@ void QSynEdit::doMoveSelUp()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
-    int origBlockBeginLine,origBlockEndLine;
+    int fromLine,toLine;
     CharPos origBlockBegin = selBegin();
     CharPos origBlockEnd = selEnd();
-    calcEffectiveFromToLine(origBlockBegin, origBlockEnd, origBlockBeginLine, origBlockEndLine);
-    if (!mReadOnly && (!mDocument->empty()) && (origBlockBeginLine > 0)) {
+    calcEffectiveFromToLine(origBlockBegin, origBlockEnd, fromLine, toLine);
+    if (!mReadOnly && (!mDocument->empty()) && (fromLine > 0)) {
         CharPos oldCaret = caretXY();
         beginEditing();
         // Move line above selection to below selection
-        properMoveLine(origBlockBeginLine-1, origBlockEndLine, true);
+        properMoveLine(fromLine-1, toLine, true);
 
         // Restore caret and selection
         CharPos newCaret;
         if (oldCaret>= origBlockBegin && oldCaret <= origBlockEnd) {
             newCaret = ensureCharPosValid(CharPos{oldCaret.ch, oldCaret.line-1});
-        } else if (oldCaret.line == origBlockBeginLine-1) {
-            newCaret = ensureCharPosValid(CharPos{oldCaret.ch, origBlockEndLine});
+        } else if (oldCaret.line == fromLine-1) {
+            newCaret = ensureCharPosValid(CharPos{oldCaret.ch, toLine});
         }
-        CharPos newSelBegin = ensureCharPosValid(CharPos{origBlockBegin.ch, origBlockBegin.line-1});
+        CharPos newSelBegin;
+        if (fromLine != origBlockBegin.line) {
+            if (origBlockBegin.line ==0 ) {
+                newSelBegin = fileBegin();
+            } else {
+                newSelBegin.line = origBlockBegin.line-1;
+                newSelBegin.ch = mDocument->getLine(newSelBegin.line).length();
+            }
+        } else {
+            newSelBegin=CharPos{origBlockBegin.ch, origBlockBegin.line-1};
+        }
         CharPos newSelEnd = ensureCharPosValid(CharPos{origBlockEnd.ch, origBlockEnd.line-1});
         setCaretAndSelection(
                   newCaret,
@@ -2107,8 +2120,8 @@ void QSynEdit::doMoveSelUp()
                   newSelEnd
         );
         addChangeToUndo(ChangeReason::MoveLine,
-                CharPos{0, origBlockBeginLine-1},
-                CharPos{0, origBlockEndLine},
+                CharPos{0, fromLine-1},
+                CharPos{0, toLine},
                 QStringList(),
                 SelectionMode::Normal);
         endEditing();
@@ -2119,25 +2132,31 @@ void QSynEdit::doMoveSelDown()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
-    int origBlockBeginLine,origBlockEndLine;
+    int fromLine,toLine;
     CharPos origBlockBegin = selBegin();
     CharPos origBlockEnd = selEnd();
-    calcEffectiveFromToLine(origBlockBegin, origBlockEnd, origBlockBeginLine, origBlockEndLine);
-    if (!mReadOnly && (!mDocument->empty()) && (origBlockEndLine+1 < mDocument->count())) {
+    calcEffectiveFromToLine(origBlockBegin, origBlockEnd, fromLine, toLine);
+    if (!mReadOnly && (!mDocument->empty()) && (toLine+1 < mDocument->count())) {
         CharPos oldCaret = caretXY();
         beginEditing();
 
         // Move line below selection to above selection
-        properMoveLine(origBlockEndLine + 1, origBlockBeginLine, true);
+        properMoveLine(toLine + 1, fromLine, true);
 
         // Restore caret and selection
         CharPos newCaret;
         if (oldCaret>= origBlockBegin && oldCaret <= origBlockEnd) {
             newCaret = ensureCharPosValid(CharPos{oldCaret.ch, oldCaret.line+1});
-        } else if (oldCaret.line == origBlockEndLine+1) {
-            newCaret = ensureCharPosValid(CharPos{oldCaret.ch, origBlockBeginLine});
+        } else if (oldCaret.line == toLine+1) {
+            newCaret = ensureCharPosValid(CharPos{oldCaret.ch, fromLine});
         }
-        CharPos newSelBegin = ensureCharPosValid(CharPos{origBlockBegin.ch, origBlockBegin.line+1});
+        CharPos newSelBegin;
+        if (fromLine != origBlockBegin.line) {
+            newSelBegin.line = origBlockBegin.line+1;
+            newSelBegin.ch = mDocument->getLine(newSelBegin.line).length();
+        } else {
+            newSelBegin=CharPos{origBlockBegin.ch, origBlockBegin.line+1};
+        }
         CharPos newSelEnd = ensureCharPosValid(CharPos{origBlockEnd.ch, origBlockEnd.line+1});
         setCaretAndSelection(
                     newCaret,
@@ -2146,8 +2165,8 @@ void QSynEdit::doMoveSelDown()
                     );
 
         addChangeToUndo(ChangeReason::MoveLine,
-                CharPos{0, origBlockEndLine + 1},
-                CharPos{0, origBlockBeginLine},
+                CharPos{0, toLine + 1},
+                CharPos{0, fromLine},
                 QStringList(),
                 SelectionMode::Normal);
         endEditing();
