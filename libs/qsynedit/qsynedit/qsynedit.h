@@ -572,8 +572,7 @@ private:
     void doSetSelText(const QString& value);
 
     void updateLastCaretX();
-    void ensureCaretVisible();
-    void ensureCaretVisible(bool ForceToMiddle);
+    void ensureCaretVisible(bool ForceToMiddle=false);
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);

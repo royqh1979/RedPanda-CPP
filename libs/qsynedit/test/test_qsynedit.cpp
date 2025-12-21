@@ -8098,6 +8098,205 @@ void TestQSyneditCpp::test_move_up_select_line_end_to_line_end()
     QVERIFY(!mEdit->modified());
 }
 
+void TestQSyneditCpp::test_move_up_after_collapsed_block()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "\t();",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t();",
+        "\t}",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+
+
+    mEdit->setContent(text1);
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    mEdit->collapse(5,7);
+    mEdit->collapse(10,12);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->setCaretXY(CharPos{0,8});
+    clearSignalDatas();
+    mEdit->moveSelUp();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,7}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,7}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,7}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{7});
+    QCOMPARE(mLineMovedTos, QList<int>{8});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({7}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,8));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,8));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,8); // caret changed here
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,8));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,8}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,8}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,8}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{8});
+    QCOMPARE(mLineMovedTos, QList<int>{7});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretY | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({7}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,7);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,7}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,7}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,7}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{7});
+    QCOMPARE(mLineMovedTos, QList<int>{8});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({7}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,8));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,8));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,8); // caret changed here
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,8));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    //undo again
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({0,8}));
+    QCOMPARE(mEdit->selBegin(), CharPos({0,8}));
+    QCOMPARE(mEdit->selEnd(), CharPos({0,8}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{8});
+    QCOMPARE(mLineMovedTos, QList<int>{7});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretY | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({7}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,7);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+}
+
 void TestQSyneditCpp::test_move_down_select_line_end_to_line_begin()
 {
     QStringList text1{
@@ -8368,7 +8567,7 @@ void TestQSyneditCpp::test_move_down_select_line_end_to_line_begin2()
     QVERIFY(mEdit->hasCodeBlock(3,8));
     QVERIFY(mEdit->hasCodeBlock(5,7));
 
-    //undo
+    //undo again
     clearSignalDatas();
     mEdit->undo();
     QCOMPARE(mEdit->content(),text1);
@@ -8396,6 +8595,207 @@ void TestQSyneditCpp::test_move_down_select_line_end_to_line_begin2()
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_move_down_before_collapsed_block()
+{
+    QStringList text1{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tint x;",
+        "\tif (x>0) {",
+        "\t\tx++;",
+        "\t}",
+        "\t();",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+    QStringList text2{
+        "int t() {",
+        " ttt;",
+        "}",
+        "int main() {",
+        "\tif (x>0) {",
+        "\tint x;",
+        "\t\tx++;",
+        "\t}",
+        "\t();",
+        "}",
+        "int test() {",
+        "\treturn 0;",
+        "}"
+    };
+
+
+    mEdit->setContent(text1);
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    mEdit->collapse(5,7);
+    mEdit->collapse(10,12);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->setCaretXY(CharPos{5,4});
+    clearSignalDatas();
+    mEdit->moveSelDown();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,5}));
+    QCOMPARE(mEdit->selBegin(), CharPos({5,5}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,5}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{5});
+    QCOMPARE(mLineMovedTos, QList<int>{4});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({4}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(4,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(4,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(4,7); // caret changed here
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(4,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,4}));
+    QCOMPARE(mEdit->selBegin(), CharPos({5,4}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,4}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{4});
+    QCOMPARE(mLineMovedTos, QList<int>{5});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({4}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,7);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,5}));
+    QCOMPARE(mEdit->selBegin(), CharPos({5,5}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,5}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{5});
+    QCOMPARE(mLineMovedTos, QList<int>{4});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::Modified | StatusChange::CaretY
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({4}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(4,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(4,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(4,7); // caret changed here
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(4,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    QVERIFY(!mEdit->canRedo());
+
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    QCOMPARE(mEdit->caretXY(), CharPos({5,4}));
+    QCOMPARE(mEdit->selBegin(), CharPos({5,4}));
+    QCOMPARE(mEdit->selEnd(), CharPos({5,4}));
+    QCOMPARE(mInsertStartLines, QList<int>({}));
+    QCOMPARE(mInsertLineCounts, QList<int>({}));
+    QCOMPARE(mDeleteStartLines, QList<int>({}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({}));
+    QCOMPARE(mLineMovedFroms, QList<int>{4});
+    QCOMPARE(mLineMovedTos, QList<int>{5});
+    QCOMPARE(mStatusChanges,
+             QList<StatusChanges>({
+                                      StatusChange::ModifyChanged | StatusChange::CaretX
+                                  }));
+    QCOMPARE(mReparseStarts, QList<int>({4}));
+    QCOMPARE(mReparseCounts, QList<int>({2}));
+
+    QVERIFY(!mEdit->canUndo());
+    QVERIFY(!mEdit->modified());
+
+    QCOMPARE(mEdit->codeBlockCount(),4);
+    QVERIFY(mEdit->hasCodeBlock(0,2));
+    QVERIFY(mEdit->hasCodeBlock(3,9));
+    QVERIFY(mEdit->hasCodeBlock(5,7));
+    QVERIFY(mEdit->hasCodeBlock(10,12));
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(!mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
+
+    mEdit->collapse(5,7);
+    QVERIFY(!mEdit->isCollapsed(0,2));
+    QVERIFY(!mEdit->isCollapsed(3,9));
+    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(mEdit->isCollapsed(10,12));
 }
 
 }

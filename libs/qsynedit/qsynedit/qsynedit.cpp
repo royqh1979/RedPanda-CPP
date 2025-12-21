@@ -1696,9 +1696,6 @@ void QSynEdit::doDeletePrevChar()
 {
     if (mReadOnly || mDocument->empty())
         return ;
-    auto action = finally([this]{
-        ensureCaretVisible();
-    });
 
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
@@ -1776,9 +1773,6 @@ void QSynEdit::doDeleteCurrentChar()
     CharPos newCaret{};
     if (mReadOnly || mDocument->empty())
         return;
-    auto action = finally([this]{
-        ensureCaretVisible();
-    });
 
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
@@ -2813,6 +2807,7 @@ void QSynEdit::endMergeCaretAndSelectionStatusChange()
 {
     --mMergeCaretStatusChangeLock;
     if (mMergeCaretStatusChangeLock == 0) {
+        ensureCaretVisible();
         if (mCaretBeforeMerging.ch != mCaretX)
             setStatusChanged(StatusChange::CaretX);
         if (mCaretBeforeMerging.line != mCaretY)
@@ -2828,7 +2823,7 @@ void QSynEdit::endMergeCaretAndSelectionStatusChange()
             if (selBeginNow != mSelBeginBeforeMerging
                     || selEndNow != mSelEndBeforeMerging)
                 setStatusChanged(StatusChange::Selection);
-        }
+        }        
     }
 }
 
@@ -2912,17 +2907,8 @@ void QSynEdit::updateLastCaretX()
     mLastCaretColumn = displayX();
 }
 
-void QSynEdit::ensureCaretVisible()
-{
-    ensureCaretVisible(false);
-}
-
 void QSynEdit::ensureCaretVisible(bool forceToMiddle)
 {
-    beginInternalChanges();
-    auto action = finally([this]{
-        endInternalChanges();
-    });
     // Make sure Y is visible
     int vCaretRow = displayY();
     if (forceToMiddle) {
@@ -3368,7 +3354,6 @@ void QSynEdit::processCodeBlocksOnLinesInserted(int line, int count)
 {
     if (!useCodeFolding())
         return;
-    beginInternalChanges();
     bool collapseChanged=false;
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
@@ -3383,12 +3368,12 @@ void QSynEdit::processCodeBlocksOnLinesInserted(int line, int count)
         }
     }
     if (collapseChanged) {
+        beginInternalChanges();
         updateHScrollbar();
         updateVScrollbar();
-        ensureCaretVisible();
         invalidate();
+        endInternalChanges();
     }
-    endInternalChanges();
 }
 
 void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
@@ -3423,7 +3408,6 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
     if (collapseChanged) {
         updateHScrollbar();
         updateVScrollbar();
-        ensureCaretVisible();
         invalidate();
     }
     endInternalChanges();
@@ -3436,29 +3420,27 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
     bool collapseChanged=false;
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
+        if (block->fromLine == from || block->toLine == from) {
+            if (block->collapsed) {
+                collapseChanged = true;
+                block->collapsed=false;
+            }
+        }
         if (from<to) {
             if (block->fromLine == from) {
-                block->collapsed = true;
-                collapseChanged = true;
                 block->fromLine = to;
             } else if (from < block->fromLine && block->fromLine <= to)
                 block->fromLine -=1;
             if (block->toLine == from) {
-                block->collapsed = true;
-                collapseChanged = true;
                 block->toLine = to;
             } else if (from < block->toLine && block->toLine <= to)
                 block->toLine -= 1;
         } else if (to > from) {
             if (block->fromLine == from) {
-                block->collapsed = true;
-                collapseChanged = true;
                 block->fromLine = to;
             } else if (to <= block->fromLine && block->fromLine < from)
                 block->fromLine +=1;
             if (block->toLine == from) {
-                block->collapsed = true;
-                collapseChanged = true;
                 block->toLine = to;
             } else if (to <= block->toLine && block->toLine < from)
                 block->toLine +=1;
@@ -3470,7 +3452,6 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
         beginInternalChanges();
         updateHScrollbar();
         updateVScrollbar();
-        ensureCaretVisible();
         invalidate();
         endInternalChanges();
     }
@@ -5339,10 +5320,9 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 setSelEnd(ptCurrent);
 
                 if (bBackward)
-                    internalSetCaretXY(selBegin(),false);
+                    internalSetCaretXY(selBegin());
                 else
-                    internalSetCaretXY(selEnd(),false);
-                ensureCaretVisible(true);
+                    internalSetCaretXY(selEnd());
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
                 if (searchAction==SearchAction::ReplaceAndExit) {
