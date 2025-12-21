@@ -3433,29 +3433,46 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
 {
     if (!useCodeFolding())
         return;
+    bool collapseChanged=false;
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
         if (from<to) {
-            if (block->fromLine == from)
+            if (block->fromLine == from) {
+                block->collapsed = true;
+                collapseChanged = true;
                 block->fromLine = to;
-            else if (from < block->fromLine && block->fromLine <= to)
+            } else if (from < block->fromLine && block->fromLine <= to)
                 block->fromLine -=1;
-            if (block->toLine == from)
+            if (block->toLine == from) {
+                block->collapsed = true;
+                collapseChanged = true;
                 block->toLine = to;
-            else if (from < block->toLine && block->toLine <= to)
+            } else if (from < block->toLine && block->toLine <= to)
                 block->toLine -= 1;
         } else if (to > from) {
-            if (block->fromLine == from)
+            if (block->fromLine == from) {
+                block->collapsed = true;
+                collapseChanged = true;
                 block->fromLine = to;
-            else if (to <= block->fromLine && block->fromLine < from)
+            } else if (to <= block->fromLine && block->fromLine < from)
                 block->fromLine +=1;
-            if (block->toLine == from)
+            if (block->toLine == from) {
+                block->collapsed = true;
+                collapseChanged = true;
                 block->toLine = to;
-            else if (to <= block->toLine && block->toLine < from)
+            } else if (to <= block->toLine && block->toLine < from)
                 block->toLine +=1;
         }
         if (block->toLine<=block->fromLine)
             mCodeBlocks.remove(i);
+    }
+    if (collapseChanged) {
+        beginInternalChanges();
+        updateHScrollbar();
+        updateVScrollbar();
+        ensureCaretVisible();
+        invalidate();
+        endInternalChanges();
     }
 }
 
