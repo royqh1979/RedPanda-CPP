@@ -1525,6 +1525,11 @@ void QSynEdit::doToggleBlockComment()
         return;
     if (mSyntaxer->blockCommentBeginSymbol().isEmpty())
         return;
+
+    beginEditing();
+    EditorOptions oldOptions = mOptions;
+    mOptions.setFlag(EditorOption::AutoIndent, false); //disable auto indent
+
     QString beginSymbol=mSyntaxer->blockCommentBeginSymbol();
     QString endSymbol=mSyntaxer->blockCommentEndSymbol();
     int beginSymLen = beginSymbol.length();
@@ -1548,6 +1553,8 @@ void QSynEdit::doToggleBlockComment()
         setSelText(newText);
     }
 
+    mOptions = oldOptions;
+    endEditing();
 }
 
 void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
