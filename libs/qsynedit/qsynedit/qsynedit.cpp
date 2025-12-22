@@ -5928,7 +5928,7 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
     case EditCommand::MatchBracket:
         {
         CharPos coord = getMatchingBracket();
-        if (coord.ch!=0 && coord.line!=0)
+        if (coord.isValid())
             setCaretXY(coord);
         }
         break;
