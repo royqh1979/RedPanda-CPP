@@ -204,11 +204,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mParentPageControl) {
         //first showEvent triggered here
         mParentPageControl->addTab(this,"");
-        updateCaption();
-    }
-
-    if (!inTab()) {
-        setExtraKeystrokes();
     }
 
     if (inTab()) {
@@ -4567,7 +4562,6 @@ void Editor::setFileType(FileType newFileType)
         reparse(false);
     }
     reparseTodo();
-    updateCaption();
     pMainWindow->updateEditorActions(this);
 }
 
@@ -4622,7 +4616,7 @@ Editor* Editor::openFileInContext(const QString &filename)
         }
     }
 
-    Editor *e=pMainWindow->openFile(filename, true, nullptr, fileType, contextFile);
+    Editor *e=pMainWindow->openFile(filename, true, fileType, contextFile);
     if (e) {
         if (e->isVisible())
             pMainWindow->updateClassBrowserForEditor(e);
@@ -5294,11 +5288,9 @@ void Editor::checkSyntaxInBack()
 {
     if (!mInited)
         return;
-    if (!inTab())
-        return;
     if (readOnly())
         return;
-    pMainWindow->checkSyntaxInBack(this);
+    emit syntaxCheckRequired(this);
 }
 
 
@@ -5332,12 +5324,10 @@ void Editor::toggleBreakpoint(int line)
 {
     if (hasBreakpoint(line)) {
         mBreakpointLines.remove(line);
-        if (inTab())
-            pMainWindow->debugger()->removeBreakpoint(line,this);
+        emit breakpointRemoved(this, line);
     } else {
         mBreakpointLines.insert(line);
-        if (inTab())
-            pMainWindow->debugger()->addBreakpoint(line,this);
+        emit breakpointAdded(this, line);
     }
 
     invalidateGutterLine(line);
@@ -5346,7 +5336,7 @@ void Editor::toggleBreakpoint(int line)
 
 void Editor::clearBreakpoints()
 {
-    pMainWindow->debugger()->deleteBreakpoints(this);
+    emit breakpointsCleared(this);
     mBreakpointLines.clear();
     invalidate();
 }
@@ -5669,26 +5659,15 @@ bool Editor::autoIndent()
     return opts.testFlag(QSynedit::EditorOption::AutoIndent);
 }
 
-void Editor::updateCaption(const QString& newCaption) {
-    if (!inTab()) {
-        return;
+QString Editor::caption() {
+    QString result;
+    result = QFileInfo(mFilename).fileName();
+    if (this->modified()) {
+        result.append("[*]");
     }
-    int index = mParentPageControl->indexOf(this);
-    if (index==-1)
-        return;
-    QString caption;
-    if (newCaption.isEmpty()) {
-        caption = QFileInfo(mFilename).fileName();
-        if (this->modified()) {
-            caption.append("[*]");
-        }
-        if (this->readOnly()) {
-            caption.append("["+tr("Readonly")+"]");
-        }        
-    } else {
-        caption = newCaption;
+    if (this->readOnly()) {
+        result.append("["+tr("Readonly")+"]");
     }
-    caption = caption.replace("&","&&");
-    mParentPageControl->setTabText(index,caption);
-    mParentPageControl->setTabToolTip(index, mFilename);
+    result = result.replace("&","&&");
+    return result;
 }

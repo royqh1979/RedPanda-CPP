@@ -57,7 +57,9 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, parentPageControl);
+    parentPageControl->addTab(e, e->caption());
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
+    connect(e, &Editor::captionUpdated, this, &EditorList::onEditorCaptionUpdated);
     updateLayout();
     connect(e,&Editor::fileSaved,
             pMainWindow, &MainWindow::onFileSaved);
@@ -138,6 +140,20 @@ void EditorList::doRemoveEditor(Editor *e)
 void EditorList::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
 {
     emit editorRenamed(oldFilename, newFilename, firstSave);
+}
+
+void EditorList::onEditorCaptionUpdated(Editor* e)
+{
+    QTabWidget *parentWidget = mLeftPageWidget;
+    int index = mLeftPageWidget->indexOf(e);
+    if (index==-1) {
+        index = mRightPageWidget->indexOf(e);
+        parentWidget = mRightPageWidget;
+    }
+    if (index==-1)
+        return;
+    parentWidget->setTabText(index,e->caption());
+    parentWidget->setTabToolTip(index, e->filename());
 }
 
 QTabWidget *EditorList::rightPageWidget() const

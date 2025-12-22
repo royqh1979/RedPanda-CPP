@@ -219,7 +219,7 @@ public:
 
     TodoModel* todoModel();
 
-    Editor* openFile(QString filename, bool activate=true, QTabWidget* page=nullptr, FileType fileType=FileType::None, const QString& contextFile = QString());
+    Editor* openFile(QString filename, bool activate=true, FileType fileType=FileType::None, const QString& contextFile = QString());
     void openProject(QString filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
     void changeProjectOptions(const QString& widgetName=QString(), const QString& groupName=QString());
@@ -275,8 +275,12 @@ public slots:
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
     void onDebugFinished();
+    void onBreakpointAdded(const Editor* e, int line);
+    void onBreakpointRemoved(const Editor* e, int line);
+    void onBreakpointsCleared(const Editor* e);
 
 private:
+    void connectEditorSignals(Editor * e);
     void executeTool(PToolItem item);
     int calIconSize(const QString &fontName, int fontPointSize);
     void hideAllSearchDialogs();

@@ -97,6 +97,7 @@ private:
     void doRemoveEditor(Editor* e);
 private slots:
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
+    void onEditorCaptionUpdated(Editor* e);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

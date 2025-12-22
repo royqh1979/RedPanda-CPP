@@ -157,7 +157,8 @@ public:
     QTabWidget* pageControl() noexcept;
     void setPageControl(QTabWidget* newPageControl);
 
-    void updateCaption(const QString& newCaption=QString());
+    QString caption();
+
     void applySettings();
     void applyColorScheme(const QString& schemeName);
     void setAutoIndent(bool indent);
@@ -256,7 +257,12 @@ public:
 
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
+    void captionUpdated(Editor * e);
     void fileSaved(const QString& filename, bool inProject);
+    void breakpointAdded(const Editor *e, int line);
+    void breakpointRemoved(const Editor *e, int line);
+    void breakpointsCleared(const Editor *e);
+    void syntaxCheckRequired(Editor *e);
 private slots:
     void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
@@ -269,6 +275,7 @@ private slots:
     void onParseFinished();
 
 private:
+    void updateCaption() { emit captionUpdated(this); }
     void loadContent(const QString& filename);
     void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch);

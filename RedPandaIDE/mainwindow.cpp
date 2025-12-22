@@ -1336,6 +1336,29 @@ void MainWindow::onDebugFinished()
     updateEditorActions();
 }
 
+void MainWindow::onBreakpointAdded(const Editor *e, int line)
+{
+    mDebugger->addBreakpoint(line,e);
+}
+
+void MainWindow::onBreakpointRemoved(const Editor *e, int line)
+{
+    mDebugger->removeBreakpoint(line,e);
+}
+
+void MainWindow::onBreakpointsCleared(const Editor *e)
+{
+    mDebugger->deleteBreakpoints(e);
+}
+
+void MainWindow::connectEditorSignals(Editor *editor)
+{
+    connect(editor, &Editor::breakpointAdded, this, &MainWindow::onBreakpointAdded);
+    connect(editor, &Editor::breakpointRemoved, this, &MainWindow::onBreakpointRemoved);
+    connect(editor, &Editor::breakpointsCleared, this, &MainWindow::onBreakpointsCleared);
+    connect(editor, &Editor::syntaxCheckRequired, this, &MainWindow::checkSyntaxInBack);
+}
+
 void MainWindow::executeTool(PToolItem item)
 {
     QMap<QString, QString> macros = devCppMacroVariables();
@@ -1824,7 +1847,7 @@ void MainWindow::openFiles(const QStringList &files)
     }
 }
 
-Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page, FileType fileType, const QString& contextFile)
+Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType, const QString& contextFile)
 {
     if (!fileExists(filename))
         return nullptr;
@@ -1867,7 +1890,9 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page, 
             encoding=pProject->options().encoding;
         editor = mEditorList->newEditor(filename,encoding,
                                         fileType, contextFile,
-                                        pProject, false, page);
+                                        pProject, false, nullptr);
+
+        connectEditorSignals(editor);
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
@@ -3623,7 +3648,7 @@ void MainWindow::loadLastOpens()
         if (pProject && encoding==ENCODING_PROJECT)
             encoding=pProject->options().encoding;
         Editor * editor = mEditorList->newEditor(editorFilename, encoding, fileType, contextFile, pProject,false,page);
-
+        connectEditorSignals(editor);
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
         }
@@ -3723,6 +3748,7 @@ void MainWindow::newEditor(const QString& suffix)
                                                pSettings->editor().defaultEncoding(),
                                                FileType::None, QString(),
                                                nullptr,true);
+        connectEditorSignals(editor);
         editor->activate();
         //updateForEncodingInfo();
     }  catch (FileError e) {
