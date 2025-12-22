@@ -697,6 +697,12 @@ private:
     void doToggleComment();
     void doToggleBlockComment();
     void doMouseScroll(bool isDragging, int scrollX, int scrollY);
+    void doUndoRedoAddChar(const QString &oldGlyph,
+                       const CharPos &changeStartPos,
+                       const CharPos &changeEndPos,
+                       SelectionMode changeSelectionMode,
+                       size_t changeNumber,
+                       bool undo);
 
     QString getDisplayStringAtLine(int line) const;
 

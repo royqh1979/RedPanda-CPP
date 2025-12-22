@@ -1610,6 +1610,42 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     }
 }
 
+void QSynEdit::doUndoRedoAddChar(const QString &oldGlyph,
+                             const CharPos &changeStartPos,
+                             const CharPos &changeEndPos,
+                             SelectionMode changeSelMode,
+                             size_t changeNumber,
+                             bool undo)
+{
+    int changeLine = changeStartPos.line;
+    QString lineStr = mDocument->getLine(changeLine);
+    QString replacedGlyph = lineStr.mid(
+                changeStartPos.ch,
+                changeEndPos.ch-changeStartPos.ch);
+    QString leftStr = lineStr.left(changeStartPos.ch);
+    QString rightStr = lineStr.mid(changeEndPos.ch);
+    QString restorestr = leftStr+oldGlyph+rightStr;
+    properSetLine(changeLine, restorestr, true);
+    if (undo) {
+        mRedoList->addRedo(
+                    ChangeReason::AddChar,
+                    changeStartPos,
+                    CharPos{changeStartPos.ch+oldGlyph.length(),changeLine},
+                    QStringList{replacedGlyph},
+                    changeSelMode,
+                    changeNumber);
+    } else { //redo
+        mUndoList->restoreChange(
+                    ChangeReason::AddChar,
+                    changeStartPos,
+                    CharPos{changeStartPos.ch+oldGlyph.length(),changeLine},
+                    QStringList{replacedGlyph},
+                    changeSelMode,
+                    changeNumber);
+    }
+    setCaretXY(changeStartPos);
+}
+
 void QSynEdit::beginEditing()
 {
     beginInternalChanges();
@@ -2536,12 +2572,23 @@ void QSynEdit::internalAddChar(const QChar& ch)
     }
     beginEditing();
     QString s = lineText();
-    QString newS = s.left(mCaretX)+ch+s.mid(mCaretX);
+    QString replacedGlyph;
+    QString newS;
+    if (!mInserting) {
+        int currentGlyphIdx = mDocument->charToGlyphIndex(mCaretY, mCaretX);
+        if (currentGlyphIdx < mDocument->glyphCount(mCaretY)) {
+            replacedGlyph = mDocument->glyphAt(mCaretY,currentGlyphIdx);
+            newS = s.left(mCaretX)+ch+s.mid(mCaretX+replacedGlyph.length());
+        }
+    }
+    if (replacedGlyph.isEmpty()) {
+        newS = s.left(mCaretX)+ch+s.mid(mCaretX);
+    }
     properSetLine(mCaretY,newS,true);
     addChangeToUndo(ChangeReason::AddChar,
             CharPos{mCaretX, mCaretY},
             CharPos{mCaretX+1, mCaretY},
-            QStringList(),
+            QStringList(replacedGlyph),
             SelectionMode::Normal
             );
     setCaretX(mCaretX+1);
@@ -2557,8 +2604,7 @@ void QSynEdit::doAddChar(const QChar& ch)
     beginEditing();
     //mCaretX will change after setSelLength;
     if (mInserting == false && !selAvail()) {
-        switch(mActiveSelectionMode) {
-        case SelectionMode::Column: {
+        if (mActiveSelectionMode == SelectionMode::Column) {
             //we can't use blockBegin()/blockEnd()
             CharPos start=mSelectionBegin;
             CharPos end=mSelectionEnd;
@@ -2567,10 +2613,6 @@ void QSynEdit::doAddChar(const QChar& ch)
             start.ch++; // make sure we select a whole char in the start line
             setSelBegin(start);
             setSelEnd(end);
-        }
-            break;
-        default:
-            setSelLength(1);
         }
     }
 
@@ -4132,7 +4174,15 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case ChangeReason::AddChar:
+        case ChangeReason::AddChar: {
+            doUndoRedoAddChar(item->changeText()[0],
+                          item->changeStartPos(),
+                          item->changeEndPos(),
+                          item->changeSelMode(),
+                          item->changeNumber(),
+                    true);
+            break;
+        }
         case ChangeReason::Insert: {
             QStringList tmpText = getContent(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
             doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
@@ -4450,7 +4500,15 @@ void QSynEdit::doRedoItem()
                         );
             properSetLine(item->changeStartPos().line,item->changeText()[0], true);
             break;
-        case ChangeReason::AddChar:
+        case ChangeReason::AddChar: {
+            doUndoRedoAddChar(item->changeText()[0],
+                          item->changeStartPos(),
+                          item->changeEndPos(),
+                          item->changeSelMode(),
+                          item->changeNumber(),
+                    false);
+            break;
+        }
         case ChangeReason::Insert:
             setCaretAndSelection(
                         item->changeStartPos(),

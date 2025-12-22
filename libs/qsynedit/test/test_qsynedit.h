@@ -26,6 +26,7 @@ private slots:
     void onReparsed(int start, int count);
 
     void initTestCase();
+    void cleanup();
     void clearReparseDatas();
     void clearSignalDatas();
     void loadDemoFile();
@@ -65,7 +66,9 @@ private slots:
     void test_set_content_qstringlist();
 
     void test_input_chars_in_empty_file();
+    void test_input_chars_in_empty_file_overwrite_mode();
     void test_input_chars_at_file_begin_end();
+    void test_input_chars_at_file_begin_end_overwrite_mode();
     void test_input_chars_in_file();
     void test_input_char_at_end_of_first_line_of_collapsed_block();
 

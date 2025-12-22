@@ -532,6 +532,8 @@ public:
      */
     int glyphStartChar(int line, int glyphIdx) const;
 
+    int glyphEndChar(int line, int glyphIdx) const;
+
     /**
      * @brief get count of the chars representing the specified glyph in the specified line.
      *
