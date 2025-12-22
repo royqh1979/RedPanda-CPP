@@ -160,7 +160,7 @@ bool sendFilesToInstance() {
 }
 #endif
 
-BlockWheelEventFiler::BlockWheelEventFiler(QObject* parent):QObject(parent) {}
+BlockWheelEventFiler::BlockWheelEventFiler(QObject* parent) : QObject(parent) {}
 
 BlockWheelEventFiler::~BlockWheelEventFiler()
 {
@@ -225,8 +225,25 @@ void setTheme(const QString& theme) {
         pSettings->environment().setIconSet(appTheme->defaultIconSet());
     }
     pSettings->environment().save();
-
 }
+
+#ifdef Q_OS_MACOS
+void doMacPathSetting(void) noexcept
+{
+    // in macOS GUI apps, `/usr/local/bin` is not in PATH by default
+    // follow the Unix way by prepending it to `/usr/bin`
+    QStringList pathList = getExecutableSearchPaths();
+    if (!pathList.contains("/usr/local/bin")) {
+        auto idxUsrBin = pathList.indexOf("/usr/bin");
+        if (idxUsrBin >= 0)
+            pathList.insert(idxUsrBin, "/usr/local/bin");
+        else
+            pathList.append("/usr/local/bin");
+    }
+    QString newPath = pathList.join(PATH_SEPARATOR);
+    qputenv("PATH", newPath.toUtf8());
+}
+#endif
 
 #ifdef ENABLE_GLIBC_HWCAPS
 extern "C" int Q_DECL_EXPORT RedPandaIDE_main(int argc, char *argv[])
@@ -234,27 +251,9 @@ extern "C" int Q_DECL_EXPORT RedPandaIDE_main(int argc, char *argv[])
 int main(int argc, char *argv[])
 #endif
 {
-//#ifdef Q_OS_WINDOWS
-//    // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.
-//    // Use freetype as the fontengine
-//    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2:fontengine=freetype");
-//#endif
 
 #ifdef Q_OS_MACOS
-    // in macOS GUI apps, `/usr/local/bin` is not in PATH by default
-    // follow the Unix way by prepending it to `/usr/bin`
-    {
-        QStringList pathList = getExecutableSearchPaths();
-        if (!pathList.contains("/usr/local/bin")) {
-            auto idxUsrBin = pathList.indexOf("/usr/bin");
-            if (idxUsrBin >= 0)
-                pathList.insert(idxUsrBin, "/usr/local/bin");
-            else
-                pathList.append("/usr/local/bin");
-        }
-        QString newPath = pathList.join(PATH_SEPARATOR);
-        qputenv("PATH", newPath.toUtf8());
-    }
+    doMacPathSetting();
 #endif
 
     QApplication app(argc, argv);
@@ -263,45 +262,50 @@ int main(int argc, char *argv[])
 #endif
     ExternalResource resource;
 
-    QLockFile lockFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
-    {
-        bool firstRun;
-        QString settingFilename = getSettingFilename(QString(), firstRun);
-        bool openInSingleInstance = false;
-        if (!settingFilename.isEmpty() && !firstRun) {
-            QSettings envSetting(settingFilename,QSettings::IniFormat);
-            envSetting.beginGroup(SETTING_ENVIRONMENT);
-            openInSingleInstance = envSetting.value("open_files_in_single_instance",false).toBool();
-        } else if (!settingFilename.isEmpty() && firstRun)
-            openInSingleInstance = false;
-        if (app.arguments().contains("-ns")) {
-            openInSingleInstance = false;
-        } else if (app.arguments().contains("-s"))
-            openInSingleInstance = true;
-        if (openInSingleInstance) {
-            int openCount = 0;
-            while (true) {
-                if (lockFile.tryLock(100))
-                    break;
-                openCount++;
-                if (openCount>100)
-                    break;
-            }
+    QLockFile lockFile(QDir::tempPath() + QDir::separator() + "RedPandaDevCppStartUp.lock");
 
-            if (app.arguments().length()>=2 && openCount<100) {
-#ifdef Q_OS_WIN
-                if (sendFilesToInstance()) {
-                    lockFile.unlock();
-                    return 0;
-                }
-#endif
-            }
-        }
-    }
-    //Translation must be loaded first
-    QTranslator trans,transQt,transUtils;
     bool firstRun;
     QString settingFilename = getSettingFilename(QString(), firstRun);
+    if (settingFilename.isEmpty()) {
+        return -1;
+    }
+
+    bool openInSingleInstance = false;
+    if (!settingFilename.isEmpty() && !firstRun) {
+        QSettings envSetting(settingFilename, QSettings::IniFormat);
+        envSetting.beginGroup(SETTING_ENVIRONMENT);
+        openInSingleInstance =
+            envSetting.value("open_files_in_single_instance", false).toBool();
+    } else if (!settingFilename.isEmpty() && firstRun)
+        openInSingleInstance = false;
+    if (app.arguments().contains("-ns")) {
+        openInSingleInstance = false;
+    } else if (app.arguments().contains("-s"))
+        openInSingleInstance = true;
+    if (openInSingleInstance) {
+        int openCount = 0;
+        while (true) {
+            if (lockFile.tryLock(100))
+                break;
+            openCount++;
+            if (openCount > 100)
+                break;
+        }
+
+        if (app.arguments().length() >= 2 && openCount <= 100) {
+#ifdef Q_OS_WIN
+            if (sendFilesToInstance()) {
+                lockFile.unlock();
+                return 0;
+            }
+#endif
+        }
+    }
+
+    // Translation must be loaded first
+    app.processEvents();
+    QTranslator trans, transQt, transUtils;
+
     if (!isGreenEdition()) {
         QStringList documentLocations = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
         QDir::setCurrent(documentLocations.first());
@@ -310,6 +314,7 @@ int main(int argc, char *argv[])
         lockFile.unlock();
         return -1;
     }
+    
     QString language;
     {
         QSettings languageSetting(settingFilename,QSettings::IniFormat);
@@ -435,6 +440,7 @@ int main(int argc, char *argv[])
         BlockWheelEventFiler *blockWheelFilter=new BlockWheelEventFiler(&app);
         app.installEventFilter(blockWheelFilter);
 
+        // Unlock file if it's locked
         if (lockFile.isLocked()) {
             lockFile.unlock();
         }
@@ -448,9 +454,20 @@ int main(int argc, char *argv[])
             dir.removeRecursively();
         }
         return retCode;
-    }  catch (BaseError e) {
-        lockFile.unlock();
-        QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());
+    } catch (BaseError e) {
+        // Ensure lock file is unlocked even if an exception occurs
+        if (lockFile.isLocked()) {
+            lockFile.unlock();
+        }
+        QMessageBox::critical(nullptr, QApplication::tr("Error"), e.reason());
+        return -1;
+    } catch (...) {
+        // Catch any other unexpected exceptions
+        if (lockFile.isLocked()) {
+            lockFile.unlock();
+        }
+        QMessageBox::critical(nullptr, QApplication::tr("Error"), 
+                              QObject::tr("An unexpected error occurred."));
         return -1;
     }
 }
