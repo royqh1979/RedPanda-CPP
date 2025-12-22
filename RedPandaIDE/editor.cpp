@@ -2604,9 +2604,9 @@ bool Editor::handleSymbolCompletion(QChar key)
     //todo: better methods to detect current caret type
     if (caretX() <= 0) {
         if (caretY()>0) {
-            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 2)))
+            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1)))
                 return false;
-            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2))
+            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1))
                     && (key!='\"') && (key!='\''))
                 return false;
         }
@@ -2914,8 +2914,8 @@ bool Editor::handleBraceSkip()
     if (lineCount()==0)
         return false;
 
-    if (syntaxer()->supportBraceLevel()) {
-        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
+    if (syntaxer()->supportBraceLevel() && caretY()>=1) {
+        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(caretY()-1);
         if (lastLineState->braceLevel==0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
@@ -3057,7 +3057,7 @@ bool Editor::handleGlobalIncludeSkip()
         return false;
     CharPos pos = getMatchingBracket();
     if (pos.isValid()) {
-        setCaretXY(CharPos{caretX(), caretY()}); // skip over
+        setCaretXY(CharPos{caretX()+1, caretY()}); // skip over
         return true;
     }
     return false;

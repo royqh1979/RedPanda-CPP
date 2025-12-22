@@ -6726,7 +6726,7 @@ void QSynEdit::setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos)
 
 void QSynEdit::setSelLength(int len)
 {
-    if (mSelectionBegin.line>mDocument->count() || mSelectionBegin.line<=0)
+    if (mSelectionBegin.line>=mDocument->count() || mSelectionBegin.line<0)
         return;
 
     if (len >= 0) {
