@@ -723,14 +723,13 @@ QString QSynEdit::genSpaces(int charCount) const
 
 int QSynEdit::charToGlyphLeft(int line, int ch) const
 {
-    Q_ASSERT(validInDoc(line, ch));
     QString s = getDisplayStringAtLine(line);
+    Q_ASSERT(ch>=0 && ch<=s.length());
     return mDocument->charToGlyphStartPosition(line, s, ch);
 }
 
 int QSynEdit::charToGlyphLeft(int line, const QString &s, int ch) const
 {
-    Q_ASSERT(validInDoc(line, ch));
     return mDocument->charToGlyphStartPosition(line, s, ch);
 }
 
@@ -6283,7 +6282,7 @@ void QSynEdit::inputMethodEvent(QInputMethodEvent *event)
     }
     QString s = event->commitString();
     if (!s.isEmpty()) {
-        processCommand(EditCommand::ImeStr,QChar());
+        processCommand(EditCommand::ImeStr,s);
 //        for (QChar ch:s) {
 //            CommandProcessor(SynEditorCommand::ecChar,ch);
 //        }
