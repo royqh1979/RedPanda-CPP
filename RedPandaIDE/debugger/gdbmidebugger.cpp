@@ -344,7 +344,7 @@ void GDBMIDebuggerClient::handleBreakpoint(const GDBMIResultParser::ParseObject&
     QString filename;
     // gdb use system encoding for file path
     filename = breakpoint["fullname"].pathValue();
-    int line = breakpoint["line"].intValue();
+    int line = breakpoint["line"].intValue() - 1;
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
 }
@@ -371,7 +371,7 @@ void GDBMIDebuggerClient::handleStack(const QList<GDBMIResultParser::ParseValue>
         PTrace trace = std::make_shared<Trace>();
         trace->funcname = frameObject["func"].value();
         trace->filename = frameObject["fullname"].pathValue();
-        trace->line = frameObject["line"].intValue();
+        trace->line = frameObject["line"].intValue() - 1;
         trace->level = frameObject["level"].intValue(0);
         trace->address = frameObject["addr"].value();
         traces.append(trace);
@@ -794,7 +794,7 @@ void GDBMIDebuggerClient::processExecAsyncRecord(const QByteArray &line)
             //         return;
             // }
         }
-        emit inferiorStopped(mCurrentFile, mCurrentLine, false);
+        emit inferiorStopped(mCurrentFile, mCurrentLine-1, false);
     }
 }
 
@@ -1109,12 +1109,12 @@ void GDBMIDebuggerClient::addBreakpoint(PBreakpoint breakpoint)
             postCommand("-break-insert",
                         QString("%1 \"%2:%3\"")
                         .arg(condition, filename)
-                        .arg(breakpoint->line));
+                        .arg(breakpoint->line+1));
         } else {
             postCommand("-break-insert",
                         QString("%1 --source \"%2\" --line %3")
                         .arg(condition,filename)
-                        .arg(breakpoint->line));
+                        .arg(breakpoint->line+1));
         }
     }
 }

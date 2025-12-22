@@ -255,8 +255,8 @@ public slots:
     void onDebugEvaluateInput();
     void onDebugMemoryAddressInput();
     void onParserProgress(const QString& fileName, int total, int current);
-    void onStartParsing();
-    void onEndParsing(int total, int updateView);
+    void onParseStarted();
+    void onParseFinished(int total, int updateView);
     void onEvalValueReady(const QString& value);
     void onLocalsReady(const QStringList& value);
     void onEditorContextMenu(const QPoint& pos);

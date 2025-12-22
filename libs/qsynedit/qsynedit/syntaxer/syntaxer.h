@@ -72,21 +72,14 @@ enum class TokenType {
     Default,
     Comment, // any comment
     Space,
-
-    String,   // a string constant: "this is a string"
-    Character, // a character constant: 'c', '\n'
-    Number, // a number constant: 234, 0xff
-
-    Identifier, // any variable name
-
-    Keyword, // any keyword
-
-    Operator, // "sizeof", "+", "*", etc.
-
+    String,   // part of a string literal: "this is a string"
+    Character, // part of a character literal: 'c', '\n'
+    Number, // a number literal: 234, 0xff
+    Identifier,
+    Keyword,
+    Symbol, // "{", "+", "*", etc.
     Preprocessor,    //generic Preprocessor
-
     Error,
-
     Embeded  //language embeded in others
     };
 

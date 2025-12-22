@@ -101,7 +101,7 @@ void CaretList::unPause()
     mPauseAdd = false;
 }
 
-void CaretList::linesDeleted(const Editor *editor, int firstLine, int count)
+void CaretList::onLinesDeleted(const Editor *editor, int firstLine, int count)
 {
     //qDebug()<<"deleted:"<<mIndex<<":"<<mList.count();
     for (int i=mList.size()-1;i>=0;i--) {
@@ -115,7 +115,7 @@ void CaretList::linesDeleted(const Editor *editor, int firstLine, int count)
     }
 }
 
-void CaretList::linesInserted(const Editor *editor, int firstLine, int count)
+void CaretList::onLinesInserted(const Editor *editor, int firstLine, int count)
 {
     //qDebug()<<"inserted:"<<mIndex<<":"<<mList.count();
     for(PEditorCaret& caret:mList) {

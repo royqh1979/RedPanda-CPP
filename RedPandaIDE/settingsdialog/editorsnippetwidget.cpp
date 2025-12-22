@@ -50,12 +50,12 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
         QModelIndex index = ui->tblSnippets->currentIndex();
         if (!index.isValid()) {
             ui->editCode->setEnabled(false);
-            ui->editCode->document()->clear();
+            ui->editCode->clear();
         } else {
             mUpdatingCode = true;
             ui->editCode->setEnabled(true);
             PCodeSnippet snippet = mModel.snippets()[index.row()];
-            ui->editCode->document()->setText(snippet->code);
+            ui->editCode->setContent(snippet->code);
             mUpdatingCode = false;
         }
     });
@@ -80,9 +80,9 @@ EditorSnippetWidget::~EditorSnippetWidget()
 void EditorSnippetWidget::doLoad()
 {
     mModel.updateSnippets(pMainWindow->codeSnippetManager()->snippets());
-    ui->editCppFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newCppFileTemplate());
-    ui->editCFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newCFileTemplate());
-    ui->editGASFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newGASFileTemplate());
+    ui->editCppFileTemplate->setContent(pMainWindow->codeSnippetManager()->newCppFileTemplate());
+    ui->editCFileTemplate->setContent(pMainWindow->codeSnippetManager()->newCFileTemplate());
+    ui->editGASFileTemplate->setContent(pMainWindow->codeSnippetManager()->newGASFileTemplate());
 }
 
 void EditorSnippetWidget::doSave()

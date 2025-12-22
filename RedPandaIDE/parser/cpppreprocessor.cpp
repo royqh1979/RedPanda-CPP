@@ -799,7 +799,7 @@ void CppPreprocessor::openInclude(QString fileName)
 //    }
 
     // Update result file
-    QString includeLine = "#include " + fileName + ":1";
+    QString includeLine = "#include " + fileName + ":0";
     if (mIncludeStack.count()>1) { // include from within a file
       mResult[mPreProcIndex] = includeLine;
     } else {

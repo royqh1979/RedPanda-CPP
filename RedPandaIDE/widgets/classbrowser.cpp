@@ -214,14 +214,14 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
 {
     if (mParser) {
         disconnect(mParser.get(),
-                   &CppParser::onEndParsing,
+                   &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
     }
     mParser = newCppParser;
     if (mParser) {
         connect(mParser.get(),
-                   &CppParser::onEndParsing,
+                   &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
     } else {

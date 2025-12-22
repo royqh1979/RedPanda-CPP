@@ -174,6 +174,7 @@ int QSynEdit::displayLineCount() const
 
 void QSynEdit::setCaretXY(const CharPos &pos)
 {
+    Q_ASSERT(validInDoc(pos));
     beginInternalChanges();
     setSelBegin(pos);
     internalSetCaretXY(pos, true);
@@ -182,6 +183,7 @@ void QSynEdit::setCaretXY(const CharPos &pos)
 
 void QSynEdit::setCaretXYCentered(const CharPos &pos)
 {
+    Q_ASSERT(validInDoc(pos));
     beginInternalChanges();
     setSelBegin(pos);
     internalSetCaretXY(pos, false);
@@ -284,9 +286,9 @@ bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &st
     lineIdx = pos.line;
     if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
         lineText = mDocument->getLine(lineIdx);
-        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText, mDocument->getLineSeq(lineIdx));
         chIdx = pos.ch;
         if ((chIdx >= 0) && (chIdx < lineText.length())) {
+            prepareSyntaxerState(mSyntaxer.get(), lineIdx, lineText);
             while (!mSyntaxer->eol()) {
                 start = mSyntaxer->getTokenPos();
                 token = mSyntaxer->getToken();
@@ -311,7 +313,7 @@ void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &ls
     lstPos.clear();
     lstAttri.clear();
     if ((line >= 0) && (line < mDocument->count())) {
-        prepareSyntaxerState(*mSyntaxer, line, mDocument->getLine(line), mDocument->getLineSeq(line));
+        prepareSyntaxerState(mSyntaxer.get(), line);
         while (!mSyntaxer->eol()) {
             lstPos.append(mSyntaxer->getTokenPos());
             lstToken.append(mSyntaxer->getToken());
@@ -389,10 +391,10 @@ void QSynEdit::doTrimTrailingSpaces()
 
 CharPos QSynEdit::getMatchingBracket()
 {
-    return getMatchingBracketEx(caretXY());
+    return getMatchingBracket(caretXY());
 }
 
-CharPos QSynEdit::getMatchingBracketEx(CharPos APoint)
+CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
 {
     QChar Brackets[] = {'(', ')', '[', ']', '{', '}', '<', '>'};
     QString lineStr;
@@ -408,9 +410,9 @@ CharPos QSynEdit::getMatchingBracketEx(CharPos APoint)
     if (mDocument->count()<1)
         return CharPos{-1,-1};
     // get char at caret
-    int posX = std::max(APoint.ch,0);
-    int posY = std::max(APoint.line,0);
-    lineStr = mDocument->getLine(APoint.line);
+    int posX = std::max(pos.ch,0);
+    int posY = std::max(pos.line,0);
+    lineStr = mDocument->getLine(pos.line);
     if (posX < lineStr.length()) {
         Test = lineStr[posX];
         // is it one of the recognized brackets?
@@ -969,43 +971,6 @@ QChar QSynEdit::charAt(const CharPos &pos) const
     return QChar(0);
 }
 
-QChar QSynEdit::nextNonSpaceChar(int line, int ch) const
-{
-    Q_ASSERT(validInDoc(line,ch));
-    QString s = mDocument->getLine(line);
-    if (s.isEmpty())
-        return QChar();
-    int x=ch;
-    while (x<s.length()) {
-        QChar ch = s[x];
-        if (!isSpaceChar(ch))
-            return ch;
-        x++;
-    }
-    return QChar();
-}
-
-QChar QSynEdit::lastNonSpaceChar(int line, int ch) const
-{
-    Q_ASSERT(validInDoc(line,ch));
-    QString s = mDocument->getLine(line);
-    int x = std::min(ch,s.length()-1);
-    while (line>=0) {
-        while (x>=0) {
-            QChar c = s[x];
-            if (!isSpaceChar(c))
-                return c;
-            x--;
-        }
-        line--;
-        if (line>=0) {
-            s = mDocument->getLine(line);
-            x = s.length()-1;
-        }
-    }
-    return QChar();
-}
-
 void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posSelBegin, const CharPos &posSelEnd)
 {
     beginInternalChanges();
@@ -1137,7 +1102,6 @@ void QSynEdit::hideCaret()
 
 bool QSynEdit::inSelection(const CharPos &pos) const
 {
-    Q_ASSERT(validInDoc(pos));
     CharPos ptBegin = selBegin();
     CharPos ptEnd = selEnd();
     if ((pos.line >= ptBegin.line) && (pos.line <= ptEnd.line) &&
@@ -2233,7 +2197,7 @@ void QSynEdit::doBreakLine()
               SelectionMode::Normal);
     bool notInComment=true;
     QString trimmedleftLineText=trimLeft(leftLineText);
-    prepareSyntaxerState(*mSyntaxer, mCaretY, trimmedleftLineText, mDocument->getLineSeq(mCaretY));
+    prepareSyntaxerState(mSyntaxer.get(), mCaretY, trimmedleftLineText);
     int indentSpaces = 0;
     if (!mUndoing && mSyntaxer->language() == ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)
             && mSyntaxer->getToken()=="else") {
@@ -2835,13 +2799,18 @@ PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineTex
         oldHandleLastBackSlash = cppSyntaxer->handleLastBackSlash();
         cppSyntaxer->setHandleLastBackSlash(handleLastBackSlash);
     }
-    prepareSyntaxerState(*mSyntaxer, line, newLineText, mDocument->getLineSeq(line));
+    prepareSyntaxerState(mSyntaxer.get(), line, newLineText);
     if (mSyntaxer->language() == ProgrammingLanguage::CPP) {
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(mSyntaxer);
         cppSyntaxer->setHandleLastBackSlash(oldHandleLastBackSlash);
     }
     syntaxer()->nextToEol();
     return syntaxer()->getState();
+}
+
+void QSynEdit::invalidateAllNonTempLineWidth()
+{
+    mDocument->invalidateAllNonTempLineWidth();
 }
 
 int QSynEdit::calcLineAlignedTopPos(int currentValue, bool passFirstLine)
@@ -4848,26 +4817,26 @@ bool QSynEdit::isSpaceChar(const QChar &ch) const
     return mSyntaxer->isSpaceChar(ch);
 }
 
-void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const
+void QSynEdit::prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const
 {
     Q_ASSERT(validLine(lineIndex));
     if (lineIndex == 0) {
-        syntaxer.resetState();
+        syntaxer->resetState();
     } else {
-        syntaxer.setState(mDocument->getSyntaxState(lineIndex-1));
+        syntaxer->setState(mDocument->getSyntaxState(lineIndex-1));
     }
-    syntaxer.setLine(lineIndex, mDocument->getLine(lineIndex), mDocument->getLineSeq(lineIndex));
+    syntaxer->setLine(lineIndex, mDocument->getLine(lineIndex), mDocument->getLineSeq(lineIndex));
 }
 
-void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const
+void QSynEdit::prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex, const QString lineText) const
 {
     Q_ASSERT(validLine(lineIndex));
     if (lineIndex == 0) {
-        syntaxer.resetState();
+        syntaxer->resetState();
     } else {
-        syntaxer.setState(mDocument->getSyntaxState(lineIndex-1));
+        syntaxer->setState(mDocument->getSyntaxState(lineIndex-1));
     }
-    syntaxer.setLine(lineIndex, lineText, lineSeq);
+    syntaxer->setLine(lineIndex, lineText, mDocument->getLineSeq(lineIndex));
 }
 
 

@@ -37,7 +37,7 @@ Syntaxer::Syntaxer() :
                                                                    TokenType::Space);
     addAttribute(mWhitespaceAttribute);
     mSymbolAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSymbol,
-                                                                 TokenType::Operator);
+                                                                 TokenType::Symbol);
     addAttribute(mSymbolAttribute);
 }
 

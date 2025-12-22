@@ -211,7 +211,7 @@ public:
     void deleteToWordStart();
     void deleteToWordEnd();
     void deleteLine();
-    void duplicateLine();
+    void duplicate();
     void deleteToEOL();
     void deleteToBOL();
     void gotoBlockStart();
@@ -266,7 +266,7 @@ private slots:
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
     void onTooltipTimer();
-    void onEndParsing();
+    void onParseFinished();
 
 private:
     void loadContent(const QString& filename);
@@ -397,7 +397,7 @@ private:
     FileType mFileType;
     QString mContextFile;
 
-    QMap<QString,StatementKind> mIdentCache;
+    QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;

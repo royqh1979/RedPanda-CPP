@@ -839,7 +839,7 @@ void QSynEditPainter::paintFoldAttributes()
         // Now loop through all the lines. The indices are valid for Lines.
         for (int row = mFirstRow; row<=mLastRow;row++) {
             int vLine = mEdit->rowToLine(row);
-            if (vLine > mEdit->mDocument->count() && mEdit->mDocument->count() > 0)
+            if (vLine >= mEdit->mDocument->count())
                 break;
             int X;
             // Set vertical coord
@@ -847,17 +847,9 @@ void QSynEditPainter::paintFoldAttributes()
             if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }
-            // Get next nonblank line
-            lastNonBlank = vLine - 1;
-            while (lastNonBlank + 1 < mEdit->mDocument->count() && mEdit->mDocument->getLine(lastNonBlank).isEmpty())
-                lastNonBlank++;
-            if (lastNonBlank>=mEdit->lineCount())
-                continue;
-            lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(lastNonBlank));
-            int braceLevel = mEdit->mDocument->getSyntaxState(lastNonBlank)->braceLevel;
-            int indentLevel = braceLevel ;
+            lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(vLine));
+            int indentLevel = 0 ;
             tabSteps = 0;
-            indentLevel = 0;
             while (tabSteps < lineIndent) {
                 X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
@@ -921,7 +913,7 @@ void QSynEditPainter::paintFoldAttributes()
 
 void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
 {
-    if (attr->tokenType() != TokenType::Operator)
+    if (attr->tokenType() != TokenType::Symbol)
         return;
     PTokenAttribute oldAttr = attr;
     switch(level % 4) {
@@ -1082,7 +1074,7 @@ void QSynEditPainter::paintLines()
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
-        mEdit->prepareSyntaxerState(*(mEdit->mSyntaxer), vLine, sLine, mEdit->lineSeq(vLine));
+        mEdit->prepareSyntaxerState(mEdit->mSyntaxer.get(), vLine, sLine);
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
@@ -1221,9 +1213,9 @@ void QSynEditPainter::paintLines()
                 }
             }
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->beginX-1);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->beginX);
             area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->endX-1);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->endX);
             area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
         }
         //input method

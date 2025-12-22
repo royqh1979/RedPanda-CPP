@@ -49,12 +49,12 @@ void Exporter::clear()
     mLastFG = QGuiApplication::palette().color(QPalette::Text);
 }
 
-void Exporter::exportAll(const PDocument& doc)
+void Exporter::exportAll(const std::shared_ptr<const Document>& doc)
 {
     exportRange(doc, CharPos{1, 1}, CharPos{INT_MAX, INT_MAX});
 }
 
-void Exporter::exportRange(const PDocument& doc, CharPos start, CharPos stop)
+void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos start, CharPos stop)
 {
     // abort if not all necessary conditions are met
     if (!doc || (doc->count() == 0))
@@ -96,7 +96,7 @@ void Exporter::exportRange(const PDocument& doc, CharPos start, CharPos stop)
             PTokenAttribute attri = mSyntaxer->getTokenAttribute();
             int startPos = mSyntaxer->getTokenPos();
             QString token = mSyntaxer->getToken();
-            if (i==start.line && (startPos+token.length()-1 < start.ch)) {
+            if (i==start.line && (startPos+token.length() <= start.ch)) {
                 mSyntaxer->next();
                 continue;
             }
@@ -104,7 +104,7 @@ void Exporter::exportRange(const PDocument& doc, CharPos start, CharPos stop)
                 mSyntaxer->next();
                 continue;
             }
-            if (i==stop.line && (startPos+token.length()-1 > stop.ch)) {
+            if (i==stop.line && (startPos+token.length() > stop.ch )) {
                 token = token.left(stop.ch - startPos);
             }
             if (i==start.line && startPos < start.ch) {

@@ -233,8 +233,6 @@ public:
     QString tokenAt(const CharPos& XY) const;
 
     QChar charAt(const CharPos& pos) const;
-    QChar nextNonSpaceChar(int line, int ch) const;
-    QChar lastNonSpaceChar(int line, int ch) const;
 
     bool inSelection(const CharPos& pos) const;
     CharPos findNextChar(const CharPos &pos, CharType type) const;
@@ -319,11 +317,11 @@ public:
 
     void processCommand(EditCommand Command, QVariant data=QVariant());
 
-    void trimTrailingSpaces() {
-        processCommand(EditCommand::TrimTrailingSpaces);
-    }
 
     //Commands
+    void trimTrailingSpaces() { processCommand(EditCommand::TrimTrailingSpaces); }
+    void clear() { processCommand(EditCommand::ClearAll); }
+
     virtual void cutToClipboard() { processCommand(EditCommand::Cut);}
     virtual void copyToClipboard() { processCommand(EditCommand::Copy);}
     virtual void pasteFromClipboard() { processCommand(EditCommand::Paste);}
@@ -346,9 +344,9 @@ public:
     virtual void moveSelDown(){ processCommand(EditCommand::MoveSelDown);}
 
     virtual CharPos getMatchingBracket();
-    virtual CharPos getMatchingBracketEx(CharPos APoint);
-    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const;
-    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const;
+    virtual CharPos getMatchingBracket(const CharPos &pos);
+    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const;
+    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex, const QString lineText) const;
 
     QStringList content();
     QString text();
@@ -558,6 +556,8 @@ protected:
 
     PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true) const;
     bool dragging() const { return mDragging; }
+
+    void invalidateAllNonTempLineWidth();
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);

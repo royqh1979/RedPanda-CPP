@@ -73,7 +73,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
     ui->editDemo->setUseCodeFolding(true);
-    ui->editDemo->document()->setText(
+    ui->editDemo->setContent(
             "#include <iostream>\n"
             "#include <conio.h>\n"
             "\n"
@@ -95,13 +95,12 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             "}\n"
                 );
     ui->editDemo->setReadOnly(true);
-    ui->editDemo->toggleBreakpoint(11);
-    ui->editDemo->toggleBookmark(9);
-    ui->editDemo->addSyntaxIssues(13, 9, 14, CompileIssueType::Error, "[Error] 'Total' was not declared in this scope; did you mean 'total'?");
-    ui->editDemo->addSyntaxIssues(8, 9, 16, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
-    ui->editDemo->setCaretY(9);
+    ui->editDemo->toggleBreakpoint(10);
+    ui->editDemo->toggleBookmark(8);
+    ui->editDemo->addSyntaxIssues(12, 8, 13, CompileIssueType::Error, "[Error] 'Total' was not declared in this scope; did you mean 'total'?");
+    ui->editDemo->addSyntaxIssues(7, 8, 15, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
     ui->editDemo->setActiveBreakpointFocus(10,false);
-    ui->editDemo->setCaretXY(QSynedit::BufferCoord{1,1});
+    ui->editDemo->setCaretXY(QSynedit::CharPos{0,0});
     ui->editDemo->setFileType(FileType::CppSource);
     //ui->editDemo->reparseDocument();
     //ui->editDemo->invalidate();
