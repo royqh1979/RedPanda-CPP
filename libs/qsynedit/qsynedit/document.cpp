@@ -46,13 +46,8 @@ Document::Document(const QFont& font, QObject *parent):
         std::placeholders::_1,
         std::placeholders::_2,
         std::placeholders::_3);
+    ensureHasLine();
 }
-
-static void listIndexOutOfBounds(int index) {
-    throw IndexOutOfRange(index);
-}
-
-
 
 int Document::parenthesisLevel(int line) const
 {
@@ -161,12 +156,8 @@ QString Document::lineBreak() const
 PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState();
-    } else {
-         listIndexOutOfBounds(line);
-    }
-    return PSyntaxState();
+    Q_ASSERT(line>=0 && line < mLines.size());
+    return mLines[line]->syntaxState();
 }
 
 void Document::insertItem(int line, const QString &s)
@@ -176,6 +167,8 @@ void Document::insertItem(int line, const QString &s)
                 mUpdateDocumentLineWidthFunc);
     documentLine->setLineText(s);
     mLines.insert(line,documentLine);
+    mLineSeqIndice.insert(documentLine->lineSeq(), documentLine);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
     endUpdate();
 }
@@ -186,6 +179,8 @@ void Document::addItem(const QString &s)
     PDocumentLine line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
     line->setLineText(s);
     mLines.append(line);
+    mLineSeqIndice.insert(line->lineSeq(), line);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     endUpdate();
 }
 
@@ -204,36 +199,28 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
 void Document::setSyntaxState(int line, const PSyntaxState& state)
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        listIndexOutOfBounds(line);
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     mLines[line]->setSyntaxState(state);
 }
 
 QString Document::getLine(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return QString();
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->lineText();
 }
 
 size_t Document::getLineSeq(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return 0;
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->lineSeq();
 }
 
 int Document::getLineGlyphsCount(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=mLines.count()) {
-        return 0;
-    }
+    Q_ASSERT(line >=0 && line < mLines.count());
     return mLines[line]->glyphsCount();
 }
 
@@ -261,29 +248,51 @@ QString Document::text() const
 void Document::setText(const QString &text)
 {
     QMutexLocker locker(&mMutex);
-    putTextStr(text);
+    beginUpdate();
+    auto action = finally([this]{
+        endUpdate();
+    });
+    internalClear();
+    if (!text.isEmpty()) {
+        int pos = 0;
+        int start;
+        while (pos < text.length()) {
+            start = pos;
+            while (pos<text.length()) {
+                if (text[pos] == '\r' || text[pos] == '\n') {
+                    break;
+                }
+                pos++;
+            }
+            addItem(text.mid(start,pos-start));
+            if (pos>=text.length())
+                break;
+            if (text[pos] == '\r')
+                pos++;
+            if (text[pos] == '\n')
+                pos++;
+        }
+        mIndexOfLongestLine = -1;
+    }
+    ensureHasLine();
 }
 
 void Document::setContents(const QStringList &text)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
     internalClear();
     if (text.count() > 0) {
-        int FirstAdded = mLines.count();
-
         foreach (const QString& s,text) {
             addItem(s);
         }
         mIndexOfLongestLine = -1;
-        emit inserted(FirstAdded,text.count());
     }
+    ensureHasLine();
+    endUpdate();
 }
 
-QStringList Document::contents() const
+QStringList Document::content() const
 {
     QMutexLocker locker(&mMutex);
     QStringList result;
@@ -297,7 +306,7 @@ QStringList Document::contents() const
 void Document::beginUpdate()
 {
     if (mUpdateCount == 0) {
-        setUpdateState(true);
+        emit changing();
         beginSetLinesWidth();
     }
     mUpdateCount++;
@@ -307,7 +316,7 @@ void Document::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
-        setUpdateState(false);
+        emit changed();
         endSetLinesWidth();
     }
 }
@@ -319,7 +328,6 @@ int Document::addLine(const QString &s)
     beginUpdate();
     int Result = mLines.count();
     insertItem(Result, s);
-    emit inserted(Result,1);
     endUpdate();
     return Result;
 }
@@ -332,12 +340,10 @@ void Document::addLines(const QStringList &strings)
         auto action = finally([this]{
             endUpdate();
         });
-        int FirstAdded = mLines.count();
         for (const QString& s:strings) {
             addItem(s);
         }
         mIndexOfLongestLine = -1;
-        emit inserted(FirstAdded,strings.count());
     }
 }
 
@@ -359,21 +365,18 @@ int Document::getTextLength() const
 void Document::clear()
 {
     QMutexLocker locker(&mMutex);
+    beginUpdate();
     internalClear();
+    ensureHasLine();
+    endUpdate();
 }
 
 void Document::deleteLines(int index, int numLines)
 {
     QMutexLocker locker(&mMutex);
-    if (numLines<=0)
-        return;
-    if ((index < 0) || (index >= mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(numLines>0);
+    Q_ASSERT(index >= 0 && index < mLines.count());
     beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
     if (mIndexOfLongestLine>=index) {
         if (mIndexOfLongestLine <index+numLines) {
             mIndexOfLongestLine = -1;
@@ -385,28 +388,37 @@ void Document::deleteLines(int index, int numLines)
     if (LinesAfter < 0) {
        numLines = mLines.count() - index;
     }
+    for (int i=0;i<numLines;i++) {
+        mLineSeqIndice.remove(mLines[index+i]->lineSeq());
+    }
     mLines.remove(index,numLines);
-    emit deleted(index,numLines);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    ensureHasLine();
+    endUpdate();
 }
 
-void Document::exchange(int index1, int index2)
+void Document::moveLine(int from, int to)
 {
     QMutexLocker locker(&mMutex);
-    if ((index1 < 0) || (index1 >= mLines.count())) {
-        listIndexOutOfBounds(index1);
-    }
-    if ((index2 < 0) || (index2 >= mLines.count())) {
-        listIndexOutOfBounds(index2);
-    }
+    Q_ASSERT(from >= 0 && from < mLines.count());
+    Q_ASSERT(to >= 0 && to < mLines.count());
     beginUpdate();
-    PDocumentLine temp = mLines[index1];
-    mLines[index1]=mLines[index2];
-    mLines[index2]=temp;
-    //mList.swapItemsAt(Index1,Index2);
-    if (mIndexOfLongestLine == index1) {
-        mIndexOfLongestLine = index2;
-    } else if (mIndexOfLongestLine == index2) {
-        mIndexOfLongestLine = index1;
+    PDocumentLine temp = mLines[from];
+    mLines.remove(from);
+    mLines.insert(to, temp);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    if (from<to) {
+        if (mIndexOfLongestLine == from) {
+            mIndexOfLongestLine = to;
+        } else if (from < mIndexOfLongestLine && mIndexOfLongestLine <= to) {
+            --mIndexOfLongestLine;
+        }
+    } else {
+        if (mIndexOfLongestLine == from) {
+            mIndexOfLongestLine = to;
+        } else if (to < mIndexOfLongestLine && mIndexOfLongestLine <= from) {
+            ++mIndexOfLongestLine;
+        }
     }
     endUpdate();
 }
@@ -414,28 +426,25 @@ void Document::exchange(int index1, int index2)
 void Document::insertLine(int index, const QString &s)
 {
     QMutexLocker locker(&mMutex);
-    if ((index < 0) || (index > mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(index>=0 && index<=mLines.count());
     beginUpdate();
     insertItem(index, s);
-    emit inserted(index,1);
     endUpdate();
 }
 
-void Document::deleteAt(int index)
+void Document::deleteLine(int index)
 {
     QMutexLocker locker(&mMutex);
-    if ((index < 0) || (index >= mLines.count())) {
-        listIndexOutOfBounds(index);
-    }
+    Q_ASSERT(index>=0 && index<mLines.count());
     beginUpdate();
     if (mIndexOfLongestLine == index)
         mIndexOfLongestLine = -1;
     else if (mIndexOfLongestLine>index)
         mIndexOfLongestLine -= 1;
+    mLineSeqIndice.remove(mLines[index]->lineSeq());
     mLines.removeAt(index);
-    emit deleted(index,1);
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    ensureHasLine();
     endUpdate();
 }
 
@@ -453,44 +462,27 @@ QString Document::getTextStr() const
     return result;
 }
 
-void Document::putLine(int index, const QString &s, bool notify) {
+void Document::putLine(int index, const QString &s) {
     QMutexLocker locker(&mMutex);
+    Q_ASSERT(index>=0 && index < mLines.count());
     if (index == mLines.count()) {
         addLine(s);
     } else {
-        if (index<0 || index>=mLines.count()) {
-            listIndexOutOfBounds(index);
-        }
-        if (notify)
-            beginUpdate();
+        beginUpdate();
         mLines[index]->setLineText(s);
         if (mIndexOfLongestLine == index) {
             // width is invalidated, so we must recalculate longest line
             mIndexOfLongestLine = -1;
         }
-        if (notify)
-            emit putted(index);
-        if (notify)
-            endUpdate();
+        endUpdate();
     }
-}
-
-void Document::setUpdateState(bool Updating)
-{
-    if (Updating)
-        emit changing();
-    else
-        emit changed();
 }
 
 void Document::insertLines(int index, int numLines)
 {
     QMutexLocker locker(&mMutex);
-    if (index<0 || index>mLines.count()) {
-        listIndexOutOfBounds(index);
-    }
-    if (numLines<=0)
-        return;
+    Q_ASSERT(index>=0 && index<=mLines.count());
+    Q_ASSERT(numLines>0);
     beginUpdate();
     auto action = finally([this]{
         endUpdate();
@@ -498,13 +490,12 @@ void Document::insertLines(int index, int numLines)
     PDocumentLine line;
     mLines.insert(index,numLines,line);
     for (int i=index;i<index+numLines;i++) {
-        line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
-        mLines[i]=line;
+        mLines[i] = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
+        mLineSeqIndice.insert(mLines[i]->lineSeq(), mLines[i]);
     }
+    Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
-    emit inserted(index,numLines);
 }
-
 
 bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
     TextDecoder decoder(encodingName);
@@ -577,16 +568,10 @@ void Document::saveUTF32File(QFile &file, TextEncoder &encoder) const
     file.write(encoder.encodeUnchecked(text));
 }
 
-int Document::findPrevLineBySeq(int startLine, size_t lineSeq) const
+PDocumentLine Document::findLineBySeq(size_t lineSeq) const
 {
-    //starts at 0
-    //-1 not found
     QMutexLocker locker(&mMutex);
-    for (int i = std::min(startLine, mLines.count()-1); i>=0;i--) {
-        if (mLines[i]->lineSeq() == lineSeq)
-            return i;
-    }
-    return -1;
+    return mLineSeqIndice.value(lineSeq);
 }
 
 void Document::setTabSize(int newTabSize)
@@ -614,8 +599,7 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     beginUpdate();
     internalClear();
     auto action = finally([this]{
-        if (mLines.count()>0)
-            emit inserted(0,mLines.count());
+        ensureHasLine();
         endUpdate();
     });
     //test for utf8 / utf 8 bom
@@ -963,7 +947,7 @@ int Document::charToGlyphIndex(int line, int charIdx) const
 
 int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charIdx) const
 {
-    return searchForSegmentIdx(glyphStartCharList, 0, str.length(), charIdx);
+    return searchForSegmentIdx(glyphStartCharList, str.length(), charIdx);
     // if (charIdx>=str.length())
     //     return glyphStartCharList.length();
     // for (int i=0;i<glyphStartCharList.length();i++) {
@@ -1007,7 +991,7 @@ int Document::xposToGlyphIndex(int line, int xpos) const
 
 int Document::xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const
 {
-    return searchForSegmentIdx(glyphPositionList,0,strWidth,xpos);
+    return searchForSegmentIdx(glyphPositionList,strWidth,xpos);
     // if (xpos>=strWidth)
     //     return glyphPositionList.length();
     // for (int i=0;i<glyphPositionList.length();i++) {
@@ -1108,43 +1092,21 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos) con
 
 // }
 
-void Document::putTextStr(const QString &text)
-{
-    beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
-    internalClear();
-    int pos = 0;
-    int start;
-    while (pos < text.length()) {
-        start = pos;
-        while (pos<text.length()) {
-            if (text[pos] == '\r' || text[pos] == '\n') {
-                break;
-            }
-            pos++;
-        }
-        addLine(text.mid(start,pos-start));
-        if (pos>=text.length())
-            break;
-        if (text[pos] == '\r')
-            pos++;
-        if (text[pos] == '\n')
-            pos++;
-    }
-}
 
 void Document::internalClear()
 {
-    if (!mLines.isEmpty()) {
-        beginUpdate();
-        int oldCount = mLines.count();
-        mLines.clear();
-        mIndexOfLongestLine = -1;
-        emit deleted(0,oldCount);
-        endUpdate();
-    }
+    Q_ASSERT(mLines.count() == mLineSeqIndice.count());
+    beginUpdate();
+    mLines.clear();
+    mLineSeqIndice.clear();
+    mIndexOfLongestLine = -1;
+    endUpdate();
+}
+
+void Document::ensureHasLine()
+{
+    if (mLines.isEmpty())
+        insertItem(0,"");
 }
 
 bool Document::lineWidthValid(int line)
@@ -1270,7 +1232,7 @@ void Document::setNewlineType(const NewlineType &fileEndingType)
 bool Document::empty() const
 {
     QMutexLocker locker(&mMutex);
-    return mLines.count()==0;
+    return mLines.count()==1 && mLines[0]->lineText().length()==0;
 }
 
 void Document::invalidateAllLineWidth()
@@ -1384,32 +1346,30 @@ UndoList::UndoList():QObject()
     mLastRestoredItemChangeNumber=0;
 }
 
-void UndoList::addChange(ChangeReason reason, const BufferCoord &startPos,
-                                const BufferCoord &endPos, const QStringList& changeText,
+PUndoItem UndoList::addChange(ChangeReason reason, const CharPos &startPos,
+                                const CharPos &endPos, const QStringList& changeText,
                                 SelectionMode selMode)
 {
-    int changeNumber;
-    if (inBlock()) {
-        changeNumber = mBlockChangeNumber;
-    } else {
-        changeNumber = getNextChangeNumber();
-    }
+    Q_ASSERT(inBlock());
     PUndoItem  newItem = std::make_shared<UndoItem>(
                 reason,
                 selMode,startPos,endPos,changeText,
-                changeNumber);
+                mBlockChangeNumber);
     mItems.append(newItem);
 
     if (reason!=ChangeReason::GroupBreak && !inBlock()) {
         emit addedUndo();
     }
+    return newItem;
 }
 
-void UndoList::restoreChange(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void UndoList::restoreChange(ChangeReason reason, const CharPos &startPos,
+                             const CharPos &endPos, const QStringList &changeText,
+                             SelectionMode selMode, size_t changeNumber)
 {
-    PUndoItem  newItem = std::make_shared<UndoItem>(AReason,
-                                                                  SelMode,AStart,AEnd,ChangeText,
-                                                                  changeNumber);
+    PUndoItem  newItem = std::make_shared<UndoItem>(reason,
+                                                    selMode,startPos,endPos,changeText,
+                                                    changeNumber);
     restoreChange(newItem);
 }
 
@@ -1435,11 +1395,20 @@ void UndoList::addGroupBreak()
     }
 }
 
-void UndoList::beginBlock()
+void UndoList::beginBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
 {
 //    qDebug()<<"begin block";
-    if (mBlockLock==0)
+    if (mBlockLock==0) {
         mBlockChangeNumber = getNextChangeNumber();
+        mCaretInfoBeforeChange.insert(
+                    mBlockChangeNumber,
+                    std::make_shared<CaretAndSelectionInfo>(
+                        caret,
+                        selBegin,
+                        selEnd,
+                        selMode
+                        ));
+    }
     mBlockLock++;
 
 }
@@ -1452,9 +1421,11 @@ void UndoList::clear()
     mLastPoppedItemChangeNumber=0;
     mLastRestoredItemChangeNumber=0;
     mBlockLock=0;
+    mCaretInfoAfterChange.clear();
+    mCaretInfoBeforeChange.clear();
 }
 
-void UndoList::endBlock()
+void UndoList::endBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
 {
 //    qDebug()<<"end block";
     if (mBlockLock > 0) {
@@ -1463,10 +1434,44 @@ void UndoList::endBlock()
             size_t iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
             if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID) {
+                mCaretInfoAfterChange.insert(
+                            iBlockID,
+                            std::make_shared<CaretAndSelectionInfo>(
+                                caret,
+                                selBegin,
+                                selEnd,
+                                selMode
+                                ));
                 emit addedUndo();
             }
         }
     }
+}
+
+PCaretAndSelectionInfo UndoList::caretAndSelBeforeChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoBeforeChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+PCaretAndSelectionInfo UndoList::caretAndSelAfterChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoAfterChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+void UndoList::restoreCaretAndSelInfos(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo, const PCaretAndSelectionInfo &afterInfo)
+{
+    mCaretInfoBeforeChange.insert(changeNumber, beforeInfo);
+    mCaretInfoAfterChange.insert(changeNumber, afterInfo);
+}
+
+void UndoList::removeCaretAndSelInfo(size_t changeNumber)
+{
+    mCaretInfoAfterChange.remove(changeNumber);
+    mCaretInfoBeforeChange.remove(changeNumber);
 }
 
 bool UndoList::inBlock()
@@ -1560,12 +1565,12 @@ SelectionMode UndoItem::changeSelMode() const
     return mChangeSelMode;
 }
 
-BufferCoord UndoItem::changeStartPos() const
+CharPos UndoItem::changeStartPos() const
 {
     return mChangeStartPos;
 }
 
-BufferCoord UndoItem::changeEndPos() const
+CharPos UndoItem::changeEndPos() const
 {
     return mChangeEndPos;
 }
@@ -1581,7 +1586,7 @@ size_t UndoItem::changeNumber() const
 }
 
 UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
-                                 BufferCoord startPos, BufferCoord endPos,
+                                 CharPos startPos, CharPos endPos,
                                  const QStringList& text, int number)
 {
     mChangeReason = reason;
@@ -1606,11 +1611,11 @@ RedoList::RedoList()
 
 }
 
-void RedoList::addRedo(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void RedoList::addRedo(ChangeReason reason, const CharPos &startPos, const CharPos &endPos, const QStringList &changeText, SelectionMode SelMode, size_t changeNumber)
 {
     PUndoItem  newItem = std::make_shared<UndoItem>(
-                AReason,
-                SelMode,AStart,AEnd,ChangeText,
+                reason,
+                SelMode,startPos,endPos,changeText,
                 changeNumber);
     mItems.append(newItem);
 }
@@ -1620,9 +1625,37 @@ void RedoList::addRedo(PUndoItem item)
     mItems.append(item);
 }
 
+void RedoList::addCaretAndSelectionInfo(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo, const PCaretAndSelectionInfo &afterInfo)
+{
+    mCaretInfoBeforeChange.insert(changeNumber, beforeInfo);
+    mCaretInfoAfterChange.insert(changeNumber, afterInfo);
+}
+
+PCaretAndSelectionInfo RedoList::caretAndSelBeforeChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoBeforeChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+PCaretAndSelectionInfo RedoList::caretAndSelAfterChange(size_t changeNumber)
+{
+    PCaretAndSelectionInfo info = mCaretInfoAfterChange.value(changeNumber);
+    Q_ASSERT(info!=nullptr);
+    return info;
+}
+
+void RedoList::removeCaretAndSelInfo(size_t changeNumber)
+{
+    mCaretInfoBeforeChange.remove(changeNumber);
+    mCaretInfoAfterChange.remove(changeNumber);
+}
+
 void RedoList::clear()
 {
     mItems.clear();
+    mCaretInfoAfterChange.clear();
+    mCaretInfoBeforeChange.clear();
 }
 
 ChangeReason RedoList::lastChangeReason()
@@ -1673,9 +1706,9 @@ BinaryFileError::BinaryFileError(const QString& reason):
 
 }
 
-int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int value)
+int searchForSegmentIdx(const QList<int> &segList, int maxVal, int value)
 {
-    if (value<minVal)
+    if (value<0)
         return 0;
     if (value>=maxVal)
         return segList.length();
@@ -1708,8 +1741,8 @@ int GlyphCalculator::updateGlyphStartPositionList(
         QList<int> &glyphStartPositionList, int left, int &right, int &startGlyph, int &endGlyph) const
 {
     right = std::max(0,left);
-    startGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),startChar);
-    endGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),endChar);
+    startGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),startChar);
+    endGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),endChar);
     for (int i=startGlyph;i<endGlyph;i++) {
         int start = glyphStartCharList[i];
         int end;
@@ -1764,10 +1797,10 @@ int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx)
     return segList[idx+1]-segList[idx];
 }
 
-int segmentIntervalStart(const QList<int> &segList, int minVal, int maxVal, int idx)
+int segmentIntervalStart(const QList<int> &segList, int maxVal, int idx)
 {
     if (idx<0)
-        return minVal;
+        return 0;
     if (idx>=segList.length())
         return maxVal;
     return segList[idx];
@@ -1787,6 +1820,14 @@ void GlyphCalculator::setFont(const QFont &newFont)
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
     mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
+}
+
+CaretAndSelectionInfo::CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
+{
+    this->caret=caret;
+    this->selBegin=selBegin;
+    this->selEnd=selEnd;
+    this->selMode = selMode;
 }
 
 }

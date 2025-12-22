@@ -173,10 +173,10 @@ public:
 
 
 signals:
-    void onProgress(const QString& fileName, int total, int current);
+    void progress(const QString& fileName, int total, int current);
     void onBusy();
-    void onStartParsing();
-    void onEndParsing(int total, int updateView);
+    void parseStarted();
+    void parseFinished(int total, int updateView);
 private:
     bool parseFile(const QString& fileName, bool inProject,
                    const QString& contextFilename,

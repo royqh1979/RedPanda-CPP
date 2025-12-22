@@ -145,7 +145,7 @@ QSet<QString> TextSyntaxer::keywords()
     return QSet<QString>();
 }
 
-QString TextSyntaxer::commentSymbol()
+QString TextSyntaxer::lineCommentSymbol()
 {
     return "";
 }

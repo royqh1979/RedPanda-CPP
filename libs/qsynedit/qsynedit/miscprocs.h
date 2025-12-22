@@ -37,14 +37,12 @@ class QColor;
 namespace QSynedit {
 
 int minMax(int x, int mi, int ma);
-BufferCoord maxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
-BufferCoord minBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
 
 int getEOL(const QString& Line, int start);
 
 QStringList splitStrings(const QString& text);
 
-int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
+int calSpanLines(const CharPos& startPos, const CharPos& endPos);
 
 using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
     PTokenAttribute attri, const QString& uniqueAttriName,
@@ -59,36 +57,7 @@ bool enumTokenAttributes(PSyntaxer syntaxer,
 
 FontStyles getFontStyles(const QFont& font);
 
-/**
- * Find the first occurency of word char in s, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findWordChar(const QString& s, int startPos);
+void ensureNotAfter(CharPos& cord1, CharPos& cord2);
 
-/**
- * Find the first occurency of non word char in s, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findNonWordChar(const QString& s, int startPos);
-
-/**
- * Find the first occurency of word char in s right to left, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findLastWordChar(const QString& s, int startPos);
-
-/**
- * Find the first occurency of non word char in s  right to left, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findLastNonWordChar(const QString& s, int startPos);
-
-void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
-
-bool isWordChar(const QChar& ch);
 }
 #endif // MISCPROCS_H

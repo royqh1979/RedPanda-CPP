@@ -1261,13 +1261,13 @@ void MainWindow::removeActiveBreakpoints()
     }
 }
 
-void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
+void MainWindow::setActiveBreakpoint(QString fileName, int line, bool setFocus)
 {
     removeActiveBreakpoints();
     // Then active the current line in the current file
     Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
-        e->setActiveBreakpointFocus(Line,setFocus);
+        e->setActiveBreakpointFocus(line-1,setFocus);
         e->activate(false);
         if (setFocus) {
             activateWindow();
@@ -1718,29 +1718,29 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
             int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
             if (e->selAvail()) {
                 msg = tr("Line: %1/%2 Col: %3 Sel: %4")
-                        .arg(e->caretY())
+                        .arg(e->caretY()+1)
                         .arg(e->lineCount())
                         .arg(col)
                         .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Col: %3")
-                        .arg(e->caretY())
+                        .arg(e->caretY()+1)
                         .arg(e->lineCount())
                         .arg(col);
             }
         } else {
             if (e->selAvail()) {
                 msg = tr("Line: %1/%2 Char: %3/%4 Sel: %5")
-                        .arg(e->caretY())
+                        .arg(e->caretY()+1)
                         .arg(e->lineCount())
-                        .arg(e->caretX())
+                        .arg(e->caretX()+1)
                         .arg(e->lineText().length())
                         .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Char: %3/%4")
-                        .arg(e->caretY())
+                        .arg(e->caretY()+1)
                         .arg(e->lineCount())
-                        .arg(e->caretX())
+                        .arg(e->caretX()+1)
                         .arg(e->lineText().length());
             }
         }
@@ -3591,7 +3591,7 @@ void MainWindow::loadLastOpens()
         if (!fileExists(editorFilename))
             continue;
         bool onLeft = fileObj["onLeft"].toBool();
-        QSynedit::BufferCoord pos;
+        QSynedit::CharPos pos;
         pos.ch = fileObj["caretX"].toInt(1);
         pos.line = fileObj["caretY"].toInt(1);
         QByteArray encoding;
@@ -3636,6 +3636,7 @@ void MainWindow::loadLastOpens()
         if (isReadOnly!=editor->readOnly()) {
             editor->setReadOnly(isReadOnly);
         }
+        pos = editor->ensureCharPosValid(pos);
         editor->setCaretXY(pos);
         editor->setTopPos(
                     fileObj["top"].toInt(1)
@@ -4999,7 +5000,7 @@ void MainWindow::onClassBrowserGotoDeclaration()
     line = statement->line;
     Editor* e=openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(line,1);
+        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line});
     }
 }
 
@@ -5021,7 +5022,7 @@ void MainWindow::onClassBrowserGotoDefinition()
     line = statement->definitionLine;
     Editor* e=openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(line,1);
+        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line});
     }
 }
 
@@ -5256,7 +5257,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     FileType fileType=getFileType(editor->filename());
     bool canDebug = isC_CPP_ASMSourceFile(fileType);
     QMenu menu(this);
-    QSynedit::BufferCoord p;
+    QSynedit::CharPos p;
     int line;
     if (editor->getPositionOfMouse(p)) {
         if (!editor->getLineOfMouse(line))
@@ -5634,9 +5635,9 @@ void MainWindow::onFileChanged(const QString &path)
                                       QMessageBox::No) == QMessageBox::Yes) {
                 try {
                     int top = e->topPos();
-                    QSynedit::BufferCoord caretPos = e->caretXY();
+                    QSynedit::CharPos caretPos = e->caretXY();
                     e->loadFile();
-                    e->setCaretPositionAndActivate(caretPos.line,1);
+                    e->setCaretPositionAndActivate(QSynedit::CharPos{0,caretPos.line});
                     e->setTopPos(top);
                 } catch(FileError e) {
                     QMessageBox::critical(this,tr("Error"),e.reason());
@@ -6060,13 +6061,13 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
     if (issue->type == CompileIssueType::Error || issue->type ==
             CompileIssueType::Warning) {
         Editor* e = mEditorList->getOpenedEditorByFilename(issue->filename);
-        if (e!=nullptr && (issue->line>0)) {
+        if (e!=nullptr && (issue->line>=0)) {
             int line = issue->line;
             if (line > e->lineCount())
                 return;
-            int col = std::min(issue->column,e->lineText(line).length()+1);
-            if (col < 1)
-                col = e->lineText(line).length()+1;
+            int col = std::min(issue->column,e->lineText(line).length());
+            if (col < 0)
+                col = e->lineText(line).length();
             e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
@@ -6188,9 +6189,9 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                         editor->setReadOnly(true);
                         updateEditorActions(editor);
                         int line = e->caretY();
-                        int startLine = 1;
+                        int startLine = 0;
                         QString s = "# "+e->filename()+":";
-                        for(int i=1;i<=editor->lineCount();i++) {
+                        for(int i=0;i<editor->lineCount();i++) {
                             QString t=editor->lineText(i).trimmed();
                             if (t.startsWith(s,PATH_SENSITIVITY)) {
                                 t=t.mid(s.length());
@@ -6208,7 +6209,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                                 }
                             }
                         }
-                        editor->setCaretPositionAndActivate(startLine,1);
+                        editor->setCaretPositionAndActivate(QSynedit::CharPos{0,startLine});
                     }
                     break;
                 case MainWindow::CompileSuccessionTaskType::RunProblemCases:
@@ -6494,7 +6495,7 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
     if (editor == nullptr)
         return;
 
-    editor->setCaretPositionAndActivate(issue->line,issue->column);
+    editor->setCaretPositionAndActivate(QSynedit::CharPos{issue->column,issue->line});
 }
 
 void MainWindow::on_actionEncode_in_ANSI_triggered()
@@ -6737,12 +6738,12 @@ void MainWindow::onParserProgress(const QString &fileName, int total, int curren
     }
 }
 
-void MainWindow::onStartParsing()
+void MainWindow::onParseStarted()
 {
     mParserTimer.restart();
 }
 
-void MainWindow::onEndParsing(int total, int)
+void MainWindow::onParseFinished(int total, int)
 {
     double parseTime = mParserTimer.elapsed() / 1000.0;
     double parsingFrequency;
@@ -6989,7 +6990,7 @@ void MainWindow::on_actionBack_triggered()
     const PEditorCaret &caret = mCaretList.gotoAndGetPrevious();
     mCaretList.pause();
     if (caret) {
-        caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
+        caret->editor->setCaretPositionAndActivate(QSynedit::CharPos{caret->aChar,caret->line});
     }
     mCaretList.unPause();
     updateCaretActions();
@@ -7001,7 +7002,7 @@ void MainWindow::on_actionForward_triggered()
     const PEditorCaret &caret = mCaretList.gotoAndGetNext();
     mCaretList.pause();
     if (caret) {
-        caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
+        caret->editor->setCaretPositionAndActivate(QSynedit::CharPos{caret->aChar,caret->line});
     }
     mCaretList.unPause();
     updateCaretActions();
@@ -7181,7 +7182,7 @@ void MainWindow::on_searchView_doubleClicked(const QModelIndex &index)
                 index,filename,line,start)) {
         Editor *e = openFile(filename);
         if (e) {
-            e->setCaretPositionAndActivate(line,start);
+            e->setCaretPositionAndActivate(QSynedit::CharPos{start,line});
         }
     }
 }
@@ -7201,7 +7202,7 @@ void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
     if (breakpoint) {
         Editor * e = openFile(breakpoint->filename);
         if (e) {
-            e->setCaretPositionAndActivate(breakpoint->line,1);
+            e->setCaretPositionAndActivate(QSynedit::CharPos{0,breakpoint->line});
         }
     }
 }
@@ -7553,7 +7554,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
     Editor* e = openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(line,1);
+        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line-1});
     }
 }
 
@@ -8343,7 +8344,7 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
     if (item) {
         Editor * editor = mEditorList->getOpenedEditorByFilename(item->filename);
         if (editor) {
-            editor->setCaretPositionAndActivate(item->lineNo,item->ch+1);
+            editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->lineNo});
         }
     }
 }
@@ -8364,7 +8365,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!editor->parser())
         return;
     editor->beginEditing();
-    QSynedit::BufferCoord oldCaretXY = editor->caretXY();
+    QSynedit::CharPos oldCaret = editor->caretXY();
     //    mClassBrowserModel->beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
@@ -8374,9 +8375,9 @@ void MainWindow::on_actionRename_Symbol_triggered()
         editor->setCursor(oldCursor);
     });
 
-    QStringList expression = editor->getExpressionAtPosition(oldCaretXY);
-    if (expression.isEmpty() && oldCaretXY.ch>1) {
-        QSynedit::BufferCoord coord=oldCaretXY;
+    QStringList expression = editor->getExpressionAtPosition(oldCaret);
+    if (expression.isEmpty() && oldCaret.ch>=0) {
+        QSynedit::CharPos coord=oldCaret;
         coord.ch--;
         expression = editor->getExpressionAtPosition(coord);
     }
@@ -8394,7 +8395,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
         PStatement oldStatement = editor->parser()->findStatementOf(
                         editor->filename(),
                         expression,
-                        oldCaretXY.line);
+                        oldCaret.line);
         // definition of the symbol not found
         if (!oldStatement)
             return;
@@ -8410,7 +8411,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
                 return;
             }
             CppRefacter refactor;
-            refactor.findOccurence(editor,oldCaretXY);
+            refactor.findOccurence(editor,oldCaret);
             showSearchPanel(true);
             return;
         }
@@ -8420,7 +8421,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     PStatement oldStatement = editor->parser()->findStatementOf(
                     editor->filename(),
                     expression,
-                    oldCaretXY.line);
+                    oldCaret.line);
     bool isUndefinedLocalVar = false;
     if (!oldStatement) {
         if (expression.length()!=1)
@@ -8454,9 +8455,9 @@ void MainWindow::on_actionRename_Symbol_triggered()
     CppRefacter refactor;
 
     if (isUndefinedLocalVar) {
-        refactor.renameUndefinedLocalVariable(editor,oldCaretXY,newWord);
+        refactor.renameUndefinedLocalVariable(editor,oldCaret,newWord);
     } else {
-        refactor.renameSymbol(editor,oldCaretXY,newWord);
+        refactor.renameSymbol(editor,oldCaret,newWord);
     }
     editor->reparse(true);
     editor->checkSyntaxInBack();
@@ -8636,7 +8637,6 @@ void MainWindow::on_btnReplace_clicked()
         std::shared_ptr<Editor> pEditor;
         if (editor) {
             editor->clearSelection();
-            editor->addGroupBreak();
             editor->beginEditing();
         } else {
             needSave=true;
@@ -8645,7 +8645,7 @@ void MainWindow::on_btnReplace_clicked()
             QByteArray encoding;
             editor->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
             try {
-                editor->document()->loadFromFile(file->filename,ENCODING_AUTO_DETECT,encoding);
+                editor->loadFromFile(file->filename,ENCODING_AUTO_DETECT,encoding);
             } catch(FileError e) {
                 QMessageBox::critical(this,
                                       tr("Replace Error"),
@@ -8812,7 +8812,7 @@ void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
     if (bookmark) {
         Editor *editor= openFile(bookmark->filename);
         if (editor) {
-            editor->setCaretPositionAndActivate(bookmark->line,1);
+            editor->setCaretPositionAndActivate(QSynedit::CharPos{0,bookmark->line});
         }
     }
 }
@@ -9142,7 +9142,7 @@ void MainWindow::switchCurrentStackTrace(int idx)
     if (trace) {
         Editor *e = openFile(trace->filename);
         if (e) {
-            e->setCaretPositionAndActivate(trace->line,1);
+            e->setCaretPositionAndActivate(QSynedit::CharPos{0,trace->line});
         }
         mDebugger->selectFrame(trace);
         mDebugger->refreshStackVariables();
@@ -9295,7 +9295,7 @@ void MainWindow::on_actionDuplicate_Line_triggered()
 {
     Editor *e=mEditorList->getEditor();
     if (e) {
-        e->duplicateLine();
+        e->duplicate();
     }
 }
 
@@ -10103,11 +10103,11 @@ void MainWindow::on_actionGo_to_Line_triggered()
     if (!e)
         return;
     bool ok;
-    int lineNo=QInputDialog::getInt(e,tr("Go to Line"),tr("Line"),
+    int line=QInputDialog::getInt(e,tr("Go to Line"),tr("Line"),
                                     e->caretY(),1,e->lineCount(),
-                                    1,&ok);
-    if (ok && lineNo!=e->caretY()) {
-        e->setCaretPosition(lineNo,1);
+                                    1,&ok) - 1; //editor line starts with 0
+    if (ok && line!=e->caretY()) {
+        e->setCaretPosition(QSynedit::CharPos{0,line});
         e->setFocus();
     }
 }

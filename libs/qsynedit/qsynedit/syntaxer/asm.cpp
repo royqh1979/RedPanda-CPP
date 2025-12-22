@@ -1513,6 +1513,7 @@ ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextC
 
 bool ASMSyntaxer::isCommentStartChar(QChar ch)
 {
+    Q_UNUSED(ch);
     return false;
 }
 
@@ -1736,7 +1737,7 @@ const PTokenAttribute &ASMSyntaxer::labelAttribute() const
     return mLabelAttribute;
 }
 
-QString ASMSyntaxer::commentSymbol()
+QString ASMSyntaxer::lineCommentSymbol()
 {
     return "#";
 }

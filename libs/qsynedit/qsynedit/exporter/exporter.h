@@ -55,7 +55,7 @@ public:
      * @brief Exports everything in the strings parameter to the output buffer.
      * @param doc
      */
-    void exportAll(const PDocument& doc);
+    void exportAll(const std::shared_ptr<const Document>& doc);
 
     /**
      * @brief Exports the given range of the strings parameter to the output buffer.
@@ -63,8 +63,8 @@ public:
      * @param start
      * @param stop
      */
-    void exportRange(const PDocument& doc,
-                     BufferCoord start, BufferCoord stop);
+    void exportRange(const std::shared_ptr<const Document>& doc,
+                     CharPos start, CharPos stop);
     /**
      * @brief Saves the contents of the output buffer to a file.
      * @param AFileName

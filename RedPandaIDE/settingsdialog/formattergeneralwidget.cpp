@@ -329,7 +329,7 @@ void FormatterGeneralWidget::updateDemo()
 {
     const QString &astyle = pSettings->environment().AStylePath();
     if (!fileExists(astyle)) {
-        ui->editDemo->document()->setText(Editor::tr("Can't find astyle in \"%1\".").arg(astyle));
+        ui->editDemo->setContent(Editor::tr("Can't find astyle in \"%1\".").arg(astyle));
         return;
     }
     QFile file(":/codes/formatdemo.cpp");
@@ -352,7 +352,7 @@ void FormatterGeneralWidget::updateDemo()
 #endif
     }
     display += newContent;
-    ui->editDemo->document()->setText(display);
+    ui->editDemo->setContent(display);
 }
 
 void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format)

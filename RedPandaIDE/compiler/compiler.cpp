@@ -268,9 +268,9 @@ void Compiler::processOutput(QString &line)
     if (line.startsWith(inFilePrefix)) {
         line.remove(0,inFilePrefix.length());
         issue->filename = getFileNameFromOutputLine(line);
-        issue->line = getLineNumberFromOutputLine(line);
-        if (issue->line > 0)
-            issue->column = getColunmnFromOutputLine(line);
+        issue->line = getLineNumberFromOutputLine(line) - 1; // editor line starts from 0, gdb line starts from 1
+        if (issue->line >= 0)
+            issue->column = getColunmnFromOutputLine(line) - 1; // editor ch starts from 0, gdb col starts from 1
         issue->type = getIssueTypeFromOutputLine(line);
         issue->description = inFilePrefix + issue->filename;
         emit compileIssue(issue);
@@ -278,9 +278,9 @@ void Compiler::processOutput(QString &line)
     } else if(line.startsWith(fromPrefix)) {
         line.remove(0,fromPrefix.length());
         issue->filename = getFileNameFromOutputLine(line);
-        issue->line = getLineNumberFromOutputLine(line);
-        if (issue->line > 0)
-            issue->column = getColunmnFromOutputLine(line);
+        issue->line = getLineNumberFromOutputLine(line) - 1; // editor line starts from 0, gdb line starts from 1
+        if (issue->line >= 0)
+            issue->column = getColunmnFromOutputLine(line) - 1; // editor ch starts from 0, gdb col starts from 1
         issue->type = getIssueTypeFromOutputLine(line);
         issue->description = "                 from " + issue->filename;
         emit compileIssue(issue);
@@ -322,9 +322,9 @@ void Compiler::processOutput(QString &line)
 
     // assume regular main.cpp:line:col: message
     issue->filename = getFileNameFromOutputLine(line);
-    issue->line = getLineNumberFromOutputLine(line);
-    if (issue->line > 0) {
-        issue->column = getColunmnFromOutputLine(line);
+    issue->line = getLineNumberFromOutputLine(line) - 1; // editor line starts from 0, gdb line starts from 1
+    if (issue->line >= 0) {
+        issue->column = getColunmnFromOutputLine(line) - 1; // editor ch starts from 0, gdb col starts from 1
         issue->type = getIssueTypeFromOutputLine(line);
         if (issue->column<=0 && issue->type == CompileIssueType::Other) {
             issue->type = CompileIssueType::Error; //linkage error
@@ -335,9 +335,9 @@ void Compiler::processOutput(QString &line)
         issue->type = getIssueTypeFromOutputLine(line);
     }
     issue->description = line.trimmed();
-    if (issue->line<=0 && (issue->filename=="ld" || issue->filename=="lld")) {
+    if (issue->line<0 && (issue->filename=="ld" || issue->filename=="lld")) {
         mLastIssue = issue;
-    } else if (issue->line<=0) {
+    } else if (issue->line<0) {
         emit compileIssue(issue);
     } else
         mLastIssue = issue;

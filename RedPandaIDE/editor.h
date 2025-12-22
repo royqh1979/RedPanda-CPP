@@ -167,8 +167,8 @@ public:
     void cutToClipboard() override;
     void copyAsHTML();
 
-    void setCaretPosition(int line,int aChar);
-    void setCaretPositionAndActivate(int line,int aChar);
+    void setCaretPosition(const QSynedit::CharPos & pos);
+    void setCaretPositionAndActivate(const QSynedit::CharPos & pos);
 
     void addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString& hint);
     void clearSyntaxIssues();
@@ -177,8 +177,7 @@ public:
     bool hasPrevSyntaxIssue() const;
     bool hasNextSyntaxIssue() const;
     PSyntaxIssueList getSyntaxIssuesAtLine(int line);
-    PSyntaxIssue getSyntaxIssueAtPosition(const QSynedit::BufferCoord& pos);
-    int gutterClickedLine() const;
+    PSyntaxIssue getSyntaxIssueAtPosition(const QSynedit::CharPos& pos);
     void toggleBreakpoint(int line);
     void clearBreakpoints();
     bool hasBreakpoint(int line);
@@ -190,14 +189,14 @@ public:
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
-    QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p,
+    QString getPreviousWordAtPositionForSuggestion(const QSynedit::CharPos& p,
                                                    QSynedit::TokenType &tokenType);
-    QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord& p);
+    QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::CharPos& p) const;
     void reformat(bool doReparse=true);
     void replaceContent(const QString &newContent, bool doReparse=true);
     void checkSyntaxInBack();
-    void gotoDeclaration(const QSynedit::BufferCoord& pos);
-    void gotoDefinition(const QSynedit::BufferCoord& pos);
+    void gotoDeclaration(const QSynedit::CharPos& pos);
+    void gotoDefinition(const QSynedit::CharPos& pos);
     void reparse(bool resetParser);
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
@@ -207,13 +206,12 @@ public:
     void exportAsHTML(const QString& htmlFilename);
     void resetBreakpoints();
     bool notParsed();
-    void insertLine();
     void breakLine();
     void deleteWord();
     void deleteToWordStart();
     void deleteToWordEnd();
     void deleteLine();
-    void duplicateLine();
+    void duplicate();
     void deleteToEOL();
     void deleteToBOL();
     void gotoBlockStart();
@@ -221,12 +219,12 @@ public:
     void showCodeCompletion();
 
     QStringList getOwnerExpressionAndMemberAtPositionForCompletion(
-            const QSynedit::BufferCoord& pos,
+            const QSynedit::CharPos& pos,
             QString& memberOperator,
             QStringList& memberExpression);
-    QString getWordForCompletionSearch(const QSynedit::BufferCoord& pos,bool permitTilde);
+    QString getWordForCompletionSearch(const QSynedit::CharPos& pos,bool permitTilde);
     QStringList getExpressionAtPosition(
-            const QSynedit::BufferCoord& pos);
+            const QSynedit::CharPos& pos);
     void resetBookmarks();
 
     const PCppParser &parser() const;
@@ -268,7 +266,7 @@ private slots:
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
     void onTooltipTimer();
-    void onEndParsing();
+    void onParseFinished();
 
 private:
     void loadContent(const QString& filename);
@@ -294,7 +292,7 @@ private:
     bool handleCodeCompletion(QChar key);
     void initParser();
     ParserLanguage calcParserLanguage();
-    void undoSymbolCompletion(int pos);
+    void undoSymbolCompletion(const QSynedit::CharPos &pos);
     QuoteStatus getQuoteStatus();
 
     void showCompletion(const QString& preWord, bool autoComplete, CodeCompletionType type);
@@ -304,7 +302,7 @@ private:
     void saveAutoBackup();
     void cleanAutoBackup();
 
-    bool testInFunc(const QSynedit::BufferCoord& pos);
+    bool testInFunc(const QSynedit::CharPos& pos);
 
     void completionInsert(bool appendFunc=false);
 
@@ -314,10 +312,10 @@ private:
     bool onHeaderCompletionKeyPressed(QKeyEvent* event);
     bool onCompletionInputMethod(QInputMethodEvent *event);
 
-    TipType getTipType(QPoint point, QSynedit::BufferCoord& pos);
+    TipType getTipType(QPoint point, QSynedit::CharPos& pos);
     void cancelHint();
     QString getHeaderFileHint(const QString& s, bool fromNext);
-    QString getParserHint(const QStringList& expression, const QSynedit::BufferCoord& p);
+    QString getParserHint(const QStringList& expression, const QSynedit::CharPos& p);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement,
@@ -338,7 +336,9 @@ private:
     Editor* openFileInContext(const QString& filename);
     bool needReparse();
 
-    PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::BufferCoord& p);
+    PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::CharPos& p);
+
+    int previousIdChars(const QSynedit::CharPos &pos);
 
 private:
     bool mInited;
@@ -361,7 +361,6 @@ private:
     QColor mCurrentHighlighWordBackground;
     int mSyntaxErrorLine;
     int mLineCount;
-    int mGutterClickedLine;
     QSet<int> mBreakpointLines;
     QSet<int> mBookmarkLines;
     int mActiveBreakpointLine;
@@ -386,8 +385,8 @@ private:
     QString mLineBeforeTabStop;
     QString mLineAfterTabStop;
     QList<PTabStop> mUserCodeInTabStops;
-    QSynedit::BufferCoord mHighlightCharPos1;
-    QSynedit::BufferCoord mHighlightCharPos2;
+    QSynedit::CharPos mHighlightCharPos1;
+    QSynedit::CharPos mHighlightCharPos2;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
     QTimer mAutoBackupTimer;
@@ -398,7 +397,7 @@ private:
     FileType mFileType;
     QString mContextFile;
 
-    QMap<QString,StatementKind> mIdentCache;
+    QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
@@ -454,9 +453,9 @@ protected:
 };
 
 QString getWordAtPosition(QSynedit::QSynEdit* editor,
-                          const QSynedit::BufferCoord& p,
-                          QSynedit::BufferCoord& pWordBegin,
-                          QSynedit::BufferCoord& pWordEnd,
+                          const QSynedit::CharPos& p,
+                          QSynedit::CharPos& pWordBegin,
+                          QSynedit::CharPos& pWordEnd,
                           Editor::WordPurpose purpose);
 
 

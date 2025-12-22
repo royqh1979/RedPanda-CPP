@@ -247,13 +247,14 @@ public:
 
     bool supportBraceLevel() override;
 
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
     virtual bool supportFolding() override;
     virtual bool needsLineState() override;
     bool handleLastBackSlash() const;
     void setHandleLastBackSlash(bool newHandleLastBackSlash);
+    bool isSpaceChar(const QChar& ch) const override { return ch == ' ' || ch == '\t'; }
 };
 
 }

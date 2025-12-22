@@ -54,14 +54,14 @@ void FilePropertiesDialog::calcFile(Editor *editor,
     charCounts = 0;
     int lineBreakerLen = QString(LINE_BREAKER).length();
     // iterate through all lines of file
-    for (int i=1;i<=editor->lineCount();i++) {
+    for (int i=0;i<editor->lineCount();i++) {
         QString line = editor->lineText(i);
         charCounts+=line.length()+lineBreakerLen;
 //        while (j<line.length() && (line[j]=='\t' || line[j]==' '))
 //            j++;
         QString token;
         QSynedit::PTokenAttribute attr;
-        if (editor->getTokenAttriAtRowCol(QSynedit::BufferCoord{1,i},
+        if (editor->getTokenAttriAtRowCol(QSynedit::CharPos{0,i},
                                                 token,attr)) {
             // if it is preprocessor...
             if (attr->name() == SYNS_AttrPreprocessor) {

@@ -42,7 +42,7 @@ enum class EditCaretType {
     VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
 };
 
-enum class StatusChange {
+enum StatusChange {
     None = 0,
     AllCleared = 0x0001,
     CaretX = 0x0002,
@@ -53,7 +53,7 @@ enum class StatusChange {
     ModifyChanged = 0x0040,
     Selection = 0x0080,
     ReadOnlyChanged = 0x0100,
-    Modified = 0x0200
+    Modified = 0x0200,
 };
 
 Q_DECLARE_FLAGS(StatusChanges, StatusChange)
@@ -140,10 +140,16 @@ class RedoList;
 using PUndoList = std::shared_ptr<UndoList>;
 using PRedoList = std::shared_ptr<RedoList>;
 
+enum class ChangeReason;
+
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
+    enum  class CharType {
+        SpaceChar,
+        NonSpaceChar
+    };
     explicit QSynEdit(QWidget* parent=nullptr);
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;
@@ -169,8 +175,8 @@ public:
     int displayY() const {
         return displayXY().row;
     }
-    BufferCoord caretXY() const {
-        return BufferCoord{caretX(),caretY()};
+    CharPos caretXY() const {
+        return CharPos{caretX(),caretY()};
     }
     int caretX() const {
         return mCaretX;
@@ -181,7 +187,7 @@ public:
 
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
-    void invalidateGutterLines(int FirstLine, int LastLine);
+    void invalidateGutterLines(int startLine, int endLine);
 
     int yposToRow(int y) const {
         return std::max(1, ((y + mTopPos) / mTextHeight) + 1 );
@@ -190,19 +196,19 @@ public:
     DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
     DisplayCoord pixelsToGlyphPos(int aX, int aY) const;
     QPoint displayCoordToPixels(const DisplayCoord& coord) const;
-    DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
-    BufferCoord displayToBufferPos(const DisplayCoord& p) const;
+    DisplayCoord bufferToDisplayPos(const CharPos& p) const;
+    CharPos displayToBufferPos(const DisplayCoord& p) const;
 
     //normalized buffer coord operations
-//    ContentsCoord fromBufferCoord(const BufferCoord& p) const;
-//    ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
+//    ContentsCoord fromCharPos(const CharPos& p) const;
+//    ContentsCoord createNormalizedCharPos(int aChar,int aLine) const;
 //    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& line) const;
-    QString GetLeftSpacing(int charCount,bool wantTabs) const;
-    int charToGlyphLeft(int line, int charPos) const;
-    int charToGlyphLeft(int line, const QString& s, int charPos) const;
+    QString genSpaces(int charCount) const;
+    int charToGlyphLeft(int line, int ch) const;
+    int charToGlyphLeft(int line, const QString& s, int ch) const;
     //int charToColumn(const QString& s, int aChar) const;
     int xposToGlyphStartChar(int line, int xpos) const;
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
@@ -217,28 +223,36 @@ public:
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
     void invalidateLine(int line);
-    void invalidateLines(int firstLine, int lastLine);
+    void invalidateLines(int startLine, int endLine);
     void invalidateSelection();
     void invalidateRect(const QRect& rect);
     void invalidate();
     bool selAvail() const;
     bool colSelAvail() const;
     QString wordAtCursor() const;
-    QString wordAtRowCol(const BufferCoord& XY) const;
+    QString tokenAt(const CharPos& XY) const;
 
-    QChar charAt(const BufferCoord& pos) const;
-    QChar nextNonSpaceChar(int line, int ch) const;
-    QChar lastNonSpaceChar(int line, int ch) const;
+    QChar charAt(const CharPos& pos) const;
 
-    bool isPointInSelection(const BufferCoord& pos) const;
-    BufferCoord nextWordPos();
-    BufferCoord nextWordPos(const BufferCoord& pos);
-    BufferCoord wordStart();
-    BufferCoord wordStart(const BufferCoord& pos);
-    BufferCoord wordEnd();
-    BufferCoord wordEnd(const BufferCoord& pos);
-    BufferCoord prevWordPos();
-    BufferCoord prevWordPos(const BufferCoord& pos);
+    bool inSelection(const CharPos& pos) const;
+    CharPos findNextChar(const CharPos &pos, CharType type) const;
+    CharPos findPrevChar(const CharPos &pos, CharType type) const;
+    CharPos nextSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::SpaceChar); }
+    CharPos nextNonSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::NonSpaceChar); }
+    CharPos prevSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::SpaceChar); }
+    CharPos prevNonSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::NonSpaceChar); }
+
+    bool inWord(const CharPos& pos) const;
+
+    CharPos getTokenBegin(const CharPos& pos) const;
+    CharPos getTokenEnd(const CharPos& pos) const;
+
+    CharPos prevWordBegin(CharPos) const;
+    CharPos prevWordEnd(const CharPos &pos) const;
+    CharPos nextWordBegin(const CharPos & pos) const;
+    CharPos nextWordEnd(const CharPos &pos) const;
+    CharPos fileBegin() const { return CharPos{0,0}; }
+    CharPos fileEnd() const;
 
     //Caret
     void showCaret();
@@ -249,11 +263,11 @@ public:
     void setCaretY(int line) {
         setCaretXY({mCaretX,line});
     }
-    void setCaretXY(const BufferCoord& pos);
-    void setCaretXYCentered(const BufferCoord& pos);
-    void setCaretAndSelection(const BufferCoord& posCaret,
-                              const BufferCoord& posSelBegin,
-                              const BufferCoord& posSelEnd);
+    void setCaretXY(const CharPos& pos);
+    void setCaretXYCentered(const CharPos& pos);
+    void setCaretAndSelection(const CharPos& posCaret,
+                              const CharPos& posSelBegin,
+                              const CharPos& posSelEnd);
 
     bool inputMethodOn() const {
         return !mInputPreeditString.isEmpty();
@@ -262,7 +276,16 @@ public:
     void collapseAll();
     void unCollpaseAll();
     void uncollapseAroundLine(int line);
-    PCodeFoldingRange foldHidesLine(int line);
+    void uncollapseAroundLines(int startLine, int count);
+    bool collapse(int fromLine, int toLine);
+    bool uncollapase(int fromLine, int toLine);
+#ifdef QSYNEDIT_TEST
+    int codeBlockCount() const;
+    bool hasCodeBlock(int fromLine, int toLine) const; // for testing
+    int subBlockCounts(int fromLine, int toLine) const;
+    bool isCollapsed(int fromLine, int toLine) const;
+#endif
+    PCodeBlock foldHidesLine(int line);
     void setSelLength(int len);
     void setSelText(const QString& text);
 
@@ -274,26 +297,31 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
-      PTokenAttribute& attri);
-    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
-      PTokenAttribute& attri, PSyntaxState &syntaxState);
-    bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
-      int &start, PTokenAttribute& attri);
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+      PTokenAttribute& attri) const;
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+      PTokenAttribute& attri, PSyntaxState &syntaxState) const;
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+      int &start, PTokenAttribute& attri) const;
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+      int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
 
-    void addGroupBreak();
+    void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri);
+
     void beginEditing();
     void endEditing();
-    void beginSetting();
-    void endSetting();
+    bool editing() const {return mEditingCount!=0;} // for testing
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
-    void trimTrailingSpaces() {
-        processCommand(EditCommand::TrimTrailingSpaces);
-    }
+
+    void processCommand(EditCommand Command, QVariant data=QVariant());
+
 
     //Commands
+    void trimTrailingSpaces() { processCommand(EditCommand::TrimTrailingSpaces); }
+    void clear() { processCommand(EditCommand::ClearAll); }
+
     virtual void cutToClipboard() { processCommand(EditCommand::Cut);}
     virtual void copyToClipboard() { processCommand(EditCommand::Copy);}
     virtual void pasteFromClipboard() { processCommand(EditCommand::Paste);}
@@ -315,20 +343,25 @@ public:
     virtual void moveSelUp(){ processCommand(EditCommand::MoveSelUp);}
     virtual void moveSelDown(){ processCommand(EditCommand::MoveSelDown);}
 
-    virtual BufferCoord getMatchingBracket();
-    virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
-    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const;
-    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const;
+    virtual CharPos getMatchingBracket();
+    virtual CharPos getMatchingBracket(const CharPos &pos);
+    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const;
+    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex, const QString lineText) const;
 
-    QStringList contents();
+    QStringList content();
     QString text();
 
-    bool getPositionOfMouse(BufferCoord& aPos) const;
+    CharPos ensureCharPosValid(const CharPos& coord) const;
+    bool validLine(int line) const;
+    bool validInDoc(int line, int ch) const;
+    bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
+    bool getPositionOfMouse(CharPos& aPos) const;
     bool getLineOfMouse(int& line) const;
-    bool pointToCharLine(const QPoint& point, BufferCoord& coord) const;
+    bool pointToCharLine(const QPoint& point, CharPos& coord) const;
     bool pointToLine(const QPoint& point, int& line) const;
     bool isIdentChar(const QChar& ch) const;
     bool isIdentStartChar(const QChar& ch) const;
+    bool isSpaceChar(const QChar& ch) const;
 
     void setRainbowAttrs(const PTokenAttribute &attr0,
                          const PTokenAttribute &attr1,
@@ -348,14 +381,15 @@ public:
     int leftPos() const;
     void setLeftPos(int value);
 
-    BufferCoord blockBegin() const;
-    BufferCoord blockEnd() const;
+    const CharPos &selBegin() const;
+    const CharPos &selEnd() const;
     int selectionBeginLine() const;
     int selectionEndLine() const;
 
     void clearSelection();
-    void setBlockBegin(BufferCoord value);
-    void setBlockEnd(BufferCoord Value);
+    void setSelBegin(const CharPos &value);
+    void setSelEnd(const CharPos &value);
+    void setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos);
 
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);
@@ -385,18 +419,22 @@ public:
     QString displayLineText();
     QString lineText() const;
     QString lineText(int line) const;
-    void setLineText(const QString s);
     size_t lineSeq(int line) const;
 
-    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
+    bool findLineTextBySeq(size_t lineSeq, QString& text) const;
 
-    const PDocument& document() const;
+    const std::shared_ptr<const Document> document() const;
     bool empty();
 
+    void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
+    void setContent(const QString& text);
+    void setContent(const QStringList& text);
+
     QString selText() const;
+    QStringList selContent() const;
     int selCount() const;
 
-    QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
+    QStringList getContent(CharPos startPos, CharPos endPos, SelectionMode mode) const;
     void reparseDocument();
 
     QString lineBreak() const;
@@ -481,13 +519,18 @@ public:
     const PFormatter &formatter() const;
     void setFormatter(const PFormatter &newFormatter);
 signals:
-    void linesDeleted(int FirstLine, int Count);
-    void linesInserted(int FirstLine, int Count);
+    void linesDeleted(int firstLine, int count);
+    void linesInserted(int firstLine, int count);
+    void lineMoved(int from, int to);
     void changed();
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
     void statusChanged(QSynedit::StatusChanges changes);
     void fontChanged();
     void tabSizeChanged();
+#ifdef QSYNEDIT_TEST
+    void foldsRescaned(); // for test
+    void linesReparesd(int start, int count);
+#endif
 protected:
     virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
@@ -498,9 +541,6 @@ protected:
     virtual void onPreparePaintHighlightToken(int line,
             int aChar, const QString& token, PTokenAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
-    virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
-    virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
-    virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
     void replaceAll(const QString& text);
     int clientWidth() const;
@@ -509,36 +549,36 @@ protected:
     int clientLeft() const;
     QRect clientRect() const;
     void doSelectLine();
-    void incPaintLock();
-    void decPaintLock();
-    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
-    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    void beginInternalChanges();
+    void endInternalChanges();
+    void beginMergeCaretAndSelectionStatusChange();
+    void endMergeCaretAndSelectionStatusChange();
+
+    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true) const;
     bool dragging() const { return mDragging; }
+
+    void invalidateAllNonTempLineWidth();
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
-    void beginEditingWithoutUndo();
-    void endEditingWithoutUndo();
-    void clearAreaList(EditingAreaList areaList);
     void computeCaret();
     void computeScroll(bool isDragging);
+    void selCurrentToken();
+    void selTokenAt(const CharPos &pos);
 
     void synFontChanged();
 
     void doSetSelText(const QString& value);
 
     void updateLastCaretX();
-    void ensureCaretVisible();
-    void ensureCaretVisibleEx(bool ForceToMiddle);
+    void ensureCaretVisible(bool ForceToMiddle=false);
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
-    void internalSetCaretXY(BufferCoord value, bool ensureVisible = true);
+    void internalSetCaretXY(CharPos value, bool ensureVisible = true);
     void internalSetCaretX(int value);
-    void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
-    void doOnStatusChange(StatusChanges changes);
+    void notifyStatusChange(StatusChanges changes);
     void updateHScrollbar();
     void doUpdateHScrollbar();
     void updateVScrollbar();
@@ -546,27 +586,21 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatusForUndoRedo();
-    int reparseLines(int startLine, int endLine, bool needRescanFolds = true,  bool toDocumentEnd = true);
+    int reparseLines(int startLine, int endLine, bool toDocumentEnd);
     //void reparseLine(int line);
-    void uncollapse(PCodeFoldingRange FoldRange);
-    void collapse(PCodeFoldingRange FoldRange);
-
-    void foldOnLinesInserted(int Line, int Count);
-    void foldOnLinesDeleted(int Line, int Count);
-    void foldOnListCleared();
-    void rescanFolds(); // rescan for folds
-    void rescanForFoldRanges();
-    void scanForFoldRanges(PCodeFoldingRanges topFoldRanges);
-    void findSubFoldRange(PCodeFoldingRanges topFoldRanges,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
-    PCodeFoldingRange collapsedFoldStartAtLine(int Line);
-    void initializeCaret();
-    PCodeFoldingRange foldStartAtLine(int Line) const;
-    bool foldCollapsedBetween(int startLine, int endLine) const;
+    void uncollapse(const PCodeBlock &foldRange);
+    void collapse(const PCodeBlock &foldRange);
+    void processCodeBlocksOnLinesInserted(int line, int count);
+    void processFoldsOnLinesDeleted(int line, int count);
+    void processFoldsOnLineMoved(int from, int to);
+    void rescanCodeBlocks(); // rescan for folds
+    void internalScanCodeBlocks();
+    PCodeBlock foldStartAtLine(int Line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
-    PCodeFoldingRange foldAroundLine(int line);
-    PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
-    PCodeFoldingRange checkFoldRange(PCodeFoldingRanges foldRangesToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PCodeFoldingRange foldEndAtLine(int line);
+    PCodeBlock foldAroundLine(int line);
+    PCodeBlock foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
+    PCodeBlock checkFoldRange(const QVector<PCodeBlock> &blocksToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeBlock foldEndAtLine(int line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset() const;
     EditCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
@@ -577,7 +611,7 @@ private:
      */
     void moveCaretHorz(int deltaX, bool isSelection);
     void moveCaretVert(int deltaY, bool isSelection);
-    void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
+    void moveCaretAndSelection(const CharPos& ptBefore, const CharPos& ptAfter,
                                bool isSelection, bool ensureCaretVisible = true);
     void moveCaretToLineStart(bool isSelection);
     void moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible = true);
@@ -585,59 +619,66 @@ private:
     void doGotoBlockEnd(bool isSelection);
     void doGotoEditorStart(bool isSelection);
     void doGotoEditorEnd(bool isSelection);
-    void setSelectedTextEmpty();
-    void setSelTextPrimitive(const QStringList& text);
-    void setSelTextPrimitiveEx(SelectionMode mode,
-                               const QStringList& text);
-    void doLinesDeleted(int firstLine, int count);
-    void doLinesInserted(int firstLine, int count);
-    void properSetLine(int line, const QString& sLineText, bool notify = true);
+    void doDeleteSelection();
+    void doSetSelTextPrimitive(const QStringList& text);
+    void properSetLine(int line, const QString& sLineText, bool parseToEnd);
+    void properInsertLine(int line, const QString& sLineText, bool parseToEnd);
+    void properDeleteLines(int line, int count, bool parseToEnd);
+    void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 1, parseToEnd); }
+    void properInsertLines(int line, int count, bool parseToEnd);
+    void properMoveLine(int from, int to, bool parseToEnd);
 
     //primitive edit operations
-    void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);
-    void doInsertText(const BufferCoord& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
-    int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine);
+    void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
+    void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
+    void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text);
+    void doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
-    void doTrimTrailingSpaces();
-    void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
-    void setSelWord();
-    void setWordBlock(BufferCoord value);
+    void doExpandSelection(const CharPos& pos);
+    void doShrinkSelection(const CharPos& pos);
 
-    void doExpandSelection(const BufferCoord& pos);
-    void doShrinkSelection(const BufferCoord& pos);
-
+    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
+    bool shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const;
+    void calcEffectiveFromToLine(const CharPos &beginPos, const CharPos &endPos, int &fromLine, int &toLine);
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
 
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    BufferCoord getPreviousLeftBrace(int x,int y);
     bool canDoBlockIndent() const;
 
     QRect calculateCaretRect() const;
     QRect calculateInputCaretRect() const;
 
     //Commands
-    void doDeleteLastChar();
+    void doTrimTrailingSpaces();
+    void doDeletePrevChar();
     void doDeleteCurrentChar();
-    void doDeleteWord();
+    void doMergeWithNextLine();
+    void doMergeWithPrevLine();
     void doDeleteToEOL();
+    void doDeleteCurrentToken();
+
     void doDeleteToWordStart();
     void doDeleteToWordEnd();
+    void doDeleteCurrentTokenAndTralingSpaces();
     void doDeleteFromBOL();
-    void doDeleteLine();
+    void doDeleteCurrentLine();
 
-    void doDuplicateLine();
+    void doDuplicate();
+    void doDuplicateSelection();
+    void doDuplicateCurrentLine();
     void doMoveSelUp();
     void doMoveSelDown();
-    void clearAll();
-    void insertLine(bool moveCaret);
+    void doClearAll();
+    void doBreakLine();
     void doTabKey();
     void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
+    void internalAddChar(const QChar& ch);
+    void internalClearAll();
     void doAddChar(const QChar& ch);
     void doCutToClipboard();
     void doCopyToClipboard();
@@ -659,6 +700,13 @@ private:
 
     QString getDisplayStringAtLine(int line) const;
 
+    void onLinesDeleted(int line, int count);
+    void onLinesInserted(int line, int count);
+    void onLineMoved(int from, int to);
+
+    void addGroupUndoBreak();
+    void addChangeToUndo(ChangeReason reason, const CharPos& start, const CharPos& end,
+                 const QStringList& changeText, SelectionMode selMode);
 private slots:
     void onMaxLineWidthChanged();
     void updateHScrollBarLater();
@@ -666,10 +714,6 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onLinesCleared();
-    void onLinesDeleted(int line, int count);
-    void onLinesInserted(int line, int count);
-    void onLinesPutted(int line);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();
@@ -681,13 +725,13 @@ private slots:
 
 private:
     std::shared_ptr<QImage> mContentImage;
-    PCodeFoldingRanges mAllFoldRanges;
+    QVector<PCodeBlock> mCodeBlocks;
     CodeFoldingOptions mCodeFolding;
     int mEditingCount;
     bool mUseCodeFolding;
     bool  mAlwaysShowCaret;
-    BufferCoord mBlockBegin;
-    BufferCoord mBlockEnd;
+    CharPos mSelectionBegin;
+    CharPos mSelectionEnd;
     int mCaretX;
     int mLastCaretColumn;
     int mCaretY;
@@ -743,9 +787,12 @@ private:
 
     PSynEdit  fChainedEditor;
 
-    int mPaintTransientLock;
     bool mIsScrolling;
-    int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
+    int mMergeCaretStatusChangeLock;
+    CharPos mCaretBeforeMerging;
+    CharPos mSelBeginBeforeMerging;
+    CharPos mSelEndBeforeMerging;
+    SelectionMode mSelModeBeforeMerging;
     bool mUndoing;
     int mGutterWidth;
     //caret blink related
@@ -759,9 +806,9 @@ private:
     int mMouseWheelScrollSpeed;
     int mMouseSelectionScrollSpeed;
 
-    BufferCoord mDragCaretSave;
-    BufferCoord mDragSelBeginSave;
-    BufferCoord mDragSelEndSave;
+    CharPos mDragCaretSave;
+    CharPos mDragSelBeginSave;
+    CharPos mDragSelEndSave;
     bool mDropped;
     int mWheelAccumulatedDeltaX;
     int mWheelAccumulatedDeltaY;
@@ -805,4 +852,6 @@ protected:
 };
 
 }
+
+Q_DECLARE_METATYPE(QSynedit::StatusChanges);
 #endif // QSYNEDIT_H

@@ -46,8 +46,8 @@ public:
     void pause();
     void unPause();
 public slots:
-    void linesDeleted(const Editor* editor, int firstLine, int count);
-    void linesInserted(const Editor* editor, int firstLine, int count);
+    void onLinesDeleted(const Editor* editor, int firstLine, int count);
+    void onLinesInserted(const Editor* editor, int firstLine, int count);
 private:
     void removeCaret(int index);
 private:

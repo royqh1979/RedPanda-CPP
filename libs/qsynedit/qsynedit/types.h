@@ -21,6 +21,7 @@
 #include <QList>
 #include <QFlags>
 #include <memory>
+#include <QDebug>
 
 namespace QSynedit {
 
@@ -42,20 +43,35 @@ enum class ProgrammingLanguage {
     Unknown
 };
 
-struct BufferCoord {
-    int ch;
-    int line;
+struct CharPos {
+    int ch; // starts from 0
+    int line; // starts from 0
 
-    BufferCoord() = default;
-    constexpr BufferCoord(qsizetype ch_, qsizetype line_) : ch(ch_), line(line_) {}
+    CharPos(): ch{-1}, line{-1} {}
+    CharPos(const CharPos &pos): ch{pos.ch}, line{pos.line} {}
+    constexpr CharPos(int ch_, int line_) : ch{ch_}, line{line_} {}
 
-    bool operator==(const BufferCoord& coord);
-    bool operator>=(const BufferCoord& coord);
-    bool operator>(const BufferCoord& coord);
-    bool operator<(const BufferCoord& coord);
-    bool operator<=(const BufferCoord& coord);
-    bool operator!=(const BufferCoord& coord);
+    const CharPos& operator=(const CharPos &coord) {
+        ch=coord.ch;
+        line=coord.line;
+        return *this;
+    };
+
+    bool operator==(const CharPos& coord) const;
+    bool operator>=(const CharPos& coord) const;
+    bool operator>(const CharPos& coord) const;
+    bool operator<(const CharPos& coord) const;
+    bool operator<=(const CharPos& coord) const;
+    bool operator!=(const CharPos& coord) const;
+
+    bool isValid() const { return ch>=0 && line >=0; };
 };
+
+QDataStream &operator<<(QDataStream &out, const CharPos &data);
+
+QDataStream &operator>>(QDataStream &in, CharPos &data);
+
+QDebug operator<<(QDebug dbg, const CharPos& data);
 
 struct DisplayCoord {
     int x;
@@ -94,5 +110,7 @@ using PEditingAreaList = std::shared_ptr<EditingAreaList>;
 
 bool isAssemblyLanguage(ProgrammingLanguage lang);
 }
+
+Q_DECLARE_METATYPE(QSynedit::CharPos);
 
 #endif // TYPES_H

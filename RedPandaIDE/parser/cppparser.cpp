@@ -1067,15 +1067,15 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         updateSerialId();
         if (updateView)
             emit onBusy();
-        emit onStartParsing();
+        emit parseStarted();
     }
     {
         auto action = finally([&,this]{
             QMutexLocker locker(&mMutex);
             if (updateView)
-                emit onEndParsing(mFilesScannedCount,1);
+                emit parseFinished(mFilesScannedCount,1);
             else
-                emit onEndParsing(mFilesScannedCount,0);
+                emit parseFinished(mFilesScannedCount,0);
             mParsing = false;
         });
         QString fName = fileName;
@@ -1092,7 +1092,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
 
             foreach (const QString& file,files) {
                 mFilesScannedCount++;
-                emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
+                emit progress(file,mFilesToScanCount,mFilesScannedCount);
                 if (!mPreprocessor.fileScanned(file)) {
                     internalParse(file);
                 }
@@ -1104,7 +1104,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
             mFilesScannedCount = 0;
 
             mFilesScannedCount++;
-            emit onProgress(fileName,mFilesToScanCount,mFilesScannedCount);
+            emit progress(fileName,mFilesToScanCount,mFilesScannedCount);
             internalParse(contextFilename);
             if (!mPreprocessor.fileScanned(fileName)) {
                 internalParse(fileName);
@@ -1126,15 +1126,15 @@ void CppParser::parseFileList(bool updateView)
         mParsing = true;
         if (updateView)
             emit onBusy();
-        emit onStartParsing();
+        emit parseStarted();
     }
     {
         auto action = finally([&,this]{
             mParsing = false;
             if (updateView)
-                emit onEndParsing(mFilesScannedCount,1);
+                emit parseFinished(mFilesScannedCount,1);
             else
-                emit onEndParsing(mFilesScannedCount,0);
+                emit parseFinished(mFilesScannedCount,0);
         });
         // Support stopping of parsing when files closes unexpectedly
         mFilesScannedCount = 0;
@@ -1144,7 +1144,7 @@ void CppParser::parseFileList(bool updateView)
         // parse header files in the first parse
         foreach (const QString& file, files) {
             mFilesScannedCount++;
-            emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+            emit progress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
             if (!mPreprocessor.fileScanned(file)) {
                 internalParse(file);
             }
@@ -3579,7 +3579,7 @@ void CppParser::handlePreprocessor()
             if (line == 1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
-                emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+                emit progress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
             }
         }
     } else if (text.startsWith("define")) {
@@ -6904,7 +6904,7 @@ QStringList CppParser::splitExpression(const QString &expr)
         while(!syntaxer.eol()) {
             QSynedit::TokenType tokenType = syntaxer.getTokenAttribute()->tokenType();
             QString token = syntaxer.getToken();
-            if (tokenType == QSynedit::TokenType::Operator) {
+            if (tokenType == QSynedit::TokenType::Symbol) {
                 if ( token == ">>" ) {
                     result.append(">");
                     result.append(">");

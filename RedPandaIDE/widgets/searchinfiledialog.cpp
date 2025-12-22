@@ -228,7 +228,7 @@ void SearchInFileDialog::doSearch(bool replace)
                 QSynedit::QSynEdit editor;
                 QByteArray realEncoding;
                 try{
-                    editor.document()->loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
+                    editor.loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
                 } catch (QSynedit::BinaryFileError e) {
                     continue;
                 } catch (FileError e) {
@@ -315,7 +315,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     encoding = projectEncoding;
                 QByteArray realEncoding;
                 try {
-                    editor.document()->loadFromFile(curFilename,encoding, realEncoding);
+                    editor.loadFromFile(curFilename,encoding, realEncoding);
                 } catch (QSynedit::BinaryFileError e) {
                     continue;
                 } catch (FileError e) {
@@ -351,9 +351,9 @@ int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSear
             && editor->selAvail()) {
         // start at end of selection
         if (mSearchOptions.testFlag(QSynedit::ssoBackwards)) {
-            editor->setCaretXY(editor->blockBegin());
+            editor->setCaretXY(editor->selBegin());
         } else {
-            editor->setCaretXY(editor->blockEnd());
+            editor->setCaretXY(editor->selEnd());
         }
     }
 
@@ -371,9 +371,9 @@ int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSear
 std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSynedit::QSynEdit *e, const QString& filename,const QString &keyword)
 {
     //backup
-    QSynedit::BufferCoord caretBackup = e->caretXY();
-    QSynedit::BufferCoord blockBeginBackup = e->blockBegin();
-    QSynedit::BufferCoord blockEndBackup = e->blockEnd();
+    QSynedit::CharPos caretBackup = e->caretXY();
+    QSynedit::CharPos blockBeginBackup = e->selBegin();
+    QSynedit::CharPos blockEndBackup = e->selEnd();
     int topPosBackup = e->topPos();
     int leftPosBackup = e->leftPos();
 

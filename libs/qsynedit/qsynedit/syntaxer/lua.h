@@ -166,7 +166,7 @@ public:
     QMap<QString, QSet<QString> > scopedKeywords() override;
     bool useXMakeLibs() const;
     void setUseXMakeLibs(bool newUseXMakeLibs);
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
     bool supportFolding() override;

@@ -35,46 +35,22 @@ struct CodeFoldingOptions {
       CodeFoldingOptions();
 };
 
-class CodeFoldingRange;
-typedef std::shared_ptr<CodeFoldingRange> PCodeFoldingRange;
-class CodeFoldingRanges;
-typedef std::shared_ptr<CodeFoldingRanges> PCodeFoldingRanges;
-
-class CodeFoldingRanges{
-
-public:
-    explicit CodeFoldingRanges();
-    CodeFoldingRanges& operator=(const CodeFoldingRanges&)=delete;
-
-    PCodeFoldingRange range(int index) const;
-    void clear();
-    int count() const;
-    PCodeFoldingRange addByParts(PCodeFoldingRange parent, PCodeFoldingRanges allFold,
-                               int fromLine, int toLine);
-
-    void insert(int index, PCodeFoldingRange range);
-    void remove(int index);
-    void add(PCodeFoldingRange foldRange);
-    PCodeFoldingRange operator[](int index) const;
-    const QVector<PCodeFoldingRange> &ranges() const;
-
-private:
-    QVector<PCodeFoldingRange> mRanges;
-};
+class CodeBlock;
+typedef std::shared_ptr<CodeBlock> PCodeBlock;
 
 // A single fold
-class CodeFoldingRange {
+class CodeBlock {
 public:
-    explicit CodeFoldingRange(PCodeFoldingRange parent, int fromLine, int toLine);
-    CodeFoldingRange(const CodeFoldingRange&)=delete;
-    CodeFoldingRange& operator=(const CodeFoldingRange&)=delete;
+    explicit CodeBlock(PCodeBlock parent, int fromLine, int toLine);
+    CodeBlock(const CodeBlock&)=delete;
+    CodeBlock& operator=(const CodeBlock&)=delete;
     int fromLine; // Beginning line
     int toLine; // End line
-    int linesCollapsed; // Number of collapsed lines
-    PCodeFoldingRanges subFoldRanges; // Sub fold ranges
+    QVector<PCodeBlock> subBlocks; // Sub fold ranges
     bool collapsed; // Is collapsed?
-    std::weak_ptr<CodeFoldingRange> parent;
-    bool parentCollapsed();
+    std::weak_ptr<CodeBlock> parent;
+    int linesCollapsed() const { return collapsed?(toLine - fromLine):0; }
+    bool parentCollapsed() const;
     void move(int count);
 };
 

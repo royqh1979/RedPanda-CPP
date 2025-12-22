@@ -37,7 +37,7 @@ Syntaxer::Syntaxer() :
                                                                    TokenType::Space);
     addAttribute(mWhitespaceAttribute);
     mSymbolAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSymbol,
-                                                                 TokenType::Operator);
+                                                                 TokenType::Symbol);
     addAttribute(mSymbolAttribute);
 }
 
@@ -85,12 +85,12 @@ bool Syntaxer::supportBraceLevel()
     return false;
 }
 
-bool Syntaxer::isSpaceChar(const QChar &ch)
+bool Syntaxer::isSpaceChar(const QChar &ch) const
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch.isSpace();
 }
 
-bool Syntaxer::isWordBreakChar(const QChar &ch)
+bool Syntaxer::isWordBreakChar(const QChar &ch) const
 {
     switch (ch.unicode()) {
     case '.':
@@ -144,7 +144,7 @@ PTokenAttribute Syntaxer::getAttribute(const QString& name) const
     return mAttributes.value(name,PTokenAttribute());
 }
 
-QString Syntaxer::commentSymbol()
+QString Syntaxer::lineCommentSymbol()
 {
     return QString();
 }

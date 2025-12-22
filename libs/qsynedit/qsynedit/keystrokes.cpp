@@ -192,13 +192,13 @@ void EditKeyStrokes::resetDefaults()
     add(EditCommand::Left, Qt::Key_Left, Qt::NoModifier);
     add(EditCommand::SelLeft, Qt::Key_Left, Qt::ShiftModifier);
     add(EditCommand::SelLeft, Qt::Key_Left, Qt::KeyboardModifiers(Qt::ShiftModifier | Qt::AltModifier));
-    add(EditCommand::WordLeft, Qt::Key_Left, Qt::ControlModifier);
-    add(EditCommand::SelWordLeft, Qt::Key_Left, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
+    add(EditCommand::PrevWordBegin, Qt::Key_Left, Qt::ControlModifier);
+    add(EditCommand::SelPrevWordBegin, Qt::Key_Left, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
     add(EditCommand::Right, Qt::Key_Right, Qt::NoModifier);
     add(EditCommand::SelRight, Qt::Key_Right, Qt::ShiftModifier);
     add(EditCommand::SelRight, Qt::Key_Right, Qt::KeyboardModifiers(Qt::ShiftModifier | Qt::AltModifier));
-    add(EditCommand::WordRight, Qt::Key_Right, Qt::ControlModifier);
-    add(EditCommand::SelWordRight, Qt::Key_Right, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
+    add(EditCommand::nextWordBegin, Qt::Key_Right, Qt::ControlModifier);
+    add(EditCommand::SelNextWordBegin, Qt::Key_Right, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
 
     add(EditCommand::BlockStart, Qt::Key_Up, Qt::KeyboardModifiers(Qt::MetaModifier|Qt::ControlModifier));
     add(EditCommand::SelBlockStart, Qt::Key_Up, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier|Qt::MetaModifier));
@@ -238,7 +238,7 @@ void EditKeyStrokes::setExtraKeyStrokes()
     add(EditCommand::DeleteWordStart, Qt::Key_Backspace, Qt::ControlModifier);
     add(EditCommand::DeleteWordEnd, Qt::Key_Delete, Qt::ControlModifier);
 
-    add(EditCommand::DuplicateLine, Qt::Key_D, Qt::ControlModifier);
+    add(EditCommand::Duplicate, Qt::Key_D, Qt::ControlModifier);
     add(EditCommand::DeleteLine, Qt::Key_E, Qt::ControlModifier);
 
     add(EditCommand::SelectAll, Qt::Key_A, Qt::ControlModifier);

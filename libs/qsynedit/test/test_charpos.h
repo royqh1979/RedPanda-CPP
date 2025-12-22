@@ -1,0 +1,14 @@
+#include <QtTest>
+#include <QCoreApplication>
+
+class TestCharPos : public QObject
+{
+    Q_OBJECT
+
+private slots:
+    void test_default_constructor();
+    void test_constructor();
+    void test_copy_constructor();
+    void test_isInvalid();
+    void test_compare();
+};

@@ -179,7 +179,7 @@ public:
     PSyntaxState getState() const override;
     QSet<QString> keywords() override;
     bool supportBraceLevel() override;
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
     bool supportFolding() override;

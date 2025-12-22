@@ -4,6 +4,7 @@ Red Panda C++ Version 3.5
   - enhancement: Skip all std:: (C++ standard libraries) functions when debugging.
   - enhancement: Correctly syntax color lines ending with '\'. (https://en.cppreference.com/w/c/language/translation_phases.html)
   - enhancement: Correctly parse lines ending with '\'. (https://en.cppreference.com/w/c/language/translation_phases.html)
+  - redo/undo restore caret and select positions.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

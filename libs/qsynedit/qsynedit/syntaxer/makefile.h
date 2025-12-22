@@ -148,7 +148,7 @@ public:
     void resetState() override;
     bool isIdentChar(const QChar& ch) const override;
     QSet<QString> keywords() override;
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     bool supportFolding() override;
     bool needsLineState() override;
 

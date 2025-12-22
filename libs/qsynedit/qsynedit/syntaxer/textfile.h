@@ -76,7 +76,7 @@ public:
     void setState(const PSyntaxState& rangeState) override;
     void resetState() override;
     QSet<QString> keywords() override;
-    QString commentSymbol() override;
+    QString lineCommentSymbol() override;
     bool supportFolding() override;
     bool needsLineState() override;
 

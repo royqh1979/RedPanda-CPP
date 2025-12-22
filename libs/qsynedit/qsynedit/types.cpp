@@ -20,36 +20,36 @@
 
 namespace QSynedit {
 
-bool BufferCoord::operator==(const BufferCoord &coord)
+bool CharPos::operator==(const CharPos &coord) const
 {
     return coord.ch == ch && coord.line == line;
 }
 
-bool BufferCoord::operator>=(const BufferCoord &coord)
+bool CharPos::operator>=(const CharPos &coord) const
 {
     return (line > coord.line)
             || (line == coord.line && ch >= coord.ch);
 }
 
-bool BufferCoord::operator>(const BufferCoord &coord)
+bool CharPos::operator>(const CharPos &coord) const
 {
     return (line > coord.line)
             || (line == coord.line && ch > coord.ch);
 }
 
-bool BufferCoord::operator<(const BufferCoord &coord)
+bool CharPos::operator<(const CharPos &coord) const
 {
     return (line < coord.line)
             || (line == coord.line && ch < coord.ch);
 }
 
-bool BufferCoord::operator<=(const BufferCoord &coord)
+bool CharPos::operator<=(const CharPos &coord) const
 {
     return (line < coord.line)
             || (line == coord.line && ch <= coord.ch);
 }
 
-bool BufferCoord::operator!=(const BufferCoord &coord)
+bool CharPos::operator!=(const CharPos &coord) const
 {
     return coord.ch != ch || coord.line != line;
 }
@@ -59,6 +59,25 @@ bool isAssemblyLanguage(ProgrammingLanguage lang)
     return lang == ProgrammingLanguage::Assembly
             || lang == ProgrammingLanguage::GNU_Assembly
             || lang == ProgrammingLanguage::NetwideAssembly;
+}
+
+QDataStream &operator<<(QDataStream &out, const CharPos &data)
+{
+    out<<data.ch;
+    out<<data.line;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, CharPos &data)
+{
+    in>>data.ch;
+    in>>data.line;
+    return in;
+}
+
+QDebug operator<<(QDebug dbg, const CharPos& data){
+    dbg.space() << "CharPos(ch=" << data.ch << ", line=" << data.line << ")";
+    return dbg;
 }
 
 }

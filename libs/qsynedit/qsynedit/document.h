@@ -29,9 +29,11 @@
 
 namespace QSynedit {
 
-int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int value);
+int searchForSegmentIdx(const QList<int> &segList, int maxVal, int value);
+
+//calc length of each segments
 int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx);
-int segmentIntervalStart(const QList<int> &segList, int minVal, int maxVal, int idx);
+int segmentIntervalStart(const QList<int> &segList, int maxVal, int idx);
 QList<int> calcGlyphStartCharList(const QString &text);
 void expandGlyphStartCharList(const QString& strAdded, int oldStrLen, QList<int> &glyphStartCharList);
 
@@ -59,6 +61,14 @@ public:
     explicit DocumentLine(UpdateWidthFunc updateWidthFunc);
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
+
+    /**
+     * @brief get the line text
+     * @return the line text
+     */
+    const QString& lineText() const { return mLineText; }
+
+    size_t lineSeq() const { return mLineSeq; }
 
 private:
     /**
@@ -117,11 +127,6 @@ private:
      */
     int glyphWidth(int i);
 
-    /**
-     * @brief get the line text
-     * @return the line text
-     */
-    const QString& lineText() const { return mLineText; }
 
     /**
      * @brief get the width (pixel) of the line text
@@ -129,7 +134,6 @@ private:
      */
     int width();
 
-    size_t lineSeq() const { return mLineSeq; }
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
@@ -371,7 +375,7 @@ public:
     int blockEnded(int line) const;
 
     /**
-     * @brief get index of the longest line (has the max width)
+     * @brief get width of the longest line (has the max width)
      *
      * It's thread safe.
      *
@@ -466,7 +470,6 @@ public:
      */
     void setText(const QString& text);
 
-
     /**
      * @brief set the text of the document
      *
@@ -483,9 +486,9 @@ public:
      *
      * @return
      */
-    QStringList contents() const;
+    QStringList content() const;
 
-    void putLine(int index, const QString& s, bool notify=true);
+    void putLine(int index, const QString& s);
 
     void beginUpdate();
     void endUpdate();
@@ -495,13 +498,13 @@ public:
 
     int getTextLength() const;
     void clear();
-    void deleteAt(int index);
+    void deleteLine(int index);
     void deleteLines(int index, int numLines);
-    void exchange(int index1, int index2);
+    void moveLine(int from, int to);
     void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
 
-    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
+    PDocumentLine findLineBySeq(size_t lineSeq) const;
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
@@ -624,19 +627,14 @@ public slots:
 signals:
     void changed();
     void changing();
-    void cleared();
-    void deleted(int startLine, int count);
-    void inserted(int startLine, int count);
-    void putted(int line);
     void maxLineWidthChanged();
 protected:
     QString getTextStr() const;
-    void setUpdateState(bool Updating);
     void insertItem(int line, const QString& s);
     void addItem(const QString& s);
-    void putTextStr(const QString& text);
     void internalClear();
 private:
+    void ensureHasLine();
     void invalidateAllLineWidth();
     bool lineWidthValid(int line);
     void beginSetLinesWidth();
@@ -658,6 +656,7 @@ private:
     void saveUTF32File(QFile& file, TextEncoder &encoder) const;
 private:
     DocumentLines mLines;
+    QMap<size_t,PDocumentLine> mLineSeqIndice;
 
     DocumentLine::UpdateWidthFunc mUpdateDocumentLineWidthFunc;
 
@@ -676,6 +675,7 @@ private:
 };
 
 enum class ChangeReason {
+    InsertLine,
     Insert,
     Delete,
     Caret, //just restore the Caret, allowing better Undo behavior
@@ -683,32 +683,47 @@ enum class ChangeReason {
     GroupBreak,
     LeftTop,
     LineBreak,
-    MoveSelectionUp,
-    MoveSelectionDown,
+    MoveLine,
     ReplaceLine,
+    AddChar,
+    DeleteChar,
+    DeletePreviousChar,
+    MergeWithPrevLine,
+    MergeWithNextLine,
+    DuplicateLine,
     Nothing // undo list empty
   };
+
+struct CaretAndSelectionInfo{
+    CharPos caret;
+    CharPos selBegin;
+    CharPos selEnd;
+    SelectionMode selMode;
+    CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin,const CharPos &selEnd, SelectionMode selMode);
+};
+
+using PCaretAndSelectionInfo = std::shared_ptr<CaretAndSelectionInfo>;
 
 class UndoItem {
 private:
     ChangeReason mChangeReason;
     SelectionMode mChangeSelMode;
-    BufferCoord mChangeStartPos;
-    BufferCoord mChangeEndPos;
+    CharPos mChangeStartPos;
+    CharPos mChangeEndPos;
     QStringList mChangeText;
     size_t mChangeNumber;
 public:
     UndoItem(ChangeReason reason,
         SelectionMode selMode,
-        BufferCoord startPos,
-        BufferCoord endPos,
+        CharPos startPos,
+        CharPos endPos,
         const QStringList& text,
         int number);
 
     ChangeReason changeReason() const;
     SelectionMode changeSelMode() const;
-    BufferCoord changeStartPos() const;
-    BufferCoord changeEndPos() const;
+    CharPos changeStartPos() const;
+    CharPos changeEndPos() const;
     QStringList changeText() const;
     size_t changeNumber() const;
 };
@@ -720,17 +735,25 @@ class UndoList : public QObject {
 public:
     explicit UndoList();
 
-    void addChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+    PUndoItem addChange(ChangeReason reason, const CharPos& start, const CharPos& end,
       const QStringList& changeText, SelectionMode selMode);
 
-    void restoreChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+    void restoreChange(ChangeReason reason, const CharPos& start, const CharPos& end,
                        const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
 
     void restoreChange(PUndoItem item);
 
     void addGroupBreak();
-    void beginBlock();
-    void endBlock();
+    void beginBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode);
+    void endBlock(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode);
+
+    PCaretAndSelectionInfo caretAndSelBeforeChange(size_t changeNumber);
+    PCaretAndSelectionInfo caretAndSelAfterChange(size_t changeNumber);
+
+    void restoreCaretAndSelInfos(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo,
+                                 const PCaretAndSelectionInfo &afterInfo);
+
+    void removeCaretAndSelInfo(size_t changeNumber);
 
     void clear();
     ChangeReason lastChangeReason();
@@ -756,6 +779,7 @@ signals:
 protected:
     bool inBlock();
     unsigned int getNextChangeNumber();
+
 protected:
     size_t mBlockChangeNumber;
     int mBlockLock;
@@ -763,9 +787,11 @@ protected:
     size_t mLastRestoredItemChangeNumber;
     bool mFullUndoImposible;
     QVector<PUndoItem> mItems;
-    unsigned int mNextChangeNumber;
-    unsigned int mInitialChangeNumber;
+    size_t mNextChangeNumber;
+    size_t mInitialChangeNumber;
     bool mInsideRedo;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoBeforeChange;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoAfterChange;
 };
 
 class RedoList : public QObject {
@@ -773,10 +799,15 @@ class RedoList : public QObject {
 public:
     explicit RedoList();
 
-    void addRedo(ChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-                 const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
+    void addRedo(ChangeReason reason, const CharPos& startPos, const CharPos& endPos,
+                 const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
     void addRedo(PUndoItem item);
 
+    void addCaretAndSelectionInfo(size_t changeNumber, const PCaretAndSelectionInfo &beforeInfo,
+                                  const PCaretAndSelectionInfo &afterInfo);
+    PCaretAndSelectionInfo caretAndSelBeforeChange(size_t changeNumber);
+    PCaretAndSelectionInfo caretAndSelAfterChange(size_t changeNumber);
+    void removeCaretAndSelInfo(size_t changeNumber);
     void clear();
     ChangeReason lastChangeReason();
     bool isEmpty();
@@ -788,6 +819,8 @@ public:
 
 protected:
     QVector<PUndoItem> mItems;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoBeforeChange;
+    QMap<size_t, PCaretAndSelectionInfo> mCaretInfoAfterChange;
 };
 
 

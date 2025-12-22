@@ -63,11 +63,6 @@ protected:
     QString mReason;
 };
 
-class IndexOutOfRange:public BaseError {
-public:
-    explicit IndexOutOfRange(int Index);
-};
-
 class FileError: public BaseError {
 public:
     explicit FileError(const QString& reason);

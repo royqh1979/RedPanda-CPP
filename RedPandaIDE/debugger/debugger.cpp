@@ -1234,8 +1234,8 @@ QVariant BreakpointModel::data(const QModelIndex &index, int role) const
             return extractFileName(breakpoint->filename);
         }
         case 1:
-            if (breakpoint->line>0)
-                return breakpoint->line;
+            if (breakpoint->line>=0)
+                return breakpoint->line+1;
             else
                 return "";
         case 2:
@@ -1483,8 +1483,8 @@ QVariant BacktraceModel::data(const QModelIndex &index, int role) const
         case 1:
             return trace->filename;
         case 2:
-            if (trace->line>0)
-                return trace->line;
+            if (trace->line>=0)
+                return trace->line + 1;
             else
                 return "";
         default:

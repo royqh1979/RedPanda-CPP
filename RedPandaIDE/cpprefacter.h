@@ -24,7 +24,7 @@
 
 class Editor;
 namespace QSynedit {
-    struct BufferCoord;
+    struct CharPos;
 }
 class Project;
 class CppRefacter : public QObject
@@ -33,11 +33,11 @@ class CppRefacter : public QObject
 public:
     explicit CppRefacter(QObject *parent = nullptr);
 
-    bool findOccurence(Editor * editor, const QSynedit::BufferCoord& pos);
+    bool findOccurence(Editor * editor, const QSynedit::CharPos& pos);
     bool findOccurence(Editor * editor, const QString& statementFullname, SearchFileScope scope);
 
-    void renameSymbol(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
-    void renameUndefinedLocalVariable(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
+    void renameSymbol(Editor* editor, const QSynedit::CharPos& pos, const QString& newWord);
+    void renameUndefinedLocalVariable(Editor* editor, const QSynedit::CharPos& pos, const QString& newWord);
 private:
     void doFindOccurenceInEditor(const PStatement &statement, Editor* editor, const PCppParser& parser);
     void doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser& parser);

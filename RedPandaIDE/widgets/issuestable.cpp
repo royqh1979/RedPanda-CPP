@@ -207,13 +207,13 @@ QVariant IssuesModel::data(const QModelIndex &index, int role) const
                 return issue->filename;
         }
         case 1:
-            if (issue->line>0)
-                return issue->line;
+            if (issue->line>=0)
+                return issue->line+1;
             else
                 return "";
         case 2:
-            if (issue->column>0)
-                return issue->column;
+            if (issue->column>=0)
+                return issue->column+1;
             else
                 return "";
         case 3:

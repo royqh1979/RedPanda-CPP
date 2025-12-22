@@ -255,8 +255,8 @@ public slots:
     void onDebugEvaluateInput();
     void onDebugMemoryAddressInput();
     void onParserProgress(const QString& fileName, int total, int current);
-    void onStartParsing();
-    void onEndParsing(int total, int updateView);
+    void onParseStarted();
+    void onParseFinished(int total, int updateView);
     void onEvalValueReady(const QString& value);
     void onLocalsReady(const QStringList& value);
     void onEditorContextMenu(const QPoint& pos);
@@ -271,7 +271,7 @@ public slots:
     void onTodoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void onWatchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
-    void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
+    void setActiveBreakpoint(QString fileName, int line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
     void onDebugFinished();
