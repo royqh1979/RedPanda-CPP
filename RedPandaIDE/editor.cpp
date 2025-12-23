@@ -851,10 +851,10 @@ void Editor::keyPressEvent(QKeyEvent *event)
     }
 
     QString t = event->text();
-    if (t.isEmpty())
+    if (t.length() != 1) // handled by qsynedit
         return;
 
-    if (activeSelectionMode()==QSynedit::SelectionMode::Column)
+    if (activeSelectionMode()==QSynedit::SelectionMode::Column) // handled by qsynedit
         return;
 
     QChar ch = t[0];

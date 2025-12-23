@@ -1733,7 +1733,7 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end_overwrite_mode()
 
     QVERIFY(!mEdit->canRedo());
 
-    //undo
+    //undo again
     clearSignalDatas();
     mEdit->undo();
     QCOMPARE(mEdit->content(),text3);

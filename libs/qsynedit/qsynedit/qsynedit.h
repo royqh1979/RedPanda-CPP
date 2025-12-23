@@ -677,9 +677,9 @@ private:
     void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
-    void internalAddChar(const QChar& ch);
+    void internalAddChar(const QString& chText);
     void internalClearAll();
-    void doAddChar(const QChar& ch);
+    void doAddChar(const QString& chText);
     void doCutToClipboard();
     void doCopyToClipboard();
     void internalDoCopyToClipboard(const QString& s);
