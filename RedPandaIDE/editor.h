@@ -262,7 +262,9 @@ signals:
     void breakpointAdded(const Editor *e, int line);
     void breakpointRemoved(const Editor *e, int line);
     void breakpointsCleared(const Editor *e);
-    void syntaxCheckRequired(Editor *e);
+    void syntaxCheckRequested(Editor *e);
+    void parseTodoRequested(const QString& filename, bool inProject);
+    void updateEncodingInfoRequested(const Editor *e);
 private slots:
     void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);

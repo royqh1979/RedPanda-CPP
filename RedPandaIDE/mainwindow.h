@@ -117,8 +117,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateForEncodingInfo(bool clear=false);
-    void updateForEncodingInfo(const Editor* editor, bool clear=false);
+    void updateForEncodingInfo(const Editor* editor);
     void updateStatusbarForLineCol(bool clear=false);
     void updateStatusbarForLineCol(const Editor* editor, bool clear=false);
     void updateForStatusbarModeInfo(bool clear=false);
@@ -268,16 +267,19 @@ public slots:
     void stopDebugForNoSymbolTable();
     void onTodoParsingFile(const QString& filename);
     void onTodoParseStarted();
-    void onTodoFound(const QString& filename, int lineNo, int ch, const QString& line);
+    void onTodoFound(const QString& filename, int line, int ch, const QString& lineText);
     void onTodoParseFinished();
     void onWatchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
     void setActiveBreakpoint(QString fileName, int line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
     void onDebugFinished();
+
+    //editor signals
     void onBreakpointAdded(const Editor* e, int line);
     void onBreakpointRemoved(const Editor* e, int line);
     void onBreakpointsCleared(const Editor* e);
+    void onParseTodoRequired(const QString &fileName, bool inProject);
 
 private:
     void connectEditorSignals(Editor * e);

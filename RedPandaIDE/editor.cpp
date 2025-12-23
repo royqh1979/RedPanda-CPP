@@ -317,8 +317,9 @@ void Editor::saveFile(QString filename) {
             unit->setRealEncoding(mFileEncoding);
         }
     }
-    if (isVisible() && inTab())
-        pMainWindow->updateForEncodingInfo(this);
+    if (isVisible())
+        emit updateEncodingInfoRequested(this);
+
     emit fileSaved(filename, inProject());
 //    QFile::remove(backupFilename);
 }
@@ -556,8 +557,8 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
                                   tr("Error Load File"),
                                   e.reason());
         }
-    } else if (inTab())
-        pMainWindow->updateForEncodingInfo(this);
+    } else
+        emit updateEncodingInfoRequested(this);
     resolveAutoDetectEncodingOption();
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
@@ -690,7 +691,7 @@ void Editor::focusInEvent(QFocusEvent *event)
         pMainWindow->updateClassBrowserForEditor(this);
         pMainWindow->updateAppTitle(this);
         pMainWindow->updateEditorActions(this);
-        pMainWindow->updateForEncodingInfo(this);
+        emit updateEncodingInfoRequested(this);
         pMainWindow->updateStatusbarForLineCol(this);
         pMainWindow->updateForStatusbarModeInfo(this);
     }
@@ -1513,7 +1514,7 @@ void Editor::closeEvent(QCloseEvent *)
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
     if (inTab()) {
-        pMainWindow->updateForEncodingInfo(true);
+        emit updateEncodingInfoRequested(nullptr);
         pMainWindow->updateStatusbarForLineCol(true);
         pMainWindow->updateForStatusbarModeInfo(true);
     }
@@ -1558,7 +1559,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         pMainWindow->updateClassBrowserForEditor(this);
         pMainWindow->updateAppTitle(this);
         pMainWindow->updateEditorActions(this);
-        pMainWindow->updateForEncodingInfo(this);
+        emit updateEncodingInfoRequested(this);
         pMainWindow->updateStatusbarForLineCol(this);
         pMainWindow->updateForStatusbarModeInfo(this);
     }
@@ -1585,7 +1586,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 &Editor::onParseFinished);
     }
     if (!pMainWindow->isQuitting()) {
-        pMainWindow->updateForEncodingInfo(nullptr);
+        emit updateEncodingInfoRequested(nullptr);
         pMainWindow->updateStatusbarForLineCol(nullptr);
         pMainWindow->updateForStatusbarModeInfo(nullptr);
     }
@@ -2185,8 +2186,7 @@ void Editor::loadContent(const QString& filename)
     }
     //this->setModified(false);
 
-    if (inTab())
-        pMainWindow->updateForEncodingInfo(this);
+    emit updateEncodingInfoRequested(this);
 
     saveAutoBackup();
 }
@@ -3179,8 +3179,6 @@ void Editor::reparse(bool resetParser)
 {
     if (!mInited)
         return;
-    if (!inTab())
-        return;
     if (!pSettings->codeCompletion().enabled())
         return;
     if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP
@@ -3213,12 +3211,7 @@ void Editor::reparse(bool resetParser)
 
 void Editor::reparseTodo()
 {
-    if (!mInited)
-        return;
-    if (!inTab())
-        return;
-    if (pSettings->editor().parseTodos())
-        pMainWindow->todoParser()->parseFile(mFilename, inProject());
+    emit parseTodoRequested(mFilename, inProject());
 }
 
 void Editor::insertString(const QString &value, bool moveCursor)
@@ -5290,7 +5283,7 @@ void Editor::checkSyntaxInBack()
         return;
     if (readOnly())
         return;
-    emit syntaxCheckRequired(this);
+    emit syntaxCheckRequested(this);
 }
 
 

@@ -525,7 +525,7 @@ QVariant BookmarkModel::data(const QModelIndex &index, int role) const
         case 0:
             return bookmark->description;
         case 1:
-            return bookmark->line;
+            return bookmark->line+1;
         case 2:
             return bookmark->filename;
         }

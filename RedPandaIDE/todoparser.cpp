@@ -130,7 +130,7 @@ void TodoThread::doParseFile(const QString &filename)
     }
     syntaxer->resetState();
     for (int i =0;i<lines.count();i++) {
-        syntaxer->setLine(i+1, lines[i], 0);
+        syntaxer->setLine(i, lines[i], 0);
         while (!syntaxer->eol()) {
             QSynedit::PTokenAttribute attr;
             attr = syntaxer->getTokenAttribute();
@@ -140,7 +140,7 @@ void TodoThread::doParseFile(const QString &filename)
                 if (pos>=0) {
                     emit todoFound(
                                 filename,
-                                i+1,
+                                i,
                                 pos+syntaxer->getTokenPos(),
                                 lines[i].trimmed()
                                 );
@@ -167,7 +167,7 @@ TodoModel::TodoModel(QObject *parent) : QAbstractListModel(parent)
     mIsForProject=false;
 }
 
-void TodoModel::addItem(const QString &filename, int lineNo, int ch, const QString &line)
+void TodoModel::addItem(const QString &filename, int line, int ch, const QString &lineText)
 {
     QList<PTodoItem> &items=getItems(mIsForProject);
     int pos=-1;
@@ -177,7 +177,7 @@ void TodoModel::addItem(const QString &filename, int lineNo, int ch, const QStri
             pos=i;
             break;
         } else if (comp==0) {
-            if (lineNo<items[i]->lineNo)  {
+            if (line<items[i]->line)  {
                 pos=i;
                 break;
             }
@@ -189,9 +189,9 @@ void TodoModel::addItem(const QString &filename, int lineNo, int ch, const QStri
     beginInsertRows(QModelIndex(),pos,pos);
     PTodoItem item = std::make_shared<TodoItem>();
     item->filename = filename;
-    item->lineNo = lineNo;
-    item->ch = ch;
     item->line = line;
+    item->ch = ch;
+    item->lineText = lineText;
     items.insert(pos,item);
     endInsertRows();
 }
@@ -275,9 +275,9 @@ QVariant TodoModel::data(const QModelIndex &index, int role) const
         case 0:
             return item->filename;
         case 1:
-            return item->lineNo;
+            return item->line+1;
         case 2:
-            return item->line;
+            return item->lineText;
         }
     }
     return QVariant();

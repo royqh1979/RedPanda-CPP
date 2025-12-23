@@ -539,14 +539,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::updateForEncodingInfo(bool clear)
-{
-    Editor * editor = mEditorList->getEditor();
-    updateForEncodingInfo(editor,clear);
-}
-
-void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
-    if (!clear && editor!=nullptr) {
+void MainWindow::updateForEncodingInfo(const Editor* editor) {
+    if (editor!=nullptr) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
                         QString(" %1(%2) ")
@@ -1351,12 +1345,21 @@ void MainWindow::onBreakpointsCleared(const Editor *e)
     mDebugger->deleteBreakpoints(e);
 }
 
+void MainWindow::onParseTodoRequired(const QString &fileName, bool inProject)
+{
+    if (pSettings->editor().parseTodos())
+        mTodoParser->parseFile(fileName, inProject);
+}
+
 void MainWindow::connectEditorSignals(Editor *editor)
 {
     connect(editor, &Editor::breakpointAdded, this, &MainWindow::onBreakpointAdded);
     connect(editor, &Editor::breakpointRemoved, this, &MainWindow::onBreakpointRemoved);
     connect(editor, &Editor::breakpointsCleared, this, &MainWindow::onBreakpointsCleared);
-    connect(editor, &Editor::syntaxCheckRequired, this, &MainWindow::checkSyntaxInBack);
+    connect(editor, &Editor::syntaxCheckRequested, this, &MainWindow::checkSyntaxInBack);
+    connect(editor, &Editor::parseTodoRequested, this, &MainWindow::onParseTodoRequired);
+    connect(editor, &Editor::updateEncodingInfoRequested, this, &MainWindow::updateForEncodingInfo);
+
 }
 
 void MainWindow::executeTool(PToolItem item)
@@ -3684,7 +3687,7 @@ void MainWindow::loadLastOpens()
     }
     if (focusedEditor) {
         updateEditorActions();
-        updateForEncodingInfo();
+        updateForEncodingInfo(mEditorList->getEditor());
         focusedEditor->reparse(false);
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
@@ -5482,9 +5485,9 @@ void MainWindow::onTodoParseStarted()
     mTodoModel->clear();
 }
 
-void MainWindow::onTodoFound(const QString& filename, int lineNo, int ch, const QString& line)
+void MainWindow::onTodoFound(const QString& filename, int line, int ch, const QString& lineText)
 {
-    mTodoModel->addItem(filename,lineNo,ch,line);
+    mTodoModel->addItem(filename,line,ch,lineText);
 }
 
 void MainWindow::onTodoParseFinished()
@@ -8370,7 +8373,7 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
     if (item) {
         Editor * editor = mEditorList->getOpenedEditorByFilename(item->filename);
         if (editor) {
-            editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->lineNo});
+            editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->line});
         }
     }
 }

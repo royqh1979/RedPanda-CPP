@@ -26,9 +26,9 @@
 
 struct TodoItem {
     QString filename;
-    int lineNo;
+    int line;
     int ch;
-    QString line;
+    QString lineText;
 };
 
 using PTodoItem = std::shared_ptr<TodoItem>;
@@ -37,8 +37,8 @@ class TodoModel : public QAbstractListModel {
     Q_OBJECT
 public:
     explicit TodoModel(QObject* parent=nullptr);
-    void addItem(const QString& filename, int lineNo,
-                 int ch, const QString& line);
+    void addItem(const QString& filename, int line,
+                 int ch, const QString& lineText);
     void removeTodosForFile(const QString& filename);
     void clear();
     void clear(bool forProject);
