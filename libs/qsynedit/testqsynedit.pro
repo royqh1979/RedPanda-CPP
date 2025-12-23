@@ -23,12 +23,16 @@ SOURCES += \
     test/main.cpp \
     test/test_charpos.cpp \
     test/test_document.cpp \
-    test/test_qsynedit.cpp
+    test/test_qsynedit_base.cpp \
+    test/test_qsynedit_cpp.cpp \
+    test/test_qsynedit_emoji.cpp
 
 HEADERS += \
     test/test_charpos.h \
     test/test_document.h \
-    test/test_qsynedit.h
+    test/test_qsynedit_base.h \
+    test/test_qsynedit_cpp.h \
+    test/test_qsynedit_emoji.h
 
 SOURCES += qsynedit/codefolding.cpp \
     qsynedit/constants.cpp \

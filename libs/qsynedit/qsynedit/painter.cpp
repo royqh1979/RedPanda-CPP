@@ -819,7 +819,6 @@ void QSynEditPainter::addHighlightToken(
 
 void QSynEditPainter::paintFoldAttributes()
 {
-    int tabSteps, lineIndent, lastNonBlank;
     // Paint indent guides. Use folds to determine indent value of these
     // Use a separate loop so we can use a custom pen
     // Paint indent guides using custom pen
@@ -847,9 +846,9 @@ void QSynEditPainter::paintFoldAttributes()
             if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }
-            lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(vLine));
+            int lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(vLine));
             int indentLevel = 0 ;
-            tabSteps = 0;
+            int tabSteps = 0;
             while (tabSteps < lineIndent) {
                 X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();

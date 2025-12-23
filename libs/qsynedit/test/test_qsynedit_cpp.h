@@ -1,36 +1,18 @@
+#ifndef TEST_QSYNEDIT_CPP
+#define TEST_QSYNEDIT_CPP
 #include <QtTest>
 #include <QCoreApplication>
-#include "qsynedit/qsynedit.h"
+#include "test_qsynedit_base.h"
 
 namespace QSynedit{
 
-class TestQSyneditCpp : public QObject
+class TestQSyneditCpp : public TestQSyneditBase
 {
     Q_OBJECT
-private:
-    std::shared_ptr<QSynEdit> mEdit;
-    QList<int> mDeleteStartLines;
-    QList<int> mDeleteLineCounts;
-    QList<int> mInsertStartLines;
-    QList<int> mInsertLineCounts;
-    QList<int> mLineMovedFroms;
-    QList<int> mLineMovedTos;
-    QList<StatusChanges> mStatusChanges;
-    QList<int> mReparseStarts;
-    QList<int> mReparseCounts;
 private slots:
-    void onLinesDeleted(int line, int count);
-    void onLinesInserted(int line, int count);
-    void onLineMoved(int from, int to);
-    void onStatusChanged(StatusChanges change);
-    void onReparsed(int start, int count);
-
     void initTestCase();
     void cleanup();
-    void clearReparseDatas();
-    void clearSignalDatas();
     void loadDemoFile();
-    void clearContent();
 
     void test_get_token_data();
     void test_get_token();
@@ -129,3 +111,4 @@ private slots:
 };
 
 }
+#endif

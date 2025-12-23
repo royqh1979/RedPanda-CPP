@@ -2,7 +2,8 @@
 #include <QGuiApplication>
 #include "test_charpos.h"
 #include "test_document.h"
-#include "test_qsynedit.h"
+#include "test_qsynedit_cpp.h"
+#include "test_qsynedit_emoji.h"
 #include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
@@ -30,6 +31,12 @@ int main(int argc, char *argv[]) {
         QSynedit::TestQSyneditCpp tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
+
+    {
+        QSynedit::TestQSyneditEmoji tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
 
     return status;
 }
