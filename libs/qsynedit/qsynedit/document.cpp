@@ -217,13 +217,6 @@ size_t Document::getLineSeq(int line) const
     return mLines[line]->lineSeq();
 }
 
-int Document::getLineGlyphsCount(int line) const
-{
-    QMutexLocker locker(&mMutex);
-    Q_ASSERT(line >=0 && line < mLines.count());
-    return mLines[line]->glyphsCount();
-}
-
 // QList<int> Document::getGlyphPositions(int index)
 // {
 //     QMutexLocker locker(&mMutex);

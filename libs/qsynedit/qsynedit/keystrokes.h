@@ -119,7 +119,7 @@ enum class EditCommand {
     DeleteLine      = 507,  // Delete current line
     ClearAll        = 508,  // Delete everything
     LineBreak       = 509,  // Break line at current position, move caret to new line
-    Char            = 511,  // Insert a character at current position
+    Input            = 511,  // Insert a character / one line string at current position
     Duplicate   = 512,  // Duplicate current line
     MoveSelUp       = 513,  // Move selection up
     MoveSelDown     = 514,  // Move selection down
@@ -148,7 +148,6 @@ enum class EditCommand {
     LowerCaseBlock  = 626,
     ToggleCaseBlock = 627,
 
-    String          = 630,  //Insert a whole string
     ZoomOut         = 631,  //Increase Font Size
     ZoomIn          = 632,  //Decrease Font Size
 

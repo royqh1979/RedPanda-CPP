@@ -678,14 +678,13 @@ private:
     void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
-    void internalAddChar(const QString& chText);
+    void internalInputStr(const QString& inputStr);
     void internalClearAll();
-    void doAddChar(const QString& chText);
+    void doInputStr(const QString& chText);
     void doCutToClipboard();
     void doCopyToClipboard();
     void internalDoCopyToClipboard(const QString& s);
     void doPasteFromClipboard();
-    void doAddStr(const QString& s);
     void doUndo();
     void doUndoItem();
     void doRedo();
@@ -698,7 +697,7 @@ private:
     void doToggleComment();
     void doToggleBlockComment();
     void doMouseScroll(bool isDragging, int scrollX, int scrollY);
-    void doUndoRedoAddChar(const QString &oldGlyph,
+    void doUndoRedoInput(const QString &oldGlyph,
                        const CharPos &changeStartPos,
                        const CharPos &changeEndPos,
                        SelectionMode changeSelectionMode,

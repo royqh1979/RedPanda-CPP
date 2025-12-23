@@ -301,9 +301,9 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
 
     mEdit->setCaretXY(CharPos{10,2});
     clearSignalDatas();
-    mEdit->processCommand(EditCommand::Char, "🌸");
-    mEdit->processCommand(EditCommand::Char, "🌹");
-    mEdit->processCommand(EditCommand::Char, "👩‍🎨");
+    mEdit->processCommand(EditCommand::Input, "🌸");
+    mEdit->processCommand(EditCommand::Input, "🌹");
+    mEdit->processCommand(EditCommand::Input, "👩‍🎨");
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(mEdit->caretXY(),CharPos(19,2));
     QCOMPARE(mEdit->selBegin(),CharPos(19,2));

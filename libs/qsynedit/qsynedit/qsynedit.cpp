@@ -1623,7 +1623,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     }
 }
 
-void QSynEdit::doUndoRedoAddChar(const QString &oldGlyph,
+void QSynEdit::doUndoRedoInput(const QString &oldGlyph,
                              const CharPos &changeStartPos,
                              const CharPos &changeEndPos,
                              SelectionMode changeSelMode,
@@ -1632,27 +1632,27 @@ void QSynEdit::doUndoRedoAddChar(const QString &oldGlyph,
 {
     int changeLine = changeStartPos.line;
     QString lineStr = mDocument->getLine(changeLine);
-    QString replacedGlyph = lineStr.mid(
+    QString replacedStr = lineStr.mid(
                 changeStartPos.ch,
                 changeEndPos.ch-changeStartPos.ch);
     QString leftStr = lineStr.left(changeStartPos.ch);
     QString rightStr = lineStr.mid(changeEndPos.ch);
-    QString restorestr = leftStr+oldGlyph+rightStr;
-    properSetLine(changeLine, restorestr, true);
+    QString restoredStr = leftStr+oldGlyph+rightStr;
+    properSetLine(changeLine, restoredStr, true);
     if (undo) {
         mRedoList->addRedo(
-                    ChangeReason::AddChar,
+                    ChangeReason::Input,
                     changeStartPos,
                     CharPos{changeStartPos.ch+oldGlyph.length(),changeLine},
-                    QStringList{replacedGlyph},
+                    QStringList{replacedStr},
                     changeSelMode,
                     changeNumber);
     } else { //redo
         mUndoList->restoreChange(
-                    ChangeReason::AddChar,
+                    ChangeReason::Input,
                     changeStartPos,
                     CharPos{changeStartPos.ch+oldGlyph.length(),changeLine},
-                    QStringList{replacedGlyph},
+                    QStringList{replacedStr},
                     changeSelMode,
                     changeNumber);
     }
@@ -2328,7 +2328,7 @@ void QSynEdit::doBreakLine()
 void QSynEdit::doTabKey()
 {
     if (mActiveSelectionMode == SelectionMode::Column) {
-        doAddChar("\t");
+        doInputStr("\t");
         return;
     }
     // Provide Visual Studio like block indenting
@@ -2592,52 +2592,63 @@ void QSynEdit::doBlockUnindent()
     endEditing();
 }
 
-void QSynEdit::internalAddChar(const QString& chText)
+void QSynEdit::internalInputStr(const QString& inputStr)
 {
     if ((mActiveSelectionMode != SelectionMode::Normal)
             || selAvail()) {
-        doSetSelText(chText);
+        doSetSelText(inputStr);
         return;
     }
+    Q_ASSERT(validGlyphStart(caretXY()));
     beginEditing();
     QString s = lineText();
-    QString replacedGlyph;
+    QString replaceStr;
     QString newS;
     if (!mInserting) {
+        int inputGlyphCounts = calcGlyphStartCharList(inputStr).length();
         int currentGlyphIdx = mDocument->charToGlyphIndex(mCaretY, mCaretX);
         if (currentGlyphIdx < mDocument->glyphCount(mCaretY)) {
-            replacedGlyph = mDocument->glyph(mCaretY,currentGlyphIdx);
-            newS = s.left(mCaretX)+chText+s.mid(mCaretX+replacedGlyph.length());
+            int endDeleteGlyphIdx = std::min(currentGlyphIdx + inputGlyphCounts - 1, mDocument->glyphCount(mCaretY) - 1);
+            int replaceEnd = mDocument->glyphEndChar(mCaretY, endDeleteGlyphIdx);
+            replaceStr = s.mid(mCaretX, replaceEnd-mCaretX);
+            newS = s.left(mCaretX)+inputStr+s.mid(replaceEnd);
         }
     }
-    if (replacedGlyph.isEmpty()) {
-        newS = s.left(mCaretX)+chText+s.mid(mCaretX);
+    if (replaceStr.isEmpty()) {
+        newS = s.left(mCaretX)+inputStr+s.mid(mCaretX);
     }
     properSetLine(mCaretY,newS,true);
-    addChangeToUndo(ChangeReason::AddChar,
+    addChangeToUndo(ChangeReason::Input,
             CharPos{mCaretX, mCaretY},
-            CharPos{mCaretX+chText.length(), mCaretY},
-            QStringList(replacedGlyph),
+            CharPos{mCaretX+inputStr.length(), mCaretY},
+            QStringList(replaceStr),
             SelectionMode::Normal
             );
-    setCaretX(mCaretX+chText.length());
+    setCaretX(mCaretX+inputStr.length());
     endEditing();
 }
 
-void QSynEdit::doAddChar(const QString& chText)
+void QSynEdit::doInputStr(const QString& s)
 {
     if (mReadOnly)
         return;
-    QList<int> glyphList = calcGlyphStartCharList(chText);
-    if (glyphList.count()!=1) {
-        return;
+    QString inputStr = s;
+    for(int i=0;i<s.length();i++) {
+        if (s[i]=='\r' || s[i]=='\n' || s[i]=='\0') {
+            inputStr = s.left(i);
+            break;
+        }
     }
-    if (chText.length() == 1 && !chText[0].isPrint() && chText[0]!='\t')
+    if (inputStr.isEmpty())
         return;
-    beginEditing();
-    //mCaretX will change after setSelLength;
-    if (mInserting == false && !selAvail()) {
-        if (mActiveSelectionMode == SelectionMode::Column) {
+    if (inputStr.length() == 1 ) {
+        if (!inputStr[0].isPrint() && inputStr[0]!='\t')
+            return;
+    }
+
+    if (mActiveSelectionMode == SelectionMode::Column) {
+        if (mInserting == false && !selAvail()) {
+            //todo
             //we can't use blockBegin()/blockEnd()
             CharPos start=mSelectionBegin;
             CharPos end=mSelectionEnd;
@@ -2647,130 +2658,132 @@ void QSynEdit::doAddChar(const QString& chText)
             setSelBegin(start);
             setSelEnd(end);
         }
-    }
-
-    if (chText.length()>1) {
-        bool shouldAddBreak = true;
-        if (!selAvail()) {
-            PUndoItem undoItem = mUndoList->peekItem();
-            if (undoItem && undoItem->changeReason()==ChangeReason::AddChar
-                    && undoItem->changeEndPos().line == mCaretY
-                    && undoItem->changeEndPos().ch == mCaretX
-                    && undoItem->changeEndPos().ch - undoItem->changeStartPos().ch>1) {
-                shouldAddBreak = false;
-            }
-        }
-        if (shouldAddBreak)
-            addGroupUndoBreak();
-        internalAddChar(chText);
     } else {
-        QChar lastCh{0};
-        if (!selAvail()) {
-            PUndoItem undoItem = mUndoList->peekItem();
-            if (undoItem && undoItem->changeReason()==ChangeReason::AddChar
-                    && undoItem->changeEndPos().line == mCaretY
-                    && undoItem->changeEndPos().ch == mCaretX
-                    && undoItem->changeStartPos().line == mCaretY
-                    && undoItem->changeStartPos().ch == mCaretX-1) {
-                QString s = mDocument->getLine(mCaretY);
-                int i=mCaretX-1;
-                if (i>=0 && i<s.length())
-                    lastCh=s[i];
+        beginEditing();
+
+        if (inputStr.length()>1) {
+            bool shouldAddBreak = true;
+            if (!selAvail()) {
+                PUndoItem undoItem = mUndoList->peekItem();
+                if (undoItem && undoItem->changeReason()==ChangeReason::Input
+                        && undoItem->changeEndPos().line == mCaretY
+                        && undoItem->changeEndPos().ch == mCaretX
+                        && undoItem->changeEndPos().ch - undoItem->changeStartPos().ch>1) {
+                    shouldAddBreak = false;
+                }
             }
-        }
-        if (isIdentChar(chText[0])) {
-            if (!isIdentChar(lastCh)) {
+            if (shouldAddBreak)
                 addGroupUndoBreak();
-            }
-            internalAddChar(chText);
-        } else if (isSpaceChar(chText[0])) {
-            // break group undo chain
-            if (!isSpaceChar(lastCh)) {
-                addGroupUndoBreak();
-            }
-            internalAddChar(chText);
+            internalInputStr(inputStr);
         } else {
-            if (isSpaceChar(lastCh) || isIdentChar(lastCh)) {
-                addGroupUndoBreak();
+            QChar lastCh{0};
+            if (!selAvail()) {
+                PUndoItem undoItem = mUndoList->peekItem();
+                if (undoItem && undoItem->changeReason()==ChangeReason::Input
+                        && undoItem->changeEndPos().line == mCaretY
+                        && undoItem->changeEndPos().ch == mCaretX
+                        && undoItem->changeStartPos().line == mCaretY
+                        && undoItem->changeStartPos().ch == mCaretX-1) {
+                    QString s = mDocument->getLine(mCaretY);
+                    int i=mCaretX-1;
+                    if (i>=0 && i<s.length())
+                        lastCh=s[i];
+                }
             }
-            int oldCaretX=mCaretX;
-            int oldCaretY=mCaretY;
-            internalAddChar(chText);
-            // auto indent
-            if (mActiveSelectionMode==SelectionMode::Normal
-                    && mOptions.testFlag(EditorOption::AutoIndent)
-                    && mSyntaxer->language() == ProgrammingLanguage::CPP
-                    && (oldCaretY<=mDocument->count()) ) {
+            if (isIdentChar(inputStr[0])) {
+                if (!isIdentChar(lastCh)) {
+                    addGroupUndoBreak();
+                }
+                internalInputStr(inputStr);
+            } else if (isSpaceChar(inputStr[0])) {
+                // break group undo chain
+                if (!isSpaceChar(lastCh)) {
+                    addGroupUndoBreak();
+                }
+                internalInputStr(inputStr);
+            } else {
+                if (isSpaceChar(lastCh) || isIdentChar(lastCh)) {
+                    addGroupUndoBreak();
+                }
+                int oldCaretX=mCaretX;
+                int oldCaretY=mCaretY;
+                internalInputStr(inputStr);
+                // auto indent
+                if (mActiveSelectionMode==SelectionMode::Normal
+                        && mOptions.testFlag(EditorOption::AutoIndent)
+                        && mSyntaxer->language() == ProgrammingLanguage::CPP
+                        && (oldCaretY<=mDocument->count()) ) {
 
-                //unindent if ':' at end of the line
-                if (chText[0] == ':') {
-                    QString line = mDocument->getLine(oldCaretY);
-                    if (mCaretX == line.length()) {
-                        int indentSpaces = calcIndentSpaces(oldCaretY,line, true);
-                        if (indentSpaces != leftSpaces(line)) {
-                            QString newLine = genSpaces(indentSpaces) + trimLeft(line);
-                            properSetLine(oldCaretY,newLine,true);
-                            setCaretXY(CharPos{newLine.length(),oldCaretY});
-                            addChangeToUndo(ChangeReason::Delete,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{line.length(), oldCaretY},
-                                    QStringList(line),
-                                    SelectionMode::Normal
-                                    );
-                            addChangeToUndo(ChangeReason::Insert,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{newLine.length(), oldCaretY},
-                                    QStringList(),
-                                    SelectionMode::Normal
-                                    );
+                    //unindent if ':' at end of the line
+                    if (inputStr == ":") {
+                        QString line = mDocument->getLine(oldCaretY);
+                        if (mCaretX == line.length()) {
+                            int indentSpaces = calcIndentSpaces(oldCaretY,line, true);
+                            if (indentSpaces != leftSpaces(line)) {
+                                QString newLine = genSpaces(indentSpaces) + trimLeft(line);
+                                properSetLine(oldCaretY,newLine,true);
+                                setCaretXY(CharPos{newLine.length(),oldCaretY});
+                                addChangeToUndo(ChangeReason::Delete,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{line.length(), oldCaretY},
+                                        QStringList(line),
+                                        SelectionMode::Normal
+                                        );
+                                addChangeToUndo(ChangeReason::Insert,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{newLine.length(), oldCaretY},
+                                        QStringList(),
+                                        SelectionMode::Normal
+                                        );
+                            }
                         }
-                    }
-                } else if (chText[0] == '*') {
-                    QString line = mDocument->getLine(oldCaretY);
-                    if (mCaretX == line.length()) {
-                        int indentSpaces = calcIndentSpaces(oldCaretY,line+"*", true);
-                        if (indentSpaces != leftSpaces(line)) {
-                            QString newLine = genSpaces(indentSpaces) + trimLeft(line);
-                            properSetLine(oldCaretY,newLine, true);
-                            setCaretXY(CharPos{newLine.length(), oldCaretY});
-                            addChangeToUndo(ChangeReason::Delete,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{line.length(), oldCaretY},
-                                    QStringList(line),
-                                    SelectionMode::Normal
-                                    );
-                            addChangeToUndo(ChangeReason::Insert,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{newLine.length(), oldCaretY},
-                                    QStringList(),
-                                    SelectionMode::Normal
-                                    );
+                    } else if (inputStr == "*") {
+                        QString line = mDocument->getLine(oldCaretY);
+                        if (mCaretX == line.length()) {
+                            int indentSpaces = calcIndentSpaces(oldCaretY,line+"*", true);
+                            if (indentSpaces != leftSpaces(line)) {
+                                QString newLine = genSpaces(indentSpaces) + trimLeft(line);
+                                properSetLine(oldCaretY,newLine, true);
+                                setCaretXY(CharPos{newLine.length(), oldCaretY});
+                                addChangeToUndo(ChangeReason::Delete,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{line.length(), oldCaretY},
+                                        QStringList(line),
+                                        SelectionMode::Normal
+                                        );
+                                addChangeToUndo(ChangeReason::Insert,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{newLine.length(), oldCaretY},
+                                        QStringList(),
+                                        SelectionMode::Normal
+                                        );
+                            }
                         }
-                    }
-                } else if (chText[0] == '{' || chText[0] == '}' || chText[0] == '#') {
-                    //Reindent line when add '{' '}' and '#' at the beginning
-                    QString left = mDocument->getLine(oldCaretY).left(oldCaretX);
-                    // and the first nonblank char is this new {
-                    if (left.trimmed().isEmpty()) {
-                        int indentSpaces = calcIndentSpaces(oldCaretY,chText[0], true);
-                        if (indentSpaces != leftSpaces(left)) {
-                            QString right = mDocument->getLine(oldCaretY).mid(oldCaretX);
-                            QString newLeft = genSpaces(indentSpaces);
-                            properSetLine(oldCaretY,newLeft+right, true);
-                            setCaretXY(CharPos{newLeft.length(),oldCaretY});
-                            addChangeToUndo(ChangeReason::Delete,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{left.length(), oldCaretY},
-                                    QStringList(left),
-                                    SelectionMode::Normal
-                                    );
-                            addChangeToUndo(ChangeReason::Insert,
-                                    CharPos{0, oldCaretY},
-                                    CharPos{newLeft.length(), oldCaretY},
-                                    QStringList(""),
-                                    SelectionMode::Normal
-                                    );
+                    } else if (inputStr[0] == "{" || inputStr[0] == "}" || inputStr[0] == "#") {
+                        //Reindent line when add '{' '}' and '#' at the beginning
+                        QString left = mDocument->getLine(oldCaretY).left(oldCaretX);
+                        // and the first nonblank char is this new {
+                        if (left.trimmed().isEmpty()) {
+                            int indentSpaces = calcIndentSpaces(oldCaretY,inputStr, true);
+                            if (indentSpaces != leftSpaces(left)) {
+                                QString right = mDocument->getLine(oldCaretY).mid(oldCaretX);
+                                QString newLeft = genSpaces(indentSpaces);
+                                properSetLine(oldCaretY,newLeft+right, true);
+                                setCaretXY(CharPos{newLeft.length(),oldCaretY});
+                                addChangeToUndo(ChangeReason::Delete,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{left.length(), oldCaretY},
+                                        QStringList(left),
+                                        SelectionMode::Normal
+                                        );
+                                addChangeToUndo(ChangeReason::Insert,
+                                        CharPos{0, oldCaretY},
+                                        CharPos{newLeft.length(), oldCaretY},
+                                        QStringList(""),
+                                        SelectionMode::Normal
+                                        );
 
+                            }
                         }
                     }
                 }
@@ -4072,34 +4085,8 @@ int QSynEdit::tabSize() const
     return mDocument->tabSize();
 }
 
-void QSynEdit::doAddStr(const QString &s)
-{
-    if (mReadOnly)
-        return;
-    beginEditing();
-    if (mInserting == false && !selAvail()) {
-        switch(mActiveSelectionMode) {
-        case SelectionMode::Column: {
-            //we can't use blockBegin()/blockEnd()
-            CharPos start=selBegin();
-            CharPos end=selEnd();
-            if (start.line > end.line )
-                std::swap(start,end);
-            start.ch+=s.length(); // make sure we select a whole char in the start line
-            setSelBegin(start);
-            setSelEnd(end);
-        }
-            break;
-        default:
-            setSelLength(s.length());
-        }
-    }
-    doSetSelText(s);
-    endEditing();
-}
-
 inline bool isGroupChange(ChangeReason reason){
-    return (reason == ChangeReason::AddChar
+    return (reason == ChangeReason::Input
             || reason == ChangeReason::DeleteChar
             || reason == ChangeReason::DeletePreviousChar);
 }
@@ -4224,8 +4211,8 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
-        case ChangeReason::AddChar: {
-            doUndoRedoAddChar(item->changeText()[0],
+        case ChangeReason::Input: {
+            doUndoRedoInput(item->changeText()[0],
                           item->changeStartPos(),
                           item->changeEndPos(),
                           item->changeSelMode(),
@@ -4550,8 +4537,8 @@ void QSynEdit::doRedoItem()
                         );
             properSetLine(item->changeStartPos().line,item->changeText()[0], true);
             break;
-        case ChangeReason::AddChar: {
-            doUndoRedoAddChar(item->changeText()[0],
+        case ChangeReason::Input: {
+            doUndoRedoInput(item->changeText()[0],
                           item->changeStartPos(),
                           item->changeEndPos(),
                           item->changeSelMode(),
@@ -5738,7 +5725,7 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
             }
         } else {
             tempString = mDocument->getLine(line);
-            len = mDocument->getLineGlyphsCount(line);
+            len = mDocument->glyphCount(line);
             if (len < startGlyph) {
                 insertPos = tempString.length()+1;
                 tempString = tempString + QString(startGlyph - len,' ') + str;
@@ -5970,11 +5957,12 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
     case EditCommand::ShiftTab:
         doShiftTabKey();
         break;
-    case EditCommand::Char:
+    case EditCommand::ImeStr:
+    case EditCommand::Input:
         if (data.canConvert<QChar>()) {
-            doAddChar(data.toChar());
+            doInputStr(data.toChar());
         } else
-            doAddChar(data.toString());
+            doInputStr(data.toString());
         break;
     case EditCommand::InsertMode:
         setInsertMode(true);
@@ -5993,10 +5981,6 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
         break;
     case EditCommand::Paste:
         doPasteFromClipboard();
-        break;
-    case EditCommand::ImeStr:
-    case EditCommand::String:
-        doAddStr(data.toString());
         break;
     case EditCommand::Undo:
         doUndo();
@@ -6246,11 +6230,11 @@ void QSynEdit::keyPressEvent(QKeyEvent *event)
             if (event->text().length()==1) {
                 QChar c = event->text().at(0);
                 if (c=='\t' || c.isPrint()) {
-                    processCommand(EditCommand::Char,event->text());
+                    processCommand(EditCommand::Input,event->text());
                     event->accept();
                 }
             } else  {
-                processCommand(EditCommand::Char,event->text());
+                processCommand(EditCommand::Input,event->text());
                 event->accept();
             }
         }

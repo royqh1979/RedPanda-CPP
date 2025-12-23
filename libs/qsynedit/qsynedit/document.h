@@ -421,15 +421,6 @@ public:
     QString getLine(int line) const;
 
     size_t getLineSeq(int line) const;
-    /**
-     * @brief get count of the glyphs on the specified line.
-     *
-     * It's thread safe.
-     *
-     * @param line line index (starts frome 0)
-     * @return
-     */
-    int getLineGlyphsCount(int line) const;
 
     // /**
     //  * @brief get position list of the glyphs on the specified line.
@@ -687,7 +678,7 @@ enum class ChangeReason {
     LineBreak,
     MoveLine,
     ReplaceLine,
-    AddChar,
+    Input,
     DeleteChar,
     DeletePreviousChar,
     MergeWithPrevLine,
