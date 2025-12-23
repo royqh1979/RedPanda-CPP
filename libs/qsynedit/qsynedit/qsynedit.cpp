@@ -1730,7 +1730,7 @@ void QSynEdit::doDeletePrevChar()
         doMergeWithPrevLine();
     } else {
         // delete char
-        QChar lastDelCh{0};
+        QString lastDelText;
         bool shouldAddGroupBreak = false;
         if (!mUndoing && mOptions.testFlag(EditorOption::GroupUndo)) {
             PUndoItem undoItem = mUndoList->peekItem();
@@ -1739,7 +1739,7 @@ void QSynEdit::doDeletePrevChar()
                     && undoItem->changeStartPos().line == mCaretY
                     && undoItem->changeStartPos().ch == mCaretX
                     ))
-                lastDelCh = undoItem->changeText()[0][0];
+                lastDelText = undoItem->changeText()[0];
             else
                 shouldAddGroupBreak = true;
         }
@@ -1750,18 +1750,25 @@ void QSynEdit::doDeletePrevChar()
         int oldCaretX = mCaretX;
         int newCaretX = mDocument->glyphStartChar(mCaretY, glyphIndex-1);
         //qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretY;
-        QString s = tempStr.mid(newCaretX, oldCaretX-newCaretX);
+        QString deletedGlyph = tempStr.mid(newCaretX, oldCaretX-newCaretX);
         setCaretX(newCaretX);
         if (!shouldAddGroupBreak) {
-            if (isSpaceChar(s[0]))
-                shouldAddGroupBreak = !isSpaceChar(lastDelCh);
-            else if (isIdentChar(s[0]))
-                shouldAddGroupBreak = !isIdentChar(lastDelCh);
-            else
-                shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+            if (deletedGlyph.length()!=lastDelText.length())
+                shouldAddGroupBreak = true;
+            else {
+                if (lastDelText.length()==1) {
+                    QChar lastDelCh = lastDelText[0];
+                    if (isSpaceChar(deletedGlyph[0]))
+                        shouldAddGroupBreak = !isSpaceChar(lastDelCh);
+                    else if (isIdentChar(deletedGlyph[0]))
+                        shouldAddGroupBreak = !isIdentChar(lastDelCh);
+                    else
+                        shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+                }
+            }
         }
 
-        helper.append(s);
+        helper.append(deletedGlyph);
         tempStr.remove(newCaretX, oldCaretX-newCaretX);
         properSetLine(mCaretY, tempStr, true);
         if (shouldAddGroupBreak)
@@ -1802,7 +1809,7 @@ void QSynEdit::doDeleteCurrentChar()
         if (mCaretX>tempStrLen) {
             return;
         } else if (mCaretX < tempStrLen) {
-            QChar lastDelCh{0};
+            QString lastDelText;
             bool shouldAddGroupBreak = false;
             if (!mUndoing && mOptions.testFlag(EditorOption::GroupUndo)) {
                 PUndoItem undoItem = mUndoList->peekItem();
@@ -1810,30 +1817,35 @@ void QSynEdit::doDeleteCurrentChar()
                         (undoItem->changeReason() ==ChangeReason::DeleteChar
                         && undoItem->changeStartPos().line == mCaretY
                         && undoItem->changeStartPos().ch == mCaretX
-                        ))
-                    lastDelCh = undoItem->changeText()[0][0];
-                else
+                        )) {
+                    lastDelText = undoItem->changeText()[0];
+                } else
                     shouldAddGroupBreak = true;
             }
 
             beginEditing();
-            int glyphIndex = mDocument->charToGlyphIndex(mCaretY,mCaretX);
-            int glyphLen = mDocument->glyphLength(mCaretY,glyphIndex);
-            QString s = tempStr.mid(mCaretX,glyphLen);
+            QString deletedGlyph = mDocument->glyphAt(mCaretY, mCaretX);
             if (!shouldAddGroupBreak) {
-                if (isSpaceChar(s[0]))
-                    shouldAddGroupBreak = !isSpaceChar(lastDelCh);
-                else if (isIdentChar(s[0]))
-                    shouldAddGroupBreak = !isIdentChar(lastDelCh);
-                else
-                    shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+                if (deletedGlyph.length()!=lastDelText.length())
+                    shouldAddGroupBreak = true;
+                else {
+                    if (lastDelText.length()==1) {
+                        QChar lastDelCh = lastDelText[0];
+                        if (isSpaceChar(deletedGlyph[0]))
+                            shouldAddGroupBreak = !isSpaceChar(lastDelCh);
+                        else if (isIdentChar(deletedGlyph[0]))
+                            shouldAddGroupBreak = !isIdentChar(lastDelCh);
+                        else
+                            shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
+                    }
+                }
             }
 
             // delete char
-            helper.append(s);
-            newCaret.ch = mCaretX + glyphLen;
+            helper.append(deletedGlyph);
+            newCaret.ch = mCaretX + deletedGlyph.length();
             newCaret.line = mCaretY;
-            tempStr.remove(mCaretX, glyphLen);
+            tempStr.remove(mCaretX, deletedGlyph.length());
             properSetLine(mCaretY, tempStr, true);
             if (!mUndoing) {
                 if (shouldAddGroupBreak)
