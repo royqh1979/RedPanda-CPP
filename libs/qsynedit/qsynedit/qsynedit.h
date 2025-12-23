@@ -355,6 +355,7 @@ public:
     bool validLine(int line) const;
     bool validInDoc(int line, int ch) const;
     bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
+    bool validGlyphStart(const CharPos& pos) const;
     bool getPositionOfMouse(CharPos& aPos) const;
     bool getLineOfMouse(int& line) const;
     bool pointToCharLine(const QPoint& point, CharPos& coord) const;

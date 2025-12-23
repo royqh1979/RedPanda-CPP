@@ -254,7 +254,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QStringList text4({
                           "ab🌵🌶🌷🌸🌹🌺🌻🌼🌽",
                           "🌴1🌳2🌵3🌶",
-                          "0🌴1🌳2🌵3🌸🌹🌺",
+                          "0🌴1🌳2🌵3🌸🌹👩‍🎨",
                           "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬cde"
                       });
     mEdit->setContent(text1);
@@ -303,11 +303,11 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     clearSignalDatas();
     mEdit->processCommand(EditCommand::Char, "🌸");
     mEdit->processCommand(EditCommand::Char, "🌹");
-    mEdit->processCommand(EditCommand::Char, "🌺");
+    mEdit->processCommand(EditCommand::Char, "👩‍🎨");
     QCOMPARE(mEdit->content(),text4);
-    QCOMPARE(mEdit->caretXY(),CharPos(16,2));
-    QCOMPARE(mEdit->selBegin(),CharPos(16,2));
-    QCOMPARE(mEdit->selEnd(),CharPos(16,2));
+    QCOMPARE(mEdit->caretXY(),CharPos(19,2));
+    QCOMPARE(mEdit->selBegin(),CharPos(19,2));
+    QCOMPARE(mEdit->selEnd(),CharPos(19,2));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{});
@@ -414,9 +414,9 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     clearSignalDatas();
     mEdit->redo();
     QCOMPARE(mEdit->content(),text4);
-    QCOMPARE(mEdit->caretXY(),CharPos(16,2));
-    QCOMPARE(mEdit->selBegin(),CharPos(16,2));
-    QCOMPARE(mEdit->selEnd(),CharPos(16,2));
+    QCOMPARE(mEdit->caretXY(),CharPos(19,2));
+    QCOMPARE(mEdit->selBegin(),CharPos(19,2));
+    QCOMPARE(mEdit->selEnd(),CharPos(19,2));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{});
@@ -492,7 +492,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
                           "🌴🌳🌵🌶🌷🌸🌹🌺🌻🌼🌽",
                           "🌴1🌳2🌵3🌶",
                           "0🌴1🌳2🌵3🌶",
-                          "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬🧑‍✈️👩‍🎨"
+                          "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬🧑‍✈️🌳"
                       });
     QStringList text2({
                           "🌴🌳🌵🌶🌷🌸🌹🌺🌻🌼🌽",
@@ -670,7 +670,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
                           "🌴🌳🌵🌶🌷🌸🌹🌺🌻🌼🌽",
                           "🌴1🌳2🌵3🌶",
                           "0🌴1🌳2🌵3🌶",
-                          "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬🧑‍✈️👩‍🎨"
+                          "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬🧑‍✈️🌴"
                       });
     QStringList text2({
                           "🌴🌳🌵🌶🌷🌸🌹🌺🌻🌼🌽",
@@ -687,7 +687,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
 
     mEdit->setContent(text1);
 
-    mEdit->setCaretXY(CharPos{31,3});
+    mEdit->setCaretXY(CharPos{28,3});
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
     QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
@@ -749,9 +749,9 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     clearSignalDatas();
     mEdit->undo();
     QCOMPARE(mEdit->content(), text1);
-    QCOMPARE(mEdit->caretXY(),CharPos(31,3));
-    QCOMPARE(mEdit->selBegin(),CharPos(31,3));
-    QCOMPARE(mEdit->selEnd(),CharPos(31,3));
+    QCOMPARE(mEdit->caretXY(),CharPos(28,3));
+    QCOMPARE(mEdit->selBegin(),CharPos(28,3));
+    QCOMPARE(mEdit->selEnd(),CharPos(28,3));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{});
@@ -824,9 +824,9 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     clearSignalDatas();
     mEdit->undo();
     QCOMPARE(mEdit->content(), text1);
-    QCOMPARE(mEdit->caretXY(),CharPos(31,3));
-    QCOMPARE(mEdit->selBegin(),CharPos(31,3));
-    QCOMPARE(mEdit->selEnd(),CharPos(31,3));
+    QCOMPARE(mEdit->caretXY(),CharPos(28,3));
+    QCOMPARE(mEdit->selBegin(),CharPos(28,3));
+    QCOMPARE(mEdit->selEnd(),CharPos(28,3));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{});

@@ -525,6 +525,12 @@ bool QSynEdit::validInDoc(int line, int ch) const
     return ch<= mDocument->getLine(line).length();
 }
 
+bool QSynEdit::validGlyphStart(const CharPos &pos) const
+{
+    return pos.ch == mDocument->charToGlyphStartChar(pos.line, pos.ch);
+
+}
+
 
 bool QSynEdit::getPositionOfMouse(CharPos &aPos) const
 {
@@ -1753,9 +1759,7 @@ void QSynEdit::doDeletePrevChar()
         QString deletedGlyph = tempStr.mid(newCaretX, oldCaretX-newCaretX);
         setCaretX(newCaretX);
         if (!shouldAddGroupBreak) {
-            if (deletedGlyph.length()!=lastDelText.length())
-                shouldAddGroupBreak = true;
-            else {
+            if (deletedGlyph.length() == 1) {
                 if (lastDelText.length()==1) {
                     QChar lastDelCh = lastDelText[0];
                     if (isSpaceChar(deletedGlyph[0]))
@@ -1764,7 +1768,11 @@ void QSynEdit::doDeletePrevChar()
                         shouldAddGroupBreak = !isIdentChar(lastDelCh);
                     else
                         shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
-                }
+                } else
+                    shouldAddGroupBreak = true;
+            } else {
+                if (lastDelText.length()==1)
+                    shouldAddGroupBreak = true;
             }
         }
 
@@ -1826,9 +1834,7 @@ void QSynEdit::doDeleteCurrentChar()
             beginEditing();
             QString deletedGlyph = mDocument->glyphAt(mCaretY, mCaretX);
             if (!shouldAddGroupBreak) {
-                if (deletedGlyph.length()!=lastDelText.length())
-                    shouldAddGroupBreak = true;
-                else {
+                if (deletedGlyph.length() == 1) {
                     if (lastDelText.length()==1) {
                         QChar lastDelCh = lastDelText[0];
                         if (isSpaceChar(deletedGlyph[0]))
@@ -1837,7 +1843,11 @@ void QSynEdit::doDeleteCurrentChar()
                             shouldAddGroupBreak = !isIdentChar(lastDelCh);
                         else
                             shouldAddGroupBreak = isIdentChar(lastDelCh) || isSpaceChar(lastDelCh);
-                    }
+                    } else
+                        shouldAddGroupBreak = true;
+                } else {
+                    if (lastDelText.length()==1)
+                        shouldAddGroupBreak = true;
                 }
             }
 
@@ -3018,6 +3028,7 @@ void QSynEdit::internalSetCaretXY(CharPos value, bool ensureVisible)
 {
     Q_ASSERT(validInDoc(value));
     //value = ensureBufferCoordValid(value);
+    Q_ASSERT(validGlyphStart(value));
     if ((value.ch != mCaretX) || (value.line != mCaretY)) {
         beginInternalChanges();
         auto action = finally([this]{
@@ -6797,6 +6808,8 @@ void QSynEdit::clearSelection()
 void QSynEdit::setSelEnd(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
+    Q_ASSERT(validGlyphStart(value));
+
     beginInternalChanges();
     if (value.ch != mSelectionEnd.ch || value.line != mSelectionEnd.line) {
         if (mActiveSelectionMode == SelectionMode::Column && value.ch != mSelectionEnd.ch) {
@@ -6904,6 +6917,7 @@ const CharPos &QSynEdit::selBegin() const
 void QSynEdit::setSelBegin(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
+    Q_ASSERT(validGlyphStart(value));
     beginInternalChanges();
     if (selAvail()) {
         int nInval1, nInval2;
