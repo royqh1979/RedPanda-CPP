@@ -23,13 +23,15 @@
 namespace QSynedit {
 
 enum SearchOption {
+    ssoNone         = 0x0000,
     ssoMatchCase    = 0x0001,
     ssoWholeWord    = 0x0002,
     ssoBackwards    = 0x0004,
     ssoEntireScope  = 0x0008,
     ssoSelectedOnly = 0x0010,
     ssoWrapAround   = 0x0020,
-    ssoRegExp       = 0x0080
+    ssoRegExp       = 0x0080,
+    ssoIncludeCurrentSelection = 0x0100,
 };
 
 Q_DECLARE_FLAGS(SearchOptions, SearchOption)

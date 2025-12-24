@@ -5275,14 +5275,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
         ptEnd.line = mDocument->count()-1;
         ptEnd.ch = mDocument->getLine(ptEnd.line).length();
         if (bFromCursor) {
-            Qt::CaseSensitivity caseSensitivity = sOptions.testFlag(ssoMatchCase)?Qt::CaseSensitive:Qt::CaseInsensitive;
             if (selAvail()
-                    && matchedCallback // we are replacing
-                    && QString::compare(sSearch,sReplace, Qt::CaseSensitive)!=0
+                    && sOptions.testFlag(ssoIncludeCurrentSelection)
                     && ((bBackward && selBegin() == caretXY())
-                        || (!bBackward && selEnd() == caretXY()))
-                    && selCount() == sSearch.length()
-                    && QString::compare(sSearch,selText(), caseSensitivity)==0 ) {
+                        || (!bBackward && selEnd() == caretXY()))) {
                 if (bBackward) {
                     ptEnd = selEnd();
                 } else {
@@ -5420,8 +5416,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
             }
             if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
                     && bFromCursor ){
-                if (!sOptions.testFlag(ssoWrapAround) && confirmAroundCallback && !confirmAroundCallback())
-                    break;
+                if (!sOptions.testFlag(ssoWrapAround)) {
+                    if (!confirmAroundCallback)
+                        break;
+                    if(!confirmAroundCallback())
+                        break;
+                }
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;
                 ptStart.ch = 0;

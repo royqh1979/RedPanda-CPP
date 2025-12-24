@@ -290,6 +290,7 @@ public:
     void setSelText(const QString& text);
 
     void replaceLine(int line, const QString& lineText);
+
     int searchReplace(const QString& sSearch, const QString& sReplace, SearchOptions options,
                Searcher *searchEngine,  SearchMatchedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);
