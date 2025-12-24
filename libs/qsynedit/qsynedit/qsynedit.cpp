@@ -5249,14 +5249,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
     // option if nothing is selected
     bool bBackward = sOptions.testFlag(ssoBackwards);
     bool bFromCursor = !sOptions.testFlag(ssoEntireScope);
-    CharPos ptCurrent;
-    CharPos ptStart;
-    CharPos ptEnd;
+    CharPos ptCurrent, ptStart, ptEnd;
     if (!selAvail())
         sOptions.setFlag(ssoSelectedOnly,false);
     if (sOptions.testFlag(ssoSelectedOnly)) {
-        ptStart = selBegin();
-        ptEnd = selEnd();
+        CharPos ptStart = selBegin();
+        CharPos ptEnd = selEnd();
         // search the whole line in the line selection mode
         if (mActiveSelectionMode == SelectionMode::Column) {
             // make sure the start column is smaller than the end column
@@ -5270,33 +5268,29 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
             ptCurrent = ptStart;
         }
     } else {
-        ptStart.ch = 0;
-        ptStart.line = 0;
-        ptEnd.line = mDocument->count()-1;
-        ptEnd.ch = mDocument->getLine(ptEnd.line).length();
+        ptStart = fileBegin();
+        ptEnd = fileEnd();
         if (bFromCursor) {
-            if (selAvail()
-                    && sOptions.testFlag(ssoIncludeCurrentSelection)
-                    && ((bBackward && selBegin() == caretXY())
-                        || (!bBackward && selEnd() == caretXY()))) {
-                if (bBackward) {
-                    ptEnd = selEnd();
+            if (selBegin() == caretXY() || selEnd() == caretXY()) {
+                if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
+                    if (bBackward)
+                        ptEnd = std::max(selBegin(), selEnd());
+                    else
+                        ptStart = std::min(selBegin(), selEnd());
                 } else {
-                    ptStart = selBegin();
-                }
-            } else {
-                if (bBackward) {
-                    ptEnd = caretXY();
-                } else {
-                    ptStart = caretXY();
+                    if (bBackward)
+                        ptEnd = std::min(selBegin(), selEnd());
+                    else
+                        ptStart = std::max(selBegin(), selEnd());
                 }
             }
         }
-        if (bBackward)
-            ptCurrent = ptEnd;
-        else
-            ptCurrent = ptStart;
     }
+    if (bBackward)
+        ptCurrent = ptEnd;
+    else
+        ptCurrent = ptStart;
+
     CharPos originCaretXY=caretXY();
     // initialize the search engine
     searchEngine->setOptions(sOptions);
