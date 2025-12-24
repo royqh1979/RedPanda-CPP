@@ -1855,37 +1855,49 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 }
             }
         } else if (!selAvail() && pSettings->editor().highlightMathingBraces()){
-            // Is there a bracket char before us?
-            int lineLength = lineText().length();
-            int ch = caretX();
-            CharPos coord{};
-            if (ch>=0 && ch<lineLength &&  isBraceChar(lineText()[ch]) ) {
-                coord.ch = ch;
-                coord.line = caretY();
+            CharPos coord;
+            //are there a brace char under caret?
+            if (isBraceChar(charAt(caretXY()))) {
+                coord=caretXY();
+            } else if (isBraceChar(charAt(CharPos{caretX()-1,caretY()}))) {
+                coord=CharPos{caretX()-1,caretY()};
             }
-            //or after us?
-            ch = caretX();
-            if (ch>=0 && ch<lineLength &&  isBraceChar(lineText()[ch]) ) {
-                coord.ch = ch+1;
-                coord.line = caretY();
-            }
-            QSynedit::PTokenAttribute attr;
-            QString token;
-            if (getTokenAttriAtRowCol(coord,token,attr)
-                    && attr->tokenType() == QSynedit::TokenType::Symbol) {
-                CharPos complementCharPos = getMatchingBracket(coord);
-                if (!foldHidesLine(coord.line)
-                        && !foldHidesLine(complementCharPos.line)) {
-                    mHighlightCharPos1 = coord;
-                    mHighlightCharPos2 = complementCharPos;
-                    invalidateLine(mHighlightCharPos1.line);
-                    invalidateLine(mHighlightCharPos2.line);
+            if (coord.isValid()) {
+                QSynedit::PTokenAttribute attr;
+                QString token;
+                if (getTokenAttriAtRowCol(coord,token,attr)
+                        && attr->tokenType() == QSynedit::TokenType::Symbol) {
+                    CharPos complementCharPos = getMatchingBracket(coord);
+                    if (!foldHidesLine(coord.line)
+                            && !foldHidesLine(complementCharPos.line)) {
+                        mHighlightCharPos1 = coord;
+                        mHighlightCharPos2 = complementCharPos;
+                        invalidateLine(mHighlightCharPos1.line);
+                        invalidateLine(mHighlightCharPos2.line);
+                    }
                 }
             }
         }
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::Selection)) {
+    if (changes.testFlag(QSynedit::StatusChange::CaretX)
+            || changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        pMainWindow->updateStatusbarForLineCol(this);
+        // Update the function tip
+        if (pSettings->editor().showFunctionTips()) {
+            updateFunctionTip(false);
+            mFunctionTipTimer.stop();
+            if (pSettings->editor().tipsDelay()>0)
+                mFunctionTipTimer.start(500);
+            else
+                onFunctionTipsTimer();
+        }
+    }
+
+    if (changes.testFlag(QSynedit::StatusChange::Selection)
+            || changes.testFlag(QSynedit::StatusChange::CaretX)
+            || changes.testFlag(QSynedit::StatusChange::CaretY)
+            ) {
         if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
             QString token;
             QSynedit::PTokenAttribute attri;
@@ -1911,36 +1923,24 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             invalidate();
             mOldHighlightedWord = mCurrentHighlightedWord;
         }
-        pMainWindow->updateStatusbarForLineCol(this);
-        pMainWindow->updateEditorActions(this);
-        // Update the function tip
-        if (pSettings->editor().showFunctionTips()) {
-            updateFunctionTip(false);
-            mFunctionTipTimer.stop();
-            if (pSettings->editor().tipsDelay()>0)
-                mFunctionTipTimer.start(500);
-            else
-                onFunctionTipsTimer();
-        }
     }
 
     if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         pMainWindow->updateForStatusbarModeInfo(this);
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged) || changes.testFlag(QSynedit::StatusChange::Modified)) {
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
+        || changes.testFlag(QSynedit::StatusChange::Modified)
+        || changes.testFlag(QSynedit::StatusChange::Selection)
+        || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
+        if (!readOnly())
+            initAutoBackup();
         pMainWindow->updateEditorActions(this);
     }
 
     if (changes.testFlag(QSynedit::StatusChange::CaretY) && inTab()) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
-    }
-
-    if (changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
-        if (!readOnly())
-            initAutoBackup();
-        pMainWindow->updateEditorActions(this);
     }
 }
 
@@ -4090,7 +4090,7 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
-                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line)
+                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -4136,23 +4136,8 @@ QString Editor::getHintForFunction(const PStatement &statement, const QString& f
     QFileInfo fileInfo(statement->fileName);
     QString result;
     result = mParser->prettyPrintStatement(statement,filename,line) + " - "
-            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line)
+            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
             + tr("Ctrl+click for more info");
-//    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-//    foreach (const PStatement& childStatement, children){
-//        if (statement->command == childStatement->command
-//                && statement->kind == childStatement->kind) {
-//            if ((line < childStatement->line) &&
-//                    childStatement->fileName == filename)
-//                continue;
-//            if (!result.isEmpty())
-//                result += "\n";
-//            QFileInfo fileInfo(childStatement->fileName);
-//            result = mParser->prettyPrintStatement(childStatement,filename,line) + " - "
-//                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(childStatement->line)
-//                    + tr("Ctrl+click for more info");
-//        }
-//    }
     return result;
 }
 
@@ -4254,8 +4239,8 @@ void Editor::updateFunctionTip(bool showTip)
                         // found start of function
                         foundFunctionStart = true;
                         if (i>0) {
-                            functionNamePos.line = currentLine+1;
-                            functionNamePos.ch = positions[i-1]+1;
+                            functionNamePos.line = currentLine;
+                            functionNamePos.ch = positions[i-1];
                         }
                         break;
                     } else if (tokens[i]=="[") {
@@ -4283,8 +4268,8 @@ void Editor::updateFunctionTip(bool showTip)
             if (i>=0){
                 if (!tokens[i].isEmpty() &&
                     isIdentStartChar(tokens[i].front())) {
-                    functionNamePos.line = currentLine+1;
-                    functionNamePos.ch = positions[i]+1;
+                    functionNamePos.line = currentLine;
+                    functionNamePos.ch = positions[i];
                     break;
                 }
                 // not a valid function

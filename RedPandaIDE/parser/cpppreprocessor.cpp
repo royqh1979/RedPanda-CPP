@@ -834,7 +834,7 @@ void CppPreprocessor::closeInclude()
     // Update result file (we've left the previous file)
     mResult.append(
                 QString("#include %1:%2").arg(parsedFile->fileName)
-                .arg(parsedFile->index+1));
+                .arg(parsedFile->index));
 }
 
 CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult oldResult)
