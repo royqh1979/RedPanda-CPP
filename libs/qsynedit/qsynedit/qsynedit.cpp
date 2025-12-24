@@ -426,7 +426,10 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                         if (line == pos.line && mSyntaxer->getTokenPos() >= pos.ch) {
                             break;
                         }
-                        if (mSyntaxer->getTokenAttribute()->tokenType() == TokenType::Symbol) {
+                        TokenType tokenType = mSyntaxer->getTokenAttribute()->tokenType();
+                        if ( tokenType != TokenType::String
+                             && tokenType != TokenType::Character
+                             && tokenType != TokenType::String ) {
                             if (mSyntaxer->getToken() == bracketOpen
                                     || mSyntaxer->getToken() == bracketClose) {
                                bracketsFound.append(mSyntaxer->getToken()[0]);
@@ -455,10 +458,13 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                 for (int line=pos.line;line<mDocument->count();line++) {
                     mSyntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
                     while(!mSyntaxer->eol()) {
+                        TokenType tokenType = mSyntaxer->getTokenAttribute()->tokenType();
                         if (line == pos.line && mSyntaxer->getTokenPos() <= pos.ch) {
                             goto MOVE_NEXT_2;
                         }
-                        if (mSyntaxer->getTokenAttribute()->tokenType() == TokenType::Symbol) {
+                        if ( tokenType != TokenType::String
+                             && tokenType != TokenType::Character
+                             && tokenType != TokenType::String ) {
                             if (mSyntaxer->getToken() == bracketOpen)
                                 ++bracketsLevel;
                             else if (mSyntaxer->getToken() == bracketClose) {
@@ -5228,8 +5234,8 @@ void QSynEdit::doSetSelText(const QString &value)
     doSetSelTextPrimitive(splitStrings(value));
 }
 
-int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, PSynSearchBase searchEngine,
-                    SearchMathedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
+int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, Searcher *searchEngine,
+                    SearchMatchedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
         return 0;
@@ -5369,8 +5375,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 if (searchAction==SearchAction::ReplaceAndExit) {
                     searchAction=SearchAction::Exit;
                 } else if (matchedCallback && !dobatchReplace) {
-                    searchAction = matchedCallback(sSearch,replaceText,ptCurrent.line,
-                                    nFound,nSearchLen);
+                    searchAction = matchedCallback(
+                                selText(),replaceText,
+                                CharPos{nFound,ptCurrent.line},
+                                nSearchLen);
                 }
                 if (searchAction==SearchAction::Exit) {
                     return result;

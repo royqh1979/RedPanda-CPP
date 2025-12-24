@@ -25,6 +25,7 @@ SOURCES += \
     test/test_document.cpp \
     test/test_qsynedit_base.cpp \
     test/test_qsynedit_cpp.cpp \
+    test/test_qsynedit_cpp_search_replace.cpp \
     test/test_qsynedit_emoji.cpp
 
 HEADERS += \
@@ -32,6 +33,7 @@ HEADERS += \
     test/test_document.h \
     test/test_qsynedit_base.h \
     test/test_qsynedit_cpp.h \
+    test/test_qsynedit_cpp_search_replace.h \
     test/test_qsynedit_emoji.h
 
 SOURCES += qsynedit/codefolding.cpp \

@@ -86,7 +86,7 @@ void SearchDialog::doSearch(bool backward)
 
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
-        QSynedit::PSynSearchBase searchEngine;
+        QSynedit::PSearcher searchEngine;
         if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
             searchEngine = mRegexSearchEngine;
         } else {
@@ -96,7 +96,7 @@ void SearchDialog::doSearch(bool backward)
                     ui->cbFind->currentText(),
                     "",
                     mSearchOptions,
-                    searchEngine, nullptr, [this,backward](){
+                    searchEngine.get(), nullptr, [this,backward](){
                         QString msg;
                         if (backward) {
                             msg = tr("Beginning of file has been reached. ")
@@ -146,7 +146,7 @@ void SearchDialog::doReplace(bool replaceAll)
     prepareOptions(false);
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
-        QSynedit::PSynSearchBase searchEngine;
+        QSynedit::PSearcher searchEngine;
         if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
             searchEngine = mRegexSearchEngine;
         } else {
@@ -156,9 +156,9 @@ void SearchDialog::doReplace(bool replaceAll)
                     ui->cbFind->currentText(),
                     ui->cbReplace->currentText(),
                     mSearchOptions,
-                    searchEngine,
-                    [&replaceAll](const QString& /*sSearch*/,
-                    const QString& /*sReplace*/, int /*Line*/, int /*ch*/, int /*wordLen*/){
+                    searchEngine.get(),
+                    [&replaceAll](const QString& /*sFound*/,
+                    const QString& /*sReplace*/, const QSynedit::CharPos &, int /*wordLen*/){
                         if (replaceAll) {
                             return QSynedit::SearchAction::ReplaceAll;
                         } else {

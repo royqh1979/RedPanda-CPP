@@ -20,7 +20,7 @@
 
 namespace QSynedit {
 
-RegexSearcher::RegexSearcher(QObject* parent):BaseSearcher(parent)
+RegexSearcher::RegexSearcher(QObject* parent):Searcher(parent)
 {
 
 }
@@ -79,14 +79,14 @@ QString RegexSearcher::replace(const QString &aOccurrence, const QString &aRepla
 
 void RegexSearcher::setPattern(const QString &value)
 {
-    BaseSearcher::setPattern(value);
+    Searcher::setPattern(value);
     mRegex.setPattern(value);
     updateRegexOptions();
 }
 
 void RegexSearcher::setOptions(const SearchOptions &options)
 {
-    BaseSearcher::setOptions(options);
+    Searcher::setOptions(options);
     updateRegexOptions();
 }
 

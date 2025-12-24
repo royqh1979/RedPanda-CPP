@@ -40,8 +40,8 @@ SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     mSearchOptions&=0;
-    mBasicSearchEngine= QSynedit::PSynSearchBase(new QSynedit::BasicSearcher());
-    mRegexSearchEngine= QSynedit::PSynSearchBase(new QSynedit::RegexSearcher());
+    mBasicSearchEngine= std::make_shared<QSynedit::BasicSearcher>();
+    mRegexSearchEngine= std::make_shared<QSynedit::RegexSearcher>();
     ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
     on_rbFolder_toggled(false);
 }
@@ -341,7 +341,7 @@ void SearchInFileDialog::doSearch(bool replace)
 }
 
 int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSearch, const QString &sReplace,
-                          QSynedit::SearchMathedProc matchCallback,
+                          QSynedit::SearchMatchedProc matchCallback,
                           QSynedit::SearchConfirmAroundProc confirmAroundCallback)
 {
     if (editor==nullptr)
@@ -357,7 +357,7 @@ int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSear
         }
     }
 
-    QSynedit::PSynSearchBase searchEngine;
+    QSynedit::PSearcher searchEngine;
     if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
         searchEngine = mRegexSearchEngine;
     } else {
@@ -365,7 +365,7 @@ int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSear
     }
 
     return editor->searchReplace(sSearch, sReplace, mSearchOptions,
-                          searchEngine, matchCallback, confirmAroundCallback);
+                          searchEngine.get(), matchCallback, confirmAroundCallback);
 }
 
 std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSynedit::QSynEdit *e, const QString& filename,const QString &keyword)
@@ -382,14 +382,14 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSyn
     parentItem->parent = nullptr;
     execute(e,keyword,"",
                     [e,&parentItem, filename](const QString&,
-                    const QString&, int line, int ch, int wordLen){
+                    const QString&, const QSynedit::CharPos& foundPos, int wordLen){
         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
         item->filename = filename;
-        item->line = line;
-        item->start = ch;
+        item->line = foundPos.line;
+        item->start = foundPos.ch;
         item->len = wordLen;
         item->parent = parentItem.get();
-        item->text = e->lineText(line);
+        item->text = e->lineText(foundPos.line);
         item->text.replace('\t',' ');
         parentItem->results.append(item);
         return QSynedit::SearchAction::Skip;

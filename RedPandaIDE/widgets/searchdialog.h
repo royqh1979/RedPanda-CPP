@@ -47,8 +47,8 @@ private:
     int mSearchTabIdx;
     int mReplaceTabIdx;
     QSynedit::SearchOptions mSearchOptions;
-    QSynedit::PSynSearchBase mBasicSearchEngine;
-    QSynedit::PSynSearchBase mRegexSearchEngine;
+    QSynedit::PSearcher mBasicSearchEngine;
+    QSynedit::PSearcher mRegexSearchEngine;
     QStringList mSearchKeys;
     QStringList mReplaceKeys;
 };

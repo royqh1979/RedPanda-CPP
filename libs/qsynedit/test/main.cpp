@@ -4,6 +4,7 @@
 #include "test_document.h"
 #include "test_qsynedit_cpp.h"
 #include "test_qsynedit_emoji.h"
+#include "test_qsynedit_cpp_search_replace.h"
 #include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
@@ -36,7 +37,10 @@ int main(int argc, char *argv[]) {
         QSynedit::TestQSyneditEmoji tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
-
+    {
+        QSynedit::TestQSyneditCppSearchReplace tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     return status;
 }

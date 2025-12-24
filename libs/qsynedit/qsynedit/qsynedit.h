@@ -112,8 +112,8 @@ enum class SearchAction {
     Exit
 };
 
-using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
-    const QString& sReplace, int Line, int ch, int wordLen)>;
+using SearchMatchedProc = std::function<SearchAction(const QString& sFound,
+    const QString& sReplace, const CharPos& pos, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
 
 struct GlyphPostionsListCache {
@@ -291,7 +291,7 @@ public:
 
     void replaceLine(int line, const QString& lineText);
     int searchReplace(const QString& sSearch, const QString& sReplace, SearchOptions options,
-               PSynSearchBase searchEngine,  SearchMathedProc matchedCallback = nullptr,
+               Searcher *searchEngine,  SearchMatchedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);
 
     int maxScrollWidth() const;

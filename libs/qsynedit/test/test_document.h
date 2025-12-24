@@ -1,3 +1,5 @@
+#ifndef TEST_DOCUMENT_H
+#define TEST_DOCUMENT_H
 #include <QtTest>
 #include <QCoreApplication>
 
@@ -69,3 +71,4 @@ private slots:
     void onChanged();
 };
 }
+#endif

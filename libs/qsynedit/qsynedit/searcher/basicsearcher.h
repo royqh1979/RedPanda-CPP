@@ -20,7 +20,7 @@
 
 namespace  QSynedit {
 
-class BasicSearcher : public BaseSearcher
+class BasicSearcher : public Searcher
 {
     Q_OBJECT
 public:

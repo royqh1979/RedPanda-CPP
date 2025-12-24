@@ -1,5 +1,5 @@
-#ifndef TEST_QSYNEDIT_EMOJI
-#define TEST_QSYNEDIT_EMOJI
+#ifndef TEST_QSYNEDIT_EMOJI_H
+#define TEST_QSYNEDIT_EMOJI_H
 #include <QtTest>
 #include <QCoreApplication>
 #include "test_qsynedit_base.h"

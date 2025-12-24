@@ -17,32 +17,32 @@
 #include "baseseacher.h"
 
 namespace QSynedit {
-BaseSearcher::BaseSearcher(QObject *parent) : QObject(parent)
+Searcher::Searcher(QObject *parent) : QObject(parent)
 {
 
 }
 
-QString BaseSearcher::pattern()
+QString Searcher::pattern()
 {
     return mPattern;
 }
 
-void BaseSearcher::setPattern(const QString &value)
+void Searcher::setPattern(const QString &value)
 {
     mPattern = value;
 }
 
-SearchOptions BaseSearcher::options() const
+SearchOptions Searcher::options() const
 {
     return mOptions;
 }
 
-void BaseSearcher::setOptions(const SearchOptions &options)
+void Searcher::setOptions(const SearchOptions &options)
 {
     mOptions = options;
 }
 
-bool BaseSearcher::isDelimitChar(const QChar& ch) const
+bool Searcher::isDelimitChar(const QChar& ch) const
 {
     return !(ch == '_' || ch.isLetterOrNumber());
 }

@@ -1,5 +1,5 @@
-#ifndef TEST_QSYNEDIT_BASE
-#define TEST_QSYNEDIT_BASE
+#ifndef TEST_QSYNEDIT_BASE_H
+#define TEST_QSYNEDIT_BASE_H
 #include <QtTest>
 #include <QCoreApplication>
 #include "qsynedit/qsynedit.h"

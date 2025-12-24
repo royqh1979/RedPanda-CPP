@@ -1,3 +1,5 @@
+#ifndef TEST_CHARPOS_H
+#define TEST_CHARPOS_H
 #include <QtTest>
 #include <QCoreApplication>
 
@@ -12,3 +14,4 @@ private slots:
     void test_isInvalid();
     void test_compare();
 };
+#endif

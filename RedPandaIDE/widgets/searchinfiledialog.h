@@ -37,7 +37,7 @@ public:
     ~SearchInFileDialog();
     void findInFiles(const QString& text);
     void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SearchOptions options, const QString& folder, const QString& filters, bool searchSubfolders );
-    QSynedit::PSynSearchBase searchEngine() const;
+    QSynedit::PSearcher searchEngine() const;
 
 private slots:
    void on_cbFind_currentTextChanged(const QString &arg1);
@@ -55,14 +55,14 @@ private:
    void doSearch(bool replace);
    int execute(QSynedit::QSynEdit* editor, const QString& sSearch,
                const QString& sReplace,
-               QSynedit::SearchMathedProc matchCallback = nullptr,
+               QSynedit::SearchMatchedProc matchCallback = nullptr,
                QSynedit::SearchConfirmAroundProc confirmAroundCallback = nullptr);
    std::shared_ptr<SearchResultTreeItem> batchFindInEditor(QSynedit::QSynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchInFileDialog *ui;
     QSynedit::SearchOptions mSearchOptions;
-    QSynedit::PSynSearchBase mBasicSearchEngine;
-    QSynedit::PSynSearchBase mRegexSearchEngine;
+    QSynedit::PSearcher mBasicSearchEngine;
+    QSynedit::PSearcher mRegexSearchEngine;
     QStringList mSearchKeys;
 
     // QWidget interface

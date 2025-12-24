@@ -21,7 +21,7 @@
 #include <QRegularExpression>
 
 namespace QSynedit {
-class RegexSearcher : public BaseSearcher
+class RegexSearcher : public Searcher
 {
     Q_OBJECT
 public:

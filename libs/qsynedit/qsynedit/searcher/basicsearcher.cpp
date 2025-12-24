@@ -18,7 +18,7 @@
 
 namespace QSynedit {
 
-BasicSearcher::BasicSearcher(QObject *parent):BaseSearcher(parent)
+BasicSearcher::BasicSearcher(QObject *parent):Searcher(parent)
 {
 
 }

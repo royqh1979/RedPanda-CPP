@@ -35,11 +35,11 @@ enum SearchOption {
 Q_DECLARE_FLAGS(SearchOptions, SearchOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SearchOptions)
 
-class BaseSearcher : public QObject
+class Searcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit BaseSearcher(QObject *parent = nullptr);
+    explicit Searcher(QObject *parent = nullptr);
     QString pattern();
     virtual void setPattern(const QString& value);
     virtual int length(int aIndex) = 0;
@@ -57,7 +57,7 @@ private:
     SearchOptions mOptions;
 };
 
-using PSynSearchBase = std::shared_ptr<BaseSearcher>;
+using PSearcher = std::shared_ptr<Searcher>;
 
 }
 
