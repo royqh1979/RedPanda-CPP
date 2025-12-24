@@ -623,6 +623,38 @@ void TestQSyneditCpp::test_move_caret_to_line_end()
     QCOMPARE(statusChanges, expect_statusChange);
 }
 
+void TestQSyneditCpp::test_match_brackets_data()
+{
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+    loadDemoFile();
+    {
+        QTest::addRow("at bracket open 1")<<mEdit->getMatchingBracket({0,13})<<CharPos{0,63};
+    }
+    {
+        QTest::addRow("at bracket close 1")<<mEdit->getMatchingBracket({0,63})<<CharPos{0,13};
+    }
+    {
+        QTest::addRow("at parenthesis open 1")<<mEdit->getMatchingBracket({29,22})<<CharPos{21,24};
+    }
+    {
+        QTest::addRow("at parenthesis close 1")<<mEdit->getMatchingBracket({21,24})<<CharPos{29,22};
+    }
+    {
+        QTest::addRow("at parenthesis open 2")<<mEdit->getMatchingBracket({39,72})<<CharPos{63,72};
+    }
+    {
+        QTest::addRow("at parenthesis close 2")<<mEdit->getMatchingBracket({63,72})<<CharPos{39,72};
+    }
+}
+
+void TestQSyneditCpp::test_match_brackets()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
 void TestQSyneditCpp::test_select_data()
 {
     QTest::addColumn<CharPos>("selBegin");

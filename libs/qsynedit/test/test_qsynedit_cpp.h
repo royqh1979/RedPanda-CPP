@@ -38,6 +38,9 @@ private slots:
     void test_move_caret_to_line_end_data();
     void test_move_caret_to_line_end();
 
+    void test_match_brackets_data();
+    void test_match_brackets();
+
     void test_select_data();
     void test_select();
 

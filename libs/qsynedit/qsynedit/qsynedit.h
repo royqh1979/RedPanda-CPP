@@ -345,8 +345,8 @@ public:
 
     virtual CharPos getMatchingBracket();
     virtual CharPos getMatchingBracket(const CharPos &pos);
-    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const;
-    void prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex, const QString lineText) const;
+    void startParseLine(Syntaxer *syntaxer, int lineIndex) const;
+    void startParseLine(Syntaxer *syntaxer, int lineIndex, const QString lineText) const;
 
     QStringList content();
     QString text();

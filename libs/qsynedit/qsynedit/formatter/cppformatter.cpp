@@ -196,7 +196,7 @@ namespace QSynedit {
     {
         QString lineText = editor->lineText(line);
         int leading = editor->leftSpaces(lineText);
-        editor->prepareSyntaxerState(editor->syntaxer().get(), line);
+        editor->startParseLine(editor->syntaxer().get(), line);
         QList<int> posList;
         while (!editor->syntaxer()->eol()) {
             if (editor->syntaxer()->getTokenAttribute() == editor->syntaxer()->symbolAttribute()) {

@@ -213,7 +213,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
             break;
 
         QString line = editor->document()->getLine(posY);
-        editor->prepareSyntaxerState(syntaxer.get(), posY);
+        editor->startParseLine(syntaxer.get(), posY);
         QString newLine;
         while (!syntaxer->eol()) {
             QString token = syntaxer->getToken();
@@ -333,7 +333,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             continue;
         }
 
-        editor.prepareSyntaxerState(editor.syntaxer().get(), posY);
+        editor.startParseLine(editor.syntaxer().get(), posY);
         while (!editor.syntaxer()->eol()) {
             int start = editor.syntaxer()->getTokenPos();
             QString token = editor.syntaxer()->getToken();
@@ -381,15 +381,8 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         oldEditor->beginEditing();
         while (posY < oldEditor->lineCount()) {
             QString line = oldEditor->document()->getLine(posY);
-            oldEditor->prepareSyntaxerState(syntaxer.get(), posY);
-//            if (posY == 0) {
-//                syntaxer->resetState();
-//            } else {
-//                syntaxer->setState(
-//                            oldEditor->document()->getSyntaxState(posY-1));
-//            }
-//            syntaxer->setLine(line,posY);
             QString newLine;
+            oldEditor->startParseLine(syntaxer.get(), posY);
             while (!syntaxer->eol()) {
                 QString token = syntaxer->getToken();
                 if (token == statement->command) {
@@ -433,15 +426,8 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         int posY = 0;
         while (posY < editor.lineCount()) {
             QString line = editor.document()->getLine(posY);
-            editor.prepareSyntaxerState(editor.syntaxer().get(), posY);
-//            if (posY == 0) {
-//                editor.syntaxer()->resetState();
-//            } else {
-//                editor.syntaxer()->setState(
-//                            editor.document()->getSyntaxState(posY-1));
-//            }
-//            editor.syntaxer()->setLine(line,posY);
             QString newLine;
+            editor.startParseLine(editor.syntaxer().get(), posY);
             while (!editor.syntaxer()->eol()) {
                 QString token = editor.syntaxer()->getToken();
                 if (token == statement->command) {

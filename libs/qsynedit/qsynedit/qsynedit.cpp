@@ -288,7 +288,7 @@ bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &st
         lineText = mDocument->getLine(lineIdx);
         chIdx = pos.ch;
         if ((chIdx >= 0) && (chIdx < lineText.length())) {
-            prepareSyntaxerState(mSyntaxer.get(), lineIdx, lineText);
+            startParseLine(mSyntaxer.get(), lineIdx, lineText);
             while (!mSyntaxer->eol()) {
                 start = mSyntaxer->getTokenPos();
                 token = mSyntaxer->getToken();
@@ -313,7 +313,7 @@ void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &ls
     lstPos.clear();
     lstAttri.clear();
     if ((line >= 0) && (line < mDocument->count())) {
-        prepareSyntaxerState(mSyntaxer.get(), line);
+        startParseLine(mSyntaxer.get(), line);
         while (!mSyntaxer->eol()) {
             lstPos.append(mSyntaxer->getTokenPos());
             lstToken.append(mSyntaxer->getToken());
@@ -397,103 +397,83 @@ CharPos QSynEdit::getMatchingBracket()
 CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
 {
     QChar Brackets[] = {'(', ')', '[', ']', '{', '}', '<', '>'};
-    QString lineStr;
-    int i, Len;
-    QChar Test, BracketInc, BracketDec;
-    int NumBrackets;
-    QString vDummy;
-    PTokenAttribute attr;
-    CharPos p;
-    bool isCommentOrStringOrChar;
     int nBrackets = sizeof(Brackets) / sizeof(QChar);
 
-    if (mDocument->count()<1)
+    Q_ASSERT(validInDoc(pos));
+    if (!validInDoc(pos))
         return CharPos{-1,-1};
+
     // get char at caret
-    int posX = std::max(pos.ch,0);
-    int posY = std::max(pos.line,0);
-    lineStr = mDocument->getLine(pos.line);
-    if (posX < lineStr.length()) {
-        Test = lineStr[posX];
-        // is it one of the recognized brackets?
-        for (i = 0; i<nBrackets; i++) {
-            if (Test == Brackets[i]) {
-                // this is the bracket, get the matching one and the direction
-                BracketInc = Brackets[i];
-                BracketDec = Brackets[i ^ 1]; // 0 -> 1, 1 -> 0, ...
-                // search for the matching bracket (that is until NumBrackets = 0)
-                NumBrackets = 1;
-                if (i%2==1) {
-                    while (true) {
-                        // search until start of line
-                        while ((--posX) >= 0) {
-                            Test = lineStr[posX];
-                            p.ch = posX;
-                            p.line = posY;
-                            if ((Test == BracketInc) || (Test == BracketDec)) {
-                                isCommentOrStringOrChar = false;
-                                if (getTokenAttriAtRowCol(p, vDummy, attr))
-                                    isCommentOrStringOrChar =
-                                        (attr->tokenType() == TokenType::String) ||
-                                            (attr->tokenType() == TokenType::Comment) ||
-                                            (attr->tokenType() == TokenType::Character);
-                                if ((Test == BracketInc) && (!isCommentOrStringOrChar))
-                                    NumBrackets++;
-                                else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
-                                    NumBrackets--;
-                                    if (NumBrackets == 0) {
-                                        // matching bracket found, set caret and bail out
-                                        return p;
-                                    }
-                                }
+    QChar testCh = charAt(pos);
+    // is it one of the recognized brackets?
+    for (int i = 0; i<nBrackets; i++) {
+        if (testCh == Brackets[i]) {
+            // this is the bracket, get the matching one and the direction
+            QChar bracketOpen = Brackets[i];
+            QChar bracketClose = Brackets[i ^ 1]; // 0 -> 1, 1 -> 0, ...
+            // search for the matching bracket (that is until NumBrackets = 0)
+            int bracketsLevel = 1;
+            QString vDummy;
+            PTokenAttribute attr;
+            CharPos p;
+            if (i%2==1) {
+                //search backward
+                for (int line = pos.line;line >= 0;line--) {
+                    startParseLine(mSyntaxer.get(), line);
+                    QList<QChar> bracketsFound;
+                    QList<int> bracketsPos;
+                    while(!mSyntaxer->eol()) {
+                        if (line == pos.line && mSyntaxer->getTokenPos() >= pos.ch) {
+                            break;
+                        }
+                        if (mSyntaxer->getTokenAttribute()->tokenType() == TokenType::Symbol) {
+                            if (mSyntaxer->getToken() == bracketOpen
+                                    || mSyntaxer->getToken() == bracketClose) {
+                               bracketsFound.append(mSyntaxer->getToken()[0]);
+                               bracketsPos.append(mSyntaxer->getTokenPos());
                             }
                         }
-                        // get previous line if possible
-                        if (posY == 0)
-                            break;
-                        posY--;
-                        lineStr = mDocument->getLine(posY);
-                        posX = lineStr.length();
+                        mSyntaxer->next();
                     }
-                } else {
-                    while (true) {
-                        // search until end of line
-                        Len = lineStr.length();
-                        while ((++posX) < Len) {
-                            Test = lineStr[posX];
-                            p.ch = posX;
-                            p.line = posY;
-                            if ((Test == BracketInc) || (Test == BracketDec)) {
-                                isCommentOrStringOrChar = false;
-                                if (getTokenAttriAtRowCol(p, vDummy, attr))
-                                    isCommentOrStringOrChar =
-                                        (attr->tokenType() == TokenType::String) ||
-                                            (attr->tokenType() == TokenType::Comment) ||
-                                            (attr->tokenType() == TokenType::Character);
-                                else
-                                    isCommentOrStringOrChar = false;
-                                if ((Test == BracketInc) && (!isCommentOrStringOrChar))
-                                    NumBrackets++;
-                                else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
-                                    NumBrackets--;
-                                    if (NumBrackets == 0) {
-                                        // matching bracket found, set caret and bail out
-                                        return p;
-                                    }
-                                }
-                            }
+                    for (int i=bracketsFound.length()-1;i>=0;i--) {
+                        if (bracketsFound[i] == bracketOpen)
+                            bracketsLevel++;
+                        else if (bracketsFound[i] == bracketClose) {
+                            bracketsLevel--;
+                            if (bracketsLevel == 0)
+                                return CharPos{bracketsPos[i], line};
                         }
-                        // get next line if possible
-                        if (posY+1 < mDocument->count())
-                            break;
-                        posY++;
-                        lineStr = mDocument->getLine(posY);
-                        posX = -1;
                     }
                 }
-                // don't test the other brackets, we're done
-                break;
+            } else {
+                // search until end of line
+                if (pos.line == 0) {
+                    mSyntaxer->resetState();
+                } else {
+                    mSyntaxer->setState(mDocument->getSyntaxState(pos.line-1));
+                }
+                for (int line=pos.line;line<mDocument->count();line++) {
+                    mSyntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
+                    while(!mSyntaxer->eol()) {
+                        if (line == pos.line && mSyntaxer->getTokenPos() <= pos.ch) {
+                            goto MOVE_NEXT_2;
+                        }
+                        if (mSyntaxer->getTokenAttribute()->tokenType() == TokenType::Symbol) {
+                            if (mSyntaxer->getToken() == bracketOpen)
+                                ++bracketsLevel;
+                            else if (mSyntaxer->getToken() == bracketClose) {
+                                --bracketsLevel;
+                                if (bracketsLevel == 0)
+                                    return CharPos{mSyntaxer->getTokenPos(), line};
+                            }
+                        }
+MOVE_NEXT_2:
+                        mSyntaxer->next();
+                    }
+                }
             }
+            // don't test the other brackets, we're done
+            break;
         }
     }
     return CharPos{-1,-1};
@@ -2261,7 +2241,7 @@ void QSynEdit::doBreakLine()
               SelectionMode::Normal);
     bool notInComment=true;
     QString trimmedleftLineText=trimLeft(leftLineText);
-    prepareSyntaxerState(mSyntaxer.get(), mCaretY, trimmedleftLineText);
+    startParseLine(mSyntaxer.get(), mCaretY, trimmedleftLineText);
     int indentSpaces = 0;
     if (!mUndoing && mSyntaxer->language() == ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)
             && mSyntaxer->getToken()=="else") {
@@ -2902,7 +2882,7 @@ PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineTex
         oldHandleLastBackSlash = cppSyntaxer->handleLastBackSlash();
         cppSyntaxer->setHandleLastBackSlash(handleLastBackSlash);
     }
-    prepareSyntaxerState(mSyntaxer.get(), line, newLineText);
+    startParseLine(mSyntaxer.get(), line, newLineText);
     if (mSyntaxer->language() == ProgrammingLanguage::CPP) {
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(mSyntaxer);
         cppSyntaxer->setHandleLastBackSlash(oldHandleLastBackSlash);
@@ -4911,7 +4891,7 @@ bool QSynEdit::isSpaceChar(const QChar &ch) const
     return mSyntaxer->isSpaceChar(ch);
 }
 
-void QSynEdit::prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const
+void QSynEdit::startParseLine(Syntaxer *syntaxer, int lineIndex) const
 {
     Q_ASSERT(validLine(lineIndex));
     if (lineIndex == 0) {
@@ -4922,7 +4902,7 @@ void QSynEdit::prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex) const
     syntaxer->setLine(lineIndex, mDocument->getLine(lineIndex), mDocument->getLineSeq(lineIndex));
 }
 
-void QSynEdit::prepareSyntaxerState(Syntaxer *syntaxer, int lineIndex, const QString lineText) const
+void QSynEdit::startParseLine(Syntaxer *syntaxer, int lineIndex, const QString lineText) const
 {
     Q_ASSERT(validLine(lineIndex));
     if (lineIndex == 0) {
