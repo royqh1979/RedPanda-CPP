@@ -925,6 +925,7 @@ private:
     bool mOpeningProject;
     bool mClosingProject;
     QElapsedTimer mParserTimer;
+    int  mParsingCount;
     QFileSystemWatcher mFileSystemWatcher;
     std::shared_ptr<Project> mProject; //mProject can be destoryed any time
     Qt::DockWidgetArea mMessagesDockLocation;

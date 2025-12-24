@@ -253,8 +253,10 @@ bool EditorList::swapEditor(Editor *editor)
     QTabWidget* fromPageControl = editor->pageControl();
     if (fromPageControl == mLeftPageWidget) {
         editor->setPageControl(mRightPageWidget);
+        mRightPageWidget->addTab(editor, editor->caption());
     } else {
         editor->setPageControl(mLeftPageWidget);
+        mLeftPageWidget->addTab(editor, editor->caption());
     }
     updateLayout();
     editor->activate();

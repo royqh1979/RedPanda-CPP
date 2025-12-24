@@ -29,7 +29,7 @@
 
 //Enable debug log
 #ifdef QT_DEBUG
-#define PARSER_DEBUG_LOG
+//#define PARSER_DEBUG_LOG
 #endif
 
 #ifdef PARSER_DEBUG_LOG

@@ -127,6 +127,7 @@ MainWindow::MainWindow(QWidget *parent)
       mOpeningFiles{false},
       mOpeningProject{false},
       mClosingProject{false},
+      mParsingCount{0},
       mCheckSyntaxInBack{false},
       mShouldRemoveAllSettings{false},
       mClosing{false},
@@ -5928,7 +5929,6 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         return ;
     }
     mClosingAll=false;
-
 //    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
 //        if (mProject) {
 //            closeProject(false);
@@ -5948,7 +5948,14 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     if (mCPUDialog!=nullptr)
         cleanUpCPUDialog();
 
-    event->accept();
+    this->hide();
+
+    //wait for all parsers finished.
+    if (mParsingCount>0)
+        event->ignore();
+    else
+        event->accept();
+
     return;
 }
 
@@ -6770,14 +6777,13 @@ void MainWindow::onParserProgress(const QString &fileName, int total, int curren
 void MainWindow::onParseStarted()
 {
     mParserTimer.restart();
+    mParsingCount++;
 }
 
 void MainWindow::onParseFinished(int total, int)
 {
     double parseTime = mParserTimer.elapsed() / 1000.0;
     double parsingFrequency;
-
-
     if (total > 1) {
         if (parseTime>0) {
             parsingFrequency = total / parseTime;
@@ -6793,6 +6799,9 @@ void MainWindow::onParseFinished(int total, int)
         updateStatusbarMessage(tr("Done parsing %1 files in %2 seconds")
                                   .arg(total).arg(parseTime));
     }
+    mParsingCount--;
+    if (mParsingCount == 0 && mQuitting)
+        this->close();
 }
 
 void MainWindow::onEvalValueReady(const QString& value)

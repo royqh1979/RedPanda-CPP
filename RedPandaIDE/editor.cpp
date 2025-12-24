@@ -201,10 +201,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     mStatementColors = pMainWindow->statementColors();
-    if (mParentPageControl) {
-        //first showEvent triggered here
-        mParentPageControl->addTab(this,"");
-    }
+//    if (mParentPageControl) {
+//        //first showEvent triggered here
+//        mParentPageControl->addTab(this,"");
+//    }
 
     if (inTab()) {
         connect(&mFunctionTipTimer, &QTimer::timeout,
@@ -601,10 +601,6 @@ void Editor::setPageControl(QTabWidget *newPageControl)
             mParentPageControl->removeTab(index);
     }
     mParentPageControl= newPageControl;
-    if (newPageControl!=nullptr) {
-        mParentPageControl->addTab(this,"");
-        updateCaption();
-    }
 }
 
 void Editor::undoSymbolCompletion(const CharPos &pos)

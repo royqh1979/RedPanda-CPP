@@ -737,6 +737,7 @@ private:
     QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
     QList<PClassInheritanceInfo> mClassInheritances;
     QSet<QString> mInlineNamespaces;
+    bool mStopParse;
 #ifdef QT_DEBUG
     int mLastIndex;
 #endif
