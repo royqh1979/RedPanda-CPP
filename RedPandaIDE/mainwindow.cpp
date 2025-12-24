@@ -5825,131 +5825,134 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    mQuitting = true;
-    if (!mShouldRemoveAllSettings) {
-        if (mCPUDialog)
-            mCPUDialog->close();
-        Settings::UI& settings = pSettings->ui();
-        settings.setOpenEditorsWhenReplace(ui->chkOpenFileInEditors->isChecked());
-        settings.setMainWindowState(saveState());
-        settings.setMainWindowGeometry(saveGeometry());
-        settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
-        settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
-        settings.setDebugPanelIndex(ui->debugViews->currentIndex());
+    //if mQuitting is true, closeEvent is handled before, we are waiting for parsing finished.
+    //Don't save config twice ( lastopen info will get lost )
+    if (!mQuitting) {
+        mQuitting = true;
+        if (!mShouldRemoveAllSettings) {
+            if (mCPUDialog)
+                mCPUDialog->close();
+            Settings::UI& settings = pSettings->ui();
+            settings.setOpenEditorsWhenReplace(ui->chkOpenFileInEditors->isChecked());
+            settings.setMainWindowState(saveState());
+            settings.setMainWindowGeometry(saveGeometry());
+            settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
+            settings.setLeftPanelIndex(ui->tabExplorer->currentIndex());
+            settings.setDebugPanelIndex(ui->debugViews->currentIndex());
 
-        settings.setShowStatusBar(ui->actionStatus_Bar->isChecked());
-        settings.setShowToolWindowBars(ui->actionTool_Window_Bars->isChecked());
+            settings.setShowStatusBar(ui->actionStatus_Bar->isChecked());
+            settings.setShowToolWindowBars(ui->actionTool_Window_Bars->isChecked());
 
-        settings.setShowProject(ui->actionProject->isChecked());
-        settings.setShowWatch(ui->actionWatch->isChecked());
-        settings.setShowStructure(ui->actionStructure->isChecked());
-        settings.setShowFiles(ui->actionFiles->isChecked());
-        settings.setShowProblemSet(ui->actionProblem_Set->isChecked());
+            settings.setShowProject(ui->actionProject->isChecked());
+            settings.setShowWatch(ui->actionWatch->isChecked());
+            settings.setShowStructure(ui->actionStructure->isChecked());
+            settings.setShowFiles(ui->actionFiles->isChecked());
+            settings.setShowProblemSet(ui->actionProblem_Set->isChecked());
 
-        settings.setShowIssues(ui->actionIssues->isChecked());
-        settings.setShowCompileLog(ui->actionTools_Output->isChecked());
-        settings.setShowDebug(ui->actionDebug_Window->isChecked());
-        settings.setShowSearch(ui->actionSearch->isChecked());
-        settings.setShowTODO(ui->actionTODO->isChecked());
-        settings.setShowBookmark(ui->actionBookmark->isChecked());
-        settings.setShowProblem(ui->actionProblem->isChecked());
+            settings.setShowIssues(ui->actionIssues->isChecked());
+            settings.setShowCompileLog(ui->actionTools_Output->isChecked());
+            settings.setShowDebug(ui->actionDebug_Window->isChecked());
+            settings.setShowSearch(ui->actionSearch->isChecked());
+            settings.setShowTODO(ui->actionTODO->isChecked());
+            settings.setShowBookmark(ui->actionBookmark->isChecked());
+            settings.setShowProblem(ui->actionProblem->isChecked());
 
-        settings.setMessagesTabsSize(ui->tabMessages->currentSize());
-        settings.setExplorerTabsSize(ui->tabExplorer->currentSize());
-        settings.setShrinkExplorerTabs(ui->tabExplorer->isShrinked());
-        settings.setShrinkMessagesTabs(ui->tabMessages->isShrinked());
-        settings.save();
+            settings.setMessagesTabsSize(ui->tabMessages->currentSize());
+            settings.setExplorerTabsSize(ui->tabExplorer->currentSize());
+            settings.setShrinkExplorerTabs(ui->tabExplorer->isShrinked());
+            settings.setShrinkMessagesTabs(ui->tabMessages->isShrinked());
+            settings.save();
 
-        if (pSettings->sync()!=QSettings::NoError) {
-            QMessageBox::warning(nullptr,
-                             tr("Save Error"),
-                             tr("Save settings failed!"));
-        }
+            if (pSettings->sync()!=QSettings::NoError) {
+                QMessageBox::warning(nullptr,
+                                 tr("Save Error"),
+                                 tr("Save settings failed!"));
+            }
 
-        //save current folder ( for files view )
-        pSettings->environment().setDefaultOpenFolder(QDir::currentPath());
-        pSettings->environment().save();
+            //save current folder ( for files view )
+            pSettings->environment().setDefaultOpenFolder(QDir::currentPath());
+            pSettings->environment().save();
 
-        try {
-            mBookmarkModel->saveBookmarks(includeTrailingPathDelimiter(pSettings->dirs().config())
-                             +DEV_BOOKMARK_FILE);
-        } catch (FileError& e) {
-            QMessageBox::warning(nullptr,
-                             tr("Save Error"),
-                             e.reason());
-        }
-
-        try {
-            int currentIndex=-1;
-            if (ui->lstProblemSet->currentIndex().isValid())
-                currentIndex = ui->lstProblemSet->currentIndex().row();
-            QDir dir(pSettings->dirs().config());
-            QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
-            mOJProblemSetModel->saveToFile(filename, false, currentIndex);
-        } catch (FileError& e) {
-            QMessageBox::warning(nullptr,
-                             tr("Save Error"),
-                             e.reason());
-        }
-
-        if (pSettings->debugger().autosave()) {
             try {
-                mDebugger->saveForNonproject(includeTrailingPathDelimiter(pSettings->dirs().config())
-                                               +DEV_DEBUGGER_FILE);
+                mBookmarkModel->saveBookmarks(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                 +DEV_BOOKMARK_FILE);
             } catch (FileError& e) {
                 QMessageBox::warning(nullptr,
                                  tr("Save Error"),
                                  e.reason());
             }
-        } else
-            removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
-                          +DEV_DEBUGGER_FILE);
-    }
 
-    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
-        if (!saveLastOpens()) { //canceled
+            try {
+                int currentIndex=-1;
+                if (ui->lstProblemSet->currentIndex().isValid())
+                    currentIndex = ui->lstProblemSet->currentIndex().row();
+                QDir dir(pSettings->dirs().config());
+                QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
+                mOJProblemSetModel->saveToFile(filename, false, currentIndex);
+            } catch (FileError& e) {
+                QMessageBox::warning(nullptr,
+                                 tr("Save Error"),
+                                 e.reason());
+            }
+
+            if (pSettings->debugger().autosave()) {
+                try {
+                    mDebugger->saveForNonproject(includeTrailingPathDelimiter(pSettings->dirs().config())
+                                                   +DEV_DEBUGGER_FILE);
+                } catch (FileError& e) {
+                    QMessageBox::warning(nullptr,
+                                     tr("Save Error"),
+                                     e.reason());
+                }
+            } else
+                removeFile(includeTrailingPathDelimiter(pSettings->dirs().config())
+                              +DEV_DEBUGGER_FILE);
+        }
+
+        if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
+            if (!saveLastOpens()) { //canceled
+                mClosingAll=false;
+                mQuitting = false;
+                event->ignore();
+                return ;
+            }
+        } /*else {
+            //if don't save last open files, close project before editors, to save project opened editors;
+
+        }*/
+        if (mProject) {
+            closeProject(false);
+        }
+
+        mClosingAll=true;
+        if (!mEditorList->closeAll(false)) {
             mClosingAll=false;
             mQuitting = false;
             event->ignore();
             return ;
         }
-    } /*else {
-        //if don't save last open files, close project before editors, to save project opened editors;
-
-    }*/
-    if (mProject) {
-        closeProject(false);
-    }
-
-    mClosingAll=true;
-    if (!mEditorList->closeAll(false)) {
         mClosingAll=false;
-        mQuitting = false;
-        event->ignore();
-        return ;
+    //    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
+    //        if (mProject) {
+    //            closeProject(false);
+    //        }
+    //    }
+
+        mCCHandler.stop();
+        mCompilerManager->stopAllRunners();
+        mCompilerManager->stopCompile();
+        mCompilerManager->stopCheckSyntax();
+        mCompilerManager->stopRun();
+        mDebugger->stop();
+
+        if (!mShouldRemoveAllSettings)
+            mSymbolUsageManager->save();
+
+        if (mCPUDialog!=nullptr)
+            cleanUpCPUDialog();
+
+        this->hide();
     }
-    mClosingAll=false;
-//    if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
-//        if (mProject) {
-//            closeProject(false);
-//        }
-//    }
-
-    mCCHandler.stop();
-    mCompilerManager->stopAllRunners();
-    mCompilerManager->stopCompile();
-    mCompilerManager->stopCheckSyntax();
-    mCompilerManager->stopRun();
-    mDebugger->stop();
-
-    if (!mShouldRemoveAllSettings)
-        mSymbolUsageManager->save();
-
-    if (mCPUDialog!=nullptr)
-        cleanUpCPUDialog();
-
-    this->hide();
-
     //wait for all parsers finished.
     if (mParsingCount>0)
         event->ignore();
