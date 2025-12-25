@@ -53,20 +53,8 @@ int RegexSearcher::findAll(const QString &text)
     QRegularExpressionMatchIterator it = mRegex.globalMatch(text);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        if (options().testFlag(ssoWholeWord)) {
-            int start = match.capturedStart();
-            int end = match.capturedStart()+match.capturedLength();
-            if (((start<=0) || isDelimitChar(text[start-1]))
-                    &&
-                    ( (end>=text.length()) || isDelimitChar(text[end]) )
-                 ) {
-                mLengths.append(match.capturedLength());
-                mResults.append(match.capturedStart());
-            }
-        } else {
-            mLengths.append(match.capturedLength());
-            mResults.append(match.capturedStart());
-        }
+        mLengths.append(match.capturedLength());
+        mResults.append(match.capturedStart());
     }
     return mResults.size();
 }

@@ -5244,6 +5244,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
         return 0;
 
     Q_ASSERT(scopeBegin<=scopeEnd);
+    Q_ASSERT(validInDoc(scopeBegin));
+    Q_ASSERT(validInDoc(scopeEnd));
     // can't search for or replace an empty string
     if (sSearch.isEmpty()) {
         return 0;
@@ -5331,6 +5333,14 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 }
                 if (!isInValidSearchRange)
                     continue;
+                if (sOptions.testFlag(ssoWholeWord) && first != last) {
+                    if (first != 0
+                            && first != getTokenBegin(CharPos{first, ptCurrent.line}).ch)
+                        continue;
+                    if (last != mDocument->getLine(ptCurrent.line).length()
+                            && last != getTokenBegin(CharPos{last, ptCurrent.line}).ch)
+                        continue;
+                }
                 result++;
                 // Select the text, so the user can see it in the OnReplaceText event
                 // handler or as the search result.

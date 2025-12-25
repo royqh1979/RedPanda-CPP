@@ -32,15 +32,22 @@ private slots:
     void test_basic_search_forward_ignore_caret_pos();
     void test_basic_search_forward_with_wrap();
 
-    void test_search_all_in_whole_file_from_start();
-    void test_search_all_in_whole_file_from_caret_and_wrap();
-    void test_search_all_in_whole_file_from_caret_and_no_wrap();
+    void test_search_forward_whole_word();
+    void test_search_forward_match_case();
+
+    void test_search_all_forward_in_whole_file_from_start();
+    void test_search_all_forward_in_whole_file_from_caret_and_wrap();
+    void test_search_all_forward_in_whole_file_from_caret_and_no_wrap();
 
     void test_basic_search_backward_in_empty_doc();
     void test_basic_search_backward_without_wrap();
     void test_basic_search_backward_without_wrap_with_callback();
     void test_basic_search_backward_with_selection();
     void test_basic_search_backward_with_wrap();
+
+    void test_search_all_backward_in_whole_file_from_end();
+    void test_search_all_backward_in_whole_file_from_caret_and_wrap();
+    void test_search_all_backward_in_whole_file_from_caret_and_no_wrap();
 
     void test_basic_forward_search_without_wrap2();
 };
