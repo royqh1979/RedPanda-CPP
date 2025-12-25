@@ -5411,9 +5411,9 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
             if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
                     && bFromCursor ){
                 if (!sOptions.testFlag(ssoWrapAround)) {
-                    if (!confirmAroundCallback)
-                        break;
-                    if(!confirmAroundCallback())
+                    break;
+                } else {
+                    if (confirmAroundCallback && !confirmAroundCallback())
                         break;
                 }
                 //search start from cursor, search has finished but no result founds

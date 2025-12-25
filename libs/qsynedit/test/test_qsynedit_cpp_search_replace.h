@@ -34,9 +34,9 @@ private slots:
     void test_basic_search_backward_without_wrap();
     void test_basic_search_backward_without_wrap_with_callback();
     void test_basic_search_backward_with_selection();
+    void test_basic_search_backward_with_wrap();
 
     void test_basic_forward_search_without_wrap2();
-
 };
 
 }
