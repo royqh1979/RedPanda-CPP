@@ -27,10 +27,8 @@ enum SearchOption {
     ssoMatchCase    = 0x0001,
     ssoWholeWord    = 0x0002,
     ssoBackwards    = 0x0004,
-    ssoEntireScope  = 0x0008,
-    ssoSelectedOnly = 0x0010,
-    ssoWrapAround   = 0x0020,
-    ssoRegExp       = 0x0080,
+    ssoFromCursor   = 0x0008,
+    ssoWrapAround   = 0x0010,
     ssoIncludeCurrentSelection = 0x0100,
 };
 

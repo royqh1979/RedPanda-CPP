@@ -5234,12 +5234,16 @@ void QSynEdit::doSetSelText(const QString &value)
     doSetSelTextPrimitive(splitStrings(value));
 }
 
-int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, Searcher *searchEngine,
+int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
+                            const CharPos & scopeBegin,
+                            const CharPos & scopeEnd,
+                            SearchOptions sOptions, Searcher *searchEngine,
                     SearchMatchedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
         return 0;
 
+    Q_ASSERT(scopeBegin<=scopeEnd);
     // can't search for or replace an empty string
     if (sSearch.isEmpty()) {
         return 0;
@@ -5248,41 +5252,22 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
     // get the text range to search in, ignore the "Search in selection only"
     // option if nothing is selected
     bool bBackward = sOptions.testFlag(ssoBackwards);
-    bool bFromCursor = !sOptions.testFlag(ssoEntireScope);
+    bool bFromCursor = sOptions.testFlag(ssoFromCursor);
     CharPos ptCurrent, ptStart, ptEnd;
-    if (!selAvail())
-        sOptions.setFlag(ssoSelectedOnly,false);
-    if (sOptions.testFlag(ssoSelectedOnly)) {
-        CharPos ptStart = selBegin();
-        CharPos ptEnd = selEnd();
-        // search the whole line in the line selection mode
-        if (mActiveSelectionMode == SelectionMode::Column) {
-            // make sure the start column is smaller than the end column
-            if (ptStart.ch > ptEnd.ch)
-                std::swap(ptStart.ch,ptEnd.ch);
-        }
-        // ignore the cursor position when searching in the selection
-        if (bBackward) {
-            ptCurrent = ptEnd;
-        } else {
-            ptCurrent = ptStart;
-        }
-    } else {
-        ptStart = fileBegin();
-        ptEnd = fileEnd();
-        if (bFromCursor) {
-            if (selBegin() == caretXY() || selEnd() == caretXY()) {
-                if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
-                    if (bBackward)
-                        ptEnd = std::max(selBegin(), selEnd());
-                    else
-                        ptStart = std::min(selBegin(), selEnd());
-                } else {
-                    if (bBackward)
-                        ptEnd = std::min(selBegin(), selEnd());
-                    else
-                        ptStart = std::max(selBegin(), selEnd());
-                }
+    ptStart = scopeBegin;
+    ptEnd = scopeEnd;
+    if (bFromCursor) {
+        if (selBegin() == caretXY() || selEnd() == caretXY()) {
+            if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
+                if (bBackward)
+                    ptEnd = std::max(selBegin(), selEnd());
+                else
+                    ptStart = std::min(selBegin(), selEnd());
+            } else {
+                if (bBackward)
+                    ptEnd = std::min(selBegin(), selEnd());
+                else
+                    ptStart = std::max(selBegin(), selEnd());
             }
         }
     }
@@ -5329,22 +5314,15 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 bool isInValidSearchRange = true;
                 int first = nFound;
                 int last = nFound + nSearchLen;
-                if ((mActiveSelectionMode == SelectionMode::Normal)
-                        || !sOptions.testFlag(ssoSelectedOnly)) {
 //                    qDebug()<<ptStart.line<<ptStart.ch<<ptEnd.line<<ptEnd.ch<<ptCurrent.line<<first<<last;
-                    if  ((nSearchLen==0) &&
-                         (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !bBackward)
-                          ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && bBackward))
-                         ) {
-                        isInValidSearchRange = false;
-                    } else if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
-                            ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch))) {
-                        isInValidSearchRange = false;
-                    }
-                } else if (mActiveSelectionMode == SelectionMode::Column) {
-                    // solves bug in search/replace when smColumn mode active and no selection
-                    isInValidSearchRange = ((first >= ptStart.ch) && (last <= ptEnd.ch))
-                            || (ptEnd.ch - ptStart.ch < 1);
+                if  ((nSearchLen==0) &&
+                     (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !bBackward)
+                      ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && bBackward))
+                     ) {
+                    isInValidSearchRange = false;
+                } else if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
+                        ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch))) {
+                    isInValidSearchRange = false;
                 }
                 if (!isInValidSearchRange)
                     continue;
@@ -5418,17 +5396,13 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 }
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;
-                ptStart.ch = 0;
-                ptStart.line = 0;
-                ptEnd.line = mDocument->count()-1;
-                ptEnd.ch = mDocument->getLine(ptEnd.line).length();
+                ptStart = scopeBegin;
+                ptEnd = scopeEnd;
                 if (bBackward) {
                     ptStart = originCaretXY;
-                    ptEnd.ch++;
                     ptCurrent = ptEnd;
                 } else {
                     ptEnd= originCaretXY;
-                    ptStart.ch--;
                     ptCurrent = ptStart;
                 }
             }

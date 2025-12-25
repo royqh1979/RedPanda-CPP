@@ -291,7 +291,10 @@ public:
 
     void replaceLine(int line, const QString& lineText);
 
-    int searchReplace(const QString& sSearch, const QString& sReplace, SearchOptions options,
+    int searchReplace(const QString& sSearch, const QString& sReplace,
+                      const CharPos & scopeBegin,
+                      const CharPos & scopeEnd,
+                      SearchOptions options,
                Searcher *searchEngine,  SearchMatchedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);
 
