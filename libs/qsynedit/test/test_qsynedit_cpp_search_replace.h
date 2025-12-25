@@ -19,7 +19,8 @@ protected:
     QList<CharPos> mFoundPositions;
     QList<int> mFoundLens;
 
-    SearchMatchedProc mBasicMatchedProc;
+    SearchMatchedProc mBasicMatchedAndExitProc;
+    SearchMatchedProc mBasicMatchedAndContinueProc;
     std::shared_ptr<Searcher> mBasicSearcher;
 private slots:
     void initTestCase();
@@ -28,7 +29,12 @@ private slots:
     void test_basic_search_forward_without_wrap();
     void test_basic_search_forward_without_wrap_with_callback();
     void test_basic_search_forward_with_selection();
+    void test_basic_search_forward_ignore_caret_pos();
     void test_basic_search_forward_with_wrap();
+
+    void test_search_all_in_whole_file_from_start();
+    void test_search_all_in_whole_file_from_caret_and_wrap();
+    void test_search_all_in_whole_file_from_caret_and_no_wrap();
 
     void test_basic_search_backward_in_empty_doc();
     void test_basic_search_backward_without_wrap();

@@ -27,13 +27,21 @@ void TestQSyneditCppSearchReplace::initTestCase()
     mEdit->setFormatter(std::make_shared<CppFormatter>());
 
     mBasicSearcher = std::make_shared<BasicSearcher>();
-    mBasicMatchedProc = [this](const QString& sFound,
+    mBasicMatchedAndExitProc = [this](const QString& sFound,
             const QString& sReplace, const CharPos& pos, int wordLen){
         mFoundStrings.append(sFound);
         mReplaces.append(sReplace);
         mFoundPositions.append(pos);
         mFoundLens.append(wordLen);
         return SearchAction::Exit;
+    };
+    mBasicMatchedAndContinueProc = [this](const QString& sFound,
+            const QString& sReplace, const CharPos& pos, int wordLen){
+        mFoundStrings.append(sFound);
+        mReplaces.append(sReplace);
+        mFoundPositions.append(pos);
+        mFoundLens.append(wordLen);
+        return SearchAction::Skip;
     };
 }
 
@@ -47,7 +55,7 @@ void TestQSyneditCppSearchReplace::clearFounds()
 
 void TestQSyneditCppSearchReplace::test_basic_search_forward_in_empty_doc()
 {
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoNone;
+    SearchOptions options = SearchOption::ssoFromCaret;
     mEdit->clear();
     clearFounds();
     QCOMPARE(mEdit->searchReplace(
@@ -68,7 +76,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_in_empty_doc()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),0);
     QCOMPARE(mFoundStrings,{});
     QCOMPARE(mReplaces,{});
@@ -85,7 +93,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoNone;
+    SearchOptions options = SearchOption::ssoFromCaret;
 
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -199,7 +207,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap()
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
 
     //not found
-    QCOMPARE(mEdit->searchReplace("thread","",
+     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
@@ -216,7 +224,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoNone;
+    SearchOptions options = SearchOption::ssoFromCaret;
 
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
@@ -224,7 +232,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -240,7 +248,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -256,7 +264,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -272,7 +280,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -288,7 +296,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -304,7 +312,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -320,7 +328,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -336,7 +344,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -352,7 +360,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -368,7 +376,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -385,7 +393,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),0);
     QCOMPARE(mFoundStrings,{});
     QCOMPARE(mReplaces,{});
@@ -402,37 +410,18 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoNone;
+    SearchOptions options = SearchOption::ssoFromCaret;
 
-    //no selection, caret at the first "thread" begin
+    //no selection, caret at the second "thread" begin
+    //should found the second "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{10,3});
+    mEdit->setCaretXY(CharPos{6,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
-                         nullptr),1);
-    QCOMPARE(mFoundStrings,{"thread"});
-    QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(10,3)});
-    QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
-    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
-    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
-
-    //no selection, caret at the first "thread" end
-
-    //the first "thread" selected, caret at selection end
-    clearFounds();
-    mEdit->setCaretXY(CharPos{16,3});
-    QCOMPARE(mEdit->searchReplace("thread","",
-                                  mEdit->fileBegin(),
-                                  mEdit->fileEnd(),
-                         options,
-                         mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -442,15 +431,73 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
 
-    //the first "thread" selected, caret at selection end
+    //no selection, caret at the second "thread" end
+    //should found the third "thread"
     clearFounds();
-    mEdit->setCaretAndSelection(CharPos{16,3},CharPos{10,3},CharPos{16,3});
+    mEdit->setCaretXY(CharPos{12,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,15)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,15));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,15));
+
+    //the second "thread" selected, caret at selection begin
+    //should found the third "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{6,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,15)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,15));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,15));
+
+    //the second "thread" selected, caret at selection end
+    //should found the third "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{12,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,15)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,15));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,15));
+
+    // the third "thread" selected, caret before the second "thread"
+    // should found the second "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{4,12},CharPos{4,15},CharPos{4,15});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -460,15 +507,44 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
 
-    //the first "thread" selected, caret not in selection
+    // the third "thread" selected, caret after the fifth "thread"
+    // should found the sixth "thread"
     clearFounds();
-    mEdit->setCaretAndSelection(CharPos{1,3},CharPos{10,3},CharPos{16,3});
+    mEdit->setCaretAndSelection(CharPos{16,19},CharPos{4,15},CharPos{4,15});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(5,48)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->selBegin(), CharPos(5,48));
+    QCOMPARE(mEdit->selEnd(), CharPos(11,48));
+}
+
+void TestQSyneditCppSearchReplace::test_basic_search_forward_ignore_caret_pos()
+{
+    //when caret is at selection begin/end, forward search will start from selection end
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoNone;
+
+    //no selection, caret at the second "thread" begin
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos{6,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -478,6 +554,100 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
 
+    //no selection, caret at the second "thread" end
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(10,3)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
+    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
+
+    //the second "thread" selected, caret at selection begin
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{6,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(10,3)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
+    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
+
+    //the second "thread" selected, caret at selection end
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{12,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(10,3)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
+    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
+
+    // the third "thread" selected, caret before the second "thread"
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{4,12},CharPos{4,15},CharPos{4,15});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(10,3)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
+    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
+
+    // the third "thread" selected, caret after the fifth "thread"
+    //should found the first "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{16,19},CharPos{4,15},CharPos{4,15});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(10,3)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->selBegin(), CharPos(10,3));
+    QCOMPARE(mEdit->selEnd(), CharPos(16,3));
 }
 
 void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
@@ -486,7 +656,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoWrapAround;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoWrapAround;
 
     //caret before last "thread"
     mEdit->setCaretXY({10,67});
@@ -498,7 +668,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -515,7 +685,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -534,7 +704,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
                  mEdit->fileEnd(),
                  options,
                  mBasicSearcher.get(),
-                 mBasicMatchedProc,
+                 mBasicMatchedAndExitProc,
                  [](){ return false; }),
              0);
     QCOMPARE(mFoundStrings,{});
@@ -554,7 +724,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
                  mEdit->fileEnd(),
                  options,
                  mBasicSearcher.get(),
-                 mBasicMatchedProc,
+                 mBasicMatchedAndExitProc,
                  [](){ return true; }),
              1);
     QCOMPARE(mFoundStrings,{"thread"});
@@ -566,11 +736,221 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
 }
 
+void TestQSyneditCppSearchReplace::test_search_all_in_whole_file_from_start()
+{
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoNone;
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndContinueProc,
+                         nullptr),10);
+    QCOMPARE(mFoundStrings,
+             QStringList(
+                 {
+                     "thread",
+                     "Thread",
+                     "Thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                     "thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                 }));
+    QCOMPARE(mReplaces,
+             QStringList(
+                 {
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                 }));
+    QCOMPARE(mFoundPositions,QList<CharPos>(
+                 {
+                     CharPos(10,3),
+                     CharPos(6,12),
+                     CharPos(4,15),
+                     CharPos(12,18),
+                     CharPos(5,48),
+                     CharPos(21,52),
+                     CharPos(21,62),
+                     CharPos(29,62),
+                     CharPos(4,67),
+                     CharPos(22,72)
+
+             }));
+    QCOMPARE(mFoundLens,QList<int>(
+                 {
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                 }));
+
+}
+
+void TestQSyneditCppSearchReplace::test_search_all_in_whole_file_from_caret_and_wrap()
+{
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoWrapAround;
+
+    //before the 3rd "thread"
+    mEdit->setCaretXY({3,15});
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndContinueProc,
+                         nullptr),10);
+    QCOMPARE(mFoundStrings,
+             QStringList(
+                 {
+                     "Thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                     "thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                     "thread",
+                     "Thread",
+                 }));
+    QCOMPARE(mReplaces,
+             QStringList(
+                 {
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                 }));
+    QCOMPARE(mFoundPositions,QList<CharPos>(
+                 {
+                     CharPos(4,15),
+                     CharPos(12,18),
+                     CharPos(5,48),
+                     CharPos(21,52),
+                     CharPos(21,62),
+                     CharPos(29,62),
+                     CharPos(4,67),
+                     CharPos(22,72),
+                     CharPos(10,3),
+                     CharPos(6,12),
+             }));
+    QCOMPARE(mFoundLens,QList<int>(
+                 {
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                 }));
+}
+
+void TestQSyneditCppSearchReplace::test_search_all_in_whole_file_from_caret_and_no_wrap()
+{
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoFromCaret;
+
+    //before the 3rd "thread"
+    mEdit->setCaretXY({3,15});
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndContinueProc,
+                         nullptr),8);
+    QCOMPARE(mFoundStrings,
+             QStringList(
+                 {
+                     "Thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                     "thread",
+                     "thread",
+                     "Thread",
+                     "thread",
+                 }));
+    QCOMPARE(mReplaces,
+             QStringList(
+                 {
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                 }));
+    QCOMPARE(mFoundPositions,QList<CharPos>(
+                 {
+                     CharPos(4,15),
+                     CharPos(12,18),
+                     CharPos(5,48),
+                     CharPos(21,52),
+                     CharPos(21,62),
+                     CharPos(29,62),
+                     CharPos(4,67),
+                     CharPos(22,72),
+             }));
+    QCOMPARE(mFoundLens,QList<int>(
+                 {
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                     6,
+                 }));
+}
+
 void TestQSyneditCppSearchReplace::test_basic_search_backward_in_empty_doc()
 {
     mEdit->clear();
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoBackwards;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards;
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -589,7 +969,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_in_empty_doc()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),0);
     QCOMPARE(mFoundStrings,{});
     QCOMPARE(mReplaces,{});
@@ -605,7 +985,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoBackwards;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards;
 
     //caret at file end
     mEdit->setCaretXY(mEdit->fileEnd());
@@ -738,7 +1118,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoBackwards;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards;
 
     //caret at file end
     mEdit->setCaretXY(mEdit->fileEnd());
@@ -749,7 +1129,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -765,7 +1145,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -781,7 +1161,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -797,7 +1177,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -813,7 +1193,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -829,7 +1209,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -845,7 +1225,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -861,7 +1241,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -877,7 +1257,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"Thread"});
     QCOMPARE(mReplaces,{""});
@@ -893,7 +1273,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -910,97 +1290,121 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_selection()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoBackwards;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards;
 
-    //no selection, caret at the last "thread" end
+    //no selection, caret at the 9th "thread" end
+    //should found the 9th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(28,72));
+    mEdit->setCaretXY(CharPos(10,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+
+    //no selection, caret at the 9th "thread" begin
+    //should found the 8th "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos(4,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(22,72)});
+    QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
-    QCOMPARE(mEdit->selBegin(), CharPos(22,72));
-    QCOMPARE(mEdit->selEnd(), CharPos(28,72));
+    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(29,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(35,62));
 
-    //no selection, caret at the last "thread" begin
+    //the 9th "thread" selected, caret at selection begin
+    //should found the 8th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(22,72));
+    mEdit->setCaretAndSelection(CharPos(4,67),CharPos(4,67),CharPos(10,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
-                         nullptr),1);
-    QCOMPARE(mFoundStrings,{"Thread"});
-    QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(4,67)});
-    QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
-    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
-    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
-
-    //the last "thread" selected, caret at selection begin
-    clearFounds();
-    mEdit->setCaretAndSelection(CharPos(22,72),CharPos(22,72),CharPos(28,72));
-    QCOMPARE(mEdit->searchReplace("thread","",
-                                  mEdit->fileBegin(),
-                                  mEdit->fileEnd(),
-                         options,
-                         mBasicSearcher.get(),
-                         mBasicMatchedProc,
-                         nullptr),1);
-    QCOMPARE(mFoundStrings,{"Thread"});
-    QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(4,67)});
-    QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
-    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
-    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
-
-    //the last "thread" selected, caret at selection end
-    clearFounds();
-    mEdit->setCaretAndSelection(CharPos(28,72),CharPos(22,72),CharPos(28,72));
-    QCOMPARE(mEdit->searchReplace("thread","",
-                                  mEdit->fileBegin(),
-                                  mEdit->fileEnd(),
-                         options,
-                         mBasicSearcher.get(),
-                         mBasicMatchedProc,
-                         nullptr),1);
-    QCOMPARE(mFoundStrings,{"Thread"});
-    QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(4,67)});
-    QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
-    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
-    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
-
-    //the last "thread" selected, caret not in selection
-    clearFounds();
-    mEdit->setCaretAndSelection(CharPos(29,72),CharPos(22,72),CharPos(28,72));
-    QCOMPARE(mEdit->searchReplace("thread","",
-                                  mEdit->fileBegin(),
-                                  mEdit->fileEnd(),
-                         options,
-                         mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
-    QCOMPARE(mFoundPositions,{CharPos(22,72)});
+    QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
-    QCOMPARE(mEdit->selBegin(), CharPos(22,72));
-    QCOMPARE(mEdit->selEnd(), CharPos(28,72));
+    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(29,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(35,62));
+
+    //the 9th "thread" selected, caret at selection end
+    //should found the 8th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(10,67),CharPos(4,67),CharPos(10,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(29,62)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(29,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(35,62));
+
+    //the 8th "thread" selected, caret after the 9th "thread"
+    //should found the 9th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(0,68),CharPos(29,62),CharPos(35,62));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+
+    //the 8th "thread" selected, caret before the 7th "thread"
+    //should found the 6th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(28,62),CharPos(29,62),CharPos(35,62));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(21,62)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(21,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(27,62));
 }
 
 void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
@@ -1008,7 +1412,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor | SearchOption::ssoBackwards | SearchOption::ssoWrapAround;
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards | SearchOption::ssoWrapAround;
 
     //found the first "thread"
     mEdit->setCaretXY({16,3});
@@ -1018,7 +1422,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -1035,7 +1439,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          nullptr),1);
     QCOMPARE(mFoundStrings,{"thread"});
     QCOMPARE(mReplaces,{""});
@@ -1053,7 +1457,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          [](){ return false; }),
              0);
     QCOMPARE(mFoundStrings,{});
@@ -1071,7 +1475,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
                                   mEdit->fileEnd(),
                          options,
                          mBasicSearcher.get(),
-                         mBasicMatchedProc,
+                         mBasicMatchedAndExitProc,
                          [](){ return true; }),
              1);
     QCOMPARE(mFoundStrings,{"thread"});
@@ -1105,7 +1509,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
-    SearchOptions options = SearchOption::ssoFromCursor;
+    SearchOptions options = SearchOption::ssoFromCaret;
 
     QCOMPARE(mEdit->searchReplace("stop","",
                                   mEdit->fileBegin(),

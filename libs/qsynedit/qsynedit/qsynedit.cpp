@@ -5251,32 +5251,37 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
     int result = 0;
     // get the text range to search in, ignore the "Search in selection only"
     // option if nothing is selected
-    bool bBackward = sOptions.testFlag(ssoBackwards);
-    bool bFromCursor = sOptions.testFlag(ssoFromCursor);
+    bool backwards = sOptions.testFlag(ssoBackwards);
+    bool fromCaret = sOptions.testFlag(ssoFromCaret);
+    bool wrapped = false;
     CharPos ptCurrent, ptStart, ptEnd;
     ptStart = scopeBegin;
     ptEnd = scopeEnd;
-    if (bFromCursor) {
+    if (fromCaret) {
         if (selBegin() == caretXY() || selEnd() == caretXY()) {
             if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
-                if (bBackward)
+                if (backwards)
                     ptEnd = std::max(selBegin(), selEnd());
                 else
                     ptStart = std::min(selBegin(), selEnd());
             } else {
-                if (bBackward)
+                if (backwards)
                     ptEnd = std::min(selBegin(), selEnd());
                 else
                     ptStart = std::max(selBegin(), selEnd());
             }
+        } else {
+            if (backwards)
+                ptEnd = caretXY();
+            else
+                ptStart = caretXY();
         }
     }
-    if (bBackward)
+    if (backwards)
         ptCurrent = ptEnd;
     else
         ptCurrent = ptStart;
-
-    CharPos originCaretXY=caretXY();
+    CharPos origCurrent{ptCurrent};
     // initialize the search engine
     searchEngine->setOptions(sOptions);
     searchEngine->setPattern(sSearch);
@@ -5295,7 +5300,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
         while ((ptCurrent.line >= ptStart.line) && (ptCurrent.line <= ptEnd.line)) {
             int nInLine = searchEngine->findAll(mDocument->getLine(ptCurrent.line));
             int iResultOffset = 0;
-            if (bBackward)
+            if (backwards)
                 i = searchEngine->resultCount()-1;
             else
                 i = 0;
@@ -5305,7 +5310,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 int nFound = searchEngine->result(i) + iResultOffset;
                 int nSearchLen = searchEngine->length(i);
                 int nReplaceLen = 0;
-                if (bBackward)
+                if (backwards)
                     i--;
                 else
                     i++;
@@ -5316,8 +5321,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 int last = nFound + nSearchLen;
 //                    qDebug()<<ptStart.line<<ptStart.ch<<ptEnd.line<<ptEnd.ch<<ptCurrent.line<<first<<last;
                 if  ((nSearchLen==0) &&
-                     (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !bBackward)
-                      ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && bBackward))
+                     (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !backwards)
+                      ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && backwards))
                      ) {
                     isInValidSearchRange = false;
                 } else if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
@@ -5334,19 +5339,19 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 ptCurrent.ch += nSearchLen;
                 setSelEnd(ptCurrent);
 
-                if (bBackward)
+                if (backwards)
                     internalSetCaretXY(selBegin());
                 else
                     internalSetCaretXY(selEnd());
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
-                if (searchAction==SearchAction::ReplaceAndExit) {
-                    searchAction=SearchAction::Exit;
-                } else if (matchedCallback && !dobatchReplace) {
+                if (matchedCallback && !dobatchReplace) {
                     searchAction = matchedCallback(
                                 selText(),replaceText,
                                 CharPos{nFound,ptCurrent.line},
                                 nSearchLen);
+                } else if (searchAction==SearchAction::ReplaceAndExit) {
+                    searchAction=SearchAction::Exit;
                 }
                 if (searchAction==SearchAction::Exit) {
                     return result;
@@ -5366,7 +5371,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     doSetSelText(replaceText);
                     nReplaceLen = caretX() - nFound;
                     // fix the caret position and the remaining results
-                    if (!bBackward) {
+                    if (!backwards) {
                         internalSetCaretX(nFound + nReplaceLen);
                         if ((nSearchLen != nReplaceLen)) {
                             iResultOffset += nReplaceLen - nSearchLen;
@@ -5381,13 +5386,13 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             }
 
             // search next / previous line
-            if (bBackward) {
+            if (backwards) {
                 ptCurrent.line--;
             } else {
                 ptCurrent.line++;
             }
             if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
-                    && bFromCursor ){
+                    && fromCaret && !wrapped){ //wrap around, should happen only once
                 if (!sOptions.testFlag(ssoWrapAround)) {
                     break;
                 } else {
@@ -5395,14 +5400,14 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                         break;
                 }
                 //search start from cursor, search has finished but no result founds
-                bFromCursor = false;
+                wrapped = true;
                 ptStart = scopeBegin;
                 ptEnd = scopeEnd;
-                if (bBackward) {
-                    ptStart = originCaretXY;
+                if (backwards) {
+                    ptStart = origCurrent;
                     ptCurrent = ptEnd;
                 } else {
-                    ptEnd= originCaretXY;
+                    ptEnd= origCurrent;
                     ptCurrent = ptStart;
                 }
             }
