@@ -5251,10 +5251,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
         return 0;
     }
     int result = 0;
-    // get the text range to search in, ignore the "Search in selection only"
-    // option if nothing is selected
+
     bool backwards = sOptions.testFlag(ssoBackwards);
-    bool fromCaret = sOptions.testFlag(ssoFromCaret);
+    // from caret only in effect if searching in whole document
+    bool fromCaret = sOptions.testFlag(ssoFromCaret)
+            && scopeBegin == fileBegin()
+            && scopeEnd == fileEnd();
     bool wrapped = false;
     CharPos ptCurrent, ptStart, ptEnd;
     ptStart = scopeBegin;
