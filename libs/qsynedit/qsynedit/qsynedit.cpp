@@ -5250,6 +5250,7 @@ void QSynEdit::doSetSelText(const QString &value)
 int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                             const CharPos & scopeBegin,
                             const CharPos & scopeEnd,
+                            CharPos& newScopeEnd,
                             SearchOptions sOptions, Searcher *searchEngine,
                     SearchMatchedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
 {
@@ -5266,14 +5267,16 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
     int result = 0;
 
     bool backwards = sOptions.testFlag(ssoBackwards);
+    bool searchInWholeDoc = (
+                scopeBegin == fileBegin()
+                && scopeEnd == fileEnd());
     // from caret only in effect if searching in whole document
-    bool fromCaret = sOptions.testFlag(ssoFromCaret)
-            && scopeBegin == fileBegin()
-            && scopeEnd == fileEnd();
+    bool fromCaret = sOptions.testFlag(ssoFromCaret) && searchInWholeDoc;
     bool wrapped = false;
-    CharPos posCurrent, posBegin, posEnd;
-    posBegin = scopeBegin;
-    posEnd = scopeEnd;
+    CharPos posCurrent;
+    CharPos posBegin = scopeBegin;
+    CharPos posEnd = scopeEnd;
+    newScopeEnd = scopeEnd;
     if (fromCaret) {
         if (selBegin() == caretXY() || selEnd() == caretXY()) {
             if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
@@ -5411,8 +5414,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
                 }
             }
-            if (backwards && fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line)
-                origCurrent.ch += totalLineOffset;
+            if (fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line) {
+                if (backwards != wrapped)
+                    origCurrent.ch += totalLineOffset;
+            }
+            if (totalLineOffset!=0 && newScopeEnd.line == posCurrent.line)
+                newScopeEnd.line += totalLineOffset;
 
             // search next / previous line
             if (backwards) {

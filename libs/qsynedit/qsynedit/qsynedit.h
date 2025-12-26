@@ -294,6 +294,7 @@ public:
     int searchReplace(const QString& sSearch, const QString& sReplace,
                       const CharPos & scopeBegin,
                       const CharPos & scopeEnd,
+                      CharPos& newScopeEnd,
                       SearchOptions options,
                Searcher *searchEngine,  SearchMatchedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);
