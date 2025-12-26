@@ -35,6 +35,7 @@ private slots:
     void test_basic_search_forward_with_wrap();
 
     void test_search_forward_whole_word();
+    void test_search_forward_whole_word2();
     void test_search_forward_match_case();
 
     void test_search_all_forward_in_whole_file_from_start();

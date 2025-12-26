@@ -307,20 +307,33 @@ bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &st
     return false;
 }
 
-void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri)
+void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri) const
 {
+    Q_ASSERT((line >= 0) && (line < mDocument->count()));
     lstToken.clear();
     lstPos.clear();
     lstAttri.clear();
-    if ((line >= 0) && (line < mDocument->count())) {
-        startParseLine(mSyntaxer.get(), line);
-        while (!mSyntaxer->eol()) {
-            lstPos.append(mSyntaxer->getTokenPos());
-            lstToken.append(mSyntaxer->getToken());
-            lstAttri.append(mSyntaxer->getTokenAttribute());
-            mSyntaxer->next();
-        }
+    startParseLine(mSyntaxer.get(), line);
+    while (!mSyntaxer->eol()) {
+        lstPos.append(mSyntaxer->getTokenPos());
+        lstToken.append(mSyntaxer->getToken());
+        lstAttri.append(mSyntaxer->getTokenAttribute());
+        mSyntaxer->next();
     }
+}
+
+QSet<int> QSynEdit::getTokenBorders(int line) const
+{
+    Q_ASSERT((line >= 0) && (line < mDocument->count()));
+    QSet<int> result;
+    result.insert(0);
+    result.insert(mDocument->getLine(line).length());
+    startParseLine(mSyntaxer.get(), line);
+    while (!mSyntaxer->eol()) {
+        result.insert(mSyntaxer->getTokenPos());
+        mSyntaxer->next();
+    }
+    return result;
 }
 
 void QSynEdit::addGroupUndoBreak()
@@ -5309,6 +5322,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             else
                 i = 0;
             // Operate on all results in this line.
+            QSet<int> tokenBorders;
+            if (nInLine>0) {
+                tokenBorders = getTokenBorders(ptCurrent.line);
+            }
             while (nInLine > 0) {
                 // An occurrence may have been replaced with a text of different length
                 int nFound = searchEngine->result(i) + iResultOffset;
@@ -5336,11 +5353,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 if (!isInValidSearchRange)
                     continue;
                 if (sOptions.testFlag(ssoWholeWord) && first != last) {
-                    if (first != 0
-                            && first != getTokenBegin(CharPos{first, ptCurrent.line}).ch)
-                        continue;
-                    if (last != mDocument->getLine(ptCurrent.line).length()
-                            && last != getTokenBegin(CharPos{last, ptCurrent.line}).ch)
+                    if (!tokenBorders.contains(first)
+                            || !tokenBorders.contains(last))
                         continue;
                 }
                 result++;

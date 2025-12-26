@@ -805,6 +805,68 @@ void TestQSyneditCppSearchReplace::test_search_forward_whole_word()
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
 }
 
+void TestQSyneditCppSearchReplace::test_search_forward_whole_word2()
+{
+    QStringList text = {
+        "uint uint,uint,uint uint",
+        "int int,int,int int",
+        "uintx uintx,uintx,uintx uintx",
+        "uintx uintx,int,uintx uintx",
+        "intx intx,intx,intx intx",
+    };
+
+    SearchOptions options = SearchOption::ssoWholeWord;
+
+    mEdit->setContent(text);
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndContinueProc,
+                         nullptr),6);
+
+    QCOMPARE(mFoundStrings,
+             QStringList(
+                 {
+                     "int",
+                     "int",
+                     "int",
+                     "int",
+                     "int",
+                     "int",
+                 }));
+    QCOMPARE(mReplaces,
+             QStringList(
+                 {
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                     "",
+                 }));
+    QCOMPARE(mFoundPositions,QList<CharPos>(
+                 {
+                     CharPos(0,1),
+                     CharPos(4,1),
+                     CharPos(8,1),
+                     CharPos(12,1),
+                     CharPos(16,1),
+                     CharPos(12,3),
+             }));
+    QCOMPARE(mFoundLens,QList<int>(
+                 {
+                     3,
+                     3,
+                     3,
+                     3,
+                     3,
+                     3,
+                 }));
+}
+
 void TestQSyneditCppSearchReplace::test_search_forward_match_case()
 {
     QByteArray encoding;

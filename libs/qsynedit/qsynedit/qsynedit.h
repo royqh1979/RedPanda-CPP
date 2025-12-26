@@ -310,7 +310,8 @@ public:
     bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
 
-    void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri);
+    void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri) const;
+    QSet<int> getTokenBorders(int line) const;
 
     void beginEditing();
     void endEditing();
