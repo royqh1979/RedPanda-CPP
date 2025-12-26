@@ -5419,7 +5419,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     origCurrent.ch += totalLineOffset;
             }
             if (totalLineOffset!=0 && newScopeEnd.line == posCurrent.line)
-                newScopeEnd.line += totalLineOffset;
+                newScopeEnd.ch += totalLineOffset;
 
             // search next / previous line
             if (backwards) {
