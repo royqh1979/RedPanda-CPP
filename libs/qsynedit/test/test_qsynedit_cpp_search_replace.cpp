@@ -113,7 +113,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_in_empty_doc()
 
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap()
+void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_wrap()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -266,7 +266,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_callback()
+void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_wrap_with_callback()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -472,7 +472,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_without_wrap_with_c
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
+void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_selection()
 {
     //when caret is at selection begin/end, forward search will start from selection end
     QByteArray encoding;
@@ -607,7 +607,143 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_selection()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_forward_ignore_caret_pos()
+void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_current_selection()
+{
+    //when caret is at selection begin/end, forward search will start from selection end
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoIncludeCurrentSelection;
+    CharPos newEndPos;
+
+    //no selection, caret at the second "thread" begin
+    //should found the second "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos{6,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(6,12)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->selBegin(), CharPos(6,12));
+    QCOMPARE(mEdit->selEnd(), CharPos(12,12));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //no selection, caret at the second "thread" end
+    //should found the third "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,15)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,15));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,15));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the second "thread" selected, caret at selection begin
+    //should found the second "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{6,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(6,12)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->selBegin(), CharPos(6,12));
+    QCOMPARE(mEdit->selEnd(), CharPos(12,12));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the second "thread" selected, caret at selection end
+    //should found the second "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{12,12},CharPos{6,12},CharPos{12,12});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(6,12)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->selBegin(), CharPos(6,12));
+    QCOMPARE(mEdit->selEnd(), CharPos(12,12));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    // the third "thread" selected, caret before the second "thread"
+    // should found the second "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{4,12},CharPos{4,15},CharPos{4,15});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(6,12)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->selBegin(), CharPos(6,12));
+    QCOMPARE(mEdit->selEnd(), CharPos(12,12));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    // the third "thread" selected, caret after the fifth "thread"
+    // should found the sixth "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos{16,19},CharPos{4,15},CharPos{4,15});
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(5,48)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->selBegin(), CharPos(5,48));
+    QCOMPARE(mEdit->selEnd(), CharPos(11,48));
+    QCOMPARE(newEndPos,CharPos(1,76));
+}
+
+void TestQSyneditCppSearchReplace::test_basic_search_forward()
 {
     //when caret is at selection begin/end, forward search will start from selection end
     QByteArray encoding;
@@ -742,7 +878,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_ignore_caret_pos()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
+void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wrap()
 {
     //when caret is at selection begin/end, forward search will start from selection end
     QByteArray encoding;
@@ -837,7 +973,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_with_wrap()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_search_forward_whole_word()
+void TestQSyneditCppSearchReplace::test_search_forward_from_caret_whole_word()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -966,7 +1102,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_whole_word2()
                  }));
 }
 
-void TestQSyneditCppSearchReplace::test_search_forward_match_case()
+void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -2049,7 +2185,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_in_empty_doc()
     QCOMPARE(newEndPos,CharPos(0,0));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap()
+void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without_wrap()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -2205,7 +2341,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_callback()
+void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without_wrap_with_callback()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -2397,7 +2533,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_without_wrap_with_
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_backward_with_selection()
+void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_selection()
 {
     //when caret is at selection begin/end, backward search will start from selection begin
     QByteArray encoding;
@@ -2533,7 +2669,143 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_with_selection()
     QCOMPARE(newEndPos,CharPos(1,76));
 }
 
-void TestQSyneditCppSearchReplace::test_basic_search_backward_with_wrap()
+void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include_current_selection()
+{
+    //when caret is at selection begin/end, backward search will start from selection begin
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoBackwards | SearchOption::ssoIncludeCurrentSelection;
+    CharPos newEndPos;
+
+    //no selection, caret at the 9th "thread" end
+    //should found the 9th "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos(10,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //no selection, caret at the 9th "thread" begin
+    //should found the 8th "thread"
+    clearFounds();
+    mEdit->setCaretXY(CharPos(4,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(29,62)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(29,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(35,62));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the 9th "thread" selected, caret at selection begin
+    //should found the 9th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(4,67),CharPos(4,67),CharPos(10,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the 9th "thread" selected, caret at selection end
+    //should found the 9th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(10,67),CharPos(4,67),CharPos(10,67));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the 8th "thread" selected, caret after the 9th "thread"
+    //should found the 9th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(0,68),CharPos(29,62),CharPos(35,62));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"Thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(4,67)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->selBegin(), CharPos(4,67));
+    QCOMPARE(mEdit->selEnd(), CharPos(10,67));
+    QCOMPARE(newEndPos,CharPos(1,76));
+
+    //the 8th "thread" selected, caret before the 7th "thread"
+    //should found the 6th "thread"
+    clearFounds();
+    mEdit->setCaretAndSelection(CharPos(28,62),CharPos(29,62),CharPos(35,62));
+    QCOMPARE(mEdit->searchReplace("thread","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                                  newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mBasicMatchedAndExitProc,
+                         nullptr),1);
+    QCOMPARE(mFoundStrings,{"thread"});
+    QCOMPARE(mReplaces,{""});
+    QCOMPARE(mFoundPositions,{CharPos(21,62)});
+    QCOMPARE(mFoundLens,{6});
+    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->selBegin(), CharPos(21,62));
+    QCOMPARE(mEdit->selEnd(), CharPos(27,62));
+    QCOMPARE(newEndPos,CharPos(1,76));
+}
+
+void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wrap()
 {
     QByteArray encoding;
     mEdit->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -3758,6 +4030,93 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
     QCOMPARE(newEndPos,CharPos(39,2));
 }
 
+void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selection()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+    QStringList text2{
+        "int int int int",
+        "int int int int",
+        "int replaced int int",
+    };
+    QStringList text3{
+        "int int int int",
+        "int int int int",
+        "int int  int",
+    };
+    QStringList text4{
+        "int int int int",
+        "int int int int",
+        "int int replaced1 int",
+    };
+    QStringList text5{
+        "int int int int",
+        "int int int int",
+        "int int replaced2 int",
+    };
+    SearchOptions options = ssoFromCaret;
+    CharPos newEndPos;
+
+    //no selection,caret at begin of the second "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({4,2});
+    mEdit->searchReplace("int","replaced",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(newEndPos,CharPos(20,2));
+
+    //no selection,caret at end of the second "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({7,2});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+    QCOMPARE(newEndPos,CharPos(12,2));
+
+    //the second "int" on 3rd line selected, caret at selection begin
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{4,2},CharPos{4,2},CharPos{7,2});
+    mEdit->searchReplace("int","replaced1",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text4);
+    QCOMPARE(newEndPos,CharPos(21,2));
+
+    //the second "int" on 3rd line selected, caret at selection end
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{7,2},CharPos{4,2},CharPos{7,2});
+    mEdit->searchReplace("int","replaced2",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text5);
+    QCOMPARE(newEndPos,CharPos(21,2));
+}
+
 void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
 {
     QStringList text1{
@@ -3836,6 +4195,93 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
     QCOMPARE(newEndPos,CharPos(39,2));
 }
 
+void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selection()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+    QStringList text2{
+        "int int int int",
+        "int int int int",
+        "int replaced int int",
+    };
+    QStringList text3{
+        "int int int int",
+        "int int int int",
+        "int int  int",
+    };
+    QStringList text4{
+        "int int int int",
+        "int int int int",
+        "int replaced1 int int",
+    };
+    QStringList text5{
+        "int int int int",
+        "int int int int",
+        "int replaced2 int int",
+    };
+    SearchOptions options = ssoFromCaret | ssoBackwards;
+    CharPos newEndPos;
+
+    //no selection,caret at begin of the third "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({8,2});
+    mEdit->searchReplace("int","replaced",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(newEndPos,CharPos(20,2));
+
+    //no selection,caret at end of the third "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({11,2});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+    QCOMPARE(newEndPos,CharPos(12,2));
+
+    //the thrid "int" on 3rd line selected, caret at selection begin
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{8,2},CharPos{8,2},CharPos{11,2});
+    mEdit->searchReplace("int","replaced1",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text4);
+    QCOMPARE(newEndPos,CharPos(21,2));
+
+    //the third "int" on 3rd line selected, caret at selection end
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{11,2},CharPos{8,2},CharPos{11,2});
+    mEdit->searchReplace("int","replaced2",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text5);
+    QCOMPARE(newEndPos,CharPos(21,2));
+}
+
 void TestQSyneditCppSearchReplace::test_replace_forward_scope()
 {
     QStringList text1{
@@ -3858,6 +4304,54 @@ void TestQSyneditCppSearchReplace::test_replace_forward_scope()
     };
 
     SearchOptions options = ssoNone;
+    CharPos newEndPos;
+    mEdit->setContent(text1);
+    mEdit->searchReplace("int","",
+                         CharPos{4,0},
+                         CharPos{8,2},
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndContinueProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(newEndPos,CharPos(2,2));
+
+    mEdit->setContent(text1);
+    mEdit->searchReplace("int","replaced",
+                         CharPos{4,0},
+                         CharPos{8,2},
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndContinueProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+    QCOMPARE(newEndPos,CharPos(18,2));
+}
+
+void TestQSyneditCppSearchReplace::test_replace_backward_scope()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+
+
+    QStringList text2{
+        "int   ",
+        "   ",
+        "  int int",
+    };
+
+    QStringList text3{
+        "int replaced replaced replaced",
+        "replaced replaced replaced replaced",
+        "replaced replaced int int",
+    };
+
+    SearchOptions options = ssoBackwards;
     CharPos newEndPos;
     mEdit->setContent(text1);
     mEdit->searchReplace("int","",

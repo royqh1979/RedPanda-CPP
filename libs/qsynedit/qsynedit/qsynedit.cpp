@@ -5321,6 +5321,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             int nInLine = searchEngine->findAll(mDocument->getLine(posCurrent.line));
             int iResultOffset = 0;
             int totalLineOffset = 0;
+            bool shouldExit = false;
             if (backwards)
                 i = searchEngine->resultCount()-1;
             else
@@ -5380,12 +5381,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                                 selText(),replaceText,
                                 CharPos{chFound,posCurrent.line},
                                 searchLen);
-                } else if (searchAction==SearchAction::ReplaceAndExit) {
-                    searchAction=SearchAction::Exit;
                 }
-                if (searchAction==SearchAction::Exit) {
-                    return result;
-                } else if (searchAction == SearchAction::Skip) {
+                if (searchAction == SearchAction::Skip) {
                     continue;
                 } else if (searchAction == SearchAction::Replace
                            || searchAction == SearchAction::ReplaceAndExit
@@ -5413,6 +5410,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     }
                     mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
                 }
+                if (searchAction==SearchAction::Exit || searchAction == SearchAction::ReplaceAndExit) {
+                    shouldExit = true;
+                    break;
+                }
             }
             if (fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line) {
                 if (backwards != wrapped)
@@ -5420,6 +5421,9 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             }
             if (totalLineOffset!=0 && newScopeEnd.line == posCurrent.line)
                 newScopeEnd.ch += totalLineOffset;
+
+            if (shouldExit)
+                return result;
 
             // search next / previous line
             if (backwards) {
