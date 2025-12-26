@@ -53,6 +53,15 @@ void TestQSyneditCppSearchReplace::initTestCase()
         mFoundLens.append(wordLen);
         return SearchAction::ReplaceAndExit;
     };
+    mReplaceAndContinueProc = [this](const QString& sFound,
+            const QString& sReplace, const CharPos& pos, int wordLen){
+        mFoundStrings.append(sFound);
+        mReplaces.append(sReplace);
+        mFoundPositions.append(pos);
+        mFoundLens.append(wordLen);
+        return SearchAction::Replace;
+    };
+
 }
 
 void TestQSyneditCppSearchReplace::clearFounds()
@@ -3395,23 +3404,207 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
 
 }
 
-void TestQSyneditCppSearchReplace::test_replace()
-{    QStringList text1{
-        "int iNTel() {",
-        " ttt;",
-        "}",
-        "int main() {",
-        " UNIT xint0;",
-        " if (xint0>0) {",
-        "  intel(xint0++);",
-        " }",
-        "}",
-        "int test() {",
-        " return 0;",
-        "}"
+void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
+{
+//    QStringList text1{
+//        "int iNTel() {",
+//        " ttt;",
+//        "}",
+//        "int main() {",
+//        " UNIT xint0;",
+//        " if (xint0>0) {",
+//        "  intel(xint0++);",
+//        " }",
+//        "}",
+//        "int test() {",
+//        " return 0;",
+//        "}"
+//    };
+
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+    QStringList text2{
+        "   ",
+        "  int ",
+        "   ",
+    };
+
+    QStringList text3{
+        "   ",
+        "  int ",
+        "   ",
+    };
+    QStringList text4{
+        "beautiful beautiful beautiful beautiful",
+        "beautiful beautiful int beautiful",
+        "beautiful beautiful beautiful beautiful",
+    };
+
+    SearchOptions options = ssoWrapAround | ssoFromCaret;
+
+    auto matchProc = [this](const QString& sFound,
+            const QString& sReplace, const CharPos& pos, int wordLen){
+        mFoundStrings.append(sFound);
+        mReplaces.append(sReplace);
+        mFoundPositions.append(pos);
+        mFoundLens.append(wordLen);
+        if (pos == CharPos{8,1})
+            return SearchAction::Skip;
+        return SearchAction::Replace;
+    };
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({8,1});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({9,1});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({8,1});
+    mEdit->searchReplace("int","beautiful",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text4);
+
+
+}
+
+void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+    QStringList text2{
+        "   ",
+        " int  ",
+        "   ",
+    };
+
+    QStringList text3{
+        "   ",
+        " int  ",
+        "   ",
+    };
+    QStringList text4{
+        "beautiful beautiful beautiful beautiful",
+        "beautiful int beautiful beautiful",
+        "beautiful beautiful beautiful beautiful",
+    };
+
+    SearchOptions options = ssoWrapAround | ssoFromCaret | ssoBackwards;
+
+    auto matchProc = [this](const QString& sFound,
+            const QString& sReplace, const CharPos& pos, int wordLen){
+        mFoundStrings.append(sFound);
+        mReplaces.append(sReplace);
+        mFoundPositions.append(pos);
+        mFoundLens.append(wordLen);
+        if (pos == CharPos{4,1})
+            return SearchAction::Skip;
+        return SearchAction::Replace;
+    };
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({8,1});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({12,1});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({12,1});
+    mEdit->searchReplace("int","beautiful",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         options,
+                         mBasicSearcher.get(),
+                         matchProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text4);
+}
+
+void TestQSyneditCppSearchReplace::test_replace_forward_scope()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
     };
 
 
+    QStringList text2{
+        "int   ",
+        "   ",
+        "  int int",
+    };
+
+    QStringList text3{
+        "int replaced replaced replaced",
+        "replaced replaced replaced replaced",
+        "replaced replaced int int",
+    };
+
+    SearchOptions options = ssoNone;
+
+    mEdit->setContent(text1);
+    mEdit->searchReplace("int","",
+                         CharPos{4,0},
+                         CharPos{8,2},
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndContinueProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->setContent(text1);
+    mEdit->searchReplace("int","replaced",
+                         CharPos{4,0},
+                         CharPos{8,2},
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndContinueProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
 }
 
 }

@@ -22,6 +22,7 @@ protected:
     SearchMatchedProc mBasicMatchedAndExitProc;
     SearchMatchedProc mBasicMatchedAndContinueProc;
     SearchMatchedProc mReplaceAndExitProc;
+    SearchMatchedProc mReplaceAndContinueProc;
     std::shared_ptr<Searcher> mBasicSearcher;
     std::shared_ptr<Searcher> mRegexSearcher;
 private slots:
@@ -60,7 +61,9 @@ private slots:
     void test_search_regex();
     void test_basic_forward_search_without_wrap2();
 
-    void test_replace();
+    void test_replace_forward_from_caret();
+    void test_replace_backward_from_caret();
+    void test_replace_forward_scope();
 };
 
 }

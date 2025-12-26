@@ -5271,34 +5271,34 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             && scopeBegin == fileBegin()
             && scopeEnd == fileEnd();
     bool wrapped = false;
-    CharPos ptCurrent, ptStart, ptEnd;
-    ptStart = scopeBegin;
-    ptEnd = scopeEnd;
+    CharPos posCurrent, posBegin, posEnd;
+    posBegin = scopeBegin;
+    posEnd = scopeEnd;
     if (fromCaret) {
         if (selBegin() == caretXY() || selEnd() == caretXY()) {
             if (sOptions.testFlag(ssoIncludeCurrentSelection)) {
                 if (backwards)
-                    ptEnd = std::max(selBegin(), selEnd());
+                    posEnd = std::max(selBegin(), selEnd());
                 else
-                    ptStart = std::min(selBegin(), selEnd());
+                    posBegin = std::min(selBegin(), selEnd());
             } else {
                 if (backwards)
-                    ptEnd = std::min(selBegin(), selEnd());
+                    posEnd = std::min(selBegin(), selEnd());
                 else
-                    ptStart = std::max(selBegin(), selEnd());
+                    posBegin = std::max(selBegin(), selEnd());
             }
         } else {
             if (backwards)
-                ptEnd = caretXY();
+                posEnd = caretXY();
             else
-                ptStart = caretXY();
+                posBegin = caretXY();
         }
     }
     if (backwards)
-        ptCurrent = ptEnd;
+        posCurrent = posEnd;
     else
-        ptCurrent = ptStart;
-    CharPos origCurrent{ptCurrent};
+        posCurrent = posBegin;
+    CharPos origCurrent{posCurrent};
     // initialize the search engine
     searchEngine->setOptions(sOptions);
     searchEngine->setPattern(sSearch);
@@ -5314,9 +5314,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
         int i;
         // If it's a search only we can leave the procedure now.
         SearchAction searchAction = SearchAction::Exit;
-        while ((ptCurrent.line >= ptStart.line) && (ptCurrent.line <= ptEnd.line)) {
-            int nInLine = searchEngine->findAll(mDocument->getLine(ptCurrent.line));
+        while ((posCurrent.line >= posBegin.line) && (posCurrent.line <= posEnd.line)) {
+            int nInLine = searchEngine->findAll(mDocument->getLine(posCurrent.line));
             int iResultOffset = 0;
+            int totalLineOffset = 0;
             if (backwards)
                 i = searchEngine->resultCount()-1;
             else
@@ -5324,13 +5325,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             // Operate on all results in this line.
             QSet<int> tokenBorders;
             if (nInLine>0) {
-                tokenBorders = getTokenBorders(ptCurrent.line);
+                tokenBorders = getTokenBorders(posCurrent.line);
             }
             while (nInLine > 0) {
                 // An occurrence may have been replaced with a text of different length
-                int nFound = searchEngine->result(i) + iResultOffset;
-                int nSearchLen = searchEngine->length(i);
-                int nReplaceLen = 0;
+                int chFound = searchEngine->result(i) + iResultOffset;
+                int searchLen = searchEngine->length(i);
                 if (backwards)
                     i--;
                 else
@@ -5338,16 +5338,16 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 nInLine--;
                 // Is the search result entirely in the search range?
                 bool isInValidSearchRange = true;
-                int first = nFound;
-                int last = nFound + nSearchLen;
+                int first = chFound;
+                int last = chFound + searchLen;
 //                    qDebug()<<ptStart.line<<ptStart.ch<<ptEnd.line<<ptEnd.ch<<ptCurrent.line<<first<<last;
-                if  ((nSearchLen==0) &&
-                     (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !backwards)
-                      ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && backwards))
+                if  ((searchLen==0) &&
+                     (((posCurrent.line == posBegin.line) && (first == posBegin.ch) && !backwards)
+                      ||  ((posCurrent.line == posEnd.line) && (last == posEnd.ch) && backwards))
                      ) {
                     isInValidSearchRange = false;
-                } else if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
-                        ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch))) {
+                } else if (((posCurrent.line == posBegin.line) && (first < posBegin.ch)) ||
+                        ((posCurrent.line == posEnd.line) && (last > posEnd.ch))) {
                     isInValidSearchRange = false;
                 }
                 if (!isInValidSearchRange)
@@ -5360,10 +5360,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 result++;
                 // Select the text, so the user can see it in the OnReplaceText event
                 // handler or as the search result.
-                ptCurrent.ch = nFound;
-                setSelBegin(ptCurrent);
-                ptCurrent.ch += nSearchLen;
-                setSelEnd(ptCurrent);
+                posCurrent.ch = chFound;
+                setSelBegin(posCurrent);
+                posCurrent.ch += searchLen;
+                setSelEnd(posCurrent);
 
                 if (backwards)
                     internalSetCaretXY(selBegin());
@@ -5371,11 +5371,12 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     internalSetCaretXY(selEnd());
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
-                if (matchedCallback && !dobatchReplace) {
+                if (searchAction != SearchAction::ReplaceAll
+                        && matchedCallback && !dobatchReplace) {
                     searchAction = matchedCallback(
                                 selText(),replaceText,
-                                CharPos{nFound,ptCurrent.line},
-                                nSearchLen);
+                                CharPos{chFound,posCurrent.line},
+                                searchLen);
                 } else if (searchAction==SearchAction::ReplaceAndExit) {
                     searchAction=SearchAction::Exit;
                 }
@@ -5395,47 +5396,51 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     bool oldAutoIndent = mOptions.testFlag(EditorOption::AutoIndent);
                     mOptions.setFlag(EditorOption::AutoIndent,false);
                     doSetSelText(replaceText);
-                    nReplaceLen = caretX() - nFound;
+                    int nReplaceLen = replaceText.length();
+                    totalLineOffset += nReplaceLen - searchLen;
                     // fix the caret position and the remaining results
                     if (!backwards) {
-                        internalSetCaretX(nFound + nReplaceLen);
-                        if ((nSearchLen != nReplaceLen)) {
-                            iResultOffset += nReplaceLen - nSearchLen;
-                            if ((mActiveSelectionMode != SelectionMode::Column) && (caretY() == ptEnd.line)) {
-                                ptEnd.ch+=nReplaceLen - nSearchLen;
-                                setSelEnd(ptEnd);
+                        internalSetCaretX(chFound + nReplaceLen);
+                        if ((searchLen != nReplaceLen)) {
+                            iResultOffset += nReplaceLen - searchLen;
+                            if (posEnd != fileEnd()  && posCurrent.line == posEnd.line) {
+                                posEnd.ch+= nReplaceLen - searchLen;
                             }
                         }
                     }
                     mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
                 }
             }
+            if (backwards && fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line)
+                origCurrent.ch += totalLineOffset;
 
             // search next / previous line
             if (backwards) {
-                ptCurrent.line--;
+                posCurrent.line--;
             } else {
-                ptCurrent.line++;
+                posCurrent.line++;
             }
-            if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
-                    && fromCaret && !wrapped){ //wrap around, should happen only once
-                if (!sOptions.testFlag(ssoWrapAround)) {
-                    break;
-                } else {
-                    if (confirmAroundCallback && !confirmAroundCallback())
+            if ((posCurrent.line < posBegin.line) || (posCurrent.line > posEnd.line)) {
+                if (fromCaret && !wrapped){ //wrap around, should happen only once
+                    if (!sOptions.testFlag(ssoWrapAround)) {
                         break;
-                }
-                //search start from cursor, search has finished but no result founds
-                wrapped = true;
-                ptStart = scopeBegin;
-                ptEnd = scopeEnd;
-                if (backwards) {
-                    ptStart = origCurrent;
-                    ptCurrent = ptEnd;
-                } else {
-                    ptEnd= origCurrent;
-                    ptCurrent = ptStart;
-                }
+                    } else {
+                        if (confirmAroundCallback && !confirmAroundCallback())
+                            break;
+                    }
+                    //search start from cursor, search has finished but no result founds
+                    wrapped = true;
+                    posBegin = scopeBegin;
+                    posEnd = scopeEnd;
+                    if (backwards) {
+                        posBegin = origCurrent;
+                        posCurrent = posEnd;
+                    } else {
+                        posEnd= origCurrent;
+                        posCurrent = posBegin;
+                    }
+                } else
+                    break;
             }
         }
     }
