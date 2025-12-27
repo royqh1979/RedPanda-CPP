@@ -199,6 +199,8 @@ public:
     void gotoDeclaration(const QSynedit::CharPos& pos);
     void gotoDefinition(const QSynedit::CharPos& pos);
     void reparse(bool resetParser);
+    void reparseIfNeeded();
+    void resetParserIfNeeded();
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
@@ -265,6 +267,11 @@ signals:
     void syntaxCheckRequested(Editor *e);
     void parseTodoRequested(const QString& filename, bool inProject);
     void updateEncodingInfoRequested(const Editor *e);
+
+    void showOccured(Editor *e);
+    void focusInOccured(Editor *e);
+    void closeOccured(Editor *e);
+    void hideOccured(Editor *e);
 private slots:
     void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);

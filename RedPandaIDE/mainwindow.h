@@ -118,10 +118,8 @@ public:
     ~MainWindow();
 
     void updateForEncodingInfo(const Editor* editor);
-    void updateStatusbarForLineCol(bool clear=false);
-    void updateStatusbarForLineCol(const Editor* editor, bool clear=false);
-    void updateForStatusbarModeInfo(bool clear=false);
-    void updateForStatusbarModeInfo(const Editor* editor, bool clear=false);
+    void updateStatusbarForLineCol(const Editor* editor);
+    void updateForStatusbarModeInfo(const Editor* editor);
     void updateStatusbarMessage(const QString& s);
     void setProjectCurrentFile(const QString& filename);
     void updateEditorSettings();
@@ -280,7 +278,9 @@ public slots:
     void onBreakpointRemoved(const Editor* e, int line);
     void onBreakpointsCleared(const Editor* e);
     void onParseTodoRequired(const QString &fileName, bool inProject);
-
+    void onEditorShown(Editor *e);
+    void refreshInfosForEditor(Editor *e);
+    void removeInfosForEditor();
 private:
     void connectEditorSignals(Editor * e);
     void executeTool(PToolItem item);

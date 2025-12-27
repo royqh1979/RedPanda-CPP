@@ -541,6 +541,8 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::updateForEncodingInfo(const Editor* editor) {
+    if (mQuitting)
+        return;
     if (editor!=nullptr) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
@@ -564,12 +566,6 @@ void MainWindow::updateForEncodingInfo(const Editor* editor) {
         ui->actionEncode_in_UTF_8->setChecked(false);
         ui->actionEncode_in_UTF_8_BOM->setChecked(false);
     }
-}
-
-void MainWindow::updateStatusbarForLineCol(bool clear)
-{
-    Editor* e = mEditorList->getEditor();
-    updateStatusbarForLineCol(e,clear);
 }
 
 void MainWindow::updateEditorSettings()
@@ -629,6 +625,8 @@ void MainWindow::updateEncodingActions(const Editor *e)
 
 void MainWindow::updateEditorActions(const Editor *e)
 {
+    if (mQuitting)
+        return;
     ui->menuCode->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuEdit->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuSelection->menuAction()->setVisible(mEditorList->pageCount()>0);
@@ -1352,6 +1350,55 @@ void MainWindow::onParseTodoRequired(const QString &fileName, bool inProject)
         mTodoParser->parseFile(fileName, inProject);
 }
 
+void MainWindow::onEditorShown(Editor *e)
+{
+    Q_ASSERT(e!=nullptr);
+    if (e->parser() && !isClosingAll()
+            && !isQuitting()) {
+        if (!openingFiles() && !openingProject()) {
+            if (pSettings->codeCompletion().clearWhenEditorHidden()
+                && pSettings->codeCompletion().shareParser()
+                && !e->inProject()) {
+                e->resetParserIfNeeded();
+            }
+            e->reparseIfNeeded();
+        }
+    }
+    debugger()->setIsForProject(e->inProject());
+    bookmarkModel()->setIsForProject(e->inProject());
+    todoModel()->setIsForProject(e->inProject());
+
+    if (!isClosingAll()
+                && !isQuitting()
+            && !openingFiles()
+            && !openingProject()) {
+        if (!e->inProject() || !pMainWindow->closingProject()) {
+            e->checkSyntaxInBack();
+            e->reparseTodo();
+        }
+    }
+    if (e->inProject() && !closingProject()) {
+        setProjectCurrentFile(e->filename());
+    }
+}
+
+void MainWindow::refreshInfosForEditor(Editor *e)
+{
+    updateClassBrowserForEditor(e);
+    updateAppTitle(e);
+    updateEditorActions(e);
+    updateForEncodingInfo(e);
+    updateStatusbarForLineCol(e);
+    updateForStatusbarModeInfo(e);
+}
+
+void MainWindow::removeInfosForEditor()
+{
+    updateForEncodingInfo(nullptr);
+    updateStatusbarForLineCol(nullptr);
+    updateForStatusbarModeInfo(nullptr);
+}
+
 void MainWindow::connectEditorSignals(Editor *editor)
 {
     connect(editor, &Editor::breakpointAdded, this, &MainWindow::onBreakpointAdded);
@@ -1360,7 +1407,10 @@ void MainWindow::connectEditorSignals(Editor *editor)
     connect(editor, &Editor::syntaxCheckRequested, this, &MainWindow::checkSyntaxInBack);
     connect(editor, &Editor::parseTodoRequested, this, &MainWindow::onParseTodoRequired);
     connect(editor, &Editor::updateEncodingInfoRequested, this, &MainWindow::updateForEncodingInfo);
-
+    connect(editor, &Editor::focusInOccured, this, &MainWindow::refreshInfosForEditor);
+    connect(editor, &Editor::showOccured, this, &MainWindow::onEditorShown);
+    connect(editor, &Editor::closeOccured, this, &MainWindow::removeInfosForEditor);
+    connect(editor, &Editor::hideOccured, this, &MainWindow::removeInfosForEditor);
 }
 
 void MainWindow::executeTool(PToolItem item)
@@ -1481,6 +1531,8 @@ void MainWindow::updateAppTitle()
 
 void MainWindow::updateAppTitle(const Editor *e)
 {
+    if (mQuitting)
+        return;
     QString appName=tr("Red Panda C++");
 #ifdef APP_VERSION_SUFFIX
     appName += tr(" %1 Version").arg(APP_VERSION_SUFFIX);
@@ -1737,9 +1789,13 @@ QMenuBar *MainWindow::menuBar() const
     return ui->menubar;
 }
 
-void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
+void MainWindow::updateStatusbarForLineCol(const Editor* e)
 {
-    if (!clear && e!=nullptr) {
+    if (mQuitting)
+        return;
+    if (e==nullptr) {
+        mFileInfoStatus->setText("");
+    } else {
         QString msg;
         if (pSettings->editor().forceFixedFontWidth()){
             int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
@@ -1772,20 +1828,16 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
             }
         }
         mFileInfoStatus->setText(msg);
-    } else {
-        mFileInfoStatus->setText("");
     }
 }
 
-void MainWindow::updateForStatusbarModeInfo(bool clear)
+void MainWindow::updateForStatusbarModeInfo(const Editor* e)
 {
-    Editor* e = mEditorList->getEditor();
-    updateForStatusbarModeInfo(e,clear);
-}
-
-void MainWindow::updateForStatusbarModeInfo(const Editor* e, bool clear)
-{
-    if (!clear && e!=nullptr) {
+    if (mQuitting)
+        return;
+    if (e==nullptr) {
+        mFileModeStatus->setText("");
+    } else {
         QString msg;
         if (e->readOnly()) {
             msg = tr("Read Only");
@@ -1795,8 +1847,6 @@ void MainWindow::updateForStatusbarModeInfo(const Editor* e, bool clear)
             msg = tr("Overwrite");
         }
         mFileModeStatus->setText(msg);
-    } else {
-        mFileModeStatus->setText("");
     }
 }
 

@@ -143,7 +143,7 @@ void PrintToStderr(const wchar_t *fmt, ...)
 
 void PrintSplitLine(HANDLE hStream)
 {
-    CONSOLE_SCREEN_BUFFER_INFO info;
+//    CONSOLE_SCREEN_BUFFER_INFO info;
     int width = 20;
 //    if (GetConsoleScreenBufferInfo(hStream, &info))
 //        width = info.dwSize.X;

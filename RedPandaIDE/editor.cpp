@@ -321,7 +321,6 @@ void Editor::saveFile(QString filename) {
         emit updateEncodingInfoRequested(this);
 
     emit fileSaved(filename, inProject());
-//    QFile::remove(backupFilename);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -683,14 +682,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     QSynEdit::focusInEvent(event);
-    if (inTab()) {
-        pMainWindow->updateClassBrowserForEditor(this);
-        pMainWindow->updateAppTitle(this);
-        pMainWindow->updateEditorActions(this);
-        emit updateEncodingInfoRequested(this);
-        pMainWindow->updateStatusbarForLineCol(this);
-        pMainWindow->updateForStatusbarModeInfo(this);
-    }
+    emit focusInOccured(this);
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)
@@ -1509,82 +1501,28 @@ void Editor::closeEvent(QCloseEvent *)
         mCompletionPopup->hide();
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
-    if (inTab()) {
-        emit updateEncodingInfoRequested(nullptr);
-        pMainWindow->updateStatusbarForLineCol(true);
-        pMainWindow->updateForStatusbarModeInfo(true);
-    }
+    emit closeOccured(this);
 }
 
 void Editor::showEvent(QShowEvent */*event*/)
 {
-    if (mParser && !pMainWindow->isClosingAll()
-            && !pMainWindow->isQuitting()) {
+    if (mParser) {
         connect(mParser.get(),
                 &CppParser::parseFinished,
                 this,
                 &Editor::onParseFinished);
-        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && pSettings->codeCompletion().shareParser()
-                && !inProject()) {
-                if (needReparse())
-                    resetCppParser(mParser);
-            }
-            if (needReparse()) {
-                reparse(false);
-            }
-        }
     }
-    if (inTab()) {
-        pMainWindow->debugger()->setIsForProject(inProject());
-        pMainWindow->bookmarkModel()->setIsForProject(inProject());
-        pMainWindow->todoModel()->setIsForProject(inProject());
-    }
-
-    if (!pMainWindow->isClosingAll()
-                && !pMainWindow->isQuitting()
-            && !pMainWindow->openingFiles()
-            && !pMainWindow->openingProject()) {
-        if (!inProject() || !pMainWindow->closingProject()) {
-            checkSyntaxInBack();
-            reparseTodo();
-        }
-    }
-    if (inTab()) {
-        pMainWindow->updateClassBrowserForEditor(this);
-        pMainWindow->updateAppTitle(this);
-        pMainWindow->updateEditorActions(this);
-        emit updateEncodingInfoRequested(this);
-        pMainWindow->updateStatusbarForLineCol(this);
-        pMainWindow->updateForStatusbarModeInfo(this);
-    }
-    if (inProject() && !pMainWindow->closingProject()) {
-        pMainWindow->setProjectCurrentFile(mFilename);
-    }
-
+    emit showOccured(this);
     setHideTime(QDateTime::currentDateTime());
 }
 
 void Editor::hideEvent(QHideEvent */*event*/)
 {
-//    if (pSettings->codeCompletion().clearWhenEditorHidden()
-//            && !inProject() && mParser
-//            && !pMainWindow->isMinimized()) {
-//        //recreate a parser, to totally clean memories the parser uses;
-//        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
-//            resetCppParser(mParser);
-//    }
     if (mParser) {
         disconnect(mParser.get(),
                 &CppParser::parseFinished,
                 this,
                 &Editor::onParseFinished);
-    }
-    if (!pMainWindow->isQuitting()) {
-        emit updateEncodingInfoRequested(nullptr);
-        pMainWindow->updateStatusbarForLineCol(nullptr);
-        pMainWindow->updateForStatusbarModeInfo(nullptr);
     }
     setHideTime(QDateTime::currentDateTime());
 }
@@ -3203,6 +3141,19 @@ void Editor::reparse(bool resetParser)
         }
     }
     parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
+}
+
+void Editor::reparseIfNeeded()
+{
+    if (needReparse()) {
+        reparse(false);
+    }
+}
+
+void Editor::resetParserIfNeeded()
+{
+    if (needReparse())
+        resetCppParser(mParser);
 }
 
 void Editor::reparseTodo()
