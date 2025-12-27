@@ -621,10 +621,6 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int aX, int aY) const
     int xpos = std::max(0, leftPos() + aX - mGutterWidth - 2);
     int row = yposToRow(aY);
     int line = rowToLine(row);
-    if (line<0)
-        line = 0;
-    if (line>=mDocument->count())
-        line = mDocument->count()-1;
     if (xpos<0) {
         xpos=0;
     } else if (xpos>mDocument->lineWidth(line)) {
@@ -645,12 +641,14 @@ DisplayCoord QSynEdit::pixelsToGlyphPos(int aX, int aY) const
     int xpos = std::max(0, leftPos() + aX - mGutterWidth - 2);
     int row = yposToRow(aY);
     int line = rowToLine(row);
-    if (line<0 || line >= mDocument->count() )
-        return DisplayCoord{-1,-1};
-    if (xpos<0 || xpos>mDocument->lineWidth(line))
-        return DisplayCoord{-1,-1};
-    int glyphIndex = mDocument->xposToGlyphIndex(line, xpos);
-    xpos = mDocument->glyphStartPostion(line, glyphIndex);
+    if (xpos<0) {
+        xpos=0;
+    } else if (xpos>mDocument->lineWidth(line)) {
+        xpos=mDocument->lineWidth(line)+1;
+    } else {
+        int glyphIndex = mDocument->xposToGlyphIndex(line, xpos);
+        xpos = mDocument->glyphStartPostion(line, glyphIndex);
+    }
     return DisplayCoord{xpos, row};
 }
 
@@ -795,10 +793,16 @@ int QSynEdit::getLineIndent(const QString &line) const
 
 int QSynEdit::rowToLine(int aRow) const
 {
+    int line;
     if (useCodeFolding())
-        return foldRowToLine(aRow);
+        line = foldRowToLine(aRow);
     else
-        return aRow-1;
+        line = aRow-1;
+    if (line<0)
+        line = 0;
+    if (line>=mDocument->count())
+        line = mDocument->count()-1;
+    return line;
 }
 
 int QSynEdit::lineToRow(int aLine) const
@@ -6524,9 +6528,11 @@ void QSynEdit::dropEvent(QDropEvent *event)
     int topPos = mTopPos;
     int leftPos = mLeftPos;
     QStringList text=splitStrings(event->mimeData()->text());
+    //let beginEditing record old position;
+    setCaretAndSelection(mDragCaretSave, mDragSelBeginSave, mDragSelEndSave);
     beginEditing();
     if (lastLineUsed) {
-        int line=mDocument->count()-1;
+        int line=mDocument->count()-2;
         QString s=mDocument->getLine(line);
         addChangeToUndo(ChangeReason::LineBreak,
                          CharPos{s.length(),line},
