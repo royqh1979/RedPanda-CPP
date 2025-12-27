@@ -20,7 +20,10 @@
 #include <QStyledItemDelegate>
 #include "mainwindow.h"
 
-PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSynedit::SearchOptions options, SearchFileScope scope, const QString& folder, const QString& filters, bool searchSubfolders)
+PSearchResults SearchResultModel::addSearchResults(
+        const QString &keyword, QSynedit::SearchOptions options,
+        bool useRegex,
+        SearchFileScope scope, const QString& folder, const QString& filters, bool searchSubfolders)
 {
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
@@ -40,6 +43,7 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSyne
     PSearchResults results = std::make_shared<SearchResults>();
     results->keyword = keyword;
     results->options = options;
+    results->useRegex = useRegex;
     results->scope = scope;
     results->searchType = SearchType::Search;
     results->folder=folder;

@@ -22,10 +22,8 @@ public:
     void findPrevious();
 private:
     void doSearch(bool backward);
-
     void doReplace(bool replaceAll);
-
-    void prepareOptions(bool backward);
+    QSynedit::SearchOptions prepareOptions(bool backward, bool &regex, bool &searchInSelection);
 private slots:
     void onTabBarCurrentChanged(int currentIndex);
 
@@ -41,12 +39,13 @@ private slots:
 
     void on_btnReplaceAll_clicked();
 
+    void setOriginVisibility();
+
 private:
     Ui::SearchDialog *ui;
     QTabBar * mTabBar;
     int mSearchTabIdx;
     int mReplaceTabIdx;
-    QSynedit::SearchOptions mSearchOptions;
     QSynedit::PSearcher mBasicSearchEngine;
     QSynedit::PSearcher mRegexSearchEngine;
     QStringList mSearchKeys;

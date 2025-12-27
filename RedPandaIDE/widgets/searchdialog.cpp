@@ -13,8 +13,7 @@
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SearchDialog),
-    mSearchOptions()
+    ui(new Ui::SearchDialog)
 {
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
@@ -33,6 +32,9 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mRegexSearchEngine = std::make_shared<QSynedit::RegexSearcher>();
     ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
     ui->cbReplace->completer()->setCaseSensitivity(Qt::CaseSensitive);
+
+    connect(ui->rbGlobal, &QRadioButton::toggled, this, &SearchDialog::setOriginVisibility);
+    connect(ui->rbSelection, &QRadioButton::toggled, this, &SearchDialog::setOriginVisibility);
 }
 
 SearchDialog::~SearchDialog()
@@ -82,12 +84,24 @@ void SearchDialog::doSearch(bool backward)
     if (ui->cbFind->currentText().isEmpty())
         return;
     updateComboHistory(mSearchKeys, ui->cbFind->currentText());
-    prepareOptions(backward);
+    bool regex, searchInSelection;
+    QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
 
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
+        QSynedit::CharPos searchBegin, searchEnd, newSearchEnd;
+        if (searchInSelection) {
+            if (editor->selAvail()) {
+                searchBegin = editor->selBegin();
+                searchEnd = editor->selEnd();
+            } else
+                return;
+        } else {
+            searchBegin = editor->fileBegin();
+            searchEnd = editor->fileEnd();
+        }
         QSynedit::PSearcher searchEngine;
-        if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
+        if (regex) {
             searchEngine = mRegexSearchEngine;
         } else {
             searchEngine = mBasicSearchEngine;
@@ -95,7 +109,10 @@ void SearchDialog::doSearch(bool backward)
         int foundCount = editor->searchReplace(
                     ui->cbFind->currentText(),
                     "",
-                    mSearchOptions,
+                    searchBegin,
+                    searchEnd,
+                    newSearchEnd,
+                    searchOptions,
                     searchEngine.get(), nullptr, [this,backward](){
                         QString msg;
                         if (backward) {
@@ -143,11 +160,25 @@ void SearchDialog::doReplace(bool replaceAll)
     if (ui->rbEntireScope->isChecked()) {
         ui->rbFromCaret->setChecked(true);
     }
-    prepareOptions(false);
+    bool regex, searchInSelection;
+    QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
+    searchOptions.setFlag(QSynedit::SearchOption::ssoIncludeCurrentSelection);
+
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
+        QSynedit::CharPos searchBegin, searchEnd, newSearchEnd;
+        if (searchInSelection) {
+            if (editor->selAvail()) {
+                searchBegin = editor->selBegin();
+                searchEnd = editor->selEnd();
+            } else
+                return;
+        } else {
+            searchBegin = editor->fileBegin();
+            searchEnd = editor->fileEnd();
+        }
         QSynedit::PSearcher searchEngine;
-        if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
+        if (regex) {
             searchEngine = mRegexSearchEngine;
         } else {
             searchEngine = mBasicSearchEngine;
@@ -155,7 +186,10 @@ void SearchDialog::doReplace(bool replaceAll)
         editor->searchReplace(
                     ui->cbFind->currentText(),
                     ui->cbReplace->currentText(),
-                    mSearchOptions,
+                    searchBegin,
+                    searchEnd,
+                    newSearchEnd,
+                    searchOptions,
                     searchEngine.get(),
                     [&replaceAll](const QString& /*sFound*/,
                     const QString& /*sReplace*/, const QSynedit::CharPos &, int /*wordLen*/){
@@ -183,42 +217,42 @@ void SearchDialog::doReplace(bool replaceAll)
     }
 }
 
-void SearchDialog::prepareOptions(bool backward)
+QSynedit::SearchOptions SearchDialog::prepareOptions(bool backward,bool &regex, bool &searchInSelection)
 {
-    mSearchOptions&=0;
+    QSynedit::SearchOptions searchOptions= QSynedit::ssoNone;
 
     // Apply options
     if (backward) {
-        mSearchOptions.setFlag(QSynedit::ssoBackwards);
+        searchOptions.setFlag(QSynedit::ssoBackwards);
     }
 
-    if (ui->chkRegExp->isChecked()) {
-        mSearchOptions.setFlag(QSynedit::ssoRegExp);
-    }
+    regex = ui->chkRegExp->isChecked();
     if (ui->chkCaseSensetive->isChecked()) {
-        mSearchOptions.setFlag(QSynedit::ssoMatchCase);
+        searchOptions.setFlag(QSynedit::ssoMatchCase);
     }
     if (ui->chkWholeWord->isChecked()) {
-        mSearchOptions.setFlag(QSynedit::ssoWholeWord);
+        searchOptions.setFlag(QSynedit::ssoWholeWord);
     }
     if (ui->chkWrapAround->isChecked()) {
-        mSearchOptions.setFlag(QSynedit::ssoWrapAround);
+        searchOptions.setFlag(QSynedit::ssoWrapAround);
     }
 
     // Apply scope, when enabled
-    if (ui->grpScope->isEnabled()) {
-        if (ui->rbSelection->isChecked()) {
-            mSearchOptions.setFlag(QSynedit::ssoSelectedOnly);
-        }
-    }
+    searchInSelection = (ui->grpScope->isEnabled())
+            &&  (ui->rbSelection->isChecked());
 
     // Apply origin, when enabled
     if (ui->grpOrigin->isEnabled()) {
-        if (ui->rbEntireScope->isChecked()) {
-            mSearchOptions.setFlag(QSynedit::ssoEntireScope);
+        if (ui->rbFromCaret->isChecked()) {
+            searchOptions.setFlag(QSynedit::ssoFromCaret);
         }
     }
+    return searchOptions;
+}
 
+void SearchDialog::setOriginVisibility()
+{
+    ui->grpOrigin->setEnabled(ui->rbGlobal->isChecked());
 }
 
 

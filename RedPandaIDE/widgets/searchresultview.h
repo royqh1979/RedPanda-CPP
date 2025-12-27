@@ -47,6 +47,7 @@ struct SearchResultTreeItem {
 
 struct SearchResults{
     QSynedit::SearchOptions options;
+    bool useRegex;
     QString keyword;
     QString statementFullname;
     SearchFileScope scope;
@@ -65,6 +66,7 @@ class SearchResultModel : public QObject {
 public:
     explicit SearchResultModel(QObject* parent=nullptr);
     PSearchResults addSearchResults(const QString& keyword,QSynedit::SearchOptions options,
+                                    bool useRegex,
                                     SearchFileScope scope, const QString& folder=QString(), const QString& filters=QString(), bool searchSubfolders=true);
     PSearchResults addSearchResults(
             const QString& keyword,

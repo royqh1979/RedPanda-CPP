@@ -6924,6 +6924,7 @@ void MainWindow::on_btnSearchAgain_clicked()
                     results->keyword,
                     results->scope,
                     results->options,
+                    results->useRegex,
                     results->folder,
                     results->filters,
                     results->searchSubfolders);
