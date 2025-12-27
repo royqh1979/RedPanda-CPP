@@ -68,6 +68,7 @@ private slots:
     void test_replace_forward_from_caret_include_selection();
     void test_replace_backward_from_caret();
     void test_replace_backward_from_caret_with_selection();
+    void test_replace_backward_from_caret_include_selection();
     void test_replace_forward_scope();
     void test_replace_backward_scope();
 };

@@ -5402,8 +5402,9 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     int nReplaceLen = replaceText.length();
                     totalLineOffset += nReplaceLen - searchLen;
                     // fix the caret position and the remaining results
-                    if (!backwards) {
-                        internalSetCaretX(chFound + nReplaceLen);
+                    if (backwards) {
+                        setCaretX(chFound);
+                    } else {
                         if ((searchLen != nReplaceLen)) {
                             iResultOffset += nReplaceLen - searchLen;
                             if (posEnd != fileEnd()  && posCurrent.line == posEnd.line) {
@@ -5420,7 +5421,6 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 if (backwards != wrapped)
                     origCurrent.ch += totalLineOffset;
             }
-
 
             // search next / previous line
             if (backwards) {
