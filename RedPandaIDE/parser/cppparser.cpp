@@ -3058,7 +3058,7 @@ void CppParser::handleLambda(int index, int maxIndex)
         mIndex = bodyStart+1;
         if (mIndex < maxIndex  && mTokenizer[mIndex])
         while (handleStatement(bodyEnd));
-        Q_ASSERT(mIndex == bodyEnd);
+        //Q_ASSERT(mIndex == bodyEnd); // lambda body may be incompleted, we should permit it.
         mIndex = oldIndex;
     }
     removeScopeLevel(mTokenizer[bodyEnd]->line, maxIndex);
