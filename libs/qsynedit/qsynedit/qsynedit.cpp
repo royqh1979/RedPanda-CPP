@@ -5321,7 +5321,6 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
             int nInLine = searchEngine->findAll(mDocument->getLine(posCurrent.line));
             int iResultOffset = 0;
             int totalLineOffset = 0;
-            bool shouldExit = false;
             if (backwards)
                 i = searchEngine->resultCount()-1;
             else
@@ -5375,14 +5374,18 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                     internalSetCaretXY(selEnd());
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
-                if (searchAction != SearchAction::ReplaceAll
+                if (searchAction == SearchAction::ReplaceAndExit) {
+                    searchAction = SearchAction::Exit;
+                } else if (searchAction != SearchAction::ReplaceAll
                         && matchedCallback && !dobatchReplace) {
                     searchAction = matchedCallback(
                                 selText(),replaceText,
                                 CharPos{chFound,posCurrent.line},
                                 searchLen);
                 }
-                if (searchAction == SearchAction::Skip) {
+                if (searchAction == SearchAction::Exit) {
+                    return result;
+                } else if (searchAction == SearchAction::Skip) {
                     continue;
                 } else if (searchAction == SearchAction::Replace
                            || searchAction == SearchAction::ReplaceAndExit
@@ -5404,26 +5407,20 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                         if ((searchLen != nReplaceLen)) {
                             iResultOffset += nReplaceLen - searchLen;
                             if (posEnd != fileEnd()  && posCurrent.line == posEnd.line) {
-                                posEnd.ch+= nReplaceLen - searchLen;
+                                posEnd.ch += nReplaceLen - searchLen;
                             }
                         }
                     }
+                    if (searchLen != nReplaceLen && newScopeEnd.line == posCurrent.line)
+                        newScopeEnd.ch += nReplaceLen - searchLen;
                     mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
-                }
-                if (searchAction==SearchAction::Exit || searchAction == SearchAction::ReplaceAndExit) {
-                    shouldExit = true;
-                    break;
                 }
             }
             if (fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line) {
                 if (backwards != wrapped)
                     origCurrent.ch += totalLineOffset;
             }
-            if (totalLineOffset!=0 && newScopeEnd.line == posCurrent.line)
-                newScopeEnd.ch += totalLineOffset;
 
-            if (shouldExit)
-                return result;
 
             // search next / previous line
             if (backwards) {

@@ -4117,6 +4117,93 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
     QCOMPARE(newEndPos,CharPos(21,2));
 }
 
+void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selection()
+{
+    QStringList text1{
+        "int int int int",
+        "int int int int",
+        "int int int int",
+    };
+    QStringList text2{
+        "int int int int",
+        "int int int int",
+        "int replaced int int",
+    };
+    QStringList text3{
+        "int int int int",
+        "int int int int",
+        "int int  int",
+    };
+    QStringList text4{
+        "int int int int",
+        "int int int int",
+        "int replaced1 int int",
+    };
+    QStringList text5{
+        "int int int int",
+        "int int int int",
+        "int replaced2 int int",
+    };
+    SearchOptions options = ssoFromCaret | ssoIncludeCurrentSelection;
+    CharPos newEndPos;
+
+    //no selection,caret at begin of the second "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({4,2});
+    mEdit->searchReplace("int","replaced",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text2);
+    QCOMPARE(newEndPos,CharPos(20,2));
+
+    //no selection,caret at end of the second "int" on 3rd line
+    mEdit->setContent(text1);
+    mEdit->setCaretXY({7,2});
+    mEdit->searchReplace("int","",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text3);
+    QCOMPARE(newEndPos,CharPos(12,2));
+
+    //the second "int" on 3rd line selected, caret at selection begin
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{4,2},CharPos{4,2},CharPos{7,2});
+    mEdit->searchReplace("int","replaced1",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text4);
+    QCOMPARE(newEndPos,CharPos(21,2));
+
+    //the second "int" on 3rd line selected, caret at selection end
+    mEdit->setContent(text1);
+    mEdit->setCaretAndSelection(CharPos{7,2},CharPos{4,2},CharPos{7,2});
+    mEdit->searchReplace("int","replaced2",
+                                  mEdit->fileBegin(),
+                                  mEdit->fileEnd(),
+                         newEndPos,
+                         options,
+                         mBasicSearcher.get(),
+                         mReplaceAndExitProc,
+                         nullptr);
+    QCOMPARE(mEdit->content(),text5);
+    QCOMPARE(newEndPos,CharPos(21,2));
+}
+
 void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
 {
     QStringList text1{
