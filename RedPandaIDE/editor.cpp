@@ -170,27 +170,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     setContextMenuPolicy(Qt::CustomContextMenu);
 
     mCanAutoSave = false;
-    if (isNew && mEditorList!=nullptr ) {
-        QString fileTemplate;
-        switch (mFileType) {
-        case FileType::CSource:
-            fileTemplate = pMainWindow->codeSnippetManager()->newCFileTemplate();
-            break;
-        case FileType::CppSource:
-            fileTemplate = pMainWindow->codeSnippetManager()->newCppFileTemplate();
-            break;
-        case FileType::ATTASM:
-            fileTemplate = pMainWindow->codeSnippetManager()->newGASFileTemplate();
-            break;
-        default:
-            break;
-        }
-        if (!fileTemplate.isEmpty()) {
-            insertCodeSnippet(fileTemplate);
-            setCaretPosition(fileBegin());
-            setModified(false);
-        }
-    }
+
     if (!isNew && mEditorList) {
         resetBookmarks();
         resetBreakpoints();
