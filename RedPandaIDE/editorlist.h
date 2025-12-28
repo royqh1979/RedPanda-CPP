@@ -50,6 +50,7 @@ public:
     bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
 
     bool swapEditor(Editor* editor);
+    void activeEditor(Editor *e, bool focus);
 
     void saveAll();
     bool saveAllForProject();
@@ -69,6 +70,9 @@ public:
     void getVisibleEditors(Editor*& left, Editor*& right) const;
     void updateLayout();
 
+
+    QTabWidget *findPageControlForEditor(Editor *e);
+
     void beginUpdate();
     void endUpdate();
     void applySettings();
@@ -86,6 +90,7 @@ public:
     QTabWidget *rightPageWidget() const;
 
 signals:
+    void editorCreated(Editor *);
     void editorClosed();
     void editorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void editorOpenned();

@@ -182,6 +182,8 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onEditorRenamed);
     connect(mEditorList, &EditorList::editorClosed,
                this, &MainWindow::onEditorClosed);
+    connect(mEditorList, &EditorList::editorCreated,
+                this, &MainWindow::onEditorCreated);
     mProject = nullptr;
     //delete in the destructor
     mProjectProxyModel = new ProjectModelSortFilterProxy();
@@ -1329,6 +1331,14 @@ void MainWindow::onDebugFinished()
     updateEditorActions();
 }
 
+void MainWindow::onEditorCreated(Editor *e)
+{
+    e->setFunctionTooltip(mFunctionTip);
+    e->setCompletionPopup(mCompletionPopup);
+    e->setHeaderCompletionPopup(mHeaderCompletionPopup);
+    connectEditorSignals(e);
+}
+
 void MainWindow::onBreakpointAdded(const Editor *e, int line)
 {
     mDebugger->addBreakpoint(line,e);
@@ -1401,6 +1411,7 @@ void MainWindow::removeInfosForEditor()
 
 void MainWindow::connectEditorSignals(Editor *editor)
 {
+    connect(editor,&Editor::fileSaved, this, &MainWindow::onFileSaved);
     connect(editor, &Editor::breakpointAdded, this, &MainWindow::onBreakpointAdded);
     connect(editor, &Editor::breakpointRemoved, this, &MainWindow::onBreakpointRemoved);
     connect(editor, &Editor::breakpointsCleared, this, &MainWindow::onBreakpointsCleared);
@@ -1411,6 +1422,7 @@ void MainWindow::connectEditorSignals(Editor *editor)
     connect(editor, &Editor::showOccured, this, &MainWindow::onEditorShown);
     connect(editor, &Editor::closeOccured, this, &MainWindow::removeInfosForEditor);
     connect(editor, &Editor::hideOccured, this, &MainWindow::removeInfosForEditor);
+    connect(editor, &QWidget::customContextMenuRequested, this, &MainWindow::onEditorContextMenu);
 }
 
 void MainWindow::executeTool(PToolItem item)
@@ -3589,7 +3601,7 @@ bool MainWindow::saveLastOpens()
       }
 
       fileObj["filename"] = editor->filename();
-      fileObj["onLeft"] = (editor->pageControl() != mEditorList->rightPageWidget());
+      fileObj["onLeft"] = (mEditorList->findPageControlForEditor(editor) != mEditorList->rightPageWidget());
       fileObj["focused"] = editor->hasFocus();
       fileObj["caretX"] = editor->caretX();
       fileObj["caretY"] = editor->caretY();

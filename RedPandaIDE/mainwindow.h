@@ -274,6 +274,7 @@ public slots:
     void onDebugFinished();
 
     //editor signals
+    void onEditorCreated(Editor *e);
     void onBreakpointAdded(const Editor* e, int line);
     void onBreakpointRemoved(const Editor* e, int line);
     void onBreakpointsCleared(const Editor* e);

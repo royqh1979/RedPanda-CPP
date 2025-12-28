@@ -40,6 +40,10 @@ struct TabStop {
 
 class QTemporaryFile;
 
+class EditorList;
+
+class FunctionTooltipWidget;
+
 using PTabStop = std::shared_ptr<TabStop>;
 
 class Editor : public QSynedit::QSynEdit
@@ -128,7 +132,7 @@ public:
                     const QByteArray& encoding,
                     FileType fileType,
                     const QString& contextFile,
-                    Project* pProject, bool isNew,QTabWidget* parentPageControl);
+                    Project* pProject, bool isNew, EditorList* editorList);
 
     ~Editor();
 
@@ -153,9 +157,6 @@ public:
     bool saveAs(const QString& name="", bool fromProject = false);
     void setFilename(const QString& newName);
     void activate(bool focus=true);
-
-    QTabWidget* pageControl() noexcept;
-    void setPageControl(QTabWidget* newPageControl);
 
     QString caption();
 
@@ -255,7 +256,7 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    bool inTab() { return mParentPageControl!=nullptr; }
+    bool inTab() { return mEditorList!=nullptr; }
 
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
@@ -284,10 +285,13 @@ private slots:
     void onParseFinished();
 
 private:
+    bool completionPopupVisible() const;
+    bool headerCompletionPopupVisible() const;
+    bool functionTooltipVisible() const;
     void updateCaption() { emit captionUpdated(this); }
     void loadContent(const QString& filename);
     void resolveAutoDetectEncodingOption();
-    bool isBraceChar(QChar ch);
+    bool isBraceChar(QChar ch) const;
     bool shouldOpenInReadonly();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
@@ -363,7 +367,8 @@ private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
-    QTabWidget* mParentPageControl;
+    //QTabWidget* mParentPageControl;
+    EditorList *mEditorList;
     Project* mProject;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
@@ -383,6 +388,7 @@ private:
     PCppParser mParser;
     CodeCompletionPopup *mCompletionPopup;
     HeaderCompletionPopup *mHeaderCompletionPopup;
+    FunctionTooltipWidget *mFunctionTooltip;
     bool mUseCppSyntax;
     QString mCurrentWord;
     QString mCurrentDebugTipWord;
@@ -390,6 +396,7 @@ private:
     QString mOldHighlightedWord;
     QString mCurrentHighlightedWord;
     QDateTime mHideTime;
+    bool mAutoBackupEnabled;
 
     bool mSaving;
     bool mCurrentLineModified;
@@ -450,6 +457,18 @@ public:
     void setFileType(FileType newFileType);
     const QString &contextFile() const;
     void setContextFile(const QString &newContextFile);
+
+    bool autoBackupEnabled() const;
+    void setAutoBackupEnabled(bool newEnableAutoBackup);
+
+    FunctionTooltipWidget *functionTooltip() const;
+    void setFunctionTooltip(FunctionTooltipWidget *newFunctionTooltip);
+
+    HeaderCompletionPopup *headerCompletionPopup() const;
+    void setHeaderCompletionPopup(HeaderCompletionPopup *newHeaderCompletionPopup);
+
+    CodeCompletionPopup *completionPopup() const;
+    void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
 
 protected:
     // QWidget interface

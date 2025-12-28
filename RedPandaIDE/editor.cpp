@@ -81,12 +81,12 @@ Editor::Editor(QWidget *parent):
 Editor::Editor(QWidget *parent, const QString& filename,
                const QByteArray& encoding, FileType fileType,
                const QString& contextFile, Project* pProject,
-               bool isNew, QTabWidget* parentPageControl):
+               bool isNew, EditorList* editorList):
     QSynEdit{parent},
     mInited{false},
     mEncodingOption{encoding},
     mFilename{filename},
-    mParentPageControl{parentPageControl},
+    mEditorList{editorList},
     mProject{pProject},
     mIsNew{isNew},
     mSyntaxErrorColor{Qt::red},
@@ -101,6 +101,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mFileType{FileType::None},
     mContextFile{contextFile}
 {
+    mAutoBackupEnabled = false;
     mLastFocusOutTime = 0;
     mInited=false;
     mBackupFile=nullptr;
@@ -141,9 +142,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setReadOnly(true);
     }
 
-    mCompletionPopup = pMainWindow->completionPopup();
-    mHeaderCompletionPopup = pMainWindow->headerCompletionPopup();
-
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
 
@@ -157,8 +155,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     connect(this,&QSynEdit::statusChanged,this,&Editor::onStatusChanged);
 
-    if (mParentPageControl)
-        connect(this,&QSynEdit::gutterClicked,this,&Editor::onGutterClicked);
+    connect(this,&QSynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
     setAttribute(Qt::WA_Hover,true);
 
@@ -169,12 +166,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     setContextMenuPolicy(Qt::CustomContextMenu);
 
-    if (mParentPageControl)
-        connect(this, &QWidget::customContextMenuRequested,
-            pMainWindow, &MainWindow::onEditorContextMenu);
-
     mCanAutoSave = false;
-    if (isNew && parentPageControl!=nullptr ) {
+    if (isNew && mEditorList!=nullptr ) {
         QString fileTemplate;
         switch (mFileType) {
         case FileType::CSource:
@@ -195,7 +188,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
             setModified(false);
         }
     }
-    if (!isNew && parentPageControl) {
+    if (!isNew && mEditorList) {
         resetBookmarks();
         resetBreakpoints();
     }
@@ -206,13 +199,11 @@ Editor::Editor(QWidget *parent, const QString& filename,
 //        mParentPageControl->addTab(this,"");
 //    }
 
-    if (inTab()) {
-        connect(&mFunctionTipTimer, &QTimer::timeout,
-            this, &Editor::onFunctionTipsTimer);
-        mAutoBackupTimer.setInterval(1);
-        connect(&mAutoBackupTimer, &QTimer::timeout,
-            this, &Editor::onAutoBackupTimer);
-    }
+    connect(&mFunctionTipTimer, &QTimer::timeout,
+        this, &Editor::onFunctionTipsTimer);
+    mAutoBackupTimer.setInterval(1000);
+    connect(&mAutoBackupTimer, &QTimer::timeout,
+                this, &Editor::onAutoBackupTimer);
 
     connect(&mTooltipTimer, &QTimer::timeout,
             this, &Editor::onTooltipTimer);
@@ -523,9 +514,9 @@ void Editor::setFilename(const QString &newName)
 
 void Editor::activate(bool focus)
 {
-    if (mParentPageControl)
-        mParentPageControl->setCurrentWidget(this);
-    if (focus)
+    if (mEditorList)
+        mEditorList->activeEditor(this,focus);
+    else if (focus)
         setFocus();
 }
 
@@ -578,28 +569,6 @@ bool Editor::inProject() const noexcept{
 }
 bool Editor::isNew() const noexcept {
     return mIsNew;
-}
-
-QTabWidget* Editor::pageControl() noexcept{
-    return mParentPageControl;
-}
-static int findWidgetInPageControl(QTabWidget* pageControl, QWidget* child) {
-    for (int i=0;i<pageControl->count();i++) {
-        if (pageControl->widget(i)==child)
-            return i;
-    }
-    return -1;
-}
-void Editor::setPageControl(QTabWidget *newPageControl)
-{
-    if (mParentPageControl==newPageControl)
-        return;
-    if (inTab()) {
-        int index = findWidgetInPageControl(mParentPageControl,this);
-        if (index>=0)
-            mParentPageControl->removeTab(index);
-    }
-    mParentPageControl= newPageControl;
 }
 
 void Editor::undoSymbolCompletion(const CharPos &pos)
@@ -690,7 +659,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
     QSynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     if (!pMainWindow->isQuitting()) {
-        pMainWindow->functionTip()->hide();
+        mFunctionTooltip->hide();
     }
     mLastFocusOutTime = QDateTime::currentMSecsSinceEpoch();
 }
@@ -707,8 +676,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
     });
     if (event->modifiers() == Qt::ControlModifier
             && event->key() == Qt::Key_Control
-            && !mCompletionPopup->isVisible()
-            && !mHeaderCompletionPopup->isVisible()
+            && !completionPopupVisible()
+            && !headerCompletionPopupVisible()
             ) {
         //setMouseTracking(true);
         handled=true;
@@ -799,7 +768,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         }
-        pMainWindow->functionTip()->hide();
+        mFunctionTooltip->hide();
         return;
     case Qt::Key_Tab:
         handled = true;
@@ -810,17 +779,17 @@ void Editor::keyPressEvent(QKeyEvent *event)
         shifttab();
         return;
     case Qt::Key_Up:
-        if (pMainWindow->functionTip()->isVisible()) {
+        if (functionTooltipVisible()) {
             handled = true;
-            pMainWindow->functionTip()->previousTip();
+            mFunctionTooltip->previousTip();
         } else {
             clearUserCodeInTabStops();
         }
         return;
     case Qt::Key_Down:
-        if (pMainWindow->functionTip()->isVisible()) {
+        if (functionTooltipVisible()) {
             handled = true;
-            pMainWindow->functionTip()->nextTip();
+            mFunctionTooltip->nextTip();
         } else {
             clearUserCodeInTabStops();
         }
@@ -1387,9 +1356,9 @@ bool Editor::event(QEvent *event)
     if ((event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove)
             && qApp->mouseButtons() == Qt::NoButton
             && pSettings->editor().enableTooltips()
-            && !mCompletionPopup->isVisible()
-            && !pMainWindow->functionTip()->isVisible()
-            && !mHeaderCompletionPopup->isVisible()) {
+            && !completionPopupVisible()
+            && !functionTooltipVisible()
+            && !functionTooltipVisible()) {
         cancelHint();
         mTooltipTimer.stop();
         if (pSettings->editor().tipsDelay()>0) {
@@ -1454,7 +1423,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
     QString s = event->commitString();
     if (s.isEmpty())
         return;
-    if (mCompletionPopup->isVisible()) {
+    if (completionPopupVisible()) {
         onCompletionInputMethod(event);
         return;
     } else {
@@ -1499,8 +1468,8 @@ void Editor::closeEvent(QCloseEvent *)
         mHeaderCompletionPopup->hide();
     if (mCompletionPopup)
         mCompletionPopup->hide();
-    if (pMainWindow->functionTip())
-        pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip)
+        mFunctionTooltip->hide();
     emit closeOccured(this);
 }
 
@@ -1530,8 +1499,10 @@ void Editor::hideEvent(QHideEvent */*event*/)
 void Editor::resizeEvent(QResizeEvent *event)
 {
     QSynedit::QSynEdit::resizeEvent(event);
-    pMainWindow->functionTip()->setMinWidth(width()*3/4);
-    pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip) {
+        mFunctionTooltip->setMinWidth(width()*3/4);
+        mFunctionTooltip->hide();
+    }
 }
 
 void Editor::copyToClipboard()
@@ -1934,6 +1905,8 @@ void Editor::onFunctionTipsTimer()
 
 void Editor::onAutoBackupTimer()
 {
+    if (!mAutoBackupEnabled)
+        return;
     if (mBackupTime>lastModifyTime())
         return;
     QDateTime current=QDateTime::currentDateTime();
@@ -1982,16 +1955,16 @@ void Editor::onTooltipTimer()
     case TipType::Identifier:
         if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning()) {
             s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
-        } else if (!mCompletionPopup->isVisible()
-                 && !mHeaderCompletionPopup->isVisible()) {
+        } else if (!completionPopupVisible()
+                 && !headerCompletionPopupVisible()) {
             expression = getExpressionAtPosition(p);
             s = expression.join(""); // information during coding
         }
         break;
     case TipType::Keyword:
         if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
-            if (!mCompletionPopup->isVisible()
-                 && !mHeaderCompletionPopup->isVisible()) {
+            if (!completionPopupVisible()
+                 && !headerCompletionPopupVisible()) {
                 s = tokenAt(p);
             }
         }
@@ -2003,8 +1976,8 @@ void Editor::onTooltipTimer()
         s = pError->token;
         break;
     case TipType::Number:
-        if (!mCompletionPopup->isVisible()
-             && !mHeaderCompletionPopup->isVisible()) {
+        if (!completionPopupVisible()
+             && !headerCompletionPopupVisible()) {
             QSynedit::PTokenAttribute attr;
             int start;
             if (getTokenAttriAtRowCol(p,s,start,attr)) {
@@ -2041,8 +2014,8 @@ void Editor::onTooltipTimer()
         break;
     case TipType::Identifier:
     case TipType::Selection:
-        if (!mCompletionPopup->isVisible()
-                && !mHeaderCompletionPopup->isVisible()) {
+        if (!completionPopupVisible()
+                && !headerCompletionPopupVisible()) {
             if (pMainWindow->debugger()->executing()
                     && (pSettings->editor().enableDebugTooltips())) {
                 if (inTab()) {
@@ -2094,9 +2067,7 @@ void Editor::onTooltipTimer()
     if (!hint.isEmpty()) {
         //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
         //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
-        if (pMainWindow->functionTip()->isVisible()) {
-            pMainWindow->functionTip()->hide();
-        }
+        if (mFunctionTooltip) mFunctionTooltip->hide();
         QToolTip::showText(mapToGlobal(pos),hint,this);
     }
 }
@@ -2106,6 +2077,21 @@ void Editor::onParseFinished()
     mIdCache.clear();
     invalidateAllNonTempLineWidth();
     invalidate();
+}
+
+bool Editor::completionPopupVisible() const
+{
+    return mCompletionPopup && mCompletionPopup->isVisible();
+}
+
+bool Editor::headerCompletionPopupVisible() const
+{
+    return mHeaderCompletionPopup && mHeaderCompletionPopup->isVisible();
+}
+
+bool Editor::functionTooltipVisible() const
+{
+    return mFunctionTooltip && mFunctionTooltip->isVisible();
 }
 
 void Editor::loadContent(const QString& filename)
@@ -2135,7 +2121,7 @@ void Editor::resolveAutoDetectEncodingOption()
     }
 }
 
-bool Editor::isBraceChar(QChar ch)
+bool Editor::isBraceChar(QChar ch) const
 {
     switch( ch.unicode()) {
     case '{':
@@ -2994,7 +2980,7 @@ bool Editor::handleGlobalIncludeSkip()
 
 bool Editor::handleCodeCompletion(QChar key)
 {
-    if (!mCompletionPopup->isEnabled())
+    if (!mCompletionPopup || !mCompletionPopup->isEnabled())
         return false;
     if (mParser) {
         switch(key.unicode()) {
@@ -3365,9 +3351,9 @@ void Editor::exportAsHTML(const QString &htmlFilename)
 
 void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeCompletionType type)
 {
-    if (pMainWindow->functionTip()->isVisible()) {
-        pMainWindow->functionTip()->hide();
-    }
+    if(!mCompletionPopup)
+        return;
+    if (mFunctionTooltip) mFunctionTooltip->hide();
     if (!pSettings->codeCompletion().enabled())
         return;
     if (type==CodeCompletionType::KeywordsOnly) {
@@ -3376,7 +3362,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
             return;
     }
 
-    if (mCompletionPopup->isVisible()) // already in search, don't do it again
+    if (completionPopupVisible()) // already in search, don't do it again
         return;
 
     QString word="";
@@ -3515,7 +3501,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     mParser->findScopeStatement(mFilename, caretY())
                     );
     }
-    pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip) mFunctionTooltip->hide();
     mCompletionPopup->show();
 
     if (word.isEmpty()) {
@@ -3554,6 +3540,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
 void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 {
+    if (!mHeaderCompletionPopup)
+        return;
     if (!pSettings->codeCompletion().enabled())
         return;
 //    if not devCodeCompletion.Enabled then
@@ -3604,7 +3592,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     if (word.lastIndexOf('"')>0 || word.lastIndexOf('>')>0)
         return;
 
-    pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip) mFunctionTooltip->hide();
     mHeaderCompletionPopup->show();
     mHeaderCompletionPopup->setSearchLocal(word.startsWith('"'));
     word.remove(0,1);
@@ -3618,9 +3606,9 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 
 void Editor::initAutoBackup()
 {
-    if (!inTab())
-        return;
     cleanAutoBackup();
+    if (mAutoBackupEnabled)
+        return;
     if (!pSettings->editor().enableEditTempBackup())
         return;
     if (readOnly())
@@ -3697,6 +3685,7 @@ bool Editor::testInFunc(const CharPos& pos)
 
 void Editor::completionInsert(bool appendFunc)
 {
+    Q_ASSERT(mCompletionPopup!=nullptr);
     PStatement statement = mCompletionPopup->selectedStatement();
     if (!statement)
         return;
@@ -3784,6 +3773,7 @@ void Editor::completionInsert(bool appendFunc)
 
 void Editor::headerCompletionInsert()
 {
+    Q_ASSERT(mHeaderCompletionPopup!=nullptr);
     QString headerName = mHeaderCompletionPopup->selectedFilename(true);
     if (headerName.isEmpty()) {
         mHeaderCompletionPopup->hide();
@@ -3824,6 +3814,7 @@ void Editor::headerCompletionInsert()
 
 bool Editor::onCompletionKeyPressed(QKeyEvent *event)
 {
+    Q_ASSERT(mCompletionPopup!=nullptr);
     bool processed = false;
     if (!mCompletionPopup->isEnabled())
         return false;
@@ -3897,6 +3888,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
 
 bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
 {
+    Q_ASSERT(mHeaderCompletionPopup!=nullptr);
     bool processed = false;
     if (!mHeaderCompletionPopup->isEnabled())
         return false;
@@ -3953,10 +3945,10 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
 bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
 {
     bool processed = false;
-    if (!mCompletionPopup->isVisible())
+    if (!completionPopupVisible())
         return processed;
     QString s=event->commitString();
-    if (mParser && !s.isEmpty()) {
+    if (mCompletionPopup && mParser && !s.isEmpty()) {
         QString phrase = getWordForCompletionSearch(caretXY(),mCompletionPopup->memberOperator()=="::");
         mCompletionPopup->search(phrase, false);
         return true;
@@ -4060,8 +4052,8 @@ void Editor::showDebugHint(const QString &s, int line)
     }
     if (pMainWindow->debugger()->commandRunning())
         return;
-    if (pMainWindow->functionTip()->isVisible()) {
-        pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip) {
+        mFunctionTooltip->hide();
     }
     connect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
@@ -4090,12 +4082,14 @@ QString Editor::getHintForFunction(const PStatement &statement, const QString& f
 
 void Editor::updateFunctionTip(bool showTip)
 {
-    if (mCompletionPopup->isVisible()) {
-        pMainWindow->functionTip()->hide();
+    if (!mFunctionTooltip)
+        return;
+    if (completionPopupVisible()) {
+        mFunctionTooltip->hide();
         return;
     }
     if (inputMethodOn()) {
-        pMainWindow->functionTip()->hide();
+        mFunctionTooltip->hide();
         return;
     }
 
@@ -4103,9 +4097,9 @@ void Editor::updateFunctionTip(bool showTip)
         return;
 
     bool isFunction = false;
-    auto action = finally([&isFunction]{
+    auto action = finally([&isFunction,this]{
         if (!isFunction)
-            pMainWindow->functionTip()->hide();
+            mFunctionTooltip->hide();
     });
     const int maxLines=10;
     CharPos caretPos = caretXY();
@@ -4281,15 +4275,15 @@ void Editor::updateFunctionTip(bool showTip)
     // Don't bother scanning the database when there's no identifier to scan for
 
     // Only do the cumbersome list filling when showing a new tooltip...
-    if (s != pMainWindow->functionTip()->functionFullName()
+    if (s != mFunctionTooltip->functionFullName()
             && !mParser->parsing()) {
-        pMainWindow->functionTip()->clearTips();
+        mFunctionTooltip->clearTips();
         QList<PStatement> statements=mParser->getListOfFunctions(mFilename,
                                                                   s,
                                                                   functionNamePos.line);
 //      qDebug()<<"finding function list:"<<s<<" - "<<statements.length();
         foreach (const PStatement statement, statements) {
-            pMainWindow->functionTip()->addTip(
+            mFunctionTooltip->addTip(
                         statement->command,
                         statement->fullName,
                         statement->type,
@@ -4299,26 +4293,26 @@ void Editor::updateFunctionTip(bool showTip)
     }
 
     // If we can't find it in our database, hide
-    if (pMainWindow->functionTip()->tipCount()<=0) {
-        pMainWindow->functionTip()->hide();
+    if (mFunctionTooltip->tipCount()<=0) {
+        mFunctionTooltip->hide();
         return;
     }
     // Position it at the top of the next line
     QPoint p = displayCoordToPixels(displayXY());
     p+=QPoint(0,textHeight()+2);
 
-    pMainWindow->functionTip()->setFunctioFullName(s);
-    pMainWindow->functionTip()->guessFunction(paramsCount-1);
-    pMainWindow->functionTip()->setParamIndex(
+    mFunctionTooltip->setFunctioFullName(s);
+    mFunctionTooltip->guessFunction(paramsCount-1);
+    mFunctionTooltip->setParamIndex(
                 currentParamPos
                 );
-    int w = pMainWindow->functionTip()->width();
+    int w = mFunctionTooltip->width();
     if (w+p.x() > clientWidth())
         p.setX(clientWidth()-w-2);
-    pMainWindow->functionTip()->move(mapToGlobal(p));
+    mFunctionTooltip->move(mapToGlobal(p));
     cancelHint();
-    if (showTip && hasFocus() && !mCompletionPopup->isVisible() && !mHeaderCompletionPopup->isVisible())
-        pMainWindow->functionTip()->show();
+    if (showTip && hasFocus() && !completionPopupVisible() && !headerCompletionPopupVisible())
+        mFunctionTooltip->show();
 }
 
 void Editor::clearUserCodeInTabStops()
@@ -4371,7 +4365,7 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
     if (token.isEmpty())
         return;
     //don't do this
-    if (mCompletionPopup->isVisible() || mHeaderCompletionPopup->isVisible())
+    if (completionPopupVisible() || headerCompletionPopupVisible())
         return;
 
     if (mParser && (attr == syntaxer->identifierAttribute())) {
@@ -4439,7 +4433,7 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
 
 void Editor::onScrollBarValueChanged()
 {
-    pMainWindow->functionTip()->hide();
+    if(mFunctionTooltip) mFunctionTooltip->hide();
 }
 
 void Editor::updateHoverLink(int line)
@@ -4589,6 +4583,51 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+CodeCompletionPopup *Editor::completionPopup() const
+{
+    return mCompletionPopup;
+}
+
+void Editor::setCompletionPopup(CodeCompletionPopup *newCompletionPopup)
+{
+    mCompletionPopup = newCompletionPopup;
+}
+
+HeaderCompletionPopup *Editor::headerCompletionPopup() const
+{
+    return mHeaderCompletionPopup;
+}
+
+void Editor::setHeaderCompletionPopup(HeaderCompletionPopup *newHeaderCompletionPopup)
+{
+    mHeaderCompletionPopup = newHeaderCompletionPopup;
+}
+
+FunctionTooltipWidget *Editor::functionTooltip() const
+{
+    return mFunctionTooltip;
+}
+
+void Editor::setFunctionTooltip(FunctionTooltipWidget *newFunctionTooltip)
+{
+    mFunctionTooltip = newFunctionTooltip;
+}
+
+bool Editor::autoBackupEnabled() const
+{
+    return mAutoBackupEnabled;
+}
+
+void Editor::setAutoBackupEnabled(bool newEnableAutoBackup)
+{
+    mAutoBackupEnabled = newEnableAutoBackup;
+    if (mAutoBackupEnabled) {
+        initAutoBackup();
+    } else {
+        cleanAutoBackup();
+    }
 }
 
 const QString &Editor::contextFile() const

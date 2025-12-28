@@ -56,13 +56,13 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     }
 
     // parentPageControl takes the owner ship
-    Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, parentPageControl);
+    Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
+    e->setAutoBackupEnabled(true);
     parentPageControl->addTab(e, e->caption());
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     connect(e, &Editor::captionUpdated, this, &EditorList::onEditorCaptionUpdated);
     updateLayout();
-    connect(e,&Editor::fileSaved,
-            pMainWindow, &MainWindow::onFileSaved);
+    emit editorCreated(e);
     return e;
 }
 
@@ -127,9 +127,11 @@ void EditorList::showLayout(LayoutShowType layout)
 
 void EditorList::doRemoveEditor(Editor *e)
 {
-    QTabWidget* parentPage=e->pageControl();
-    int index = parentPage->indexOf(e);
-    parentPage->removeTab(index);
+    QTabWidget* parentPage=findPageControlForEditor(e);
+    if (parentPage) {
+        int index = parentPage->indexOf(e);
+        parentPage->removeTab(index);
+    }
     pMainWindow->fileSystemWatcher()->removePath(e->filename());
     pMainWindow->caretList().removeEditor(e);
     pMainWindow->updateCaretActions();
@@ -228,7 +230,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     if (!force && transferFocus) {
         editor = getEditor();
         if (editor) {
-            editor->activate();
+            activeEditor(editor,true);
             pMainWindow->updateClassBrowserForEditor(editor);
         }
     }
@@ -250,16 +252,16 @@ bool EditorList::swapEditor(Editor *editor)
         endUpdate();
     });
     //remember old index
-    QTabWidget* fromPageControl = editor->pageControl();
+    QTabWidget* fromPageControl = findPageControlForEditor(editor);
     if (fromPageControl == mLeftPageWidget) {
-        editor->setPageControl(mRightPageWidget);
+        mLeftPageWidget->removeTab(mLeftPageWidget->indexOf(editor));
         mRightPageWidget->addTab(editor, editor->caption());
     } else {
-        editor->setPageControl(mLeftPageWidget);
+        mRightPageWidget->removeTab(mRightPageWidget->indexOf(editor));
         mLeftPageWidget->addTab(editor, editor->caption());
     }
     updateLayout();
-    editor->activate();
+    activeEditor(editor, true);
     return true;
 }
 
@@ -405,6 +407,16 @@ void EditorList::selectPreviousPage()
     }
 }
 
+void EditorList::activeEditor(Editor *e, bool focus)
+{
+    QTabWidget * pageControl = findPageControlForEditor(e);
+    if (pageControl!=nullptr) {
+        pageControl->setCurrentWidget(e);
+        if (focus)
+            e->setFocus();
+    }
+}
+
 Editor *EditorList::operator[](int index)
 {
     if (index>=0 && index<mLeftPageWidget->count()) {
@@ -526,4 +538,13 @@ void EditorList::updateLayout()
         showLayout(LayoutShowType::lstRight);
     else
         showLayout(LayoutShowType::lstBoth);
+}
+
+QTabWidget *EditorList::findPageControlForEditor(Editor *e)
+{
+    if (mLeftPageWidget->indexOf(e)!=-1)
+        return mLeftPageWidget;
+    if (mRightPageWidget->indexOf(e)!=-1)
+        return mRightPageWidget;
+    return nullptr;
 }
