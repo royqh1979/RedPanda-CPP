@@ -8,6 +8,7 @@ Red Panda C++ Version 3.5
   - fix: keep indents while commenting blocks.
   - fix: Qsynedit now accept multi-QChar key press input.
   - fix: Crash when parsing lambda expression that has incomplete statements.
+  - fix: Chances to deadlock while parser is working and trying to close/switch editors.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

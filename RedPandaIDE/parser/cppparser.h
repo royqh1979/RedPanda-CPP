@@ -734,7 +734,6 @@ private:
     bool mIsProjectFile;
     int mLockCount; // lock(don't reparse) when we need to find statements in a batch
     bool mParsing;
-    bool mReseting;
     QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
     QList<PClassInheritanceInfo> mClassInheritances;
     QSet<QString> mInlineNamespaces;

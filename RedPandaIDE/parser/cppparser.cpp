@@ -56,7 +56,6 @@ CppParser::CppParser() : QObject{nullptr},
     updateSerialId();
     mUniqId = 0;
     mParsing = false;
-    mReseting = false;
     //mStatementList ; // owns the objects
     //mFilesToScan;
     //mIncludePaths;
@@ -1198,7 +1197,6 @@ bool CppParser::parsing() const
 
 void CppParser::resetParser()
 {
-    mReseting = true;
     while (true) {
         {
             QMutexLocker locker(&mMutex);
@@ -1214,7 +1212,6 @@ void CppParser::resetParser()
     {
         auto action = finally([this]{
             mParsing = false;
-            mReseting = false;
         });
         emit  onBusy();
         mUniqId = 0;

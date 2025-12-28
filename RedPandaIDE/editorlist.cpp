@@ -521,14 +521,19 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename) const
 
 bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer) const
 {
-    QMutexLocker locker(&mMutex);
-    if (pMainWindow->isQuitting())
+    if(mMutex.tryLock(0)){
+        auto action = finally([this](){
+            mMutex.unlock();
+        });
+        if (pMainWindow->isQuitting())
+            return false;
+        Editor * e= getOpenedEditorByFilename(filename);
+        if (!e)
+            return false;
+        buffer = e->content();
+        return true;
+    } else
         return false;
-    Editor * e= getOpenedEditorByFilename(filename);
-    if (!e)
-        return false;
-    buffer = e->content();
-    return true;
 }
 
 void EditorList::getVisibleEditors(Editor *&left, Editor *&right) const
