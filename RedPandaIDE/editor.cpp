@@ -145,6 +145,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     applySettings();
     applyColorScheme(pSettings->editor().colorScheme());
 
+    mFunctionTooltip = nullptr;
+    mCompletionPopup = nullptr;
+    mHeaderCompletionPopup = nullptr;
     //Initialize User Code Template stuff;
     mXOffsetSince =0;
     mTabStopY=-1;
@@ -659,7 +662,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
     QSynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     if (!pMainWindow->isQuitting()) {
-        mFunctionTooltip->hide();
+        if (mFunctionTooltip) mFunctionTooltip->hide();
     }
     mLastFocusOutTime = QDateTime::currentMSecsSinceEpoch();
 }
