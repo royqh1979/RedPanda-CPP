@@ -1104,8 +1104,8 @@ void setIncludeUnderline(const QString& lineText, int startPos,
     int pos2=lineText.indexOf(quoteEndChar,pos1+1);
     if (pos1>=0 && pos2>=0 && pos1 < pos2 ) {
         QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
-        p->beginX = pos1+2;
-        p->endX = pos2+1;
+        p->beginX = pos1+1;
+        p->endX = pos2;
         p->type = QSynedit::EditingAreaType::eatUnderLine;
         if (syntaxer) {
             if (quoteEndChar=='\"')
@@ -1197,9 +1197,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         QString sLine = lineText(line);
         if (mParser->isIncludeLine(sLine) && attr->tokenType() != QSynedit::TokenType::Comment) {
             // #include header names (<>)
-            int pos1=sLine.indexOf("<")+1;
+            int pos1=sLine.indexOf("<");
             int pos2=sLine.indexOf(">",pos1);
-            if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
+            if (pos1>=0 && pos2>=0 && pos1<aChar && aChar<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
                 foreground = syntaxer()->identifierAttribute()->foreground();
                 background = syntaxer()->identifierAttribute()->background();
@@ -1378,11 +1378,11 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString sLine = lineText(p.line);
             if (mParser->isIncludeNextLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
-                openFileInContext(filename);
+                openFileInContext(filename, CharPos{0,0});
                 return;
             } if (mParser->isIncludeLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine);
-                openFileInContext(filename);
+                openFileInContext(filename, CharPos{0,0});
                 return;
             } else if (mParser->enabled()) {
                 gotoDefinition(p);
@@ -1558,10 +1558,11 @@ void Editor::setCaretPosition(const CharPos & pos)
 
 void Editor::setCaretPositionAndActivate(const CharPos & pos)
 {
-    this->uncollapseAroundLine(pos.line);
+    CharPos p=ensureCharPosValid(pos);
+    this->uncollapseAroundLine(p.line);
     if (!this->hasFocus())
         this->activate();
-    this->setCaretXYCentered(pos);
+    this->setCaretXYCentered(p);
 }
 
 void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)
@@ -4503,7 +4504,7 @@ void Editor::doSetFileType(FileType newFileType)
     }
 }
 
-Editor* Editor::openFileInContext(const QString &filename)
+void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)
 {
     FileType fileType = getFileType(filename);
     QString contextFile;
@@ -4518,12 +4519,7 @@ Editor* Editor::openFileInContext(const QString &filename)
         }
     }
 
-    Editor *e=pMainWindow->openFile(filename, true, fileType, contextFile);
-    if (e) {
-        if (e->isVisible())
-            pMainWindow->updateClassBrowserForEditor(e);
-    }
-    return e;
+    emit openFileRequested(filename, fileType,contextFile, caretPos);
 }
 
 bool Editor::needReparse()
@@ -4753,10 +4749,7 @@ void Editor::gotoDeclaration(const CharPos &pos)
         filename = statement->fileName;
         line = statement->line;
     }
-    Editor *e = openFileInContext(filename);
-    if (e) {
-        e->setCaretPositionAndActivate(CharPos{0,line});
-    }
+    openFileInContext(filename, CharPos{0,line});
 }
 
 void Editor::gotoDefinition(const CharPos &pos)
@@ -4784,10 +4777,7 @@ void Editor::gotoDefinition(const CharPos &pos)
         filename = statement->definitionFileName;
         line = statement->definitionLine;
     }
-    Editor *e = openFileInContext(filename);
-    if (e) {
-        e->setCaretPositionAndActivate(CharPos{0,line});
-    }
+    openFileInContext(filename,CharPos{0,line});
 }
 
 QString getWordAtPosition(QSynedit::QSynEdit *editor, const CharPos &p, CharPos &pWordBegin, CharPos &pWordEnd, Editor::WordPurpose purpose)

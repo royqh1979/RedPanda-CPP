@@ -84,14 +84,9 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
     for (int i = start.line; i<=stop.line; i++) {
         if (mExportLineNumber)
             addData(getLineNumberString(i-baseStartLine));
-        QString Line = doc->getLine(i-1);
-        // order is important, since Start.Y might be equal to Stop.Y
-//        if (i == Stop.Line)
-//            Line.remove(Stop.Char-1, INT_MAX);
-//        if ( (i = Start.Line) && (Start.Char > 1))
-//            Line.remove(0, Start.Char - 1);
+        QString lineText = doc->getLine(i);
         // export the line
-        mSyntaxer->setLine(i, Line, 0);
+        mSyntaxer->setLine(i, lineText, 0);
         while (!mSyntaxer->eol()) {
             PTokenAttribute attri = mSyntaxer->getTokenAttribute();
             int startPos = mSyntaxer->getTokenPos();

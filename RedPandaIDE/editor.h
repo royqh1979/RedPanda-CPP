@@ -268,6 +268,7 @@ signals:
     void syntaxCheckRequested(Editor *e);
     void parseTodoRequested(const QString& filename, bool inProject);
     void updateEncodingInfoRequested(const Editor *e);
+    void openFileRequested(const QString& filename, FileType fileType, const QString& contextFile , const QSynedit::CharPos& caretPos);
 
     void showOccured(Editor *e);
     void focusInOccured(Editor *e);
@@ -353,7 +354,7 @@ private:
     QSize calcCompletionPopupSize();
     void doSetFileType(FileType newFileType);
 
-    Editor* openFileInContext(const QString& filename);
+    void openFileInContext(const QString& filename, const QSynedit::CharPos& caretPos);
     bool needReparse();
 
     PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::CharPos& p);

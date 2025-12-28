@@ -9,6 +9,7 @@ Red Panda C++ Version 3.5
   - fix: Qsynedit now accept multi-QChar key press input.
   - fix: Crash when parsing lambda expression that has incomplete statements.
   - fix: Chances to deadlock while parser is working and trying to close/switch editors.
+  - fix: Can't goto definition / declaration in an unsaved new file.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

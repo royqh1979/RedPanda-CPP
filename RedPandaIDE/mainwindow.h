@@ -282,6 +282,7 @@ public slots:
     void onEditorShown(Editor *e);
     void refreshInfosForEditor(Editor *e);
     void removeInfosForEditor();
+    void onOpenFileRequested(const QString& filename, FileType fileType, const QString& contextFile, const QSynedit::CharPos& caretPos);
 private:
     void connectEditorSignals(Editor * e);
     void executeTool(PToolItem item);

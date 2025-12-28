@@ -1409,6 +1409,16 @@ void MainWindow::removeInfosForEditor()
     updateForStatusbarModeInfo(nullptr);
 }
 
+void MainWindow::onOpenFileRequested(
+        const QString &filename, FileType fileType,
+        const QString &contextFile, const QSynedit::CharPos& caretPos)
+{
+    Editor *e=openFile(filename, true, fileType, contextFile);
+    if (e) {
+        e->setCaretPositionAndActivate(caretPos);
+    }
+}
+
 void MainWindow::connectEditorSignals(Editor *editor)
 {
     connect(editor,&Editor::fileSaved, this, &MainWindow::onFileSaved);
@@ -1423,6 +1433,7 @@ void MainWindow::connectEditorSignals(Editor *editor)
     connect(editor, &Editor::closeOccured, this, &MainWindow::removeInfosForEditor);
     connect(editor, &Editor::hideOccured, this, &MainWindow::removeInfosForEditor);
     connect(editor, &QWidget::customContextMenuRequested, this, &MainWindow::onEditorContextMenu);
+    connect(editor, &Editor::openFileRequested, this, &MainWindow::onOpenFileRequested);
 }
 
 void MainWindow::executeTool(PToolItem item)
@@ -1915,9 +1926,6 @@ void MainWindow::openFiles(const QStringList &files)
 
 Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType, const QString& contextFile)
 {
-    if (!fileExists(filename))
-        return nullptr;
-
     QFileInfo info=QFileInfo(filename);
     if (info.isDir())
         return nullptr;
@@ -1935,6 +1943,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         }
         return editor;
     }
+    if (!fileExists(filename))
+        return nullptr;
     try {
         Editor* oldEditor=nullptr;
         if (mEditorList->pageCount()==1) {
