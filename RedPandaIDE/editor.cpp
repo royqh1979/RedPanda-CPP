@@ -378,7 +378,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QDir::setCurrent(extractFileDir(newName));
     }
 
-    if (pMainWindow->editorManager()->getOpenedEditorByFilename(newName)) {
+    if (mEditorManager && mEditorManager->getOpenedEditorByFilename(newName)!=nullptr) {
         QMessageBox::critical(pMainWindow,tr("Error"),
                               tr("File %1 already opened!").arg(newName));
         return false;
@@ -5278,23 +5278,6 @@ void Editor::removeBreakpointFocus()
         mActiveBreakpointLine = -1;
         invalidateGutterLine(oldLine);
         invalidateLine(oldLine);
-    }
-}
-
-void Editor::modifyBreakpointProperty(int line)
-{
-    int index;
-    PBreakpoint breakpoint = pMainWindow->debugger()->breakpointAt(line,this,&index);
-    if (!breakpoint)
-        return;
-    bool isOk;
-    QString s=QInputDialog::getText(this,
-                              tr("Break point condition"),
-                              tr("Enter the condition of the breakpoint:"),
-                            QLineEdit::Normal,
-                            breakpoint->condition,&isOk);
-    if (isOk) {
-        pMainWindow->debugger()->setBreakPointCondition(index,s,inProject());
     }
 }
 

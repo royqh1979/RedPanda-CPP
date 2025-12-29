@@ -7126,8 +7126,21 @@ void MainWindow::on_actionBreakpoint_property_triggered()
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
         int line = editor->caretY();
-        if (editor->hasBreakpoint(line))
-            editor->modifyBreakpointProperty(line);
+        if (editor->hasBreakpoint(line)) {
+            int index;
+            PBreakpoint breakpoint = mDebugger->breakpointAt(line,editor->filename(),&index,editor->inProject());
+            if (!breakpoint)
+                return;
+            bool isOk;
+            QString s=QInputDialog::getText(this,
+                                      tr("Break point condition"),
+                                      tr("Enter the condition of the breakpoint:"),
+                                    QLineEdit::Normal,
+                                    breakpoint->condition,&isOk);
+            if (isOk) {
+                mDebugger->setBreakPointCondition(index,s,editor->inProject());
+            }
+        }
     }
 }
 

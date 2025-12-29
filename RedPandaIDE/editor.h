@@ -189,7 +189,6 @@ public:
     bool hasBookmark(int line) const;
     void clearBookmarks();
     void removeBreakpointFocus();
-    void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
     QString getPreviousWordAtPositionForSuggestion(const QSynedit::CharPos& p,
                                                    QSynedit::TokenType &tokenType);

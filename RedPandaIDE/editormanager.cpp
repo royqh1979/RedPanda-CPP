@@ -206,17 +206,17 @@ void EditorManager::onEditorCaptionUpdated(Editor* e)
 
 void EditorManager::onBreakpointAdded(const Editor *e, int line)
 {
-    pMainWindow->debugger()->addBreakpoint(line,e);
+    pMainWindow->debugger()->addBreakpoint(line,e->filename(),e->inProject());
 }
 
 void EditorManager::onBreakpointRemoved(const Editor *e, int line)
 {
-    pMainWindow->debugger()->removeBreakpoint(line,e);
+    pMainWindow->debugger()->removeBreakpoint(line,e->filename(), e->inProject());
 }
 
 void EditorManager::onBreakpointsCleared(const Editor *e)
 {
-    pMainWindow->debugger()->deleteBreakpoints(e);
+    pMainWindow->debugger()->deleteBreakpoints(e->filename(), e->inProject());
 }
 
 void EditorManager::onEditorShown(Editor *e)

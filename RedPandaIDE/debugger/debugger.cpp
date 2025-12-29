@@ -19,7 +19,6 @@
 #include "utils.h"
 #include "utils/parsearg.h"
 #include "mainwindow.h"
-#include "editor.h"
 #include "settings.h"
 #include "widgets/cpudialog.h"
 #include "systemconsts.h"
@@ -414,11 +413,6 @@ void Debugger::clearForProject()
     mWatchModel->clear(true);
 }
 
-void Debugger::addBreakpoint(int line, const Editor* editor)
-{
-    addBreakpoint(line,editor->filename(), editor->inProject());
-}
-
 void Debugger::addBreakpoint(int line, const QString &filename, bool forProject)
 {
     QMutexLocker locker{&mClientMutex};
@@ -451,11 +445,6 @@ void Debugger::deleteBreakpoints(const QString &filename, bool forProject)
     }
 }
 
-void Debugger::deleteBreakpoints(const Editor *editor)
-{
-    deleteBreakpoints(editor->filename(),editor->inProject());
-}
-
 void Debugger::deleteBreakpoints(bool forProject)
 {
     mBreakpointModel->clear(forProject);
@@ -471,11 +460,6 @@ void Debugger::deleteInvalidProjectBreakpoints(const QSet<QString> unitFiles)
         if (!unitFiles.contains(bp->filename))
             mBreakpointModel->removeBreakpoint(i, true);
     }
-}
-
-void Debugger::removeBreakpoint(int line, const Editor *editor)
-{
-    removeBreakpoint(line,editor->filename(),editor->inProject());
 }
 
 void Debugger::removeBreakpoint(int line, const QString &filename, bool forProject)
@@ -506,11 +490,6 @@ PBreakpoint Debugger::breakpointAt(int line, const QString& filename, int *index
     }
     *index=-1;
     return PBreakpoint();
-}
-
-PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
-{
-    return breakpointAt(line,editor->filename(),index, editor->inProject());
 }
 
 void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
