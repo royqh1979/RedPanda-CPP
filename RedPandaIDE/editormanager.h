@@ -73,6 +73,12 @@ public:
 
     QTabWidget *findPageControlForEditor(Editor *e);
 
+    void updateEditorBookmarks();
+    void updateEditorBreakpoints();
+
+    bool requestEvalTip(Editor *e, const QString& s);
+    void onEditorTipEvalValueReady(Editor *e);
+
     void beginUpdate();
     void endUpdate();
     void applySettings();
@@ -82,6 +88,8 @@ public:
     int pageCount() const;
     void selectNextPage();
     void selectPreviousPage();
+
+    void showCriticalError(const QString& title, const QString& reason);
 
     Editor* operator[](int index);
 

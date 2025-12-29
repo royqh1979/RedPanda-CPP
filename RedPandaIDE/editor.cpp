@@ -101,6 +101,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mFileType{FileType::None},
     mContextFile{contextFile}
 {
+    mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
     mAutoBackupEnabled = false;
     mLastFocusOutTime = 0;
     mInited=false;
@@ -166,10 +167,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     mCanAutoSave = false;
 
-    if (!isNew && mEditorManager) {
-        resetBookmarks();
-        resetBreakpoints();
-    }
 //    if (mParentPageControl) {
 //        //first showEvent triggered here
 //        mParentPageControl->addTab(this,"");
@@ -379,8 +376,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
 
     if (mEditorManager && mEditorManager->getOpenedEditorByFilename(newName)!=nullptr) {
-        QMessageBox::critical(pMainWindow,tr("Error"),
-                              tr("File %1 already opened!").arg(newName));
+        mEditorManager->showCriticalError(tr("Error"),
+                                      tr("File %1 already opened!").arg(newName));
         return false;
     }
     // Update project information
@@ -442,7 +439,7 @@ void Editor::setFilename(const QString &newName)
 {
     if (mFilename == newName)
         return;
-    if (pMainWindow->editorManager()->getOpenedEditorByFilename(newName)) {
+    if (mEditorManager && mEditorManager->getOpenedEditorByFilename(newName)) {
         return;
     }
     QString oldName = mFilename;
@@ -1833,8 +1830,7 @@ void Editor::onTipEvalValueReady(const QString& value)
         }
         QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + newValue, this);
     }
-    disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
-               this, &Editor::onTipEvalValueReady);
+    mEditorManager->onEditorTipEvalValueReady(this);
 }
 
 void Editor::onFunctionTipsTimer()
@@ -2084,17 +2080,16 @@ bool Editor::shouldOpenInReadonly()
                 && mParser && (mParser->isSystemHeaderFile(mFilename) || mParser->isProjectHeaderFile(mFilename));
 }
 
-void Editor::resetBookmarks()
+void Editor::resetBookmarks(BookmarkModel *model)
 {
-    mBookmarkLines=pMainWindow->bookmarkModel()->bookmarksInFile(mFilename,inProject());
+    mBookmarkLines=model->bookmarksInFile(mFilename,inProject());
     invalidate();
 }
 
-void Editor::resetBreakpoints()
+void Editor::resetBreakpoints(BreakpointModel *model)
 {
     mBreakpointLines.clear();
-    foreach (const PBreakpoint& breakpoint,
-             pMainWindow->debugger()->breakpointModel()->breakpoints(inProject())) {
+    foreach (const PBreakpoint& breakpoint, model->breakpoints(inProject())) {
         if (breakpoint->filename == mFilename) {
             mBreakpointLines.insert(breakpoint->line);
         }
@@ -2958,13 +2953,14 @@ bool Editor::handleCodeCompletion(QChar key)
 void Editor::initParser()
 {
     if (pSettings->codeCompletion().enabled()
-        && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))) {
+        && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
+            && mEditorManager) {
         if (pSettings->codeCompletion().shareParser()) {
             mParser = sharedParser(calcParserLanguage());
         } else {
             bool parserGot = false;
             if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-                Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(mContextFile);
+                Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
                 if (e) {
                     mParser = e->parser();
                     parserGot=true;
@@ -2975,7 +2971,7 @@ void Editor::initParser()
                 mParser->setLanguage(calcParserLanguage());
                 mParser->setOnGetFileStream(
                             std::bind(
-                                &EditorManager::getContentFromOpenedEditor,pMainWindow->editorManager(),
+                                &EditorManager::getContentFromOpenedEditor,mEditorManager,
                                 std::placeholders::_1, std::placeholders::_2));
                 resetCppParser(mParser);
                 mParser->setEnabled(
@@ -3980,7 +3976,7 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
 
 void Editor::showDebugHint(const QString &s, int line)
 {
-    if (!mParser)
+    if (!mParser || !mEditorManager)
         return;
     PStatement statement = mParser->findStatementOf(mFilename,s,line);
     if (statement) {
@@ -3991,15 +3987,12 @@ void Editor::showDebugHint(const QString &s, int line)
             return;
         }
     }
-    if (pMainWindow->debugger()->commandRunning())
-        return;
-    if (mFunctionTooltip) {
-        mFunctionTooltip->hide();
+    if (mEditorManager->requestEvalTip(this,s)) {
+        if (mFunctionTooltip) {
+            mFunctionTooltip->hide();
+        }
+        mCurrentDebugTipWord = s;
     }
-    connect(pMainWindow->debugger(), &Debugger::evalValueReady,
-               this, &Editor::onTipEvalValueReady);
-    mCurrentDebugTipWord = s;
-    pMainWindow->debugger()->evalExpression(s);
 }
 
 QString Editor::getErrorHint(const PSyntaxIssue& issue)
@@ -4582,8 +4575,9 @@ void Editor::setContextFile(const QString &newContextFile)
         applyColorScheme(pSettings->editor().colorScheme());
         if (pSettings->codeCompletion().enabled()
                 && !pSettings->codeCompletion().shareParser()
-                && !mContextFile.isEmpty()) {
-            Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(mContextFile);
+                && !mContextFile.isEmpty()
+                && mEditorManager) {
+            Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
             if (e)
                 mParser = e->parser();
         }

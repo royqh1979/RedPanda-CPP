@@ -44,6 +44,10 @@ class EditorManager;
 
 class FunctionTooltipWidget;
 
+class BreakpointModel;
+
+class BookmarkModel;
+
 using PTabStop = std::shared_ptr<TabStop>;
 
 class Editor : public QSynedit::QSynEdit
@@ -207,7 +211,7 @@ public:
     void print();
     void exportAsRTF(const QString& rtfFilename);
     void exportAsHTML(const QString& htmlFilename);
-    void resetBreakpoints();
+    void resetBreakpoints(BreakpointModel *model);
     bool notParsed();
     void breakLine();
     void deleteWord();
@@ -228,7 +232,7 @@ public:
     QString getWordForCompletionSearch(const QSynedit::CharPos& pos,bool permitTilde);
     QStringList getExpressionAtPosition(
             const QSynedit::CharPos& pos);
-    void resetBookmarks();
+    void resetBookmarks(BookmarkModel *model);
 
     const PCppParser &parser() const;
 
@@ -275,10 +279,12 @@ signals:
     void focusInOccured(Editor *e);
     void closeOccured(Editor *e);
     void hideOccured(Editor *e);
+public slots:
+    void onTipEvalValueReady(const QString& value);
+
 private slots:
     void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
-    void onTipEvalValueReady(const QString& value);
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
     void onTooltipTimer();

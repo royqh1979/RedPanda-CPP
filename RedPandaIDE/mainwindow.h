@@ -123,8 +123,6 @@ public:
     void updateStatusbarMessage(const QString& s);
     void setProjectCurrentFile(const QString& filename);
     void updateEditorSettings();
-    void updateEditorBookmarks();
-    void updateEditorBreakpoints();
     void updateEditorActions();
     void updateEncodingActions(const Editor *e);
     void updateEditorActions(const Editor *e);

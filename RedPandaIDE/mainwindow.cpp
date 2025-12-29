@@ -575,22 +575,6 @@ void MainWindow::updateEditorSettings()
     mEditorManager->applySettings();
 }
 
-void MainWindow::updateEditorBookmarks()
-{
-    for (int i=0;i<mEditorManager->pageCount();i++) {
-        Editor * e=(*mEditorManager)[i];
-        e->resetBookmarks();
-    }
-}
-
-void MainWindow::updateEditorBreakpoints()
-{
-    for (int i=0;i<mEditorManager->pageCount();i++) {
-        Editor * e=(*mEditorManager)[i];
-        e->resetBreakpoints();
-    }
-}
-
 void MainWindow::updateEditorActions()
 {
     Editor* e = mEditorManager->getEditor();
@@ -1258,7 +1242,7 @@ void MainWindow::setActiveBreakpoint(QString fileName, int line, bool setFocus)
     // Then active the current line in the current file
     Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
-        e->setActiveBreakpointFocus(line-1,setFocus);
+        e->setActiveBreakpointFocus(line,setFocus);
         e->activate(false);
         if (setFocus) {
             activateWindow();
@@ -1991,7 +1975,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
         Editor* e = mEditorManager->getOpenedEditorByFilename(unit->fileName());
         mProject->associateEditorToUnit(e,unit);
         if (e)
-            e->resetBookmarks();
+            e->resetBookmarks(mBookmarkModel);
     }
 
     Editor * e = mEditorManager->getEditor();
@@ -3667,8 +3651,8 @@ void MainWindow::loadLastOpens()
     }
     if (mProject && mEditorManager->pageCount()==0) {
         mProject->doAutoOpen();
-        updateEditorBookmarks();
-        updateEditorBreakpoints();
+        mEditorManager->updateEditorBookmarks();
+        mEditorManager->updateEditorBreakpoints();
     }
 
     if (!focusedEditor) {
@@ -5213,12 +5197,7 @@ void MainWindow::onBreakpointRemove()
 void MainWindow::onBreakpointViewRemoveAll()
 {
     debugger()->deleteBreakpoints(debugger()->isForProject());
-    for (int i=0;i<mEditorManager->pageCount();i++) {
-        Editor * e = (*(mEditorManager))[i];
-        if (e) {
-            e->resetBreakpoints();
-        }
-    }
+    mEditorManager->updateEditorBreakpoints();
 }
 
 void MainWindow::onModifyBreakpointCondition()

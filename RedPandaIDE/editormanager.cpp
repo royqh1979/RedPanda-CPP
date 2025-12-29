@@ -58,6 +58,10 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
+    if (!newFile) {
+        e->resetBookmarks(pMainWindow->bookmarkModel());
+        e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    }
     e->setStatementColors(pMainWindow->statementColors());
     QString fileTemplate;
     switch (e->fileType()) {
@@ -287,8 +291,8 @@ void EditorManager::onEditorLinesInserted(int startLine, int count)
     pMainWindow->caretList().onLinesInserted(e,startLine,count);
     pMainWindow->debugger()->breakpointModel()->onFileInsertLines(e->filename(), startLine,count, e->inProject());
     pMainWindow->bookmarkModel()->onFileInsertLines(e->filename(), startLine,count, e->inProject());
-    e->resetBreakpoints();
-    e->resetBookmarks();
+    e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    e->resetBookmarks(pMainWindow->bookmarkModel());
 }
 
 void EditorManager::onEditorLinesRemoved(int startLine, int count)
@@ -297,8 +301,8 @@ void EditorManager::onEditorLinesRemoved(int startLine, int count)
     pMainWindow->caretList().onLinesDeleted(e,startLine,count);
     pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(e->filename(),startLine,count,e->inProject());
     pMainWindow->bookmarkModel()->onFileDeleteLines(e->filename(),startLine,count,e->inProject());
-    e->resetBreakpoints();
-    e->resetBookmarks();
+    e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    e->resetBookmarks(pMainWindow->bookmarkModel());
 }
 
 void EditorManager::onEditorLineMoved(int fromLine, int toLine)
@@ -308,8 +312,8 @@ void EditorManager::onEditorLineMoved(int fromLine, int toLine)
     pMainWindow->debugger()->breakpointModel()->onFileLineMoved(e->filename(),fromLine,toLine,e->inProject());
     pMainWindow->bookmarkModel()->onFileDeleteLines(e->filename(),fromLine,toLine,e->inProject());
 
-    e->resetBreakpoints();
-    e->resetBookmarks();
+    e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    e->resetBookmarks(pMainWindow->bookmarkModel());
 }
 
 QTabWidget *EditorManager::rightPageWidget() const
@@ -561,6 +565,11 @@ void EditorManager::selectPreviousPage()
     }
 }
 
+void EditorManager::showCriticalError(const QString &title, const QString &reason)
+{
+    QMessageBox::critical(pMainWindow,title,reason);
+}
+
 void EditorManager::activeEditor(Editor *e, bool focus)
 {
     QTabWidget * pageControl = findPageControlForEditor(e);
@@ -706,4 +715,44 @@ QTabWidget *EditorManager::findPageControlForEditor(Editor *e)
     if (mRightPageWidget->indexOf(e)!=-1)
         return mRightPageWidget;
     return nullptr;
+}
+
+void EditorManager::updateEditorBookmarks()
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor * e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        e->resetBookmarks(pMainWindow->bookmarkModel());
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor * e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        e->resetBookmarks(pMainWindow->bookmarkModel());
+    }
+}
+
+void EditorManager::updateEditorBreakpoints()
+{
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        Editor * e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        Editor * e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    }
+}
+
+bool EditorManager::requestEvalTip(Editor *e, const QString &s)
+{
+    if (pMainWindow->debugger()->commandRunning())
+        return false;
+    connect(pMainWindow->debugger(), &Debugger::evalValueReady,
+               e, &Editor::onTipEvalValueReady);
+    pMainWindow->debugger()->evalExpression(s);
+    return true;
+}
+
+void EditorManager::onEditorTipEvalValueReady(Editor *e)
+{
+    disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
+               e, &Editor::onTipEvalValueReady);
 }
