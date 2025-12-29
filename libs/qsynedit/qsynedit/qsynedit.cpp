@@ -5789,7 +5789,7 @@ void QSynEdit::onPreparePaintHighlightToken(int , int , const QString &,
 
 }
 
-void QSynEdit::processCommand(EditCommand command, QVariant data)
+void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
 {
     hideCaret();
     beginInternalChanges();
@@ -5967,6 +5967,9 @@ void QSynEdit::processCommand(EditCommand command, QVariant data)
             doInputStr(data.toChar());
         } else
             doInputStr(data.toString());
+        break;
+    case EditCommand::ReplaceLine:
+        doReplaceLine(data.toInt(), data2.toString());
         break;
     case EditCommand::InsertMode:
         setInsertMode(true);
@@ -6885,12 +6888,13 @@ void QSynEdit::setSelText(const QString &text)
     doSetSelText(text);
 }
 
-void QSynEdit::replaceLine(int line, const QString &lineText)
+void QSynEdit::doReplaceLine(int line, const QString &lineText)
 {
     beginEditing();
     CharPos pos{0,line};
     addChangeToUndo(ChangeReason::ReplaceLine,pos,pos,QStringList(mDocument->getLine(line)),SelectionMode::Normal);
     properSetLine(line, lineText,true);
+    setCaretXY(ensureCharPosValid(caretXY()));
     endEditing();
 }
 

@@ -310,9 +310,9 @@ bool Editor::save(bool force, bool doReparse) {
         // must emit fileSaving/fileSaved signal out of saveFile(),
         // to let fileSystemWatcher's addPath/removePath() invoked out of the saveFile().
         // If not, fileSystemWatcher would generate fileChanged signal when saving files.
-        emit fileSaving(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        emit fileSaving(this, mFilename);
         saveFile(mFilename);
-        emit fileSaved(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        emit fileSaved(this, mFilename);
         setModified(false);
         mIsNew = false;
         updateCaption();
@@ -425,9 +425,12 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     emit fileRenamed(this, mFilename, newName);
 
     try {
-        emit fileSaving(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        // must emit fileSaving/fileSaved signal out of saveFile(),
+        // to let fileSystemWatcher's addPath/removePath() invoked out of the saveFile().
+        // If not, fileSystemWatcher would generate fileChanged signal when saving files.
+        emit fileSaving(this, mFilename);
         saveFile(mFilename);
-        emit fileSaved(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        emit fileSaved(this, mFilename);
         mIsNew = false;
         setModified(false);
         updateCaption();
@@ -5189,7 +5192,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
     newOptions.setFlag(QSynedit::EditorOption::AutoIndent,false);
     setOptions(newOptions);
     replaceAll(newContent);
-    setCaretXY(mOldCaret);
+    setCaretXY(ensureCharPosValid(mOldCaret));
     setTopPos(oldTopPos);
     setOptions(oldOptions);
     endEditing();

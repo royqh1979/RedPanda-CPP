@@ -125,6 +125,7 @@ enum class EditCommand {
     MoveSelDown     = 514,  // Move selection down
     ImeStr          = 550,  // Insert character(s) from IME
     DeleteWord     = 551,  // Delete current Word
+    ReplaceLine     = 552,
 
     Undo            = 601,  // Perform undo if available
     Redo            = 602,  // Perform redo if available

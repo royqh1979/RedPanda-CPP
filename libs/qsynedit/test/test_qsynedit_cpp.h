@@ -59,6 +59,9 @@ private slots:
     void test_input_string_in_empty_file();
     void test_input_string_in_overwrite_mode();
 
+    void test_replace_line_in_empty_file();
+    void test_replace_line_at_file_begin_end();
+
     void test_delete_chars_in_empty_file();
     void test_delete_chars_in_file();
     void test_delete_chars_at_file_begin_end();

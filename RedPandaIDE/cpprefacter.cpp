@@ -201,7 +201,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
     while (posY < editor->lineCount()) {
         //check if still in the scope
         bool inScope = false;
-        PStatement currentScope = editor->parser()->findScopeStatement(editor->filename(),posY+1);
+        PStatement currentScope = editor->parser()->findScopeStatement(editor->filename(),posY);
         while (currentScope != nullptr) {
             if (currentScope == scope) {
                 inScope = true;
@@ -237,9 +237,10 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
             syntaxer->next();
         }
         if (newLine!=line)
-            editor->replaceLine(posY+1,newLine);
+            editor->replaceLine(posY,newLine);
         posY++;
     }
+    editor->setCaretXY(editor->ensureCharPosValid(editor->caretXY()));
     editor->endEditing();
 }
 
@@ -405,9 +406,10 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                 syntaxer->next();
             }
             if (newLine!=line)
-                oldEditor->replaceLine(posY+1,newLine);
+                oldEditor->replaceLine(posY,newLine);
             posY++;
         }
+        oldEditor->setCaretXY(oldEditor->ensureCharPosValid(oldEditor->caretXY()));
         oldEditor->endEditing();
     } else {
         Editor editor(nullptr);

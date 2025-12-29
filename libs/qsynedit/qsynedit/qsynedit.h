@@ -289,7 +289,7 @@ public:
     void setSelLength(int len);
     void setSelText(const QString& text);
 
-    void replaceLine(int line, const QString& lineText);
+    void replaceLine(int line, const QString& lineText) { processCommand(EditCommand::ReplaceLine, line, lineText);};
 
     int searchReplace(const QString& sSearch, const QString& sReplace,
                       const CharPos & scopeBegin,
@@ -321,7 +321,7 @@ public:
     void addLeftTopToUndo();
     void addSelectionToUndo();
 
-    void processCommand(EditCommand Command, QVariant data=QVariant());
+    void processCommand(EditCommand Command, QVariant data=QVariant(),QVariant data2=QVariant());
 
 
     //Commands
@@ -680,6 +680,7 @@ private:
     void doMoveSelDown();
     void doClearAll();
     void doBreakLine();
+    void doReplaceLine(int line, const QString &lineText);
     void doTabKey();
     void doShiftTabKey();
     void doBlockIndent();
