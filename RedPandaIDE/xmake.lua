@@ -86,7 +86,7 @@ target("RedPandaIDE")
         "codesnippetsmanager",
         "cpprefacter",
         "editor",
-        "editorlist",
+        "editormanager",
         "iconsmanager",
         "main",
         "project",
