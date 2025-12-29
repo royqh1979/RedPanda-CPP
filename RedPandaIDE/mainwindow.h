@@ -181,7 +181,7 @@ public:
 
     Debugger *debugger() const;
 
-    EditorManager *editorList() const;
+    EditorManager *editorManager() const;
 
     SearchInFileDialog *searchInFilesDialog() const;
 
@@ -274,17 +274,10 @@ public slots:
     void onDebugFinished();
 
     //editor signals
-    void onEditorCreated(Editor *e);
-    void onBreakpointAdded(const Editor* e, int line);
-    void onBreakpointRemoved(const Editor* e, int line);
-    void onBreakpointsCleared(const Editor* e);
-    void onParseTodoRequired(const QString &fileName, bool inProject);
-    void onEditorShown(Editor *e);
     void refreshInfosForEditor(Editor *e);
     void removeInfosForEditor();
     void onOpenFileRequested(const QString& filename, FileType fileType, const QString& contextFile, const QSynedit::CharPos& caretPos);
 private:
-    void connectEditorSignals(Editor * e);
     void executeTool(PToolItem item);
     int calIconSize(const QString &fontName, int fontPointSize);
     void hideAllSearchDialogs();
@@ -362,7 +355,6 @@ private slots:
     void updateVCSActions();
 #endif
     void invalidateProjectProxyModel();
-    void onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString &path);
     void onDirChanged(const QString &path);
@@ -896,7 +888,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;
-    EditorManager *mEditorList;
+    EditorManager *mEditorManager;
     QLabel *mFileInfoStatus;
     LabelWithMenu *mFileEncodingStatus;
     QLabel *mFileModeStatus;
@@ -1087,6 +1079,8 @@ public:
     bool openingFiles() const;
     bool openingProject() const;
 
+    OJProblemSetModel *getOJProblemSetModel() const;
+    OJProblemModel *getOJProblemModel() const;
 };
 
 extern MainWindow* pMainWindow;

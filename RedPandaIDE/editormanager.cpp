@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "editorlist.h"
+#include "editormanager.h"
 #include "editor.h"
 #include <QMessageBox>
 #include <QVariant>
@@ -24,9 +24,10 @@
 #include "project.h"
 #include "systemconsts.h"
 #include "visithistorymanager.h"
+#include "debugger/debugger.h"
 #include <QApplication>
 
-EditorList::EditorList(QTabWidget* leftPageWidget,
+EditorManager::EditorManager(QTabWidget* leftPageWidget,
       QTabWidget* rightPageWidget,
       QSplitter* splitter,
       QWidget* panel,
@@ -42,7 +43,7 @@ EditorList::EditorList(QTabWidget* leftPageWidget,
 
 }
 
-Editor* EditorList::newEditor(const QString& filename, const QByteArray& encoding,
+Editor* EditorManager::newEditor(const QString& filename, const QByteArray& encoding,
                               FileType fileType, const QString& contextFile,
                               Project *pProject, bool newFile,
                               QTabWidget* page) {
@@ -57,7 +58,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
-    e->setStatementColors(pMainWindow->statementColors();
+    e->setStatementColors(pMainWindow->statementColors());
     QString fileTemplate;
     switch (e->fileType()) {
     case FileType::CSource:
@@ -79,11 +80,29 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     }
     e->setAutoBackupEnabled(true);
     parentPageControl->addTab(e, e->caption());
-    connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
-    connect(e, &Editor::captionUpdated, this, &EditorList::onEditorCaptionUpdated);
+    connect(e, &Editor::captionUpdated, this, &EditorManager::onEditorCaptionUpdated);
     updateLayout();
-    emit editorCreated(e);
-    //show event is trigged when this is added to the qtabwidget
+    e->setFunctionTooltip(pMainWindow->functionTip());
+    e->setCompletionPopup(pMainWindow->completionPopup());
+    e->setHeaderCompletionPopup(pMainWindow->headerCompletionPopup());
+
+    connect(e, &Editor::breakpointAdded, this, &EditorManager::onBreakpointAdded);
+    connect(e, &Editor::breakpointRemoved, this, &EditorManager::onBreakpointRemoved);
+    connect(e, &Editor::breakpointsCleared, this, &EditorManager::onBreakpointsCleared);
+    connect(e, &Editor::showOccured, this, &EditorManager::onEditorShown);
+    connect(e, &Editor::fileSaving, this, &EditorManager::onFileSaving);
+    connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
+    connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
+
+    connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
+    connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
+    connect(e, &Editor::updateEncodingInfoRequested, pMainWindow, &MainWindow::updateForEncodingInfo);
+    connect(e, &Editor::focusInOccured, pMainWindow, &MainWindow::refreshInfosForEditor);
+    connect(e, &Editor::closeOccured, pMainWindow, &MainWindow::removeInfosForEditor);
+    connect(e, &Editor::hideOccured, pMainWindow, &MainWindow::removeInfosForEditor);
+    connect(e, &QWidget::customContextMenuRequested, pMainWindow, &MainWindow::onEditorContextMenu);
+    connect(e, &Editor::openFileRequested, pMainWindow, &MainWindow::onOpenFileRequested);
+
     if (!pMainWindow->openingFiles()
             && !pMainWindow->openingProject()) {
         if (e->inProject()) {
@@ -95,11 +114,11 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     return e;
 }
 
-QTabWidget*  EditorList::getNewEditorPageControl() const {
+QTabWidget*  EditorManager::getNewEditorPageControl() const {
     return getFocusedPageControl();
 }
 
-QTabWidget* EditorList::getFocusedPageControl() const {
+QTabWidget* EditorManager::getFocusedPageControl() const {
     switch(mLayout) {
     case LayoutShowType::lstLeft:
         return mLeftPageWidget;
@@ -125,7 +144,7 @@ QTabWidget* EditorList::getFocusedPageControl() const {
     }
 }
 
-void EditorList::showLayout(LayoutShowType layout)
+void EditorManager::showLayout(LayoutShowType layout)
 {
     if (layout == mLayout)
         return;
@@ -154,7 +173,7 @@ void EditorList::showLayout(LayoutShowType layout)
     }
 }
 
-void EditorList::doRemoveEditor(Editor *e)
+void EditorManager::doRemoveEditor(Editor *e)
 {
     QTabWidget* parentPage=findPageControlForEditor(e);
     if (parentPage) {
@@ -168,12 +187,7 @@ void EditorList::doRemoveEditor(Editor *e)
     delete e;
 }
 
-void EditorList::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
-{
-    emit editorRenamed(oldFilename, newFilename, firstSave);
-}
-
-void EditorList::onEditorCaptionUpdated(Editor* e)
+void EditorManager::onEditorCaptionUpdated(Editor* e)
 {
     QTabWidget *parentWidget = mLeftPageWidget;
     int index = mLeftPageWidget->indexOf(e);
@@ -187,17 +201,94 @@ void EditorList::onEditorCaptionUpdated(Editor* e)
     parentWidget->setTabToolTip(index, e->filename());
 }
 
-QTabWidget *EditorList::rightPageWidget() const
+void EditorManager::onBreakpointAdded(const Editor *e, int line)
+{
+    pMainWindow->debugger()->addBreakpoint(line,e);
+}
+
+void EditorManager::onBreakpointRemoved(const Editor *e, int line)
+{
+    pMainWindow->debugger()->removeBreakpoint(line,e);
+}
+
+void EditorManager::onBreakpointsCleared(const Editor *e)
+{
+    pMainWindow->debugger()->deleteBreakpoints(e);
+}
+
+void EditorManager::onEditorShown(Editor *e)
+{
+    Q_ASSERT(e!=nullptr);
+    if (e->parser() && !pMainWindow->isClosingAll()
+            && !pMainWindow->isQuitting()) {
+        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
+            if (pSettings->codeCompletion().clearWhenEditorHidden()
+                && pSettings->codeCompletion().shareParser()
+                && !e->inProject()) {
+                e->resetParserIfNeeded();
+            }
+            e->reparseIfNeeded();
+        }
+    }
+    pMainWindow->debugger()->setIsForProject(e->inProject());
+    pMainWindow->bookmarkModel()->setIsForProject(e->inProject());
+    pMainWindow->todoModel()->setIsForProject(e->inProject());
+
+    if (!pMainWindow->isClosingAll()
+                && !pMainWindow->isQuitting()
+            && !pMainWindow->openingFiles()
+            && !pMainWindow->openingProject()) {
+        if (!e->inProject() || !pMainWindow->closingProject()) {
+            e->checkSyntaxInBack();
+            e->reparseTodo();
+        }
+    }
+    if (e->inProject() && !pMainWindow->closingProject()) {
+        pMainWindow->setProjectCurrentFile(e->filename());
+    }
+}
+
+void EditorManager::onFileSaving(Editor *e, const QString &filename)
+{
+    Q_UNUSED(e);
+    pMainWindow->fileSystemWatcher()->removePath(filename);
+}
+
+void EditorManager::onFileSaved(Editor *e, const QString &filename)
+{
+    pMainWindow->fileSystemWatcher()->addPath(filename);
+    pMainWindow->onFileSaved(filename, e->inProject());
+}
+
+void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const QString &newFilename)
+{
+    pMainWindow->fileSystemWatcher()->removePath(oldFilename);
+    pMainWindow->fileSystemWatcher()->addPath(newFilename);
+    pMainWindow->getOJProblemSetModel()->updateProblemAnswerFilename(oldFilename, newFilename);
+    if (!e->inProject()) {
+        pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
+        pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
+    }
+}
+
+void EditorManager::onFileSaveError(Editor *e, const QString& filename, const QString& reason)
+{
+    Q_UNUSED(e);
+    pMainWindow->fileSystemWatcher()->addPath(filename);
+    QMessageBox::critical(pMainWindow,tr("Save Error"), reason);
+}
+
+QTabWidget *EditorManager::rightPageWidget() const
 {
     return mRightPageWidget;
 }
 
-QTabWidget *EditorList::leftPageWidget() const
+QTabWidget *EditorManager::leftPageWidget() const
 {
     return mLeftPageWidget;
 }
 
-Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
+Editor* EditorManager::getEditor(int index, QTabWidget* tabsWidget) const {
     QTabWidget* selectedWidget;
     if (tabsWidget == nullptr) {
         selectedWidget = getFocusedPageControl();
@@ -215,7 +306,7 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
     return (Editor*)selectedWidget->widget(index);
 }
 
-bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
+bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) {
     QMutexLocker locker(&mMutex);
     if (editor == nullptr)
         return false;
@@ -272,7 +363,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
     return true;
 }
 
-bool EditorList::swapEditor(Editor *editor)
+bool EditorManager::swapEditor(Editor *editor)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(editor!=nullptr);
@@ -294,7 +385,7 @@ bool EditorList::swapEditor(Editor *editor)
     return true;
 }
 
-void EditorList::saveAll()
+void EditorManager::saveAll()
 {
     for (int i=0;i<pageCount();i++) {
         Editor * e= (*this)[i];
@@ -303,7 +394,7 @@ void EditorList::saveAll()
     }
 }
 
-bool EditorList::saveAllForProject()
+bool EditorManager::saveAllForProject()
 {
     for (int i=0;i<pageCount();i++) {
         Editor * e= (*this)[i];
@@ -315,7 +406,7 @@ bool EditorList::saveAllForProject()
     return true;
 }
 
-bool EditorList::projectEditorsModified()
+bool EditorManager::projectEditorsModified()
 {
     for (int i=0;i<pageCount();i++) {
         Editor * e= (*this)[i];
@@ -326,7 +417,7 @@ bool EditorList::projectEditorsModified()
     return false;
 }
 
-void EditorList::clearProjectEditorsModified()
+void EditorManager::clearProjectEditorsModified()
 {
     for (int i=0;i<pageCount();i++) {
         Editor * e= (*this)[i];
@@ -336,14 +427,14 @@ void EditorList::clearProjectEditorsModified()
     }
 }
 
-void EditorList::beginUpdate() {
+void EditorManager::beginUpdate() {
     if (mUpdateCount==0) {
         mPanel->setUpdatesEnabled(false);
     }
     mUpdateCount++;
 }
 
-void EditorList::endUpdate() {
+void EditorManager::endUpdate() {
     mUpdateCount--;
     if (mUpdateCount==0) {
         mPanel->setUpdatesEnabled(true);
@@ -351,7 +442,7 @@ void EditorList::endUpdate() {
     }
 }
 
-void EditorList::applySettings()
+void EditorManager::applySettings()
 {
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
@@ -363,7 +454,7 @@ void EditorList::applySettings()
     }
 }
 
-void EditorList::applyColorSchemes(const QString& name)
+void EditorManager::applyColorSchemes(const QString& name)
 {
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
@@ -375,7 +466,7 @@ void EditorList::applyColorSchemes(const QString& name)
     }
 }
 
-bool EditorList::isFileOpened(const QString &fullfilepath) const
+bool EditorManager::isFileOpened(const QString &fullfilepath) const
 {
     QFileInfo fileInfo(fullfilepath);
     QString filename = fileInfo.absoluteFilePath();
@@ -392,7 +483,7 @@ bool EditorList::isFileOpened(const QString &fullfilepath) const
     return false;
 }
 
-bool EditorList::hasFilename(const QString &filename) const
+bool EditorManager::hasFilename(const QString &filename) const
 {
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
@@ -411,12 +502,12 @@ bool EditorList::hasFilename(const QString &filename) const
     return false;
 }
 
-int EditorList::pageCount() const
+int EditorManager::pageCount() const
 {
     return mLeftPageWidget->count()+mRightPageWidget->count();
 }
 
-void EditorList::selectNextPage()
+void EditorManager::selectNextPage()
 {
     QTabWidget * pageControl = getFocusedPageControl();
     if (pageControl && pageControl->count()>0) {
@@ -426,7 +517,7 @@ void EditorList::selectNextPage()
     }
 }
 
-void EditorList::selectPreviousPage()
+void EditorManager::selectPreviousPage()
 {
     QTabWidget * pageControl = getFocusedPageControl();
     if (pageControl && pageControl->count()>0) {
@@ -436,7 +527,7 @@ void EditorList::selectPreviousPage()
     }
 }
 
-void EditorList::activeEditor(Editor *e, bool focus)
+void EditorManager::activeEditor(Editor *e, bool focus)
 {
     QTabWidget * pageControl = findPageControlForEditor(e);
     if (pageControl!=nullptr) {
@@ -446,7 +537,7 @@ void EditorList::activeEditor(Editor *e, bool focus)
     }
 }
 
-Editor *EditorList::operator[](int index)
+Editor *EditorManager::operator[](int index)
 {
     if (index>=0 && index<mLeftPageWidget->count()) {
         return static_cast<Editor*>(mLeftPageWidget->widget(index));
@@ -458,7 +549,7 @@ Editor *EditorList::operator[](int index)
     return nullptr;
 }
 
-bool EditorList::closeAll(bool force) {
+bool EditorManager::closeAll(bool force) {
 //    beginUpdate();
 //    auto end = finally([this] {
 //        this->endUpdate();
@@ -476,7 +567,7 @@ bool EditorList::closeAll(bool force) {
     return true;
 }
 
-bool EditorList::closeOthers(Editor *editor)
+bool EditorManager::closeOthers(Editor *editor)
 {
     QList<Editor*> editors;
     for (int i=0;i<mLeftPageWidget->count();i++) {
@@ -495,7 +586,7 @@ bool EditorList::closeOthers(Editor *editor)
     return true;
 }
 
-void EditorList::forceCloseEditor(Editor *editor)
+void EditorManager::forceCloseEditor(Editor *editor)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
@@ -506,7 +597,7 @@ void EditorList::forceCloseEditor(Editor *editor)
     emit editorClosed();
 }
 
-Editor* EditorList::getOpenedEditorByFilename(QString filename) const
+Editor* EditorManager::getOpenedEditorByFilename(QString filename) const
 {
     if (filename.isEmpty())
         return nullptr;
@@ -529,7 +620,7 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename) const
     return nullptr;
 }
 
-bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer) const
+bool EditorManager::getContentFromOpenedEditor(const QString &filename, QStringList &buffer) const
 {
     if(mMutex.tryLock(0)){
         auto action = finally([this](){
@@ -546,7 +637,7 @@ bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList
         return false;
 }
 
-void EditorList::getVisibleEditors(Editor *&left, Editor *&right) const
+void EditorManager::getVisibleEditors(Editor *&left, Editor *&right) const
 {
     switch(mLayout) {
     case LayoutShowType::lstLeft:
@@ -564,7 +655,7 @@ void EditorList::getVisibleEditors(Editor *&left, Editor *&right) const
     }
 }
 
-void EditorList::updateLayout()
+void EditorManager::updateLayout()
 {
     if (mRightPageWidget->count() == 0)
         showLayout(LayoutShowType::lstLeft);
@@ -574,7 +665,7 @@ void EditorList::updateLayout()
         showLayout(LayoutShowType::lstBoth);
 }
 
-QTabWidget *EditorList::findPageControlForEditor(Editor *e)
+QTabWidget *EditorManager::findPageControlForEditor(Editor *e)
 {
     if (mLeftPageWidget->indexOf(e)!=-1)
         return mLeftPageWidget;

@@ -174,16 +174,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
     ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
     ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
-    mEditorList = new EditorManager(ui->EditorTabsLeft,
+    mEditorManager = new EditorManager(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel, this);
-    connect(mEditorList, &EditorManager::editorRenamed,
-            this, &MainWindow::onEditorRenamed);
-    connect(mEditorList, &EditorManager::editorClosed,
+    connect(mEditorManager, &EditorManager::editorClosed,
                this, &MainWindow::onEditorClosed);
-    connect(mEditorList, &EditorManager::editorCreated,
-                this, &MainWindow::onEditorCreated);
     mProject = nullptr;
     //delete in the destructor
     mProjectProxyModel = new ProjectModelSortFilterProxy();
@@ -538,7 +534,7 @@ MainWindow::~MainWindow()
     if (mProject)
         mProject=nullptr;
     delete mProjectProxyModel;
-    delete mEditorList;
+    delete mEditorManager;
     delete ui;
 }
 
@@ -576,28 +572,28 @@ void MainWindow::updateEditorSettings()
                 pSettings->environment().iconSet(),
                 calIconSize(pSettings->editor().fontName(),pSettings->editor().fontSize())
                 );
-    mEditorList->applySettings();
+    mEditorManager->applySettings();
 }
 
 void MainWindow::updateEditorBookmarks()
 {
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor * e=(*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor * e=(*mEditorManager)[i];
         e->resetBookmarks();
     }
 }
 
 void MainWindow::updateEditorBreakpoints()
 {
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor * e=(*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor * e=(*mEditorManager)[i];
         e->resetBreakpoints();
     }
 }
 
 void MainWindow::updateEditorActions()
 {
-    Editor* e = mEditorList->getEditor();
+    Editor* e = mEditorManager->getEditor();
     updateEditorActions(e);
 }
 
@@ -629,14 +625,14 @@ void MainWindow::updateEditorActions(const Editor *e)
 {
     if (mQuitting)
         return;
-    ui->menuCode->menuAction()->setVisible(mEditorList->pageCount()>0);
-    ui->menuEdit->menuAction()->setVisible(mEditorList->pageCount()>0);
-    ui->menuSelection->menuAction()->setVisible(mEditorList->pageCount()>0);
-    ui->menuRefactor->menuAction()->setVisible(mEditorList->pageCount()>0);
+    ui->menuCode->menuAction()->setVisible(mEditorManager->pageCount()>0);
+    ui->menuEdit->menuAction()->setVisible(mEditorManager->pageCount()>0);
+    ui->menuSelection->menuAction()->setVisible(mEditorManager->pageCount()>0);
+    ui->menuRefactor->menuAction()->setVisible(mEditorManager->pageCount()>0);
 
     //it's not a compile action, but put here for convinience
     ui->actionSaveAll->setEnabled(
-                (mProject!=nullptr || mEditorList->pageCount()>0));
+                (mProject!=nullptr || mEditorManager->pageCount()>0));
     if (e==nullptr || !e->hasFocus()) {
         ui->actionCopy->setEnabled(false);
         ui->actionCut->setEnabled(false);
@@ -783,7 +779,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
-        ui->actionClose_Others->setEnabled(mEditorList->pageCount()>1);
+        ui->actionClose_Others->setEnabled(mEditorManager->pageCount()>1);
 
         int line = e->caretY();
         ui->actionToggle_Bookmark->setEnabled(e->lineCount()>0);
@@ -844,7 +840,7 @@ void MainWindow::updateProjectActions()
 }
 
 void MainWindow::updateCompileActions() {
-    updateCompileActions(mEditorList->getEditor());
+    updateCompileActions(mEditorManager->getEditor());
 }
 
 void MainWindow::updateCompileActions(const Editor *e)
@@ -949,7 +945,7 @@ void MainWindow::updateEditorColorSchemes()
         return;
     mStatementColors->clear();
 
-    mEditorList->applyColorSchemes(pSettings->editor().colorScheme());
+    mEditorManager->applyColorSchemes(pSettings->editor().colorScheme());
     QString schemeName = pSettings->editor().colorScheme();
     pColorManager->updateStatementColors(mStatementColors,schemeName);
     //color for code completion popup
@@ -1250,8 +1246,8 @@ void MainWindow::initDocks()
 
 void MainWindow::removeActiveBreakpoints()
 {
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor* e= (*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor* e= (*mEditorManager)[i];
         e->removeBreakpointFocus();
     }
 }
@@ -1331,67 +1327,6 @@ void MainWindow::onDebugFinished()
     updateEditorActions();
 }
 
-void MainWindow::onEditorCreated(Editor *e)
-{
-    e->setFunctionTooltip(mFunctionTip);
-    e->setCompletionPopup(mCompletionPopup);
-    e->setHeaderCompletionPopup(mHeaderCompletionPopup);
-    connectEditorSignals(e);
-}
-
-void MainWindow::onBreakpointAdded(const Editor *e, int line)
-{
-    mDebugger->addBreakpoint(line,e);
-}
-
-void MainWindow::onBreakpointRemoved(const Editor *e, int line)
-{
-    mDebugger->removeBreakpoint(line,e);
-}
-
-void MainWindow::onBreakpointsCleared(const Editor *e)
-{
-    mDebugger->deleteBreakpoints(e);
-}
-
-void MainWindow::onParseTodoRequired(const QString &fileName, bool inProject)
-{
-    if (pSettings->editor().parseTodos())
-        mTodoParser->parseFile(fileName, inProject);
-}
-
-void MainWindow::onEditorShown(Editor *e)
-{
-    Q_ASSERT(e!=nullptr);
-    if (e->parser() && !isClosingAll()
-            && !isQuitting()) {
-        if (!openingFiles() && !openingProject()) {
-            if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && pSettings->codeCompletion().shareParser()
-                && !e->inProject()) {
-                e->resetParserIfNeeded();
-            }
-            e->reparseIfNeeded();
-        }
-    }
-    debugger()->setIsForProject(e->inProject());
-    bookmarkModel()->setIsForProject(e->inProject());
-    todoModel()->setIsForProject(e->inProject());
-
-    if (!isClosingAll()
-                && !isQuitting()
-            && !openingFiles()
-            && !openingProject()) {
-        if (!e->inProject() || !pMainWindow->closingProject()) {
-            e->checkSyntaxInBack();
-            e->reparseTodo();
-        }
-    }
-    if (e->inProject() && !closingProject()) {
-        setProjectCurrentFile(e->filename());
-    }
-}
-
 void MainWindow::refreshInfosForEditor(Editor *e)
 {
     updateClassBrowserForEditor(e);
@@ -1419,23 +1354,6 @@ void MainWindow::onOpenFileRequested(
     }
 }
 
-void MainWindow::connectEditorSignals(Editor *editor)
-{
-    connect(editor,&Editor::fileSaved, this, &MainWindow::onFileSaved);
-    connect(editor, &Editor::breakpointAdded, this, &MainWindow::onBreakpointAdded);
-    connect(editor, &Editor::breakpointRemoved, this, &MainWindow::onBreakpointRemoved);
-    connect(editor, &Editor::breakpointsCleared, this, &MainWindow::onBreakpointsCleared);
-    connect(editor, &Editor::syntaxCheckRequested, this, &MainWindow::checkSyntaxInBack);
-    connect(editor, &Editor::parseTodoRequested, this, &MainWindow::onParseTodoRequired);
-    connect(editor, &Editor::updateEncodingInfoRequested, this, &MainWindow::updateForEncodingInfo);
-    connect(editor, &Editor::focusInOccured, this, &MainWindow::refreshInfosForEditor);
-    connect(editor, &Editor::showOccured, this, &MainWindow::onEditorShown);
-    connect(editor, &Editor::closeOccured, this, &MainWindow::removeInfosForEditor);
-    connect(editor, &Editor::hideOccured, this, &MainWindow::removeInfosForEditor);
-    connect(editor, &QWidget::customContextMenuRequested, this, &MainWindow::onEditorContextMenu);
-    connect(editor, &Editor::openFileRequested, this, &MainWindow::onOpenFileRequested);
-}
-
 void MainWindow::executeTool(PToolItem item)
 {
     QMap<QString, QString> macros = devCppMacroVariables();
@@ -1451,12 +1369,12 @@ void MainWindow::executeTool(PToolItem item)
     case ToolItemInputOrigin::None:
         break;
     case ToolItemInputOrigin::CurrentSelection:
-        e=mEditorList->getEditor();
+        e=mEditorManager->getEditor();
         if (e)
             inputContent=stringToByteArray(e->selText(), item->isUTF8);
         break;
     case ToolItemInputOrigin::WholeDocument:
-        e=mEditorList->getEditor();
+        e=mEditorManager->getEditor();
         if (e)
             inputContent=stringToByteArray(e->text(), item->isUTF8);
         break;
@@ -1505,12 +1423,12 @@ void MainWindow::executeTool(PToolItem item)
     case ToolItemOutputTarget::RedirectToNull:
         break;
     case ToolItemOutputTarget::RepalceWholeDocument:
-        e=mEditorList->getEditor();
+        e=mEditorManager->getEditor();
         if (e)
             e->replaceContent(errorMessage + byteArrayToString(output, item->isUTF8));
         break;
     case ToolItemOutputTarget::ReplaceCurrentSelection:
-        e=mEditorList->getEditor();
+        e=mEditorManager->getEditor();
         if (e)
             e->setSelText(errorMessage + byteArrayToString(output, item->isUTF8));
         break;
@@ -1548,7 +1466,7 @@ void MainWindow::prepareSearchInFilesDialog()
 
 void MainWindow::updateAppTitle()
 {
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     updateAppTitle(e);
 }
 
@@ -1896,11 +1814,11 @@ void MainWindow::setProjectCurrentFile(const QString &filename)
 void MainWindow::openFiles(const QStringList &files)
 {
     mOpeningFiles=true;
-    mEditorList->beginUpdate();
+    mEditorManager->beginUpdate();
     auto end = finally([this] {
-        this->mEditorList->endUpdate();
+        this->mEditorManager->endUpdate();
         mOpeningFiles=false;
-        Editor* e=mEditorList->getEditor();
+        Editor* e=mEditorManager->getEditor();
         if (e) {
             e->reparse(false);
             e->checkSyntaxInBack();
@@ -1933,7 +1851,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
     if (info.isAbsolute())
         filename = info.absoluteFilePath();
 
-    Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
+    Editor* editor = mEditorManager->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         editor->setContextFile(contextFile);
         if (fileType != FileType::None)
@@ -1947,8 +1865,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         return nullptr;
     try {
         Editor* oldEditor=nullptr;
-        if (mEditorList->pageCount()==1) {
-            oldEditor = mEditorList->getEditor(0);
+        if (mEditorManager->pageCount()==1) {
+            oldEditor = mEditorManager->getEditor(0);
             if (!oldEditor->isNew() || oldEditor->modified()) {
                 oldEditor = nullptr;
             }
@@ -1964,11 +1882,10 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         Project * pProject = (inProject?mProject.get():nullptr);
         if (pProject && encoding==ENCODING_PROJECT)
             encoding=pProject->options().encoding;
-        editor = mEditorList->newEditor(filename,encoding,
+        editor = mEditorManager->newEditor(filename,encoding,
                                         fileType, contextFile,
                                         pProject, false, nullptr);
 
-        connectEditorSignals(editor);
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
@@ -1977,8 +1894,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         } else {
             updateEditorActions();
         }
-        if (mEditorList->pageCount()>1 && oldEditor)
-            mEditorList->closeEditor(oldEditor);
+        if (mEditorManager->pageCount()>1 && oldEditor)
+            mEditorManager->closeEditor(oldEditor);
 //        editor->activate();
         return editor;
     } catch (FileError e) {
@@ -2021,8 +1938,8 @@ void MainWindow::openProject(QString filename, bool openFiles)
         }
 
     } else {
-        if (mEditorList->pageCount()==1) {
-            oldEditor = mEditorList->getEditor(0);
+        if (mEditorManager->pageCount()==1) {
+            oldEditor = mEditorManager->getEditor(0);
             if (!oldEditor->isNew() || oldEditor->modified()) {
                 oldEditor = nullptr;
             }
@@ -2035,7 +1952,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
 
     // Only update class browser once
     mClassBrowserModel->beginUpdate();
-    mProject = Project::load(filename,mEditorList,&mFileSystemWatcher);
+    mProject = Project::load(filename,mEditorManager,&mFileSystemWatcher);
     updateProjectView();
     ui->projectView->expand(
                 mProjectProxyModel->mapFromSource(
@@ -2071,13 +1988,13 @@ void MainWindow::openProject(QString filename, bool openFiles)
 
     //update editor's inproject flag
     foreach (PProjectUnit unit, mProject->unitList()) {
-        Editor* e = mEditorList->getOpenedEditorByFilename(unit->fileName());
+        Editor* e = mEditorManager->getOpenedEditorByFilename(unit->fileName());
         mProject->associateEditorToUnit(e,unit);
         if (e)
             e->resetBookmarks();
     }
 
-    Editor * e = mEditorList->getEditor();
+    Editor * e = mEditorManager->getEditor();
     if (e) {
         checkSyntaxInBack(e);
     }
@@ -2086,7 +2003,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
     updateClassBrowserForEditor(e);
     mClassBrowserModel->endUpdate();
     if (oldEditor)
-        mEditorList->closeEditor(oldEditor);
+        mEditorManager->closeEditor(oldEditor);
     setupSlotsForProject();
     //updateForEncodingInfo();
 }
@@ -2135,7 +2052,7 @@ void MainWindow::changeProjectOptions(const QString &widgetName, const QString &
 
 void MainWindow::updateCompilerSet()
 {
-    updateCompilerSet(mEditorList->getEditor());
+    updateCompilerSet(mEditorManager->getEditor());
 }
 
 void MainWindow::updateCompilerSet(const Editor *e)
@@ -2445,8 +2362,8 @@ bool MainWindow::parsing()
 {
     if (mProject && mProject->cppParser() && mProject->cppParser()->parsing())
         return true;
-    for(int i=0;i<mEditorList->pageCount();i++) {
-        Editor * editor = (*mEditorList)[i];
+    for(int i=0;i<mEditorManager->pageCount();i++) {
+        Editor * editor = (*mEditorManager)[i];
         if (editor->parser() && editor->parser()->parsing())
             return true;
     }
@@ -2483,7 +2400,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
         if (mProject->modified()) {
             mProject->saveAll();
         }
-        mEditorList->saveAll();
+        mEditorManager->saveAll();
         clearIssues();
 
         // Increment build number automagically
@@ -2501,7 +2418,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
         updateCompileActions();
         updateAppTitle();
     } else {
-        Editor * editor = mEditorList->getEditor();
+        Editor * editor = mEditorManager->getEditor();
         if (editor) {
             clearIssues();
             if (editor->modified() || editor->isNew()) {
@@ -2536,9 +2453,9 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                 }
                 if (!mCompileSuccessionTask->isExecutable) {
                     QString targetFileName = QFileInfo(mCompileSuccessionTask->execName).absoluteFilePath();
-                    Editor *editor = mEditorList->getOpenedEditorByFilename(targetFileName);
+                    Editor *editor = mEditorManager->getOpenedEditorByFilename(targetFileName);
                     if (editor) {
-                        mEditorList->closeEditor(editor,false,true);
+                        mEditorManager->closeEditor(editor,false,true);
                     }
                 }
             }
@@ -2645,7 +2562,7 @@ void MainWindow::runExecutable(RunType runType)
         runExecutable(mProject->outputFilename(),mProject->filename(),runType,
                       binDirs);
     } else {
-        Editor * editor = mEditorList->getEditor();
+        Editor * editor = mEditorManager->getEditor();
         if (editor) {
             if (editor->modified() || editor->isNew()) {
                 if (!editor->save(false,false))
@@ -2853,7 +2770,7 @@ void MainWindow::debug()
                 }
                 return;
             }
-            Editor* e = mEditorList->getEditor();
+            Editor* e = mEditorManager->getEditor();
             if (e!=nullptr) {
                 // Did we saved?
                 if (e->modified() || e->isNew()) {
@@ -3588,8 +3505,8 @@ bool MainWindow::saveLastOpens()
         rootObj["lastProject"]=mProject->filename();
     }
     QJsonArray filesArray;
-    for (int i=0;i<mEditorList->pageCount();i++) {
-      Editor * editor = (*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+      Editor * editor = (*mEditorManager)[i];
       QJsonObject fileObj;
       if (editor->isNew()) {
           if (!editor->modified())
@@ -3611,7 +3528,7 @@ bool MainWindow::saveLastOpens()
       }
 
       fileObj["filename"] = editor->filename();
-      fileObj["onLeft"] = (mEditorList->findPageControlForEditor(editor) != mEditorList->rightPageWidget());
+      fileObj["onLeft"] = (mEditorManager->findPageControlForEditor(editor) != mEditorManager->rightPageWidget());
       fileObj["focused"] = editor->hasFocus();
       fileObj["caretX"] = editor->caretX();
       fileObj["caretY"] = editor->caretY();
@@ -3708,9 +3625,9 @@ void MainWindow::loadLastOpens()
             fileType = getFileType(editorFilename);
         QTabWidget* page;
         if (onLeft)
-            page = mEditorList->leftPageWidget();
+            page = mEditorManager->leftPageWidget();
         else
-            page = mEditorList->rightPageWidget();
+            page = mEditorManager->rightPageWidget();
         PProjectUnit unit;
         if (mProject) {
             unit = mProject->findUnit(editorFilename);
@@ -3723,8 +3640,7 @@ void MainWindow::loadLastOpens()
         Project* pProject = (inProject?mProject.get():nullptr);
         if (pProject && encoding==ENCODING_PROJECT)
             encoding=pProject->options().encoding;
-        Editor * editor = mEditorList->newEditor(editorFilename, encoding, fileType, contextFile, pProject,false,page);
-        connectEditorSignals(editor);
+        Editor * editor = mEditorManager->newEditor(editorFilename, encoding, fileType, contextFile, pProject,false,page);
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
         }
@@ -3749,18 +3665,18 @@ void MainWindow::loadLastOpens()
             focusedEditor = editor;
         //mVisitHistoryManager->removeFile(editorFilename);
     }
-    if (mProject && mEditorList->pageCount()==0) {
+    if (mProject && mEditorManager->pageCount()==0) {
         mProject->doAutoOpen();
         updateEditorBookmarks();
         updateEditorBreakpoints();
     }
 
     if (!focusedEditor) {
-        focusedEditor = mEditorList->getEditor();
+        focusedEditor = mEditorManager->getEditor();
     }
     if (focusedEditor) {
         updateEditorActions();
-        updateForEncodingInfo(mEditorList->getEditor());
+        updateForEncodingInfo(mEditorManager->getEditor());
         focusedEditor->reparse(false);
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
@@ -3819,12 +3735,11 @@ void MainWindow::newEditor(const QString& suffix)
             } else
                 filename+= "." + suffix;
 
-        } while(mEditorList->hasFilename(filename));
-        Editor * editor=mEditorList->newEditor(filename,
+        } while(mEditorManager->hasFilename(filename));
+        Editor * editor=mEditorManager->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
                                                FileType::None, QString(),
                                                nullptr,true);
-        connectEditorSignals(editor);
         editor->activate();
         //updateForEncodingInfo();
     }  catch (FileError e) {
@@ -3930,7 +3845,7 @@ void MainWindow::buildEncodingMenu()
         connect(menuLang,&QMenu::aboutToShow,
                 [langName,menuLang,this]() {
             menuLang->clear();
-            Editor* editor = mEditorList->getEditor();
+            Editor* editor = mEditorManager->getEditor();
             QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
             foreach (const PCharsetInfo& info, charInfos) {
                 QAction * action = new QAction(info->name);
@@ -3939,7 +3854,7 @@ void MainWindow::buildEncodingMenu()
                     action->setChecked(info->name == editor->encodingOption());
                 connect(action, &QAction::triggered,
                         [info,this](){
-                    Editor * editor = mEditorList->getEditor();
+                    Editor * editor = mEditorManager->getEditor();
                     if (editor == nullptr)
                         return;
                     try {
@@ -3973,7 +3888,7 @@ void MainWindow::buildEncodingMenu()
                     tr("Convert to %1").arg(QString(charset->name)));
         connect(action, &QAction::triggered,
                 [charset,this](){
-            Editor * editor = mEditorList->getEditor();
+            Editor * editor = mEditorManager->getEditor();
             if (editor == nullptr)
                 return;
             if (QMessageBox::warning(this,tr("Confirm Convertion"),
@@ -4013,7 +3928,7 @@ void MainWindow::maximizeEditor()
 
 QStringList MainWindow::getBinDirsForCurrentEditor()
 {
-    Editor * e=mEditorList->getEditor();
+    Editor * e=mEditorManager->getEditor();
     if (e) {
         if (e->inProject() && mProject) {
             return mProject->binDirs();
@@ -4073,14 +3988,14 @@ void MainWindow::onAutoSaveTimeout()
         int updateCount = 0;
         switch (pSettings->editor().autoSaveTarget()) {
         case astCurrentFile: {
-            Editor *e = mEditorList->getEditor();
+            Editor *e = mEditorManager->getEditor();
             doAutoSave(e);
             updateCount++;
         }
             break;
         case astAllOpennedFiles:
-            for (int i=0;i<mEditorList->pageCount();i++) {
-                Editor *e = (*mEditorList)[i];
+            for (int i=0;i<mEditorManager->pageCount();i++) {
+                Editor *e = (*mEditorManager)[i];
                 doAutoSave(e);
                 updateCount++;
             }
@@ -4088,8 +4003,8 @@ void MainWindow::onAutoSaveTimeout()
         case astAllProjectFiles:
             if (!mProject)
                 return;
-            for (int i=0;i<mEditorList->pageCount();i++) {
-                Editor *e = (*mEditorList)[i];
+            for (int i=0;i<mEditorManager->pageCount();i++) {
+                Editor *e = (*mEditorManager)[i];
                 if (!e->inProject())
                     return;
                 doAutoSave(e);
@@ -4301,7 +4216,7 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addAction(mClassBrowser_Sort_By_Name);
     menu.addAction(mClassBrowser_Sort_By_Type);
     menu.addAction(mClassBrowser_Show_Inherited);
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if ((editor &&editor->inProject()) || mProject) {
         menu.addSeparator();
         menu.addAction(mClassBrowser_Show_CurrentFile);
@@ -4452,8 +4367,8 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         QActionGroup *actionGroup = new QActionGroup(menuSetAnswer);
         bool answerFound=false;
         menuSetAnswer->setTitle(tr("Set answer to..."));
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor *e = (*mEditorList)[i];
+        for (int i=0;i<mEditorManager->pageCount();i++) {
+            Editor *e = (*mEditorManager)[i];
             QString filename = e->filename();
             QAction* action = new QAction(filename,menuSetAnswer);
             action->setCheckable(true);
@@ -4711,7 +4626,7 @@ void MainWindow::onEditorClosed()
         return;
     updateEditorActions();
     updateAppTitle();
-    if (mEditorList->pageCount()==0) {
+    if (mEditorManager->pageCount()==0) {
 
     }
 }
@@ -4758,7 +4673,7 @@ void MainWindow::onShowInsertCodeSnippetMenu()
         QAction * action = mMenuInsertCodeSnippet->addAction(snippet->caption);
         connect(action, &QAction::triggered,
                 [snippet,this](){
-            Editor * editor = mEditorList->getEditor();
+            Editor * editor = mEditorManager->getEditor();
             if (editor) {
                 editor->insertCodeSnippet(snippet->code);
             }
@@ -4973,7 +4888,7 @@ void MainWindow::onBookmarkRemove()
     if (index.isValid()) {
         PBookmark bookmark = mBookmarkModel->bookmark(index.row());
         if (bookmark) {
-            Editor * editor = mEditorList->getOpenedEditorByFilename(bookmark->filename);
+            Editor * editor = mEditorManager->getOpenedEditorByFilename(bookmark->filename);
             if (editor && editor->inProject() == mBookmarkModel->isForProject()) {
                 editor->removeBookmark(bookmark->line);
             }
@@ -4985,8 +4900,8 @@ void MainWindow::onBookmarkRemove()
 void MainWindow::onBookmarkRemoveAll()
 {
     mBookmarkModel->clear(mBookmarkModel->isForProject());
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor * editor = (*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor * editor = (*mEditorManager)[i];
         if (editor->inProject() == mBookmarkModel->isForProject())
             editor->clearBookmarks();
     }
@@ -5161,7 +5076,7 @@ void MainWindow::onClassBrowserChangeScope()
     }
     mProject->options().classBrowserType=classBrowserType;
     mProject->saveOptions();
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if ((!editor || editor->inProject())  &&
             mClassBrowserModel->classBrowserType()!=classBrowserType) {
         mClassBrowserModel->setClassBrowserType(classBrowserType);
@@ -5285,7 +5200,7 @@ void MainWindow::onBreakpointRemove()
 
     PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index, debugger()->isForProject());
     if (breakpoint) {
-        Editor * e = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
+        Editor * e = mEditorManager->getOpenedEditorByFilename(breakpoint->filename);
         if (e) {
             if (e->hasBreakpoint(breakpoint->line))
                 e->toggleBreakpoint(breakpoint->line);
@@ -5298,8 +5213,8 @@ void MainWindow::onBreakpointRemove()
 void MainWindow::onBreakpointViewRemoveAll()
 {
     debugger()->deleteBreakpoints(debugger()->isForProject());
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor * e = (*(mEditorList))[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor * e = (*(mEditorManager))[i];
         if (e) {
             e->resetBreakpoints();
         }
@@ -5353,7 +5268,7 @@ void MainWindow::onTableIssuesCopy()
 
 void MainWindow::onEditorContextMenu(const QPoint& pos)
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
     FileType fileType=getFileType(editor->filename());
@@ -5585,8 +5500,8 @@ void MainWindow::prepareProjectForCompile()
     if (!mProject->saveUnits())
         return;
     // Check if saves have been succesful
-    for (int i=0; i<mEditorList->pageCount();i++) {
-        Editor * e= (*(mEditorList))[i];
+    for (int i=0; i<mEditorManager->pageCount();i++) {
+        Editor * e= (*(mEditorManager))[i];
         if (e->inProject() && e->modified())
             return;
     }
@@ -5609,7 +5524,7 @@ void MainWindow::closeProject(bool refreshEditor)
 
         // TODO: should we save watches?
         if (fileExists(mProject->directory())){
-            if (mEditorList->projectEditorsModified()) {
+            if (mEditorManager->projectEditorsModified()) {
                 QString s;
                 if (mProject->name().isEmpty()) {
                     s = mProject->filename();
@@ -5618,7 +5533,7 @@ void MainWindow::closeProject(bool refreshEditor)
                 }
                 if (mSystemTurnedOff) {
                     mProject->saveAll();
-                    mEditorList->saveAllForProject();
+                    mEditorManager->saveAllForProject();
                 } else {
                     int answer = QMessageBox::question(
                                 this,
@@ -5631,10 +5546,10 @@ void MainWindow::closeProject(bool refreshEditor)
                     switch (answer) {
                     case QMessageBox::Yes:
                         mProject->saveAll();
-                        mEditorList->saveAllForProject();
+                        mEditorManager->saveAllForProject();
                         break;
                     case QMessageBox::No:
-                        mEditorList->clearProjectEditorsModified();
+                        mEditorManager->clearProjectEditorsModified();
                         mProject->setModified(false);
                         mProject->saveLayout();
                         break;
@@ -5663,19 +5578,19 @@ void MainWindow::closeProject(bool refreshEditor)
         // Remember it
         mVisitHistoryManager->addProject(mProject->filename());
 
-        mEditorList->beginUpdate();
+        mEditorManager->beginUpdate();
         mProject.reset();
 
         if (!mQuitting && refreshEditor) {
             //reset Class browsing
             ui->tabExplorer->setCurrentWidget(ui->tabStructure);
-            Editor * e = mEditorList->getEditor();
+            Editor * e = mEditorManager->getEditor();
             updateClassBrowserForEditor(e);
         } else {
             mClassBrowserModel->setParser(nullptr);
             mClassBrowserModel->setCurrentFile("");
         }
-        mEditorList->endUpdate();
+        mEditorManager->endUpdate();
         mClassBrowserModel->endUpdate();
 
         if (!mQuitting) {
@@ -5727,7 +5642,7 @@ void MainWindow::onFileChanged(const QString &path)
     if (mFilesChangedNotifying.contains(path))
         return;
     mFilesChangedNotifying.insert(path);
-    Editor *e = mEditorList->getOpenedEditorByFilename(path);
+    Editor *e = mEditorManager->getOpenedEditorByFilename(path);
     if (e) {
         if (fileExists(path)) {
             e->activate();
@@ -5753,7 +5668,7 @@ void MainWindow::onFileChanged(const QString &path)
                                       tr("File '%1' was removed.").arg(path)+"<BR /><BR />" + tr("Keep it open?"),
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::Yes) == QMessageBox::No) {
-                mEditorList->closeEditor(e);
+                mEditorManager->closeEditor(e);
             } else {
                 e->setModified(true);
             }
@@ -5818,7 +5733,7 @@ SearchResultModel *MainWindow::searchResultModel()
 
 EditorManager *MainWindow::editorManager() const
 {
-    return mEditorList;
+    return mEditorManager;
 }
 
 Debugger *MainWindow::debugger() const
@@ -5852,14 +5767,14 @@ void MainWindow::on_actionNew_triggered()
 
 void MainWindow::on_EditorTabsLeft_tabCloseRequested(int index)
 {
-    Editor* editor = mEditorList->getEditor(index,ui->EditorTabsLeft);
-    mEditorList->closeEditor(editor);
+    Editor* editor = mEditorManager->getEditor(index,ui->EditorTabsLeft);
+    mEditorManager->closeEditor(editor);
 }
 
 void MainWindow::on_EditorTabsRight_tabCloseRequested(int index)
 {
-    Editor* editor = mEditorList->getEditor(index,ui->EditorTabsRight);
-    mEditorList->closeEditor(editor);
+    Editor* editor = mEditorManager->getEditor(index,ui->EditorTabsRight);
+    mEditorManager->closeEditor(editor);
 }
 
 void MainWindow::onFileSystemModelLayoutChanged()
@@ -5873,7 +5788,7 @@ void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QStri
     QString oldFile = folder.absoluteFilePath(oldName);
     QString newFile = folder.absoluteFilePath(newName);
 
-    Editor *e = mEditorList->getOpenedEditorByFilename(oldFile);
+    Editor *e = mEditorManager->getOpenedEditorByFilename(oldFile);
     if (e) {
         e->setFilename(newFile);
     }
@@ -5997,7 +5912,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         }
 
         mClosingAll=true;
-        if (!mEditorList->closeAll(false)) {
+        if (!mEditorManager->closeAll(false)) {
             mClosingAll=false;
             mQuitting = false;
             event->ignore();
@@ -6095,7 +6010,7 @@ bool MainWindow::event(QEvent *event)
 
 void MainWindow::on_actionSave_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         if (editor->inProject() && mCompileIssuesState == CompileIssuesState::ProjectCompilationResultFilled)
             mCompileIssuesState = CompileIssuesState::None;
@@ -6107,7 +6022,7 @@ void MainWindow::on_actionSave_triggered()
 
 void MainWindow::on_actionSaveAs_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->saveAs();
     }
@@ -6122,7 +6037,7 @@ void MainWindow::onCompilerSetChanged(int index)
 {
     if (index<0)
         return;
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     updateCompileActions();
     if ( mProject && (!e || e->inProject())
          ) {
@@ -6171,7 +6086,7 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
 
     if (issue->type == CompileIssueType::Error || issue->type ==
             CompileIssueType::Warning) {
-        Editor* e = mEditorList->getOpenedEditorByFilename(issue->filename);
+        Editor* e = mEditorManager->getOpenedEditorByFilename(issue->filename);
         if (e!=nullptr && (issue->line>=0)) {
             int line = issue->line;
             if (line > e->lineCount())
@@ -6276,7 +6191,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
         stretchMessagesPanel(true);
     }
 
-    Editor * e = mEditorList->getEditor();
+    Editor * e = mEditorManager->getEditor();
     if (e!=nullptr) {
         e->invalidate();
     }
@@ -6503,7 +6418,7 @@ void MainWindow::on_actionRun_triggered()
 
 void MainWindow::on_actionUndo_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->undo();
     }
@@ -6511,7 +6426,7 @@ void MainWindow::on_actionUndo_triggered()
 
 void MainWindow::on_actionRedo_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->redo();
     }
@@ -6519,7 +6434,7 @@ void MainWindow::on_actionRedo_triggered()
 
 void MainWindow::on_actionCut_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->cutToClipboard();
     }
@@ -6527,7 +6442,7 @@ void MainWindow::on_actionCut_triggered()
 
 void MainWindow::on_actionSelectAll_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->selectAll();
     }
@@ -6535,7 +6450,7 @@ void MainWindow::on_actionSelectAll_triggered()
 
 void MainWindow::on_actionCopy_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->copyToClipboard();
     }
@@ -6548,7 +6463,7 @@ void MainWindow::on_actionPaste_triggered()
     if (!data)
         return;
     if (data->hasText()) {
-        Editor * editor = mEditorList->getEditor();
+        Editor * editor = mEditorManager->getEditor();
         if (editor) {
             editor->pasteFromClipboard();
             editor->activate();
@@ -6558,7 +6473,7 @@ void MainWindow::on_actionPaste_triggered()
 
 void MainWindow::on_actionIndent_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->tab();
     }
@@ -6566,7 +6481,7 @@ void MainWindow::on_actionIndent_triggered()
 
 void MainWindow::on_actionUnIndent_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->shifttab();
     }
@@ -6574,7 +6489,7 @@ void MainWindow::on_actionUnIndent_triggered()
 
 void MainWindow::on_actionToggleComment_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->toggleComment();
     }
@@ -6582,7 +6497,7 @@ void MainWindow::on_actionToggleComment_triggered()
 
 void MainWindow::on_actionUnfoldAll_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->unCollpaseAll();
     }
@@ -6590,7 +6505,7 @@ void MainWindow::on_actionUnfoldAll_triggered()
 
 void MainWindow::on_actionFoldAll_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->collapseAll();
     }
@@ -6611,7 +6526,7 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_actionEncode_in_ANSI_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     try {
@@ -6623,7 +6538,7 @@ void MainWindow::on_actionEncode_in_ANSI_triggered()
 
 void MainWindow::on_actionEncode_in_UTF_8_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     try {
@@ -6635,7 +6550,7 @@ void MainWindow::on_actionEncode_in_UTF_8_triggered()
 
 void MainWindow::on_actionAuto_Detect_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     editor->setEncodingOption(ENCODING_AUTO_DETECT);
@@ -6643,7 +6558,7 @@ void MainWindow::on_actionAuto_Detect_triggered()
 
 void MainWindow::on_actionConvert_to_ANSI_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     if (QMessageBox::warning(this,tr("Confirm Convertion"),
@@ -6657,7 +6572,7 @@ void MainWindow::on_actionConvert_to_ANSI_triggered()
 
 void MainWindow::on_actionConvert_to_UTF_8_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     if (QMessageBox::warning(this,tr("Confirm Convertion"),
@@ -6698,7 +6613,7 @@ CompileTarget MainWindow::getCompileTarget()
 {
     // Check if the current file belongs to a project
     CompileTarget target = CompileTarget::None;
-    Editor* e = mEditorList->getEditor();
+    Editor* e = mEditorManager->getEditor();
     if (e!=nullptr) {
         // Treat makefiles as InProject files too
         if (mProject
@@ -6717,7 +6632,7 @@ CompileTarget MainWindow::getCompileTarget()
 
 bool MainWindow::debugInferiorhasBreakpoint()
 {
-    Editor * e = mEditorList->getEditor();
+    Editor * e = mEditorManager->getEditor();
     if (e==nullptr)
         return false;
     for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints(e->inProject())) {
@@ -6757,7 +6672,7 @@ void MainWindow::on_actionStep_Out_triggered()
 void MainWindow::on_actionRun_To_Cursor_triggered()
 {
     if (mDebugger->executing()) {
-        Editor *e=mEditorList->getEditor();
+        Editor *e=mEditorManager->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
             mDebugger->runTo(e->filename(), e->caretY());
@@ -6777,7 +6692,7 @@ void MainWindow::on_actionContinue_triggered()
 void MainWindow::on_actionAdd_Watch_triggered()
 {
     QString s = "";
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (e!=nullptr) {
         if (e->selAvail()) {
             s = e->selText();
@@ -6897,7 +6812,7 @@ void MainWindow::onLocalsReady(const QStringList& value)
 
 void MainWindow::on_actionFind_triggered()
 {
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (!e)
         return;
     if (mSearchInFilesDialog)
@@ -6914,7 +6829,7 @@ void MainWindow::on_actionFind_in_files_triggered()
     if (mSearchDialog)
         mSearchDialog->hide();
     prepareSearchInFilesDialog();
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (e) {
         if (e->selAvail())
             mSearchInFilesDialog->findInFiles(e->selText());
@@ -6927,7 +6842,7 @@ void MainWindow::on_actionFind_in_files_triggered()
 
 void MainWindow::on_actionReplace_triggered()
 {
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (!e)
         return;
 
@@ -6942,7 +6857,7 @@ void MainWindow::on_actionReplace_triggered()
 
 void MainWindow::on_actionFind_Next_triggered()
 {
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (e==nullptr)
         return;
 
@@ -6954,7 +6869,7 @@ void MainWindow::on_actionFind_Next_triggered()
 
 void MainWindow::on_actionFind_Previous_triggered()
 {
-    Editor *e = mEditorList->getEditor();
+    Editor *e = mEditorManager->getEditor();
     if (e==nullptr)
         return;
 
@@ -7006,7 +6921,7 @@ void MainWindow::on_btnSearchAgain_clicked()
             return;
         CppRefacter refactor;
         Editor* editor;
-        editor = mEditorList->getEditor();
+        editor = mEditorManager->getEditor();
 
         if (!editor)
             return;
@@ -7080,7 +6995,7 @@ void MainWindow::on_actionModify_Watch_triggered()
 
 void MainWindow::on_actionReformat_Code_triggered()
 {
-    Editor* e = mEditorList->getEditor();
+    Editor* e = mEditorManager->getEditor();
     if (e) {
         e->reformat();
         e->activate();
@@ -7147,9 +7062,9 @@ void MainWindow::on_EditorTabsRight_tabBarDoubleClicked(int)
 void MainWindow::on_actionClose_triggered()
 {
     mClosing = true;
-    Editor* e = mEditorList->getEditor();
+    Editor* e = mEditorManager->getEditor();
     if (e) {
-        mEditorList->closeEditor(e);
+        mEditorManager->closeEditor(e);
     }
     mClosing = false;
 }
@@ -7159,7 +7074,7 @@ void MainWindow::on_actionClose_All_triggered()
 {
     mClosingAll=true;
     mClosing = true;
-    mEditorList->closeAll(mSystemTurnedOff);
+    mEditorManager->closeAll(mSystemTurnedOff);
     mClosing = false;
     mClosingAll=false;
 }
@@ -7173,19 +7088,19 @@ void MainWindow::on_actionMaximize_Editor_triggered()
 
 void MainWindow::on_actionNext_Editor_triggered()
 {
-    mEditorList->selectNextPage();
+    mEditorManager->selectNextPage();
 }
 
 
 void MainWindow::on_actionPrevious_Editor_triggered()
 {
-    mEditorList->selectPreviousPage();
+    mEditorManager->selectPreviousPage();
 }
 
 
 void MainWindow::on_actionToggle_Breakpoint_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor)
         editor->toggleBreakpoint(editor->caretY());
 }
@@ -7193,7 +7108,7 @@ void MainWindow::on_actionToggle_Breakpoint_triggered()
 
 void MainWindow::on_actionClear_all_breakpoints_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (!e)
         return;
     if (QMessageBox::question(this,
@@ -7208,7 +7123,7 @@ void MainWindow::on_actionClear_all_breakpoints_triggered()
 
 void MainWindow::on_actionBreakpoint_property_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         int line = editor->caretY();
         if (editor->hasBreakpoint(line))
@@ -7219,7 +7134,7 @@ void MainWindow::on_actionBreakpoint_property_triggered()
 
 void MainWindow::on_actionGoto_Declaration_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->gotoDeclaration(editor->caretXY());
     }
@@ -7227,7 +7142,7 @@ void MainWindow::on_actionGoto_Declaration_triggered()
 
 void MainWindow::on_actionGoto_Definition_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->gotoDefinition(editor->caretXY());
     }
@@ -7236,7 +7151,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 
 void MainWindow::on_actionFind_references_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         CppRefacter refactor;
         refactor.findOccurence(editor, editor->caretXY());
@@ -7247,7 +7162,7 @@ void MainWindow::on_actionFind_references_triggered()
 
 void MainWindow::on_actionOpen_Containing_Folder_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         openFileFolderInExplorer(editor->filename());
 //        QFileInfo info(editor->filename());
@@ -7262,7 +7177,7 @@ void MainWindow::on_actionOpen_Containing_Folder_triggered()
 
 void MainWindow::on_actionOpen_Terminal_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         QFileInfo info(editor->filename());
         if (!info.path().isEmpty()) {
@@ -7279,7 +7194,7 @@ void MainWindow::on_actionOpen_Terminal_triggered()
 
 void MainWindow::on_actionFile_Properties_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         FilePropertiesDialog dialog(editor,this);
         dialog.exec();
@@ -7444,7 +7359,7 @@ void MainWindow::on_actionNew_Project_triggered()
         }
 
         mProject = Project::create(s,dialog.getProjectName(),
-                                             mEditorList,
+                                             mEditorManager,
                                              &mFileSystemWatcher,
                                    dialog.getTemplate(),dialog.isCppProject());
         if (!mProject) {
@@ -7456,7 +7371,7 @@ void MainWindow::on_actionNew_Project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
-        Editor* editor = mEditorList->getEditor();
+        Editor* editor = mEditorManager->getEditor();
         updateClassBrowserForEditor(editor);
         if (editor) {
             PProjectUnit unit=mProject->findUnit(editor);
@@ -7493,7 +7408,7 @@ void MainWindow::on_actionSaveAll_triggered()
     }
 
     // Make changes to files
-    mEditorList->saveAll();
+    mEditorManager->saveAll();
     updateAppTitle();
 }
 
@@ -7587,9 +7502,9 @@ void MainWindow::on_actionView_Makefile_triggered()
 {
     if (!mProject)
         return;
-    Editor *editor = mEditorList->getOpenedEditorByFilename(mProject->makeFileName());
+    Editor *editor = mEditorManager->getOpenedEditorByFilename(mProject->makeFileName());
     if (editor) {
-        mEditorList->closeEditor(editor, false, true);
+        mEditorManager->closeEditor(editor, false, true);
     }
     prepareProjectForCompile();
     mCompilerManager->buildProjectMakefile(mProject);
@@ -7645,7 +7560,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
     QString filename;
     int line;
-    Editor* currentEditor = mEditorList->getEditor();
+    Editor* currentEditor = mEditorManager->getEditor();
     if (currentEditor) {
         if (statement->fileName == currentEditor->filename()
                 && statement->definitionFileName!=currentEditor->filename()) {
@@ -7992,8 +7907,8 @@ void MainWindow::reparseNonProjectEditors()
     if (pSettings->codeCompletion().shareParser()) {
         bool hasC=false;
         bool hasCpp=false;
-        for(int i=0;i<mEditorList->pageCount();i++) {
-            Editor* e=(*mEditorList)[i];
+        for(int i=0;i<mEditorManager->pageCount();i++) {
+            Editor* e=(*mEditorManager)[i];
             if (!e->inProject() && e->parser()) {
                 if (e->parser()->language()==ParserLanguage::C) {
                     hasC=true;
@@ -8013,8 +7928,8 @@ void MainWindow::reparseNonProjectEditors()
                 resetCppParser(parser);
         }
     }
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor* e=(*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor* e=(*mEditorManager)[i];
         if (!e->inProject()) {
 //            if (!pSettings->codeCompletion().clearWhenEditorHidden() || e->isVisible()) {
             if (e->isVisible()) {
@@ -8432,17 +8347,6 @@ void MainWindow::invalidateProjectProxyModel()
     mProjectProxyModel->invalidate();
 }
 
-void MainWindow::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
-{
-    if (firstSave)
-        mOJProblemSetModel->updateProblemAnswerFilename(oldFilename, newFilename);
-    Editor * editor=mEditorList->getOpenedEditorByFilename(newFilename);
-    if (editor && !editor->inProject()) {
-        mBookmarkModel->renameBookmarkFile(oldFilename,newFilename,false);
-        mDebugger->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
-    }
-}
-
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
 }
@@ -8456,7 +8360,7 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
 {
     PTodoItem item = mTodoModel->getItem(index);
     if (item) {
-        Editor * editor = mEditorList->getOpenedEditorByFilename(item->filename);
+        Editor * editor = mEditorManager->getOpenedEditorByFilename(item->filename);
         if (editor) {
             editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->line});
         }
@@ -8473,7 +8377,7 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionRename_Symbol_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
     if (!editor->parser())
@@ -8497,8 +8401,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
     }
 
     if (editor->inProject() && mProject) {
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor * e=(*mEditorList)[i];
+        for (int i=0;i<mEditorManager->pageCount();i++) {
+            Editor * e=(*mEditorManager)[i];
             if (e->modified())  {
                 //here we must reparse the file in sync, or rename may fail
                 parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
@@ -8745,7 +8649,7 @@ void MainWindow::on_btnReplace_clicked()
                 return;
             }
         } else {
-            editor = mEditorList->getOpenedEditorByFilename(file->filename);
+            editor = mEditorManager->getOpenedEditorByFilename(file->filename);
         }
         bool needSave=false;
         std::shared_ptr<Editor> pEditor;
@@ -8811,7 +8715,7 @@ void MainWindow::on_btnCancelReplace_clicked()
 
 void MainWindow::on_actionPrint_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
     editor->print();
@@ -8830,7 +8734,7 @@ ToolsManager *MainWindow::toolsManager() const
 
 void MainWindow::on_actionExport_As_RTF_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
     QString rtfFile = QFileDialog::getSaveFileName(editor,
@@ -8852,7 +8756,7 @@ void MainWindow::on_actionExport_As_RTF_triggered()
 
 void MainWindow::on_actionExport_As_HTML_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
     QString htmlFile = QFileDialog::getSaveFileName(editor,
@@ -8874,9 +8778,9 @@ void MainWindow::on_actionExport_As_HTML_triggered()
 
 void MainWindow::on_actionMove_To_Other_View_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
-        mEditorList->swapEditor(editor);
+        mEditorManager->swapEditor(editor);
     }
 }
 
@@ -8934,7 +8838,7 @@ void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_actionModify_Bookmark_Description_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         int line = editor->caretY();
         PBookmark bookmark = mBookmarkModel->bookmark(editor->filename(),line);
@@ -8951,7 +8855,7 @@ void MainWindow::on_actionModify_Bookmark_Description_triggered()
 
 void MainWindow::on_actionLocate_in_Files_View_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         QFileInfo fileInfo(editor->filename());
         //qDebug()<<fileInfo.absoluteFilePath();
@@ -9399,7 +9303,7 @@ void MainWindow::on_actionProblem_triggered()
 
 void MainWindow::on_actionDelete_Line_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteLine();
     }
@@ -9407,7 +9311,7 @@ void MainWindow::on_actionDelete_Line_triggered()
 
 void MainWindow::on_actionDuplicate_Line_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->duplicate();
     }
@@ -9416,7 +9320,7 @@ void MainWindow::on_actionDuplicate_Line_triggered()
 
 void MainWindow::on_actionDelete_Word_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteWord();
     }
@@ -9425,7 +9329,7 @@ void MainWindow::on_actionDelete_Word_triggered()
 
 void MainWindow::on_actionDelete_to_EOL_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteToEOL();
     }
@@ -9433,7 +9337,7 @@ void MainWindow::on_actionDelete_to_EOL_triggered()
 
 void MainWindow::on_actionDelete_to_BOL_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteToBOL();
     }
@@ -9459,7 +9363,7 @@ void MainWindow::on_actionInterrupt_triggered()
 
 void MainWindow::on_actionDelete_Last_Word_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteToWordStart();
     }
@@ -9468,7 +9372,7 @@ void MainWindow::on_actionDelete_Last_Word_triggered()
 
 void MainWindow::on_actionDelete_to_Word_End_triggered()
 {
-    Editor *e=mEditorList->getEditor();
+    Editor *e=mEditorManager->getEditor();
     if (e) {
         e->deleteToWordEnd();
     }
@@ -9977,7 +9881,7 @@ void MainWindow::on_actionFilesView_Hide_Non_Support_Files_toggled(bool /* arg1 
 
 void MainWindow::on_actionToggle_Block_Comment_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->toggleBlockComment();
     }
@@ -9986,7 +9890,7 @@ void MainWindow::on_actionToggle_Block_Comment_triggered()
 
 void MainWindow::on_actionMatch_Bracket_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->matchBracket();
     }
@@ -10100,7 +10004,7 @@ void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
 
 void MainWindow::on_actionMove_Selection_Up_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->moveSelUp();
     }
@@ -10109,7 +10013,7 @@ void MainWindow::on_actionMove_Selection_Up_triggered()
 
 void MainWindow::on_actionMove_Selection_Down_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor) {
         editor->moveSelDown();
     }
@@ -10117,7 +10021,7 @@ void MainWindow::on_actionMove_Selection_Down_triggered()
 
 void MainWindow::on_actionConvert_to_UTF_8_BOM_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     if (QMessageBox::warning(this,tr("Confirm Convertion"),
@@ -10131,7 +10035,7 @@ void MainWindow::on_actionConvert_to_UTF_8_BOM_triggered()
 
 void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
     try {
@@ -10144,7 +10048,7 @@ void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
 
 void MainWindow::on_actionCompiler_Options_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->fileType() == FileType::NASM) {
         changeOptions(
                    SettingsDialog::tr("NASM"),
@@ -10204,7 +10108,7 @@ void MainWindow::on_actionRaylib_Manual_triggered()
 
 void MainWindow::on_actionSelect_Word_triggered()
 {
-    Editor* e=mEditorList->getEditor();
+    Editor* e=mEditorManager->getEditor();
     if (e) {
         e->selectWord();
     }
@@ -10213,7 +10117,7 @@ void MainWindow::on_actionSelect_Word_triggered()
 
 void MainWindow::on_actionGo_to_Line_triggered()
 {
-    Editor* e=mEditorList->getEditor();
+    Editor* e=mEditorManager->getEditor();
     if (!e)
         return;
     bool ok;
@@ -10278,7 +10182,7 @@ bool MainWindow::isClosingAll() const
 
 void MainWindow::on_actionGoto_block_start_triggered()
 {
-    Editor *editor=mEditorList->getEditor();
+    Editor *editor=mEditorManager->getEditor();
     if (editor)
         editor->gotoBlockStart();
 }
@@ -10286,7 +10190,7 @@ void MainWindow::on_actionGoto_block_start_triggered()
 
 void MainWindow::on_actionGoto_block_end_triggered()
 {
-    Editor *editor=mEditorList->getEditor();
+    Editor *editor=mEditorManager->getEditor();
     if (editor)
         editor->gotoBlockEnd();
 }
@@ -10294,7 +10198,7 @@ void MainWindow::on_actionGoto_block_end_triggered()
 
 void MainWindow::on_actionSwitchHeaderSource_triggered()
 {
-    Editor *editor=mEditorList->getEditor();
+    Editor *editor=mEditorManager->getEditor();
     QString file=switchHeaderSourceTarget(editor);
     if (!file.isEmpty()) {
         openFile(file);
@@ -10337,7 +10241,7 @@ void MainWindow::onImportFPSProblemSet()
 
 void MainWindow::on_actionTrim_trailing_spaces_triggered()
 {
-    Editor * e = mEditorList->getEditor();
+    Editor * e = mEditorManager->getEditor();
     if (e) {
         e->trimTrailingSpaces();
     }
@@ -10364,7 +10268,7 @@ void MainWindow::onExportFPSProblemSet()
 
 void MainWindow::on_actionToggle_Readonly_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && !editor->modified()) {
         editor->setReadOnly(!editor->readOnly());
         updateEditorActions(editor);
@@ -10492,7 +10396,7 @@ void MainWindow::on_actionNew_Text_File_triggered()
 
 void MainWindow::on_actionPage_Up_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->pageUp();
     }
@@ -10501,7 +10405,7 @@ void MainWindow::on_actionPage_Up_triggered()
 
 void MainWindow::on_actionPage_Down_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->pageDown();
     }
@@ -10510,7 +10414,7 @@ void MainWindow::on_actionPage_Down_triggered()
 
 void MainWindow::on_actionGoto_Line_Start_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoLineStart();
     }
@@ -10519,7 +10423,7 @@ void MainWindow::on_actionGoto_Line_Start_triggered()
 
 void MainWindow::on_actionGoto_Line_End_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoLineEnd();
     }
@@ -10528,7 +10432,7 @@ void MainWindow::on_actionGoto_Line_End_triggered()
 
 void MainWindow::on_actionGoto_File_Start_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoFileStart();
     }
@@ -10537,7 +10441,7 @@ void MainWindow::on_actionGoto_File_Start_triggered()
 
 void MainWindow::on_actionGoto_File_End_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoFileEnd();
     }
@@ -10546,7 +10450,7 @@ void MainWindow::on_actionGoto_File_End_triggered()
 
 void MainWindow::on_actionPage_Up_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->pageUpAndSelect();;
     }
@@ -10555,7 +10459,7 @@ void MainWindow::on_actionPage_Up_and_Select_triggered()
 
 void MainWindow::on_actionPage_Down_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->pageDownAndSelect();
     }
@@ -10564,7 +10468,7 @@ void MainWindow::on_actionPage_Down_and_Select_triggered()
 
 void MainWindow::on_actionGoto_Page_Start_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoPageStart();
     }
@@ -10573,7 +10477,7 @@ void MainWindow::on_actionGoto_Page_Start_triggered()
 
 void MainWindow::on_actionGoto_Page_End_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->gotoPageEnd();
     }
@@ -10582,7 +10486,7 @@ void MainWindow::on_actionGoto_Page_End_triggered()
 
 void MainWindow::on_actionGoto_Page_Start_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToPageStart();
     }
@@ -10591,7 +10495,7 @@ void MainWindow::on_actionGoto_Page_Start_and_Select_triggered()
 
 void MainWindow::on_actionGoto_Page_End_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToPageEnd();
     }
@@ -10600,7 +10504,7 @@ void MainWindow::on_actionGoto_Page_End_and_Select_triggered()
 
 void MainWindow::on_actionGoto_Line_Start_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToLineStart();
     }
@@ -10609,7 +10513,7 @@ void MainWindow::on_actionGoto_Line_Start_and_Select_triggered()
 
 void MainWindow::on_actionGoto_Line_End_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToLineEnd();
     }
@@ -10618,7 +10522,7 @@ void MainWindow::on_actionGoto_Line_End_and_Select_triggered()
 
 void MainWindow::on_actionGoto_File_Start_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToFileStart();
     }
@@ -10627,7 +10531,7 @@ void MainWindow::on_actionGoto_File_Start_and_Select_triggered()
 
 void MainWindow::on_actionGoto_File_End_and_Select_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (editor && editor->hasFocus()) {
         editor->selectToFileEnd();
     }
@@ -10637,9 +10541,9 @@ void MainWindow::on_actionGoto_File_End_and_Select_triggered()
 void MainWindow::on_actionClose_Others_triggered()
 {
     mClosing = true;
-    Editor* e = mEditorList->getEditor();
+    Editor* e = mEditorManager->getEditor();
     if (e) {
-        mEditorList->closeOthers(e);
+        mEditorManager->closeOthers(e);
     }
     mClosing = false;
 }
@@ -10675,7 +10579,7 @@ void MainWindow::on_cbProblemCaseValidateType_currentIndexChanged(int index)
 
 void MainWindow::on_actionToggle_Bookmark_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         if (editor->lineCount()<=0)
             return;
@@ -10695,7 +10599,7 @@ void MainWindow::on_actionToggle_Bookmark_triggered()
 
 void MainWindow::on_actionCode_Completion_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->showCodeCompletion();
     }
@@ -10704,7 +10608,7 @@ void MainWindow::on_actionCode_Completion_triggered()
 
 void MainWindow::on_actionC_C_Header_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::CCppHeader);
     }
@@ -10712,7 +10616,7 @@ void MainWindow::on_actionC_C_Header_triggered()
 
 void MainWindow::on_actionText_File_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::Text);
     }
@@ -10721,7 +10625,7 @@ void MainWindow::on_actionText_File_triggered()
 
 void MainWindow::on_actionC_File_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::CSource);
     }
@@ -10730,7 +10634,7 @@ void MainWindow::on_actionC_File_triggered()
 
 void MainWindow::on_actionCPP_File_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::CppSource);
     }
@@ -10738,7 +10642,7 @@ void MainWindow::on_actionCPP_File_triggered()
 
 void MainWindow::on_actionGAS_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::GAS);
     }
@@ -10759,7 +10663,7 @@ void MainWindow::on_actionPreprocess_triggered()
 
 void MainWindow::on_actionPaste_indentation_triggered()
 {
-    Editor * editor = mEditorList->getEditor();
+    Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return ;
     bool oldAutoIndent = editor->autoIndent();
@@ -10771,9 +10675,19 @@ void MainWindow::on_actionPaste_indentation_triggered()
 
 void MainWindow::on_actionNASM_triggered()
 {
-    Editor* editor = mEditorList->getEditor();
+    Editor* editor = mEditorManager->getEditor();
     if (editor) {
         editor->setFileType(FileType::NASM);
     }
+}
+
+OJProblemModel *MainWindow::getOJProblemModel() const
+{
+    return mOJProblemModel;
+}
+
+OJProblemSetModel *MainWindow::getOJProblemSetModel() const
+{
+    return mOJProblemSetModel;
 }
 

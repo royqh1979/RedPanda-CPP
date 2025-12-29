@@ -51,7 +51,7 @@
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
 #include "debugger/debugger.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include <QDebug>
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
@@ -81,12 +81,12 @@ Editor::Editor(QWidget *parent):
 Editor::Editor(QWidget *parent, const QString& filename,
                const QByteArray& encoding, FileType fileType,
                const QString& contextFile, Project* pProject,
-               bool isNew, EditorList* editorList):
+               bool isNew, EditorManager* editorList):
     QSynEdit{parent},
     mInited{false},
     mEncodingOption{encoding},
     mFilename{filename},
-    mEditorList{editorList},
+    mEditorManager{editorList},
     mProject{pProject},
     mIsNew{isNew},
     mSyntaxErrorColor{Qt::red},
@@ -171,7 +171,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     mCanAutoSave = false;
 
-    if (!isNew && mEditorList) {
+    if (!isNew && mEditorManager) {
         resetBookmarks();
         resetBreakpoints();
     }
@@ -281,8 +281,6 @@ void Editor::saveFile(QString filename) {
     }
     if (isVisible())
         emit updateEncodingInfoRequested(this);
-
-    emit fileSaved(filename, inProject());
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -303,25 +301,23 @@ bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
         return saveAs();
     }    
-
-    pMainWindow->fileSystemWatcher()->removePath(mFilename);
     try {
         if (pSettings->editor().autoFormatWhenSaved()) {
             reformat(false);
         } else if (pSettings->editor().removeTrailingSpacesWhenSaved()) {
             trimTrailingSpaces();
         }
+        // must emit fileSaving/fileSaved signal out of saveFile(),
+        // to let fileSystemWatcher's addPath/removePath() invoked out of the saveFile().
+        // If not, fileSystemWatcher would generate fileChanged signal when saving files.
+        emit fileSaving(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
         saveFile(mFilename);
-        pMainWindow->fileSystemWatcher()->addPath(mFilename);
+        emit fileSaved(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
         setModified(false);
         mIsNew = false;
         updateCaption();
     } catch (FileError& exception) {
-        if (!force) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                 exception.reason());
-        }
-        pMainWindow->fileSystemWatcher()->addPath(mFilename);
+        emit fileSaveError(this, mFilename, exception.reason());
         return false;
     }
 
@@ -338,7 +334,6 @@ bool Editor::save(bool force, bool doReparse) {
 bool Editor::saveAs(const QString &name, bool fromProject){
     QString newName = name;
     QString oldName = mFilename;
-    bool firstSave = isNew();
     if (name.isEmpty()) {
         QString selectedFileFilter;
         QString defaultExt;
@@ -388,7 +383,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QDir::setCurrent(extractFileDir(newName));
     }
 
-    if (pMainWindow->editorList()->getOpenedEditorByFilename(newName)) {
+    if (pMainWindow->editorManager()->getOpenedEditorByFilename(newName)) {
         QMessageBox::critical(pMainWindow,tr("Error"),
                               tr("File %1 already opened!").arg(newName));
         return false;
@@ -402,7 +397,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
 
     clearSyntaxIssues();
-    pMainWindow->fileSystemWatcher()->removePath(mFilename);
     if (pSettings->codeCompletion().enabled() && mParser && !inProject()) {
         mParser->invalidateFile(mFilename);
     }
@@ -412,20 +406,10 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     } else if (pSettings->editor().removeTrailingSpacesWhenSaved()) {
         trimTrailingSpaces();
     }
-    try {
-        mFilename = newName;
-        saveFile(mFilename);
-        mIsNew = false;
-        setModified(false);
-    }  catch (FileError& exception) {
-        QMessageBox::critical(pMainWindow,tr("Error"),
-                                 exception.reason());
-        return false;
-    }
+    mFilename = newName;
     if (mProject && !fromProject) {
         mProject->associateEditor(this);
     }
-    pMainWindow->fileSystemWatcher()->addPath(mFilename);
     setFileType(getFileType(mFilename));
     if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
@@ -438,7 +422,19 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     updateCaption();
 
-    emit renamed(oldName, newName , firstSave);
+    emit fileRenamed(this, mFilename, newName);
+
+    try {
+        emit fileSaving(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        saveFile(mFilename);
+        emit fileSaved(this, mFilename); // must emit out of saveFile(), or file system watcher will generate fileChanged signal
+        mIsNew = false;
+        setModified(false);
+        updateCaption();
+    }  catch (FileError& exception) {
+        emit fileSaveError(this, mFilename, exception.reason());
+        return false;
+    }
 
     initAutoBackup();
     return true;
@@ -448,7 +444,7 @@ void Editor::setFilename(const QString &newName)
 {
     if (mFilename == newName)
         return;
-    if (pMainWindow->editorList()->getOpenedEditorByFilename(newName)) {
+    if (pMainWindow->editorManager()->getOpenedEditorByFilename(newName)) {
         return;
     }
     QString oldName = mFilename;
@@ -461,7 +457,6 @@ void Editor::setFilename(const QString &newName)
     }
 
     clearSyntaxIssues();
-    pMainWindow->fileSystemWatcher()->removePath(oldName);
     if (pSettings->codeCompletion().enabled() && mParser && !inProject()) {
         mParser->invalidateFile(oldName);
     }
@@ -470,14 +465,13 @@ void Editor::setFilename(const QString &newName)
     if (mProject) {
         mProject->associateEditor(this);
     }
-    pMainWindow->fileSystemWatcher()->addPath(mFilename);
     setFileType(getFileType(mFilename));
     if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
-    emit renamed(oldName, newName , true);
+    emit fileRenamed(this, oldName, newName);
 
     initAutoBackup();
     return;
@@ -485,8 +479,8 @@ void Editor::setFilename(const QString &newName)
 
 void Editor::activate(bool focus)
 {
-    if (mEditorList)
-        mEditorList->activeEditor(this,focus);
+    if (mEditorManager)
+        mEditorManager->activeEditor(this,focus);
     else if (focus)
         setFocus();
 }
@@ -2996,7 +2990,7 @@ void Editor::initParser()
         } else {
             bool parserGot = false;
             if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-                Editor * e = pMainWindow->editorList()->getOpenedEditorByFilename(mContextFile);
+                Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(mContextFile);
                 if (e) {
                     mParser = e->parser();
                     parserGot=true;
@@ -3007,7 +3001,7 @@ void Editor::initParser()
                 mParser->setLanguage(calcParserLanguage());
                 mParser->setOnGetFileStream(
                             std::bind(
-                                &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                                &EditorManager::getContentFromOpenedEditor,pMainWindow->editorManager(),
                                 std::placeholders::_1, std::placeholders::_2));
                 resetCppParser(mParser);
                 mParser->setEnabled(
@@ -3116,7 +3110,8 @@ void Editor::resetParserIfNeeded()
 
 void Editor::reparseTodo()
 {
-    emit parseTodoRequested(mFilename, inProject());
+    if (pSettings->editor().parseTodos())
+        emit parseTodoRequested(mFilename, inProject());
 }
 
 void Editor::insertString(const QString &value, bool moveCursor)
@@ -4614,7 +4609,7 @@ void Editor::setContextFile(const QString &newContextFile)
         if (pSettings->codeCompletion().enabled()
                 && !pSettings->codeCompletion().shareParser()
                 && !mContextFile.isEmpty()) {
-            Editor * e = pMainWindow->editorList()->getOpenedEditorByFilename(mContextFile);
+            Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(mContextFile);
             if (e)
                 mParser = e->parser();
         }
@@ -4638,7 +4633,7 @@ PCppParser Editor::sharedParser(ParserLanguage language)
         parser->setLanguage(language);
         parser->setOnGetFileStream(
                     std::bind(
-                        &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                        &EditorManager::getContentFromOpenedEditor,pMainWindow->editorManager(),
                         std::placeholders::_1, std::placeholders::_2));
         resetCppParser(parser);
         parser->setEnabled(true);

@@ -90,19 +90,23 @@ public:
     QTabWidget *rightPageWidget() const;
 
 signals:
-    void editorCreated(Editor *);
     void editorClosed();
-    void editorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void editorOpenned();
-
 private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
 private slots:
-    void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
     void onEditorCaptionUpdated(Editor* e);
+    void onBreakpointAdded(const Editor* e, int line);
+    void onBreakpointRemoved(const Editor* e, int line);
+    void onBreakpointsCleared(const Editor* e);
+    void onEditorShown(Editor *e);
+    void onFileSaving(Editor *e, const QString& filename);
+    void onFileSaved(Editor *e, const QString& filename);
+    void onFileRenamed(Editor *e, const QString &oldFilename, const QString &newFilename);
+    void onFileSaveError(Editor *e, const QString& filename, const QString& reason);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

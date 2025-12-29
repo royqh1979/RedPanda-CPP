@@ -256,12 +256,14 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    bool inTab() { return mEditorList!=nullptr; }
+    bool inTab() { return mEditorManager!=nullptr; }
 
 signals:
-    void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void captionUpdated(Editor * e);
-    void fileSaved(const QString& filename, bool inProject);
+    void fileSaving(Editor *e, const QString& filename);
+    void fileSaveError(Editor *e, const QString& filename, const QString& reason);
+    void fileSaved(Editor *e, const QString& filename);
+    void fileRenamed(Editor *e, const QString& oldFilename, const QString& newFilename);
     void breakpointAdded(const Editor *e, int line);
     void breakpointRemoved(const Editor *e, int line);
     void breakpointsCleared(const Editor *e);
@@ -369,7 +371,7 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    EditorManager *mEditorList;
+    EditorManager *mEditorManager;
     Project* mProject;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
