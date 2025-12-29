@@ -57,7 +57,7 @@ enum class RunType {
 };
 
 
-class EditorList;
+class EditorManager;
 class QLabel;
 class QComboBox;
 class CompilerManager;
@@ -181,7 +181,7 @@ public:
 
     Debugger *debugger() const;
 
-    EditorList *editorList() const;
+    EditorManager *editorList() const;
 
     SearchInFileDialog *searchInFilesDialog() const;
 
@@ -896,7 +896,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;
-    EditorList *mEditorList;
+    EditorManager *mEditorList;
     QLabel *mFileInfoStatus;
     LabelWithMenu *mFileEncodingStatus;
     QLabel *mFileModeStatus;

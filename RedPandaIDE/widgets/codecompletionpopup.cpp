@@ -18,7 +18,7 @@
 #include "../utils.h"
 #include "../mainwindow.h"
 #include "../editor.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../symbolusagemanager.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"

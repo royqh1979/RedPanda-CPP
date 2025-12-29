@@ -57,6 +57,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
+    e->setStatementColors(pMainWindow->statementColors();
     QString fileTemplate;
     switch (e->fileType()) {
     case FileType::CSource:
@@ -82,6 +83,15 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     connect(e, &Editor::captionUpdated, this, &EditorList::onEditorCaptionUpdated);
     updateLayout();
     emit editorCreated(e);
+    //show event is trigged when this is added to the qtabwidget
+    if (!pMainWindow->openingFiles()
+            && !pMainWindow->openingProject()) {
+        if (e->inProject()) {
+            e->reparse(false);
+            e->reparseTodo();
+        }
+        //checkSyntaxInBack();
+    }
     return e;
 }
 

@@ -134,6 +134,7 @@ SOURCES += \
 #    debugger/dapprotocol.cpp \
 #    debugger/dapdebugger.cpp \    
     cpprefacter.cpp \
+    editormanager.cpp \
     parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
     parser/cpptokenizer.cpp \
@@ -190,7 +191,6 @@ SOURCES += \
     widgets/codecompletionpopup.cpp \
     widgets/cpudialog.cpp \
     editor.cpp \
-    editorlist.cpp \
     iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -273,6 +273,7 @@ HEADERS += \
 #    debugger/dapdebugger.h \    
     cpprefacter.h \
     customfileiconprovider.h \
+    editormanager.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
@@ -329,7 +330,6 @@ HEADERS += \
     widgets/codecompletionpopup.h \
     widgets/cpudialog.h \
     editor.h \
-    editorlist.h \
     iconsmanager.h \
     main.h \
     mainwindow.h \

@@ -48,7 +48,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include "editor.h"
 #include "systemconsts.h"
 #include "settings.h"
@@ -174,15 +174,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
     ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
     ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
-    mEditorList = new EditorList(ui->EditorTabsLeft,
+    mEditorList = new EditorManager(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
                                  ui->EditorPanel, this);
-    connect(mEditorList, &EditorList::editorRenamed,
+    connect(mEditorList, &EditorManager::editorRenamed,
             this, &MainWindow::onEditorRenamed);
-    connect(mEditorList, &EditorList::editorClosed,
+    connect(mEditorList, &EditorManager::editorClosed,
                this, &MainWindow::onEditorClosed);
-    connect(mEditorList, &EditorList::editorCreated,
+    connect(mEditorList, &EditorManager::editorCreated,
                 this, &MainWindow::onEditorCreated);
     mProject = nullptr;
     //delete in the destructor
@@ -806,7 +806,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(e->parser()!=nullptr);
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
-        ui->actionMove_To_Other_View->setEnabled(editorList()->pageCount()>1);
+        ui->actionMove_To_Other_View->setEnabled(editorManager()->pageCount()>1);
 
         ui->actionC_C_Header->setEnabled(true);
         ui->actionC_File->setEnabled(true);
@@ -5816,7 +5816,7 @@ SearchResultModel *MainWindow::searchResultModel()
     return mSearchResultModel;
 }
 
-EditorList *MainWindow::editorList() const
+EditorManager *MainWindow::editorManager() const
 {
     return mEditorList;
 }

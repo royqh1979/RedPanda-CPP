@@ -19,7 +19,7 @@
 #include "qt_utils/utils.h"
 #include "utils.h"
 #include "systemconsts.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include <parser/cppparser.h>
 #include "utils.h"
 #include "qt_utils/charsetinfo.h"
@@ -45,7 +45,7 @@
 #include "vcs/gitrepository.h"
 
 Project::Project(const QString &filename, const QString &name,
-                 EditorList* editorList,
+                 EditorManager* editorList,
                  QFileSystemWatcher* fileSystemWatcher,
                  QObject *parent) :
     QObject(parent),
@@ -59,12 +59,12 @@ Project::Project(const QString &filename, const QString &name,
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
-                    &EditorList::getContentFromOpenedEditor,mEditorList,
+                    &EditorManager::getContentFromOpenedEditor,mEditorList,
                     std::placeholders::_1, std::placeholders::_2));
     mFileSystemWatcher->addPath(directory());
 }
 
-std::shared_ptr<Project> Project::load(const QString &filename, EditorList *editorList, QFileSystemWatcher *fileSystemWatcher, QObject *parent)
+std::shared_ptr<Project> Project::load(const QString &filename, EditorManager *editorList, QFileSystemWatcher *fileSystemWatcher, QObject *parent)
 {
     std::shared_ptr<Project> project=std::make_shared<Project>(filename,
                                                                "",
@@ -79,7 +79,7 @@ std::shared_ptr<Project> Project::load(const QString &filename, EditorList *edit
 
 std::shared_ptr<Project> Project::create(
         const QString &filename, const QString &name,
-        EditorList *editorList, QFileSystemWatcher *fileSystemWatcher,
+        EditorManager *editorList, QFileSystemWatcher *fileSystemWatcher,
         const std::shared_ptr<ProjectTemplate> pTemplate,
         bool useCpp,  QObject *parent)
 {
@@ -2282,7 +2282,7 @@ void Project::renameFolderNode(PProjectModelNode node, const QString newName)
     emit nodeRenamed();
 }
 
-EditorList *Project::editorList() const
+EditorManager *Project::editorList() const
 {
     return mEditorList;
 }

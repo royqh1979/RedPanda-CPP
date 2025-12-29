@@ -23,7 +23,7 @@
 #include "settings.h"
 #include "widgets/cpudialog.h"
 #include "systemconsts.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>

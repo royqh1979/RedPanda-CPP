@@ -17,7 +17,7 @@
 #include "codecompletionlistview.h"
 #include "../mainwindow.h"
 #include "../editor.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include <QDebug>
 
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
@@ -46,7 +46,7 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 
 void CodeCompletionListView::focusInEvent(QFocusEvent *)
 {
-    Editor *editor = pMainWindow->editorList()->getEditor();
+    Editor *editor = pMainWindow->editorManager()->getEditor();
     if (editor) {
         editor->showCaret();
     }

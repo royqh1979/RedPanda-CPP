@@ -40,7 +40,7 @@ struct TabStop {
 
 class QTemporaryFile;
 
-class EditorList;
+class EditorManager;
 
 class FunctionTooltipWidget;
 
@@ -132,7 +132,7 @@ public:
                     const QByteArray& encoding,
                     FileType fileType,
                     const QString& contextFile,
-                    Project* pProject, bool isNew, EditorList* editorList);
+                    Project* pProject, bool isNew, EditorManager* editorManager);
 
     ~Editor();
 
@@ -369,7 +369,7 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    EditorList *mEditorList;
+    EditorManager *mEditorList;
     Project* mProject;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;

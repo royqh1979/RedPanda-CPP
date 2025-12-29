@@ -39,7 +39,7 @@
 #include "autolinkmanager.h"
 #include <qt_utils/charsetinfo.h>
 #include "parser/parserutils.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include "widgets/choosethemedialog.h"
 #include "thememanager.h"
 #include "utils/font.h"

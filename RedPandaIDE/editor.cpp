@@ -175,8 +175,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
         resetBookmarks();
         resetBreakpoints();
     }
-
-    mStatementColors = pMainWindow->statementColors();
 //    if (mParentPageControl) {
 //        //first showEvent triggered here
 //        mParentPageControl->addTab(this,"");
@@ -196,16 +194,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(verticalScrollBar(), &QScrollBar::valueChanged,
             this, &Editor::onScrollBarValueChanged);
     mInited=true;
-
-    //show event is trigged when this is added to the qtabwidget
-    if (!pMainWindow->openingFiles()
-            && !pMainWindow->openingProject()) {
-        if (inProject()) {
-            reparse(false);
-            reparseTodo();
-        }
-        //checkSyntaxInBack();
-    }
 }
 
 Editor::~Editor() {

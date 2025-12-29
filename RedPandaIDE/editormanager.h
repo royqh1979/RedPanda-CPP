@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef EDITORLIST_H
-#define EDITORLIST_H
+#ifndef EDITORMANAGER_H
+#define EDITORMANAGER_H
 
 #include <QTabWidget>
 #include <QSplitter>
@@ -25,7 +25,7 @@
 
 class Project;
 class Editor;
-class EditorList : public QObject
+class EditorManager : public QObject
 {
     Q_OBJECT
 public:
@@ -35,7 +35,7 @@ public:
         lstBoth
     };
 
-    explicit EditorList(QTabWidget* leftPageWidget,
+    explicit EditorManager(QTabWidget* leftPageWidget,
                         QTabWidget* rightPageWidget,
                         QSplitter* splitter,
                         QWidget* panel, QObject* parent = nullptr);

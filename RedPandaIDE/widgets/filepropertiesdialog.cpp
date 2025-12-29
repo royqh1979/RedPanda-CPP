@@ -18,7 +18,7 @@
 #include "systemconsts.h"
 #include "ui_filepropertiesdialog.h"
 #include "../mainwindow.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../editor.h"
 #include <qsynedit/constants.h>
 
@@ -88,8 +88,8 @@ void FilePropertiesDialog::calcFile(Editor *editor,
 
 void FilePropertiesDialog::showEvent(QShowEvent *)
 {
-    for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
-        Editor * editor =  (*(pMainWindow->editorList()))[i];
+    for (int i=0;i<pMainWindow->editorManager()->pageCount();i++) {
+        Editor * editor =  (*(pMainWindow->editorManager()))[i];
         if (editor == mActiveEditor) {
             ui->cbFiles->setCurrentIndex(i);
             break;
@@ -104,7 +104,7 @@ FilePropertiesModel::FilePropertiesModel(QObject *parent):QAbstractListModel(par
 
 int FilePropertiesModel::rowCount(const QModelIndex &) const
 {
-    return pMainWindow->editorList()->pageCount();
+    return pMainWindow->editorManager()->pageCount();
 }
 
 QVariant FilePropertiesModel::data(const QModelIndex &index, int role) const
@@ -113,8 +113,8 @@ QVariant FilePropertiesModel::data(const QModelIndex &index, int role) const
         return QVariant();
     int row = index.row();
     if (role == Qt::DisplayRole) {
-        if (row>=0 && row < pMainWindow->editorList()->pageCount()) {
-            Editor *editor = (*(pMainWindow->editorList()))[row];
+        if (row>=0 && row < pMainWindow->editorManager()->pageCount()) {
+            Editor *editor = (*(pMainWindow->editorManager()))[row];
             if (editor) {
                 return extractFileName(editor->filename());
             }
@@ -125,7 +125,7 @@ QVariant FilePropertiesModel::data(const QModelIndex &index, int role) const
 
 void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
 {
-    Editor *editor = (*(pMainWindow->editorList()))[index];
+    Editor *editor = (*(pMainWindow->editorManager()))[index];
     if (editor) {
         QFileInfo info(editor->filename());
 

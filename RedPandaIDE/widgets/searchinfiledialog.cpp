@@ -28,7 +28,7 @@
 #include <qsynedit/searcher/regexsearcher.h>
 #include "../editor.h"
 #include "../mainwindow.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../project.h"
 #include "../settings.h"
 #include "../systemconsts.h"
@@ -140,8 +140,8 @@ void SearchInFileDialog::doSearch(bool replace)
                     SearchFileScope::openedFiles
                     );
         // loop through editors, add results to message control
-        for (int i=0;i<pMainWindow->editorList()->pageCount();i++) {
-            Editor * e=pMainWindow->editorList()->operator[](i);
+        for (int i=0;i<pMainWindow->editorManager()->pageCount();i++) {
+            Editor * e=pMainWindow->editorManager()->operator[](i);
             if (e!=nullptr) {
                 fileSearched++;
                 PSearchResultTreeItem parentItem = batchFindInEditor(
@@ -212,7 +212,7 @@ void SearchInFileDialog::doSearch(bool replace)
 
             if (progressDlg.wasCanceled())
                 break;
-            Editor * e = pMainWindow->editorList()->getOpenedEditorByFilename(curFilename);
+            Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(curFilename);
             if (e) {
                 fileSearched++;
                 PSearchResultTreeItem parentItem = batchFindInEditor(
@@ -256,7 +256,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     useRegex,
                     SearchFileScope::currentFile
                     );
-        Editor * e= pMainWindow->editorList()->getEditor();
+        Editor * e= pMainWindow->editorManager()->getEditor();
         if (e!=nullptr) {
             fileSearched++;
             PSearchResultTreeItem parentItem = batchFindInEditor(

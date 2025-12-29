@@ -17,7 +17,7 @@
 #include "todoparser.h"
 #include "mainwindow.h"
 #include "editor.h"
-#include "editorlist.h"
+#include "editormanager.h"
 
 #include <QRegularExpression>
 
@@ -125,7 +125,7 @@ void TodoThread::doParseFile(const QString &filename)
     if (!syntaxer || syntaxer->language() == QSynedit::ProgrammingLanguage::Textfile)
         return;
     QStringList lines;
-    if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,lines)) {
+    if (!pMainWindow->editorManager()->getContentFromOpenedEditor(filename,lines)) {
         lines = readFileToLines(filename);
     }
     syntaxer->resetState();

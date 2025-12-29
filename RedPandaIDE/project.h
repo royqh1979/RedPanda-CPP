@@ -28,7 +28,7 @@
 class Project;
 class Editor;
 class CppParser;
-class EditorList;
+class EditorManager;
 class QFileSystemWatcher;
 
 enum ProjectModelNodeType {
@@ -194,17 +194,17 @@ class Project : public QObject
     Q_OBJECT
 public:
     explicit Project(const QString& filename, const QString& name,
-                     EditorList* editorList,
+                     EditorManager* editorList,
                      QFileSystemWatcher* fileSystemWatcher,
                      QObject *parent = nullptr);
 
     static std::shared_ptr<Project> load(const QString& filename,
-                                    EditorList* editorList,
+                                    EditorManager* editorList,
                                     QFileSystemWatcher* fileSystemWatcher,
                                     QObject *parent = nullptr);
     static std::shared_ptr<Project> create(const QString& filename,
                                            const QString& name,
-                                           EditorList* editorList,
+                                           EditorManager* editorList,
                                            QFileSystemWatcher* fileSystemWatcher,
                                            const std::shared_ptr<ProjectTemplate> pTemplate,
                                            bool useCpp,
@@ -287,7 +287,7 @@ public:
     ProjectModelType modelType() const;
     void setModelType(ProjectModelType type);
 
-    EditorList *editorList() const;
+    EditorManager *editorList() const;
 
     QFileSystemWatcher *fileSystemWatcher() const;
 
@@ -357,7 +357,7 @@ private:
 
     QList<PProjectModelNode> mCustomFolderNodes;
     ProjectModel mModel;
-    EditorList *mEditorList;
+    EditorManager *mEditorList;
     QFileSystemWatcher* mFileSystemWatcher;
 };
 

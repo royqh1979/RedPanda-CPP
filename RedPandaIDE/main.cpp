@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
             if (pSettings->editor().autoLoadLastFiles())
                 mainWindow.loadLastOpens();
         }
-        if (mainWindow.editorList()->pageCount()==0 && !mainWindow.project()) {
+        if (mainWindow.editorManager()->pageCount()==0 && !mainWindow.project()) {
             mainWindow.newEditor();
         }
 

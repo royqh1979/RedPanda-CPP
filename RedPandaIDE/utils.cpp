@@ -10,7 +10,7 @@
 #include <QOperatingSystemVersion>
 #include <QtXml>
 #include "editor.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include "settings.h"
 #include "mainwindow.h"
 #include "project.h"
@@ -217,7 +217,7 @@ QString parseMacros(const QString &s, const QMap<QString, QString> &macros)
 
 QMap<QString, QString> devCppMacroVariables()
 {
-    Editor *e = pMainWindow->editorList()->getEditor();
+    Editor *e = pMainWindow->editorManager()->getEditor();
 
     QMap<QString, QString> result = {
         {"DEFAULT", localizePath(QDir::currentPath())},

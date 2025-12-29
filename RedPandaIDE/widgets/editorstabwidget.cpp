@@ -20,7 +20,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include "../editor.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../mainwindow.h"
 
 EditorsTabWidget::EditorsTabWidget(QWidget* parent):QTabWidget(parent)

@@ -8,7 +8,7 @@
 #include <qsynedit/searcher/regexsearcher.h>
 #include "../utils.h"
 #include "../editor.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../mainwindow.h"
 
 SearchDialog::SearchDialog(QWidget *parent) :
@@ -87,7 +87,7 @@ void SearchDialog::doSearch(bool backward)
     bool regex, searchInSelection;
     QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
 
-    Editor *editor = pMainWindow->editorList()->getEditor();
+    Editor *editor = pMainWindow->editorManager()->getEditor();
     if (editor) {
         QSynedit::CharPos searchBegin, searchEnd, newSearchEnd;
         if (searchInSelection) {
@@ -164,7 +164,7 @@ void SearchDialog::doReplace(bool replaceAll)
     QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
     searchOptions.setFlag(QSynedit::SearchOption::ssoIncludeCurrentSelection);
 
-    Editor *editor = pMainWindow->editorList()->getEditor();
+    Editor *editor = pMainWindow->editorManager()->getEditor();
     if (editor) {
         QSynedit::CharPos searchBegin, searchEnd, newSearchEnd;
         if (searchInSelection) {

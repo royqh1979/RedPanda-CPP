@@ -16,7 +16,7 @@
  */
 #include "gdbmidebugger.h"
 #include "../mainwindow.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../utils.h"
 #include "../systemconsts.h"
 #include "../settings.h"
@@ -860,7 +860,7 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                                         if (mFileCache.contains(filename))
                                             contents = mFileCache.value(filename);
                                         else {
-                                            if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,contents))
+                                            if (!pMainWindow->editorManager()->getContentFromOpenedEditor(filename,contents))
                                                 contents = readFileToLines(filename);
                                             mFileCache[filename]=contents;
                                         }

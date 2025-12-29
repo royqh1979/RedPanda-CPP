@@ -22,7 +22,7 @@
 #include "mainwindow.h"
 #include "settings.h"
 #include "editor.h"
-#include "editorlist.h"
+#include "editormanager.h"
 #include "syntaxermanager.h"
 #include "project.h"
 
@@ -310,7 +310,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     if (!isC_CPPSourceFile(fileType))
         fileType = FileType::CCppHeader;
     editor.setFileType(fileType);
-    if (pMainWindow->editorList()->getContentFromOpenedEditor(
+    if (pMainWindow->editorManager()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.setContent(buffer);
     } else if (!fileExists(filename)){
@@ -373,7 +373,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
 void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
-    Editor * oldEditor=pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+    Editor * oldEditor=pMainWindow->editorManager()->getOpenedEditorByFilename(filename);
     if (oldEditor){
         QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
         int posY = 0;

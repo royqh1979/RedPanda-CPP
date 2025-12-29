@@ -30,7 +30,7 @@
 #include <QApplication>
 #include "../editor.h"
 #include "../mainwindow.h"
-#include "../editorlist.h"
+#include "../editormanager.h"
 #include "../parser/cppparser.h"
 #include "../autolinkmanager.h"
 #include "qt_utils/charsetinfo.h"
@@ -853,7 +853,7 @@ void Compiler::getParserForFile(const QString &filename)
     FileType fileType = getFileType(filename);
     if (fileType == FileType::CSource ||
             fileType == FileType::CppSource){
-        Editor* editor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+        Editor* editor = pMainWindow->editorManager()->getOpenedEditorByFilename(filename);
         if (editor && editor->parser()) {
             mParserForFile=editor->parser();
         }
