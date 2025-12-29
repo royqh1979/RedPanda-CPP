@@ -56,6 +56,7 @@ public:
 public slots:
     void onFileDeleteLines(const QString& filename, int startLine, int count, bool forProject);
     void onFileInsertLines(const QString& filename, int startLine, int count, bool forProject);
+    void onFileLineMoved(const QString& filename, int fromLine, int toLine, bool forProject);
 private:
     bool isBookmarkExists(const QString&filename, int line, bool forProject);
     void save(const QString& filename, const QString& projectFolder);

@@ -393,7 +393,7 @@ void BookmarkModel::onFileInsertLines(const QString &filename, int startLine, in
         bookmarks = mProjectBookmarks;
     else
         bookmarks = mBookmarks;
-    for (int i = bookmarks.count()-1;i>=0;i--){
+    for (int i = 0; i<bookmarks.count();i++){
         PBookmark bookmark = bookmarks[i];
         if  (bookmark->filename == filename
              && bookmark->line>=startLine) {
@@ -401,6 +401,37 @@ void BookmarkModel::onFileInsertLines(const QString &filename, int startLine, in
             if (forProject == mIsForProject)
                 emit dataChanged(createIndex(i,0),createIndex(i,2));
         }
+    }
+}
+
+void BookmarkModel::onFileLineMoved(const QString &filename, int fromLine, int toLine, bool forProject)
+{
+    QList<PBookmark> bookmarks;
+    if (forProject)
+        bookmarks = mProjectBookmarks;
+    else
+        bookmarks = mBookmarks;
+    for (int i = 0; i<bookmarks.count();i++){
+        bool changed = false;
+        PBookmark bookmark = bookmarks[i];
+        if  (bookmark->filename == filename) {
+           if (bookmark->line==fromLine) {
+               bookmark->line = toLine;
+               changed = true;
+           } else if (fromLine < toLine) {
+               if (fromLine < bookmark->line && bookmark->line <= toLine) {
+                   --bookmark->line;
+                   changed = true;
+               }
+           } else if (toLine < fromLine) {
+               if (toLine <= bookmark->line && bookmark->line <= fromLine) {
+                   ++bookmark->line;
+                   changed = true;
+               }
+           }
+        }
+        if (changed && forProject == mIsForProject)
+            emit dataChanged(createIndex(i,0),createIndex(i,2));
     }
 }
 

@@ -93,6 +93,9 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::fileSaving, this, &EditorManager::onFileSaving);
     connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
     connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
+    connect(e,&Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
+    connect(e,&Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
+    connect(e,&Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -276,6 +279,37 @@ void EditorManager::onFileSaveError(Editor *e, const QString& filename, const QS
     Q_UNUSED(e);
     pMainWindow->fileSystemWatcher()->addPath(filename);
     QMessageBox::critical(pMainWindow,tr("Save Error"), reason);
+}
+
+void EditorManager::onEditorLinesInserted(int startLine, int count)
+{
+    Editor * e = static_cast<Editor *>(sender());
+    pMainWindow->caretList().onLinesInserted(e,startLine,count);
+    pMainWindow->debugger()->breakpointModel()->onFileInsertLines(e->filename(), startLine,count, e->inProject());
+    pMainWindow->bookmarkModel()->onFileInsertLines(e->filename(), startLine,count, e->inProject());
+    e->resetBreakpoints();
+    e->resetBookmarks();
+}
+
+void EditorManager::onEditorLinesRemoved(int startLine, int count)
+{
+    Editor * e = static_cast<Editor *>(sender());
+    pMainWindow->caretList().onLinesDeleted(e,startLine,count);
+    pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(e->filename(),startLine,count,e->inProject());
+    pMainWindow->bookmarkModel()->onFileDeleteLines(e->filename(),startLine,count,e->inProject());
+    e->resetBreakpoints();
+    e->resetBookmarks();
+}
+
+void EditorManager::onEditorLineMoved(int fromLine, int toLine)
+{
+    Editor * e = static_cast<Editor *>(sender());
+    pMainWindow->caretList().onLinesMoved(e, fromLine, toLine);
+    pMainWindow->debugger()->breakpointModel()->onFileLineMoved(e->filename(),fromLine,toLine,e->inProject());
+    pMainWindow->bookmarkModel()->onFileDeleteLines(e->filename(),fromLine,toLine,e->inProject());
+
+    e->resetBreakpoints();
+    e->resetBookmarks();
 }
 
 QTabWidget *EditorManager::rightPageWidget() const

@@ -107,6 +107,9 @@ private slots:
     void onFileSaved(Editor *e, const QString& filename);
     void onFileRenamed(Editor *e, const QString &oldFilename, const QString &newFilename);
     void onFileSaveError(Editor *e, const QString& filename, const QString& reason);
+    void onEditorLinesInserted(int startLine, int count);
+    void onEditorLinesRemoved(int startLine, int count);
+    void onEditorLineMoved(int fromLine, int toLine);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

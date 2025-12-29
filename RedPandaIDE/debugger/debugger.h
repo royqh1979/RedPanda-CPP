@@ -145,6 +145,7 @@ public slots:
     void invalidateAllBreakpointNumbers(); // call this when gdb is stopped
     void onFileDeleteLines(const QString& filename, int startLine, int count, bool forProject);
     void onFileInsertLines(const QString& filename, int startLine, int count, bool forProject);
+    void onFileLineMoved(const QString& filename, int fromLine, int toLine, bool forProject);
 private:
     bool isForProject() const;
     void setIsForProject(bool newIsForProject);

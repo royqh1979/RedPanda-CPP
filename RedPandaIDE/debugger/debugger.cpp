@@ -1400,7 +1400,7 @@ void BreakpointModel::onFileDeleteLines(const QString& filename, int startLine, 
 void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, int count, bool forProject)
 {
     const QList<PBreakpoint> &list=breakpoints(forProject);
-    for (int i = list.count()-1;i>=0;i--){
+    for (int i = 0; i<list.count();i++){
         PBreakpoint breakpoint = list[i];
         if  (breakpoint->filename == filename
              && breakpoint->line>=startLine) {
@@ -1408,6 +1408,34 @@ void BreakpointModel::onFileInsertLines(const QString& filename, int startLine, 
             if (forProject == mIsForProject)
                 emit dataChanged(createIndex(i,0),createIndex(i,2));
         }
+    }
+}
+
+void BreakpointModel::onFileLineMoved(const QString &filename, int fromLine, int toLine, bool forProject)
+{
+    const QList<PBreakpoint> &list=breakpoints(forProject);
+
+    for (int i = 0; i<list.count();i++){
+        bool changed = false;
+        PBreakpoint breakpoint = list[i];
+        if  (breakpoint->filename == filename) {
+           if (breakpoint->line==fromLine) {
+               breakpoint->line = toLine;
+               changed = true;
+           } else if (fromLine < toLine) {
+               if (fromLine < breakpoint->line && breakpoint->line <= toLine) {
+                   --breakpoint->line;
+                   changed = true;
+               }
+           } else if (toLine < fromLine) {
+               if (toLine <= breakpoint->line && breakpoint->line <= fromLine) {
+                   ++breakpoint->line;
+                   changed = true;
+               }
+           }
+        }
+        if (changed && forProject == mIsForProject)
+            emit dataChanged(createIndex(i,0),createIndex(i,2));
     }
 }
 

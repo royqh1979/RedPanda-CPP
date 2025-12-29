@@ -162,11 +162,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     setAttribute(Qt::WA_Hover,true);
 
-    connect(this,&QSynEdit::linesDeleted,
-            this, &Editor::onLinesDeleted);
-    connect(this,&QSynEdit::linesInserted,
-            this, &Editor::onLinesInserted);
-
     setContextMenuPolicy(Qt::CustomContextMenu);
 
     mCanAutoSave = false;
@@ -1840,30 +1835,6 @@ void Editor::onTipEvalValueReady(const QString& value)
     }
     disconnect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
-}
-
-void Editor::onLinesDeleted(int first, int count)
-{
-    pMainWindow->caretList().onLinesDeleted(this,first,count);
-    pMainWindow->debugger()->breakpointModel()->onFileDeleteLines(mFilename,first,count,inProject());
-    pMainWindow->bookmarkModel()->onFileDeleteLines(mFilename,first,count, inProject());
-    resetBreakpoints();
-    resetBookmarks();
-    if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
-        //todo: update syntax issues
-    }
-}
-
-void Editor::onLinesInserted(int first, int count)
-{
-    pMainWindow->caretList().onLinesInserted(this,first,count);
-    pMainWindow->debugger()->breakpointModel()->onFileInsertLines(mFilename,first,count, inProject());
-    pMainWindow->bookmarkModel()->onFileInsertLines(mFilename,first,count, inProject());
-    resetBreakpoints();
-    resetBookmarks();
-    if (!pSettings->editor().syntaxCheckWhenLineChanged()) {
-        //todo: update syntax issues
-    }
 }
 
 void Editor::onFunctionTipsTimer()

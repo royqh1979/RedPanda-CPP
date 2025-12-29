@@ -125,6 +125,23 @@ void CaretList::onLinesInserted(const Editor *editor, int firstLine, int count)
     }
 }
 
+void CaretList::onLinesMoved(const Editor *editor, int fromLine, int toLine)
+{
+    for(PEditorCaret& caret:mList) {
+        if (caret->editor == editor) {
+            if (caret->line == fromLine)
+                caret->line = toLine;
+            else if (fromLine < toLine ) {
+                if (fromLine < caret->line && caret->line <= toLine)
+                    --caret->line;
+            } else if (toLine < fromLine) {
+                if (toLine <= caret->line && caret->line <= fromLine)
+                    caret->line++;
+            }
+        }
+    }
+}
+
 void CaretList::removeCaret(int index)
 {
     if (index<0 || index>=(int)mList.size())

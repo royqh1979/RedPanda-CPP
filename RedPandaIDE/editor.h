@@ -280,8 +280,6 @@ private slots:
     void onStatusChanged(QSynedit::StatusChanges changes);
     void onGutterClicked(Qt::MouseButton button, int x, int y, int line);
     void onTipEvalValueReady(const QString& value);
-    void onLinesDeleted(int first,int count);
-    void onLinesInserted(int first,int count);
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
     void onTooltipTimer();
