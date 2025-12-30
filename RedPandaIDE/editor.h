@@ -262,7 +262,6 @@ public:
     bool inTab() { return mEditorManager!=nullptr; }
 
 signals:
-    void captionUpdated(Editor * e);
     void fileSaving(Editor *e, const QString& filename);
     void fileSaveError(Editor *e, const QString& filename, const QString& reason);
     void fileSaved(Editor *e, const QString& filename);
@@ -294,7 +293,6 @@ private:
     bool completionPopupVisible() const;
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;
-    void updateCaption() { emit captionUpdated(this); }
     void loadContent(const QString& filename);
     void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch) const;

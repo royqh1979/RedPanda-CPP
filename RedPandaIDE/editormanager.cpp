@@ -84,7 +84,6 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
     e->setAutoBackupEnabled(true);
     parentPageControl->addTab(e, e->caption());
-    connect(e, &Editor::captionUpdated, this, &EditorManager::onEditorCaptionUpdated);
     updateLayout();
     e->setFunctionTooltip(pMainWindow->functionTip());
     e->setCompletionPopup(pMainWindow->completionPopup());
@@ -97,9 +96,10 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::fileSaving, this, &EditorManager::onFileSaving);
     connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
     connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
-    connect(e,&Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
-    connect(e,&Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
-    connect(e,&Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
+    connect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
+    connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
+    connect(e, &Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
+    connect(e, &Editor::statusChanged, this, &EditorManager::onEditorStatusChanged);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -194,7 +194,7 @@ void EditorManager::doRemoveEditor(Editor *e)
     delete e;
 }
 
-void EditorManager::onEditorCaptionUpdated(Editor* e)
+void EditorManager::updateEditorTabCaption(Editor* e)
 {
     QTabWidget *parentWidget = mLeftPageWidget;
     int index = mLeftPageWidget->indexOf(e);
@@ -314,6 +314,35 @@ void EditorManager::onEditorLineMoved(int fromLine, int toLine)
 
     e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
     e->resetBookmarks(pMainWindow->bookmarkModel());
+}
+
+void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
+{
+    Editor *e = static_cast<Editor *>(sender());
+    if (changes.testFlag(QSynedit::StatusChange::CaretX)
+            || changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        pMainWindow->updateStatusbarForLineCol(e);
+    }
+    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
+        pMainWindow->updateForStatusbarModeInfo(e);
+    }
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
+            || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
+            || changes.testFlag(QSynedit::StatusChange::Custom)) {
+        updateEditorTabCaption(e);
+    }
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
+        || changes.testFlag(QSynedit::StatusChange::Modified)
+        || changes.testFlag(QSynedit::StatusChange::Selection)
+        || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
+            || changes.testFlag(QSynedit::StatusChange::Custom)) {
+        pMainWindow->updateEditorActions(e);
+    }
+
+    if (changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        pMainWindow->caretList().addCaret(e,e->caretY(),e->caretX());
+        pMainWindow->updateCaretActions();
+    }
 }
 
 QTabWidget *EditorManager::rightPageWidget() const

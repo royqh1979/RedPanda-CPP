@@ -54,6 +54,7 @@ enum StatusChange {
     Selection = 0x0080,
     ReadOnlyChanged = 0x0100,
     Modified = 0x0200,
+    Custom = 0x0400,
 };
 
 Q_DECLARE_FLAGS(StatusChanges, StatusChange)
@@ -565,6 +566,7 @@ protected:
     bool dragging() const { return mDragging; }
 
     void invalidateAllNonTempLineWidth();
+    void setStatusChanged(StatusChanges changes);
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
@@ -584,7 +586,6 @@ private:
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);
     void internalSetCaretX(int value);
-    void setStatusChanged(StatusChanges changes);
     void notifyStatusChange(StatusChanges changes);
     void updateHScrollbar();
     void doUpdateHScrollbar();

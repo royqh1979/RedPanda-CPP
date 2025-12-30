@@ -850,7 +850,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         if (set) {
             if (e) {
                 if (!e->inProject()) {
-                    FileType fileType = getFileType(e->filename());
+                    FileType fileType = e->fileType();
                     switch(fileType) {
                     case FileType::CSource:
                         canCompile = set->canCompileC();
@@ -900,7 +900,7 @@ void MainWindow::updateCompileActions(const Editor *e)
                         && (mProject->options().type !=ProjectType::StaticLib);
                 canDebug = set->canDebug() && canRun;
                 if (e) {
-                    FileType fileType = getFileType(e->filename());
+                    FileType fileType = e->fileType();
                     if (fileType == FileType::CSource
                             || fileType == FileType::CppSource) {
                         canGenerateAssembly = true;
@@ -2303,6 +2303,12 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     if (!pSettings->editor().syntaxCheck()) {
         return;
     }
+    if (isQuitting())
+        return;
+    if (isClosingAll())
+        return;
+    if (e && e->inProject() && closingProject())
+        return;
 
     //not c or cpp file
     FileType fileType = e->fileType();
@@ -5250,7 +5256,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     Editor * editor = mEditorManager->getEditor();
     if (!editor)
         return;
-    FileType fileType=getFileType(editor->filename());
+    FileType fileType=editor->fileType();
     bool canDebug = isC_CPP_ASMSourceFile(fileType);
     QMenu menu(this);
     QSynedit::CharPos p;
@@ -7935,7 +7941,7 @@ void MainWindow::reparseNonProjectEditors()
 QString MainWindow::switchHeaderSourceTarget(Editor *editor)
 {
     QString filename=editor->filename();
-    if (isC_CPPHeaderFile(getFileType(filename))) {
+    if (isC_CPPHeaderFile(editor->fileType())) {
         QStringList lst;
         lst.push_back("c");
         lst.push_back("cc");
@@ -7949,7 +7955,7 @@ QString MainWindow::switchHeaderSourceTarget(Editor *editor)
                 return newFile;
             }
         }
-    } else if (getFileType(filename)==FileType::CSource) {
+    } else if (editor->fileType()==FileType::CSource) {
         QStringList lst;
         lst.push_back("h");
         foreach(const QString& suffix,lst) {
@@ -7958,7 +7964,7 @@ QString MainWindow::switchHeaderSourceTarget(Editor *editor)
                 return newFile;
             }
         }
-    } else if (getFileType(filename)==FileType::CppSource) {
+    } else if (editor->fileType()==FileType::CppSource) {
         QStringList lst;
         lst.push_back("h");
         lst.push_back("hpp");

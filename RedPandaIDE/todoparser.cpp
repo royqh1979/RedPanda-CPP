@@ -32,6 +32,12 @@ TodoParser::TodoParser(QObject *parent) : QObject(parent),
 void TodoParser::parseFile(const QString &filename,bool isForProject)
 {
     QMutexLocker locker(&mMutex);
+    if (pMainWindow->isQuitting())
+        return;
+    if (pMainWindow->isClosingAll())
+        return;
+    if (isForProject && pMainWindow->closingProject())
+        return;
     if (mThread) {
         return;
     }
@@ -60,6 +66,10 @@ void TodoParser::parseFile(const QString &filename,bool isForProject)
 void TodoParser::parseFiles(const QStringList &files)
 {
     QMutexLocker locker(&mMutex);
+    if (pMainWindow->isQuitting())
+        return;
+    if (pMainWindow->isClosingAll())
+        return;
     if (mThread) {
         return;
     }

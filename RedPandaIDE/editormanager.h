@@ -22,9 +22,9 @@
 #include <QWidget>
 #include <QRecursiveMutex>
 #include "utils.h"
+#include "editor.h"
 
 class Project;
-class Editor;
 class EditorManager : public QObject
 {
     Q_OBJECT
@@ -106,7 +106,7 @@ private:
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
 private slots:
-    void onEditorCaptionUpdated(Editor* e);
+    void updateEditorTabCaption(Editor* e);
     void onBreakpointAdded(const Editor* e, int line);
     void onBreakpointRemoved(const Editor* e, int line);
     void onBreakpointsCleared(const Editor* e);
@@ -118,6 +118,7 @@ private slots:
     void onEditorLinesInserted(int startLine, int count);
     void onEditorLinesRemoved(int startLine, int count);
     void onEditorLineMoved(int fromLine, int toLine);
+    void onEditorStatusChanged(QSynedit::StatusChanges changes);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

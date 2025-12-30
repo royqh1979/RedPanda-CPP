@@ -219,7 +219,7 @@ void Editor::loadFile(QString filename) {
 
     //FileError should by catched by the caller of loadFile();
     loadContent(filename);
-    updateCaption();
+    setStatusChanged(QSynedit::StatusChange::Custom);
 
 //    applyColorScheme(pSettings->editor().colorScheme());
     if (!inProject()) {
@@ -307,7 +307,7 @@ bool Editor::save(bool force, bool doReparse) {
         emit fileSaved(this, mFilename);
         setModified(false);
         mIsNew = false;
-        updateCaption();
+        setStatusChanged(QSynedit::StatusChange::Custom);
     } catch (FileError& exception) {
         emit fileSaveError(this, mFilename, exception.reason());
         return false;
@@ -412,7 +412,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
     }
-    updateCaption();
+    setStatusChanged(QSynedit::StatusChange::Custom);
 
     emit fileRenamed(this, mFilename, newName);
 
@@ -425,7 +425,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         emit fileSaved(this, mFilename);
         mIsNew = false;
         setModified(false);
-        updateCaption();
+        setStatusChanged(QSynedit::StatusChange::Custom);
     }  catch (FileError& exception) {
         emit fileSaveError(this, mFilename, exception.reason());
         return false;
@@ -1675,10 +1675,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 //        }
     }
     mLineCount = lineCount();
-    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
-            || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
-        updateCaption();
-    }
     if (changes.testFlag(QSynedit::StatusChange::Modified)) {
         mCurrentLineModified = true;
         if (inTab())
@@ -1748,7 +1744,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     if (changes.testFlag(QSynedit::StatusChange::CaretX)
             || changes.testFlag(QSynedit::StatusChange::CaretY)) {
-        pMainWindow->updateStatusbarForLineCol(this);
         // Update the function tip
         if (pSettings->editor().showFunctionTips()) {
             updateFunctionTip(false);
@@ -1791,22 +1786,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
-        pMainWindow->updateForStatusbarModeInfo(this);
-    }
-
     if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
         || changes.testFlag(QSynedit::StatusChange::Modified)
         || changes.testFlag(QSynedit::StatusChange::Selection)
         || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         if (!readOnly())
             initAutoBackup();
-        pMainWindow->updateEditorActions(this);
-    }
-
-    if (changes.testFlag(QSynedit::StatusChange::CaretY) && inTab()) {
-        pMainWindow->caretList().addCaret(this,caretY(),caretX());
-        pMainWindow->updateCaretActions();
     }
 }
 
@@ -4410,12 +4395,11 @@ void Editor::setFileType(FileType newFileType)
         return;
     doSetFileType(newFileType);
     applyColorScheme(pSettings->editor().colorScheme());
-    if (!inProject()) {
+    if (!inProject())
         initParser();
-        reparse(false);
-    }
+    reparse(false);
     reparseTodo();
-    pMainWindow->updateEditorActions(this);
+    emit statusChanged(QSynedit::StatusChange::Custom);
 }
 
 void Editor::doSetFileType(FileType newFileType)
@@ -5167,7 +5151,6 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
         reparse(true);
         checkSyntaxInBack();
         reparseTodo();
-        pMainWindow->updateEditorActions(this);
     }
 }
 
