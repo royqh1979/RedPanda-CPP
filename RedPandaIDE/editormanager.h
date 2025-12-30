@@ -24,6 +24,7 @@
 #include "utils.h"
 #include "editor.h"
 
+class MainWindow;
 class Project;
 class EditorManager : public QObject
 {
@@ -69,6 +70,8 @@ public:
 
     void getVisibleEditors(Editor*& left, Editor*& right) const;
     void updateLayout();
+
+    MainWindow * mainWindow();
 
 
     QTabWidget *findPageControlForEditor(Editor *e);

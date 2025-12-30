@@ -58,6 +58,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
+    e->setDebugger(pMainWindow->debugger());
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
         e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
@@ -735,6 +736,11 @@ void EditorManager::updateLayout()
         showLayout(LayoutShowType::lstRight);
     else
         showLayout(LayoutShowType::lstBoth);
+}
+
+MainWindow *EditorManager::mainWindow()
+{
+    return pMainWindow;
 }
 
 QTabWidget *EditorManager::findPageControlForEditor(Editor *e)

@@ -32,6 +32,8 @@
 #define USER_CODE_IN_REPL_POS_END "%REPL_END%"
 
 class Project;
+class Debugger;
+class MainWindow;
 struct TabStop {
     int x;
     int endX;
@@ -47,6 +49,8 @@ class FunctionTooltipWidget;
 class BreakpointModel;
 
 class BookmarkModel;
+
+class Settings;
 
 using PTabStop = std::shared_ptr<TabStop>;
 
@@ -373,7 +377,10 @@ private:
     QString mFilename;
     //QTabWidget* mParentPageControl;
     EditorManager *mEditorManager;
+    Debugger *mDebugger;
     Project* mProject;
+    Settings* mSettings;
+    MainWindow *mMainWindow;
     bool mIsNew;
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
     QColor mSyntaxErrorColor;
@@ -393,7 +400,6 @@ private:
     CodeCompletionPopup *mCompletionPopup;
     HeaderCompletionPopup *mHeaderCompletionPopup;
     FunctionTooltipWidget *mFunctionTooltip;
-    bool mUseCppSyntax;
     QString mCurrentWord;
     QString mCurrentDebugTipWord;
     TipType mCurrentTipType;
@@ -443,9 +449,6 @@ public:
     // QWidget interface
     void setProject(Project* pProject);
 
-    bool useCppSyntax() const;
-    void setUseCppSyntax(bool newUseCppSyntax);
-
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
     void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
 
@@ -473,6 +476,15 @@ public:
 
     CodeCompletionPopup *completionPopup() const;
     void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
+
+    Debugger *debugger() const;
+    void setDebugger(Debugger *newDebugger);
+
+    Settings *settings() const;
+    void setSettings(Settings *newSettings);
+
+    MainWindow *mainWindow() const;
+    void setMainWindow(MainWindow *newMainWindow);
 
 protected:
     // QWidget interface
