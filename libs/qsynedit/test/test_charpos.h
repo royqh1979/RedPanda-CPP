@@ -3,6 +3,7 @@
 #include <QtTest>
 #include <QCoreApplication>
 
+namespace QSynedit {
 class TestCharPos : public QObject
 {
     Q_OBJECT
@@ -14,4 +15,5 @@ private slots:
     void test_isInvalid();
     void test_compare();
 };
+}
 #endif

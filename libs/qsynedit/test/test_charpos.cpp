@@ -4,7 +4,7 @@
 #include "qsynedit/types.h"
 #include "test_charpos.h"
 
-using namespace QSynedit;
+namespace QSynedit {
 
 void TestCharPos::test_default_constructor() {
     CharPos pos;
@@ -76,5 +76,7 @@ void TestCharPos::test_compare()
     QVERIFY(pos4>=pos0);
     QVERIFY(pos5>=pos2);
     QVERIFY(pos6>=pos2);
+
+}
 
 }

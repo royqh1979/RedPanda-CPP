@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc,argv);
     //CharPos Test
     {
-        TestCharPos tc;
+        QSynedit::TestCharPos tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
     {

@@ -69,31 +69,31 @@ target_link_libraries(qsynedit PUBLIC
 # Test library #
 ################
 
-add_library(qsynedit_test STATIC)
+#add_library(qsynedit_test STATIC)
 
-target_qt_plain_cpp(qsynedit_test ${QSYNEDIT_QT_PLAIN_CPP})
+#target_qt_plain_cpp(qsynedit_test ${QSYNEDIT_QT_PLAIN_CPP})
 
-target_moc_classes(qsynedit_test ${QSYNEDIT_MOC_CLASSES})
+#target_moc_classes(qsynedit_test ${QSYNEDIT_MOC_CLASSES})
 
-target_compile_definitions(qsynedit PUBLIC
-    ${GLOBAL_COMPILE_DEFINITIONS}
-    ARCH_X86_64=1
-    ARCH_X86=1)
+#target_compile_definitions(qsynedit PUBLIC
+#    ${GLOBAL_COMPILE_DEFINITIONS}
+#    ARCH_X86_64=1
+#    ARCH_X86=1)
 
-target_include_directories(qsynedit_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+#target_include_directories(qsynedit_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(qsynedit_test PUBLIC
-    Qt::Core
-    Qt::Gui
-    Qt::Widgets
-    redpanda_qt_utils)
+#target_link_libraries(qsynedit_test PUBLIC
+#    Qt::Core
+#    Qt::Gui
+#    Qt::Widgets
+#    redpanda_qt_utils)
 
-target_compile_definitions(qsynedit_test PUBLIC
-    QSYNEDIT_TEST
-    ARCH_X86_64=1
-    ARCH_X86=1)
+#target_compile_definitions(qsynedit_test PUBLIC
+#    QSYNEDIT_TEST
+#    ARCH_X86_64=1
+#    ARCH_X86=1)
 
-add_library(qsynedit::test ALIAS qsynedit_test)
+#add_library(qsynedit::test ALIAS qsynedit_test)
 
 ################
 # Test program #
@@ -101,7 +101,11 @@ add_library(qsynedit::test ALIAS qsynedit_test)
 
 add_executable(test-qsynedit test/main.cpp)
 
+target_qt_plain_cpp(test-qsynedit
+    ${QSYNEDIT_QT_PLAIN_CPP})
+
 target_moc_classes(test-qsynedit
+    ${QSYNEDIT_MOC_CLASSES}
     test/test_charpos
     test/test_document
     test/test_qsynedit_base
@@ -109,17 +113,27 @@ target_moc_classes(test-qsynedit
     test/test_qsynedit_cpp_search_replace
     test/test_qsynedit_emoji)
 
+target_include_directories(test-qsynedit PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(test-qsynedit PRIVATE
     Qt::Core
     Qt::Gui
+    Qt::Widgets
     Qt::Test
-    qsynedit::test)
+    redpanda_qt_utils)
 
 add_custom_command(
     TARGET test-qsynedit POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "$<TARGET_PROPERTY:test-qsynedit,SOURCE_DIR>/test/resources"
         "$<TARGET_PROPERTY:test-qsynedit,BINARY_DIR>/resources")
+
+target_compile_definitions(test-qsynedit PUBLIC
+    ${GLOBAL_COMPILE_DEFINITIONS}
+    QSYNEDIT_TEST
+    ARCH_X86_64=1
+    ARCH_X86=1)
 
 add_test(
     NAME test-qsynedit
