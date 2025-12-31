@@ -18,10 +18,11 @@ CONFIG += ENABLE_SDCC
 
 APP_NAME = RedPandaCPP
 
-include(../version.inc)
-
-# TEST_VERSION = beta2
-system(git rev-list HEAD --count): TEST_VERSION = $$system(git rev-list HEAD --count)
+win32 {
+    APP_VERSION = $$system(../qmake/parse-version.ps1)
+} else {
+    APP_VERSION = $$system(../qmake/parse-version.sh)
+}
 
 contains(QMAKE_HOST.arch, x86_64):{
     DEFINES += ARCH_X86_64=1
@@ -66,15 +67,8 @@ win32: {
 DEFINES += LIBEXECDIR=\\\"$${LIBEXECDIR}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 
-!isEmpty(APP_VERSION_SUFFIX): {
-    DEFINES += APP_VERSION_SUFFIX=\\\"$${APP_VERSION_SUFFIX}\\\"
-}
+DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 
-isEmpty(TEST_VERSION) {
-    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
-} else {
-    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}.$${TEST_VERSION}\\\"
-}
 win32 {
     _WINDOWS_PREFER_OPENCONSOLE = $$(WINDOWS_PREFER_OPENCONSOLE)
     equals(_WINDOWS_PREFER_OPENCONSOLE, "ON") {

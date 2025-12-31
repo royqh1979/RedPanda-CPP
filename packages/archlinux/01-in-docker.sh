@@ -17,4 +17,4 @@ su builduser -c "git config --global --add safe.directory $PWD"
 su builduser -c ./packages/archlinux/buildpkg.sh
 
 mkdir -p dist
-cp /tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst dist/
+cp /tmp/redpanda-cpp/redpanda-cpp-*.pkg.tar.zst dist/

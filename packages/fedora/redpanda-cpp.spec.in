@@ -1,4 +1,4 @@
-Name: redpanda-cpp-git
+Name: redpanda-cpp
 Version: __VERSION__
 Release: 1%{?dist}
 Summary: A fast, lightweight, open source, and cross platform C++ IDE
@@ -7,10 +7,10 @@ URL: https://github.com/royqh1979/RedPanda-CPP
 Source0: RedPanda-CPP.tar.gz
 
 BuildRequires: gcc gcc-c++
-BuildRequires: qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
+BuildRequires: qt6-qtbase-devel qt6-qtsvg-devel qt6-qttools-devel cmake
 Requires: gcc gcc-c++ astyle
 Requires: glibc-static libstdc++-static libasan
-Requires: qt5-qtbase qt5-qtsvg
+Requires: qt6-qtbase qt6-qtsvg
 
 %description
 A lightweight but powerful C/C++ IDE
@@ -25,14 +25,15 @@ can only running under Windows.
 %build
 mkdir -p %{name}
 cd %{name}
-qmake-qt5 \
-    PREFIX=/usr \
-    "%{_builddir}/RedPanda-CPP/Red_Panda_CPP.pro"
+cmake -S "%{_builddir}/RedPanda-CPP" -B . \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
 make %{_smp_mflags}
 
 %install
 cd %{name}
-make INSTALL_ROOT="%{buildroot}" install
+make DESTDIR="%{buildroot}" install
 
 %files
 /usr/bin/RedPandaIDE

@@ -1,7 +1,3 @@
-includes("./version.lua")
-
-TEST_VERSION = "$(shell git rev-list HEAD --count)"
-
 add_rules("mode.debug", "mode.release")
 set_warnings("all", "extra", "pedantic")
 set_languages("cxx17", "c11")
@@ -107,7 +103,7 @@ rule("qt.ts")
         ]]
 
         local rcc = target:data("qt.rcc")
-        local name = target:name() .. "_qmake_qmake_qm_files"  -- same as qmake
+        local name = target:name() .. "_qmake_qmake_qm_files"
         local sourcefile_qrc = path.join(target:autogendir(), "rules", "qt", "ts", name .. ".qrc")
         io.writefile(sourcefile_qrc, qrc_content)
         -- get c++ source file for qrc
@@ -216,9 +212,7 @@ target("resources")
         add_installfiles("platform/linux/templates/(**.*)", {prefixdir = "share/$(app-name)/templates"})
     elseif is_os("windows") then
         add_installfiles("platform/windows/templates/(**.*)", {prefixdir = "bin/templates"})
-        if is_arch("x86_64") then
-            add_installfiles("platform/windows/templates-win64/(**.*)", {prefixdir = "bin/templates"})
-        end
+        add_installfiles("platform/windows/templates-win64/(**.*)", {prefixdir = "bin/templates"})
     end
 
     -- docs
@@ -239,9 +233,8 @@ target("resources")
 
     if is_xdg() then
         add_configfiles("platform/linux/RedPandaIDE.desktop.in", {
-            pattern = "$${(.-)}",
             variables = {
-                PREFIX = get_config("prefix"),
+                CMAKE_INSTALL_PREFIX = get_config("prefix"),
             },
         })
         add_installfiles("$(buildir)/RedPandaIDE.desktop", {prefixdir = "share/applications"})

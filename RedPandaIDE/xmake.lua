@@ -32,26 +32,34 @@ target("RedPandaIDE")
         "QtXml")
     add_includedirs(".")
 
+    -- resolve version
+
+    on_load(function (target)
+        import("core.base.json")
+        local version_json = io.readfile("version.json")
+        local version = json.decode(version_json)
+
+        local redpanda_version = format("%d.%d.%d", version.major, version.minor, version.patch)
+        try {function()
+            local outdata = os.iorunv("git", {"rev-list", "HEAD", "--count"})
+            redpanda_version = redpanda_version .. "." .. outdata:trim()
+        end}
+
+        if version.preRelease ~= "" then
+            redpanda_version = redpanda_version .. "-" .. version.preRelease
+            target:add("defines", "APP_VERSION_SUFFIX=\"" .. version.preRelease .. "\"")
+        end
+
+        target:add("defines", "REDPANDA_CPP_VERSION=\"" .. redpanda_version .. "\"")
+    end)
+
     -- defines
 
     add_options("app-name", "prefix", "libexecdir", "glibc-hwcaps")
     add_options("lua-addon", "sdcc", "vcs")
 
-    if APP_VERSION_SUFFIX ~= "" then
-        add_defines('APP_VERSION_SUFFIX="' .. APP_VERSION_SUFFIX .. '"')
-    end
-
-    if TEST_VERSION ~= "" then
-        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '.' .. TEST_VERSION .. '"')
-    else
-        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '"')
-    end
-
-    if is_arch("x86_64","x64") then
-        add_defines("ARCH_X86_64=1")
-    elseif is_arch("i[3456]86") then
-        add_defines("ARCH_X86=1")
-    end
+    add_defines("ARCH_X86_64=1")
+    add_defines("ARCH_X86=1")
 
     -- files
 
@@ -77,6 +85,7 @@ target("RedPandaIDE")
         -- problems
         "problems/freeprojectsetformat.cpp",
         "problems/problemcasevalidator.cpp",
+        -- utils
         "utils/escape.cpp",
         "utils/font.cpp",
         "utils/parsearg.cpp")
@@ -149,10 +158,10 @@ target("RedPandaIDE")
         "mainwindow",
         -- settings dialog
         "settingsdialog/compilerautolinkwidget",
-        "settingsdialog/compilersetdirectorieswidget",
-        "settingsdialog/compilersetoptionwidget",
         "settingsdialog/compilergaswidget",
         "settingsdialog/compilernasmwidget",
+        "settingsdialog/compilersetdirectorieswidget",
+        "settingsdialog/compilersetoptionwidget",
         "settingsdialog/debuggeneralwidget",
         "settingsdialog/editorautosavewidget",
         "settingsdialog/editorclipboardwidget",
@@ -219,6 +228,7 @@ target("RedPandaIDE")
         add_ui_classes(
             "settingsdialog/environmentfileassociationwidget",
             "settingsdialog/projectversioninfowidget")
+        add_files("resources/windows_icon.rc")
     end
 
     if has_config("lua-addon") then

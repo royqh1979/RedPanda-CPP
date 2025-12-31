@@ -3,8 +3,6 @@
 set -xeuo pipefail
 
 DISTRO_ID=$(grep ^ID= /etc/os-release | cut -d= -f2- | tr -d '"')
-VERSION_ID=$(grep ^VERSION_ID= /etc/os-release | cut -d= -f2- | tr -d '"')
-[[ -v JOBS ]] || JOBS=$(nproc)
 
 # install deps
 default_repositories=(
@@ -30,13 +28,12 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt update
-apt install -y --no-install-recommends build-essential debhelper devscripts equivs
+apt install -y --no-install-recommends build-essential debhelper devscripts equivs git
 
 ./packages/debian/builddeb.sh
 
 file=$(ls /tmp/redpanda-cpp_*.deb)
 basename=$(basename $file)
 
-# copy back to host
 mkdir -p dist
-cp $file dist/${basename/.deb/.$DISTRO_ID$VERSION_ID.deb}
+cp $file dist/${basename/.deb/.$DISTRO_ID.deb}

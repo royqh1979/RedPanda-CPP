@@ -13,4 +13,4 @@ Terminal=false
 Type=Application
 Categories=Development;Qt;
 Icon=redpandaide
-Path=$${PREFIX}/bin
+Path=${CMAKE_INSTALL_PREFIX}/bin

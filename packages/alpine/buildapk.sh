@@ -2,7 +2,7 @@
 
 set -xeuo pipefail
 
-TMP_FOLDER=/tmp/unsupported/redpanda-cpp-git
+TMP_FOLDER=/tmp/unsupported/redpanda-cpp
 [[ -d $TMP_FOLDER ]] && rm -rf $TMP_FOLDER
 mkdir -p "$TMP_FOLDER"
 

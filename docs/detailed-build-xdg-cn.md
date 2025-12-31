@@ -2,16 +2,19 @@
 
 ## 传统 Unix 方式（`./configure`–`make`–`make install`）
 
-- 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
-- 安装 Qt 5.15 或 6.8+ Base、SVG、Tools 模块，包括库和开发文件。
+- 安装支持 C++17 的 GCC 或 Clang。
+- 安装 Qt 6.8+ Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
 - 安装 astyle 以便在小熊猫 C++ 中对代码进行重新排版。
 
-### 基于 qmake 构建
+### 基于 CMake 构建
 
 1. 配置：
    ```bash
-   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
+   cmake -S /path/to/src -B /path/to/build \
+     -G "Unix Makefiles" \
+     -DCMAKE_BUILD_TYPE=Release \
+     -DCMAKE_INSTALL_PREFIX=/usr/local
    ```
 2. 构建：
    ```bash
@@ -23,10 +26,10 @@
    ```
 
 qmake 变量:
-- `PREFIX`：`$MAKE install` 的安装路径。
+- `CMAKE_INSTALL_PREFIX`：`$MAKE install` 的安装路径。
   - 小熊猫C++ 内部使用相对路径，不受影响。
   - `.desktop` 文件受影响。
-- `LIBEXECDIR`：辅助程序的路径，**相对于 `PREFIX`**。
+- `LIBEXECDIR`：辅助程序的路径，**相对于 `CMAKE_INSTALL_PREFIX`**。
   - Arch Linux 使用 `lib`。
 
 ### 基于 xmake 构建
@@ -46,6 +49,7 @@ qmake 变量:
 
 提示：`xmake f --help` 可以查看更多选项。
 
+<!--
 ### Debian/Ubuntu 的傻瓜式指南
 
 ```bash
@@ -63,22 +67,7 @@ sudo make install                                           # 安装
 # 运行
 RedPandaIDE
 ```
-
-## 适用于多架构/版本的 Debian 包
-
-可以在容器环境中构建这些包。支持 Linux 宿主和 Windows 宿主。
-
-```bash
-podman run --rm -v $PWD:/mnt -w /mnt --platform linux/amd64 docker.io/debian:12 ./packages/debian/01-in-docker.sh
-```
-
-平台（`--platform` 参数）可以是 `linux/amd64`、`linux/386`、`linux/arm64/v8`、`linux/arm/v7`、`linux/riscv64` 等。
-
-映像可以是 `docker.io/debian:12`、`docker.io/debian:11`、`docker.io/ubuntu:24.04`、`docker.io/ubuntu:23.10`、`docker.io/ubuntu:22.04` 等。
-
-可选环境变量：
-- `-e MIRROR=mirrors.kernel.org`：APT 镜像站。
-- `-e JOBS=4`：make 的并行任务数。
+-->
 
 ## 异架构的模拟本机构建（emulated native build）
 
