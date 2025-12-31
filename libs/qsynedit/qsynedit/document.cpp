@@ -870,6 +870,8 @@ QList<int> calcGlyphStartCharList(const QString &text)
     //qDebug()<<text<<glyphStartCharList;
     // if (text=="...}")
     //     qDebug()<<"where it comes?";
+    if (!text.isEmpty() && glyphStartCharList.isEmpty())
+        glyphStartCharList.append(0);
     return glyphStartCharList;
 }
 
