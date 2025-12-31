@@ -53,6 +53,29 @@ void TestDocument::test_load_from_file()
                                            "\tprintf(\"lala\\n\");",
                                            "\treturn 0;",
                                            "}"}));
+    QCOMPARE(mDoc->charToGlyphIndex(0,0),0);
+    QCOMPARE(mDoc->charToGlyphIndex(0,1),1);
+    QCOMPARE(mDoc->charToGlyphIndex(0,2),2);
+    QCOMPARE(mDoc->charToGlyphIndex(0,3),3);
+    QCOMPARE(mDoc->charToGlyphIndex(0,4),4);
+    QCOMPARE(mDoc->charToGlyphIndex(0,5),5);
+    QCOMPARE(mDoc->charToGlyphIndex(0,6),6);
+    QCOMPARE(mDoc->charToGlyphIndex(0,7),7);
+    QCOMPARE(mDoc->charToGlyphIndex(0,8),8);
+    QCOMPARE(mDoc->charToGlyphIndex(0,9),9);
+    QCOMPARE(mDoc->charToGlyphIndex(0,10),10);
+    QCOMPARE(mDoc->charToGlyphIndex(0,11),11);
+    QCOMPARE(mDoc->charToGlyphIndex(0,12),12);
+    QCOMPARE(mDoc->charToGlyphIndex(0,13),13);
+    QCOMPARE(mDoc->charToGlyphIndex(0,14),14);
+    QCOMPARE(mDoc->charToGlyphIndex(0,15),15);
+    QCOMPARE(mDoc->charToGlyphIndex(0,16),16);
+    QCOMPARE(mDoc->charToGlyphIndex(0,17),17);
+    QCOMPARE(mDoc->charToGlyphIndex(0,18),18);
+    QCOMPARE(mDoc->charToGlyphIndex(0,19),18);
+    QCOMPARE(mDoc->charToGlyphIndex(1,0),0);
+    QCOMPARE(mDoc->charToGlyphIndex(1,1),0);
+
 }
 
 void TestDocument::test_load_from_empty_file()
@@ -80,6 +103,12 @@ void TestDocument::test_emoji_glyphs()
     QCOMPARE(mDoc->glyph(0,1),"🌳");
     QCOMPARE(mDoc->glyph(0,2),"🌵");
     QCOMPARE(mDoc->glyph(0,3),"🌶");
+
+    QCOMPARE(mDoc->charToGlyphIndex(0,0),0);
+    QCOMPARE(mDoc->charToGlyphIndex(0,1),0);
+    QCOMPARE(mDoc->charToGlyphIndex(0,2),1);
+    QCOMPARE(mDoc->charToGlyphIndex(0,3),1);
+    QCOMPARE(mDoc->charToGlyphIndex(0,4),2);
 
     QCOMPARE(mDoc->glyphAt(0,0),"🌴");
     QCOMPARE(mDoc->glyphAt(0,1),"🌴");
@@ -467,6 +496,19 @@ void TestDocument::test_find_last_line_by_seq()
     QVERIFY(line!=nullptr);
     QCOMPARE(line->lineText(), mDoc->getLine(1));
     QCOMPARE(line->lineSeq(), seq);
+}
+
+void TestDocument::test_crash_on_debian_amd_64()
+{
+    mDoc=std::make_shared<Document>(QFont{});
+    QByteArray encoding;
+
+    mDoc->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    QCOMPARE(mDoc->getLine(0), "#include <iostream>");
+    QCOMPARE(mDoc->charToGlyphIndex(0,0), 0);
+    QCOMPARE(mDoc->charToGlyphStartChar(0,0),0);
+    QCOMPARE(mDoc->charToGlyphStartPosition(0, mDoc->getLine(0), 0),0);
 }
 
 void TestDocument::initSignalTest()

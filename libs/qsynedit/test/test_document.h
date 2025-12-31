@@ -67,6 +67,8 @@ private slots:
     void test_clear();
     void test_find_last_line_by_seq();
 
+    void test_crash_on_debian_amd_64();
+
     void initSignalTest();
     void onChanged();
 };
