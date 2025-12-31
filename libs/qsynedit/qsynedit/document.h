@@ -613,6 +613,9 @@ public:
 
     bool forceMonospace() const { return mGlyphCalculator.forceMonospace(); }
     void setForceMonospace(bool newForceMonospace);
+#ifdef QSYNEDIT_TEST
+    QList<int> getGlyphStartCharListForTest(int line);
+#endif
 
 public slots:
     void invalidateAllNonTempLineWidth();
@@ -641,7 +644,6 @@ private:
     QList<int> getGlyphStartCharList(int line, const QString &lineText);
     QList<int> getGlyphStartCharList(int line);
     QList<int> getGlyphStartPositionList(int line);
-    int getLineWidth(int line);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
@@ -664,7 +666,7 @@ private:
 
     GlyphCalculator mGlyphCalculator;
 
-    friend class QSynEditPainter;
+    friend class QSynEditPainter;    
 };
 
 enum class ChangeReason {

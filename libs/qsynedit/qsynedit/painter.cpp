@@ -1068,7 +1068,7 @@ void QSynEditPainter::paintLines()
             glyphStartPositionsList = glyphStartCharList;
         } else {
             glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine);
-            mCurrentLineWidth = mEdit->mDocument->getLineWidth(vLine);
+            mCurrentLineWidth = mEdit->mDocument->lineWidth(vLine);
         }
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last

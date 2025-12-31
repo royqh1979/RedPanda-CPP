@@ -583,6 +583,13 @@ void Document::setForceMonospace(bool newForceMonospace)
         invalidateAllLineWidth();
 }
 
+#ifdef QSYNEDIT_TEST
+QList<int> Document::getGlyphStartCharListForTest(int line)
+{
+    QMutexLocker locker(&mMutex);
+    return mLines[line]->glyphStartCharList();;
+}
+#endif
 void Document::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
@@ -1206,11 +1213,6 @@ QList<int> Document::getGlyphStartCharList(int line)
 QList<int> Document::getGlyphStartPositionList(int line)
 {
     return mLines[line]->glyphStartPositionList();
-}
-
-int Document::getLineWidth(int line)
-{
-    return mLines[line]->mWidth;
 }
 
 NewlineType Document::getNewlineType() const

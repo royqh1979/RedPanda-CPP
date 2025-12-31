@@ -38,6 +38,7 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void test_load_from_file();
+    void test_load_from_file2();
     void test_load_from_empty_file();
     void test_emoji_glyphs();
     void test_set_text();
@@ -47,6 +48,7 @@ private slots:
     void test_add_line();
     void test_add_lines();
 
+    void test_search_segment_index();
     void test_insert_line();
     void test_insert_line1();
     void test_insert_line2();

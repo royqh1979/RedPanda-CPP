@@ -78,6 +78,17 @@ void TestDocument::test_load_from_file()
 
 }
 
+void TestDocument::test_load_from_file2()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
+
+    QCOMPARE(mDoc->getLine(0), "#include <iostream>");
+    QCOMPARE(mDoc->getGlyphStartCharListForTest(0),
+             QList<int>({0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18}));
+}
+
 void TestDocument::test_load_from_empty_file()
 {
     QByteArray encoding;
@@ -208,6 +219,14 @@ void TestDocument::test_add_lines()
 
     //signals
     QCOMPARE(mChangedCount,1);
+}
+
+void TestDocument::test_search_segment_index()
+{
+    QString line = "#include <iostream>";
+    QList<int> glyphStartCharList({0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18});
+    QCOMPARE(searchForSegmentIdx(glyphStartCharList,line.length(),0),0);
+
 }
 
 void TestDocument::test_insert_line()
@@ -506,8 +525,6 @@ void TestDocument::test_crash_on_debian_amd_64()
     mDoc->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
     QCOMPARE(mDoc->getLine(0), "#include <iostream>");
-    QCOMPARE(mDoc->charToGlyphIndex(0,0), 0);
-    QCOMPARE(mDoc->charToGlyphStartChar(0,0),0);
     QCOMPARE(mDoc->charToGlyphStartPosition(0, mDoc->getLine(0), 0),0);
 }
 
