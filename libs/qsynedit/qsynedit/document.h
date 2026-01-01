@@ -635,12 +635,12 @@ private:
     bool lineWidthValid(int line);
     void beginSetLinesWidth();
     void endSetLinesWidth();
-    void setLineWidth(int line, int newWidth, const QList<int> glyphStartPositionList);
+    void setLineWidth(int line, int newWidth, const QList<int> &glyphStartPositionList);
     void updateMaxLineWidthChanged();
     void updateMaxLineWidthAndNotify();
 
-    int xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const;
-    int charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charPos) const;
+    int xposToGlyphIndex(int strWidth, const QList<int> &glyphPositionList, int xpos) const;
+    int charToGlyphIndex(const QString& str, const QList<int> &glyphStartCharList, int charPos) const;
     QList<int> getGlyphStartCharList(int line, const QString &lineText);
     QList<int> getGlyphStartCharList(int line);
     QList<int> getGlyphStartPositionList(int line);

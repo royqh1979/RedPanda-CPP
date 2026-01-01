@@ -948,19 +948,9 @@ int Document::charToGlyphIndex(int line, int charIdx) const
     return charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charIdx);
 }
 
-int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charIdx) const
+int Document::charToGlyphIndex(const QString& str, const QList<int> &glyphStartCharList, int charIdx) const
 {
     return searchForSegmentIdx(glyphStartCharList, str.length(), charIdx);
-    // if (charIdx>=str.length())
-    //     return glyphStartCharList.length();
-    // for (int i=0;i<glyphStartCharList.length();i++) {
-    //     if (glyphStartCharList[i]>charIdx) {
-    //         Q_ASSERT(i-1>=0);
-    //         return i-1;
-    //     }
-    // }
-    // Q_ASSERT(glyphStartCharList.length()-1>=0);
-    // return glyphStartCharList.length()-1;
 }
 
 QList<int> GlyphCalculator::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, const QFontMetrics &fontMetrics, int left, int &right) const
@@ -992,17 +982,9 @@ int Document::xposToGlyphIndex(int line, int xpos) const
     return xposToGlyphIndex(mLines[line]->width(), glyphPositionList, xpos);
 }
 
-int Document::xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const
+int Document::xposToGlyphIndex(int strWidth, const QList<int> &glyphPositionList, int xpos) const
 {
     return searchForSegmentIdx(glyphPositionList,strWidth,xpos);
-    // if (xpos>=strWidth)
-    //     return glyphPositionList.length();
-    // for (int i=0;i<glyphPositionList.length();i++) {
-    //     if (glyphPositionList[i]>xpos) {
-    //         return i-1;
-    //     }
-    // }
-    // return glyphPositionList.length()-1;
 }
 
 int Document::charToGlyphStartPosition(int line, int charPos) const
@@ -1136,7 +1118,7 @@ void Document::endSetLinesWidth()
     }
 }
 
-void Document::setLineWidth(int line, int newWidth, const QList<int> glyphStartPositionList)
+void Document::setLineWidth(int line, int newWidth, const QList<int> &glyphStartPositionList)
 {
     QMutexLocker locker(&mMutex);
     if (line<0 || line>=count())
