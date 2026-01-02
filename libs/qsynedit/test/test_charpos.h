@@ -1,7 +1,6 @@
 #ifndef TEST_CHARPOS_H
 #define TEST_CHARPOS_H
-#include <QtTest>
-#include <QCoreApplication>
+#include <QObject>
 
 namespace QSynedit {
 class TestCharPos : public QObject

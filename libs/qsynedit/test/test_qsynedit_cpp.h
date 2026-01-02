@@ -1,7 +1,5 @@
 #ifndef TEST_QSYNEDIT_CPP_H
 #define TEST_QSYNEDIT_CPP_H
-#include <QtTest>
-#include <QCoreApplication>
 #include "test_qsynedit_base.h"
 
 namespace QSynedit{

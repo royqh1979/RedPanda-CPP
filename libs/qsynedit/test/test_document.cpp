@@ -1,4 +1,4 @@
-#include <QtTest>
+#include <QTest>
 #include <QCoreApplication>
 #include "test_document.h"
 #include "qsynedit/document.h"

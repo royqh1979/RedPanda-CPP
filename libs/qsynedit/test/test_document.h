@@ -1,8 +1,5 @@
 #ifndef TEST_DOCUMENT_H
 #define TEST_DOCUMENT_H
-#include <QtTest>
-#include <QCoreApplication>
-
 namespace QSynedit {
 class TestDocumentHelpers : public QObject
 {

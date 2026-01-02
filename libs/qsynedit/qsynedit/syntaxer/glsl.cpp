@@ -126,7 +126,7 @@ GLSLSyntaxer::GLSLSyntaxer(): Syntaxer()
                                                                 TokenType::Identifier);
     addAttribute(mVariableAttribute);
 
-    resetState();
+    GLSLSyntaxer::resetState();
 }
 
 const PTokenAttribute &GLSLSyntaxer::preprocessorAttribute() const

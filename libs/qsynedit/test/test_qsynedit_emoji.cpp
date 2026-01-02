@@ -1,4 +1,4 @@
-#include <QtTest>
+#include <QTest>
 #include <QCoreApplication>
 
 #include "test_qsynedit_emoji.h"
@@ -42,8 +42,8 @@ void TestQSyneditEmoji::test_move_caret_x_data()
 {
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
-    QTest::addColumn<QList<StatusChanges>>("statusChanges");
-    QTest::addColumn<QList<StatusChanges>>("expect_statusChange");
+    QTest::addColumn<QList<int>>("statusChanges");
+    QTest::addColumn<QList<int>>("expect_statusChange");
 
     clearContent();
     {
@@ -51,14 +51,14 @@ void TestQSyneditEmoji::test_move_caret_x_data()
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Right);
         QTestData& td = QTest::newRow("forward in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
 
     loadDemoFile();
@@ -67,63 +67,63 @@ void TestQSyneditEmoji::test_move_caret_x_data()
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward at file start")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{31,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Right);
         QTestData& td = QTest::newRow("forward at file end")<<mEdit->caretXY()<<CharPos{31,9};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,8});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward at line start")<<mEdit->caretXY()<<CharPos{12,7};
-        td << mStatusChanges << QList<StatusChanges>{(StatusChange::CaretX | StatusChange::CaretY)};
+        td << mStatusChanges << QList<int>{(StatusChange::CaretX | StatusChange::CaretY)};
     }
     {
         mEdit->setCaretXY(CharPos{0,8});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Right);
         QTestData& td = QTest::newRow("forward at line start")<<mEdit->caretXY()<<CharPos{2,8};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{16,8});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward at line end")<<mEdit->caretXY()<<CharPos{14,8};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{16,8});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Right);
         QTestData& td = QTest::newRow("forward at line end")<<mEdit->caretXY()<<CharPos{0,9};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX | StatusChange::CaretY};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::CaretY};
     }
     {
         mEdit->setCaretXY(CharPos{31,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward on emoji zwj sequence")<<mEdit->caretXY()<<CharPos{26,9};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{26,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Left);
         QTestData& td = QTest::newRow("backward on emoji sequence")<<mEdit->caretXY()<<CharPos{21,9};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{11,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Right);
-        QTestData& td = QTest::newRow("backward on emoji zwj sequence")<<mEdit->caretXY()<<CharPos{16,9};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX};
+        QTestData& td = QTest::newRow("backward on emoji zwj sequence 2")<<mEdit->caretXY()<<CharPos{16,9};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX};
     }
 }
 
@@ -131,8 +131,8 @@ void TestQSyneditEmoji::test_move_caret_x()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);
-    QFETCH(QList<StatusChanges>, statusChanges);
-    QFETCH(QList<StatusChanges>, expect_statusChange);
+    QFETCH(QList<int>, statusChanges);
+    QFETCH(QList<int>, expect_statusChange);
     QCOMPARE(pos, expect);
     QCOMPARE(statusChanges, expect_statusChange);
 }
@@ -141,8 +141,8 @@ void TestQSyneditEmoji::test_move_caret_y_data()
 {
     QTest::addColumn<CharPos>("pos");
     QTest::addColumn<CharPos>("expect");
-    QTest::addColumn<QList<StatusChanges>>("statusChanges");
-    QTest::addColumn<QList<StatusChanges>>("expect_statusChange");
+    QTest::addColumn<QList<int>>("statusChanges");
+    QTest::addColumn<QList<int>>("expect_statusChange");
 
     clearContent();
     {
@@ -150,28 +150,28 @@ void TestQSyneditEmoji::test_move_caret_y_data()
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Up);
         QTestData& td = QTest::newRow("Up in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Down in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::PageUp);
         QTestData& td = QTest::newRow("Page Up in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::PageDown);
         QTestData& td = QTest::newRow("Page Down in empty doc")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
 
     loadDemoFile();
@@ -181,42 +181,42 @@ void TestQSyneditEmoji::test_move_caret_y_data()
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Up);
         QTestData& td = QTest::newRow("Up at file start")<<mEdit->caretXY()<<CharPos{0,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{4,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Up);
         QTestData& td = QTest::newRow("Up at first line")<<mEdit->caretXY()<<CharPos{4,0};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{3,1});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Up);
         QTestData& td = QTest::newRow("Up in the middle of emoji")<<mEdit->caretXY()<<CharPos{2,0};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretY | StatusChange::CaretX};
+        td << mStatusChanges << QList<int>{StatusChange::CaretY | StatusChange::CaretX};
     }
     {
         mEdit->setCaretXY(CharPos{4,0});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Down in the middle of emoji")<<mEdit->caretXY()<<CharPos{3,1};
-        td << mStatusChanges << QList<StatusChanges>{StatusChange::CaretX | StatusChange::CaretY};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::CaretY};
     }
     {
         mEdit->setCaretXY(CharPos{31,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Down at file end")<<mEdit->caretXY()<<CharPos{31,9};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
     {
         mEdit->setCaretXY(CharPos{0,9});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Down at lastline")<<mEdit->caretXY()<<CharPos{0,9};
-        td << mStatusChanges << QList<StatusChanges>{};
+        td << mStatusChanges << QList<int>{};
     }
 }
 
@@ -224,8 +224,8 @@ void TestQSyneditEmoji::test_move_caret_y()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);
-    QFETCH(QList<StatusChanges>, statusChanges);
-    QFETCH(QList<StatusChanges>, expect_statusChange);
+    QFETCH(QList<int>, statusChanges);
+    QFETCH(QList<int>, expect_statusChange);
     QCOMPARE(pos, expect);
     QCOMPARE(statusChanges, expect_statusChange);
 }
@@ -270,7 +270,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
@@ -291,7 +291,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
                                       (StatusChange::CaretX | StatusChange::Modified),
                                       (StatusChange::CaretX | StatusChange::Modified),
@@ -313,7 +313,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
                                       (StatusChange::CaretX | StatusChange::Modified),
                                       (StatusChange::CaretX | StatusChange::Modified),
@@ -333,7 +333,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({2,2,2}));
@@ -350,7 +350,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3,3}));
@@ -367,7 +367,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretY | StatusChange::CaretX | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -388,7 +388,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -405,7 +405,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       ( StatusChange::CaretX | StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3,3}));
@@ -422,7 +422,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({2,2,2}));
@@ -442,7 +442,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({2,2,2}));
@@ -459,7 +459,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3,3}));
@@ -476,7 +476,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretY | StatusChange::CaretX | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -523,7 +523,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::Modified | StatusChange::ModifyChanged),
                                       (StatusChange::Modified),
              }));
@@ -543,7 +543,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::Modified),
                                       (StatusChange::Modified),
              }));
@@ -562,7 +562,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -579,7 +579,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
@@ -600,7 +600,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::Modified | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
@@ -617,7 +617,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::Modified | StatusChange::CaretX | StatusChange::CaretY)
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -637,8 +637,8 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
-                                      (StatusChange::Modified),
+             QList<int>({
+                                      StatusChange::Modified ,
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
@@ -654,7 +654,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
@@ -700,7 +700,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
@@ -721,7 +721,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
@@ -740,7 +740,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -757,7 +757,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
@@ -778,7 +778,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
@@ -795,7 +795,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX |  StatusChange::CaretY | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -815,7 +815,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::Modified),
              }));
     QCOMPARE(mReparseStarts, QList<int>({0,0}));
@@ -832,7 +832,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
-             QList<StatusChanges>({
+             QList<int>({
                                       (StatusChange::CaretX | StatusChange::CaretY | StatusChange::ModifyChanged),
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));

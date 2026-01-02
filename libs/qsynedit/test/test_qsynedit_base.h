@@ -1,7 +1,6 @@
 #ifndef TEST_QSYNEDIT_BASE_H
 #define TEST_QSYNEDIT_BASE_H
-#include <QtTest>
-#include <QCoreApplication>
+#include <QTest>
 #include "qsynedit/qsynedit.h"
 
 template <>inline char *QTest::toString(const QSynedit::CharPos &pos) {
@@ -21,7 +20,7 @@ protected:
     QList<int> mInsertLineCounts;
     QList<int> mLineMovedFroms;
     QList<int> mLineMovedTos;
-    QList<StatusChanges> mStatusChanges;
+    QList<int> mStatusChanges;
     QList<int> mReparseStarts;
     QList<int> mReparseCounts;
 protected:

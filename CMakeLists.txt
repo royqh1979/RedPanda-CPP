@@ -86,7 +86,7 @@ endif()
 
 function(target_qt_plain_cpp target)
     foreach (arg IN LISTS ARGN)
-        target_sources(${target} PRIVATE ${arg}.cpp)
+        target_sources(${target} PRIVATE ${arg}.cpp ${arg}.h)
         # for Qt 5 lupdate
         list(APPEND ${target}_LUPDATE_SOURCES ${arg}.cpp)
         set(${target}_LUPDATE_SOURCES ${${target}_LUPDATE_SOURCES} PARENT_SCOPE)

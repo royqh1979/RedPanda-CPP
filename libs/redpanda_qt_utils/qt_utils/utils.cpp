@@ -623,7 +623,7 @@ float pixelToPoint(float pixel)
 }
 
 
-void decodeKey(const int combinedKey, int &key, Qt::KeyboardModifiers &modifiers)
+void decodeKey(int combinedKey, int &key, Qt::KeyboardModifiers &modifiers)
 {
     modifiers = Qt::NoModifier;
     if (combinedKey & Qt::ShiftModifier) {

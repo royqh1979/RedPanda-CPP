@@ -64,7 +64,7 @@ struct CharPos {
     bool operator<=(const CharPos& coord) const;
     bool operator!=(const CharPos& coord) const;
 
-    bool isValid() const { return ch>=0 && line >=0; };
+    bool isValid() const { return ch>=0 && line >=0; }
 };
 
 QDataStream &operator<<(QDataStream &out, const CharPos &data);

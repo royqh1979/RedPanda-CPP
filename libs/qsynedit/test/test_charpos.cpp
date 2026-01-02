@@ -1,7 +1,5 @@
-#include <QtTest>
-#include <QCoreApplication>
-
 #include "qsynedit/types.h"
+#include <QTest>
 #include "test_charpos.h"
 
 namespace QSynedit {

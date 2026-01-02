@@ -179,7 +179,7 @@ LuaSyntaxer::LuaSyntaxer(): Syntaxer()
     mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences,
                                                                             TokenType::String);
     addAttribute(mStringEscapeSequenceAttribute);
-    resetState();
+    LuaSyntaxer::resetState();
 }
 
 const PTokenAttribute &LuaSyntaxer::invalidAttribute() const

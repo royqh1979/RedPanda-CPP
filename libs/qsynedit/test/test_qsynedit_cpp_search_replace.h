@@ -1,12 +1,9 @@
 #ifndef TEST_QSYNEDIT_CPP_SEARCH_REPLACE_H
 #define TEST_QSYNEDIT_CPP_SEARCH_REPLACE_H
-#include <QtTest>
-#include <QCoreApplication>
-#include "qsynedit/qsynedit.h"
+#include <qsynedit/qsynedit.h>
 
 namespace QSynedit{
 
-class QSynEdit;
 class Searcher;
 
 class TestQSyneditCppSearchReplace : public QObject

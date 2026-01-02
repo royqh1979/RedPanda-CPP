@@ -249,7 +249,7 @@ CppSyntaxer::CppSyntaxer(): Syntaxer()
     mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable,
                                                                 TokenType::Identifier);
     addAttribute(mVariableAttribute);
-    resetState();
+    CppSyntaxer::resetState();
 
     mHandleLastBackSlash = true;
 }
