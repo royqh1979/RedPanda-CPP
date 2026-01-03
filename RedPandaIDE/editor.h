@@ -136,12 +136,6 @@ public:
 
     explicit Editor(QWidget *parent);
 
-    explicit Editor(QWidget *parent, const QString& filename,
-                    const QByteArray& encoding,
-                    FileType fileType,
-                    const QString& contextFile,
-                    Project* pProject, bool isNew, EditorManager* editorManager);
-
     ~Editor();
 
     //tell the compiler to prohibit copy/moving editor objects ( we should only use pointers to the editor object)
@@ -485,6 +479,9 @@ public:
 
     MainWindow *mainWindow() const;
     void setMainWindow(MainWindow *newMainWindow);
+
+    EditorManager *editorManager() const;
+    void setEditorManager(EditorManager *newEditorManager);
 
 protected:
     // QWidget interface

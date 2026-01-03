@@ -74,22 +74,9 @@ static QSet<QString> CppTypeQualifiers {
 };
 
 Editor::Editor(QWidget *parent):
-    Editor{parent,"untitled",ENCODING_AUTO_DETECT, FileType::None, QString(), nullptr,true,nullptr}
-{
-}
-
-Editor::Editor(QWidget *parent, const QString& filename,
-               const QByteArray& encoding, FileType fileType,
-               const QString& contextFile, Project* pProject,
-               bool isNew, EditorManager* editorList):
     QSynEdit{parent},
     mInited{false},
-    mEncodingOption{encoding},
-    mFilename{filename},
-    mEditorManager{editorList},
-    mProject{pProject},
     mSettings{pSettings},
-    mIsNew{isNew},
     mSyntaxErrorColor{Qt::red},
     mSyntaxWarningColor{"orange"},
     mLineCount{0},
@@ -99,9 +86,15 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mHoverModifiedLine{-1},
     mWheelAccumulatedDelta{0},
     mCtrlClicking{false},
-    mFileType{FileType::None},
-    mContextFile{contextFile}
+    mFileType{FileType::None}
 {
+    mEncodingOption = ENCODING_UTF8;
+    mFileEncoding = ENCODING_ASCII;
+    mEditorManager = nullptr;
+    mProject = nullptr;
+    mMainWindow = nullptr;
+    mIsNew = true;
+
     mDebugger = nullptr;
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
     mAutoBackupEnabled = false;
@@ -114,38 +107,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mFilename.isEmpty()) {
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
-    if (mEditorManager)
-        mMainWindow = mEditorManager->mainWindow();
-    if (fileType == FileType::None)
-        fileType = getFileType(mFilename);
-    doSetFileType(fileType);
-    if (mProject && mEncodingOption==ENCODING_PROJECT) {
-        mEncodingOption=mProject->options().encoding;
-    }
-    mFileEncoding = ENCODING_ASCII;
-    if (!isNew) {
-        try {
-            loadContent(mFilename);
-        } catch (FileError& e) {
-            QMessageBox::critical(nullptr,
-                                  tr("Error Load File"),
-                                  e.reason());
-        }
-    }
-    resolveAutoDetectEncodingOption();
-
-    if (mProject) {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP)
-            mParser = mProject->cppParser();
-    } else {
-        initParser();
-    }
-
-    if (shouldOpenInReadonly()) {
-        this->setModified(false);
-        setReadOnly(true);
-    }
-
     applySettings();
     applyColorScheme(mSettings->editor().colorScheme());
 
@@ -224,6 +185,10 @@ void Editor::loadFile(QString filename) {
     loadContent(filename);
     setStatusChanged(QSynedit::StatusChange::Custom);
 
+    if (shouldOpenInReadonly()) {
+        this->setModified(false);
+        setReadOnly(true);
+    }
 //    applyColorScheme(mSettings->editor().colorScheme());
     if (!inProject()) {
         initParser();
@@ -464,14 +429,16 @@ void Editor::setFilename(const QString &newName)
         mProject->associateEditor(this);
     }
     setFileType(getFileType(mFilename));
-    if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
-        mSyntaxIssues.clear();
-    }
-    if (mSettings->editor().syntaxCheckWhenSave())
-        checkSyntaxInBack();
-    emit fileRenamed(this, oldName, newName);
+    if (!mIsNew) {
+        if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
+            mSyntaxIssues.clear();
+        }
+        if (mSettings->editor().syntaxCheckWhenSave())
+            checkSyntaxInBack();
+        emit fileRenamed(this, oldName, newName);
 
-    initAutoBackup();
+        initAutoBackup();
+    }
     return;
 }
 
@@ -2028,10 +1995,8 @@ void Editor::loadContent(const QString& filename)
             unit->setRealEncoding(mFileEncoding);
         }
     }
-    //this->setModified(false);
-
+    mIsNew = false;
     emit updateEncodingInfoRequested(this);
-
     saveAutoBackup();
 }
 
@@ -3904,7 +3869,7 @@ Editor::TipType Editor::getTipType(QPoint point, CharPos& pos)
     // Only allow in the text area...
     if (pointToCharLine(point, pos)) {
         //qDebug()<<gutterWidth()<<charWidth()<<point.y()<<point.x()<<pos.line<<pos.ch;
-        if (!mDebugger->executing()
+        if (mDebugger && !mDebugger->executing()
                 && getSyntaxIssueAtPosition(pos)) {
             return TipType::Error;
         }
@@ -4495,6 +4460,22 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+EditorManager *Editor::editorManager() const
+{
+    return mEditorManager;
+}
+
+void Editor::setEditorManager(EditorManager *newEditorManager)
+{
+    if (mEditorManager!=newEditorManager) {
+        mEditorManager = newEditorManager;
+        if (mEditorManager)
+            mMainWindow = mEditorManager->mainWindow();
+        else
+            mMainWindow = nullptr;
+    }
 }
 
 MainWindow *Editor::mainWindow() const

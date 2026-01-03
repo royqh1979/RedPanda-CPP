@@ -57,7 +57,18 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
 
     // parentPageControl takes the owner ship
-    Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, this);
+    Editor * e = new Editor(parentPageControl);
+    e->setEditorManager(this);
+    e->setEncodingOption(encoding);
+    e->setFilename(filename);
+    if (!newFile) {
+        e->loadFile(filename);
+        e->setFileType(fileType);
+        e->setContextFile(contextFile);
+    }
+    e->setProject(pProject);
+
+
     e->setDebugger(pMainWindow->debugger());
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
