@@ -68,6 +68,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
     e->setProject(pProject);
 
+    e->applySettings();
 
     e->setDebugger(pMainWindow->debugger());
     if (!newFile) {

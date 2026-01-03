@@ -107,8 +107,6 @@ Editor::Editor(QWidget *parent):
     if (mFilename.isEmpty()) {
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
-    applySettings();
-    applyColorScheme(mSettings->editor().colorScheme());
 
     mFunctionTooltip = nullptr;
     mCompletionPopup = nullptr;
@@ -4499,7 +4497,6 @@ void Editor::setSettings(Settings *newSettings)
     if (mSettings != newSettings) {
         mSettings = newSettings;
         applySettings();
-        applyColorScheme(mSettings->editor().colorScheme());
     }
 }
 
@@ -5405,6 +5402,8 @@ void Editor::applySettings()
 
     setMouseWheelScrollSpeed(mSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(mSettings->editor().mouseSelectionScrollSpeed());
+
+    applyColorScheme(mSettings->editor().colorScheme());
     invalidate();
     endInternalChanges();
 }

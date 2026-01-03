@@ -72,6 +72,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             this, &EditorColorSchemeWidget::onItemSelectionChanged);
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
+    ui->editDemo->applySettings();
     ui->editDemo->setUseCodeFolding(true);
     ui->editDemo->setContent(
             "#include <iostream>\n"

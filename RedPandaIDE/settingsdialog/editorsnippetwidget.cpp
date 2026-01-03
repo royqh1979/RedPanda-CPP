@@ -59,6 +59,10 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             mUpdatingCode = false;
         }
     });
+    ui->editCode->applySettings();
+    ui->editCppFileTemplate->applySettings();
+    ui->editCFileTemplate->applySettings();
+    ui->editGASFileTemplate->applySettings();
     connect(ui->editCppFileTemplate,&Editor::changed,
             this, &SettingsWidget::setSettingsChanged);
     connect(ui->editCFileTemplate,&Editor::changed,
