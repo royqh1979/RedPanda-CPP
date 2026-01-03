@@ -25,6 +25,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QWidget>
+#include <QElapsedTimer>
 #include "gutter.h"
 #include "codefolding.h"
 #include "types.h"
