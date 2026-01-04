@@ -21,7 +21,7 @@
 #include "parser/parserutils.h"
 #include "widgets/searchresultview.h"
 #include "parser/cppparser.h"
-
+class MainWindow;
 class Editor;
 namespace QSynedit {
     struct CharPos;
@@ -31,7 +31,7 @@ class CppRefacter : public QObject
 {
     Q_OBJECT
 public:
-    explicit CppRefacter(QObject *parent = nullptr);
+    explicit CppRefacter(MainWindow * pMain, QObject *parent = nullptr);
 
     bool findOccurence(Editor * editor, const QSynedit::CharPos& pos);
     bool findOccurence(Editor * editor, const QString& statementFullname, SearchFileScope scope);
@@ -51,6 +51,8 @@ private:
             const PStatement& statement,
             const QString& newWord,
             const PCppParser& parser);
+private:
+    MainWindow *mMainWindow;
 };
 
 #endif // CPPREFACTER_H

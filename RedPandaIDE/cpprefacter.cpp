@@ -27,9 +27,9 @@
 #include "project.h"
 
 using QSynedit::CharPos;
-CppRefacter::CppRefacter(QObject *parent) : QObject(parent)
+CppRefacter::CppRefacter(MainWindow * pMain, QObject *parent) : QObject(parent)
 {
-
+    mMainWindow = pMain;
 }
 
 bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
@@ -55,14 +55,14 @@ bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
     if (statement->scope == StatementScope::Local) {
         doFindOccurenceInEditor(statement,editor,editor->parser());
     } else {
-        std::shared_ptr<Project> project = pMainWindow->project();
+        std::shared_ptr<Project> project = mMainWindow->project();
         if (editor->inProject() && project) {
             doFindOccurenceInProject(statement,project,editor->parser());
         } else {
             doFindOccurenceInEditor(statement,editor,editor->parser());
         }
     }
-    pMainWindow->searchResultModel()->notifySearchResultsUpdated();
+    mMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
 }
 
@@ -82,14 +82,14 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &statementFullnam
     if (statement->scope == StatementScope::Local) {
         doFindOccurenceInEditor(statement,editor,editor->parser());
     } else {
-        std::shared_ptr<Project> project = pMainWindow->project();
+        std::shared_ptr<Project> project = mMainWindow->project();
         if (editor->inProject() && project) {
             doFindOccurenceInProject(statement,project,editor->parser());
         } else {
             doFindOccurenceInEditor(statement,editor,editor->parser());
         }
     }
-    pMainWindow->searchResultModel()->notifySearchResultsUpdated();
+    mMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
 }
 
@@ -246,7 +246,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
 
 void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser)
 {
-    PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
+    PSearchResults results = mMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
                 statement->fullName,
                 SearchFileScope::currentFile
@@ -263,7 +263,7 @@ void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *
 
 void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser &parser)
 {
-    PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
+    PSearchResults results = mMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
                 statement->fullName,
                 SearchFileScope::wholeProject
@@ -272,8 +272,8 @@ void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::sha
                 tr("Searching..."),
                 tr("Abort"),
                 0,
-                pMainWindow->project()->unitList().count(),
-                pMainWindow);
+                mMainWindow->project()->unitList().count(),
+                mMainWindow);
     progressDlg.setWindowModality(Qt::WindowModal);
     int i=0;
     foreach (const PProjectUnit& unit, project->unitList()) {
@@ -311,7 +311,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     if (!isC_CPPSourceFile(fileType))
         fileType = FileType::CCppHeader;
     editor.setFileType(fileType);
-    if (pMainWindow->editorManager()->getContentFromOpenedEditor(
+    if (mMainWindow->editorManager()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.setContent(buffer);
     } else if (!fileExists(filename)){
@@ -374,7 +374,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
 void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
-    Editor * oldEditor=pMainWindow->editorManager()->getOpenedEditorByFilename(filename);
+    Editor * oldEditor=mMainWindow->editorManager()->getOpenedEditorByFilename(filename);
     if (oldEditor){
         QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
         int posY = 0;
@@ -418,7 +418,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         try {
             editor.loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
         } catch(FileError e) {
-            QMessageBox::critical(pMainWindow,
+            QMessageBox::critical(mMainWindow,
                         tr("Rename Symbol Error"),
                         e.reason());
             return;
@@ -461,7 +461,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                                        pSettings->editor().defaultEncoding(),
                                        realEncoding);
         } catch(FileError e) {
-            QMessageBox::critical(pMainWindow,
+            QMessageBox::critical(mMainWindow,
                         tr("Rename Symbol Error"),
                         e.reason());
             return;
