@@ -1,3 +1,6 @@
+
+# RedPandaIDE #
+
 add_executable(RedPandaIDE WIN32 MACOSX_BUNDLE)
 
 target_qt_plain_cpp(RedPandaIDE
@@ -189,7 +192,55 @@ target_link_options(RedPandaIDE PRIVATE
 # test-editor       #
 #####################
 
+#add_executable(test-editor test/test-editor-main.cpp)
 
+#target_qt_plain_cpp(test-editor
+#    # utils
+#    src/utils/escape
+#    src/utils/font
+#    src/utils/parsearg)
+
+#target_moc_classes(test-editor
+#    src/editor
+#    src/editormanager
+#    src/settings
+#)
+
+#target_ui_classes(RedPandaIDE
+#    src/mainwindow)
+
+#target_include_directories(test-editor PRIVATE
+#    ${CMAKE_CURRENT_SOURCE_DIR})
+
+#target_link_libraries(test-editor PRIVATE
+#        Qt::Core
+#        Qt::Gui
+#        Qt::Network
+#        Qt::PrintSupport
+#        Qt::Svg
+#        Qt::Test
+#        Qt::Widgets
+#        Qt::Xml
+#        qsynedit
+#        redpanda_qt_utils)
+
+
+#add_custom_command(
+#    TARGET test-editor POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
+#        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
+
+#target_compile_definitions(test-editor PUBLIC
+#    ${GLOBAL_COMPILE_DEFINITIONS}
+#    ARCH_X86_64=1
+#    ARCH_X86=1)
+
+#add_test(
+#    NAME test-editor
+#    COMMAND test-editor)
+
+#add_dependencies(all-test-targets test-editor)
 #####################
 # Platform-specific #
 #####################
