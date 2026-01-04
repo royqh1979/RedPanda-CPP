@@ -6905,7 +6905,7 @@ void MainWindow::on_btnSearchAgain_clicked()
         if (results->scope==SearchFileScope::wholeProject
                 && pMainWindow->project()==nullptr)
             return;
-        CppRefacter refactor;
+        CppRefacter refactor(this);
         Editor* editor;
         editor = mEditorManager->getEditor();
 
@@ -7152,7 +7152,7 @@ void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
-        CppRefacter refactor;
+        CppRefacter refactor(this);
         refactor.findOccurence(editor, editor->caretXY());
         showSearchPanel(false);
     }
@@ -8427,7 +8427,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
                                       .arg(oldStatement->fullName));
                 return;
             }
-            CppRefacter refactor;
+            CppRefacter refactor(this);
             refactor.findOccurence(editor,oldCaret);
             showSearchPanel(true);
             return;
@@ -8469,7 +8469,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
         //here we must reparse the file in sync, or rename may fail
         parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
     }
-    CppRefacter refactor;
+    CppRefacter refactor(this);
 
     if (isUndefinedLocalVar) {
         refactor.renameUndefinedLocalVariable(editor,oldCaret,newWord);
