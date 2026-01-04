@@ -123,6 +123,11 @@ target_link_libraries(test-qsynedit PRIVATE
     Qt::Test
     redpanda_qt_utils)
 
+if (QT_FEATURE_static)
+    qt_import_plugins(test-qsynedit
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
+
 add_custom_command(
     TARGET test-qsynedit POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

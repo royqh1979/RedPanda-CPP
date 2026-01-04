@@ -355,21 +355,21 @@ jobs:
           name: Alpine Linux
           path: dist/*.apk
 
-  appimage:
-    name: Linux AppImage
-    if: false
+  linux_static:
+    name: Linux static
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         arch:
           - x86_64
+          - x86_64.v3
           - aarch64
           - riscv64
           - loong64
           - i686
     env:
-      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20241204.0
+      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20260107.0
       PLATFORM: linux/amd64
 
     steps:
@@ -379,33 +379,13 @@ jobs:
 
       - name: Build
         run: |
-          ${{ env.CONTAINER_COMMAND }} ./packages/appimage/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/linux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Linux AppImage ${{ matrix.arch }}
-          path: dist/*.AppImage
-
-  static-deb:
-    name: Static Deb
-    if: false
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build
-        run: |
-          packages/debian-static/builddeb.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Static Deb
-          path: dist/*.deb
+          name: Linux static ${{ matrix.arch }}
+          path: dist/*
 
   macos:
     name: macOS

@@ -206,8 +206,11 @@ if(MACOS)
 endif()
 
 if(LINUX AND QT_FEATURE_static)
-    target_qt_plain_cpp(RedPandaIDE
-        resources/linux_static_ime_plugin)
+    qt_import_plugins(RedPandaIDE
+        INCLUDE
+            Qt::QComposePlatformInputContextPlugin
+            Qt::QFcitx5PlatformInputContextPlugin
+            Qt::QIbusPlatformInputContextPlugin)
 endif()
 
 if(XDG)
