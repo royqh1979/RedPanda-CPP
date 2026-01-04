@@ -44,7 +44,8 @@ public:
     const std::shared_ptr<Project> &project() const;
     void setProject(const std::shared_ptr<Project> &newProject);
 
-    PCppParser parser() const;
+    const PCppParser &parserForFile() const;
+    void setParserForFile(const PCppParser &newParserForFile);
 
 signals:
     void compileStarted();
@@ -58,7 +59,6 @@ public slots:
 protected:
     void run() override;
     void processOutput(QString& line);
-    void getParserForFile(const QString& filename);
     virtual QString getFileNameFromOutputLine(QString &line);
     virtual int getLineNumberFromOutputLine(QString &line);
     virtual int getColunmnFromOutputLine(QString &line);

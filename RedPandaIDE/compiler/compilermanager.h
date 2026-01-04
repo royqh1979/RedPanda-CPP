@@ -23,6 +23,7 @@
 #include "../utils.h"
 #include "../common.h"
 
+class MainWindow;
 class Runner;
 class Project;
 class Compiler;
@@ -31,6 +32,9 @@ class OJProblem;
 using POJProblem = std::shared_ptr<OJProblem>;
 class OJProblemCase;
 using POJProblemCase = std::shared_ptr<OJProblemCase>;
+class CppParser;
+using PCppParser = std::shared_ptr<CppParser>;
+
 class CompilerManager : public QObject
 {
     Q_OBJECT
@@ -75,6 +79,9 @@ public:
 
     int syntaxCheckIssueCount() const;
 
+    MainWindow *mainWindow() const;
+    void setMainWindow(MainWindow *newMainWindow);
+
 signals:
     void signalStopAllRunners();
     void compileFinished(const QString& filename, bool isSyntaxCheck);
@@ -91,7 +98,9 @@ private slots:
     void onSyntaxCheckIssue(PCompileIssue issue);
 private:
     ProjectCompiler* createProjectCompiler(std::shared_ptr<Project> project);
+    PCppParser getParserForFile(const QString& filename);
 private:
+    MainWindow *mMainWindow;
     Compiler* mCompiler;
     int mCompileErrorCount;
     int mCompileIssueCount;

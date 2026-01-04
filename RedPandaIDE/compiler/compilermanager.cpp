@@ -24,6 +24,7 @@
 #include "nasmfilecompiler.h"
 #include "stdincompiler.h"
 #include "../mainwindow.h"
+#include "../editormanager.h"
 #include "executablerunner.h"
 #include "ojproblemcasesrunner.h"
 #include "utils.h"
@@ -50,6 +51,7 @@ CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
     mCompileErrorCount = 0;
     mCompileIssueCount = 0;
     mSyntaxCheckErrorCount = 0;
+    mMainWindow = nullptr;
 }
 
 CompilerManager::~CompilerManager()
@@ -81,7 +83,7 @@ bool CompilerManager::running() const
 void CompilerManager::compile(const QString& filename, FileType fileType, const QByteArray& encoding, bool rebuild, CppCompileType compileType)
 {
     if (!pSettings->compilerSets().defaultSet()) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(mMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
@@ -104,16 +106,19 @@ void CompilerManager::compile(const QString& filename, FileType fileType, const 
         } else  {
             mCompiler = new FileCompiler(filename,encoding,fileType,compileType,false);
         }
+        mCompiler->setParserForFile(getParserForFile(filename));
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
+        if (mMainWindow) {
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::onCompileStarted);
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::clearToolsOutput);
 
-        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
-        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+            connect(mCompiler, &Compiler::compileOutput, mMainWindow, &MainWindow::logToolsOutput);
+            connect(mCompiler, &Compiler::compileIssue, mMainWindow, &MainWindow::onCompileIssue);
+            connect(mCompiler, &Compiler::compileErrorOccured, mMainWindow, &MainWindow::onCompileErrorOccured);
+        }
         mCompiler->start();
     }
 }
@@ -121,7 +126,7 @@ void CompilerManager::compile(const QString& filename, FileType fileType, const 
 void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebuild)
 {
     if (!pSettings->compilerSets().defaultSet()) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(mMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
@@ -140,12 +145,14 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onProjectCompileStarted);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
+        if (mMainWindow) {
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::onProjectCompileStarted);
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::clearToolsOutput);
 
-        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
-        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+            connect(mCompiler, &Compiler::compileOutput, mMainWindow, &MainWindow::logToolsOutput);
+            connect(mCompiler, &Compiler::compileIssue, mMainWindow, &MainWindow::onCompileIssue);
+            connect(mCompiler, &Compiler::compileErrorOccured, mMainWindow, &MainWindow::onCompileErrorOccured);
+        }
         mCompiler->start();
     }
 }
@@ -153,7 +160,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
 void CompilerManager::cleanProject(std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(mMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
@@ -174,12 +181,14 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onProjectCompileStarted);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
+        if (mMainWindow) {
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::onProjectCompileStarted);
+            connect(mCompiler, &Compiler::compileStarted, mMainWindow, &MainWindow::clearToolsOutput);
 
-        connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
-        connect(mCompiler, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-        connect(mCompiler, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+            connect(mCompiler, &Compiler::compileOutput, mMainWindow, &MainWindow::logToolsOutput);
+            connect(mCompiler, &Compiler::compileIssue, mMainWindow, &MainWindow::onCompileIssue);
+            connect(mCompiler, &Compiler::compileErrorOccured, mMainWindow, &MainWindow::onCompileErrorOccured);
+        }
         mCompiler->start();
     }
 }
@@ -187,7 +196,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
 void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(mMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
@@ -206,7 +215,7 @@ void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
 void CompilerManager::checkSyntax(const QString &filename, const QByteArray& encoding, const QString &content, std::shared_ptr<Project> project)
 {
     if (!pSettings->compilerSets().defaultSet()) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(mMainWindow,
                               tr("No compiler set"),
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return;
@@ -222,14 +231,18 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
 
         //deleted when thread finished
         mBackgroundSyntaxChecker = new StdinCompiler(filename,encoding, content,true);
+        if (!project)
+            mBackgroundSyntaxChecker->setParserForFile(getParserForFile(filename));
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, pMainWindow, &MainWindow::onSyntaxCheckStarted);
         connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this, &CompilerManager::onSyntaxCheckFinished);
-        //connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, pMainWindow, &MainWindow::onCompileErrorOccured);
+        if (mMainWindow) {
+            connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, mMainWindow, &MainWindow::onSyntaxCheckStarted);
+            connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, mMainWindow, &MainWindow::onCompileIssue);
+            connect(mBackgroundSyntaxChecker, &Compiler::compileErrorOccured, mMainWindow, &MainWindow::onCompileErrorOccured);
+            //connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, mMainWindow, &MainWindow::logToolsOutput);
+        }
         mBackgroundSyntaxChecker->start();
     }
 }
@@ -280,7 +293,7 @@ void CompilerManager::run(
         bool requireConsolePauser = execArgs.length() > 1;
         if (requireConsolePauser) {
             if (!fileExists(consolePauserPath)) {
-                QMessageBox::critical(pMainWindow,
+                QMessageBox::critical(mMainWindow,
                                          tr("Can't find Console Pauser"),
                                          tr("Console Pauser \"%1\" doesn't exists!")
                                          .arg(consolePauserPath));
@@ -334,10 +347,12 @@ void CompilerManager::run(
 
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
-    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
-    connect(mRunner, &Runner::pausingForFinish, pMainWindow ,&MainWindow::onRunPausingForFinish);
     connect(mRunner, &Runner::pausingForFinish, this ,&CompilerManager::onRunnerPausing);
-    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
+    if (mMainWindow) {
+        connect(mRunner, &Runner::finished, mMainWindow ,&MainWindow::onRunFinished);
+        connect(mRunner, &Runner::pausingForFinish, mMainWindow ,&MainWindow::onRunPausingForFinish);
+        connect(mRunner, &Runner::runErrorOccurred, mMainWindow ,&MainWindow::onRunErrorOccured);
+    }
     mRunner->start();
 }
 
@@ -378,14 +393,16 @@ void CompilerManager::doRunProblem(const QString &filename, const QString &argum
         execRunner->setMemoryLimit(memoryLimit);
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
-    connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);
-    connect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
-    connect(execRunner, &OJProblemCasesRunner::caseStarted, pMainWindow, &MainWindow::onOJProblemCaseStarted);
-    connect(execRunner, &OJProblemCasesRunner::caseFinished, pMainWindow, &MainWindow::onOJProblemCaseFinished);
-    connect(execRunner, &OJProblemCasesRunner::newOutputGetted, pMainWindow, &MainWindow::onOJProblemCaseNewOutputGetted);
-    connect(execRunner, &OJProblemCasesRunner::resetOutput, pMainWindow, &MainWindow::onOJProblemCaseResetOutput);
-    if (pSettings->executor().redirectStderrToToolLog()) {
-        connect(execRunner, &OJProblemCasesRunner::logStderrOutput, pMainWindow, &MainWindow::logToolsOutput);
+    if (mMainWindow) {
+        connect(mRunner, &Runner::finished, mMainWindow ,&MainWindow::onRunProblemFinished);
+        connect(mRunner, &Runner::runErrorOccurred, mMainWindow ,&MainWindow::onRunErrorOccured);
+        connect(execRunner, &OJProblemCasesRunner::caseStarted, mMainWindow, &MainWindow::onOJProblemCaseStarted);
+        connect(execRunner, &OJProblemCasesRunner::caseFinished, mMainWindow, &MainWindow::onOJProblemCaseFinished);
+        connect(execRunner, &OJProblemCasesRunner::newOutputGetted, mMainWindow, &MainWindow::onOJProblemCaseNewOutputGetted);
+        connect(execRunner, &OJProblemCasesRunner::resetOutput, mMainWindow, &MainWindow::onOJProblemCaseResetOutput);
+        if (pSettings->executor().redirectStderrToToolLog())  {
+            connect(execRunner, &OJProblemCasesRunner::logStderrOutput, mMainWindow, &MainWindow::logToolsOutput);
+        }
     }
     mRunner->start();
 }
@@ -441,7 +458,6 @@ void CompilerManager::onCompileFinished(const QString& filename)
     QMutexLocker locker(&mCompileMutex);
     mCompiler=nullptr;
     emit compileFinished(filename, false);
-    //pMainWindow->onCompileFinished(filename,false);
 }
 
 void CompilerManager::onRunnerTerminated()
@@ -455,9 +471,11 @@ void CompilerManager::onRunnerPausing()
 {
     QMutexLocker locker(&mRunnerMutex);
     disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
-    disconnect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunFinished);
-    disconnect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(this, &CompilerManager::signalStopAllRunners, mRunner, &Runner::stop);
+    if (mMainWindow) {
+        disconnect(mRunner, &Runner::finished, mMainWindow ,&MainWindow::onRunFinished);
+        disconnect(mRunner, &Runner::runErrorOccurred, mMainWindow ,&MainWindow::onRunErrorOccured);
+    }
     mRunner=nullptr;
     mTempFileOwner=nullptr;
 }
@@ -493,6 +511,24 @@ ProjectCompiler *CompilerManager::createProjectCompiler(std::shared_ptr<Project>
     else
 #endif
         return new ProjectCompiler(project);
+}
+
+PCppParser CompilerManager::getParserForFile(const QString &filename)
+{
+    Editor* editor = mMainWindow->editorManager()->getOpenedEditorByFilename(filename);
+    if (editor)
+        return editor->parser();
+    return PCppParser();
+}
+
+MainWindow *CompilerManager::mainWindow() const
+{
+    return mMainWindow;
+}
+
+void CompilerManager::setMainWindow(MainWindow *newMainWindow)
+{
+    mMainWindow = newMainWindow;
 }
 
 int CompilerManager::syntaxCheckIssueCount() const

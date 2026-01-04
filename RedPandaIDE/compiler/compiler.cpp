@@ -46,7 +46,7 @@ Compiler::Compiler(const QString &filename, bool onlyCheckSyntax):
     mParserForFile{},
     mForceEnglishOutput{false}
 {
-    getParserForFile(filename);
+    mParserForFile = nullptr;
 }
 
 void Compiler::run()
@@ -843,21 +843,14 @@ QString Compiler::escapeCommandForLog(const QString &cmd, const QStringList &arg
     return escapeCommandForPlatformShell(extractFileName(cmd), arguments);
 }
 
-PCppParser Compiler::parser() const
+const PCppParser &Compiler::parserForFile() const
 {
     return mParserForFile;
 }
 
-void Compiler::getParserForFile(const QString &filename)
+void Compiler::setParserForFile(const PCppParser &newParserForFile)
 {
-    FileType fileType = getFileType(filename);
-    if (fileType == FileType::CSource ||
-            fileType == FileType::CppSource){
-        Editor* editor = pMainWindow->editorManager()->getOpenedEditorByFilename(filename);
-        if (editor && editor->parser()) {
-            mParserForFile=editor->parser();
-        }
-    }
+    mParserForFile = newParserForFile;
 }
 
 const std::shared_ptr<Project> &Compiler::project() const

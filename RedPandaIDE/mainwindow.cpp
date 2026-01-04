@@ -205,6 +205,7 @@ MainWindow::MainWindow(QWidget *parent)
     //updateCompilerSet();
 
     mCompilerManager = new CompilerManager(this);
+    mCompilerManager->setMainWindow(this);
     connect(mCompilerManager, &CompilerManager::compileFinished,
             this, &MainWindow::onCompileFinished);
 
