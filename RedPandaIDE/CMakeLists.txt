@@ -1,158 +1,158 @@
 add_executable(RedPandaIDE WIN32 MACOSX_BUNDLE)
 
 target_qt_plain_cpp(RedPandaIDE
-    autolinkmanager
-    colorscheme
-    customfileiconprovider
-    projectoptions
-    settings
-    syntaxermanager
-    systemconsts
-    utils
-    visithistorymanager
+    src/autolinkmanager
+    src/colorscheme
+    src/customfileiconprovider
+    src/projectoptions
+    src/settings
+    src/syntaxermanager
+    src/systemconsts
+    src/utils
+    src/visithistorymanager
     # compiler
-    compiler/compilerinfo
+    src/compiler/compilerinfo
     # debugger
-    debugger/dapprotocol
-    debugger/gdbmiresultparser
+    src/debugger/dapprotocol
+    src/debugger/gdbmiresultparser
     # parser
-    parser/cppparser
-    parser/cpppreprocessor
-    parser/cpptokenizer
-    parser/parserutils
-    parser/statementmodel
+    src/parser/cppparser
+    src/parser/cpppreprocessor
+    src/parser/cpptokenizer
+    src/parser/parserutils
+    src/parser/statementmodel
     # problems
-    problems/competitivecompenionhandler
-    problems/freeprojectsetformat
-    problems/ojproblemset
-    problems/problemcasevalidator
+    src/problems/competitivecompenionhandler
+    src/problems/freeprojectsetformat
+    src/problems/ojproblemset
+    src/problems/problemcasevalidator
     # utils
-    utils/escape
-    utils/font
-    utils/parsearg)
+    src/utils/escape
+    src/utils/font
+    src/utils/parsearg)
 
 target_moc_classes(RedPandaIDE
-    caretlist
-    codesnippetsmanager
-    cpprefacter
-    editor
-    editormanager
-    iconsmanager
-    main
-    project
-    projecttemplate
-    shortcutmanager
-    symbolusagemanager
-    thememanager
-    todoparser
-    toolsmanager
+    src/caretlist
+    src/codesnippetsmanager
+    src/cpprefacter
+    src/editor
+    src/editormanager
+    src/iconsmanager
+    src/main
+    src/project
+    src/projecttemplate
+    src/shortcutmanager
+    src/symbolusagemanager
+    src/thememanager
+    src/todoparser
+    src/toolsmanager
     # compiler
-    compiler/compiler
-    compiler/compilermanager
-    compiler/executablerunner
-    compiler/filecompiler
-    compiler/nasmfilecompiler
-    compiler/ojproblemcasesrunner
-    compiler/projectcompiler
-    compiler/runner
-    compiler/stdincompiler
+    src/compiler/compiler
+    src/compiler/compilermanager
+    src/compiler/executablerunner
+    src/compiler/filecompiler
+    src/compiler/nasmfilecompiler
+    src/compiler/ojproblemcasesrunner
+    src/compiler/projectcompiler
+    src/compiler/runner
+    src/compiler/stdincompiler
     # debugger
-    debugger/dapdebugger
-    debugger/debugger
-    debugger/gdbmidebugger
+    src/debugger/dapdebugger
+    src/debugger/debugger
+    src/debugger/gdbmidebugger
     # parser
-    parser/cppparser
-    parser/statementmodel
+    src/parser/cppparser
+    src/parser/statementmodel
     # problems
-    problems/competitivecompenionhandler
+    src/problems/competitivecompenionhandler
     # settings dialog
-    settingsdialog/settingswidget
+    src/settingsdialog/settingswidget
     # widgets
-    widgets/bookmarkmodel
-    widgets/classbrowser
-    widgets/codecompletionlistview
-    widgets/codecompletionpopup
-    widgets/coloredit
-    widgets/compileargumentswidget
-    widgets/customdisablediconengine
-    widgets/customfilesystemmodel
-    widgets/darkfusionstyle
-    widgets/editorstabwidget
-    widgets/filenameeditdelegate
-    widgets/functiontooltipwidget
-    widgets/headercompletionpopup
-    widgets/issuestable
-    widgets/labelwithmenu
-    widgets/lightfusionstyle
-    widgets/linenumbertexteditor
-    widgets/macroinfomodel
-    widgets/ojproblemsetmodel
-    widgets/qconsole
-    widgets/qpatchedcombobox
-    widgets/searchresultview
-    widgets/shortcutinputedit
-    widgets/shrinkabletabwidget)
+    src/widgets/bookmarkmodel
+    src/widgets/classbrowser
+    src/widgets/codecompletionlistview
+    src/widgets/codecompletionpopup
+    src/widgets/coloredit
+    src/widgets/compileargumentswidget
+    src/widgets/customdisablediconengine
+    src/widgets/customfilesystemmodel
+    src/widgets/darkfusionstyle
+    src/widgets/editorstabwidget
+    src/widgets/filenameeditdelegate
+    src/widgets/functiontooltipwidget
+    src/widgets/headercompletionpopup
+    src/widgets/issuestable
+    src/widgets/labelwithmenu
+    src/widgets/lightfusionstyle
+    src/widgets/linenumbertexteditor
+    src/widgets/macroinfomodel
+    src/widgets/ojproblemsetmodel
+    src/widgets/qconsole
+    src/widgets/qpatchedcombobox
+    src/widgets/searchresultview
+    src/widgets/shortcutinputedit
+    src/widgets/shrinkabletabwidget)
 
 target_ui_classes(RedPandaIDE
-    mainwindow
+    src/mainwindow
     # settings dialog
-    settingsdialog/compilerautolinkwidget
-    settingsdialog/compilergaswidget
-    settingsdialog/compilernasmwidget
-    settingsdialog/compilersetdirectorieswidget
-    settingsdialog/compilersetoptionwidget
-    settingsdialog/debuggeneralwidget
-    settingsdialog/editorautosavewidget
-    settingsdialog/editorclipboardwidget
-    settingsdialog/editorcodecompletionwidget
-    settingsdialog/editorcolorschemewidget
-    settingsdialog/editorcustomctypekeywords
-    settingsdialog/editorfontwidget
-    settingsdialog/editorgeneralwidget
-    settingsdialog/editormiscwidget
-    settingsdialog/editorsnippetwidget
-    settingsdialog/editorsymbolcompletionwidget
-    settingsdialog/editorsyntaxcheckwidget
-    settingsdialog/editortooltipswidget
-    settingsdialog/environmentappearancewidget
-    settingsdialog/environmentfolderswidget
-    settingsdialog/environmentperformancewidget
-    settingsdialog/environmentprogramswidget
-    settingsdialog/environmentshortcutwidget
-    settingsdialog/executorgeneralwidget
-    settingsdialog/executorproblemsetwidget
-    settingsdialog/formattergeneralwidget
-    settingsdialog/formatterpathwidget
-    settingsdialog/languageasmgenerationwidget
-    settingsdialog/projectcompileparamaterswidget
-    settingsdialog/projectcompilerwidget
-    settingsdialog/projectdirectorieswidget
-    settingsdialog/projectdllhostwidget
-    settingsdialog/projectfileswidget
-    settingsdialog/projectgeneralwidget
-    settingsdialog/projectmakefilewidget
-    settingsdialog/projectoutputwidget
-    settingsdialog/projectprecompilewidget
-    settingsdialog/settingsdialog
-    settingsdialog/toolsgeneralwidget
+    src/settingsdialog/compilerautolinkwidget
+    src/settingsdialog/compilergaswidget
+    src/settingsdialog/compilernasmwidget
+    src/settingsdialog/compilersetdirectorieswidget
+    src/settingsdialog/compilersetoptionwidget
+    src/settingsdialog/debuggeneralwidget
+    src/settingsdialog/editorautosavewidget
+    src/settingsdialog/editorclipboardwidget
+    src/settingsdialog/editorcodecompletionwidget
+    src/settingsdialog/editorcolorschemewidget
+    src/settingsdialog/editorcustomctypekeywords
+    src/settingsdialog/editorfontwidget
+    src/settingsdialog/editorgeneralwidget
+    src/settingsdialog/editormiscwidget
+    src/settingsdialog/editorsnippetwidget
+    src/settingsdialog/editorsymbolcompletionwidget
+    src/settingsdialog/editorsyntaxcheckwidget
+    src/settingsdialog/editortooltipswidget
+    src/settingsdialog/environmentappearancewidget
+    src/settingsdialog/environmentfolderswidget
+    src/settingsdialog/environmentperformancewidget
+    src/settingsdialog/environmentprogramswidget
+    src/settingsdialog/environmentshortcutwidget
+    src/settingsdialog/executorgeneralwidget
+    src/settingsdialog/executorproblemsetwidget
+    src/settingsdialog/formattergeneralwidget
+    src/settingsdialog/formatterpathwidget
+    src/settingsdialog/languageasmgenerationwidget
+    src/settingsdialog/projectcompileparamaterswidget
+    src/settingsdialog/projectcompilerwidget
+    src/settingsdialog/projectdirectorieswidget
+    src/settingsdialog/projectdllhostwidget
+    src/settingsdialog/projectfileswidget
+    src/settingsdialog/projectgeneralwidget
+    src/settingsdialog/projectmakefilewidget
+    src/settingsdialog/projectoutputwidget
+    src/settingsdialog/projectprecompilewidget
+    src/settingsdialog/settingsdialog
+    src/settingsdialog/toolsgeneralwidget
     # widgets
-    widgets/aboutdialog
-    widgets/choosethemedialog
-    widgets/cpudialog
-    widgets/custommakefileinfodialog
-    widgets/editorfontdialog
-    widgets/filepropertiesdialog
-    widgets/infomessagebox
-    widgets/newclassdialog
-    widgets/newheaderdialog
-    widgets/newprojectdialog
-    widgets/newprojectunitdialog
-    widgets/newtemplatedialog
-    widgets/ojproblempropertywidget
-    widgets/projectalreadyopendialog
-    widgets/searchdialog
-    widgets/searchinfiledialog
-    widgets/signalmessagedialog)
+    src/widgets/aboutdialog
+    src/widgets/choosethemedialog
+    src/widgets/cpudialog
+    src/widgets/custommakefileinfodialog
+    src/widgets/editorfontdialog
+    src/widgets/filepropertiesdialog
+    src/widgets/infomessagebox
+    src/widgets/newclassdialog
+    src/widgets/newheaderdialog
+    src/widgets/newprojectdialog
+    src/widgets/newprojectunitdialog
+    src/widgets/newtemplatedialog
+    src/widgets/ojproblempropertywidget
+    src/widgets/projectalreadyopendialog
+    src/widgets/searchdialog
+    src/widgets/searchinfiledialog
+    src/widgets/signalmessagedialog)
 
 target_compile_definitions(RedPandaIDE PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
@@ -186,13 +186,18 @@ target_link_options(RedPandaIDE PRIVATE
 )
 
 #####################
+# test-editor       #
+#####################
+
+
+#####################
 # Platform-specific #
 #####################
 
 if(WIN32)
     target_ui_classes(RedPandaIDE
-        settingsdialog/environmentfileassociationwidget
-        settingsdialog/projectversioninfowidget)
+        src/settingsdialog/environmentfileassociationwidget
+        src/settingsdialog/projectversioninfowidget)
 
     target_link_libraries(RedPandaIDE PRIVATE
         advapi32
@@ -227,9 +232,9 @@ endif()
 
 if(LUA_ADDON)
     target_qt_plain_cpp(RedPandaIDE
-        addon/luaapi
-        addon/luaexecutor
-        addon/luaruntime)
+        src/addon/luaapi
+        src/addon/luaexecutor
+        src/addon/luaruntime)
 
     target_compile_definitions(RedPandaIDE PRIVATE ENABLE_LUA_ADDON)
 
@@ -238,29 +243,29 @@ endif()
 
 if(SDCC)
     target_moc_classes(RedPandaIDE
-        compiler/sdccfilecompiler
-        compiler/sdccprojectcompiler)
+        src/compiler/sdccfilecompiler
+        src/compiler/sdccprojectcompiler)
 
     target_compile_definitions(RedPandaIDE PRIVATE ENABLE_SDCC)
 endif()
 
 if(VCS)
     target_moc_classes(RedPandaIDE
-        vcs/gitmanager
-        vcs/gitrepository
-        vcs/gitutils)
+        src/vcs/gitmanager
+        src/vcs/gitrepository
+        src/vcs/gitutils)
 
     target_ui_classes(RedPandaIDE
-        settingsdialog/toolsgitwidget
-        vcs/gitbranchdialog
-        vcs/gitfetchdialog
-        vcs/gitlogdialog
-        vcs/gitmergedialog
-        vcs/gitpulldialog
-        vcs/gitpushdialog
-        vcs/gitremotedialog
-        vcs/gitresetdialog
-        vcs/gituserconfigdialog)
+        src/settingsdialog/toolsgitwidget
+        src/vcs/gitbranchdialog
+        src/vcs/gitfetchdialog
+        src/vcs/gitlogdialog
+        src/vcs/gitmergedialog
+        src/vcs/gitpulldialog
+        src/vcs/gitpushdialog
+        src/vcs/gitremotedialog
+        src/vcs/gitresetdialog
+        src/vcs/gituserconfigdialog)
 
     target_compile_definitions(RedPandaIDE PRIVATE ENABLE_VCS)
 endif()

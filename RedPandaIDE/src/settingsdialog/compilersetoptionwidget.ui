@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CompilerSetOptionWidget</class>
+ <widget class="QWidget" name="CompilerSetOptionWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1005</width>
+    <height>607</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Compiler set to config</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QComboBox" name="cbCompilerSet"/>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnFindCompilers">
+        <property name="toolTip">
+         <string>Auto Find Compilers</string>
+        </property>
+        <property name="text">
+         <string>Auto Find Compilers</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnAddCompilerSetByFolder">
+        <property name="toolTip">
+         <string>Find Compiler in the Folder</string>
+        </property>
+        <property name="text">
+         <string>Find Compiler in the Folder</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnAddCompilerSetByFile">
+        <property name="toolTip">
+         <string>Specify the compiler executable file</string>
+        </property>
+        <property name="text">
+         <string>Add Compiler</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnCopyCompilerSet">
+        <property name="toolTip">
+         <string>Copy current compiler set</string>
+        </property>
+        <property name="text">
+         <string>Copy compiler set</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnAddBlankCompilerSet">
+        <property name="toolTip">
+         <string>Add Blank Compiler Set</string>
+        </property>
+        <property name="text">
+         <string>Add Blank Compiler Set</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnRenameCompilerSet">
+        <property name="toolTip">
+         <string>Rename</string>
+        </property>
+        <property name="text">
+         <string>Rename</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnRemoveCompilerSet">
+        <property name="toolTip">
+         <string>Remove</string>
+        </property>
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="settingTabs">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="movable">
+      <bool>false</bool>
+     </property>
+     <widget class="QWidget" name="tabGeneral">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QWidget" name="panelCharset" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="chkAutoAddCharset">
+            <property name="text">
+             <string>Convert Executable's Charset as</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="cbEncoding"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="cbEncodingDetails"/>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkStaticLink">
+         <property name="text">
+          <string>Statically link libraries</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkForceEnglishOutput">
+         <property name="text">
+          <string>Don't localize compiler output messages</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkPersistInAutoFind">
+         <property name="text">
+          <string>Survive auto-finds</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkUseCustomCompilerParams">
+         <property name="text">
+          <string>Add the following arguments when calling the compiler</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="txtCustomCompileParams"/>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkUseCustomLinkParams">
+         <property name="text">
+          <string>Add the following arguments when calling the linker</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="txtCustomLinkParams"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSettings">
+      <attribute name="title">
+       <string>Settings</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="CompileArgumentsWidget" name="optionTabs">
+         <property name="documentMode">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabDirectories">
+      <attribute name="title">
+       <string>Directories</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QTabWidget" name="dirTabs">
+         <property name="currentIndex">
+          <number>-1</number>
+         </property>
+         <property name="documentMode">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPrograms">
+      <attribute name="title">
+       <string>Programs</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QFrame" name="frame">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="3" column="2">
+           <widget class="QToolButton" name="btnChooseGDB">
+            <property name="toolTip">
+             <string>Choose Debugger</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QToolButton" name="btnChooseGDBServer">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Resource Compiler（windres)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="txtGDBServer"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="txtCppCompiler"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QToolButton" name="btnChooseMake">
+            <property name="toolTip">
+             <string>Choose make</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>C Compiler(gcc)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>make</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="txtResourceCompiler"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QToolButton" name="btnChooseCppCompiler">
+            <property name="toolTip">
+             <string>Choose C++ Compiler</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QToolButton" name="btnChooseCCompiler">
+            <property name="toolTip">
+             <string>Choose C Compiler</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="txtCCompiler"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>gdb server</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="txtMake"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="txtDebugger"/>
+          </item>
+          <item row="5" column="2">
+           <widget class="QToolButton" name="btnChooseResourceCompiler">
+            <property name="toolTip">
+             <string>Choose Resource Compiler</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>C++ Compiler(g++)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>gdb</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabOutput">
+      <attribute name="title">
+       <string>Output</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="4" column="1">
+        <widget class="QComboBox" name="cbBinarySuffix"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="lbBinarySuffix">
+         <property name="text">
+          <string>Binary suffix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="txtPreprocessingSuffix"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbExecSuffix">
+         <property name="text">
+          <string>Executable suffix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="txtExecutableSuffix"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="txtCompilationSuffix"/>
+       </item>
+       <item row="0" column="2">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="5" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbPreprocessingSuffix">
+         <property name="text">
+          <string>Preprocessing output suffix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbCompilingSuffix">
+         <property name="text">
+          <string>Compiling output suffix</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CompileArgumentsWidget</class>
+   <extends>QTabWidget</extends>
+   <header location="global">src/widgets/compileargumentswidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>cbCompilerSet</tabstop>
+  <tabstop>btnFindCompilers</tabstop>
+  <tabstop>btnAddCompilerSetByFolder</tabstop>
+  <tabstop>btnAddCompilerSetByFile</tabstop>
+  <tabstop>btnAddBlankCompilerSet</tabstop>
+  <tabstop>btnRenameCompilerSet</tabstop>
+  <tabstop>btnRemoveCompilerSet</tabstop>
+  <tabstop>settingTabs</tabstop>
+  <tabstop>chkAutoAddCharset</tabstop>
+  <tabstop>cbEncoding</tabstop>
+  <tabstop>cbEncodingDetails</tabstop>
+  <tabstop>chkStaticLink</tabstop>
+  <tabstop>chkForceEnglishOutput</tabstop>
+  <tabstop>chkPersistInAutoFind</tabstop>
+  <tabstop>chkUseCustomCompilerParams</tabstop>
+  <tabstop>txtCustomCompileParams</tabstop>
+  <tabstop>chkUseCustomLinkParams</tabstop>
+  <tabstop>txtCustomLinkParams</tabstop>
+  <tabstop>optionTabs</tabstop>
+  <tabstop>dirTabs</tabstop>
+  <tabstop>txtCCompiler</tabstop>
+  <tabstop>btnChooseCCompiler</tabstop>
+  <tabstop>txtCppCompiler</tabstop>
+  <tabstop>btnChooseCppCompiler</tabstop>
+  <tabstop>txtMake</tabstop>
+  <tabstop>btnChooseMake</tabstop>
+  <tabstop>txtDebugger</tabstop>
+  <tabstop>btnChooseGDB</tabstop>
+  <tabstop>txtGDBServer</tabstop>
+  <tabstop>btnChooseGDBServer</tabstop>
+  <tabstop>txtResourceCompiler</tabstop>
+  <tabstop>btnChooseResourceCompiler</tabstop>
+  <tabstop>txtPreprocessingSuffix</tabstop>
+  <tabstop>txtCompilationSuffix</tabstop>
+  <tabstop>txtExecutableSuffix</tabstop>
+  <tabstop>cbBinarySuffix</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
