@@ -48,8 +48,11 @@ struct TabStop {
     int y;
 };
 using PTabStop = std::shared_ptr<TabStop>;
+class Editor;
 
-using SharedParserProviderCallBack = std::function<PCppParser (ParserLanguage)>;
+using GetSharedParserrCallBack = std::function<PCppParser (ParserLanguage)>;
+using GetOpennedEditorCallBack = std::function<Editor *(const QString &)>;
+using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -426,7 +429,9 @@ private:
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
-    SharedParserProviderCallBack mSharedParserProviderCallBack;
+    GetSharedParserrCallBack mGetSharedParserCallBack;
+    GetOpennedEditorCallBack mGetOpennedEditorCallBack;
+    GetFileStreamCallBack mGetFileStreamCallBack;
 
     // SynEdit interface
 protected:
@@ -485,8 +490,14 @@ public:
     bool codeCompletionEnabled() const;
     void setCodeCompletionEnabled(bool newUsingParser);
 
-    const SharedParserProviderCallBack &sharedParserProviderCallBack() const;
-    void setSharedParserProviderCallBack(const SharedParserProviderCallBack &newSharedParserProviderCallBack);
+    const GetSharedParserrCallBack &getSharedParserCallBack() const;
+    void setGetSharedParserCallBack(const GetSharedParserrCallBack &newSharedParserProviderCallBack);
+
+    const GetOpennedEditorCallBack &getOpennedEditorCallBack() const;
+    void setGetOpennedEditorCallBack(const GetOpennedEditorCallBack &newOpennedEditorProviderCallBack);
+
+    const GetFileStreamCallBack &getFileStreamCallBack() const;
+    void setGetFileStreamCallBack(const GetFileStreamCallBack &newGetFileStreamCallBack);
 
 protected:
     // QWidget interface

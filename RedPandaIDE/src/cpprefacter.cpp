@@ -374,7 +374,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
 void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
-    Editor * oldEditor=mMainWindow->editorManager()->getOpenedEditorByFilename(filename);
+    Editor * oldEditor=mMainWindow->editorManager()->getOpenedEditor(filename);
     if (oldEditor){
         QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
         int posY = 0;

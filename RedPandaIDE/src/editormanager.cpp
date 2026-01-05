@@ -58,8 +58,12 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl);
+    e->setGetSharedParserCallBack(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
+    e->setGetOpennedEditorCallBack(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
+    e->setGetFileStreamCallBack(std::bind(
+                                    &EditorManager::getContentFromOpenedEditor,this,
+                                    std::placeholders::_1, std::placeholders::_2));
     e->applySettings();
-    e->setSharedParserProviderCallBack(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setEditorManager(this);
     e->setEncodingOption(encoding);
     e->setFilename(filename);
@@ -628,11 +632,6 @@ void EditorManager::selectPreviousPage()
     }
 }
 
-void EditorManager::showCriticalError(const QString &title, const QString &reason)
-{
-    QMessageBox::critical(pMainWindow,title,reason);
-}
-
 void EditorManager::activeEditor(Editor *e, bool focus)
 {
     QTabWidget * pageControl = findPageControlForEditor(e);
@@ -703,7 +702,7 @@ void EditorManager::forceCloseEditor(Editor *editor)
     emit editorClosed();
 }
 
-Editor* EditorManager::getOpenedEditorByFilename(QString filename) const
+Editor* EditorManager::getOpenedEditor(const QString &filename) const
 {
     if (filename.isEmpty())
         return nullptr;
@@ -734,7 +733,7 @@ bool EditorManager::getContentFromOpenedEditor(const QString &filename, QStringL
         });
         if (pMainWindow->isQuitting())
             return false;
-        Editor * e= getOpenedEditorByFilename(filename);
+        Editor * e= getOpenedEditor(filename);
         if (!e)
             return false;
         buffer = e->content();

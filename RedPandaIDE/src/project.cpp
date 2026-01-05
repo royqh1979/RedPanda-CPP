@@ -380,7 +380,7 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
             return nullptr;
         }
 
-        Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
+        Editor * editor = mEditorList->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setProject(this);
             editor->activate();
@@ -410,7 +410,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
             return nullptr;
         }
 
-        Editor * editor = mEditorList->getOpenedEditorByFilename(unit->fileName());
+        Editor * editor = mEditorList->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setProject(this);
             editor->activate();
@@ -438,14 +438,14 @@ Editor *Project::unitEditor(const PProjectUnit &unit) const
 {
     if (!unit)
         return nullptr;
-    return mEditorList->getOpenedEditorByFilename(unit->fileName());
+    return mEditorList->getOpenedEditor(unit->fileName());
 }
 
 Editor *Project::unitEditor(const ProjectUnit *unit) const
 {
     if (!unit)
         return nullptr;
-    return mEditorList->getOpenedEditorByFilename(unit->fileName());
+    return mEditorList->getOpenedEditor(unit->fileName());
 }
 
 QList<PProjectUnit> Project::unitList()
@@ -2709,7 +2709,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
                                           QMessageBox::Yes | QMessageBox::No,
                                           QMessageBox::No) == QMessageBox::Yes) {
                     // Close the target file...
-                    Editor * e=mProject->editorList()->getOpenedEditorByFilename(newName);
+                    Editor * e=mProject->editorList()->getOpenedEditor(newName);
                     if (e)
                         mProject->editorList()->closeEditor(e);
 

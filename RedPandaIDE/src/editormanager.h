@@ -64,7 +64,7 @@ public:
 
     void forceCloseEditor(Editor* editor);
 
-    Editor* getOpenedEditorByFilename(QString filename) const;
+    Editor* getOpenedEditor(const QString &filename) const;
 
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer) const;
 
@@ -91,8 +91,6 @@ public:
     int pageCount() const;
     void selectNextPage();
     void selectPreviousPage();
-
-    void showCriticalError(const QString& title, const QString& reason);
 
     Editor* operator[](int index);
 

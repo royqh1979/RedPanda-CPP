@@ -340,8 +340,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QDir::setCurrent(extractFileDir(newName));
     }
 
-    if (mEditorManager && mEditorManager->getOpenedEditorByFilename(newName)!=nullptr) {
-        mEditorManager->showCriticalError(tr("Error"),
+    if (mGetOpennedEditorCallBack && mGetOpennedEditorCallBack(newName)!=nullptr) {
+        QMessageBox::critical(parentWidget(),tr("Error"),
                                       tr("File %1 already opened!").arg(newName));
         return false;
     }
@@ -404,7 +404,7 @@ void Editor::setFilename(const QString &newName)
 {
     if (mFilename == newName)
         return;
-    if (mEditorManager && mEditorManager->getOpenedEditorByFilename(newName)) {
+    if (mGetOpennedEditorCallBack && mGetOpennedEditorCallBack(newName)) {
         return;
     }
     QString oldName = mFilename;
@@ -2905,23 +2905,21 @@ void Editor::initParser()
     if (mCodeCompletionEnabled
         && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
             && mEditorManager) {
-        if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-            Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
+        if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()
+                && mGetOpennedEditorCallBack) {
+            Editor * e = mGetOpennedEditorCallBack(mContextFile);
             if (e) {
                 mParser = e->parser();
                 return;
             }
         }
-        if (mSettings->codeCompletion().shareParser() && mSharedParserProviderCallBack) {
-            mParser = mSharedParserProviderCallBack(calcParserLanguage());
+        if (mSettings->codeCompletion().shareParser() && mGetSharedParserCallBack) {
+            mParser = mGetSharedParserCallBack(calcParserLanguage());
             return;
         } else if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             mParser = std::make_shared<CppParser>();
             mParser->setLanguage(calcParserLanguage());
-            mParser->setOnGetFileStream(
-                        std::bind(
-                            &EditorManager::getContentFromOpenedEditor,mEditorManager,
-                            std::placeholders::_1, std::placeholders::_2));
+            mParser->setOnGetFileStream(mGetFileStreamCallBack);
             resetCppParser(mParser);
             mParser->setEnabled(true);
             return;
@@ -4455,14 +4453,34 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
-const SharedParserProviderCallBack &Editor::sharedParserProviderCallBack() const
+const GetFileStreamCallBack &Editor::getFileStreamCallBack() const
 {
-    return mSharedParserProviderCallBack;
+    return mGetFileStreamCallBack;
 }
 
-void Editor::setSharedParserProviderCallBack(const SharedParserProviderCallBack &newSharedParserProviderCallBack)
+void Editor::setGetFileStreamCallBack(const GetFileStreamCallBack &newGetFileStreamCallBack)
 {
-    mSharedParserProviderCallBack = newSharedParserProviderCallBack;
+    mGetFileStreamCallBack = newGetFileStreamCallBack;
+}
+
+const GetOpennedEditorCallBack &Editor::getOpennedEditorCallBack() const
+{
+    return mGetOpennedEditorCallBack;
+}
+
+void Editor::setGetOpennedEditorCallBack(const GetOpennedEditorCallBack &newOpennedEditorProviderCallBack)
+{
+    mGetOpennedEditorCallBack = newOpennedEditorProviderCallBack;
+}
+
+const GetSharedParserrCallBack &Editor::getSharedParserCallBack() const
+{
+    return mGetSharedParserCallBack;
+}
+
+void Editor::setGetSharedParserCallBack(const GetSharedParserrCallBack &newSharedParserProviderCallBack)
+{
+    mGetSharedParserCallBack = newSharedParserProviderCallBack;
 }
 
 bool Editor::codeCompletionEnabled() const
@@ -4587,8 +4605,8 @@ void Editor::setContextFile(const QString &newContextFile)
         if (mCodeCompletionEnabled
                 && !mSettings->codeCompletion().shareParser()
                 && !mContextFile.isEmpty()
-                && mEditorManager) {
-            Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
+                && mGetOpennedEditorCallBack) {
+            Editor * e = mGetOpennedEditorCallBack(mContextFile);
             if (e)
                 mParser = e->parser();
         }

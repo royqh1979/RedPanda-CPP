@@ -1836,7 +1836,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
     if (info.isAbsolute())
         filename = info.absoluteFilePath();
 
-    Editor* editor = mEditorManager->getOpenedEditorByFilename(filename);
+    Editor* editor = mEditorManager->getOpenedEditor(filename);
     if (editor!=nullptr) {
         editor->setContextFile(contextFile);
         if (fileType != FileType::None)
@@ -1973,7 +1973,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
 
     //update editor's inproject flag
     foreach (PProjectUnit unit, mProject->unitList()) {
-        Editor* e = mEditorManager->getOpenedEditorByFilename(unit->fileName());
+        Editor* e = mEditorManager->getOpenedEditor(unit->fileName());
         mProject->associateEditorToUnit(e,unit);
         if (e)
             e->resetBookmarks(mBookmarkModel);
@@ -2444,7 +2444,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                 }
                 if (!mCompileSuccessionTask->isExecutable) {
                     QString targetFileName = QFileInfo(mCompileSuccessionTask->execName).absoluteFilePath();
-                    Editor *editor = mEditorManager->getOpenedEditorByFilename(targetFileName);
+                    Editor *editor = mEditorManager->getOpenedEditor(targetFileName);
                     if (editor) {
                         mEditorManager->closeEditor(editor,false,true);
                     }
@@ -4879,7 +4879,7 @@ void MainWindow::onBookmarkRemove()
     if (index.isValid()) {
         PBookmark bookmark = mBookmarkModel->bookmark(index.row());
         if (bookmark) {
-            Editor * editor = mEditorManager->getOpenedEditorByFilename(bookmark->filename);
+            Editor * editor = mEditorManager->getOpenedEditor(bookmark->filename);
             if (editor && editor->inProject() == mBookmarkModel->isForProject()) {
                 editor->removeBookmark(bookmark->line);
             }
@@ -5191,7 +5191,7 @@ void MainWindow::onBreakpointRemove()
 
     PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(index, debugger()->isForProject());
     if (breakpoint) {
-        Editor * e = mEditorManager->getOpenedEditorByFilename(breakpoint->filename);
+        Editor * e = mEditorManager->getOpenedEditor(breakpoint->filename);
         if (e) {
             if (e->hasBreakpoint(breakpoint->line))
                 e->toggleBreakpoint(breakpoint->line);
@@ -5628,7 +5628,7 @@ void MainWindow::onFileChanged(const QString &path)
     if (mFilesChangedNotifying.contains(path))
         return;
     mFilesChangedNotifying.insert(path);
-    Editor *e = mEditorManager->getOpenedEditorByFilename(path);
+    Editor *e = mEditorManager->getOpenedEditor(path);
     if (e) {
         if (fileExists(path)) {
             e->activate();
@@ -5774,7 +5774,7 @@ void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QStri
     QString oldFile = folder.absoluteFilePath(oldName);
     QString newFile = folder.absoluteFilePath(newName);
 
-    Editor *e = mEditorManager->getOpenedEditorByFilename(oldFile);
+    Editor *e = mEditorManager->getOpenedEditor(oldFile);
     if (e) {
         e->setFilename(newFile);
     }
@@ -6072,7 +6072,7 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
 
     if (issue->type == CompileIssueType::Error || issue->type ==
             CompileIssueType::Warning) {
-        Editor* e = mEditorManager->getOpenedEditorByFilename(issue->filename);
+        Editor* e = mEditorManager->getOpenedEditor(issue->filename);
         if (e!=nullptr && (issue->line>=0)) {
             int line = issue->line;
             if (line > e->lineCount())
@@ -7501,7 +7501,7 @@ void MainWindow::on_actionView_Makefile_triggered()
 {
     if (!mProject)
         return;
-    Editor *editor = mEditorManager->getOpenedEditorByFilename(mProject->makeFileName());
+    Editor *editor = mEditorManager->getOpenedEditor(mProject->makeFileName());
     if (editor) {
         mEditorManager->closeEditor(editor, false, true);
     }
@@ -8359,7 +8359,7 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
 {
     PTodoItem item = mTodoModel->getItem(index);
     if (item) {
-        Editor * editor = mEditorManager->getOpenedEditorByFilename(item->filename);
+        Editor * editor = mEditorManager->getOpenedEditor(item->filename);
         if (editor) {
             editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->line});
         }
@@ -8648,7 +8648,7 @@ void MainWindow::on_btnReplace_clicked()
                 return;
             }
         } else {
-            editor = mEditorManager->getOpenedEditorByFilename(file->filename);
+            editor = mEditorManager->getOpenedEditor(file->filename);
         }
         bool needSave=false;
         std::shared_ptr<Editor> pEditor;
