@@ -67,9 +67,9 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                        std::placeholders::_1, std::placeholders::_2));
     e->setEvalTipReadyCallback(std::bind(&EditorManager::onEditorTipEvalValueReady,
                                          this, std::placeholders::_1));
-    e->applySettings();
     e->setCodeSnippetsManager(pMainWindow->codeSnippetManager());
-    e->setEditorManager(this);
+    e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
+    e->applySettings();
     e->setEncodingOption(encoding);
     e->setFilename(filename);
     if (!newFile) {
@@ -123,6 +123,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
     connect(e, &Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
     connect(e, &Editor::statusChanged, this, &EditorManager::onEditorStatusChanged);
+    connect(e, &Editor::fontSizeChangedByWheel, this, &EditorManager::onEditorFontSizeChangedByWheel);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -282,19 +283,16 @@ void EditorManager::onEditorShown(Editor *e)
 void EditorManager::onFileSaving(Editor *e, const QString &filename)
 {
     Q_UNUSED(e);
-    pMainWindow->fileSystemWatcher()->removePath(filename);
+    Q_UNUSED(filename);
 }
 
 void EditorManager::onFileSaved(Editor *e, const QString &filename)
 {
-    pMainWindow->fileSystemWatcher()->addPath(filename);
     pMainWindow->onFileSaved(filename, e->inProject());
 }
 
 void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const QString &newFilename)
 {
-    pMainWindow->fileSystemWatcher()->removePath(oldFilename);
-    pMainWindow->fileSystemWatcher()->addPath(newFilename);
     pMainWindow->getOJProblemSetModel()->updateProblemAnswerFilename(oldFilename, newFilename);
     if (!e->inProject()) {
         pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
@@ -305,8 +303,8 @@ void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const Q
 void EditorManager::onFileSaveError(Editor *e, const QString& filename, const QString& reason)
 {
     Q_UNUSED(e);
-    pMainWindow->fileSystemWatcher()->addPath(filename);
-    QMessageBox::critical(pMainWindow,tr("Save Error"), reason);
+    Q_UNUSED(reason);
+    Q_UNUSED(filename);
 }
 
 void EditorManager::onEditorLinesInserted(int startLine, int count)
@@ -368,6 +366,14 @@ void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
         pMainWindow->updateCaretActions();
     }
 }
+
+void EditorManager::onEditorFontSizeChangedByWheel(int newSize)
+{
+    pSettings->editor().setFontSize(newSize);
+    pSettings->editor().save();
+    pMainWindow->updateEditorSettings();
+}
+
 
 QTabWidget *EditorManager::rightPageWidget() const
 {

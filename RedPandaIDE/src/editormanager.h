@@ -123,6 +123,7 @@ private slots:
     void onEditorLinesRemoved(int startLine, int count);
     void onEditorLineMoved(int fromLine, int toLine);
     void onEditorStatusChanged(QSynedit::StatusChanges changes);
+    void onEditorFontSizeChangedByWheel(int newSize);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

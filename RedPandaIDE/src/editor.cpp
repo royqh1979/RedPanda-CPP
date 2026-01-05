@@ -37,6 +37,7 @@
 #include <QDebug>
 #include <QMimeData>
 #include <QTemporaryFile>
+#include <QFileSystemWatcher>
 #include <qsynedit/document.h>
 #include <qsynedit/syntaxer/cpp.h>
 #include <qsynedit/syntaxer/gas.h>
@@ -46,16 +47,17 @@
 #include <qsynedit/exporter/qtsupportedhtmlexporter.h>
 #include <qsynedit/constants.h>
 #include "settings.h"
-#include "mainwindow.h"
 #include "systemconsts.h"
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
 #include "debugger/debugger.h"
-#include "editormanager.h"
 #include <QDebug>
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
 #include "utils/escape.h"
+#include "widgets/functiontooltipwidget.h"
+#include "widgets/bookmarkmodel.h"
+#include "codesnippetsmanager.h"
 
 using QSynedit::CharPos;
 
@@ -88,11 +90,19 @@ Editor::Editor(QWidget *parent):
 {
     mEncodingOption = ENCODING_UTF8;
     mFileEncoding = ENCODING_ASCII;
-    mEditorManager = nullptr;
     mProject = nullptr;
-    mMainWindow = nullptr;
     mIsNew = true;
     mCodeCompletionEnabled = false;
+
+    mCodeSnippetsManager = nullptr;
+
+    mGetSharedParserFunc = nullptr;
+    mGetOpennedEditorFunc  = nullptr;
+    mGetFileStreamFunc = nullptr;
+    mRequestEvalTipFunc = nullptr;
+    mEvalTipReadyCallback = nullptr;
+    mLoggerFunc = nullptr;
+    mFileSystemWatcher = nullptr;
 
     mDebugger = nullptr;
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
@@ -103,9 +113,6 @@ Editor::Editor(QWidget *parent):
     mHighlightCharPos1 = CharPos{-1,-1};
     mHighlightCharPos2 = CharPos{-1,-1};
     mCurrentLineModified = false;
-    if (mFilename.isEmpty()) {
-        mFilename = QString("untitled%1").arg(getNewFileNumber());
-    }
 
     mFunctionTooltip = nullptr;
     mCompletionPopup = nullptr;
@@ -212,7 +219,7 @@ void Editor::saveFile(QString filename) {
 //    }
 //    if (!fileExists(filename)) {
 //        if (!stringToFile(text(),backupFilename)) {
-//            if (QMessageBox::question(mMainWindow,tr("Error"),
+//            if (QMessageBox::question(parentWidget(),tr("Error"),
 //                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
 //                                  +"<br />"
 //                                  +tr("Continue to save?"),
@@ -220,7 +227,7 @@ void Editor::saveFile(QString filename) {
 //                return;
 //        }
 //    } else if (!QFile::copy(filename,backupFilename)) {
-//        if (QMessageBox::question(mMainWindow,tr("Error"),
+//        if (QMessageBox::question(parentWidget(),tr("Error"),
 //                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
 //                              +"<br />"
 //                              +tr("Continue to save?"),
@@ -267,13 +274,20 @@ bool Editor::save(bool force, bool doReparse) {
         // must emit fileSaving/fileSaved signal out of saveFile(),
         // to let fileSystemWatcher's addPath/removePath() invoked out of the saveFile().
         // If not, fileSystemWatcher would generate fileChanged signal when saving files.
+        if (mFileSystemWatcher)
+            mFileSystemWatcher->removePath(mFilename);
         emit fileSaving(this, mFilename);
         saveFile(mFilename);
         emit fileSaved(this, mFilename);
+        if (mFileSystemWatcher)
+            mFileSystemWatcher->addPath(mFilename);
         setModified(false);
         mIsNew = false;
         setStatusChanged(QSynedit::StatusChange::Custom);
     } catch (FileError& exception) {
+        if (mFileSystemWatcher)
+            mFileSystemWatcher->addPath(mFilename);
+        QMessageBox::critical(parentWidget(),tr("Save Error"), exception.reason());
         emit fileSaveError(this, mFilename, exception.reason());
         return false;
     }
@@ -379,7 +393,11 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     setStatusChanged(QSynedit::StatusChange::Custom);
 
+
     emit fileRenamed(this, mFilename, newName);
+
+    if (mFileSystemWatcher)
+        mFileSystemWatcher->removePath(oldName);
 
     try {
         // must emit fileSaving/fileSaved signal out of saveFile(),
@@ -388,10 +406,15 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         emit fileSaving(this, mFilename);
         saveFile(mFilename);
         emit fileSaved(this, mFilename);
+        if (mFileSystemWatcher)
+            mFileSystemWatcher->addPath(mFilename);
         mIsNew = false;
         setModified(false);
         setStatusChanged(QSynedit::StatusChange::Custom);
     }  catch (FileError& exception) {
+        if (mFileSystemWatcher)
+            mFileSystemWatcher->addPath(mFilename);
+        QMessageBox::critical(parentWidget(),tr("Save Error"), exception.reason());
         emit fileSaveError(this, mFilename, exception.reason());
         return false;
     }
@@ -432,6 +455,11 @@ void Editor::setFilename(const QString &newName)
         }
         if (mSettings->editor().syntaxCheckWhenSave())
             checkSyntaxInBack();
+
+        if (mFileSystemWatcher) {
+            mFileSystemWatcher->removePath(oldName);
+            mFileSystemWatcher->addPath(newName);
+        }
         emit fileRenamed(this, oldName, newName);
 
         initAutoBackup();
@@ -557,11 +585,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
             size = std::max(2,size-1);
         }
         if (size!=oldSize) {
-            if (mMainWindow) {
-                mSettings->editor().setFontSize(size);
-                mSettings->editor().save();
-                mMainWindow->updateEditorSettings();
-            }
+            emit fontSizeChangedByWheel(size);
         }
         event->accept();
         return;
@@ -1626,7 +1650,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     mLineCount = lineCount();
     if (changes.testFlag(QSynedit::StatusChange::Modified)) {
         mCurrentLineModified = true;
-        if (inTab())
+        if (!mFilename.isEmpty())
             mCanAutoSave = true;
     }
 
@@ -1889,7 +1913,7 @@ void Editor::onTooltipTimer()
                 && !headerCompletionPopupVisible()) {
             if (mDebugger && mDebugger->executing()
                     && (mSettings->editor().enableDebugTooltips())) {
-                if (inTab()) {
+                if (QFileInfo::exists(mFilename)) {
                     showDebugHint(s,p.line);
                 }
             } else if (mSettings->editor().enableIdentifierToolTips()) {
@@ -2887,7 +2911,7 @@ void Editor::initParser()
 {
     if (mCodeCompletionEnabled
         && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
-            && mEditorManager) {
+            && !mFilename.isEmpty()) {
         if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()
                 && mGetOpennedEditorFunc) {
             Editor * e = mGetOpennedEditorFunc(mContextFile);
@@ -3572,8 +3596,7 @@ void Editor::completionInsert(bool appendFunc)
         return;
 
     if (mSettings->codeCompletion().recordUsage()
-            && statement->kind != StatementKind::UserCodeSnippet
-            && mMainWindow) {
+            && statement->kind != StatementKind::UserCodeSnippet) {
         statement->usageCount+=1;
         emit symbolChoosed(statement->fullName, statement->usageCount);
     }
@@ -3916,7 +3939,7 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
 
 void Editor::showDebugHint(const QString &s, int line)
 {
-    if (!mParser || !mEditorManager)
+    if (!mParser || !QFileInfo::exists(mFilename))
         return;
     PStatement statement = mParser->findStatementOf(mFilename,s,line);
     if (statement) {
@@ -4428,6 +4451,16 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
+QFileSystemWatcher *Editor::fileSystemWatcher() const
+{
+    return mFileSystemWatcher;
+}
+
+void Editor::setFileSystemWatcher(QFileSystemWatcher *newFileSystemWatcher)
+{
+    mFileSystemWatcher = newFileSystemWatcher;
+}
+
 CodeSnippetsManager *Editor::codeSnippetsManager() const
 {
     return mCodeSnippetsManager;
@@ -4506,32 +4539,6 @@ bool Editor::codeCompletionEnabled() const
 void Editor::setCodeCompletionEnabled(bool newUsingParser)
 {
     mCodeCompletionEnabled = newUsingParser;
-}
-
-EditorManager *Editor::editorManager() const
-{
-    return mEditorManager;
-}
-
-void Editor::setEditorManager(EditorManager *newEditorManager)
-{
-    if (mEditorManager!=newEditorManager) {
-        mEditorManager = newEditorManager;
-        if (mEditorManager)
-            mMainWindow = mEditorManager->mainWindow();
-        else
-            mMainWindow = nullptr;
-    }
-}
-
-MainWindow *Editor::mainWindow() const
-{
-    return mMainWindow;
-}
-
-void Editor::setMainWindow(MainWindow *newMainWindow)
-{
-    mMainWindow = newMainWindow;
 }
 
 Settings *Editor::settings() const
@@ -4730,8 +4737,6 @@ void Editor::gotoDefinition(const CharPos &pos)
                 pos.line);
     statement = constructorToClass(statement, pos);
     if (!statement) {
-        // if (mMainWindow)
-        //     mMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;

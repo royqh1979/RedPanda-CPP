@@ -19,7 +19,6 @@
 
 #include <QObject>
 #include "utils.h"
-#include <QTabWidget>
 #include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
 #include "common.h"
@@ -32,12 +31,11 @@
 
 class Project;
 class Debugger;
-class MainWindow;
 
 class CppParser;
 using PCppParser = std::shared_ptr<CppParser>;
 class QTemporaryFile;
-class EditorManager;
+class QFileSystemWatcher;
 class FunctionTooltipWidget;
 class BreakpointModel;
 class BookmarkModel;
@@ -257,8 +255,6 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    bool inTab() { return mEditorManager!=nullptr; }
-
 signals:
     void fileSaving(Editor *e, const QString& filename);
     void fileSaveError(Editor *e, const QString& filename, const QString& reason);
@@ -277,6 +273,7 @@ signals:
     void focusInOccured(Editor *e);
     void closeOccured(Editor *e);
     void hideOccured(Editor *e);
+    void fontSizeChangedByWheel(int newSize);
 public slots:
     void onTipEvalValueReady(const QString& value);
 
@@ -371,11 +368,9 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    EditorManager *mEditorManager;
     Debugger *mDebugger;
     Project* mProject;
     Settings* mSettings;
-    MainWindow *mMainWindow;
     bool mIsNew;
 
     bool mCodeCompletionEnabled;
@@ -441,6 +436,8 @@ private:
     EvalTipReadyCallback mEvalTipReadyCallback;
     LoggerFunc mLoggerFunc;
 
+    QFileSystemWatcher *mFileSystemWatcher;
+
     // SynEdit interface
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
@@ -489,12 +486,6 @@ public:
     Settings *settings() const;
     void setSettings(Settings *newSettings);
 
-    MainWindow *mainWindow() const;
-    void setMainWindow(MainWindow *newMainWindow);
-
-    EditorManager *editorManager() const;
-    void setEditorManager(EditorManager *newEditorManager);
-
     bool codeCompletionEnabled() const;
     void setCodeCompletionEnabled(bool newUsingParser);
 
@@ -518,6 +509,9 @@ public:
 
     CodeSnippetsManager *codeSnippetsManager() const;
     void setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager);
+
+    QFileSystemWatcher *fileSystemWatcher() const;
+    void setFileSystemWatcher(QFileSystemWatcher *newFileSystemWatcher);
 
 protected:
     // QWidget interface
