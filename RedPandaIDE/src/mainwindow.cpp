@@ -7917,12 +7917,12 @@ void MainWindow::reparseNonProjectEditors()
             }
         }
         if (hasC) {
-            PCppParser parser{Editor::sharedParser(ParserLanguage::C)};
+            PCppParser parser{mEditorManager->sharedParser(ParserLanguage::C)};
             if (parser)
                 resetCppParser(parser);
         }
         if (hasCpp) {
-            PCppParser parser{Editor::sharedParser(ParserLanguage::CPlusPlus)};
+            PCppParser parser{mEditorManager->sharedParser(ParserLanguage::CPlusPlus)};
             if (parser)
                 resetCppParser(parser);
         }

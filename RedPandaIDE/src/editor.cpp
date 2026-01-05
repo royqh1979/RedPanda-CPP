@@ -59,8 +59,6 @@
 
 using QSynedit::CharPos;
 
-QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
-
 static QSet<QString> CppTypeQualifiers {
     "const",
     "consteval",
@@ -94,6 +92,7 @@ Editor::Editor(QWidget *parent):
     mProject = nullptr;
     mMainWindow = nullptr;
     mIsNew = true;
+    mCodeCompletionEnabled = false;
 
     mDebugger = nullptr;
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
@@ -355,7 +354,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
 
     clearSyntaxIssues();
-    if (mSettings->codeCompletion().enabled() && mParser && !inProject()) {
+    if (mCodeCompletionEnabled && mParser && !inProject()) {
         mParser->invalidateFile(mFilename);
     }
 
@@ -418,7 +417,7 @@ void Editor::setFilename(const QString &newName)
     }
 
     clearSyntaxIssues();
-    if (mSettings->codeCompletion().enabled() && mParser && !inProject()) {
+    if (mCodeCompletionEnabled && mParser && !inProject()) {
         mParser->invalidateFile(oldName);
     }
 
@@ -748,7 +747,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (isIdentStartChar(ch)) {
         CharPos ws = CharPos{caretX()-idCharPressed,caretY()};
         idCharPressed++;
-        if (mSettings->codeCompletion().enabled()
+        if (mCodeCompletionEnabled
                 && mSettings->codeCompletion().showCompletionWhileInput()
                 && idCharPressed>=mSettings->codeCompletion().minCharRequired()) {
             if (mParser) {
@@ -883,7 +882,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             }
         }
     } else {
-        if (mSettings->codeCompletion().enabled()
+        if (mCodeCompletionEnabled
                 && mSettings->codeCompletion().showCompletionWhileInput() ) {
             if (mParser && mParser->isIncludeLine(lineText())
                     && ch.isDigit()) {
@@ -968,7 +967,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     }
 
     // Spawn code completion window if we are allowed to
-    if (mSettings->codeCompletion().enabled())
+    if (mCodeCompletionEnabled)
         handled = handleCodeCompletion(ch);
 }
 
@@ -1355,7 +1354,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
         onCompletionInputMethod(event);
         return;
     } else {
-        if (mSettings->codeCompletion().enabled()
+        if (mCodeCompletionEnabled
                 && mSettings->codeCompletion().showCompletionWhileInput() ) {
             int idCharPressed= previousIdChars(caretXY());
             idCharPressed += s.length();
@@ -2107,7 +2106,7 @@ void Editor::gotoBlockEnd()
 
 void Editor::showCodeCompletion()
 {
-    if (!mSettings->codeCompletion().enabled())
+    if (!mCodeCompletionEnabled)
         return;
 
     if (mParser) {
@@ -2903,36 +2902,32 @@ bool Editor::handleCodeCompletion(QChar key)
 
 void Editor::initParser()
 {
-    if (mSettings->codeCompletion().enabled()
+    if (mCodeCompletionEnabled
         && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
             && mEditorManager) {
-        if (mSettings->codeCompletion().shareParser()) {
-            mParser = sharedParser(calcParserLanguage());
-        } else {
-            bool parserGot = false;
-            if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-                Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
-                if (e) {
-                    mParser = e->parser();
-                    parserGot=true;
-                }
-            }
-            if (!parserGot) {
-                mParser = std::make_shared<CppParser>();
-                mParser->setLanguage(calcParserLanguage());
-                mParser->setOnGetFileStream(
-                            std::bind(
-                                &EditorManager::getContentFromOpenedEditor,mEditorManager,
-                                std::placeholders::_1, std::placeholders::_2));
-                resetCppParser(mParser);
-                mParser->setEnabled(
-                            mSettings->codeCompletion().enabled() &&
-                            (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
+        if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
+            Editor * e = mEditorManager->getOpenedEditorByFilename(mContextFile);
+            if (e) {
+                mParser = e->parser();
+                return;
             }
         }
-    } else {
-        mParser = nullptr;
+        if (mSettings->codeCompletion().shareParser() && mSharedParserProviderCallBack) {
+            mParser = mSharedParserProviderCallBack(calcParserLanguage());
+            return;
+        } else if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+            mParser = std::make_shared<CppParser>();
+            mParser->setLanguage(calcParserLanguage());
+            mParser->setOnGetFileStream(
+                        std::bind(
+                            &EditorManager::getContentFromOpenedEditor,mEditorManager,
+                            std::placeholders::_1, std::placeholders::_2));
+            resetCppParser(mParser);
+            mParser->setEnabled(true);
+            return;
+        }
     }
+    mParser = nullptr;
 }
 
 ParserLanguage Editor::calcParserLanguage()
@@ -3003,7 +2998,7 @@ void Editor::reparse(bool resetParser)
 {
     if (!mInited)
         return;
-    if (!mSettings->codeCompletion().enabled())
+    if (!mCodeCompletionEnabled)
         return;
     if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP
              && syntaxer()->language() != QSynedit::ProgrammingLanguage::GLSL)
@@ -3019,7 +3014,7 @@ void Editor::reparse(bool resetParser)
         if (mSettings->codeCompletion().shareParser()) {
             if (language!=mParser->language()) {
                 mParser->invalidateFile(mFilename);
-                mParser=sharedParser(language);
+                initParser();
             }
         } else {
             if (language!=mParser->language()) {
@@ -3259,7 +3254,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if(!mCompletionPopup)
         return;
     if (mFunctionTooltip) mFunctionTooltip->hide();
-    if (!mSettings->codeCompletion().enabled())
+    if (!mCodeCompletionEnabled)
         return;
     if (type==CodeCompletionType::KeywordsOnly) {
     } else {
@@ -3447,7 +3442,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 {
     if (!mHeaderCompletionPopup)
         return;
-    if (!mSettings->codeCompletion().enabled())
+    if (!mCodeCompletionEnabled)
         return;
 //    if not devCodeCompletion.Enabled then
 //      Exit;
@@ -4460,6 +4455,26 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
+const SharedParserProviderCallBack &Editor::sharedParserProviderCallBack() const
+{
+    return mSharedParserProviderCallBack;
+}
+
+void Editor::setSharedParserProviderCallBack(const SharedParserProviderCallBack &newSharedParserProviderCallBack)
+{
+    mSharedParserProviderCallBack = newSharedParserProviderCallBack;
+}
+
+bool Editor::codeCompletionEnabled() const
+{
+    return mCodeCompletionEnabled;
+}
+
+void Editor::setCodeCompletionEnabled(bool newUsingParser)
+{
+    mCodeCompletionEnabled = newUsingParser;
+}
+
 EditorManager *Editor::editorManager() const
 {
     return mEditorManager;
@@ -4569,7 +4584,7 @@ void Editor::setContextFile(const QString &newContextFile)
     if (isC_CPPHeaderFile(mFileType)) {
         doSetFileType(mFileType);
         applyColorScheme(mSettings->editor().colorScheme());
-        if (mSettings->codeCompletion().enabled()
+        if (mCodeCompletionEnabled
                 && !mSettings->codeCompletion().shareParser()
                 && !mContextFile.isEmpty()
                 && mEditorManager) {
@@ -4584,26 +4599,6 @@ void Editor::setContextFile(const QString &newContextFile)
 quint64 Editor::lastFocusOutTime() const
 {
     return mLastFocusOutTime;
-}
-
-PCppParser Editor::sharedParser(ParserLanguage language)
-{
-    PCppParser parser;
-    if (mSharedParsers.contains(language)) {
-        parser=mSharedParsers[language].lock();
-    }
-    if (!parser) {
-        parser = std::make_shared<CppParser>();
-        parser->setLanguage(language);
-        parser->setOnGetFileStream(
-                    std::bind(
-                        &EditorManager::getContentFromOpenedEditor,pMainWindow->editorManager(),
-                        std::placeholders::_1, std::placeholders::_2));
-        resetCppParser(parser);
-        parser->setEnabled(true);
-        mSharedParsers.insert(language,parser);
-    }
-    return parser;
 }
 
 bool Editor::canAutoSave() const
@@ -5397,6 +5392,8 @@ void Editor::applySettings()
 #endif
         ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
     }
+
+    mCodeCompletionEnabled = mSettings->codeCompletion().enabled();
 
     initAutoBackup();
 

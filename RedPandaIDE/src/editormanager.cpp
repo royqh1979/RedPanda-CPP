@@ -58,6 +58,8 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl);
+    e->applySettings();
+    e->setSharedParserProviderCallBack(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setEditorManager(this);
     e->setEncodingOption(encoding);
     e->setFilename(filename);
@@ -68,7 +70,6 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
     e->setProject(pProject);
 
-    e->applySettings();
 
     e->setDebugger(pMainWindow->debugger());
     if (!newFile) {
@@ -361,6 +362,26 @@ void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
 QTabWidget *EditorManager::rightPageWidget() const
 {
     return mRightPageWidget;
+}
+
+PCppParser EditorManager::sharedParser(ParserLanguage language)
+{
+    PCppParser parser;
+    if (mSharedParsers.contains(language)) {
+        parser=mSharedParsers[language].lock();
+    }
+    if (!parser) {
+        parser = std::make_shared<CppParser>();
+        parser->setLanguage(language);
+        parser->setOnGetFileStream(
+                    std::bind(
+                        &EditorManager::getContentFromOpenedEditor,this,
+                        std::placeholders::_1, std::placeholders::_2));
+        resetCppParser(parser);
+        parser->setEnabled(true);
+        mSharedParsers.insert(language,parser);
+    }
+    return parser;
 }
 
 QTabWidget *EditorManager::leftPageWidget() const

@@ -100,6 +100,8 @@ public:
 
     QTabWidget *rightPageWidget() const;
 
+    PCppParser sharedParser(ParserLanguage language);
+
 signals:
     void editorClosed();
     void editorOpenned();
@@ -129,6 +131,7 @@ private:
     QSplitter *mSplitter;
     QWidget *mPanel;
     int mUpdateCount;
+    QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
     mutable QRecursiveMutex mMutex;
 };
 

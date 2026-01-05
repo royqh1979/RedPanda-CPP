@@ -27,6 +27,7 @@
 
 class CppParser;
 using PCppParser = std::shared_ptr<CppParser>;
+
 class CppParser : public QObject
 {
     Q_OBJECT

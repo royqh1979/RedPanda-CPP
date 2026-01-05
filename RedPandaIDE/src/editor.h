@@ -23,7 +23,6 @@
 #include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
 #include "common.h"
-#include "parser/cppparser.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
 
@@ -34,25 +33,23 @@
 class Project;
 class Debugger;
 class MainWindow;
+
+class CppParser;
+using PCppParser = std::shared_ptr<CppParser>;
+class QTemporaryFile;
+class EditorManager;
+class FunctionTooltipWidget;
+class BreakpointModel;
+class BookmarkModel;
+class Settings;
 struct TabStop {
     int x;
     int endX;
     int y;
 };
-
-class QTemporaryFile;
-
-class EditorManager;
-
-class FunctionTooltipWidget;
-
-class BreakpointModel;
-
-class BookmarkModel;
-
-class Settings;
-
 using PTabStop = std::shared_ptr<TabStop>;
+
+using SharedParserProviderCallBack = std::function<PCppParser (ParserLanguage)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -236,8 +233,6 @@ public:
 
     void tab() override;
 
-    static PCppParser sharedParser(ParserLanguage language);
-
     void pageUp() { processCommand(QSynedit::EditCommand::PageUp); }
     void pageDown() { processCommand(QSynedit::EditCommand::PageDown); }
     void gotoLineStart() { processCommand(QSynedit::EditCommand::LineStart); }
@@ -376,6 +371,10 @@ private:
     Settings* mSettings;
     MainWindow *mMainWindow;
     bool mIsNew;
+
+    bool mCodeCompletionEnabled;
+
+
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
     QColor mSyntaxErrorColor;
     QColor mSyntaxWarningColor;
@@ -427,7 +426,7 @@ private:
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
-    static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
+    SharedParserProviderCallBack mSharedParserProviderCallBack;
 
     // SynEdit interface
 protected:
@@ -482,6 +481,12 @@ public:
 
     EditorManager *editorManager() const;
     void setEditorManager(EditorManager *newEditorManager);
+
+    bool codeCompletionEnabled() const;
+    void setCodeCompletionEnabled(bool newUsingParser);
+
+    const SharedParserProviderCallBack &sharedParserProviderCallBack() const;
+    void setSharedParserProviderCallBack(const SharedParserProviderCallBack &newSharedParserProviderCallBack);
 
 protected:
     // QWidget interface
