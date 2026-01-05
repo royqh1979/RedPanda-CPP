@@ -63,10 +63,12 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setGetFileStreamCallBack(std::bind(
                                     &EditorManager::getContentFromOpenedEditor,this,
                                     std::placeholders::_1, std::placeholders::_2));
+    e->setCanShowEvalTipFunc(std::bind(&EditorManager::debuggerReadyForEvalTip,this));
     e->setRequestEvalTipFunc(std::bind(&EditorManager::requestEvalTip,this,
                                        std::placeholders::_1, std::placeholders::_2));
     e->setEvalTipReadyCallback(std::bind(&EditorManager::onEditorTipEvalValueReady,
                                          this, std::placeholders::_1));
+
     e->setCodeSnippetsManager(pMainWindow->codeSnippetManager());
     e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
     e->applySettings();
@@ -79,8 +81,6 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
     e->setProject(pProject);
 
-
-    e->setDebugger(pMainWindow->debugger());
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
         e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
@@ -828,6 +828,11 @@ void EditorManager::updateEditorBreakpoints()
         Editor * e = static_cast<Editor*>(mRightPageWidget->widget(i));
         e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
     }
+}
+
+bool EditorManager::debuggerReadyForEvalTip()
+{
+    return (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning());
 }
 
 bool EditorManager::requestEvalTip(Editor *e, const QString &s)

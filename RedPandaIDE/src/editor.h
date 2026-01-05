@@ -30,8 +30,6 @@
 #define USER_CODE_IN_REPL_POS_END "%REPL_END%"
 
 class Project;
-class Debugger;
-
 class CppParser;
 using PCppParser = std::shared_ptr<CppParser>;
 class QTemporaryFile;
@@ -52,6 +50,7 @@ class Editor;
 using GetSharedParserrFunc = std::function<PCppParser (ParserLanguage)>;
 using GetOpennedEditorFunc = std::function<Editor *(const QString &)>;
 using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
+using CanShowEvalTipFunc = std::function<bool ()>;
 using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
 using EvalTipReadyCallback = std::function<void (Editor *)>;
 using LoggerFunc = std::function<void (const QString&)>;
@@ -368,7 +367,6 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    Debugger *mDebugger;
     Project* mProject;
     Settings* mSettings;
     bool mIsNew;
@@ -432,6 +430,7 @@ private:
     GetSharedParserrFunc mGetSharedParserFunc;
     GetOpennedEditorFunc mGetOpennedEditorFunc;
     GetFileStreamFunc mGetFileStreamFunc;
+    CanShowEvalTipFunc mCanShowEvalTipFunc;
     RequestEvalTipFunc mRequestEvalTipFunc;
     EvalTipReadyCallback mEvalTipReadyCallback;
     LoggerFunc mLoggerFunc;
@@ -480,9 +479,6 @@ public:
     CodeCompletionPopup *completionPopup() const;
     void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
 
-    Debugger *debugger() const;
-    void setDebugger(Debugger *newDebugger);
-
     Settings *settings() const;
     void setSettings(Settings *newSettings);
 
@@ -512,6 +508,9 @@ public:
 
     QFileSystemWatcher *fileSystemWatcher() const;
     void setFileSystemWatcher(QFileSystemWatcher *newFileSystemWatcher);
+
+    const CanShowEvalTipFunc &canShowEvalTipFunc() const;
+    void setCanShowEvalTipFunc(const CanShowEvalTipFunc &newCanShowEvalTipFunc);
 
 protected:
     // QWidget interface

@@ -5011,13 +5011,9 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     ptDst.row+=deltaY;
 
     if (deltaY >= 0) {
-        if (rowToLine(ptDst.row) >= mDocument->count()) {
-            ptDst.row = std::max(1, displayLineCount());
-        }
+        ptDst.row = std::min(ptDst.row, displayLineCount());
     } else {
-        if (ptDst.row < 1) {
-            ptDst.row = 1;
-        }
+        ptDst.row = std::max(ptDst.row, 1);
     }
 
     if (ptO.row != ptDst.row) {

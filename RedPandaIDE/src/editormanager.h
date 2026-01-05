@@ -80,6 +80,7 @@ public:
     void updateEditorBookmarks();
     void updateEditorBreakpoints();
 
+    bool debuggerReadyForEvalTip();
     bool requestEvalTip(Editor *e, const QString& s);
     void onEditorTipEvalValueReady(Editor *e);
 

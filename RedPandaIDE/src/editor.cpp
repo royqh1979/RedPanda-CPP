@@ -50,7 +50,6 @@
 #include "systemconsts.h"
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
-#include "debugger/debugger.h"
 #include <QDebug>
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
@@ -58,6 +57,7 @@
 #include "widgets/functiontooltipwidget.h"
 #include "widgets/bookmarkmodel.h"
 #include "codesnippetsmanager.h"
+#include "debugger/debuggermodels.h"
 
 using QSynedit::CharPos;
 
@@ -99,12 +99,12 @@ Editor::Editor(QWidget *parent):
     mGetSharedParserFunc = nullptr;
     mGetOpennedEditorFunc  = nullptr;
     mGetFileStreamFunc = nullptr;
+    mCanShowEvalTipFunc = nullptr;
     mRequestEvalTipFunc = nullptr;
     mEvalTipReadyCallback = nullptr;
     mLoggerFunc = nullptr;
     mFileSystemWatcher = nullptr;
 
-    mDebugger = nullptr;
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
     mAutoBackupEnabled = false;
     mLastFocusOutTime = 0;
@@ -1848,7 +1848,7 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Identifier:
-        if (mDebugger && mDebugger->executing() && !mDebugger->inferiorRunning()) {
+        if (mCanShowEvalTipFunc && mCanShowEvalTipFunc()) {
             s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
         } else if (!completionPopupVisible()
                  && !headerCompletionPopupVisible()) {
@@ -1911,7 +1911,7 @@ void Editor::onTooltipTimer()
     case TipType::Selection:
         if (!completionPopupVisible()
                 && !headerCompletionPopupVisible()) {
-            if (mDebugger && mDebugger->executing()
+            if (mCanShowEvalTipFunc && mCanShowEvalTipFunc()
                     && (mSettings->editor().enableDebugTooltips())) {
                 if (QFileInfo::exists(mFilename)) {
                     showDebugHint(s,p.line);
@@ -3861,8 +3861,7 @@ Editor::TipType Editor::getTipType(QPoint point, CharPos& pos)
     // Only allow in the text area...
     if (pointToCharLine(point, pos)) {
         //qDebug()<<gutterWidth()<<charWidth()<<point.y()<<point.x()<<pos.line<<pos.ch;
-        if (mDebugger && !mDebugger->executing()
-                && getSyntaxIssueAtPosition(pos)) {
+        if (getSyntaxIssueAtPosition(pos)) {
             return TipType::Error;
         }
 
@@ -4451,6 +4450,16 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
+const CanShowEvalTipFunc &Editor::canShowEvalTipFunc() const
+{
+    return mCanShowEvalTipFunc;
+}
+
+void Editor::setCanShowEvalTipFunc(const CanShowEvalTipFunc &newCanShowEvalTipFunc)
+{
+    mCanShowEvalTipFunc = newCanShowEvalTipFunc;
+}
+
 QFileSystemWatcher *Editor::fileSystemWatcher() const
 {
     return mFileSystemWatcher;
@@ -4553,16 +4562,6 @@ void Editor::setSettings(Settings *newSettings)
         mSettings = newSettings;
         applySettings();
     }
-}
-
-Debugger *Editor::debugger() const
-{
-    return mDebugger;
-}
-
-void Editor::setDebugger(Debugger *newDebugger)
-{
-    mDebugger = newDebugger;
 }
 
 CodeCompletionPopup *Editor::completionPopup() const

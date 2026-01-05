@@ -59,6 +59,7 @@ target_moc_classes(RedPandaIDE
     # debugger
     src/debugger/dapdebugger
     src/debugger/debugger
+    src/debugger/debuggermodels
     src/debugger/gdbmidebugger
     # parser
     src/parser/cppparser
