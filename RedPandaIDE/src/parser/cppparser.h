@@ -138,7 +138,7 @@ public:
     const QSet<QString> &filesToScan() const;
     void setFilesToScan(const QSet<QString> &newFilesToScan);
 
-    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
+    void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream);
 
     int parserId() const;
 

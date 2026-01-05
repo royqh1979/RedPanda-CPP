@@ -174,19 +174,19 @@ int QSynEdit::displayLineCount() const
 
 void QSynEdit::setCaretXY(const CharPos &pos)
 {
-    Q_ASSERT(validInDoc(pos));
+    CharPos safePos = ensureCharPosValid(pos);
     beginInternalChanges();
-    setSelBegin(pos);
-    internalSetCaretXY(pos, true);
+    internalSetSelBegin(safePos);
+    internalSetCaretXY(safePos, true);
     endInternalChanges();
 }
 
 void QSynEdit::setCaretXYCentered(const CharPos &pos)
 {
-    Q_ASSERT(validInDoc(pos));
+    CharPos safePos = ensureCharPosValid(pos);
     beginInternalChanges();
-    setSelBegin(pos);
-    internalSetCaretXY(pos, false);
+    internalSetSelBegin(safePos);
+    internalSetCaretXY(safePos, false);
     ensureCaretVisible(true); // but here after block has been set
     endInternalChanges();
 }
@@ -982,10 +982,10 @@ QChar QSynEdit::charAt(const CharPos &pos) const
 void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posSelBegin, const CharPos &posSelEnd)
 {
     beginInternalChanges();
-    internalSetCaretXY(posCaret);
+    internalSetCaretXY(ensureCharPosValid(posCaret));
     setActiveSelectionMode(SelectionMode::Normal);
-    setSelBegin(posSelBegin);
-    setSelEnd(posSelEnd);
+    internalSetSelBegin(ensureCharPosValid(posSelBegin));
+    internalSetSelEnd(ensureCharPosValid(posSelEnd));
     endInternalChanges();
 }
 
@@ -1613,10 +1613,10 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
 
         // if MouseCapture is True we're changing selection. otherwise we're dragging
         if (isDragging) {
-            setSelBegin(mDragSelBeginSave);
-            setSelEnd(mDragSelEndSave);
+            internalSetSelBegin(mDragSelBeginSave);
+            internalSetSelEnd(mDragSelEndSave);
         } else
-            setSelEnd(caretXY());
+            internalSetSelEnd(caretXY());
 
     }
     if (isDragging) {
@@ -1659,7 +1659,7 @@ void QSynEdit::doUndoRedoInput(const QString &oldGlyph,
                     changeSelMode,
                     changeNumber);
     }
-    setCaretXY(changeStartPos);
+    internalSetCaretXY(changeStartPos);
 }
 
 void QSynEdit::beginEditing()
@@ -1717,8 +1717,8 @@ void QSynEdit::doDeletePrevChar()
         CharPos end=selEnd();
         if (!selAvail()) {
             start.ch--;
-            setSelBegin(start);
-            setSelEnd(end);
+            internalSetSelBegin(start);
+            internalSetSelEnd(end);
         }
         doDeleteSelection();
         return;
@@ -1803,8 +1803,8 @@ void QSynEdit::doDeleteCurrentChar()
         CharPos end=selEnd();
         if (!selAvail()) {
             end.ch++;
-            setSelBegin(start);
-            setSelEnd(end);
+            internalSetSelBegin(start);
+            internalSetSelEnd(end);
         }
         doDeleteSelection();
         return;
@@ -2005,7 +2005,7 @@ void QSynEdit::doDeleteCurrentLine()
 //        return;
     beginEditing();
     if (selAvail())
-        setSelBegin(caretXY());
+        internalSetSelBegin(caretXY());
     int oldCaretY = mCaretY;
     bool isLastLine = (oldCaretY >= mDocument->count() - 1);
     bool isFirstLine = (oldCaretY == 0);
@@ -2089,6 +2089,7 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
         value.ch = std::min(value.ch, nMaxX);
     }
     value.ch = std::max(value.ch,0);
+    value.ch = mDocument->charToGlyphStartChar(value.line, value.ch);
     return value;
 }
 
@@ -2658,8 +2659,8 @@ void QSynEdit::doInputStr(const QString& s)
             if (start.line > end.line )
                 std::swap(start,end);
             start.ch++; // make sure we select a whole char in the start line
-            setSelBegin(start);
-            setSelEnd(end);
+            internalSetSelBegin(start);
+            internalSetSelEnd(end);
         }
     } else {
         beginEditing();
@@ -4072,8 +4073,8 @@ void QSynEdit::setOptions(const EditorOptions &value)
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretXY(caretXY());
         if (mOptions.testFlag(EditorOption::ScrollPastEol)) {
-            setSelBegin(selBegin());
-            setSelEnd(selEnd());
+            internalSetSelBegin(selBegin());
+            internalSetSelEnd(selEnd());
         }
         updateHScrollbar();
         updateVScrollbar();
@@ -5065,10 +5066,10 @@ void QSynEdit::moveCaretAndSelection(const CharPos &ptBefore, const CharPos &ptA
     beginInternalChanges();
     if (isSelection) {
         if (!selAvail())
-          setSelBegin(ptBefore);
-        setSelEnd(ptAfter);
+          internalSetSelBegin(ptBefore);
+        internalSetSelEnd(ptAfter);
     } else
-        setSelBegin(ptAfter);
+        internalSetSelBegin(ptAfter);
     internalSetCaretXY(ptAfter,ensureCaretVisible);
     endInternalChanges();
 }
@@ -5216,8 +5217,8 @@ void QSynEdit::doSetSelTextPrimitive(const QStringList &text)
             }
             startPos.ch = xposToGlyphStartChar(startPos.line, x);
             endPos.ch = xposToGlyphStartChar(endPos.line, x);
-            setSelBegin(startPos);
-            setSelEnd(endPos);
+            internalSetSelBegin(startPos);
+            internalSetSelEnd(endPos);
         } else
             setCaretXY(startPos);
         selChanged = true;
@@ -5368,9 +5369,9 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 // Select the text, so the user can see it in the OnReplaceText event
                 // handler or as the search result.
                 posCurrent.ch = chFound;
-                setSelBegin(posCurrent);
+                internalSetSelBegin(posCurrent);
                 posCurrent.ch += searchLen;
-                setSelEnd(posCurrent);
+                internalSetSelEnd(posCurrent);
 
                 if (backwards)
                     internalSetCaretXY(selBegin());
@@ -6225,8 +6226,8 @@ void QSynEdit::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape && mActiveSelectionMode != SelectionMode::Normal) {
         setActiveSelectionMode(SelectionMode::Normal);
-        setSelBegin(caretXY());
-        setSelEnd(caretXY());
+        internalSetSelBegin(caretXY());
+        internalSetSelEnd(caretXY());
         event->accept();
     } else {
         EditCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
@@ -6291,14 +6292,14 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             if (event->modifiers() == Qt::ShiftModifier) {
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
-                setSelEnd(caretXY());
+                internalSetSelEnd(caretXY());
             } else if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
                 else
                     setActiveSelectionMode(SelectionMode::Normal);
                 //Selection mode must be set before calling SetBlockBegin
-                setSelBegin(caretXY());
+                internalSetSelBegin(caretXY());
             }
             computeScroll(false);
         }
@@ -6320,8 +6321,8 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
             !mStateFlags.testFlag(StateFlag::DblClicked)) {
         computeCaret();
         if (! (event->modifiers() & Qt::ShiftModifier))
-            setSelBegin(caretXY());
-        setSelEnd(caretXY());
+            internalSetSelBegin(caretXY());
+        internalSetSelEnd(caretXY());
         mStateFlags.setFlag(StateFlag::WaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::DblClicked,false);
@@ -6491,8 +6492,8 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
         CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
                                                                         event->pos().y()));
         internalSetCaretXY(coord);
-        setSelBegin(mDragSelBeginSave);
-        setSelEnd(mDragSelEndSave);
+        internalSetSelBegin(mDragSelBeginSave);
+        internalSetSelEnd(mDragSelEndSave);
         properInsertLine(mDocument->count(),"",true); //add a line to handle drag to the last
         showCaret();
         computeScroll(true);
@@ -6614,8 +6615,8 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
     int y=iMousePos.y();
     CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(x,y));
     internalSetCaretXY(coord);
-    setSelBegin(mDragSelBeginSave);
-    setSelEnd(mDragSelEndSave);
+    internalSetSelBegin(mDragSelBeginSave);
+    internalSetSelEnd(mDragSelEndSave);
     showCaret();
 }
 
@@ -6693,8 +6694,8 @@ void QSynEdit::onLinesChanged()
         int xEnd = charToGlyphLeft(mCaretY,mCaretX);
         oldBlockStart.ch = xposToGlyphStartChar(oldBlockStart.line,xEnd);
         oldBlockEnd.ch = xposToGlyphStartChar(oldBlockEnd.line,xEnd);
-        setSelBegin(oldBlockStart);
-        setSelEnd(oldBlockEnd);
+        internalSetSelBegin(oldBlockStart);
+        internalSetSelEnd(oldBlockEnd);
     } else {
         vOldMode = mActiveSelectionMode;
         mActiveSelectionMode = vOldMode;
@@ -6795,10 +6796,10 @@ int QSynEdit::selectionEndLine() const
 void QSynEdit::clearSelection()
 {
     setActiveSelectionMode(SelectionMode::Normal);
-    setSelBegin(caretXY());
+    internalSetSelBegin(caretXY());
 }
 
-void QSynEdit::setSelEnd(const CharPos &value)
+void QSynEdit::internalSetSelEnd(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
     Q_ASSERT(validGlyphStart(value));
@@ -6828,8 +6829,8 @@ void QSynEdit::setSelEnd(const CharPos &value)
 void QSynEdit::setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos)
 {
     beginInternalChanges();
-    setSelBegin(beginPos);
-    setSelEnd(endPos);
+    internalSetSelBegin(beginPos);
+    internalSetSelEnd(endPos);
     endInternalChanges();
 }
 
@@ -6908,7 +6909,7 @@ const CharPos &QSynEdit::selBegin() const
         return mSelectionBegin;
 }
 
-void QSynEdit::setSelBegin(const CharPos &value)
+void QSynEdit::internalSetSelBegin(const CharPos &value)
 {
     Q_ASSERT(validInDoc(value));
     Q_ASSERT(validGlyphStart(value));

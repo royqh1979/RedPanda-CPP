@@ -340,7 +340,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QDir::setCurrent(extractFileDir(newName));
     }
 
-    if (mGetOpennedEditorCallBack && mGetOpennedEditorCallBack(newName)!=nullptr) {
+    if (mGetOpennedEditorFunc && mGetOpennedEditorFunc(newName)!=nullptr) {
         QMessageBox::critical(parentWidget(),tr("Error"),
                                       tr("File %1 already opened!").arg(newName));
         return false;
@@ -404,7 +404,7 @@ void Editor::setFilename(const QString &newName)
 {
     if (mFilename == newName)
         return;
-    if (mGetOpennedEditorCallBack && mGetOpennedEditorCallBack(newName)) {
+    if (mGetOpennedEditorFunc && mGetOpennedEditorFunc(newName)) {
         return;
     }
     QString oldName = mFilename;
@@ -437,14 +437,6 @@ void Editor::setFilename(const QString &newName)
         initAutoBackup();
     }
     return;
-}
-
-void Editor::activate(bool focus)
-{
-    if (mEditorManager)
-        mEditorManager->activeEditor(this,focus);
-    else if (focus)
-        setFocus();
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{
@@ -638,9 +630,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     sLine = lineText().mid(caretX()).trimmed();
                     if (sLine=="*/") {
                         CharPos p = caretXY();
-                        setSelBegin(p);
                         p.ch = lineText().length();
-                        setSelEnd(p);
+                        setSelBeginEnd(p, CharPos{lineText().length(), p.line});
                         setSelText("");
                     }
                     handled = true;
@@ -691,7 +682,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Escape: // Update function tip
         if (mTabStopBegin>=0) {
             mTabStopBegin = -1;
-            setSelEnd(caretXY());
+            setSelBeginEnd(caretXY(),caretXY());
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         }
@@ -1500,15 +1491,6 @@ void Editor::setCaretPosition(const CharPos & pos)
     this->setCaretXYCentered(pos);
 }
 
-void Editor::setCaretPositionAndActivate(const CharPos & pos)
-{
-    CharPos p=ensureCharPosValid(pos);
-    this->uncollapseAroundLine(p.line);
-    if (!this->hasFocus())
-        this->activate();
-    this->setCaretXYCentered(p);
-}
-
 void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)
 {
     PSyntaxIssue pError;
@@ -1782,7 +1764,8 @@ void Editor::onTipEvalValueReady(const QString& value)
         }
         QToolTip::showText(QCursor::pos(), mCurrentDebugTipWord + " = " + newValue, this);
     }
-    mEditorManager->onEditorTipEvalValueReady(this);
+    Q_ASSERT(mEvalTipReadyCallback!=nullptr);
+    mEvalTipReadyCallback(this);
 }
 
 void Editor::onFunctionTipsTimer()
@@ -2906,20 +2889,20 @@ void Editor::initParser()
         && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
             && mEditorManager) {
         if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()
-                && mGetOpennedEditorCallBack) {
-            Editor * e = mGetOpennedEditorCallBack(mContextFile);
+                && mGetOpennedEditorFunc) {
+            Editor * e = mGetOpennedEditorFunc(mContextFile);
             if (e) {
                 mParser = e->parser();
                 return;
             }
         }
-        if (mSettings->codeCompletion().shareParser() && mGetSharedParserCallBack) {
-            mParser = mGetSharedParserCallBack(calcParserLanguage());
+        if (mSettings->codeCompletion().shareParser() && mGetSharedParserFunc) {
+            mParser = mGetSharedParserFunc(calcParserLanguage());
             return;
         } else if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             mParser = std::make_shared<CppParser>();
             mParser->setLanguage(calcParserLanguage());
-            mParser->setOnGetFileStream(mGetFileStreamCallBack);
+            mParser->setOnGetFileStream(mGetFileStreamFunc);
             resetCppParser(mParser);
             mParser->setEnabled(true);
             return;
@@ -3361,8 +3344,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
         mCompletionPopup->setShowCodeSnippets(false);
     } else {
         mCompletionPopup->setShowCodeSnippets(mSettings->codeCompletion().showCodeIns());
-        if (mSettings->codeCompletion().showCodeIns() && mMainWindow) {
-            mCompletionPopup->setCodeSnippets(mMainWindow->codeSnippetManager()->snippets());
+        if (mSettings->codeCompletion().showCodeIns() && mCodeSnippetsManager) {
+            mCompletionPopup->setCodeSnippets(mCodeSnippetsManager->snippets());
         }
     }
     mCompletionPopup->setHideSymbolsStartWithUnderline(mSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
@@ -3592,8 +3575,7 @@ void Editor::completionInsert(bool appendFunc)
             && statement->kind != StatementKind::UserCodeSnippet
             && mMainWindow) {
         statement->usageCount+=1;
-        mMainWindow->symbolUsageManager()->updateUsage(statement->fullName,
-                                                         statement->usageCount);
+        emit symbolChoosed(statement->fullName, statement->usageCount);
     }
 
     QString funcAddOn = "";
@@ -3695,11 +3677,7 @@ void Editor::headerCompletionInsert()
             && sLine[posEnd]!='>'
             && sLine[posEnd]!='/'))
         posEnd++;
-    p.ch = posBegin;
-    setSelBegin(p);
-    p.ch = posEnd;
-    setSelEnd(p);
-
+    setSelBeginEnd(CharPos{posBegin, p.line}, CharPos{posEnd, p.line});
     setSelText(headerName);
 
     setCaretX(caretX());
@@ -3949,7 +3927,7 @@ void Editor::showDebugHint(const QString &s, int line)
             return;
         }
     }
-    if (mEditorManager->requestEvalTip(this,s)) {
+    if (mRequestEvalTipFunc && mRequestEvalTipFunc(this,s)) {
         if (mFunctionTooltip) {
             mFunctionTooltip->hide();
         }
@@ -4240,10 +4218,7 @@ void Editor::popUserCodeInTabStops()
         mTabStopY = caretY() + p->y;
         newCursorPos.line = mTabStopY;
         newCursorPos.ch = tabStopBegin;
-        setCaretXY(newCursorPos);
-        setSelBegin(newCursorPos);
-        newCursorPos.ch = tabStopEnd;
-        setSelEnd(newCursorPos);
+        setCaretAndSelection(newCursorPos,newCursorPos,CharPos{tabStopEnd, mTabStopY});
 
         mTabStopBegin = tabStopBegin;
         mTabStopEnd = tabStopEnd;
@@ -4453,34 +4428,74 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
-const GetFileStreamCallBack &Editor::getFileStreamCallBack() const
+CodeSnippetsManager *Editor::codeSnippetsManager() const
 {
-    return mGetFileStreamCallBack;
+    return mCodeSnippetsManager;
 }
 
-void Editor::setGetFileStreamCallBack(const GetFileStreamCallBack &newGetFileStreamCallBack)
+void Editor::setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager)
 {
-    mGetFileStreamCallBack = newGetFileStreamCallBack;
+    mCodeSnippetsManager = newCodeSnippetsManager;
 }
 
-const GetOpennedEditorCallBack &Editor::getOpennedEditorCallBack() const
+const LoggerFunc &Editor::loggerFunc() const
 {
-    return mGetOpennedEditorCallBack;
+    return mLoggerFunc;
 }
 
-void Editor::setGetOpennedEditorCallBack(const GetOpennedEditorCallBack &newOpennedEditorProviderCallBack)
+void Editor::setLoggerFunc(const LoggerFunc &newLoggerFunc)
 {
-    mGetOpennedEditorCallBack = newOpennedEditorProviderCallBack;
+    mLoggerFunc = newLoggerFunc;
 }
 
-const GetSharedParserrCallBack &Editor::getSharedParserCallBack() const
+const EvalTipReadyCallback &Editor::evalTipReadyCallback() const
 {
-    return mGetSharedParserCallBack;
+    return mEvalTipReadyCallback;
 }
 
-void Editor::setGetSharedParserCallBack(const GetSharedParserrCallBack &newSharedParserProviderCallBack)
+void Editor::setEvalTipReadyCallback(const EvalTipReadyCallback &newEvalTipReadyCallback)
 {
-    mGetSharedParserCallBack = newSharedParserProviderCallBack;
+    mEvalTipReadyCallback = newEvalTipReadyCallback;
+}
+
+const RequestEvalTipFunc &Editor::requestEvalTipFunc() const
+{
+    return mRequestEvalTipFunc;
+}
+
+void Editor::setRequestEvalTipFunc(const RequestEvalTipFunc &newRequestEvalTipFunc)
+{
+    mRequestEvalTipFunc = newRequestEvalTipFunc;
+}
+
+const GetFileStreamFunc &Editor::getFileStreamCallBack() const
+{
+    return mGetFileStreamFunc;
+}
+
+void Editor::setGetFileStreamCallBack(const GetFileStreamFunc &newGetFileStreamCallBack)
+{
+    mGetFileStreamFunc = newGetFileStreamCallBack;
+}
+
+const GetOpennedEditorFunc &Editor::getOpennedEditorFunc() const
+{
+    return mGetOpennedEditorFunc;
+}
+
+void Editor::setGetOpennedFunc(const GetOpennedEditorFunc &newOpennedEditorProviderCallBack)
+{
+    mGetOpennedEditorFunc = newOpennedEditorProviderCallBack;
+}
+
+const GetSharedParserrFunc &Editor::getSharedParserFunc() const
+{
+    return mGetSharedParserFunc;
+}
+
+void Editor::setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack)
+{
+    mGetSharedParserFunc = newSharedParserProviderCallBack;
 }
 
 bool Editor::codeCompletionEnabled() const
@@ -4605,8 +4620,8 @@ void Editor::setContextFile(const QString &newContextFile)
         if (mCodeCompletionEnabled
                 && !mSettings->codeCompletion().shareParser()
                 && !mContextFile.isEmpty()
-                && mGetOpennedEditorCallBack) {
-            Editor * e = mGetOpennedEditorCallBack(mContextFile);
+                && mGetOpennedEditorFunc) {
+            Editor * e = mGetOpennedEditorFunc(mContextFile);
             if (e)
                 mParser = e->parser();
         }
@@ -5125,11 +5140,11 @@ void Editor::reformat(bool doReparse)
     QByteArray content = text().toUtf8();
     QStringList args = mSettings->codeFormatter().getArguments();
     QString command = escapeCommandForPlatformShell(extractFileName(astyle), args);
-    if (mMainWindow) {
-        mMainWindow->logToolsOutput(tr("Reformatting content using astyle..."));
-        mMainWindow->logToolsOutput("------------------");
-        mMainWindow->logToolsOutput(tr("- Astyle: %1").arg(astyle));
-        mMainWindow->logToolsOutput(tr("- Command: %1").arg(command));
+    if (mLoggerFunc) {
+        mLoggerFunc(tr("Reformatting content using astyle..."));
+        mLoggerFunc("------------------");
+        mLoggerFunc(tr("- Astyle: %1").arg(astyle));
+        mLoggerFunc(tr("- Command: %1").arg(command));
     }
     auto [newContent, astyleError, processError] =
         runAndGetOutput(astyle, extractFileDir(astyle), args, content, true);
@@ -5139,12 +5154,12 @@ void Editor::reformat(bool doReparse)
 #else
         QString msg = QString::fromUtf8(astyleError);
 #endif
-        if (mMainWindow)
-            mMainWindow->logToolsOutput(msg);
+        if (mLoggerFunc)
+            mLoggerFunc(msg);
     }
     if (!processError.isEmpty())
-        if (mMainWindow)
-            mMainWindow->logToolsOutput(processError);
+        if (mLoggerFunc)
+            mLoggerFunc(processError);
     if (newContent.isEmpty())
         return;
     replaceContent(QString::fromUtf8(newContent), doReparse);
@@ -5166,8 +5181,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
     setOptions(oldOptions);
     endEditing();
 
-    if (doReparse && mMainWindow && !mMainWindow->isQuitting() && !mMainWindow->isClosingAll()
-            && !(inProject() && mMainWindow->closingProject())) {
+    if (doReparse) {
         reparse(true);
         checkSyntaxInBack();
         reparseTodo();
@@ -5285,11 +5299,6 @@ void Editor::setActiveBreakpointFocus(int line, bool setFocus)
 
         // Put the caret at the active breakpoint
         mActiveBreakpointLine = line;
-
-        if (setFocus)
-            setCaretPositionAndActivate(CharPos{0,line});
-        else
-            setCaretPosition(CharPos{0,line});
 
         // Invalidate new active line
         invalidateGutterLine(line);

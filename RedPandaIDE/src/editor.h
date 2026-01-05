@@ -42,6 +42,7 @@ class FunctionTooltipWidget;
 class BreakpointModel;
 class BookmarkModel;
 class Settings;
+class CodeSnippetsManager;
 struct TabStop {
     int x;
     int endX;
@@ -50,9 +51,12 @@ struct TabStop {
 using PTabStop = std::shared_ptr<TabStop>;
 class Editor;
 
-using GetSharedParserrCallBack = std::function<PCppParser (ParserLanguage)>;
-using GetOpennedEditorCallBack = std::function<Editor *(const QString &)>;
-using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
+using GetSharedParserrFunc = std::function<PCppParser (ParserLanguage)>;
+using GetOpennedEditorFunc = std::function<Editor *(const QString &)>;
+using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
+using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
+using EvalTipReadyCallback = std::function<void (Editor *)>;
+using LoggerFunc = std::function<void (const QString&)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -158,7 +162,6 @@ public:
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
     void setFilename(const QString& newName);
-    void activate(bool focus=true);
 
     QString caption();
 
@@ -172,7 +175,6 @@ public:
     void copyAsHTML();
 
     void setCaretPosition(const QSynedit::CharPos & pos);
-    void setCaretPositionAndActivate(const QSynedit::CharPos & pos);
 
     void addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString& hint);
     void clearSyntaxIssues();
@@ -269,6 +271,7 @@ signals:
     void parseTodoRequested(const QString& filename, bool inProject);
     void updateEncodingInfoRequested(const Editor *e);
     void openFileRequested(const QString& filename, FileType fileType, const QString& contextFile , const QSynedit::CharPos& caretPos);
+    void symbolChoosed(const QString& filename, int usageCount);
 
     void showOccured(Editor *e);
     void focusInOccured(Editor *e);
@@ -429,9 +432,14 @@ private:
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
-    GetSharedParserrCallBack mGetSharedParserCallBack;
-    GetOpennedEditorCallBack mGetOpennedEditorCallBack;
-    GetFileStreamCallBack mGetFileStreamCallBack;
+    CodeSnippetsManager *mCodeSnippetsManager;
+
+    GetSharedParserrFunc mGetSharedParserFunc;
+    GetOpennedEditorFunc mGetOpennedEditorFunc;
+    GetFileStreamFunc mGetFileStreamFunc;
+    RequestEvalTipFunc mRequestEvalTipFunc;
+    EvalTipReadyCallback mEvalTipReadyCallback;
+    LoggerFunc mLoggerFunc;
 
     // SynEdit interface
 protected:
@@ -490,14 +498,26 @@ public:
     bool codeCompletionEnabled() const;
     void setCodeCompletionEnabled(bool newUsingParser);
 
-    const GetSharedParserrCallBack &getSharedParserCallBack() const;
-    void setGetSharedParserCallBack(const GetSharedParserrCallBack &newSharedParserProviderCallBack);
+    const GetSharedParserrFunc &getSharedParserFunc() const;
+    void setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack);
 
-    const GetOpennedEditorCallBack &getOpennedEditorCallBack() const;
-    void setGetOpennedEditorCallBack(const GetOpennedEditorCallBack &newOpennedEditorProviderCallBack);
+    const GetOpennedEditorFunc &getOpennedEditorFunc() const;
+    void setGetOpennedFunc(const GetOpennedEditorFunc &newOpennedEditorProviderCallBack);
 
-    const GetFileStreamCallBack &getFileStreamCallBack() const;
-    void setGetFileStreamCallBack(const GetFileStreamCallBack &newGetFileStreamCallBack);
+    const GetFileStreamFunc &getFileStreamCallBack() const;
+    void setGetFileStreamCallBack(const GetFileStreamFunc &newGetFileStreamCallBack);
+
+    const RequestEvalTipFunc &requestEvalTipFunc() const;
+    void setRequestEvalTipFunc(const RequestEvalTipFunc &newRequestEvalTipFunc);
+
+    const EvalTipReadyCallback &evalTipReadyCallback() const;
+    void setEvalTipReadyCallback(const EvalTipReadyCallback &newEvalTipReadyCallback);
+
+    const LoggerFunc &loggerFunc() const;
+    void setLoggerFunc(const LoggerFunc &newLoggerFunc);
+
+    CodeSnippetsManager *codeSnippetsManager() const;
+    void setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager);
 
 protected:
     // QWidget interface

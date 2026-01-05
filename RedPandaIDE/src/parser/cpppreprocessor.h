@@ -129,7 +129,7 @@ public:
     const QList<QString> &includePathList() const { return mIncludePathList; }
 
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
-    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
+    void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
 
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
 
@@ -302,7 +302,7 @@ private:
     bool mParseSystem;
     bool mParseLocal;
 
-    GetFileStreamCallBack mOnGetFileStream;
+    GetFileStreamFunc mOnGetFileStream;
 };
 
 using PCppPreprocessor = std::shared_ptr<CppPreprocessor>;

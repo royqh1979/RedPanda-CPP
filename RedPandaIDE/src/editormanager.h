@@ -52,6 +52,7 @@ public:
 
     bool swapEditor(Editor* editor);
     void activeEditor(Editor *e, bool focus);
+    void activeEditorAndSetCaret(Editor *e, QSynedit::CharPos pos);
 
     void saveAll();
     bool saveAllForProject();

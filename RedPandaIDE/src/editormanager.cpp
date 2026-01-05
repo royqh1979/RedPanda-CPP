@@ -58,12 +58,17 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl);
-    e->setGetSharedParserCallBack(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
-    e->setGetOpennedEditorCallBack(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
+    e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
+    e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(
                                     &EditorManager::getContentFromOpenedEditor,this,
                                     std::placeholders::_1, std::placeholders::_2));
+    e->setRequestEvalTipFunc(std::bind(&EditorManager::requestEvalTip,this,
+                                       std::placeholders::_1, std::placeholders::_2));
+    e->setEvalTipReadyCallback(std::bind(&EditorManager::onEditorTipEvalValueReady,
+                                         this, std::placeholders::_1));
     e->applySettings();
+    e->setCodeSnippetsManager(pMainWindow->codeSnippetManager());
     e->setEditorManager(this);
     e->setEncodingOption(encoding);
     e->setFilename(filename);
@@ -127,6 +132,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::hideOccured, pMainWindow, &MainWindow::removeInfosForEditor);
     connect(e, &QWidget::customContextMenuRequested, pMainWindow, &MainWindow::onEditorContextMenu);
     connect(e, &Editor::openFileRequested, pMainWindow, &MainWindow::onOpenFileRequested);
+    connect(e, &Editor::symbolChoosed, pMainWindow->symbolUsageManager(), &SymbolUsageManager::updateUsage);
 
     if (!pMainWindow->openingFiles()
             && !pMainWindow->openingProject()) {
@@ -634,11 +640,21 @@ void EditorManager::selectPreviousPage()
 
 void EditorManager::activeEditor(Editor *e, bool focus)
 {
+    if (e==nullptr)
+        return;
     QTabWidget * pageControl = findPageControlForEditor(e);
     if (pageControl!=nullptr) {
         pageControl->setCurrentWidget(e);
         if (focus)
             e->setFocus();
+    }
+}
+
+void EditorManager::activeEditorAndSetCaret(Editor *e, QSynedit::CharPos pos)
+{
+    if (e) {
+        e->setCaretPosition(pos);
+        activeEditor(e,true);
     }
 }
 

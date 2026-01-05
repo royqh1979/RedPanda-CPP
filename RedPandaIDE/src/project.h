@@ -357,7 +357,7 @@ private:
 
     QList<PProjectModelNode> mCustomFolderNodes;
     ProjectModel mModel;
-    EditorManager *mEditorList;
+    EditorManager *mEditorManager;
     QFileSystemWatcher* mFileSystemWatcher;
 };
 

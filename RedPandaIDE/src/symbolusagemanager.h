@@ -37,6 +37,7 @@ public:
     void save();
     void reset();
     PSymbolUsage findUsage(const QString& fullName) const;
+public slots:
     void updateUsage(const QString& symbol, int count);
 private:
     QHash<QString, PSymbolUsage> mUsages;

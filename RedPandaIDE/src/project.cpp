@@ -52,14 +52,14 @@ Project::Project(const QString &filename, const QString &name,
     mName(name),
     mModified(false),
     mModel(this),
-    mEditorList(editorList),
+    mEditorManager(editorList),
     mFileSystemWatcher(fileSystemWatcher)
 {
     mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
     mParser->setOnGetFileStream(
                 std::bind(
-                    &EditorManager::getContentFromOpenedEditor,mEditorList,
+                    &EditorManager::getContentFromOpenedEditor,mEditorManager,
                     std::placeholders::_1, std::placeholders::_2));
     mFileSystemWatcher->addPath(directory());
 }
@@ -105,16 +105,16 @@ std::shared_ptr<Project> Project::create(
 Project::~Project()
 {
     mFileSystemWatcher->removePath(directory());
-    mEditorList->beginUpdate();
+    mEditorManager->beginUpdate();
     foreach (const PProjectUnit& unit, mUnits) {
         Editor * editor = unitEditor(unit);
         if (editor) {
             editor->setProject(nullptr);
             if (fileExists(directory()))
-                mEditorList->forceCloseEditor(editor);
+                mEditorManager->forceCloseEditor(editor);
         }
     }
-    mEditorList->endUpdate();
+    mEditorManager->endUpdate();
 }
 
 QString Project::directory() const
@@ -380,10 +380,10 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
             return nullptr;
         }
 
-        Editor * editor = mEditorList->getOpenedEditor(unit->fileName());
+        Editor * editor = mEditorManager->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setProject(this);
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
             return editor;
         }
         QByteArray encoding;
@@ -391,12 +391,12 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
 
-        editor = mEditorList->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
+        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
         if (editor) {
             //editor->setProject(this);
             //unit->setEncoding(encoding);
             loadUnitLayout(editor);
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
             return editor;
         }
     }
@@ -410,24 +410,24 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
             return nullptr;
         }
 
-        Editor * editor = mEditorList->getOpenedEditor(unit->fileName());
+        Editor * editor = mEditorManager->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
             editor->setProject(this);
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
             return editor;
         }
         QByteArray encoding;
         encoding = unit->encoding();
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
-        editor = mEditorList->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
+        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
         if (editor) {
             //editor->setInProject(true);
             editor->setCaretY(layout->caretY);
             editor->setCaretX(layout->caretX);
             editor->setTopPos(layout->top);
             editor->setLeftPos(layout->left);
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
             return editor;
         }
     }
@@ -438,14 +438,14 @@ Editor *Project::unitEditor(const PProjectUnit &unit) const
 {
     if (!unit)
         return nullptr;
-    return mEditorList->getOpenedEditor(unit->fileName());
+    return mEditorManager->getOpenedEditor(unit->fileName());
 }
 
 Editor *Project::unitEditor(const ProjectUnit *unit) const
 {
     if (!unit)
         return nullptr;
-    return mEditorList->getOpenedEditor(unit->fileName());
+    return mEditorManager->getOpenedEditor(unit->fileName());
 }
 
 QList<PProjectUnit> Project::unitList()
@@ -531,7 +531,7 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
         Editor* editor = unitEditor(unit);
         if (editor) {
             editor->setProject(nullptr);
-            mEditorList->closeEditor(editor);
+            mEditorManager->closeEditor(editor);
         }
     }
 
@@ -634,8 +634,8 @@ void Project::saveLayout()
     QHash<QString,int> editorOrderSet;
     // Write list of open project files
     int order=0;
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor* e=(*mEditorList)[i];
+    for (int i=0;i<mEditorManager->pageCount();i++) {
+        Editor* e=(*mEditorManager)[i];
         if (e && e->inProject() && !editorOrderSet.contains(e->filename())) {
             editorOrderSet.insert(e->filename(),order);
             order++;
@@ -645,7 +645,7 @@ void Project::saveLayout()
 
     Editor *e, *e2;
     // Remember what files were visible
-    mEditorList->getVisibleEditors(e, e2);
+    mEditorManager->getVisibleEditors(e, e2);
 
     QJsonArray jsonLayouts;
     // save editor info
@@ -960,6 +960,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     // Add list of files
     if (aTemplate->version() > 0) {
         QDir dir(aTemplate->folder());
+        Editor *lastNewEditor=nullptr;
         for (int i=0;i<aTemplate->unitCount();i++) {
             // Pick file contents
             PTemplateUnit templateUnit = aTemplate->unit(i);
@@ -980,14 +981,14 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 FileType fileType=getFileType(unit->fileName());
                 if ( isC_CPP_ASMSourceFile(fileType)
                         || isC_CPPHeaderFile(fileType)) {
-                    Editor * editor = mEditorList->newEditor(
+                    Editor * editor = mEditorManager->newEditor(
                                 unit->fileName(),
                                 unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
                                 FileType::None,
                                 QString(),
                                 this,
                                 false);
-                    editor->activate();
+                    lastNewEditor = editor;
                 }
             } else {
                 QString s;
@@ -999,7 +1000,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     s = templateUnit->CText;
                     unit = newUnit(mRootNode,templateUnit->CName);
                 }
-                Editor * editor = mEditorList->newEditor(
+                Editor * editor = mEditorManager->newEditor(
                             unit->fileName(),
                             unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
                             FileType::None,
@@ -1023,9 +1024,10 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     }
                     editor->save(true,false);
                 }
-                editor->activate();
+                lastNewEditor  = editor;
             }
         }
+        mEditorManager->activeEditor(lastNewEditor,true);
     }
     mModel.endUpdate();
     return true;
@@ -1677,7 +1679,7 @@ void Project::closeUnit(PProjectUnit& unit)
     saveLayout();
     Editor * editor = unitEditor(unit);
     if (editor) {
-        mEditorList->forceCloseEditor(editor);
+        mEditorManager->forceCloseEditor(editor);
     }
 }
 
@@ -1810,8 +1812,7 @@ PProjectUnit Project::doAutoOpen()
         PProjectUnit unit = findUnit(focusedFilename);
         if (unit) {
             Editor * editor = unitEditor(unit);
-            if (editor)
-                editor->activate();
+            mEditorManager->activeEditor(editor,true);
         }
         return unit;
     }
@@ -2284,7 +2285,7 @@ void Project::renameFolderNode(PProjectModelNode node, const QString newName)
 
 EditorManager *Project::editorList() const
 {
-    return mEditorList;
+    return mEditorManager;
 }
 
 ProjectModelType Project::modelType() const

@@ -23,7 +23,7 @@
 #include <memory>
 #include <functional>
 
-using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
+using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 
 enum class ParserLanguage {
     C,

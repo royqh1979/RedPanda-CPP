@@ -1244,7 +1244,11 @@ void MainWindow::setActiveBreakpoint(QString fileName, int line, bool setFocus)
     Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(line,setFocus);
-        e->activate(false);
+        if (setFocus)
+            mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
+        else
+            e->setCaretPosition(QSynedit::CharPos{0,line});
+
         if (setFocus) {
             activateWindow();
         }
@@ -1335,7 +1339,7 @@ void MainWindow::onOpenFileRequested(
 {
     Editor *e=openFile(filename, true, fileType, contextFile);
     if (e) {
-        e->setCaretPositionAndActivate(caretPos);
+        mEditorManager->activeEditorAndSetCaret(e,caretPos);
     }
 }
 
@@ -1808,7 +1812,7 @@ void MainWindow::openFiles(const QStringList &files)
             e->reparse(false);
             e->checkSyntaxInBack();
             e->reparseTodo();
-            e->activate();
+            mEditorManager->activeEditor(e,true);
         }
     });
     //Check if there is a project file in the list and open it
@@ -1842,7 +1846,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         if (fileType != FileType::None)
             editor->setFileType(fileType);
         if (activate) {
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
         }
         return editor;
     }
@@ -1875,7 +1879,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
         if (activate) {
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
         } else {
             updateEditorActions();
         }
@@ -3671,7 +3675,7 @@ void MainWindow::loadLastOpens()
         focusedEditor->reparse(false);
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
-        focusedEditor->activate();
+        mEditorManager->activeEditor(focusedEditor,true);
     }
 }
 
@@ -3731,7 +3735,7 @@ void MainWindow::newEditor(const QString& suffix)
                                                pSettings->editor().defaultEncoding(),
                                                FileType::None, QString(),
                                                nullptr,true);
-        editor->activate();
+        mEditorManager->activeEditor(editor,true);
         //updateForEncodingInfo();
     }  catch (FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
@@ -5008,7 +5012,7 @@ void MainWindow::onClassBrowserGotoDeclaration()
     line = statement->line;
     Editor* e=openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line});
+        mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
     }
 }
 
@@ -5030,7 +5034,7 @@ void MainWindow::onClassBrowserGotoDefinition()
     line = statement->definitionLine;
     Editor* e=openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line});
+        mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
     }
 }
 
@@ -5631,7 +5635,7 @@ void MainWindow::onFileChanged(const QString &path)
     Editor *e = mEditorManager->getOpenedEditor(path);
     if (e) {
         if (fileExists(path)) {
-            e->activate();
+            mEditorManager->activeEditor(e,true);
             if (QMessageBox::question(this,tr("File Changed"),
                                       tr("File '%1' was changed.").arg(path)+"<BR /><BR />" + tr("Reload its content from disk?"),
                                       QMessageBox::Yes|QMessageBox::No,
@@ -5640,7 +5644,7 @@ void MainWindow::onFileChanged(const QString &path)
                     int top = e->topPos();
                     QSynedit::CharPos caretPos = e->caretXY();
                     e->loadFile();
-                    e->setCaretPositionAndActivate(QSynedit::CharPos{0,caretPos.line});
+                    mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,caretPos.line});
                     e->setTopPos(top);
                 } catch(FileError e) {
                     QMessageBox::critical(this,tr("Error"),e.reason());
@@ -6221,7 +6225,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                                 }
                             }
                         }
-                        editor->setCaretPositionAndActivate(QSynedit::CharPos{0,startLine});
+                        mEditorManager->activeEditorAndSetCaret(editor,QSynedit::CharPos{0,startLine});
                     }
                     break;
                 case MainWindow::CompileSuccessionTaskType::RunProblemCases:
@@ -6452,7 +6456,7 @@ void MainWindow::on_actionPaste_triggered()
         Editor * editor = mEditorManager->getEditor();
         if (editor) {
             editor->pasteFromClipboard();
-            editor->activate();
+            mEditorManager->activeEditor(editor,true);
         }
     }
 }
@@ -6507,7 +6511,7 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
     if (editor == nullptr)
         return;
 
-    editor->setCaretPositionAndActivate(QSynedit::CharPos{issue->column,issue->line});
+    mEditorManager->activeEditorAndSetCaret(editor,QSynedit::CharPos{issue->column,issue->line});
 }
 
 void MainWindow::on_actionEncode_in_ANSI_triggered()
@@ -6984,7 +6988,7 @@ void MainWindow::on_actionReformat_Code_triggered()
     Editor* e = mEditorManager->getEditor();
     if (e) {
         e->reformat();
-        e->activate();
+        mEditorManager->activeEditor(e,true);
     }
 }
 
@@ -7005,7 +7009,7 @@ void MainWindow::on_actionBack_triggered()
     const PEditorCaret &caret = mCaretList.gotoAndGetPrevious();
     mCaretList.pause();
     if (caret) {
-        caret->editor->setCaretPositionAndActivate(QSynedit::CharPos{caret->aChar,caret->line});
+        mEditorManager->activeEditorAndSetCaret(caret->editor,QSynedit::CharPos{caret->aChar,caret->line});
     }
     mCaretList.unPause();
     updateCaretActions();
@@ -7017,7 +7021,7 @@ void MainWindow::on_actionForward_triggered()
     const PEditorCaret &caret = mCaretList.gotoAndGetNext();
     mCaretList.pause();
     if (caret) {
-        caret->editor->setCaretPositionAndActivate(QSynedit::CharPos{caret->aChar,caret->line});
+        mEditorManager->activeEditorAndSetCaret(caret->editor, QSynedit::CharPos{caret->aChar,caret->line});
     }
     mCaretList.unPause();
     updateCaretActions();
@@ -7210,7 +7214,7 @@ void MainWindow::on_searchView_doubleClicked(const QModelIndex &index)
                 index,filename,line,start)) {
         Editor *e = openFile(filename);
         if (e) {
-            e->setCaretPositionAndActivate(QSynedit::CharPos{start,line});
+            mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{start,line});
         }
     }
 }
@@ -7230,7 +7234,7 @@ void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
     if (breakpoint) {
         Editor * e = openFile(breakpoint->filename);
         if (e) {
-            e->setCaretPositionAndActivate(QSynedit::CharPos{0,breakpoint->line});
+            mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,breakpoint->line});
         }
     }
 }
@@ -7582,7 +7586,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
     Editor* e = openFile(filename);
     if (e) {
-        e->setCaretPositionAndActivate(QSynedit::CharPos{0,line-1});
+        mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,line-1});
     }
 }
 
@@ -7813,8 +7817,7 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 
     parseFileListNonBlocking(mProject->cppParser());
     Editor * editor = mProject->openUnit(newUnit, false);
-    if (editor)
-        editor->activate();
+    mEditorManager->activeEditor(editor,true);
 #ifdef ENABLE_VCS
     QString branch;
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
@@ -8361,7 +8364,7 @@ void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
     if (item) {
         Editor * editor = mEditorManager->getOpenedEditor(item->filename);
         if (editor) {
-            editor->setCaretPositionAndActivate(QSynedit::CharPos{item->ch,item->line});
+            mEditorManager->activeEditorAndSetCaret(editor, QSynedit::CharPos{item->ch,item->line});
         }
     }
 }
@@ -8829,7 +8832,7 @@ void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
     if (bookmark) {
         Editor *editor= openFile(bookmark->filename);
         if (editor) {
-            editor->setCaretPositionAndActivate(QSynedit::CharPos{0,bookmark->line});
+            mEditorManager->activeEditorAndSetCaret(editor,QSynedit::CharPos{0,bookmark->line});
         }
     }
 }
@@ -9129,9 +9132,7 @@ void MainWindow::onOpenProblemAnswerFile()
     if (!problem || problem->answerProgram().isEmpty())
         return;
     Editor *e = openFile(problem->answerProgram());
-    if (e) {
-        e->activate();
-    }
+    mEditorManager->activeEditor(e,true);
 }
 
 bool MainWindow::openningFiles() const
@@ -9159,7 +9160,7 @@ void MainWindow::switchCurrentStackTrace(int idx)
     if (trace) {
         Editor *e = openFile(trace->filename);
         if (e) {
-            e->setCaretPositionAndActivate(QSynedit::CharPos{0,trace->line});
+            mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,trace->line});
         }
         mDebugger->selectFrame(trace);
         mDebugger->refreshStackVariables();
