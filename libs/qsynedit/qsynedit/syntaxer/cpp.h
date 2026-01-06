@@ -35,7 +35,7 @@ public:
         Comment,
         Directive,
         Identifier,
-        Key,
+        Keyword,
         Null,
         BinInteger,
         DecInteger,

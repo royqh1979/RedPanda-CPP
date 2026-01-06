@@ -305,6 +305,10 @@ void CppSyntaxer::procDocstring()
         procNull();
         return;
     }
+    if( mLine[mRun] == '@' && mRun+1 < mLineSize && isIdentChar(mLine[mRun+1])) {
+        mTokenId = TokenId::Keyword;
+        mRun++;
+    }
     bool isWord = isIdentChar(mLine[mRun]);
     while (mRun<mLineSize) {
         if(isSpaceChar(mLine[mRun]))
@@ -602,7 +606,7 @@ void CppSyntaxer::procIdentifier()
     QString word = mLine.mid(mRun,wordEnd-mRun);
     mRun=wordEnd;
     if (isKeyword(word)) {
-        mTokenId = TokenId::Key;
+        mTokenId = TokenId::Keyword;
         if (CppStatementKeyWords.contains(word)) {
             if (word == "else") {
                 if (!mRange.ancestorsForIf.isEmpty()) {
@@ -618,7 +622,7 @@ void CppSyntaxer::procIdentifier()
             }
         }
     } else if (mRange.inAttribute && StandardAttributes.contains(word)) {
-        mTokenId = TokenId::Key;
+        mTokenId = TokenId::Keyword;
     } else {
         mTokenId = TokenId::Identifier;
     }
@@ -1561,7 +1565,7 @@ const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
         return mPreprocessorAttribute;
     case TokenId::Identifier:
         return mIdentifierAttribute;
-    case TokenId::Key:
+    case TokenId::Keyword:
         return mKeywordAttribute;
     case TokenId::DecInteger:
         return mNumberAttribute;
@@ -1706,7 +1710,7 @@ void CppSyntaxer::next()
             }
         }
     } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
-    if (mTokenId == TokenId::Key)
+    if (mTokenId == TokenId::Keyword)
         mLastKeyword = getToken();
     else if (mTokenId != TokenId::Space)
         mLastKeyword = "";

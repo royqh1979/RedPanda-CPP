@@ -456,7 +456,10 @@ MainWindow::MainWindow(QWidget *parent)
     mStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
     mCompletionPopup = new CodeCompletionPopup(this);
     mCompletionPopup->setColors(mStatementColors);
+    mCompletionPopup->setSymbolUsageManager(mSymbolUsageManager);
+    mCompletionPopup->setShowEditorCaretFunc(std::bind(&EditorManager::showActiveEditorCaret,mEditorManager));
     mHeaderCompletionPopup = new HeaderCompletionPopup(this);
+    mHeaderCompletionPopup->setShowEditorCaretFunc(std::bind(&EditorManager::showActiveEditorCaret,mEditorManager));
     mFunctionTip = new FunctionTooltipWidget(this);
 
     mClassBrowserModel->setColors(mStatementColors);

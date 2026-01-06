@@ -3604,14 +3604,12 @@ void Editor::completionInsert(bool appendFunc)
     QString funcAddOn = "";
 
 // delete the part of the word that's already been typed ...
-    CharPos p = getTokenEnd(caretXY());
-    CharPos pStart = getTokenBegin(caretXY());
-    if (QSynedit::isAssemblyLanguage( syntaxer()->language())) {
-        if (statement->command.startsWith(".")
-                || statement->command.startsWith("%"))
-            pStart.ch--;
-    }
-    setCaretAndSelection(pStart,pStart,p);
+    CharPos caretPos = caretXY();
+    CharPos pEnd = getTokenEnd(caretXY());
+    CharPos pStart = prevWordBegin(caretXY());
+    if (caretPos == pStart && caretPos.ch>0)
+        pStart = getTokenBegin(CharPos{caretPos.ch-1,caretPos.line});
+    setCaretAndSelection(pStart,pStart,pEnd);
 
     // if we are inserting a function,
     if (appendFunc) {
@@ -3630,7 +3628,7 @@ void Editor::completionInsert(bool appendFunc)
                 ||
                 (statement->kind == StatementKind::Preprocessor
                   && !statement->args.isEmpty())) {
-            QChar nextCh = charAt(nextNonSpaceChar(p));
+            QChar nextCh = charAt(nextNonSpaceChar(pEnd));
             if (nextCh=='(') {
                 funcAddOn = "";
             } else if (isIdentChar(nextCh) || nextCh == '"'
@@ -3648,13 +3646,9 @@ void Editor::completionInsert(bool appendFunc)
         //first move caret to the begin of the word to be replaced
         insertCodeSnippet(statement->value);
     } else {
-        if (
-                (statement->kind == StatementKind::Keyword
-                 || statement->kind == StatementKind::Preprocessor)
-                && (statement->command.startsWith('#')
-                    || statement->command.startsWith('@'))
-                ) {
-
+        if (statement->kind == StatementKind::Keyword
+                && !isIdentStartChar(statement->command[0])
+                && statement->command[0] != charAt(pStart)) {
             setSelText(statement->command.mid(1));
         } else
             setSelText(statement->command + funcAddOn);
@@ -3667,7 +3661,6 @@ void Editor::completionInsert(bool appendFunc)
                 && (statement->args != "()")
                 && (statement->args != "(void)")) {
             setCaretX(caretX() - funcAddOn.length()+1);
-
         } else {
             setCaretX(caretX());
         }

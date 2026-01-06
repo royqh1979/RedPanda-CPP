@@ -75,7 +75,7 @@ const QSet<QString> GASSyntaxer::Directives {
     ".struct", ".subsection", ".symver", ".tag", ".text",
     ".title", ".tls", ".type", ".uleb128", ".val",".version",
     ".vtable", ".warning",".weak",".weakref",".word",
-    ".zero",".2byte",".4byte",".8byte"
+    ".zero",
 };
 
 GASSyntaxer::GASSyntaxer(): ASMSyntaxer(),

@@ -23,6 +23,7 @@
 #include "../parser/cppparser.h"
 #include "codecompletionlistview.h"
 
+class SymbolUsageManager;
 class ColorSchemeItem;
 class CodeCompletionListModel : public QAbstractListModel {
     Q_OBJECT
@@ -94,6 +95,7 @@ public:
     ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
+    void setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc);
     void prepareSearch(const QString& preWord,
                        const QStringList & ownerExpression,
                        const QString& memberOperator,
@@ -205,6 +207,8 @@ private:
     bool mHideSymbolsStartWithUnderline;
     bool mHideSymbolsStartWithTwoUnderline;
 
+    SymbolUsageManager *mSymbolUsageManager;
+
     // QWidget interface
 protected:
     void hideEvent(QHideEvent *event) override;
@@ -214,6 +218,8 @@ public:
     bool event(QEvent *event) override;
     const QString &memberOperator() const;
 
+    SymbolUsageManager *symbolUsageManager() const;
+    void setSymbolUsageManager(SymbolUsageManager *newSymbolUsageManager);
 };
 
 #endif // CODECOMPLETIONPOPUP_H

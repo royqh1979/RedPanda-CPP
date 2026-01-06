@@ -125,6 +125,11 @@ void HeaderCompletionPopup::setKeypressedCallback(const KeyPressedCallback &newK
     mListView->setKeypressedCallback(newKeypressedCallback);
 }
 
+void HeaderCompletionPopup::setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc)
+{
+    mListView->setShowEditorCaretFunc(newShowEditorCaretFunc);
+}
+
 void HeaderCompletionPopup::setSuggestionColor(const QColor& localColor,
                                                const QColor& projectColor,
                                                const QColor& systemColor,

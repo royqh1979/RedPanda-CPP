@@ -93,6 +93,7 @@ public:
     int pageCount() const;
     void selectNextPage();
     void selectPreviousPage();
+    void showActiveEditorCaret();
 
     Editor* operator[](int index);
 

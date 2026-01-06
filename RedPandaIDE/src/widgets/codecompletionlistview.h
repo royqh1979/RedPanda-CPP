@@ -22,7 +22,7 @@
 #include "../parser/parserutils.h"
 using KeyPressedCallback = std::function<bool (QKeyEvent *)>;
 using InputMethodCallback = std::function<bool (QInputMethodEvent*)>;
-
+using ShowEditorCaretFunc = std::function<void ()>;
 class CodeCompletionListView: public QListView {
     Q_OBJECT
 public:
@@ -32,21 +32,20 @@ public:
     const KeyPressedCallback &keypressedCallback() const;
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
 
-    const InputMethodCallback &inputMethodCallback() const;
-    void setInputMethodCallback(const InputMethodCallback &newInputMethodCallback);
+//    const InputMethodCallback &inputMethodCallback() const;
+//    void setInputMethodCallback(const InputMethodCallback &newInputMethodCallback);
+    // QWidget interface
+    const ShowEditorCaretFunc &showEditorCaretFunc() const;
+    void setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 private:
     KeyPressedCallback mKeypressedCallback;
+    ShowEditorCaretFunc mShowEditorCaretFunc;
 
-    // QWidget interface
-protected:
-    void focusInEvent(QFocusEvent *event) override;
-
-    // QWidget interface
-protected:
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
 };
 
 

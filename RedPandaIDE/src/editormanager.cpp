@@ -644,6 +644,13 @@ void EditorManager::selectPreviousPage()
     }
 }
 
+void EditorManager::showActiveEditorCaret()
+{
+    Editor *editor = getEditor();
+    if (editor)
+        editor->showCaret();
+}
+
 void EditorManager::activeEditor(Editor *e, bool focus)
 {
     if (e==nullptr)
