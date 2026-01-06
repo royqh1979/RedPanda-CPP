@@ -23,6 +23,7 @@
 #include <QRecursiveMutex>
 #include "utils.h"
 #include "editor.h"
+#include "reformatter/astyleformatter.h"
 
 class MainWindow;
 class Project;
@@ -102,6 +103,8 @@ public:
     QTabWidget *rightPageWidget() const;
 
     PCppParser sharedParser(ParserLanguage language);
+
+    std::unique_ptr<BaseReformatter> createReformatterForEditor(Editor *);
 
 signals:
     void editorClosed();

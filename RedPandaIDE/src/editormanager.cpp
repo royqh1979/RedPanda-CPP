@@ -70,7 +70,8 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                        std::placeholders::_1, std::placeholders::_2));
     e->setEvalTipReadyCallback(std::bind(&EditorManager::onEditorTipEvalValueReady,
                                          this, std::placeholders::_1));
-    e->setLoggerFunc(std::bind(&MainWindow::logToolsOutput, pMainWindow, std::placeholders::_1));
+    e->setGetReformatterFunc(std::bind(&EditorManager::createReformatterForEditor,
+                                       this, std::placeholders::_1));
 #ifdef ENABLE_SDCC
     e->setGetCompilerTypeForEditorFunc(std::bind(
                                            &EditorManager::getCompilerTypeForEditor,
@@ -422,6 +423,14 @@ PCppParser EditorManager::sharedParser(ParserLanguage language)
         mSharedParsers.insert(language,parser);
     }
     return parser;
+}
+
+std::unique_ptr<BaseReformatter> EditorManager::createReformatterForEditor(Editor *)
+{
+    const QString &astyle = pSettings->environment().AStylePath();
+    QStringList args = pSettings->codeFormatter().getArguments();
+    return std::make_unique<AStyleReformatter>(astyle,args,
+                                               std::bind(&MainWindow::logToolsOutput, pMainWindow, std::placeholders::_1));
 }
 
 QTabWidget *EditorManager::leftPageWidget() const

@@ -1,5 +1,8 @@
 add_executable(RedPandaIDE WIN32 MACOSX_BUNDLE)
 
+target_sources(RedPandaIDE PRIVATE
+    src/utils/types.h
+    )
 target_qt_plain_cpp(RedPandaIDE
     src/autolinkmanager
     src/colorscheme
@@ -79,6 +82,9 @@ target_moc_classes(RedPandaIDE
     src/parser/statementmodel
     # problems
     src/problems/competitivecompenionhandler
+    # reformatter
+    src/reformatter/basereformatter
+    src/reformatter/astyleformatter
     # settings dialog
     src/settingsdialog/settingswidget
     # widgets

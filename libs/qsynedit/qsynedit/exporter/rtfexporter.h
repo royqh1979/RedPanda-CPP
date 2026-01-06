@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef RTFEXPORTER_H
-#define RTFEXPORTER_H
+#ifndef QSYNEDIT_RTFEXPORTER_H
+#define QSYNEDIT_RTFEXPORTER_H
 
 #include "exporter.h"
 

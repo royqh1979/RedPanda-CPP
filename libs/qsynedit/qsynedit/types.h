@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef QSYNEDIT_TYPES_H
+#define QSYNEDIT_TYPES_H
 
 #include <QIcon>
 #include <QList>

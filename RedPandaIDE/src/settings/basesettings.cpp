@@ -54,7 +54,6 @@ BaseSettings::BaseSettings(SettingsPersistor *persistor, const QString &groupNam
     mGroup{groupName}
 {
     Q_ASSERT(!groupName.isEmpty());
-    load();
 }
 
 void BaseSettings::beginGroup()

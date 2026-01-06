@@ -18,6 +18,7 @@
 #define EDITOR_H
 
 #include <QObject>
+#include "utils/types.h"
 #include "utils.h"
 #include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
@@ -27,6 +28,7 @@
 #include "settings/codecompletionsettings.h"
 #include "settings/editorsettings.h"
 #include "compiler/compilerinfo.h"
+#include "reformatter/basereformatter.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
@@ -56,8 +58,8 @@ using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 using CanShowEvalTipFunc = std::function<bool ()>;
 using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
 using EvalTipReadyCallback = std::function<void (Editor *)>;
-using LoggerFunc = std::function<void (const QString&)>;
 using GetCompilerTypeForEditorFunc = std::function<CompilerType (Editor *)>;
+using GetReformatterFunc = std::function<std::unique_ptr<BaseReformatter>(Editor *)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -372,7 +374,6 @@ private:
     QString mFilename;
     //QTabWidget* mParentPageControl;
     Project* mProject;
-    Settings* mSettings;
     bool mIsNew;
 
     bool mCodeCompletionEnabled;
@@ -437,7 +438,7 @@ private:
     CanShowEvalTipFunc mCanShowEvalTipFunc;
     RequestEvalTipFunc mRequestEvalTipFunc;
     EvalTipReadyCallback mEvalTipReadyCallback;
-    LoggerFunc mLoggerFunc;
+    GetReformatterFunc mGetReformatterFunc;
 #ifdef ENABLE_SDCC
     GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
 #endif
@@ -488,9 +489,6 @@ public:
     CodeCompletionPopup *completionPopup() const;
     void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
 
-    Settings *settings() const;
-    void setSettings(Settings *newSettings);
-
     const GetSharedParserrFunc &getSharedParserFunc() const;
     void setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack);
 
@@ -505,9 +503,6 @@ public:
 
     const EvalTipReadyCallback &evalTipReadyCallback() const;
     void setEvalTipReadyCallback(const EvalTipReadyCallback &newEvalTipReadyCallback);
-
-    const LoggerFunc &loggerFunc() const;
-    void setLoggerFunc(const LoggerFunc &newLoggerFunc);
 
     CodeSnippetsManager *codeSnippetsManager() const;
     void setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager);
@@ -525,6 +520,10 @@ public:
     const GetCompilerTypeForEditorFunc &getCompilerTypeForEditorFunc() const;
     void setGetCompilerTypeForEditorFunc(const GetCompilerTypeForEditorFunc &newGetCompilerTypeForEditorFunc);
 #endif
+
+    const GetReformatterFunc &getReformatterFunc() const;
+    void setGetReformatterFunc(const GetReformatterFunc &newGetReformatterFunc);
+
 protected:
     // QWidget interface
     void wheelEvent(QWheelEvent *event) override;

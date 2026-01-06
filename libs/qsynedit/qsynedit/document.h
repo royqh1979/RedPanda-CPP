@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDITSTRINGLIST_H
-#define SYNEDITSTRINGLIST_H
+#ifndef QSYNEDIT_DOCUMENT_H
+#define QSYNEDIT_DOCUMENT_H
 
 #include <QStringList>
 #include <QFontMetrics>

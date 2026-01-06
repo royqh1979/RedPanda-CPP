@@ -76,7 +76,6 @@ static QSet<QString> CppTypeQualifiers {
 Editor::Editor(QWidget *parent):
     QSynEdit{parent},
     mInited{false},
-    mSettings{pSettings},
     mSyntaxErrorColor{Qt::red},
     mSyntaxWarningColor{"orange"},
     mLineCount{0},
@@ -102,8 +101,10 @@ Editor::Editor(QWidget *parent):
     mCanShowEvalTipFunc = nullptr;
     mRequestEvalTipFunc = nullptr;
     mEvalTipReadyCallback = nullptr;
-    mLoggerFunc = nullptr;
+#ifdef ENABLE_SDCC
     mGetCompilerTypeForEditorFunc = nullptr;
+#endif
+    mGetReformatterFunc = nullptr;
     mFileSystemWatcher = nullptr;
 
     mCodeCompletionSettings = nullptr;
@@ -4441,6 +4442,16 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
+const GetReformatterFunc &Editor::getReformatterFunc() const
+{
+    return mGetReformatterFunc;
+}
+
+void Editor::setGetReformatterFunc(const GetReformatterFunc &newGetReformatterFunc)
+{
+    mGetReformatterFunc = newGetReformatterFunc;
+}
+
 #ifdef ENABLE_SDCC
 const GetCompilerTypeForEditorFunc &Editor::getCompilerTypeForEditorFunc() const
 {
@@ -4493,16 +4504,6 @@ void Editor::setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager)
     mCodeSnippetsManager = newCodeSnippetsManager;
 }
 
-const LoggerFunc &Editor::loggerFunc() const
-{
-    return mLoggerFunc;
-}
-
-void Editor::setLoggerFunc(const LoggerFunc &newLoggerFunc)
-{
-    mLoggerFunc = newLoggerFunc;
-}
-
 const EvalTipReadyCallback &Editor::evalTipReadyCallback() const
 {
     return mEvalTipReadyCallback;
@@ -4551,20 +4552,6 @@ const GetSharedParserrFunc &Editor::getSharedParserFunc() const
 void Editor::setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack)
 {
     mGetSharedParserFunc = newSharedParserProviderCallBack;
-}
-
-Settings *Editor::settings() const
-{
-    return mSettings;
-}
-
-void Editor::setSettings(Settings *newSettings)
-{
-    Q_ASSERT(newSettings!=nullptr);
-    if (mSettings != newSettings) {
-        mSettings = newSettings;
-        applySettings();
-    }
 }
 
 CodeCompletionPopup *Editor::completionPopup() const
@@ -5135,41 +5122,25 @@ void Editor::reformat(bool doReparse)
 {
     if (readOnly())
         return;
-    const QString &astyle = mSettings->environment().AStylePath();
-    if (!fileExists(astyle)) {
-        QMessageBox::critical(this,
-                              tr("astyle not found"),
-                              tr("Can't find astyle in \"%1\".").arg(astyle));
+    if (!mGetReformatterFunc)
+        return;
+    std::unique_ptr<BaseReformatter> formatter = mGetReformatterFunc(this);
+    if (!formatter)
+        return;
+    QString errorMessage;
+    bool isOk;
+    QString newContent = formatter->refomat(text(),errorMessage,isOk);
+    if (!isOk) {
+        if (!errorMessage.isEmpty()) {
+            QMessageBox::critical(this,
+                                  tr("Reformat Error"),
+                                  errorMessage);
+        }
         return;
     }
-    //we must remove all breakpoints and syntax issues
-//    onLinesDeleted(1,lineCount());
-    QByteArray content = text().toUtf8();
-    QStringList args = mSettings->codeFormatter().getArguments();
-    QString command = escapeCommandForPlatformShell(extractFileName(astyle), args);
-    if (mLoggerFunc) {
-        mLoggerFunc(tr("Reformatting content using astyle..."));
-        mLoggerFunc("------------------");
-        mLoggerFunc(tr("- Astyle: %1").arg(astyle));
-        mLoggerFunc(tr("- Command: %1").arg(command));
-    }
-    auto [newContent, astyleError, processError] =
-        runAndGetOutput(astyle, extractFileDir(astyle), args, content, true);
-    if (!astyleError.isEmpty()) {
-#ifdef Q_OS_WIN
-        QString msg = QString::fromLocal8Bit(astyleError);
-#else
-        QString msg = QString::fromUtf8(astyleError);
-#endif
-        if (mLoggerFunc)
-            mLoggerFunc(msg);
-    }
-    if (!processError.isEmpty())
-        if (mLoggerFunc)
-            mLoggerFunc(processError);
     if (newContent.isEmpty())
         return;
-    replaceContent(QString::fromUtf8(newContent), doReparse);
+    replaceContent(newContent, doReparse);
 }
 
 void Editor::replaceContent(const QString &newContent, bool doReparse)

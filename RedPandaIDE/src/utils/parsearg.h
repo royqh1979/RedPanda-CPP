@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef PARSEARG_H
-#define PARSEARG_H
+#ifndef UTILS_PARSEARG_H
+#define UTILS_PARSEARG_H
 
 #include <QString>
 #include <QMap>

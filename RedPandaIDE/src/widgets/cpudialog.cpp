@@ -33,6 +33,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
+    ui->txtCode->setEditorSettings(&pSettings->editor());
     updateSyntaxer();
     ui->txtCode->setReadOnly(true);
     ui->txtCode->gutter().setShowLineNumbers(false);

@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef HTMLEXPORTER_H
-#define HTMLEXPORTER_H
+#ifndef QSYNEDIT_HTMLEXPORTER_H
+#define QSYNEDIT_HTMLEXPORTER_H
 
 #include "exporter.h"
 

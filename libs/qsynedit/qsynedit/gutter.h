@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef GUTTER_H
-#define GUTTER_H
+#ifndef QSYNEDIT_GUTTER_H
+#define QSYNEDIT_GUTTER_H
 
 #include <QColor>
 #include <QFont>

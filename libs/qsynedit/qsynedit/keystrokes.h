@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDITKEYSTROKE_H
-#define SYNEDITKEYSTROKE_H
+#ifndef QSYNEDIT_KEYSTROKE_H
+#define QSYNEDIT_KEYSTROKE_H
 
 #include <QKeySequence>
 #include <QList>
