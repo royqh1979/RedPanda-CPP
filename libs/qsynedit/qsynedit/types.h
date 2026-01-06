@@ -27,6 +27,14 @@ namespace QSynedit {
 
 enum class SelectionMode {Normal, Column};
 
+enum class EditCaretType {
+    VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
+};
+
+enum class ScrollStyle {
+    None, OnlyHorizontal, OnlyVertical, Both
+};
+
 enum class ProgrammingLanguage {
     DecideBySuffix,
     Composition,

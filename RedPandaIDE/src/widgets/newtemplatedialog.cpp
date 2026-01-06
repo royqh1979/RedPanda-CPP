@@ -42,8 +42,8 @@ QStringList NewTemplateDialog::findCategories()
 {
     QSet<QString> categories;
     readTemplateCategory(":/templates/empty.template",categories);
-    readTemplateCategoriesInDir(pSettings->dirs().data(Settings::Dirs::DataType::Template),categories);
-    readTemplateCategoriesInDir(pSettings->dirs().config(Settings::Dirs::DataType::Template),categories);
+    readTemplateCategoriesInDir(pSettings->dirs().data(DirSettings::DataType::Template),categories);
+    readTemplateCategoriesInDir(pSettings->dirs().config(DirSettings::DataType::Template),categories);
     QStringList result;
     foreach(const QString& s, categories)
         result.append(s);

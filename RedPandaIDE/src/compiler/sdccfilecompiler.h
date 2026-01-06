@@ -19,6 +19,8 @@
 
 #include "compiler.h"
 
+#include <QDateTime>
+
 class SDCCFileCompiler : public Compiler
 {
     Q_OBJECT

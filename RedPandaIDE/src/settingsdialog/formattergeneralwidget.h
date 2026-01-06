@@ -65,7 +65,7 @@ private slots:
 
     void updateDemo();
 private:
-    void updateCodeFormatter(Settings::CodeFormatter& format);
+    void updateCodeFormatter(CodeFormatterSettings& format);
 
 private:
     Ui::FormatterGeneralWidget *ui;

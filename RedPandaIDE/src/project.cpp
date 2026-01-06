@@ -132,7 +132,7 @@ QString Project::outputFilename() const
         switch(mOptions.type) {
 #ifdef ENABLE_SDCC
         case ProjectType::MicroController: {
-            Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(mOptions.compilerSet);
+            PCompilerSet pSet=pSettings->compilerSets().getSet(mOptions.compilerSet);
             if (pSet)
                 exeFileName = changeFileExt(extractFileName(mFilename),pSet->executableSuffix());
             else
@@ -844,7 +844,7 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 
 //bool Project::setCompileOption(const QString &key, int valIndex)
 //{
-//    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+//    PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
 //    if (!pSet)
 //        return false;
 //    PCompilerOption op = CompilerInfoManager::getCompilerOption(
@@ -868,7 +868,7 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 
 bool Project::setCompileOption(const QString &key, const QString &value)
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+    PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
     if (!pSet)
         return false;
     PCompilerOption op = CompilerInfoManager::getCompilerOption(
@@ -2030,7 +2030,7 @@ void Project::loadOptions(SimpleIni& ini)
             saveOptions();
         }
 
-        Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+        PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
         if (pSet) {
             QByteArray oldCompilerOptions = ini.GetValue("Project", "CompilerSettings", "");
             if (!oldCompilerOptions.isEmpty()) {
@@ -2058,11 +2058,11 @@ void Project::loadOptions(SimpleIni& ini)
                     oldCompilerOptions[21]=t;
                 }
                 for (int i=0;i<oldCompilerOptions.length();i++) {
-                    QString key = pSettings->compilerSets().getKeyFromCompilerCompatibleIndex(i);
+                    QString key = CompilerSets::getKeyFromCompilerCompatibleIndex(i);
                     PCompilerOption pOption = CompilerInfoManager::getCompilerOption(
                                 pSet->compilerType(), key);
                     if (pOption) {
-                        int val = Settings::CompilerSet::charToValue(oldCompilerOptions[i]);
+                        int val = CompilerSet::charToValue(oldCompilerOptions[i]);
                         if (pOption->choices.isEmpty()) {
                             if (val>0)
                                 mOptions.compilerOptions.insert(key,COMPILER_OPTION_ON);
@@ -2233,7 +2233,7 @@ void Project::updateFolderNode(PProjectModelNode node)
 
 void Project::updateCompilerSetting()
 {
-    Settings::PCompilerSet defaultSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
+    PCompilerSet defaultSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
     if (defaultSet) {
         mOptions.staticLink = defaultSet->staticLink();
         mOptions.compilerOptions = defaultSet->compileOptions();
@@ -2264,7 +2264,7 @@ QString Project::fileSystemNodeFolderPath(const PProjectModelNode &node)
 QStringList Project::binDirs()
 {
     QStringList lst = options().binDirs;
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(options().compilerSet);
+    PCompilerSet compilerSet = pSettings->compilerSets().getSet(options().compilerSet);
     if (compilerSet) {
         lst.append(compilerSet->binDirs());
     }

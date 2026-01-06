@@ -58,6 +58,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
 
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl);
+    e->setEditorSettings(&pSettings->editor());
     e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(

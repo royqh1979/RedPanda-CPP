@@ -87,7 +87,7 @@ bool Debugger::startClient(int compilerSetIndex,
     if (mClient!=nullptr)
         return false;
     mCurrentSourceFile = sourceFile;
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
+    PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
     if (!compilerSet) {
         compilerSet = pSettings->compilerSets().defaultSet();
     }

@@ -21,6 +21,7 @@
 #include "../codesnippetsmanager.h"
 #include "../iconsmanager.h"
 #include "../syntaxermanager.h"
+#include "../settings.h"
 
 #include <QItemSelectionModel>
 
@@ -59,9 +60,13 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             mUpdatingCode = false;
         }
     });
+    ui->editCode->setEditorSettings(&pSettings->editor());
     ui->editCode->applySettings();
+    ui->editCppFileTemplate->setEditorSettings(&pSettings->editor());
     ui->editCppFileTemplate->applySettings();
+    ui->editCFileTemplate->setEditorSettings(&pSettings->editor());
     ui->editCFileTemplate->applySettings();
+    ui->editGASFileTemplate->setEditorSettings(&pSettings->editor());
     ui->editGASFileTemplate->applySettings();
     connect(ui->editCppFileTemplate,&Editor::changed,
             this, &SettingsWidget::setSettingsChanged);

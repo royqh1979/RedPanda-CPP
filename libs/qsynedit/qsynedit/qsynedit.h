@@ -34,14 +34,6 @@
 
 namespace QSynedit {
 
-enum class ScrollStyle {
-    None, OnlyHorizontal, OnlyVertical, Both
-};
-
-enum class EditCaretType {
-    VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
-};
-
 enum StatusChange {
     None = 0,
     AllCleared = 0x0001,

@@ -108,7 +108,7 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
     return args;
 }
 
-void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QString,QString>& options)
+void CompileArgumentsWidget::resetUI(PCompilerSet pSet, const QMap<QString,QString>& options)
 {
     QTabWidget* pTab = this;
     while (pTab->count()>0) {

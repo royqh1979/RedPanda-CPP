@@ -76,7 +76,7 @@ void CompilerSetOptionWidget::init()
 }
 
 
-static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
+static void loadCompilerSetSettings(PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
     bool supportCharset = pSet->supportConvertingCharset();
     bool supportNLS = pSet->supportNLS();
     ui->chkAutoAddCharset->setEnabled(supportCharset);
@@ -184,7 +184,7 @@ void CompilerSetOptionWidget::doLoad()
     int index=pSettings->compilerSets().defaultIndex();
     QIcon icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
-        Settings::PCompilerSet set = pSettings->compilerSets().getSet(i);
+        PCompilerSet set = pSettings->compilerSets().getSet(i);
         if (set->findErrors().isEmpty())
             ui->cbCompilerSet->addItem(set->name());
         else
@@ -207,7 +207,7 @@ void CompilerSetOptionWidget::doSave()
     pSettings->compilerSets().saveSets();
     pMainWindow->updateCompilerSet();
 
-    Settings::PCompilerSet set = pSettings->compilerSets().defaultSet();
+    PCompilerSet set = pSettings->compilerSets().defaultSet();
     if (set) {
         int idx = pSettings->compilerSets().defaultIndex();
         if (set->findErrors().isEmpty())
@@ -230,7 +230,7 @@ void CompilerSetOptionWidget::on_cbCompilerSet_currentIndexChanged(int index)
 
 void CompilerSetOptionWidget::reloadCurrentCompilerSet()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    PCompilerSet pSet = pSettings->compilerSets().defaultSet();
     loadCompilerSetSettings(pSet, ui);
 
     mBinDirWidget->setDirList(pSet->binDirs());
@@ -241,7 +241,7 @@ void CompilerSetOptionWidget::reloadCurrentCompilerSet()
 
 void CompilerSetOptionWidget::saveCurrentCompilerSet()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    PCompilerSet pSet = pSettings->compilerSets().defaultSet();
 
     pSet->setUseCustomCompileParams(ui->chkUseCustomCompilerParams->isChecked());
     pSet->setCustomCompileParams(ui->txtCustomCompileParams->toPlainText().trimmed());
@@ -290,7 +290,7 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
 
 QString CompilerSetOptionWidget::getBinDir()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    PCompilerSet pSet = pSettings->compilerSets().defaultSet();
     if (!pSet->binDirs().isEmpty())
         return pSet->binDirs().front();
     if (!mBinDirWidget->dirList().isEmpty())
@@ -338,7 +338,7 @@ void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_clicked()
     name = name.trimmed();
     if (name.isEmpty())
         return;
-    Settings::PCompilerSet set = pSettings->compilerSets().addSet();
+    PCompilerSet set = pSettings->compilerSets().addSet();
     pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
     set->setName(name);
     set->setPersistInAutoFind(true);
@@ -362,14 +362,14 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_clicked()
 
 void CompilerSetOptionWidget::on_btnCopyCompilerSet_clicked()
 {
-    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!set)
         return;
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
                                          tr("%1 Copy").arg(set->name()));
     name = name.trimmed();
     if (!name.isEmpty()) {
-        Settings::PCompilerSet newSet = pSettings->compilerSets().addSet(set);
+        PCompilerSet newSet = pSettings->compilerSets().addSet(set);
         newSet->setName(name);
         set->setPersistInAutoFind(true);
         pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
@@ -379,7 +379,7 @@ void CompilerSetOptionWidget::on_btnCopyCompilerSet_clicked()
 
 void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
 {
-    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!set)
         return;
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
@@ -392,7 +392,7 @@ void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
 
 void CompilerSetOptionWidget::on_btnRemoveCompilerSet_clicked()
 {
-    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!set)
         return;
     if (QMessageBox::question(this,

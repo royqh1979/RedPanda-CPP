@@ -36,7 +36,7 @@ ProjectCompilerWidget::~ProjectCompilerWidget()
 
 void ProjectCompilerWidget::refreshOptions()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
     ui->panelAddCharset->setVisible(pSet->compilerType()!=CompilerType::Clang);
@@ -73,7 +73,7 @@ void ProjectCompilerWidget::refreshOptions()
 void ProjectCompilerWidget::doLoad()
 {
     mOptions = pMainWindow->project()->options().compilerOptions;
-    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (mOptions.isEmpty() && pSet)
         mOptions = pSet->compileOptions();
     mStaticLink = pMainWindow->project()->options().staticLink;
@@ -87,7 +87,7 @@ void ProjectCompilerWidget::doLoad()
 
 void ProjectCompilerWidget::doSave()
 {
-    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
     pMainWindow->project()->setCompilerSet(ui->cbCompilerSet->currentIndex());
@@ -142,7 +142,7 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
         refreshOptions();
         connectInputs();
     });
-    Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(index);
+    PCompilerSet pSet=pSettings->compilerSets().getSet(index);
 #ifdef ENABLE_SDCC
     if (pSet) {
         if (project->options().type==ProjectType::MicroController) {

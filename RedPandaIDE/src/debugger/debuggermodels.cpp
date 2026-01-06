@@ -17,6 +17,7 @@
 #include "debuggermodels.h"
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QFont>
 #include "../utils.h"
 #include "../settings.h"
 

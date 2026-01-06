@@ -32,7 +32,7 @@ NASMFileCompiler::NASMFileCompiler(const QString &filename):
 
 bool NASMFileCompiler::prepareForCompile()
 {
-    //compilerSet()->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
+    //compilerSet()->setCompilationStage(CompilerSet::CompilationStage::GenerateExecutable);
 
     if (mOnlyCheckSyntax) {
         qFatal("NASM can't check syntax!");

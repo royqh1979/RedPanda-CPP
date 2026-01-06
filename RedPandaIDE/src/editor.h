@@ -24,6 +24,8 @@
 #include "common.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
+#include "settings/codecompletionsettings.h"
+#include "settings/editorsettings.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
@@ -437,6 +439,9 @@ private:
 
     QFileSystemWatcher *mFileSystemWatcher;
 
+    const EditorSettings *mEditorSettings;
+    const CodeCompletionSettings *mCodeCompletionSettings;
+
     // SynEdit interface
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
@@ -482,9 +487,6 @@ public:
     Settings *settings() const;
     void setSettings(Settings *newSettings);
 
-    bool codeCompletionEnabled() const;
-    void setCodeCompletionEnabled(bool newUsingParser);
-
     const GetSharedParserrFunc &getSharedParserFunc() const;
     void setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack);
 
@@ -511,6 +513,10 @@ public:
 
     const CanShowEvalTipFunc &canShowEvalTipFunc() const;
     void setCanShowEvalTipFunc(const CanShowEvalTipFunc &newCanShowEvalTipFunc);
+
+    void setEditorSettings(const EditorSettings *newEditorSettings);
+
+    void setCodeCompletionSettings(const CodeCompletionSettings *newCodeCompletionSettings);
 
 protected:
     // QWidget interface

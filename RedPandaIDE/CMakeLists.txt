@@ -26,6 +26,20 @@ target_qt_plain_cpp(RedPandaIDE
     src/problems/freeprojectsetformat
     src/problems/ojproblemset
     src/problems/problemcasevalidator
+    # settings
+    src/settings/basesettings
+    src/settings/codecompletionsettings
+    src/settings/codeformattersettings
+    src/settings/compilersetsettings
+    src/settings/compilesettings
+    src/settings/debuggersettings
+    src/settings/dirsettings
+    src/settings/editorsettings
+    src/settings/environmentsettings
+    src/settings/executorsettings
+    src/settings/languagesettings
+    src/settings/uisettings
+    src/settings/vcssettings
     # utils
     src/utils/escape
     src/utils/font

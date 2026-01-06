@@ -228,7 +228,7 @@ QMap<QString, QString> devCppMacroVariables()
         {"DATETIME", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")}
     };
 
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (compilerSet) {
         // Only provide the first cpp include dir
         if (compilerSet->defaultCppIncludeDirs().count() > 0)
@@ -245,7 +245,7 @@ QMap<QString, QString> devCppMacroVariables()
 
     if (e != nullptr && !e->inProject()) { // Non-project editor macros
         QString exeSuffix;
-        Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+        PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
         if (compilerSet) {
             exeSuffix = compilerSet->executableSuffix();
         } else {
@@ -303,7 +303,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     if (compilerSetIndex<0) {
         compilerSetIndex=pSettings->compilerSets().defaultIndex();
     }
-    Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
+    PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
 #ifdef ENABLE_SDCC
     if (compilerSet && compilerSet->compilerType()==CompilerType::SDCC)
         parser->setLanguage(ParserLanguage::SDCC);
@@ -802,7 +802,7 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
 
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
-    return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
+    return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, EnvironmentSettings::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
 }
 
 ExternalResource::ExternalResource() {

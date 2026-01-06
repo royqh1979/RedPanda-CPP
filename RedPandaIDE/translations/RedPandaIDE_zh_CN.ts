@@ -11552,7 +11552,7 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>Settings::CompilerSet</name>
+    <name>CompilerSet</name>
     <message>
         <source>Support all ANSI standard C programs (-ansi)</source>
         <translation type="vanished">支持所有ANSI标准C程序(-ansi)</translation>
@@ -11668,7 +11668,7 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>Settings::CompilerSets</name>
+    <name>CompilerSets</name>
     <message>
         <source>Confirm</source>
         <translation type="vanished">确认</translation>
