@@ -103,6 +103,7 @@ Editor::Editor(QWidget *parent):
     mRequestEvalTipFunc = nullptr;
     mEvalTipReadyCallback = nullptr;
     mLoggerFunc = nullptr;
+    mGetCompilerTypeForEditorFunc = nullptr;
     mFileSystemWatcher = nullptr;
 
     mCodeCompletionSettings = nullptr;
@@ -2941,13 +2942,7 @@ void Editor::initParser()
 ParserLanguage Editor::calcParserLanguage()
 {
 #ifdef ENABLE_SDCC
-    PCompilerSet pSet;
-    if (inProject()) {
-        pSet = mSettings->compilerSets().getSet(mProject->options().compilerSet);
-    } else if (!inProject()) {
-        pSet = mSettings->compilerSets().defaultSet();
-    }
-    if (pSet && pSet->compilerType()==CompilerType::SDCC)
+    if (mGetCompilerTypeForEditorFunc && mGetCompilerTypeForEditorFunc(this) == CompilerType::SDCC)
         return ParserLanguage::SDCC;
 #endif
     switch(mFileType) {
@@ -4446,6 +4441,18 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
+#ifdef ENABLE_SDCC
+const GetCompilerTypeForEditorFunc &Editor::getCompilerTypeForEditorFunc() const
+{
+    return mGetCompilerTypeForEditorFunc;
+}
+
+void Editor::setGetCompilerTypeForEditorFunc(const GetCompilerTypeForEditorFunc &newGetCompilerTypeForEditorFunc)
+{
+    mGetCompilerTypeForEditorFunc = newGetCompilerTypeForEditorFunc;
+}
+#endif
+
 void Editor::setCodeCompletionSettings(const CodeCompletionSettings *newCodeCompletionSettings)
 {
     mCodeCompletionSettings = newCodeCompletionSettings;
@@ -5412,8 +5419,7 @@ void Editor::applySettings()
                 set.insert(s);
         }
 #ifdef ENABLE_SDCC
-        if (!inProject() && mSettings->compilerSets().defaultSet()
-               && mSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
+        if (mGetCompilerTypeForEditorFunc && mGetCompilerTypeForEditorFunc(this) == CompilerType::SDCC) {
             for(auto it=SDCCKeywords.begin();it!=SDCCKeywords.end();++it)
                 set.insert(it.key());
         }

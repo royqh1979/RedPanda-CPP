@@ -59,6 +59,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     // parentPageControl takes the owner ship
     Editor * e = new Editor(parentPageControl);
     e->setEditorSettings(&pSettings->editor());
+    e->setCodeCompletionSettings(&pSettings->codeCompletion());
     e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(
@@ -69,7 +70,12 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                        std::placeholders::_1, std::placeholders::_2));
     e->setEvalTipReadyCallback(std::bind(&EditorManager::onEditorTipEvalValueReady,
                                          this, std::placeholders::_1));
-
+    e->setLoggerFunc(std::bind(&MainWindow::logToolsOutput, pMainWindow, std::placeholders::_1));
+#ifdef ENABLE_SDCC
+    e->setGetCompilerTypeForEditorFunc(std::bind(
+                                           &EditorManager::getCompilerTypeForEditor,
+                                           this, std::placeholders::_1));
+#endif
     e->setCodeSnippetsManager(pMainWindow->codeSnippetManager());
     e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
     e->applySettings();
@@ -219,6 +225,23 @@ void EditorManager::doRemoveEditor(Editor *e)
     e->setParent(nullptr);
     delete e;
 }
+
+#ifdef ENABLE_SDCC
+CompilerType EditorManager::getCompilerTypeForEditor(Editor *e)
+{
+    if (e) {
+        PCompilerSet pSet;
+        if (e->inProject()) {
+            pSet = pSettings->compilerSets().getSet(pMainWindow->project()->options().compilerSet);
+        } else if (!e->inProject()) {
+            pSet = pSettings->compilerSets().defaultSet();
+        }
+        if (pSet)
+            return pSet->compilerType();
+    }
+    return CompilerType::Unknown;
+}
+#endif
 
 void EditorManager::updateEditorTabCaption(Editor* e)
 {

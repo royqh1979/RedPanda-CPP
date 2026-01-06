@@ -26,6 +26,7 @@
 #include "widgets/headercompletionpopup.h"
 #include "settings/codecompletionsettings.h"
 #include "settings/editorsettings.h"
+#include "compiler/compilerinfo.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
@@ -56,6 +57,7 @@ using CanShowEvalTipFunc = std::function<bool ()>;
 using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
 using EvalTipReadyCallback = std::function<void (Editor *)>;
 using LoggerFunc = std::function<void (const QString&)>;
+using GetCompilerTypeForEditorFunc = std::function<CompilerType (Editor *)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -436,7 +438,9 @@ private:
     RequestEvalTipFunc mRequestEvalTipFunc;
     EvalTipReadyCallback mEvalTipReadyCallback;
     LoggerFunc mLoggerFunc;
-
+#ifdef ENABLE_SDCC
+    GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
+#endif
     QFileSystemWatcher *mFileSystemWatcher;
 
     const EditorSettings *mEditorSettings;
@@ -517,7 +521,10 @@ public:
     void setEditorSettings(const EditorSettings *newEditorSettings);
 
     void setCodeCompletionSettings(const CodeCompletionSettings *newCodeCompletionSettings);
-
+#ifdef ENABLE_SDCC
+    const GetCompilerTypeForEditorFunc &getCompilerTypeForEditorFunc() const;
+    void setGetCompilerTypeForEditorFunc(const GetCompilerTypeForEditorFunc &newGetCompilerTypeForEditorFunc);
+#endif
 protected:
     // QWidget interface
     void wheelEvent(QWheelEvent *event) override;

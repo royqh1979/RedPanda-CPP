@@ -111,6 +111,9 @@ private:
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
+#ifdef ENABLE_SDCC
+    CompilerType getCompilerTypeForEditor(Editor *e);
+#endif
 private slots:
     void updateEditorTabCaption(Editor* e);
     void onBreakpointAdded(const Editor* e, int line);

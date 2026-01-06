@@ -39,7 +39,6 @@ target_qt_plain_cpp(RedPandaIDE
     src/settings/executorsettings
     src/settings/languagesettings
     src/settings/uisettings
-    src/settings/vcssettings
     # utils
     src/utils/escape
     src/utils/font
@@ -265,6 +264,8 @@ if(SDCC)
 endif()
 
 if(VCS)
+    target_qt_plain_cpp(RedPandaIDE
+        src/settings/vcssettings)
     target_moc_classes(RedPandaIDE
         src/vcs/gitmanager
         src/vcs/gitrepository
