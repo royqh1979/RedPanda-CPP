@@ -46,7 +46,6 @@
 #include <qsynedit/exporter/htmlexporter.h>
 #include <qsynedit/exporter/qtsupportedhtmlexporter.h>
 #include <qsynedit/constants.h>
-#include "settings.h"
 #include "systemconsts.h"
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
