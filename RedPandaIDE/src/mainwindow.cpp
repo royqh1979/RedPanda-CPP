@@ -1348,7 +1348,7 @@ void MainWindow::onOpenFileRequested(
 
 void MainWindow::executeTool(PToolItem item)
 {
-    QMap<QString, QString> macros = devCppMacroVariables();
+    QMap<QString, QString> macros = macroVariables();
     QString program = parseMacros(item->program, macros);
     QString workDir = parseMacros(item->workingDirectory, macros);
     QStringList params = parseArguments(item->parameters, macros, true);
@@ -9188,6 +9188,80 @@ MainWindow::CompileSuccessionTaskType MainWindow::runTypeToCompileSuccessionTask
     default:
         return CompileSuccessionTaskType::RunNormal;
     }
+}
+
+QMap<QString, QString> MainWindow::macroVariables()
+{
+    Editor *e = mEditorManager->getEditor();
+
+    QMap<QString, QString> result = {
+        {"DEFAULT", localizePath(QDir::currentPath())},
+        {"DEVCPP", localizePath(pSettings->dirs().executable())},
+        {"DEVCPPVERSION", REDPANDA_CPP_VERSION},
+        {"EXECPATH", localizePath(pSettings->dirs().appDir())},
+        {"DATE", QDate::currentDate().toString("yyyy-MM-dd")},
+        {"DATETIME", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")}
+    };
+
+    PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+    if (compilerSet) {
+        // Only provide the first cpp include dir
+        if (compilerSet->defaultCppIncludeDirs().count() > 0)
+            result["INCLUDE"] = localizePath(compilerSet->defaultCppIncludeDirs().front());
+        else
+            result["INCLUDE"] = "";
+
+        // Only provide the first lib dir
+        if (compilerSet->defaultLibDirs().count() > 0)
+            result["LIB"] = localizePath(compilerSet->defaultLibDirs().front());
+        else
+            result["LIB"] = "";
+    }
+
+    if (e != nullptr && !e->inProject()) { // Non-project editor macros
+        QString exeSuffix;
+        PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+        if (compilerSet) {
+            exeSuffix = compilerSet->executableSuffix();
+        } else {
+            exeSuffix = DEFAULT_EXECUTABLE_SUFFIX;
+        }
+        result["EXENAME"] = extractFileName(changeFileExt(e->filename(), exeSuffix));
+        result["EXEFILE"] = localizePath(changeFileExt(e->filename(), exeSuffix));
+        result["PROJECTNAME"] = extractFileName(e->filename());
+        result["PROJECTFILE"] = localizePath(e->filename());
+        result["PROJECTFILENAME"] = extractFileName(e->filename());
+        result["PROJECTPATH"] = localizePath(extractFileDir(e->filename()));
+    } else if (mProject) {
+        result["EXENAME"] = extractFileName(mProject->outputFilename());
+        result["EXEFILE"] = localizePath(mProject->outputFilename());
+        result["PROJECTNAME"] = mProject->name();
+        result["PROJECTFILE"] = localizePath(mProject->filename());
+        result["PROJECTFILENAME"] = extractFileName(mProject->filename());
+        result["PROJECTPATH"] = localizePath(mProject->directory());
+    } else {
+        result["EXENAME"] = "";
+        result["EXEFILE"] = "";
+        result["PROJECTNAME"] = "";
+        result["PROJECTFILE"] = "";
+        result["PROJECTFILENAME"] = "";
+        result["PROJECTPATH"] = "";
+    }
+
+    // Editor macros
+    if (e != nullptr) {
+        result["SOURCENAME"] = extractFileName(e->filename());
+        result["SOURCEFILE"] = localizePath(e->filename());
+        result["SOURCEPATH"] = localizePath(extractFileDir(e->filename()));
+        result["WORDXY"] = e->wordAtCursor();
+    } else {
+        result["SOURCENAME"] = "";
+        result["SOURCEFILE"] = "";
+        result["SOURCEPATH"] = "";
+        result["WORDXY"] = "";
+    }
+
+    return result;
 }
 
 

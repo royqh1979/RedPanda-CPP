@@ -70,10 +70,6 @@ constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
 
 bool programIsWin32GuiApp(const QString& filename);
 
-QString parseMacros(const QString& s);
-QString parseMacros(const QString& s, const QMap<QString, QString>& variables);
-QMap<QString, QString> devCppMacroVariables();
-
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 

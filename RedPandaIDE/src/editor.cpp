@@ -100,10 +100,11 @@ Editor::Editor(QWidget *parent):
     mCanShowEvalTipFunc = nullptr;
     mRequestEvalTipFunc = nullptr;
     mEvalTipReadyCallback = nullptr;
+    mGetReformatterFunc = nullptr;
+    mGetMacroVarsFunc = nullptr;
 #ifdef ENABLE_SDCC
     mGetCompilerTypeForEditorFunc = nullptr;
 #endif
-    mGetReformatterFunc = nullptr;
     mFileSystemWatcher = nullptr;
 
     mCodeCompletionSettings = nullptr;
@@ -210,34 +211,7 @@ void Editor::loadFile(QString filename) {
 
 void Editor::saveFile(QString filename) {
     QFile file(filename);
-//    QByteArray encoding = mFileEncoding;
-//    if (mEncodingOption != ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
-//        encoding = mEncodingOption;
     QByteArray encoding = mEncodingOption;
-//  save backup
-//    QString backupFilename=filename+".savebak";
-//    int count=1;
-//    while (fileExists(backupFilename)) {
-//        backupFilename=filename+QString(".savebak%1").arg(count);
-//        count++;
-//    }
-//    if (!fileExists(filename)) {
-//        if (!stringToFile(text(),backupFilename)) {
-//            if (QMessageBox::question(parentWidget(),tr("Error"),
-//                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
-//                                  +"<br />"
-//                                  +tr("Continue to save?"),
-//                                  QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
-//                return;
-//        }
-//    } else if (!QFile::copy(filename,backupFilename)) {
-//        if (QMessageBox::question(parentWidget(),tr("Error"),
-//                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
-//                              +"<br />"
-//                              +tr("Continue to save?"),
-//                              QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
-//            return;
-//    }
     this->document()->saveToFile(file,encoding,
                               mEditorSettings->defaultEncoding(),
                               mFileEncoding);
@@ -474,6 +448,7 @@ void Editor::setFilename(const QString &newName)
 const QByteArray& Editor::encodingOption() const noexcept{
     return mEncodingOption;
 }
+
 void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     if (encoding.isEmpty())
         return;
@@ -3080,7 +3055,7 @@ void Editor::insertCodeSnippet(const QString &code)
     });
     if (selAvail())
         setSelText("");
-    QStringList sl = textToLines(parseMacros(code));
+    QStringList sl = textToLines(parseMacros(code, mGetMacroVarsFunc));
     int lastI=0;
 //    int spaceCount = GetLeftSpacing(
 //                leftSpaces(lineText()),true).length();
@@ -4439,6 +4414,16 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+const GetMacroVarsFunc &Editor::getMacroVarsFunc() const
+{
+    return mGetMacroVarsFunc;
+}
+
+void Editor::setGetMacroVarsFunc(const GetMacroVarsFunc &newGetMacroVarsFunc)
+{
+    mGetMacroVarsFunc = newGetMacroVarsFunc;
 }
 
 const GetReformatterFunc &Editor::getReformatterFunc() const

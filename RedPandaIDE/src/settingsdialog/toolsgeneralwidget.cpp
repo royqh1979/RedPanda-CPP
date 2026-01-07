@@ -22,6 +22,7 @@
 #include "../utils.h"
 #include "../utils/escape.h"
 #include "../utils/parsearg.h"
+#include "../utils/parsemacros.h"
 #include "../systemconsts.h"
 
 #include <QFileDialog>
@@ -161,7 +162,7 @@ void ToolsGeneralWidget::onEdited()
 
 void ToolsGeneralWidget::updateDemo()
 {
-    QMap<QString,QString> macros = devCppMacroVariables();
+    QMap<QString,QString> macros = pMainWindow->macroVariables();
     ui->txtDemo->setText(escapeCommandForPlatformShell(
                 parseMacros(ui->txtProgram->text(), macros),
                 parseArguments(ui->txtParameters->text(), macros, true)

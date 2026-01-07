@@ -24,6 +24,8 @@
 #include "../utils.h"
 #include "../utils/escape.h"
 #include "../utils/parsearg.h"
+#include "../utils/parsemacros.h"
+#include "../mainwindow.h"
 
 #include <QDir>
 
@@ -267,7 +269,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 #endif
 
 #ifdef Q_OS_WIN
-    QStringList resourceArguments = parseArguments(mProject->options().resourceCmd, devCppMacroVariables(), true);
+    QStringList resourceArguments = parseArguments(mProject->options().resourceCmd, pMainWindow->macroVariables(), true);
 #endif
 
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());

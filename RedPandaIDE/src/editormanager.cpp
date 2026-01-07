@@ -72,6 +72,8 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                          this, std::placeholders::_1));
     e->setGetReformatterFunc(std::bind(&EditorManager::createReformatterForEditor,
                                        this, std::placeholders::_1));
+    e->setGetMacroVarsFunc(std::bind(&MainWindow::macroVariables,
+                                     pMainWindow));
 #ifdef ENABLE_SDCC
     e->setGetCompilerTypeForEditorFunc(std::bind(
                                            &EditorManager::getCompilerTypeForEditor,

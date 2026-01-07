@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include "utils/types.h"
+#include "utils/parsemacros.h"
 #include "utils.h"
 #include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
@@ -439,6 +440,7 @@ private:
     RequestEvalTipFunc mRequestEvalTipFunc;
     EvalTipReadyCallback mEvalTipReadyCallback;
     GetReformatterFunc mGetReformatterFunc;
+    GetMacroVarsFunc mGetMacroVarsFunc;
 #ifdef ENABLE_SDCC
     GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
 #endif
@@ -523,6 +525,9 @@ public:
 
     const GetReformatterFunc &getReformatterFunc() const;
     void setGetReformatterFunc(const GetReformatterFunc &newGetReformatterFunc);
+
+    const GetMacroVarsFunc &getMacroVarsFunc() const;
+    void setGetMacroVarsFunc(const GetMacroVarsFunc &newGetMacroVarsFunc);
 
 protected:
     // QWidget interface

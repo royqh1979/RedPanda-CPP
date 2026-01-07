@@ -45,7 +45,8 @@ target_qt_plain_cpp(RedPandaIDE
     # utils
     src/utils/escape
     src/utils/font
-    src/utils/parsearg)
+    src/utils/parsearg
+    src/utils/parsemacros)
 
 target_moc_classes(RedPandaIDE
     src/caretlist
