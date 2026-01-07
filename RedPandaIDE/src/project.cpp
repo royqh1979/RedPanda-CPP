@@ -791,16 +791,23 @@ bool Project::saveUnits()
     return true;
 }
 
-PProjectUnit Project::findUnit(const QString &filename)
+PProjectUnit Project::findUnit(const QString &filename) const
 {
     return mUnits.value(filename,PProjectUnit());
 }
 
-PProjectUnit Project::findUnit(const Editor *editor)
+PProjectUnit Project::findUnit(const Editor *editor) const
 {
     if (!editor)
         return PProjectUnit();
     return findUnit(editor->filename());
+}
+
+bool Project::inProject(const Editor *editor) const
+{
+    if (!editor)
+        return false;
+    return mUnits.contains(editor->filename());
 }
 
 void Project::associateEditor(Editor *editor)

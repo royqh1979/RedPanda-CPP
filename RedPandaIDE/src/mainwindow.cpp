@@ -545,7 +545,7 @@ MainWindow::~MainWindow()
 void MainWindow::updateForEncodingInfo(const Editor* editor) {
     if (mQuitting)
         return;
-    if (editor!=nullptr) {
+    if (editor!=nullptr && editor->isVisible()) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
                         QString(" %1(%2) ")

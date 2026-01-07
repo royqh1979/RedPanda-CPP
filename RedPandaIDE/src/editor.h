@@ -339,7 +339,6 @@ signals:
     void breakpointsCleared(const Editor *e);
     void syntaxCheckRequested(Editor *e);
     void parseTodoRequested(const QString& filename, bool inProject);
-    void updateEncodingInfoRequested(const Editor *e);
     void openFileRequested(const QString& filename, FileType fileType, const QString& contextFile , const QSynedit::CharPos& caretPos);
     void symbolChoosed(const QString& filename, int usageCount);
     void fileEncodingChanged(Editor *e);

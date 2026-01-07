@@ -132,6 +132,7 @@ private slots:
     void onEditorLineMoved(int fromLine, int toLine);
     void onEditorStatusChanged(QSynedit::StatusChanges changes);
     void onEditorFontSizeChangedByWheel(int newSize);
+    void onEditorFileEncodingChanged(Editor *e);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

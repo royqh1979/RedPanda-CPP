@@ -215,18 +215,13 @@ void Editor::saveFile(QString filename) {
     this->document()->saveToFile(file,encoding,
                               mEditorSettings->defaultEncoding(),
                               mFileEncoding);
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(this);
-        if (unit) {
-            unit->setRealEncoding(mFileEncoding);
-        }
-    }
-    if (isVisible())
-        emit updateEncodingInfoRequested(this);
+    emit fileEncodingChanged(this);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
 {
+    if (mEditorEncoding == encoding)
+        return;
     mEditorEncoding = encoding;
     setModified(true);
     save();
@@ -237,6 +232,7 @@ void Editor::convertToEncoding(const QByteArray &encoding)
             unit->setRealEncoding(mFileEncoding);
         }
     }
+    emit editorEncodingChanged(this);
 }
 
 bool Editor::save(bool force, bool doReparse) {
@@ -458,6 +454,7 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
     if (mEditorEncoding == newEncoding)
         return;
     mEditorEncoding = newEncoding;
+    emit editorEncodingChanged(this);
     if (!isNew()) {
         if (modified()) {
             if (QMessageBox::warning(this,tr("Confirm Reload File"),
@@ -473,8 +470,7 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
                                   tr("Error Load File"),
                                   e.reason());
         }
-    } else
-        emit updateEncodingInfoRequested(this);
+    }
     resolveAutoDetectEncodingOption();
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
@@ -1972,14 +1968,8 @@ void Editor::loadContent(const QString& filename)
 {
     loadFromFile(filename,mEditorEncoding,mFileEncoding);
     applyColorScheme(mEditorSettings->colorScheme());
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(this);
-        if (unit) {
-            unit->setRealEncoding(mFileEncoding);
-        }
-    }
     mIsNew = false;
-    emit updateEncodingInfoRequested(this);
+    emit fileEncodingChanged(this);
     saveAutoBackup();
 }
 

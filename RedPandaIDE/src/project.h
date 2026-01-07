@@ -118,8 +118,8 @@ private:
     QString mBuildCmd;
     bool mLink;
     int mPriority;
-    QByteArray mEncoding;
-    QByteArray mRealEncoding;
+    QByteArray mEditorEncoding;
+    QByteArray mFileEncoding;
     PProjectModelNode mNode;
 //    bool mFileMissing;
 };
@@ -254,8 +254,9 @@ public:
     void renameUnit(PProjectUnit& unit, const QString& sFileName);
     bool saveUnits();
 
-    PProjectUnit findUnit(const QString& filename);
-    PProjectUnit findUnit(const Editor* editor);
+    PProjectUnit findUnit(const QString& filename) const;
+    PProjectUnit findUnit(const Editor* editor) const;
+    bool inProject(const Editor* editor) const;
 
     void associateEditor(Editor* editor);
     void associateEditorToUnit(Editor* editor, PProjectUnit unit);
