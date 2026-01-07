@@ -153,7 +153,7 @@ public:
     Editor& operator=(const Editor&&) = delete;
 
     const QByteArray& encodingOption() const noexcept;
-    void setEncodingOption(const QByteArray& encoding) noexcept;
+    void setEditorEncoding(const QByteArray& encoding) noexcept;
     const QByteArray& fileEncoding() const noexcept;
     void convertToEncoding(const QByteArray& encoding);
     const QString& filename() const noexcept;
@@ -370,7 +370,7 @@ private:
     bool mInited;
     QDateTime mBackupTime;
     QFile* mBackupFile;
-    QByteArray mEncodingOption; // the encoding type set by the user
+    QByteArray mEditorEncoding; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;

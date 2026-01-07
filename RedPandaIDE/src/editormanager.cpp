@@ -82,7 +82,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setCodeSnippetsManager(pMainWindow->codeSnippetManager());
     e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
     e->applySettings();
-    e->setEncodingOption(encoding);
+    e->setEditorEncoding(encoding);
     e->setFilename(filename);
     if (!newFile) {
         e->loadFile(filename);

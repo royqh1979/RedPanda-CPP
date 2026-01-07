@@ -1156,7 +1156,7 @@ void Project::setEncoding(const QByteArray &encoding)
                 continue;
             Editor * e=unitEditor(unit);
             if (e) {
-                e->setEncodingOption(ENCODING_PROJECT);
+                e->setEditorEncoding(ENCODING_PROJECT);
                 unit->setEncoding(ENCODING_PROJECT);
             }
         }
@@ -2466,7 +2466,7 @@ void ProjectUnit::setEncoding(const QByteArray &newEncoding)
     if (mEncoding != newEncoding) {
         Editor * editor=mParent->unitEditor(this);
         if (editor) {
-            editor->setEncodingOption(newEncoding);
+            editor->setEditorEncoding(newEncoding);
         }
         mEncoding = newEncoding;
     }

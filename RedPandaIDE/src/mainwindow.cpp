@@ -3856,7 +3856,7 @@ void MainWindow::buildEncodingMenu()
                     if (editor == nullptr)
                         return;
                     try {
-                        editor->setEncodingOption(info->name);
+                        editor->setEditorEncoding(info->name);
                     } catch(FileError e) {
                         QMessageBox::critical(this,tr("Error"),e.reason());
                     }
@@ -6523,7 +6523,7 @@ void MainWindow::on_actionEncode_in_ANSI_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEncodingOption(ENCODING_SYSTEM_DEFAULT);
+        editor->setEditorEncoding(ENCODING_SYSTEM_DEFAULT);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -6535,7 +6535,7 @@ void MainWindow::on_actionEncode_in_UTF_8_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEncodingOption(ENCODING_UTF8);
+        editor->setEditorEncoding(ENCODING_UTF8);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -6546,7 +6546,7 @@ void MainWindow::on_actionAuto_Detect_triggered()
     Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
-    editor->setEncodingOption(ENCODING_AUTO_DETECT);
+    editor->setEditorEncoding(ENCODING_AUTO_DETECT);
 }
 
 void MainWindow::on_actionConvert_to_ANSI_triggered()
@@ -10116,7 +10116,7 @@ void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEncodingOption(ENCODING_UTF8_BOM);
+        editor->setEditorEncoding(ENCODING_UTF8_BOM);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
