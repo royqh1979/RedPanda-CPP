@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</source>
-        <translation type="vanished">Copyright(C) 2021-2024 Ку Хуа (royqh1979@gmail.com)</translation>
+        <translation>Copyright(C) 2021-2026 Ку Хуа (royqh1979@gmail.com)</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="75"/>
@@ -573,12 +573,12 @@
     <message>
         <location filename="../settingsdialog/compilergaswidget.ui" line="14"/>
         <source>GNU Assembler</source>
-        <translation type="unfinished">GNU Assembler</translation>
+        <translation>GNU Assembler</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilergaswidget.ui" line="33"/>
         <source>Link Standard System Startup Files and Libraries</source>
-        <translation type="unfinished"></translation>
+        <translation>Связывание стандартных файлов системного загрузчика и библиотек</translation>
     </message>
 </context>
 <context>
@@ -655,43 +655,43 @@
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="20"/>
         <source>Link Standard System Startup Files and Libraries</source>
-        <translation type="unfinished"></translation>
+        <translation>Связывание стандартных файлов системного загрузчика и библиотек</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="27"/>
         <source>Path to NASM:</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к NASM:</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="47"/>
         <source>Browse</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбор</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="50"/>
         <source>...</source>
-        <translation type="unfinished">...</translation>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="57"/>
         <source>TextLabel</source>
-        <translation type="unfinished">TextLabel</translation>
+        <translation>TextLabel</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="67"/>
         <source>Test</source>
-        <translation type="unfinished">Тест</translation>
+        <translation>Тест</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.ui" line="14"/>
         <location filename="../settingsdialog/compilernasmwidget.cpp" line="49"/>
         <source>NASM</source>
-        <translation type="unfinished"></translation>
+        <translation>NASM</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilernasmwidget.cpp" line="51"/>
         <source>All files (%1)</source>
-        <translation type="unfinished">Все файлы (%1)</translation>
+        <translation>Все файлы (%1)</translation>
     </message>
 </context>
 <context>
@@ -919,19 +919,19 @@
     </message>
     <message>
         <source>Compilation Stages</source>
-        <translation type="vanished">Этапы компиляции</translation>
+        <translation>Этапы компиляции</translation>
     </message>
     <message>
         <source>Stop after the preprocessing stage</source>
-        <translation type="vanished">Остановка после этапа работы препроцессора</translation>
+        <translation>Остановка после этапа работы препроцессора</translation>
     </message>
     <message>
         <source>Stop after the compilation proper stage</source>
-        <translation type="vanished">Остановка после завершения соответствующей стадии компиляции</translation>
+        <translation>Остановка после завершения соответствующей стадии компиляции</translation>
     </message>
     <message>
         <source>Link and generate the executable </source>
-        <translation type="vanished">Сборка и создание исполняемого файла </translation>
+        <translation>Сборка и создание исполняемого файла </translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="469"/>
@@ -1368,12 +1368,12 @@
     <message>
         <location filename="../editor.cpp" line="549"/>
         <source>Confirm Reload File</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтверждение перезагрузки файла</translation>
     </message>
     <message>
         <location filename="../editor.cpp" line="550"/>
         <source>The editing file will be reloaded. &lt;br /&gt;All unsaved modifications will be lost. &lt;br /&gt;Are you sure to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактируемый файл будет перезагружен. &lt;br /&gt; Все несохраненные изменения будут потеряны. &lt;br /&gt; Вы хотите продолжить?</translation>
     </message>
     <message>
         <location filename="../editor.cpp" line="2142"/>
@@ -2337,7 +2337,7 @@
     <message>
         <location filename="../settingsdialog/environmentappearancewidget.ui" line="152"/>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Перезагрузка</translation>
     </message>
     <message>
         <location filename="../settingsdialog/environmentappearancewidget.ui" line="163"/>
@@ -2861,7 +2861,8 @@
         <location filename="../compiler/filecompiler.cpp" line="221"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
-        <translation>Невозможно удалить старый исполнимый файл &quot;%1&quot;. </translation>
+        <translation>Невозможно удалить старый исполнимый файл &quot;%1&quot;. 
+</translation>
     </message>
     <message>
         <location filename="../compiler/filecompiler.cpp" line="141"/>
@@ -4370,7 +4371,7 @@
     <message>
         <location filename="../mainwindow.ui" line="791"/>
         <source>NPS</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="803"/>
@@ -4381,7 +4382,7 @@
     <message>
         <location filename="../mainwindow.ui" line="806"/>
         <source>AP</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="818"/>
@@ -4392,12 +4393,12 @@
     <message>
         <location filename="../mainwindow.ui" line="821"/>
         <source>RP</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="833"/>
         <source>SP</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="840"/>
@@ -4409,7 +4410,7 @@
     <message>
         <location filename="../mainwindow.ui" line="843"/>
         <source>SPA</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="855"/>
@@ -4433,17 +4434,17 @@
     <message>
         <location filename="../mainwindow.ui" line="858"/>
         <source>LP</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="870"/>
         <source>IFPS</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="882"/>
         <source>EFPS</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="941"/>
@@ -5715,16 +5716,16 @@
     <message>
         <location filename="../mainwindow.ui" line="3365"/>
         <source>GNU Assembly</source>
-        <translation type="unfinished"></translation>
+        <translation>GNU Ассемблер</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3370"/>
         <source>New NASM File</source>
-        <translation type="unfinished"></translation>
+        <translation>Новый файл NASM</translation>
     </message>
     <message>
         <source>AT&amp;&amp;T ASM</source>
-        <translation type="vanished">Ассемблер AT&amp;&amp;T</translation>
+        <translation>Ассемблер AT&amp;&amp;T</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3315"/>
@@ -5743,32 +5744,32 @@
     </message>
     <message>
         <source>Intel ASM</source>
-        <translation type="vanished">Ассемблер Intel</translation>
+        <translation>Ассемблер Intel</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3336"/>
         <source>Generate GIMPLE</source>
-        <translation type="unfinished"></translation>
+        <translation>Формирование GIMPLE</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3339"/>
         <source>Ctrl+Shift+F12</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3344"/>
         <source>Preprocess</source>
-        <translation type="unfinished"></translation>
+        <translation>Предобработка (preprocess)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3349"/>
         <source>Paste indentation</source>
-        <translation type="unfinished"></translation>
+        <translation>Вставка отступа</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3357"/>
         <source>NASM</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="152"/>
@@ -6085,7 +6086,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="2967"/>
         <source>Save Problem Set As</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить Набор проблем как</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="3004"/>
@@ -7030,22 +7031,22 @@
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="40"/>
         <source>Compiling single file...</source>
-        <translation type="unfinished">Компиляция единственного файла...</translation>
+        <translation>Компиляция единственного файла...</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="42"/>
         <source>- Filename: %1</source>
-        <translation type="unfinished">- Имя файла: %1</translation>
+        <translation>- Имя файла: %1</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="43"/>
         <source>- Compiler Set Name: %1</source>
-        <translation type="unfinished">- Имя набора компиляторов: %1</translation>
+        <translation>- Имя набора компиляторов: %1</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="67"/>
         <source>The NASM &apos;%1&apos; doesn&apos;t exists!</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
@@ -7054,34 +7055,34 @@
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="69"/>
         <source>Please check NASM settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, проверьет настройки NASM.</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="86"/>
         <source>Processing %1 source file:</source>
-        <translation type="unfinished">Обработка исходного файла %1:</translation>
+        <translation>Обработка исходного файла %1:</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="88"/>
         <source>- %1 Compiler: %2</source>
-        <translation type="unfinished">%1 Компилятор: %2</translation>
+        <translation>%1 Компилятор: %2</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="90"/>
         <source>- Command: %1</source>
-        <translation type="unfinished">- Команда: %1</translation>
+        <translation>- Команда: %1</translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="113"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
-        <translation type="unfinished">Невозможно удалить старый исполнимый файл &quot;%1&quot;. </translation>
+        <translation>Невозможно удалить старый исполнимый файл &quot;%1&quot;. </translation>
     </message>
     <message>
         <location filename="../compiler/nasmfilecompiler.cpp" line="120"/>
         <source>Can&apos;t delete the old object file &quot;%1&quot;.
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно удалить старый объектный файл &quot;%1&quot;. </translation>
     </message>
 </context>
 <context>
@@ -7221,7 +7222,7 @@
     <message>
         <location filename="../widgets/newprojectdialog.ui" line="222"/>
         <source>Use as the default project location</source>
-        <translation>Использовать как разположение проектов по умолчанию</translation>
+        <translation>Использовать как расположение проектов по умолчанию</translation>
     </message>
     <message>
         <location filename="../widgets/newprojectdialog.cpp" line="178"/>
@@ -8686,7 +8687,7 @@
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="204"/>
         <source>Don&apos;t accept MSVC non-standard syntax (-fno-ms-extentions)</source>
-        <translation type="unfinished"></translation>
+        <translation>Не разрешать нестандартный синтаксис MSVC (-fno-ms-extentions)</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="205"/>
@@ -8711,22 +8712,22 @@
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="222"/>
         <source>Errors</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибки</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="223"/>
         <source>Function without return type (return-type)</source>
-        <translation type="unfinished"></translation>
+        <translation>Функция без типа возвращаемого значения (return-type)</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="224"/>
         <source>Declaration does not specify a type (implicit-int)</source>
-        <translation type="unfinished"></translation>
+        <translation>В объявлении не указан тип (implicit-int)</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="225"/>
         <source>Variable lenght array (vla)</source>
-        <translation type="unfinished"></translation>
+        <translation>Массив переменной длины (vla)</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="234"/>
@@ -9557,12 +9558,12 @@
     </message>
     <message>
         <source>From cursor</source>
-        <translation type="vanished">От курсора</translation>
+        <translation>От курсора</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="203"/>
         <source>From caret</source>
-        <translation type="unfinished"></translation>
+        <translation>От курсора</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="213"/>
@@ -9948,13 +9949,13 @@
         <location filename="../mainwindow.cpp" line="10037"/>
         <location filename="../settingsdialog/settingsdialog.cpp" line="180"/>
         <source>NASM</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="10043"/>
         <location filename="../settingsdialog/settingsdialog.cpp" line="177"/>
         <source>GNU Assembler</source>
-        <translation type="unfinished">GNU Assembler</translation>
+        <translation>GNU Assembler</translation>
     </message>
     <message>
         <location filename="../settingsdialog/settingsdialog.cpp" line="147"/>
@@ -10255,7 +10256,7 @@
     </message>
     <message>
         <source>Can&apos;t find the compiler for file %1</source>
-        <translation type="vanished">Не удалось найти компилятор для файла %1</translation>
+        <translation>Не удалось найти компилятор для файла %1</translation>
     </message>
     <message>
         <location filename="../compiler/stdincompiler.cpp" line="81"/>
@@ -10656,7 +10657,7 @@
     </message>
     <message>
         <source>Indent Line Color</source>
-        <translation type="vanished">Цвет отступа строки</translation>
+        <translation>Цвет отступа строки</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorgeneralwidget.ui" line="113"/>
