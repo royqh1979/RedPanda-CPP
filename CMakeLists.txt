@@ -23,6 +23,7 @@ option(WINDOWS_PREFER_OPENCONSOLE "Prefer OpenConsole.exe as terminal emulator" 
 
 set(LIBEXECDIR libexec CACHE STRING "Directory for auxiliary executables, RELATIVE TO prefix.")
 set(APP_NAME RedPandaCPP CACHE STRING "Subdirectory name to $prefix/share and $prefix/libexec.")
+set(OVERRIDE_MALLOC "" CACHE STRING "Override malloc implementation, e.g. mimalloc")
 
 set(QT_COMPONENTS
     Core
@@ -218,6 +219,10 @@ if (WIN32)
     if (MSVC)
         list(APPEND GLOBAL_COMPILE_DEFINITIONS NOMINMAX)
     endif()
+endif()
+
+if (OVERRIDE_MALLOC)
+    link_libraries(${OVERRIDE_MALLOC})
 endif()
 
 add_subdirectory(RedPandaIDE)

@@ -11,18 +11,17 @@
 
 1. 配置：
    ```bash
-   cmake -S /path/to/src -B /path/to/build \
-     -G "Unix Makefiles" \
+   cmake -S . -B build \
      -DCMAKE_BUILD_TYPE=Release \
      -DCMAKE_INSTALL_PREFIX=/usr/local
    ```
 2. 构建：
    ```bash
-   make -j$(nproc)
+   cmake --build build -- --parallel
    ```
 3. 安装：
    ```bash
-   sudo make install
+   sudo cmake --install build --strip
    ```
 
 qmake 变量:
@@ -31,6 +30,7 @@ qmake 变量:
   - `.desktop` 文件受影响。
 - `LIBEXECDIR`：辅助程序的路径，**相对于 `CMAKE_INSTALL_PREFIX`**。
   - Arch Linux 使用 `lib`。
+- `OVERRIDE_MALLOC`：链接指定的内存分配库。如 `-DOVERRIDE_MALLOC=mimalloc`。
 
 ### 基于 xmake 构建
 
@@ -49,31 +49,28 @@ qmake 变量:
 
 提示：`xmake f --help` 可以查看更多选项。
 
-<!--
-### Debian/Ubuntu 的傻瓜式指南
+## 异架构
 
-```bash
-# 准备工作
-apt install gcc g++ make git gdb gdbserver astyle qterminal # 安装构建工具和运行时工具
-apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev   # 安装开发头文件和库
-git clone https://gitee.com/royqh1979/RedPanda-CPP.git      # 获取源代码
+有两种方式编译异架构的小熊猫C++：
+- 交叉构建：用交叉工具链。
+  - 和本机构建一样快；
+  - 构建 Qt 并不容易；
+  - 如果要运行测试，仍要安装 QEMU 用户空间模拟器。
+- 模拟本机构建 (emulated native build)：借助 QEMU 用户空间模拟，运行目标架构的本机工具链。
+  - 和本机构建一样简单；
+  - 非常慢（耗时可能高达 10 倍）。
 
-# 构建
-mkdir -p RedPanda-CPP/build && cd RedPanda-CPP/build        # 创建构建目录
-qmake ../Red_Panda_CPP.pro                                  # 配置
-make -j$(nproc)                                             # 构建
-sudo make install                                           # 安装
+### 交叉构建
 
-# 运行
-RedPandaIDE
-```
--->
+遵循 [CMake 的交叉编译指南](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html)。如果要运行测试用例，可以设置 `CMAKE_CROSSCOMPILING_EMULATOR`。
 
-## 异架构的模拟本机构建（emulated native build）
+[AppImage 构建环境](https://github.com/redpanda-cpp/appimage-builder)是一个案例，展示了如何自举基于 musl 的静态交叉工具链和 Qt。
 
-可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫C++。
+### 模拟本机构建
 
-注意：始终**在容器或 jail 中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
+除了要安装 QEMU 用户空间模拟器外，和本机构建一样。
+
+注意：始终**在 chroot 环境、容器或 jail 中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
 
 对于 Linux 或 BSD 宿主，需要安装静态链接的 QEMU 用户空间模拟器（包名通常为 `qemu-user-static`）并确认已经启用 binfmt 支持。
 

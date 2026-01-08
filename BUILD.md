@@ -85,30 +85,32 @@ These scripts accepts the same arguments as `build-mingw.sh`, plus:
 
 See also [more build instructions for freedesktop.org-conforming (XDG) desktop systems](./docs/detailed-build-xdg.md).
 
-## Alpine Linux, Arch Linux, Debian and Its Derivatives, Fedora, openSUSE
+## Package Manager for Rolling Distributions
 
-1. Setup build environment (documentation for [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [Debians](https://wiki.debian.org/BuildingTutorial), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
-   - For Debians:
+Currently available for Alpine Linux (edge), Arch Linux, Debian (unstable), Fedora, openSUSE Tumbleweed, and Ubuntu (devel).
+
+1. Setup build environment (documentation for [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [Debian family](https://wiki.debian.org/BuildingTutorial), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
+   - For Debian family:
      ```sh
      sudo apt install --no-install-recommends build-essential debhelper devscripts equivs
      ```
 2. Call build script:
    - Alpine Linux: `./packages/alpine/buildapk.sh`
    - Arch Linux: `./packages/archlinux/buildpkg.sh`
-   - Debians: `./packages/debian/builddeb.sh`
+   - Debian family: `./packages/debian/builddeb.sh`
    - Fedora: `./packages/fedora/buildrpm.sh`
    - openSUSE: `./packages/opensuse/buildrpm.sh`
 3. Install the package:
    - Alpine Linux: `~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
    - Arch Linux: `/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
-   - Debians: `/tmp/redpanda-cpp_*.deb`
+   - Debian family: `/tmp/redpanda-cpp_*.deb`
    - Fedora, openSUSE: `~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. Run Red Panda C++:
    ```bash
    RedPandaIDE
    ```
 
-Note that some of these scripts check out HEAD of the repo, so any changes should be committed before building.
+Note that these scripts check out HEAD of the repo, so any changes should be committed before building.
 
 Alternatively, build in container (rootless Podman preferred; Docker may break file permissions):
 
@@ -121,31 +123,17 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 
 The package will be placed in `dist/`.
 
-<!--
-## Statically Linked Binary for Ubuntu 20.04 x86_64 (NOI Linux 2.0)
+## Static Binary for Almost All Linux Desktop Distributions
 
-The package `redpanda-cpp-bin` is roughly “AppImage repack”. The binary is actually built in a container. Thus the build host is not necessarily Ubuntu 20.04; any Linux distribution with Podman and dpkg should work.
-
-1. Install Podman, and dpkg if build host is not Debian or its derivatives:
-   ```sh
-   sudo apt install podman
-   ```
-   WARNING: DO NOT install packages with dpkg on non-Debians, or your system will be terminated.
-2. Call build script:
-   ```sh
-   ./packages/debian-static/builddeb.sh
-   ```
-
-The package will be placed in `dist/`.
-
-## Linux AppImage
+Package format: AppImage, Debian (`.deb`), tarball (`.tar.gz`).
 
 ```bash
-podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20241204.0 ./packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260107.0 ./packages/linux/01-in-docker.sh
 ```
 
-Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Available architectures: `x86_64`, `aarch64`, `riscv64`, `loong64`, `i686`.
--->
+The packages will be placed in `dist/`.
+
+The scripts to create the build environment are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Available architectures: `x86_64`, `x86_64.v3`, `aarch64`, `riscv64`, `loong64`, `i686`.
 
 <!--
 # macOS

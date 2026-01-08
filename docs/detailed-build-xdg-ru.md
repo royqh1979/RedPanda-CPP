@@ -11,18 +11,17 @@
 
 1. Настройка:
    ```bash
-   cmake -S /path/to/src -B /path/to/build \
-     -G "Unix Makefiles" \
+   cmake -S . -B build \
      -DCMAKE_BUILD_TYPE=Release \
      -DCMAKE_INSTALL_PREFIX=/usr/local
    ```
 2. Сборка:
    ```bash
-   make -j$(nproc)
+   cmake --build build -- --parallel
    ```
 3. Установка:
    ```bash
-   sudo make install
+   sudo cmake --install build --strip
    ```
 
 Переменные CMake:
@@ -31,6 +30,7 @@
   - На файл `.desktop` влияет `CMAKE_INSTALL_PREFIX`.
 - `LIBEXECDIR`: каталог для вспомогательных исполнимых файлов, УКАЗЫВАЕТСЯ ОТНОСИТЕЛЬНО `CMAKE_INSTALL_PREFIX`.
   - Arch Linux использует `lib`.
+- `OVERRIDE_MALLOC`: link specific memory allocation library. e.g. `-DOVERRIDE_MALLOC=mimalloc`.
 
 ### Шаги сборки с xmake
 
@@ -49,31 +49,26 @@
 
 Примечание: для информации о других параметрах выполните `xmake f --help`.
 
-<!--
-### Инструкции сборки для Debian/Ubuntu (просто скопируй и вставь)
+## Прочих архитектур
 
-```bash
-# подготовка
-apt install gcc g++ make git gdb gdbserver astyle qterminal # устанвоить интрументы, необходимые для сборки и времени выполнения
-apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev   # установить заголовочные файлы и библиотеки для сборки
-git clone https://github.com/royqh1979/RedPanda-CPP.git     # скачать исходный код
+There are 2 ways to build Red Panda C++ for foreign architectures:
+- Cross build: using cross toolchain.
+  - As fast as native build;
+  - Building cross Qt is not so easy;
+  - QEMU user space emulation is still required if you want to run test cases.
+- Emulated native build: используя родные инструменты сборки для целевых архитектур с эмуляцией пользовательского пространства QEMU.
+  - As easy as native build;
+  - Very slow (~10x build time).
 
-# сборка
-mkdir -p RedPanda-CPP/build && cd RedPanda-CPP/build        # создать каталог сборки
-qmake ../Red_Panda_CPP.pro                                  # настройка
-make -j$(nproc)                                             # сборка
-sudo make install                                           # установка
+### Cross Build
 
-# запуск
-RedPandaIDE
-```
--->
+Follow [CMake’s general cross compiling instructions](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html). Also set `CMAKE_CROSSCOMPILING_EMULATOR` if you want to run test cases.
 
-## Эмуляция родной сборки для прочих архитектур
+The [AppImage build environment](https://github.com/redpanda-cpp/appimage-builder) is an example for bootstrapping musl-based, static cross toolchain and Qt.
 
-Можно собрать Red Panda C++ для других архитектур, используя родные инструменты сборки для целевых архитектур с эмуляцией пользовательского пространства QEMU.
+### Эмуляция родной сборки
 
-Примечание: Всегда запускайте эмулируемую родную сборку **в контейнерах или jails**. Смешивание архитектур может привести к сбою в работе вашей системы.
+Примечание: Всегда запускайте эмулируемую родную сборку **в chroot’ed environment, контейнерах или jails**. Смешивание архитектур может привести к сбою в работе вашей системы.
 
 Для машин с Linux или BSD установите статически связанный эмулятор пользовательского пространства QEMU (имя пакета, скорее всего, "qemu-user-static") и убедитесь, что включена поддержка binfmt.
 

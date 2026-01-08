@@ -86,23 +86,25 @@
 
 另请参阅[详细构建指南——符合 freedesktop.org（XDG）规范的桌面系统](./docs/detailed-build-xdg-cn.md)。
 
-## Alpine Linux、Arch Linux、Debian 及其衍生版本、Fedora、openSUSE
+## 用于滚动发行版的软件包
+
+目前有 Alpine Linux (edge)、Arch Linux、Debian (unstable)、Fedora、openSUSE Tumbleweed、Ubuntu (devel)。
 
 1. 准备构建环境（[Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers)、[Arch](https://wiki.archlinuxcn.org/wiki/Makepkg)、[Debians](https://wiki.debian.org/BuildingTutorial)、[RPM](https://rpm-packaging-guide.github.io/#prerequisites) 文档）。
-   - 对于 Debian 系：
+   - 对于 Debian 家族：
      ```sh
      sudo apt install --no-install-recommends build-essential debhelper devscripts equivs
      ```
 2. 调用构建脚本：
    - Alpine Linux：`./packages/alpine/buildapk.sh`
    - Arch Linux：`./packages/archlinux/buildpkg.sh`
-   - Debian 系：`./packages/debian/builddeb.sh`
+   - Debian 家族：`./packages/debian/builddeb.sh`
    - Fedora：`./packages/fedora/buildrpm.sh`
    - openSUSE：`./packages/opensuse/buildrpm.sh`
 3. 安装软件包：
    - Alpine Linux：`~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
    - Arch Linux：`/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
-   - Debian 系：`/tmp/redpanda-cpp_*.deb`
+   - Debian 家族：`/tmp/redpanda-cpp_*.deb`
    - Fedora、openSUSE：`~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. 运行小熊猫C++：
    ```bash
@@ -122,31 +124,17 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 
 软件包位于 `dist/` 目录下。
 
-<!--
-## Ubuntu 20.04 x86_64（NOI Linux 2.0）静态链接包
+## 用于绝大多数 Linux 桌面发行版的静态包
 
-`redpanda-cpp-bin` 包大体上就是 “AppImage 重新打包”。真正的构建过程在容器中进行，因此构建主机不一定要 Ubuntu 20.04，任何 Linux 发行版只要有 Podman 和 dpkg 就行。
+打包格式：AppImage、Debian (`*.deb`)、tar 包 (`.tar.gz`)。
 
-1. 安装 Podman，如果不是 Debian 及其衍生版还要安装 dpkg。
-   ```sh
-   sudo apt install podman
-   ```
-   **警告**：**不要**在非 Debian 系上使用 dpkg 安装软件包，否则将会破坏系统。
-2. 调用构建脚本：
-   ```sh
-   ./packages/debian-static/builddeb.sh
-   ```
+```bash
+podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260107.0 ./packages/appimage/01-in-docker.sh
+```
 
 软件包位于 `dist/` 目录下。
 
-## Linux AppImage
-
-```bash
-podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20241204.0 ./packages/appimage/01-in-docker.sh
-```
-
-Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。可用架构：`x86_64`、`aarch64`、`riscv64`、`loong64`、`i686`。
--->
+创建构建环境的脚本位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。可用架构：`x86_64`、`x86_64.v3`、`aarch64`、`riscv64`、`loong64`、`i686`。
 
 <!--
 # macOS
