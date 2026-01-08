@@ -5,8 +5,9 @@ Standards-Version: 4.3.0
 Homepage: https://github.com/royqh1979/RedPanda-CPP
 Package: redpanda-cpp-bin
 Version: __VERSION__
-Architecture: amd64
-Depends: gcc, g++, make, gdb, gdbserver, astyle
+Architecture: __ARCH__
+Architecture-Variant: __ARCH_VARIANT__
+Depends: gcc, g++, make, gdb, gdbserver
 Recommends: qterminal | konsole | gnome-terminal | terminator | lxterminal | mate-terminal | terminology | xfce4-terminal | alacritty | cool-retro-term | kitty | sakura | termit | tilix
 Suggests: clang
-Description: A lightweight but powerful C/C++ IDE, built upon static Qt 5.15
+Description: A lightweight but powerful C/C++ IDE, built upon static Qt
