@@ -173,6 +173,9 @@ public:
     }
 
 
+    bool sharedByFiles() const;
+    void setSharedByFiles(bool newSharedByFiles);
+
 signals:
     void progress(const QString& fileName, int total, int current);
     void onBusy();
@@ -704,13 +707,15 @@ private:
 private:
     int mParserId;
     ParserLanguage mLanguage;
+    bool mIsSystemHeader;
+
     int mSerialCount;
     QString mSerialId;
     int mUniqId;
     bool mEnabled;
     int mIndex;
     bool mIsHeader;
-    bool mIsSystemHeader;
+    bool mSharedByFiles;
     QString mCurrentFile;
 //  stack list , each element is a list of one/many scopes(like intypedef struct  s1,s2;
 //  It's used for store scope nesting infos

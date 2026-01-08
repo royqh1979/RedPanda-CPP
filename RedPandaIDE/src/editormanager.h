@@ -104,6 +104,8 @@ public:
 
     PCppParser sharedParser(ParserLanguage language);
 
+    PCppParser createParserForEditor(Editor *editor);
+
     std::unique_ptr<BaseReformatter> createReformatterForEditor(Editor *);
 
 signals:
@@ -115,7 +117,7 @@ private:
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
 #ifdef ENABLE_SDCC
-    CompilerType getCompilerTypeForEditor(Editor *e);
+    CompilerType getCompilerTypeForEditor(const Editor *e) const;
 #endif
 private slots:
     void updateEditorTabCaption(Editor* e);

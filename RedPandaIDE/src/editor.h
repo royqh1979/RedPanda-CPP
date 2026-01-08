@@ -59,8 +59,9 @@ using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 using CanShowEvalTipFunc = std::function<bool ()>;
 using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
 using EvalTipReadyCallback = std::function<void (Editor *)>;
-using GetCompilerTypeForEditorFunc = std::function<CompilerType (Editor *)>;
+using GetCompilerTypeForEditorFunc = std::function<CompilerType (const Editor *)>;
 using GetReformatterFunc = std::function<std::unique_ptr<BaseReformatter>(Editor *)>;
+using GetCppParserFunc = std::function<PCppParser (Editor *)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -165,7 +166,7 @@ public:
     void saveFile(QString filename);
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
-    void setFilename(const QString& newName);
+    void rename(const QString& newName);
 
     QString caption();
 
@@ -278,6 +279,7 @@ public:
     void setFileType(FileType newFileType);
     const QString &contextFile() const;
     void setContextFile(const QString &newContextFile);
+    ParserLanguage calcParserLanguage() const;
 
     bool autoBackupEnabled() const;
     void setAutoBackupEnabled(bool newEnableAutoBackup);
@@ -334,6 +336,7 @@ signals:
     void fileSaveError(Editor *e, const QString& filename, const QString& reason);
     void fileSaved(Editor *e, const QString& filename);
     void fileRenamed(Editor *e, const QString& oldFilename, const QString& newFilename);
+    void fileSaveAsed(Editor *e, const QString& oldFilename, const QString& newFilename);
     void breakpointAdded(const Editor *e, int line);
     void breakpointRemoved(const Editor *e, int line);
     void breakpointsCleared(const Editor *e);
@@ -360,6 +363,7 @@ private slots:
     void onParseFinished();
 
 private:
+    void setCppParser(PCppParser parser);
     bool completionPopupVisible() const;
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;
@@ -385,7 +389,6 @@ private:
 
     bool handleCodeCompletion(QChar key);
     void initParser();
-    ParserLanguage calcParserLanguage();
     void undoSymbolCompletion(const QSynedit::CharPos &pos);
     QuoteStatus getQuoteStatus();
 
@@ -509,6 +512,7 @@ private:
     EvalTipReadyCallback mEvalTipReadyCallback;
     GetReformatterFunc mGetReformatterFunc;
     GetMacroVarsFunc mGetMacroVarsFunc;
+    GetCppParserFunc mGetCppParserFunc;
 #ifdef ENABLE_SDCC
     GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
 #endif
@@ -527,6 +531,11 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+
+    bool codeCompletionEnabled() const;
+
+    const GetCppParserFunc &getCppParserFunc() const;
+    void setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc);
 
 protected:
     // QWidget interface

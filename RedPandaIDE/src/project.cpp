@@ -57,6 +57,7 @@ Project::Project(const QString &filename, const QString &name,
 {
     mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
+    mParser->setSharedByFiles(true);
     mParser->setOnGetFileStream(
                 std::bind(
                     &EditorManager::getContentFromOpenedEditor,mEditorManager,

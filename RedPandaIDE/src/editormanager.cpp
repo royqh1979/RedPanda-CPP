@@ -83,7 +83,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
     e->applySettings();
     e->setEditorEncoding(encoding);
-    e->setFilename(filename);
+    e->rename(filename);
     if (!newFile) {
         e->loadFile(filename);
         e->setFileType(fileType);
@@ -128,6 +128,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::showOccured, this, &EditorManager::onEditorShown);
     connect(e, &Editor::fileSaving, this, &EditorManager::onFileSaving);
     connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
+    connect(e, &Editor::fileSaveAsed, this, &EditorManager::onFileRenamed);
     connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
     connect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
     connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
@@ -232,7 +233,7 @@ void EditorManager::doRemoveEditor(Editor *e)
 }
 
 #ifdef ENABLE_SDCC
-CompilerType EditorManager::getCompilerTypeForEditor(Editor *e)
+CompilerType EditorManager::getCompilerTypeForEditor(const Editor *e) const
 {
     if (e) {
         PCompilerSet pSet;
@@ -427,6 +428,7 @@ PCppParser EditorManager::sharedParser(ParserLanguage language)
     }
     if (!parser) {
         parser = std::make_shared<CppParser>();
+        parser->setSharedByFiles(true);
         parser->setLanguage(language);
         parser->setOnGetFileStream(
                     std::bind(
@@ -437,6 +439,37 @@ PCppParser EditorManager::sharedParser(ParserLanguage language)
         mSharedParsers.insert(language,parser);
     }
     return parser;
+}
+
+PCppParser EditorManager::createParserForEditor(Editor *editor)
+{
+    Q_ASSERT(editor!=nullptr);
+    Q_ASSERT(editor->syntaxer()!=nullptr);
+    if (editor->syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP)
+        return nullptr;
+    if (pMainWindow->project() && pMainWindow->project()->inProject(editor)) {
+        return pMainWindow->project()->cppParser();
+    }
+    if (editor->codeCompletionEnabled()) {
+        if (isC_CPPHeaderFile(editor->fileType()) && !editor->contextFile().isEmpty())        {
+            Editor * e = getOpenedEditor(editor->contextFile());
+            if (e)
+                return e->parser();
+        }
+        if (pSettings->codeCompletion().shareParser()) {
+            return sharedParser(editor->calcParserLanguage());
+        } else if (editor->syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+            PCppParser parser = std::make_shared<CppParser>();
+            parser->setSharedByFiles(false);
+            parser->setLanguage(editor->calcParserLanguage());
+            parser->setOnGetFileStream(std::bind(&EditorManager::getContentFromOpenedEditor,
+                                                 this, std::placeholders::_1, std::placeholders::_2));
+            resetCppParser(parser);
+            parser->setEnabled(true);
+            return parser;
+        }
+    }
+    return nullptr;
 }
 
 std::unique_ptr<BaseReformatter> EditorManager::createReformatterForEditor(Editor *)

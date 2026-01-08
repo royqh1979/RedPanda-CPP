@@ -64,6 +64,7 @@ CppParser::CppParser() : QObject{nullptr},
     // mCurrentScope;
     //mCurrentClassScope;
     //mSkipList;
+    mSharedByFiles = false;
     mParseLocalHeaders = true;
     mParseGlobalHeaders = true;
     mLockCount = 0;
@@ -6918,6 +6919,16 @@ QStringList CppParser::splitExpression(const QString &expr)
         }
     }
     return result;
+}
+
+bool CppParser::sharedByFiles() const
+{
+    return mSharedByFiles;
+}
+
+void CppParser::setSharedByFiles(bool newSharedByFiles)
+{
+    mSharedByFiles = newSharedByFiles;
 }
 
 const QSet<QString> &CppParser::projectFiles() const

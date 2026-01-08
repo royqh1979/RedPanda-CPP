@@ -5781,9 +5781,21 @@ void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QStri
     QString oldFile = folder.absoluteFilePath(oldName);
     QString newFile = folder.absoluteFilePath(newName);
 
-    Editor *e = mEditorManager->getOpenedEditor(oldFile);
+    if (QFileInfo::exists(newFile)) {
+        QMessageBox::critical(this, tr("Rename Error"),
+                              tr("File %1 already exist!").arg(newFile));
+        return;
+    }
+    Editor *e = mEditorManager->getOpenedEditor(newFile);
     if (e) {
-        e->setFilename(newFile);
+        QMessageBox::critical(this, tr("Rename Error"),
+                              tr("File %1 already openned!").arg(newFile));
+        mEditorManager->activeEditor(e,true);
+        return;
+    }
+    e = mEditorManager->getOpenedEditor(oldFile);
+    if (e) {
+        e->rename(newFile);
     }
 }
 

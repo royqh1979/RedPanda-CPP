@@ -26,6 +26,7 @@
 using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 
 enum class ParserLanguage {
+    None,
     C,
     CPlusPlus,
 #ifdef ENABLE_SDCC
