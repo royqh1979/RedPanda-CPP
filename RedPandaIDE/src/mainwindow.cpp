@@ -7922,24 +7922,12 @@ void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
 void MainWindow::reparseNonProjectEditors()
 {
     if (pSettings->codeCompletion().shareParser()) {
-        bool hasC=false;
-        bool hasCpp=false;
-        for(int i=0;i<mEditorManager->pageCount();i++) {
-            Editor* e=(*mEditorManager)[i];
-            if (!e->inProject() && e->parser()) {
-                if (e->parser()->language()==ParserLanguage::C) {
-                    hasC=true;
-                } else if (e->parser()->language()==ParserLanguage::CPlusPlus) {
-                    hasCpp=true;
-                }
-            }
-        }
-        if (hasC) {
+        {
             PCppParser parser{mEditorManager->sharedParser(ParserLanguage::C)};
             if (parser)
                 resetCppParser(parser);
         }
-        if (hasCpp) {
+        {
             PCppParser parser{mEditorManager->sharedParser(ParserLanguage::CPlusPlus)};
             if (parser)
                 resetCppParser(parser);

@@ -34,21 +34,6 @@
 
 namespace QSynedit {
 
-enum StatusChange {
-    None = 0,
-    AllCleared = 0x0001,
-    CaretX = 0x0002,
-    CaretY = 0x0004,
-    LeftPos = 0x0008,
-    TopPos = 0x0010,
-    InsertMode = 0x0020,
-    ModifyChanged = 0x0040,
-    Selection = 0x0080,
-    ReadOnlyChanged = 0x0100,
-    Modified = 0x0200,
-    Custom = 0x0400,
-};
-
 Q_DECLARE_FLAGS(StatusChanges, StatusChange)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 

@@ -162,12 +162,12 @@ public:
     bool inProject() const noexcept;
     bool isNew() const noexcept;
 
-    void loadFile(QString filename = "");
+    void loadFile(QString filename = "", bool parse = true);
     void saveFile(QString filename);
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
     void rename(const QString& newName);
-
+    void setFilename(const QString& newName);
     QString caption();
 
     void applySettings();
@@ -262,7 +262,7 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    void setProject(Project* pProject);
+    void setProject(Project* pProject, bool parse = true);
 
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
     void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
@@ -276,10 +276,12 @@ public:
     quint64 lastFocusOutTime() const;
 
     FileType fileType() const;
-    void setFileType(FileType newFileType);
+    void setFileType(FileType newFileType, bool parse = true);
     const QString &contextFile() const;
-    void setContextFile(const QString &newContextFile);
+    void setContextFile(const QString &newContextFile, bool parse = true);
     ParserLanguage calcParserLanguage() const;
+    void setCppParser(PCppParser parser);
+    void setCppParser();
 
     bool autoBackupEnabled() const;
     void setAutoBackupEnabled(bool newEnableAutoBackup);
@@ -363,7 +365,6 @@ private slots:
     void onParseFinished();
 
 private:
-    void setCppParser(PCppParser parser);
     bool completionPopupVisible() const;
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;
@@ -388,7 +389,6 @@ private:
     bool handleGlobalIncludeSkip();
 
     bool handleCodeCompletion(QChar key);
-    void initParser();
     void undoSymbolCompletion(const QSynedit::CharPos &pos);
     QuoteStatus getQuoteStatus();
 

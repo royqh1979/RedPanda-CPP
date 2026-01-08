@@ -51,6 +51,27 @@ enum class ProgrammingLanguage {
     Unknown
 };
 
+enum StatusChange {
+    None = 0,
+    AllCleared = 0x0001,
+    CaretX = 0x0002,
+    CaretY = 0x0004,
+    LeftPos = 0x0008,
+    TopPos = 0x0010,
+    InsertMode = 0x0020,
+    ModifyChanged = 0x0040,
+    Selection = 0x0080,
+    ReadOnlyChanged = 0x0100,
+    Modified = 0x0200,
+    Custom0  = 0x0400,
+    Custom1  = 0x0800,
+    Custom2  = 0x1000,
+    Custom3  = 0x2000,
+    Custom4  = 0x4000,
+    Custom5  = 0x8000,
+};
+
+
 struct CharPos {
     int ch; // starts from 0
     int line; // starts from 0

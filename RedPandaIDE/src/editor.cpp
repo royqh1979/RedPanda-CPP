@@ -167,7 +167,7 @@ Editor::~Editor() {
     cleanAutoBackup();
 }
 
-void Editor::loadFile(QString filename) {
+void Editor::loadFile(QString filename, bool parse) {
     if (filename.isEmpty()) {
         filename=mFilename;
         // save backup
@@ -193,21 +193,16 @@ void Editor::loadFile(QString filename) {
 
     //FileError should by catched by the caller of loadFile();
     loadContent(filename);
-    setStatusChanged(QSynedit::StatusChange::Custom);
+    setStatusChanged(QSynedit::StatusChange::Custom0);
 
     if (shouldOpenInReadonly()) {
         this->setModified(false);
         setReadOnly(true);
     }
-//    applyColorScheme(mEditorSettings->colorScheme());
-    if (mGetCppParserFunc)
-        setCppParser(mGetCppParserFunc(this));
-    reparse(false);
-//    if (!inProject()) {
-//        initParser();
-//    }
-    reparseTodo();
-    if (mEditorSettings->syntaxCheckWhenLineChanged()) {
+    if (parse) {
+        setCppParser();
+        reparse(false);
+        reparseTodo();
         checkSyntaxInBack();
     }
 }
@@ -260,7 +255,7 @@ bool Editor::save(bool force, bool doReparse) {
             mFileSystemWatcher->addPath(mFilename);
         setModified(false);
         mIsNew = false;
-        setStatusChanged(QSynedit::StatusChange::Custom);
+        setStatusChanged(QSynedit::StatusChange::Custom0);
     } catch (FileError& exception) {
         if (mFileSystemWatcher)
             mFileSystemWatcher->addPath(mFilename);
@@ -368,7 +363,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
     }
-    setStatusChanged(QSynedit::StatusChange::Custom);
+    setStatusChanged(QSynedit::StatusChange::Custom0);
 
 
     emit fileSaveAsed(this, mFilename, newName);
@@ -387,7 +382,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
             mFileSystemWatcher->addPath(mFilename);
         mIsNew = false;
         setModified(false);
-        setStatusChanged(QSynedit::StatusChange::Custom);
+        setStatusChanged(QSynedit::StatusChange::Custom0);
     }  catch (FileError& exception) {
         if (mFileSystemWatcher)
             mFileSystemWatcher->addPath(mFilename);
@@ -442,6 +437,11 @@ void Editor::rename(const QString &newName)
         initAutoBackup();
     }
     return;
+}
+
+void Editor::setFilename(const QString &newName)
+{
+    mFilename = newName;
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{
@@ -1952,6 +1952,12 @@ void Editor::onParseFinished()
     invalidate();
 }
 
+void Editor::setCppParser()
+{
+    if (mGetCppParserFunc)
+        setCppParser(mGetCppParserFunc(this));
+}
+
 void Editor::setCppParser(PCppParser parser)
 {
     if (parser == mParser)
@@ -2900,34 +2906,6 @@ bool Editor::handleCodeCompletion(QChar key)
     return false;
 }
 
-void Editor::initParser()
-{
-    if (mCodeCompletionEnabled
-        && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))
-            && !mFilename.isEmpty()) {
-        if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()
-                && mGetOpennedEditorFunc) {
-            Editor * e = mGetOpennedEditorFunc(mContextFile);
-            if (e) {
-                mParser = e->parser();
-                return;
-            }
-        }
-        if (mCodeCompletionSettings->shareParser() && mGetSharedParserFunc) {
-            mParser = mGetSharedParserFunc(calcParserLanguage());
-            return;
-        } else if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
-            mParser = std::make_shared<CppParser>();
-            mParser->setLanguage(calcParserLanguage());
-            mParser->setOnGetFileStream(mGetFileStreamFunc);
-            resetCppParser(mParser);
-            mParser->setEnabled(true);
-            return;
-        }
-    }
-    mParser = nullptr;
-}
-
 ParserLanguage Editor::calcParserLanguage() const
 {
 #ifdef ENABLE_SDCC
@@ -2991,11 +2969,9 @@ void Editor::reparse(bool resetParser)
         return;
     if (!mCodeCompletionEnabled)
         return;
-    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP
-             && syntaxer()->language() != QSynedit::ProgrammingLanguage::GLSL)
-        return;
     if (!mParser)
         return;
+    Q_ASSERT(syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP);
     if (!mParser->enabled())
         return;
 //    qDebug()<<"reparse "<<mFilename;
@@ -3323,6 +3299,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
             }
             break;
 #endif
+        case ParserLanguage::None:
+            Q_ASSERT(false); // shouldn't happen here
+            break;
         }
         if (mEditorSettings->enableCustomCTypeKeywords()) {
             foreach (const QString& keyword, mEditorSettings->customCTypeKeywords()) {
@@ -4327,32 +4306,28 @@ FileType Editor::fileType() const
     return mFileType;
 }
 
-void Editor::setFileType(FileType newFileType)
+void Editor::setFileType(FileType newFileType, bool parse)
 {
     if (newFileType == FileType::None)
         newFileType = getFileType(mFilename);
     if (mFileType==newFileType)
         return;
-    doSetFileType(newFileType);
-    applyColorScheme(mEditorSettings->colorScheme());
-    if (!inProject())
-        initParser();
-    reparse(false);
-    reparseTodo();
-    emit statusChanged(QSynedit::StatusChange::Custom);
-}
-
-void Editor::doSetFileType(FileType newFileType)
-{
     ParserLanguage oldLanguage = calcParserLanguage();
+    QSynedit::PSyntaxer oldSyntaxer = syntaxer();
     mFileType = newFileType;
-    ParserLanguage newLangauge = calcParserLanguage();
     setSyntaxer(syntaxerManager.getSyntaxer(mFileType));
     setFormatter(syntaxerManager.getFormatter(syntaxer()->language()));
     setUseCodeFolding(syntaxer()->supportFolding());
-    if (oldLanguage!=calcParserLanguage()) {
-        setCppParser(mGetCppParserFunc(this));
+    applyColorScheme(mEditorSettings->colorScheme());
+    if (parse && oldLanguage!=calcParserLanguage()) {
+        setCppParser();
+        reparse(false);
     }
+    if (parse && syntaxer()->language() != oldSyntaxer->language()) {
+        reparseTodo();
+        checkSyntaxInBack();
+    }
+    emit statusChanged(QSynedit::StatusChange::Custom0);
 }
 
 void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)
@@ -4602,23 +4577,15 @@ const QString &Editor::contextFile() const
     return mContextFile;
 }
 
-void Editor::setContextFile(const QString &newContextFile)
+void Editor::setContextFile(const QString &newContextFile, bool parse)
 {
     QString s = newContextFile.trimmed();
     if (mContextFile == s)
         return;
+    ParserLanguage oldLanguage = calcParserLanguage();
     mContextFile = s;
-    if (isC_CPPHeaderFile(mFileType)) {
-        doSetFileType(mFileType);
-        applyColorScheme(mEditorSettings->colorScheme());
-        if (mCodeCompletionEnabled
-                && !mCodeCompletionSettings->shareParser()
-                && !mContextFile.isEmpty()
-                && mGetOpennedEditorFunc) {
-            Editor * e = mGetOpennedEditorFunc(mContextFile);
-            if (e)
-                mParser = e->parser();
-        }
+    if (parse && oldLanguage!=calcParserLanguage()) {
+        setCppParser();
         reparse(false);
     }
 }
@@ -4658,27 +4625,14 @@ void Editor::setStatementColors(const std::shared_ptr<QHash<StatementKind, std::
     mStatementColors = newStatementColors;
 }
 
-void Editor::setProject(Project *pProject)
+void Editor::setProject(Project *pProject, bool parse)
 {
     if (mProject == pProject)
         return;
     mProject = pProject;
-    if (mProject) {
-        if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
-            mParser = mProject->cppParser();
-            if (isVisible()) {
-                if (mParser && mParser->parsing()) {
-                    connect(mParser.get(),
-                            &CppParser::parseFinished,
-                            this,
-                            &Editor::onParseFinished);
-                } else {
-                    invalidate();
-                }
-            }
-        }
-    } else {
-        initParser();
+    if (parse) {
+        setCppParser();
+        reparse(false);
     }
 }
 

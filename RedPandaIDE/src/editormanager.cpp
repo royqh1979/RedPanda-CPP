@@ -74,6 +74,8 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                        this, std::placeholders::_1));
     e->setGetMacroVarsFunc(std::bind(&MainWindow::macroVariables,
                                      pMainWindow));
+    e->setGetCppParserFunc(std::bind(&EditorManager::createParserForEditor,
+                                     this, std::placeholders::_1));
 #ifdef ENABLE_SDCC
     e->setGetCompilerTypeForEditorFunc(std::bind(
                                            &EditorManager::getCompilerTypeForEditor,
@@ -83,13 +85,17 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setFileSystemWatcher(pMainWindow->fileSystemWatcher());
     e->applySettings();
     e->setEditorEncoding(encoding);
-    e->rename(filename);
+    e->setFilename(filename);
+    e->setProject(pProject, false);
+    e->setFileType(fileType, false);
+    e->setContextFile(contextFile, false);
     if (!newFile) {
-        e->loadFile(filename);
-        e->setFileType(fileType);
-        e->setContextFile(contextFile);
+        e->loadFile(filename, false);
+        e->checkSyntaxInBack();
+        e->reparseTodo();
     }
-    e->setProject(pProject);
+    e->setCppParser();
+    e->reparse(false);
 
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
@@ -380,14 +386,14 @@ void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
     }
     if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
             || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
-            || changes.testFlag(QSynedit::StatusChange::Custom)) {
+            || changes.testFlag(QSynedit::StatusChange::Custom0)) {
         updateEditorTabCaption(e);
     }
     if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
         || changes.testFlag(QSynedit::StatusChange::Modified)
         || changes.testFlag(QSynedit::StatusChange::Selection)
         || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
-            || changes.testFlag(QSynedit::StatusChange::Custom)) {
+            || changes.testFlag(QSynedit::StatusChange::Custom0)) {
         pMainWindow->updateEditorActions(e);
     }
 
@@ -451,7 +457,7 @@ PCppParser EditorManager::createParserForEditor(Editor *editor)
         return pMainWindow->project()->cppParser();
     }
     if (editor->codeCompletionEnabled()) {
-        if (isC_CPPHeaderFile(editor->fileType()) && !editor->contextFile().isEmpty())        {
+        if (!editor->contextFile().isEmpty())  {
             Editor * e = getOpenedEditor(editor->contextFile());
             if (e)
                 return e->parser();
