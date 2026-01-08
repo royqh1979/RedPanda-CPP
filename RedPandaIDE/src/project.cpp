@@ -2350,7 +2350,7 @@ ProjectUnit::ProjectUnit(Project* parent)
 //    mFileMissing = false;
     mPriority=0;
     mNew = true;
-    mEditorEncoding=ENCODING_PROJECT;
+    mUnitEncoding=ENCODING_PROJECT;
     mFileEncoding="";
 }
 
@@ -2466,17 +2466,17 @@ void ProjectUnit::setPriority(int newPriority)
 
 const QByteArray &ProjectUnit::encoding() const
 {
-    return mEditorEncoding;
+    return mUnitEncoding;
 }
 
 void ProjectUnit::setEncoding(const QByteArray &newEncoding)
 {
-    if (mEditorEncoding != newEncoding) {
+    if (mUnitEncoding != newEncoding) {
         Editor * editor=mParent->unitEditor(this);
         if (editor) {
             editor->setEditorEncoding(newEncoding);
         }
-        mEditorEncoding = newEncoding;
+        mUnitEncoding = newEncoding;
     }
 }
 

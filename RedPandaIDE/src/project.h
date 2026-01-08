@@ -118,7 +118,7 @@ private:
     QString mBuildCmd;
     bool mLink;
     int mPriority;
-    QByteArray mEditorEncoding;
+    QByteArray mUnitEncoding;
     QByteArray mFileEncoding;
     PProjectModelNode mNode;
 //    bool mFileMissing;

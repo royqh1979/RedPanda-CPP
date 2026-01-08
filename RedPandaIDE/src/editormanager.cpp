@@ -142,6 +142,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::statusChanged, this, &EditorManager::onEditorStatusChanged);
     connect(e, &Editor::fontSizeChangedByWheel, this, &EditorManager::onEditorFontSizeChangedByWheel);
     connect(e, &Editor::fileEncodingChanged, this, &EditorManager::onEditorFileEncodingChanged);
+    connect(e, &Editor::editorEncodingChanged, this, &EditorManager::onEditorEditorEncodingChanged);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -334,6 +335,15 @@ void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const Q
         pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
         pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
     }
+
+    // Update project information
+    if (pMainWindow->project() && pMainWindow->project()->inProject(e)) {
+        PProjectUnit unit = pMainWindow->project()->findUnit(oldFilename);
+        if (unit) {
+            pMainWindow->project()->renameUnit(unit, newFilename);
+        }
+        pMainWindow->project()->associateEditor(e);
+    }
 }
 
 void EditorManager::onFileSaveError(Editor *e, const QString& filename, const QString& reason)
@@ -415,6 +425,17 @@ void EditorManager::onEditorFileEncodingChanged(Editor *e)
     if (pMainWindow->project()) {
         PProjectUnit unit = pMainWindow->project()->findUnit(e);
         if (unit) {
+            unit->setRealEncoding(e->fileEncoding());
+        }
+    }
+}
+
+void EditorManager::onEditorEditorEncodingChanged(Editor *e)
+{
+    if (pMainWindow->project() && pMainWindow->project()->inProject(e)) {
+        PProjectUnit unit = pMainWindow->project()->findUnit(e);
+        if (unit) {
+            unit->setEncoding(e->editorEncoding());
             unit->setRealEncoding(e->fileEncoding());
         }
     }

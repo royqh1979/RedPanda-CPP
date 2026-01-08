@@ -537,6 +537,8 @@ public:
     const GetCppParserFunc &getCppParserFunc() const;
     void setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc);
 
+    const QByteArray &editorEncoding() const;
+
 protected:
     // QWidget interface
     void wheelEvent(QWheelEvent *event) override;

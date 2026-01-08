@@ -223,13 +223,6 @@ void Editor::convertToEncoding(const QByteArray &encoding)
     mEditorEncoding = encoding;
     setModified(true);
     save();
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(this);
-        if (unit) {
-            unit->setEncoding(mEditorEncoding);
-            unit->setRealEncoding(mFileEncoding);
-        }
-    }
     emit editorEncodingChanged(this);
 }
 
@@ -403,13 +396,7 @@ void Editor::rename(const QString &newName)
         return;
     }
     QString oldName = mFilename;
-    // Update project information
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(oldName);
-        if (unit) {
-            mProject->renameUnit(unit, newName);
-        }
-    }
+
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
@@ -417,25 +404,20 @@ void Editor::rename(const QString &newName)
     }
 
     mFilename = newName;
-    if (mProject) {
-        mProject->associateEditor(this);
-    }
     setFileType(getFileType(mFilename));
-    if (!mIsNew) {
-        if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
-            mSyntaxIssues.clear();
-        }
-        if (mEditorSettings->syntaxCheckWhenSave())
-            checkSyntaxInBack();
-
-        if (mFileSystemWatcher) {
-            mFileSystemWatcher->removePath(oldName);
-            mFileSystemWatcher->addPath(newName);
-        }
-        emit fileRenamed(this, oldName, newName);
-
-        initAutoBackup();
+    if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
+        mSyntaxIssues.clear();
     }
+    if (mEditorSettings->syntaxCheckWhenSave())
+        checkSyntaxInBack();
+
+    if (mFileSystemWatcher) {
+        mFileSystemWatcher->removePath(oldName);
+        mFileSystemWatcher->addPath(newName);
+    }
+    emit fileRenamed(this, oldName, newName);
+
+    initAutoBackup();
     return;
 }
 
@@ -457,7 +439,6 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
     if (mEditorEncoding == newEncoding)
         return;
     mEditorEncoding = newEncoding;
-    emit editorEncodingChanged(this);
     if (!isNew()) {
         if (modified()) {
             if (QMessageBox::warning(this,tr("Confirm Reload File"),
@@ -475,13 +456,7 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
         }
     }
     resolveAutoDetectEncodingOption();
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(this);
-        if (unit) {
-            unit->setEncoding(mEditorEncoding);
-            unit->setRealEncoding(mFileEncoding);
-        }
-    }
+    emit editorEncodingChanged(this);
 }
 const QByteArray& Editor::fileEncoding() const noexcept{
     return mFileEncoding;
@@ -4388,6 +4363,11 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+const QByteArray &Editor::editorEncoding() const
+{
+    return mEditorEncoding;
 }
 
 const GetCppParserFunc &Editor::getCppParserFunc() const
