@@ -29,97 +29,13 @@
 #define SI_NO_CONVERSION
 #include "SimpleIni.h"
 #include "qt_utils/utils.h"
+#include "utils/types.h"
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 
 using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
-
-enum class FileType{
-    None,
-    ATTASM, // deprecated: AT&T Style GNU assembler source file (.s)
-    INTELASM, // deprecated: Intel Style GNU assembler source file (.s)
-    LUA, // lua file (.lua)
-    CSource, // c source file (.c)
-    CppSource, // c++ source file (.cpp)
-    CCppHeader, // c header (.h)
-    PreprocessedSource, //(.p)
-    GIMPLE, // gcc gimple file (.gimple)
-    WindowsResourceSource, // resource source (.res)
-    Project, //Red Panda C++ Project (.dev)
-    Text, // text file
-    FragmentShader,
-    VerticeShader,
-    ModuleDef, // Windows Module Definition
-    MakeFile,
-    Other, // any others
-    NASM, // NASM Files
-    GAS, //GAS Files
-};
-
-enum class SearchFileScope {
-    currentFile,
-    wholeProject,
-    openedFiles,
-    Folder
-};
-
-enum AutoSaveTarget {
-    astCurrentFile,
-    astAllOpennedFiles,
-    astAllProjectFiles
-};
-
-enum AutoSaveStrategy {
-    assOverwrite,
-    assAppendUnixTimestamp,
-    assAppendFormatedTimeStamp
-};
-
-enum FormatterBraceStyle {
-    fbsDefault,
-    fbsAllman,
-    fbsJava,
-    fbsKR,
-    fbsStroustrup,
-    fbsWitesmith,
-    fbsVtk,
-    fbsRatliff,
-    fbsGNU,
-    fbsLinux,
-    fbsHorstmann,
-    fbs1TBS,
-    fbsGoogle,
-    fbsMozilla,
-    fbsWebkit,
-    fbsPico,
-    fbsLisp
-};
-
-enum FormatterOperatorAlign {
-    foaNone,
-    foaType,
-    foaMiddle,
-    foaName
-};
-
-enum FormatterIndentType {
-    fitSpace,
-    fitTab
-};
-
-enum class SplitProcessCommandQuoteType {
-    None,
-    Single,
-    Double
-};
-
-enum class ProblemCaseValidateType {
-    Exact,
-    IgnoreLeadingTrailingSpaces,
-    IgnoreSpaces
-};
 
 struct NonExclusiveTemporaryFileOwner {
     const QString filename;
@@ -153,10 +69,6 @@ constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
 }
 
 bool programIsWin32GuiApp(const QString& filename);
-
-QString parseMacros(const QString& s);
-QString parseMacros(const QString& s, const QMap<QString, QString>& variables);
-QMap<QString, QString> devCppMacroVariables();
 
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);

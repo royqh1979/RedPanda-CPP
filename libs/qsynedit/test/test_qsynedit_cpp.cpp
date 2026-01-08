@@ -382,6 +382,13 @@ void TestQSyneditCpp::test_move_caret_y_data()
         td << mStatusChanges << QList<int>{};
     }
     {
+        mEdit->setCaretXY(CharPos{4,0});
+        mStatusChanges.clear();
+        mEdit->processCommand(EditCommand::SelUp);
+        QTestData& td = QTest::newRow("Up at first line with selection")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::Selection};
+    }
+    {
         mEdit->setCaretXY(CharPos{4,15});
         mStatusChanges.clear();
         mEdit->processCommand(EditCommand::Up);
@@ -408,6 +415,13 @@ void TestQSyneditCpp::test_move_caret_y_data()
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Down at lastline")<<mEdit->caretXY()<<CharPos{0,76};
         td << mStatusChanges << QList<int>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,76});
+        mStatusChanges.clear();
+        mEdit->processCommand(EditCommand::SelDown);
+        QTestData& td = QTest::newRow("Down at lastline with selection")<<mEdit->caretXY()<<CharPos{1,76};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::Selection};
     }
     {
         mEdit->setCaretXY(CharPos{26,61});
@@ -437,6 +451,13 @@ void TestQSyneditCpp::test_move_caret_y_data()
         mEdit->processCommand(EditCommand::PageUp);
         QTestData& td = QTest::newRow("Page Up at first line")<<mEdit->caretXY()<<CharPos{4,0};
         td << mStatusChanges << QList<int>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{4,0});
+        mStatusChanges.clear();
+        mEdit->processCommand(EditCommand::SelPageUp);
+        QTestData& td = QTest::newRow("Page Up at first line with selection")<<mEdit->caretXY()<<CharPos{0,0};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::Selection};
     }
     {
         mEdit->setCaretXY(CharPos{0,75});
@@ -471,6 +492,13 @@ void TestQSyneditCpp::test_move_caret_y_data()
         mEdit->processCommand(EditCommand::Down);
         QTestData& td = QTest::newRow("Page Down at lastline")<<mEdit->caretXY()<<CharPos{0,76};
         td << mStatusChanges << QList<int>{};
+    }
+    {
+        mEdit->setCaretXY(CharPos{0,76});
+        mStatusChanges.clear();
+        mEdit->processCommand(EditCommand::SelDown);
+        QTestData& td = QTest::newRow("Page Down at lastline with selection")<<mEdit->caretXY()<<CharPos{1,76};
+        td << mStatusChanges << QList<int>{StatusChange::CaretX | StatusChange::Selection};
     }
 }
 

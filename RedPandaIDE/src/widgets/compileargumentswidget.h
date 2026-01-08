@@ -35,7 +35,7 @@ public:
 
     QMap<QString, QString> arguments(bool includeUnset) const;
 
-    void resetUI(Settings::PCompilerSet pSet, const QMap<QString,QString>& options);
+    void resetUI(PCompilerSet pSet, const QMap<QString,QString>& options);
 
     void setBoolArgument(const QString &argKey, bool checked);
 

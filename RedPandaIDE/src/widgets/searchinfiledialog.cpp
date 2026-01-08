@@ -212,7 +212,7 @@ void SearchInFileDialog::doSearch(bool replace)
 
             if (progressDlg.wasCanceled())
                 break;
-            Editor * e = pMainWindow->editorManager()->getOpenedEditorByFilename(curFilename);
+            Editor * e = pMainWindow->editorManager()->getOpenedEditor(curFilename);
             if (e) {
                 fileSearched++;
                 PSearchResultTreeItem parentItem = batchFindInEditor(

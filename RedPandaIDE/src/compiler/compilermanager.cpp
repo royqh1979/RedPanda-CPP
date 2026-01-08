@@ -515,7 +515,7 @@ ProjectCompiler *CompilerManager::createProjectCompiler(std::shared_ptr<Project>
 
 PCppParser CompilerManager::getParserForFile(const QString &filename)
 {
-    Editor* editor = mMainWindow->editorManager()->getOpenedEditorByFilename(filename);
+    Editor* editor = mMainWindow->editorManager()->getOpenedEditor(filename);
     if (editor)
         return editor->parser();
     return PCppParser();

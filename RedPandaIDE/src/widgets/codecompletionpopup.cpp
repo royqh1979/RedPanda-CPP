@@ -73,6 +73,11 @@ void CodeCompletionPopup::setKeypressedCallback(const KeyPressedCallback &newKey
     mListView->setKeypressedCallback(newKeypressedCallback);
 }
 
+void CodeCompletionPopup::setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc)
+{
+    mListView->setShowEditorCaretFunc(newShowEditorCaretFunc);
+}
+
 void CodeCompletionPopup::prepareSearch(
         const QString &preWord,
         const QStringList &ownerExpression,
@@ -561,8 +566,8 @@ void CodeCompletionPopup::filterList(const QString &member)
     if (mRecordUsage) {
         int usageCount;
         foreach (const PStatement& statement,mCompletionStatementList) {
-            if (statement->usageCount == -1) {
-                PSymbolUsage usage = pMainWindow->symbolUsageManager()->findUsage(statement->fullName);
+            if (statement->usageCount == -1 && mSymbolUsageManager) {
+                PSymbolUsage usage = mSymbolUsageManager->findUsage(statement->fullName);
                 if (usage) {
                     usageCount = usage->count;
                 } else {
@@ -1162,6 +1167,16 @@ void CodeCompletionPopup::addKeyword(const QString &keyword)
 bool CodeCompletionPopup::isIncluded(const QString &fileName)
 {
     return mIncludedFiles.contains(fileName);
+}
+
+SymbolUsageManager *CodeCompletionPopup::symbolUsageManager() const
+{
+    return mSymbolUsageManager;
+}
+
+void CodeCompletionPopup::setSymbolUsageManager(SymbolUsageManager *newSymbolUsageManager)
+{
+    mSymbolUsageManager = newSymbolUsageManager;
 }
 
 void CodeCompletionPopup::setHideSymbolsStartWithTwoUnderline(bool newHideSymbolsStartWithTwoUnderline)

@@ -19,6 +19,7 @@
 #include "../utils.h"
 #include "../utils/escape.h"
 #include "../utils/parsearg.h"
+#include "../utils/parsemacros.h"
 #include "compilermanager.h"
 #include "../systemconsts.h"
 
@@ -218,11 +219,11 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
     return result;
 }
 
-Settings::PCompilerSet Compiler::compilerSet()
+PCompilerSet Compiler::compilerSet()
 {
     if (mProject) {
         int index = mProject->options().compilerSet;
-        Settings::PCompilerSet set = pSettings->compilerSets().getSet(index);
+        PCompilerSet set = pSettings->compilerSets().getSet(index);
         if (set)
             return set;
     }
@@ -462,7 +463,7 @@ QStringList Compiler::getCCompileArguments(bool checkSyntax)
         }
     }
 
-    QMap<QString, QString> macros = devCppMacroVariables();
+    QMap<QString, QString> macros = pMainWindow->macroVariables();
 
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
         result << parseArguments(compilerSet()->customCompileParams(), macros, true);
@@ -516,7 +517,7 @@ QStringList Compiler::getCppCompileArguments(bool checkSyntax)
         }
     }
 
-    QMap<QString, QString> macros = devCppMacroVariables();
+    QMap<QString, QString> macros = pMainWindow->macroVariables();
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
         result << parseArguments(compilerSet()->customCompileParams(), macros, true);
     }
@@ -635,7 +636,7 @@ QStringList Compiler::getLibraryArguments(FileType fileType)
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
-        QMap<QString, QString> macros = devCppMacroVariables();
+        QMap<QString, QString> macros = pMainWindow->macroVariables();
         QStringList params = parseArguments(compilerSet()->customLinkParams(), macros, true);
         if (!params.isEmpty()) {
             foreach(const QString& param, params)

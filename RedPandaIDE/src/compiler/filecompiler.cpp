@@ -42,18 +42,18 @@ bool FileCompiler::prepareForCompile()
     auto action = finally([this, oldDebugOptionValue]{
        compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,oldDebugOptionValue);
     });
-    Settings::CompilerSet::CompilationStage stage = Settings::CompilerSet::CompilationStage::GenerateExecutable;
+    CompilerSet::CompilationStage stage = CompilerSet::CompilationStage::GenerateExecutable;
     switch(mCompileType) {
     case CppCompileType::PreprocessOnly:
-        stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
+        stage = CompilerSet::CompilationStage::PreprocessingOnly;
         break;
     case CppCompileType::GenerateAssemblyOnly:
-        stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
+        stage = CompilerSet::CompilationStage::CompilationProperOnly;
         if (pSettings->languages().noDebugDirectivesWhenGenerateASM())
             compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
         break;
     case CppCompileType::GenerateGimpleOnly:
-        stage = Settings::CompilerSet::CompilationStage::GenerateGimple;
+        stage = CompilerSet::CompilationStage::GenerateGimple;
         break;
     default:
         break;
@@ -79,23 +79,23 @@ bool FileCompiler::prepareForCompile()
     mArguments += QStringList{localizePath(mFilename)};
     if (!mOnlyCheckSyntax) {
         switch(stage) {
-        case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
+        case CompilerSet::CompilationStage::PreprocessingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->preprocessingSuffix());
             mArguments << "-E";
             break;
-        case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
+        case CompilerSet::CompilationStage::CompilationProperOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
             mArguments += {"-S", "-fverbose-asm"};
             break;
-        case Settings::CompilerSet::CompilationStage::GenerateGimple:
+        case CompilerSet::CompilationStage::GenerateGimple:
             mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
             mArguments += {"-S", QString("-fdump-tree-gimple=%1").arg(localizePath(changeFileExt(mFilename,"gimple")))};
             break;
-        case Settings::CompilerSet::CompilationStage::AssemblingOnly:
+        case CompilerSet::CompilationStage::AssemblingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->assemblingSuffix());
             mArguments << "-c";
             break;
-        case Settings::CompilerSet::CompilationStage::GenerateExecutable:
+        case CompilerSet::CompilationStage::GenerateExecutable:
             mOutputFile = changeFileExt(mFilename,compilerSet()->executableSuffix());
         }
 #ifdef ENABLE_SDCC
@@ -112,7 +112,7 @@ bool FileCompiler::prepareForCompile()
         if (mCompileType == CppCompileType::GenerateAssemblyOnly) {
             if (pSettings->languages().noSEHDirectivesWhenGenerateASM())
                 mArguments << "-fno-asynchronous-unwind-tables";
-            if (pSettings->languages().x86DialectOfASMGenerated()==Settings::Languages::X86ASMDialect::Intel)
+            if (pSettings->languages().x86DialectOfASMGenerated()==LanguageSettings::X86ASMDialect::Intel)
                 mArguments << "-masm=intel";
         }
 #endif

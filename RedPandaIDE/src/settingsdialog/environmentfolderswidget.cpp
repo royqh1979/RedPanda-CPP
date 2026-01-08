@@ -43,9 +43,9 @@ void EnvironmentFoldersWidget::doLoad()
     ui->txtIconSetFolder->setEnabled(pSettings->environment().useCustomIconSet());
     ui->btnOpenIconSetFolderInFileBrowser->setEnabled(pSettings->environment().useCustomIconSet());
     if (pSettings->environment().useCustomIconSet()) {
-        ui->txtIconSetFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::IconSet));
+        ui->txtIconSetFolder->setText(pSettings->dirs().config(DirSettings::DataType::IconSet));
     }
-    ui->txtThemeFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::Theme));
+    ui->txtThemeFolder->setText(pSettings->dirs().config(DirSettings::DataType::Theme));
 }
 
 void EnvironmentFoldersWidget::doSave()
@@ -89,14 +89,14 @@ void EnvironmentFoldersWidget::on_btnOpenIconSetFolderInFileBrowser_clicked()
 {
     QDesktopServices::openUrl(
                 QUrl("file:///"+
-                     includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::IconSet)),QUrl::TolerantMode));
+                     includeTrailingPathDelimiter(pSettings->dirs().config(DirSettings::DataType::IconSet)),QUrl::TolerantMode));
 
 }
 
 
 void EnvironmentFoldersWidget::on_btnOpenThemeFolderInFileBrowser_clicked()
 {
-    QString folderName = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QString folderName = pSettings->dirs().config(DirSettings::DataType::Theme);
     QDir folder=QDir{folderName};
     if (!folder.exists())
         folder.mkpath(folderName);

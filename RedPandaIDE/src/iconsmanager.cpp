@@ -259,7 +259,7 @@ void IconsManager::prepareCustomIconSet(const QString &customIconSet)
 {
     if (QFile(customIconSet).exists())
         return;
-    copyFolder(pSettings->dirs().data(Settings::Dirs::DataType::IconSet),customIconSet);
+    copyFolder(pSettings->dirs().data(DirSettings::DataType::IconSet),customIconSet);
 }
 
 QPixmap IconsManager::getPixmapForStatement(PStatement statement)
@@ -289,7 +289,7 @@ IconsManager::PPixmap IconsManager::getPixmap(const QMap<IconName, PPixmap> &ico
 const QString IconsManager::iconSetsFolder() const
 {
     if (mIconSetsFolder.isEmpty())
-        return pSettings->dirs().data(Settings::Dirs::DataType::IconSet);
+        return pSettings->dirs().data(DirSettings::DataType::IconSet);
     return mIconSetsFolder;
 }
 

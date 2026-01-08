@@ -34,14 +34,6 @@
 
 namespace QSynedit {
 
-enum class ScrollStyle {
-    None, OnlyHorizontal, OnlyVertical, Both
-};
-
-enum class EditCaretType {
-    VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
-};
-
 enum StatusChange {
     None = 0,
     AllCleared = 0x0001,
@@ -395,8 +387,6 @@ public:
     int selectionEndLine() const;
 
     void clearSelection();
-    void setSelBegin(const CharPos &value);
-    void setSelEnd(const CharPos &value);
     void setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos);
 
     SelectionMode activeSelectionMode() const;
@@ -584,6 +574,8 @@ private:
     void ensureCaretVisible(bool ForceToMiddle=false);
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
+    void internalSetSelBegin(const CharPos &value);
+    void internalSetSelEnd(const CharPos &value);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);
     void internalSetCaretX(int value);
     void notifyStatusChange(StatusChanges changes);

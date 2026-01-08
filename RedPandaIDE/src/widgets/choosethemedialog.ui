@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Choose Theme</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../../icons.qrc">
+    <normaloff>:/icons/images/devcpp.ico</normaloff>:/icons/images/devcpp.ico</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="grpTheme">
@@ -32,7 +36,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="../icons.qrc">:/demos/light.png</pixmap>
+         <pixmap resource="../../icons.qrc">:/demos/light.png</pixmap>
         </property>
        </widget>
       </item>
@@ -48,7 +52,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="../icons.qrc">:/demos/dark.png</pixmap>
+         <pixmap resource="../../icons.qrc">:/demos/dark.png</pixmap>
         </property>
        </widget>
       </item>
@@ -184,7 +188,7 @@
   <tabstop>btnOk</tabstop>
  </tabstops>
  <resources>
-  <include location="../icons.qrc"/>
+  <include location="../../icons.qrc"/>
  </resources>
  <connections/>
  <buttongroups>

@@ -23,6 +23,7 @@
 #include <QRecursiveMutex>
 #include "utils.h"
 #include "editor.h"
+#include "reformatter/astyleformatter.h"
 
 class MainWindow;
 class Project;
@@ -52,6 +53,7 @@ public:
 
     bool swapEditor(Editor* editor);
     void activeEditor(Editor *e, bool focus);
+    void activeEditorAndSetCaret(Editor *e, QSynedit::CharPos pos);
 
     void saveAll();
     bool saveAllForProject();
@@ -64,7 +66,7 @@ public:
 
     void forceCloseEditor(Editor* editor);
 
-    Editor* getOpenedEditorByFilename(QString filename) const;
+    Editor* getOpenedEditor(const QString &filename) const;
 
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer) const;
 
@@ -79,6 +81,7 @@ public:
     void updateEditorBookmarks();
     void updateEditorBreakpoints();
 
+    bool debuggerReadyForEvalTip();
     bool requestEvalTip(Editor *e, const QString& s);
     void onEditorTipEvalValueReady(Editor *e);
 
@@ -91,14 +94,17 @@ public:
     int pageCount() const;
     void selectNextPage();
     void selectPreviousPage();
-
-    void showCriticalError(const QString& title, const QString& reason);
+    void showActiveEditorCaret();
 
     Editor* operator[](int index);
 
     QTabWidget *leftPageWidget() const;
 
     QTabWidget *rightPageWidget() const;
+
+    PCppParser sharedParser(ParserLanguage language);
+
+    std::unique_ptr<BaseReformatter> createReformatterForEditor(Editor *);
 
 signals:
     void editorClosed();
@@ -108,6 +114,9 @@ private:
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
+#ifdef ENABLE_SDCC
+    CompilerType getCompilerTypeForEditor(Editor *e);
+#endif
 private slots:
     void updateEditorTabCaption(Editor* e);
     void onBreakpointAdded(const Editor* e, int line);
@@ -122,6 +131,8 @@ private slots:
     void onEditorLinesRemoved(int startLine, int count);
     void onEditorLineMoved(int fromLine, int toLine);
     void onEditorStatusChanged(QSynedit::StatusChanges changes);
+    void onEditorFontSizeChangedByWheel(int newSize);
+    void onEditorFileEncodingChanged(Editor *e);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;
@@ -129,6 +140,7 @@ private:
     QSplitter *mSplitter;
     QWidget *mPanel;
     int mUpdateCount;
+    QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
     mutable QRecursiveMutex mMutex;
 };
 

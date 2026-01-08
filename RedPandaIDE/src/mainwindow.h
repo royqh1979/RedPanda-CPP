@@ -40,6 +40,7 @@
 #include "widgets/customfilesystemmodel.h"
 #include "customfileiconprovider.h"
 #include "problems/competitivecompenionhandler.h"
+#include "utils/parsemacros.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -226,6 +227,8 @@ public:
     void switchCurrentStackTrace(int idx);
 
     static CompileSuccessionTaskType runTypeToCompileSuccessionTaskType(RunType runType);
+
+    QMap<QString, QString> macroVariables();
 
 public slots:
     void logToolsOutput(const QString& msg);

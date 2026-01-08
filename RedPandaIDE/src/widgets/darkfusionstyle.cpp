@@ -28,6 +28,7 @@
 #include <QScrollBar>
 #include "darkfusionstyle.h"
 #include "../settings.h"
+#include <QAbstractScrollArea>
 
 #if defined(Q_OS_MACX)
 #include <QtGui/private/qguiapplication_p.h>

@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef QSYNEDIT_CONSTANTS_H
+#define QSYNEDIT_CONSTANTS_H
 #include <QSet>
 #include <QChar>
 

@@ -283,11 +283,11 @@ void ColorManager::reload()
 {
     mSchemes.clear();
     //bundled schemes ( the lowest priority)
-    loadSchemesInDir(pSettings->dirs().data(Settings::Dirs::DataType::ColorScheme),true,false);
+    loadSchemesInDir(pSettings->dirs().data(DirSettings::DataType::ColorScheme),true,false);
     //config schemes ( higher priority)
-    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorScheme),false,false);
+    loadSchemesInDir(pSettings->dirs().config(DirSettings::DataType::ColorScheme),false,false);
     //customed schemes ( highest priority)
-    loadSchemesInDir(pSettings->dirs().config(Settings::Dirs::DataType::ColorScheme),false,true);
+    loadSchemesInDir(pSettings->dirs().config(DirSettings::DataType::ColorScheme),false,true);
 }
 
 QStringList ColorManager::getSchemes(const QString &themeType)
@@ -758,9 +758,9 @@ QString ColorManager::generateFullPathname(const QString &name, bool isBundled, 
 {
     QString filename = generateFilename(name,isCustomed);
     if (isBundled && !isCustomed) {
-        return includeTrailingPathDelimiter(pSettings->dirs().data(Settings::Dirs::DataType::ColorScheme))+filename;
+        return includeTrailingPathDelimiter(pSettings->dirs().data(DirSettings::DataType::ColorScheme))+filename;
     } else {
-        return includeTrailingPathDelimiter(pSettings->dirs().config(Settings::Dirs::DataType::ColorScheme))+filename;
+        return includeTrailingPathDelimiter(pSettings->dirs().config(DirSettings::DataType::ColorScheme))+filename;
     }
 }
 

@@ -119,7 +119,7 @@ void NewProjectDialog::addTemplate(const QString &filename)
         return;
     PProjectTemplate t = std::make_shared<ProjectTemplate>();
     t->readTemplateFile(filename);
-    Settings::PCompilerSet pSet=pSettings->compilerSets().defaultSet();
+    PCompilerSet pSet=pSettings->compilerSets().defaultSet();
     if (pSet) {
 #ifdef ENABLE_SDCC
         if (pSet->compilerType()==CompilerType::SDCC) {
@@ -138,8 +138,8 @@ void NewProjectDialog::addTemplate(const QString &filename)
 void NewProjectDialog::readTemplateDirs()
 {
     addTemplate(":/templates/empty.template");
-    readTemplateDir(pSettings->dirs().data(Settings::Dirs::DataType::Template));
-    readTemplateDir(pSettings->dirs().config(Settings::Dirs::DataType::Template));
+    readTemplateDir(pSettings->dirs().data(DirSettings::DataType::Template));
+    readTemplateDir(pSettings->dirs().config(DirSettings::DataType::Template));
     rebuildTabs();
     updateView();
 }

@@ -26,10 +26,10 @@ void LanguageAsmGenerationWidget::doLoad()
     ui->chkNoSEHDirectives->setChecked(pSettings->languages().noSEHDirectivesWhenGenerateASM());
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
     switch(pSettings->languages().x86DialectOfASMGenerated()) {
-    case Settings::Languages::X86ASMDialect::ATT:
+    case LanguageSettings::X86ASMDialect::ATT:
         ui->rbATT->setChecked(true);
         break;
-    case Settings::Languages::X86ASMDialect::Intel:
+    case LanguageSettings::X86ASMDialect::Intel:
         ui->rbIntel->setChecked(true);
         break;
     }
@@ -42,9 +42,9 @@ void LanguageAsmGenerationWidget::doSave()
     pSettings->languages().setNoSEHDirectivesWhenGenerateASM(ui->chkNoSEHDirectives->isChecked());
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
     if (ui->rbATT->isChecked()) {
-        pSettings->languages().setX86DialectOfASMGenerated(Settings::Languages::X86ASMDialect::ATT);
+        pSettings->languages().setX86DialectOfASMGenerated(LanguageSettings::X86ASMDialect::ATT);
     } else {
-        pSettings->languages().setX86DialectOfASMGenerated(Settings::Languages::X86ASMDialect::Intel);
+        pSettings->languages().setX86DialectOfASMGenerated(LanguageSettings::X86ASMDialect::Intel);
     }
 #endif
     pSettings->languages().save();

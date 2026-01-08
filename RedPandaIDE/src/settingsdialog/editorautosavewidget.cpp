@@ -19,6 +19,8 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 
+#include <QDateTime>
+
 EditorAutoSaveWidget::EditorAutoSaveWidget(const QString& name, const QString& group,
                                                              QWidget *parent) :
     SettingsWidget(name,group,parent),

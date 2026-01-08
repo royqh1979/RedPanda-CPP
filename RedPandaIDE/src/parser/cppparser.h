@@ -27,6 +27,7 @@
 
 class CppParser;
 using PCppParser = std::shared_ptr<CppParser>;
+
 class CppParser : public QObject
 {
     Q_OBJECT
@@ -137,7 +138,7 @@ public:
     const QSet<QString> &filesToScan() const;
     void setFilesToScan(const QSet<QString> &newFilesToScan);
 
-    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
+    void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream);
 
     int parserId() const;
 

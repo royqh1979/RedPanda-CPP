@@ -142,7 +142,7 @@ void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
 {
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
-    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QString customThemeFolder = pSettings->dirs().config(DirSettings::DataType::Theme);
     QDir dir{customThemeFolder};
     if (!dir.exists()) {
         dir.mkpath(customThemeFolder);
@@ -154,7 +154,7 @@ void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
 
 void EnvironmentAppearanceWidget::on_btnOpenCustomThemeFolder_clicked()
 {
-    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QString customThemeFolder = pSettings->dirs().config(DirSettings::DataType::Theme);
     openFileFolderInExplorer(customThemeFolder);
 }
 

@@ -40,8 +40,8 @@ ThemeManager::ThemeManager(QObject *parent) : QObject(parent)
 
 PAppTheme ThemeManager::theme(const QString &themeName)
 {
-    QString customThemeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    QString builtInThemeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    QString customThemeDir = pSettings->dirs().config(DirSettings::DataType::Theme);
+    QString builtInThemeDir = pSettings->dirs().data(DirSettings::DataType::Theme);
     PAppTheme appTheme = nullptr;
 
     // custom overrides built-in
@@ -54,8 +54,8 @@ PAppTheme ThemeManager::theme(const QString &themeName)
 
 QList<PAppTheme> ThemeManager::getThemes()
 {
-    QString customThemeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    QString builtInThemeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    QString customThemeDir = pSettings->dirs().config(DirSettings::DataType::Theme);
+    QString builtInThemeDir = pSettings->dirs().data(DirSettings::DataType::Theme);
     std::set<PAppTheme, ThemeCompare> themes;
 
     // custom overrides built-in

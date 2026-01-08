@@ -27,6 +27,7 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     ui->cbBraceStyle->setModel(&mStylesModel);
     connect(ui->cbBraceStyle, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &FormatterGeneralWidget::onBraceStyleChanged);
+    ui->editDemo->setEditorSettings(&pSettings->editor());
     ui->editDemo->applySettings();
     ui->editDemo->setReadOnly(true);
     ui->editDemo->setFileType(FileType::CppSource);
@@ -57,7 +58,7 @@ void FormatterGeneralWidget::onBraceStyleChanged()
 
 void FormatterGeneralWidget::doLoad()
 {
-    Settings::CodeFormatter& format = pSettings->codeFormatter();
+    CodeFormatterSettings& format = pSettings->codeFormatter();
     for (int i=0;i<mStylesModel.rowCount(QModelIndex());i++) {
         PFormatterStyleItem item = mStylesModel.getStyle(i);
         if (item->style == format.braceStyle()) {
@@ -158,7 +159,7 @@ void FormatterGeneralWidget::doLoad()
 
 void FormatterGeneralWidget::doSave()
 {
-    Settings::CodeFormatter& format = pSettings->codeFormatter();
+    CodeFormatterSettings& format = pSettings->codeFormatter();
     updateCodeFormatter(format);
     format.save();
 }
@@ -338,7 +339,7 @@ void FormatterGeneralWidget::updateDemo()
         return;
     QByteArray content = file.readAll();
 
-    Settings::CodeFormatter formatter(nullptr);
+    CodeFormatterSettings formatter(nullptr);
     updateCodeFormatter(formatter);
     auto [newContent, astyleError, processError] =
         runAndGetOutput(astyle, extractFileDir(astyle), formatter.getArguments(), content, true);
@@ -356,7 +357,7 @@ void FormatterGeneralWidget::updateDemo()
     ui->editDemo->setContent(display);
 }
 
-void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format)
+void FormatterGeneralWidget::updateCodeFormatter(CodeFormatterSettings &format)
 {
     PFormatterStyleItem item = mStylesModel.getStyle(ui->cbBraceStyle->currentIndex());
     if (item)

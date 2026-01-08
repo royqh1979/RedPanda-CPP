@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef PAINTER_H
-#define PAINTER_H
+#ifndef QSYNEDIT_PAINTER_H
+#define QSYNEDIT_PAINTER_H
 
 #include <QColor>
 #include <QPainter>

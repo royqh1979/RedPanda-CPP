@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef CODEFOLDING_H
-#define CODEFOLDING_H
+#ifndef QSYNEDIT_CODEFOLDING_H
+#define QSYNEDIT_CODEFOLDING_H
 #include <QColor>
 #include <vector>
 #include <memory>

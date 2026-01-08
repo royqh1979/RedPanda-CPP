@@ -23,11 +23,13 @@
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
     setUniformItemSizes(true);
+    mKeypressedCallback = nullptr;
+    mShowEditorCaretFunc = nullptr;
 }
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 {
-
+    Q_ASSERT(mKeypressedCallback != nullptr);
     if (event->key() == Qt::Key_Up
             || event->key() == Qt::Key_Down
             || event->key() == Qt::Key_PageDown
@@ -39,17 +41,15 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
         QListView::keyPressEvent(event);
         return;
     }
-    if (!mKeypressedCallback || !mKeypressedCallback(event)) {
+    if (!mKeypressedCallback(event)) {
         QListView::keyPressEvent(event);
     }
 }
 
 void CodeCompletionListView::focusInEvent(QFocusEvent *)
 {
-    Editor *editor = pMainWindow->editorManager()->getEditor();
-    if (editor) {
-        editor->showCaret();
-    }
+    Q_ASSERT(mShowEditorCaretFunc != nullptr);
+    mShowEditorCaretFunc();
 }
 
 void CodeCompletionListView::mouseDoubleClickEvent(QMouseEvent */*event*/)
@@ -57,6 +57,16 @@ void CodeCompletionListView::mouseDoubleClickEvent(QMouseEvent */*event*/)
     QKeyEvent keyEvent(QKeyEvent::Type::KeyPress,Qt::Key_Tab,Qt::KeyboardModifier::NoModifier,
                     "\t");
     keyPressEvent(&keyEvent);
+}
+
+const ShowEditorCaretFunc &CodeCompletionListView::showEditorCaretFunc() const
+{
+    return mShowEditorCaretFunc;
+}
+
+void CodeCompletionListView::setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc)
+{
+    mShowEditorCaretFunc = newShowEditorCaretFunc;
 }
 
 const KeyPressedCallback &CodeCompletionListView::keypressedCallback() const

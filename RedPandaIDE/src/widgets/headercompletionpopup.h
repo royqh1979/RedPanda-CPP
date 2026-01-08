@@ -106,6 +106,7 @@ public:
     void prepareSearch(const QString& phrase, const QString& fileName);
     bool search(const QString& phrase, bool autoHideOnSingleResult);
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
+    void setShowEditorCaretFunc(const ShowEditorCaretFunc &newShowEditorCaretFunc);
     void setSuggestionColor(const QColor& localColor,
                             const QColor& projectColor,
                             const QColor& systemColor,

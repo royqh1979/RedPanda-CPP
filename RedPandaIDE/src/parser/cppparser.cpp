@@ -6998,7 +6998,7 @@ int CppParser::parserId() const
     return mParserId;
 }
 
-void CppParser::setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream)
+void CppParser::setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream)
 {
     mPreprocessor.setOnGetFileStream(newOnGetFileStream);
 }

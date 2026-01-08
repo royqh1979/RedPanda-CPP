@@ -18,41 +18,49 @@
 #define EDITOR_H
 
 #include <QObject>
+#include "utils/types.h"
+#include "utils/parsemacros.h"
 #include "utils.h"
-#include <QTabWidget>
 #include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
 #include "common.h"
-#include "parser/cppparser.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
+#include "settings/codecompletionsettings.h"
+#include "settings/editorsettings.h"
+#include "compiler/compilerinfo.h"
+#include "reformatter/basereformatter.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
 #define USER_CODE_IN_REPL_POS_END "%REPL_END%"
 
 class Project;
-class Debugger;
-class MainWindow;
+class CppParser;
+using PCppParser = std::shared_ptr<CppParser>;
+class QTemporaryFile;
+class QFileSystemWatcher;
+class FunctionTooltipWidget;
+class BreakpointModel;
+class BookmarkModel;
+class Settings;
+class CodeSnippetsManager;
 struct TabStop {
     int x;
     int endX;
     int y;
 };
-
-class QTemporaryFile;
-
-class EditorManager;
-
-class FunctionTooltipWidget;
-
-class BreakpointModel;
-
-class BookmarkModel;
-
-class Settings;
-
 using PTabStop = std::shared_ptr<TabStop>;
+class Editor;
+
+using GetSharedParserrFunc = std::function<PCppParser (ParserLanguage)>;
+using GetOpennedEditorFunc = std::function<Editor *(const QString &)>;
+using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
+using CanShowEvalTipFunc = std::function<bool ()>;
+using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
+using EvalTipReadyCallback = std::function<void (Editor *)>;
+using GetCompilerTypeForEditorFunc = std::function<CompilerType (Editor *)>;
+using GetReformatterFunc = std::function<std::unique_ptr<BaseReformatter>(Editor *)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -145,7 +153,7 @@ public:
     Editor& operator=(const Editor&&) = delete;
 
     const QByteArray& encodingOption() const noexcept;
-    void setEncodingOption(const QByteArray& encoding) noexcept;
+    void setEditorEncoding(const QByteArray& encoding) noexcept;
     const QByteArray& fileEncoding() const noexcept;
     void convertToEncoding(const QByteArray& encoding);
     const QString& filename() const noexcept;
@@ -158,7 +166,6 @@ public:
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
     void setFilename(const QString& newName);
-    void activate(bool focus=true);
 
     QString caption();
 
@@ -172,7 +179,6 @@ public:
     void copyAsHTML();
 
     void setCaretPosition(const QSynedit::CharPos & pos);
-    void setCaretPositionAndActivate(const QSynedit::CharPos & pos);
 
     void addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString& hint);
     void clearSyntaxIssues();
@@ -236,8 +242,6 @@ public:
 
     void tab() override;
 
-    static PCppParser sharedParser(ParserLanguage language);
-
     void pageUp() { processCommand(QSynedit::EditCommand::PageUp); }
     void pageDown() { processCommand(QSynedit::EditCommand::PageDown); }
     void gotoLineStart() { processCommand(QSynedit::EditCommand::LineStart); }
@@ -257,7 +261,73 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    bool inTab() { return mEditorManager!=nullptr; }
+    void setProject(Project* pProject);
+
+    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
+    void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
+
+    const QDateTime &hideTime() const;
+    void setHideTime(const QDateTime &newHideTime);
+
+    bool canAutoSave() const;
+    void setCanAutoSave(bool newCanAutoSave);
+
+    quint64 lastFocusOutTime() const;
+
+    FileType fileType() const;
+    void setFileType(FileType newFileType);
+    const QString &contextFile() const;
+    void setContextFile(const QString &newContextFile);
+
+    bool autoBackupEnabled() const;
+    void setAutoBackupEnabled(bool newEnableAutoBackup);
+
+    FunctionTooltipWidget *functionTooltip() const;
+    void setFunctionTooltip(FunctionTooltipWidget *newFunctionTooltip);
+
+    HeaderCompletionPopup *headerCompletionPopup() const;
+    void setHeaderCompletionPopup(HeaderCompletionPopup *newHeaderCompletionPopup);
+
+    CodeCompletionPopup *completionPopup() const;
+    void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
+
+    const GetSharedParserrFunc &getSharedParserFunc() const;
+    void setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack);
+
+    const GetOpennedEditorFunc &getOpennedEditorFunc() const;
+    void setGetOpennedFunc(const GetOpennedEditorFunc &newOpennedEditorProviderCallBack);
+
+    const GetFileStreamFunc &getFileStreamCallBack() const;
+    void setGetFileStreamCallBack(const GetFileStreamFunc &newGetFileStreamCallBack);
+
+    const RequestEvalTipFunc &requestEvalTipFunc() const;
+    void setRequestEvalTipFunc(const RequestEvalTipFunc &newRequestEvalTipFunc);
+
+    const EvalTipReadyCallback &evalTipReadyCallback() const;
+    void setEvalTipReadyCallback(const EvalTipReadyCallback &newEvalTipReadyCallback);
+
+    CodeSnippetsManager *codeSnippetsManager() const;
+    void setCodeSnippetsManager(CodeSnippetsManager *newCodeSnippetsManager);
+
+    QFileSystemWatcher *fileSystemWatcher() const;
+    void setFileSystemWatcher(QFileSystemWatcher *newFileSystemWatcher);
+
+    const CanShowEvalTipFunc &canShowEvalTipFunc() const;
+    void setCanShowEvalTipFunc(const CanShowEvalTipFunc &newCanShowEvalTipFunc);
+
+    void setEditorSettings(const EditorSettings *newEditorSettings);
+
+    void setCodeCompletionSettings(const CodeCompletionSettings *newCodeCompletionSettings);
+#ifdef ENABLE_SDCC
+    const GetCompilerTypeForEditorFunc &getCompilerTypeForEditorFunc() const;
+    void setGetCompilerTypeForEditorFunc(const GetCompilerTypeForEditorFunc &newGetCompilerTypeForEditorFunc);
+#endif
+
+    const GetReformatterFunc &getReformatterFunc() const;
+    void setGetReformatterFunc(const GetReformatterFunc &newGetReformatterFunc);
+
+    const GetMacroVarsFunc &getMacroVarsFunc() const;
+    void setGetMacroVarsFunc(const GetMacroVarsFunc &newGetMacroVarsFunc);
 
 signals:
     void fileSaving(Editor *e, const QString& filename);
@@ -269,13 +339,15 @@ signals:
     void breakpointsCleared(const Editor *e);
     void syntaxCheckRequested(Editor *e);
     void parseTodoRequested(const QString& filename, bool inProject);
-    void updateEncodingInfoRequested(const Editor *e);
     void openFileRequested(const QString& filename, FileType fileType, const QString& contextFile , const QSynedit::CharPos& caretPos);
-
+    void symbolChoosed(const QString& filename, int usageCount);
+    void fileEncodingChanged(Editor *e);
+    void editorEncodingChanged(Editor *e);
     void showOccured(Editor *e);
     void focusInOccured(Editor *e);
     void closeOccured(Editor *e);
     void hideOccured(Editor *e);
+    void fontSizeChangedByWheel(int newSize);
 public slots:
     void onTipEvalValueReady(const QString& value);
 
@@ -366,16 +438,16 @@ private:
     bool mInited;
     QDateTime mBackupTime;
     QFile* mBackupFile;
-    QByteArray mEncodingOption; // the encoding type set by the user
+    QByteArray mEditorEncoding; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    EditorManager *mEditorManager;
-    Debugger *mDebugger;
     Project* mProject;
-    Settings* mSettings;
-    MainWindow *mMainWindow;
     bool mIsNew;
+
+    bool mCodeCompletionEnabled;
+
+
     QMap<int,PSyntaxIssueList> mSyntaxIssues;
     QColor mSyntaxErrorColor;
     QColor mSyntaxWarningColor;
@@ -427,7 +499,23 @@ private:
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
-    static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
+    CodeSnippetsManager *mCodeSnippetsManager;
+
+    GetSharedParserrFunc mGetSharedParserFunc;
+    GetOpennedEditorFunc mGetOpennedEditorFunc;
+    GetFileStreamFunc mGetFileStreamFunc;
+    CanShowEvalTipFunc mCanShowEvalTipFunc;
+    RequestEvalTipFunc mRequestEvalTipFunc;
+    EvalTipReadyCallback mEvalTipReadyCallback;
+    GetReformatterFunc mGetReformatterFunc;
+    GetMacroVarsFunc mGetMacroVarsFunc;
+#ifdef ENABLE_SDCC
+    GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
+#endif
+    QFileSystemWatcher *mFileSystemWatcher;
+
+    const EditorSettings *mEditorSettings;
+    const CodeCompletionSettings *mCodeCompletionSettings;
 
     // SynEdit interface
 protected:
@@ -439,49 +527,6 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
-
-    // QWidget interface
-    void setProject(Project* pProject);
-
-    const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
-    void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
-
-    const QDateTime &hideTime() const;
-    void setHideTime(const QDateTime &newHideTime);
-
-    bool canAutoSave() const;
-    void setCanAutoSave(bool newCanAutoSave);
-
-    quint64 lastFocusOutTime() const;
-
-    FileType fileType() const;
-    void setFileType(FileType newFileType);
-    const QString &contextFile() const;
-    void setContextFile(const QString &newContextFile);
-
-    bool autoBackupEnabled() const;
-    void setAutoBackupEnabled(bool newEnableAutoBackup);
-
-    FunctionTooltipWidget *functionTooltip() const;
-    void setFunctionTooltip(FunctionTooltipWidget *newFunctionTooltip);
-
-    HeaderCompletionPopup *headerCompletionPopup() const;
-    void setHeaderCompletionPopup(HeaderCompletionPopup *newHeaderCompletionPopup);
-
-    CodeCompletionPopup *completionPopup() const;
-    void setCompletionPopup(CodeCompletionPopup *newCompletionPopup);
-
-    Debugger *debugger() const;
-    void setDebugger(Debugger *newDebugger);
-
-    Settings *settings() const;
-    void setSettings(Settings *newSettings);
-
-    MainWindow *mainWindow() const;
-    void setMainWindow(MainWindow *newMainWindow);
-
-    EditorManager *editorManager() const;
-    void setEditorManager(EditorManager *newEditorManager);
 
 protected:
     // QWidget interface

@@ -17,8 +17,8 @@
 #include "projecttemplate.h"
 #include <QFile>
 #include <QMessageBox>
-#include "mainwindow.h"
 #include "settings.h"
+#include <QApplication>
 
 ProjectTemplate::ProjectTemplate(QObject *parent) : QObject(parent)
 {
@@ -72,14 +72,14 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
         mIni = std::make_shared<SimpleIni>();
         QByteArray data = file.readAll();
         if (mIni->LoadData(data.toStdString()) != SI_OK) {
-            QMessageBox::critical(pMainWindow,
+            QMessageBox::critical(qApp->activeWindow(),
                                   tr("Read failed."),
                                   tr("Can't read template file '%1'.").arg(fileName),
                                   QMessageBox::Ok);
             return;
         }
     } else {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(qApp->activeWindow(),
                               tr("Can't Open Template"),
                               tr("Can't open template file '%1' for read.").arg(fileName),
                               QMessageBox::Ok);
@@ -88,7 +88,7 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
 
     mVersion = mIni->GetLongValue("Template", "Ver", 0);
     if (mVersion<=0) {
-        QMessageBox::critical(pMainWindow,
+        QMessageBox::critical(qApp->activeWindow(),
                               tr("Old version template"),
                               tr("Template file '%1' has version '%2', which is unsupported.")
                               .arg(fileName)

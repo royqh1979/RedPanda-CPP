@@ -36,7 +36,7 @@ SDCCFileCompiler::SDCCFileCompiler(const QString &filename, const QByteArray &en
 
 bool SDCCFileCompiler::prepareForCompile()
 {
-    //compilerSet()->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
+    //compilerSet()->setCompilationStage(CompilerSet::CompilationStage::GenerateExecutable);
 
     if (mOnlyCheckSyntax) {
         mCompiler = compilerSet()->CCompiler();
