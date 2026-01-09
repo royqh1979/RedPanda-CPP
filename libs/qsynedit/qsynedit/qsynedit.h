@@ -30,6 +30,7 @@
 #include "types.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
+#include "syntaxer/syntaxer.h"
 #include "formatter/formatter.h"
 
 namespace QSynedit {

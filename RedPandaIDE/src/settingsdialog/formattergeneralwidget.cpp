@@ -19,7 +19,7 @@
 #include "ui_formattergeneralwidget.h"
 #include "../settings.h"
 
-FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QString& group, QWidget *parent):
+FormatterGeneralWidget::FormatterGeneralWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent):
     SettingsWidget(name,group,parent),
     ui(new Ui::FormatterGeneralWidget)
 {
@@ -28,6 +28,7 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     connect(ui->cbBraceStyle, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &FormatterGeneralWidget::onBraceStyleChanged);
     ui->editDemo->setEditorSettings(&pSettings->editor());
+    ui->editDemo->setColorManager(colorManager);
     ui->editDemo->applySettings();
     ui->editDemo->setReadOnly(true);
     ui->editDemo->setFileType(FileType::CppSource);

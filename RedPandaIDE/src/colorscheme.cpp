@@ -21,11 +21,10 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "utils.h"
-#include "settings.h"
+#include "settings/dirsettings.h"
 #include "qsynedit/constants.h"
 
 
-ColorManager * pColorManager;
 ColorScheme::ColorScheme()
 {
 
@@ -267,8 +266,10 @@ void ColorSchemeItem::toJson(QJsonObject &json)
     json["strikeout"] = mStrikeout;
 }
 
-ColorManager::ColorManager()
+ColorManager::ColorManager(DirSettings *dirSettings)
 {
+    Q_ASSERT(dirSettings!=nullptr);
+    mDirSettings = dirSettings;
     mDefaultSchemeItemDefine = std::make_shared<ColorSchemeItemDefine>();
     initItemDefines();
     init();
@@ -283,11 +284,11 @@ void ColorManager::reload()
 {
     mSchemes.clear();
     //bundled schemes ( the lowest priority)
-    loadSchemesInDir(pSettings->dirs().data(DirSettings::DataType::ColorScheme),true,false);
+    loadSchemesInDir(mDirSettings->data(DirSettings::DataType::ColorScheme),true,false);
     //config schemes ( higher priority)
-    loadSchemesInDir(pSettings->dirs().config(DirSettings::DataType::ColorScheme),false,false);
+    loadSchemesInDir(mDirSettings->config(DirSettings::DataType::ColorScheme),false,false);
     //customed schemes ( highest priority)
-    loadSchemesInDir(pSettings->dirs().config(DirSettings::DataType::ColorScheme),false,true);
+    loadSchemesInDir(mDirSettings->config(DirSettings::DataType::ColorScheme),false,true);
 }
 
 QStringList ColorManager::getSchemes(const QString &themeType)
@@ -754,13 +755,34 @@ void ColorManager::updateStatementColors(std::shared_ptr<QHash<StatementKind, st
     }
 }
 
+void ColorManager::applySchemeToSyntaxer(QSynedit::PSyntaxer syntaxer, const QString &schemeName)
+{
+    if (!syntaxer)
+        return;
+
+    foreach (const QString &name, syntaxer->attributes().keys()) {
+        PColorSchemeItem item = getItem(schemeName,name);
+        if (item) {
+            QSynedit::PTokenAttribute attr = syntaxer->attributes()[name];
+            attr->setBackground(item->background());
+            attr->setForeground(item->foreground());
+            QSynedit::FontStyles styles = QSynedit::FontStyle::fsNone;
+            styles.setFlag(QSynedit::FontStyle::fsBold, item->bold());
+            styles.setFlag(QSynedit::FontStyle::fsItalic, item->italic());
+            styles.setFlag(QSynedit::FontStyle::fsUnderline, item->underlined());
+            styles.setFlag(QSynedit::FontStyle::fsStrikeOut, item->strikeout());
+            attr->setStyles(styles);
+        }
+    }
+}
+
 QString ColorManager::generateFullPathname(const QString &name, bool isBundled, bool isCustomed)
 {
     QString filename = generateFilename(name,isCustomed);
     if (isBundled && !isCustomed) {
-        return includeTrailingPathDelimiter(pSettings->dirs().data(DirSettings::DataType::ColorScheme))+filename;
+        return includeTrailingPathDelimiter(mDirSettings->data(DirSettings::DataType::ColorScheme))+filename;
     } else {
-        return includeTrailingPathDelimiter(pSettings->dirs().config(DirSettings::DataType::ColorScheme))+filename;
+        return includeTrailingPathDelimiter(mDirSettings->config(DirSettings::DataType::ColorScheme))+filename;
     }
 }
 

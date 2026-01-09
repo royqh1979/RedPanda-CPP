@@ -44,7 +44,7 @@ public:
 
     Editor* newEditor(const QString& filename, const QByteArray& encoding,
                       FileType fileType, const QString& contextFile,
-                     Project *pProject, bool newFile,
+                     bool inProject, bool newFile,
                      QTabWidget* page=nullptr);
 
     Editor* getEditor(int index=-1, QTabWidget* tabsWidget=nullptr) const;

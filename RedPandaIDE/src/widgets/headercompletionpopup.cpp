@@ -27,11 +27,11 @@
 #include "../colorscheme.h"
 #include <qsynedit/constants.h>
 
-HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget{parent},
+HeaderCompletionPopup::HeaderCompletionPopup(ColorManager *colorManager,QWidget* parent):QWidget{parent},
     mListView{nullptr}
 {
     setWindowFlags(Qt::Popup);
-
+    mColorManager = colorManager;
     mListView = new CodeCompletionListView(this);
     mModel=new HeaderCompletionListModel(&mCompletionList, 0);
     QItemSelectionModel *m=mListView->selectionModel();
@@ -95,12 +95,12 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
 
     if (!mCompletionList.isEmpty()) {
         QString schemaName = pSettings->editor().colorScheme();
-        PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        PColorSchemeItem item = mColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
         if (item && item->background().isValid())
             mDelegate->setCurrentSelectionBackColor(item->background());
         else
             mDelegate->setCurrentSelectionBackColor(palette().highlight().color());
-        item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
+        item = mColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
         if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else

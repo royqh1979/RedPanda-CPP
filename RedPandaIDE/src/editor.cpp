@@ -56,6 +56,9 @@
 #include "widgets/bookmarkmodel.h"
 #include "codesnippetsmanager.h"
 #include "debugger/debuggermodels.h"
+#include "settings/editorsettings.h"
+#include "settings/codecompletionsettings.h"
+#include "colorscheme.h"
 
 using QSynedit::CharPos;
 
@@ -107,6 +110,7 @@ Editor::Editor(QWidget *parent):
 #endif
     mFileSystemWatcher = nullptr;
 
+    mColorManager = nullptr;
     mCodeCompletionSettings = nullptr;
     mEditorSettings = nullptr;
 
@@ -1433,8 +1437,8 @@ void Editor::copyAsHTML()
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = syntaxerManager.copy(syntaxer());
-        syntaxerManager.applyColorScheme(hl,mEditorSettings->copyHTMLColorScheme());
+        hl = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
     }
     exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
@@ -3088,8 +3092,8 @@ void Editor::print()
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = syntaxerManager.copy(syntaxer());
-        syntaxerManager.applyColorScheme(hl,mEditorSettings->copyHTMLColorScheme());
+        hl = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
     }
     exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
@@ -3122,8 +3126,8 @@ void Editor::exportAsRTF(const QString &rtfFilename)
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
     if (!mEditorSettings->copyRTFUseEditorColor()) {
-        hl = syntaxerManager.copy(syntaxer());
-        syntaxerManager.applyColorScheme(hl,mEditorSettings->copyRTFColorScheme());
+        hl = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyRTFColorScheme());
     }
     exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
@@ -3146,8 +3150,8 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = syntaxerManager.copy(syntaxer());
-        syntaxerManager.applyColorScheme(hl,mEditorSettings->copyHTMLColorScheme());
+        hl = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
     }
     exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
@@ -4281,8 +4285,8 @@ void Editor::setFileType(FileType newFileType, bool parse)
     ParserLanguage oldLanguage = calcParserLanguage();
     QSynedit::PSyntaxer oldSyntaxer = syntaxer();
     mFileType = newFileType;
-    setSyntaxer(syntaxerManager.getSyntaxer(mFileType));
-    setFormatter(syntaxerManager.getFormatter(syntaxer()->language()));
+    setSyntaxer(SyntaxerManager::getSyntaxer(mFileType));
+    setFormatter(SyntaxerManager::getFormatter(syntaxer()->language()));
     setUseCodeFolding(syntaxer()->supportFolding());
     applyColorScheme(mEditorSettings->colorScheme());
     if (parse && oldLanguage!=calcParserLanguage()) {
@@ -4354,6 +4358,16 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+ColorManager *Editor::colorManager() const
+{
+    return mColorManager;
+}
+
+void Editor::setColorManager(ColorManager *newColorManager)
+{
+    mColorManager = newColorManager;
 }
 
 const GetCppParserFunc &Editor::getCppParserFunc() const
@@ -5328,8 +5342,8 @@ void Editor::applySettings()
     endInternalChanges();
 }
 
-static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
-    PColorSchemeItem item = pColorManager->getItem(schemeName,schemeItemName);
+static QSynedit::PTokenAttribute createRainbowAttribute(ColorManager *colorManager, const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
+    PColorSchemeItem item = colorManager->getItem(schemeName,schemeItemName);
     if (item) {
         QSynedit::PTokenAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName,
                                                                                                 QSynedit::TokenType::Default);
@@ -5349,48 +5363,49 @@ void Editor::applyColorScheme(const QString& schemeName)
     setOptions(options);
     codeFolding().rainbowIndentGuides = mEditorSettings->rainbowIndentGuides();
     codeFolding().rainbowIndents = mEditorSettings->rainbowIndents();
-    syntaxerManager.applyColorScheme(syntaxer(),schemeName);
+    Q_ASSERT(mColorManager!=nullptr);
+    mColorManager->applySchemeToSyntaxer(syntaxer(),schemeName);
     if (mEditorSettings->rainbowParenthesis()) {
-        QSynedit::PTokenAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr0 =createRainbowAttribute(mColorManager, SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_1);
-        QSynedit::PTokenAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr1 =createRainbowAttribute(mColorManager,SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_2);
-        QSynedit::PTokenAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr2 =createRainbowAttribute(mColorManager,SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_3);
-        QSynedit::PTokenAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr3 =createRainbowAttribute(mColorManager,SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_4);
         setRainbowAttrs(attr0,attr1,attr2,attr3);
     }
-    PColorSchemeItem item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_LINE);
+    PColorSchemeItem item = mColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         setActiveLineColor(item->background());
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER);
     if (item) {
         gutter().setTextColor(item->foreground());
         gutter().setColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER_ACTIVE_LINE);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER_ACTIVE_LINE);
     if (item) {
         gutter().setActiveLineTextColor(item->foreground());
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_FOLD_LINE);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_FOLD_LINE);
     if (item) {
         codeFolding().folderBarLinesColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_INDENT_GUIDE_LINE);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_INDENT_GUIDE_LINE);
     if (item) {
         codeFolding().indentGuidesColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_ERROR);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_ERROR);
     if (item) {
         this->mSyntaxErrorColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_WARNING);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_WARNING);
     if (item) {
         this->mSyntaxWarningColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_SELECTION);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_SELECTION);
     if (item) {
         setSelectedForeground(item->foreground());
         setSelectedBackground(item->background());
@@ -5398,17 +5413,17 @@ void Editor::applyColorScheme(const QString& schemeName)
         this->setForegroundColor(palette().color(QPalette::HighlightedText));
         this->setBackgroundColor(palette().color(QPalette::Highlight));
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_BREAKPOINT);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_ACTIVE_BREAKPOINT);
     if (item) {
         this->mActiveBreakpointForegroundColor = item->foreground();
         this->mActiveBreakpointBackgroundColor = item->background();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_BREAKPOINT);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_BREAKPOINT);
     if (item) {
         this->mBreakpointForegroundColor = item->foreground();
         this->mBreakpointBackgroundColor = item->background();
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_TEXT);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_TEXT);
     if (item) {
         this->setForegroundColor(item->foreground());
         this->setBackgroundColor(alphaBlend(palette().color(QPalette::Base), item->background()));
@@ -5416,7 +5431,7 @@ void Editor::applyColorScheme(const QString& schemeName)
         this->setForegroundColor(palette().color(QPalette::Text));
         this->setBackgroundColor(palette().color(QPalette::Base));
     }
-    item = pColorManager->getItem(schemeName,COLOR_SCHEME_CURRENT_HIGHLIGHTED_WORD);
+    item = mColorManager->getItem(schemeName,COLOR_SCHEME_CURRENT_HIGHLIGHTED_WORD);
     if (item) {
         mCurrentHighlighWordForeground = item->foreground();
         mCurrentHighlighWordBackground = item->background();

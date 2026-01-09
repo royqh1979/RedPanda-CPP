@@ -17,7 +17,6 @@
 #include "editorcolorschemewidget.h"
 #include "ui_editorcolorschemewidget.h"
 #include "../settings.h"
-#include "../colorscheme.h"
 #include "../mainwindow.h"
 #include "../systemconsts.h"
 
@@ -28,11 +27,12 @@
 #include <QFileDialog>
 #include <qsynedit/document.h>
 
-EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QString& group, QWidget *parent) :
+EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
     ui(new Ui::EditorColorSchemeWidget)
 {
     ui->setupUi(this);
+    mColorManager = colorManager;
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> >>();
 
     mItemDelegate = new ColorSchemeItemDelegate(this);
@@ -42,8 +42,8 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     mModifiedSchemeComboFont = mDefaultSchemeComboFont;
     mModifiedSchemeComboFont.setBold(true);
     int schemeCount=0;
-    foreach (const QString &schemeName, pColorManager->getSchemes()) {
-        PColorScheme scheme = pColorManager->get(schemeName);
+    foreach (const QString &schemeName, mColorManager->getSchemes()) {
+        PColorScheme scheme = mColorManager->get(schemeName);
         if (!scheme)
             return;
         ui->cbScheme->addItem(schemeName);
@@ -57,8 +57,8 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui->treeItems->setModel(&mDefinesModel);
     delete m;
     mDefinesModel.setHorizontalHeaderLabels(QStringList());        
-    foreach (const QString &defineName, pColorManager->getDefines()) {
-        addDefine(defineName, pColorManager->getDefine(defineName));
+    foreach (const QString &defineName, mColorManager->getDefines()) {
+        addDefine(defineName, mColorManager->getDefine(defineName));
     }
     ui->treeItems->expandAll();
     QModelIndex groupIndex = mDefinesModel.index(0,0);
@@ -73,6 +73,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
     ui->editDemo->setEditorSettings(&pSettings->editor());
+    ui->editDemo->setColorManager(mColorManager);
     ui->editDemo->applySettings();
     ui->editDemo->setUseCodeFolding(true);
     ui->editDemo->setContent(
@@ -133,12 +134,12 @@ PColorSchemeItem EditorColorSchemeWidget::getCurrentItem()
     QString name =mDefinesModel.data(selectionModel->currentIndex(),NameRole).toString();
     if (name.isEmpty())
         return PColorSchemeItem();
-    return pColorManager->getItem(ui->cbScheme->currentText(), name);
+    return mColorManager->getItem(ui->cbScheme->currentText(), name);
 }
 
 PColorScheme EditorColorSchemeWidget::getCurrentScheme()
 {
-    return pColorManager->get(ui->cbScheme->currentText());
+    return mColorManager->get(ui->cbScheme->currentText());
 }
 
 void EditorColorSchemeWidget::connectModificationSlots()
@@ -222,7 +223,7 @@ void EditorColorSchemeWidget::onItemSelectionChanged()
     QString name =mDefinesModel.data(selectionModel->currentIndex(),NameRole).toString();
     bool found = false;
     if (!name.isEmpty()) {
-        PColorSchemeItemDefine define = pColorManager->getDefine(name);
+        PColorSchemeItemDefine define = mColorManager->getDefine(name);
         if (define) {
             found = true;
             ui->cbBackground->setEnabled(define->hasBackground());
@@ -230,9 +231,9 @@ void EditorColorSchemeWidget::onItemSelectionChanged()
             ui->cbForeground->setEnabled(define->hasForeground());
             ui->colorForeground->setEnabled(define->hasForeground());
             ui->grpFontStyles->setEnabled(define->hasFontStyle());
-            PColorSchemeItem item = pColorManager->getItem(ui->cbScheme->currentText(), name);
+            PColorSchemeItem item = mColorManager->getItem(ui->cbScheme->currentText(), name);
             if (!item) {
-                PColorScheme scheme = pColorManager->get(ui->cbScheme->currentText());
+                PColorScheme scheme = mColorManager->get(ui->cbScheme->currentText());
                 if (scheme) {
                     scheme->addItem(name);
                 }
@@ -267,7 +268,7 @@ void EditorColorSchemeWidget::onItemSelectionChanged()
 
 void EditorColorSchemeWidget::onSettingChanged()
 {
-    pColorManager->updateStatementColors(mStatementColors,ui->cbScheme->currentText());
+    mColorManager->updateStatementColors(mStatementColors,ui->cbScheme->currentText());
     ui->editDemo->applyColorScheme(ui->cbScheme->currentText());
     ui->editDemo->setStatementColors(mStatementColors);
 }
@@ -317,7 +318,7 @@ void EditorColorSchemeWidget::onFontStyleChanged()
 void EditorColorSchemeWidget::changeSchemeComboFont()
 {
     QString name = ui->cbScheme->currentText();
-    PColorScheme scheme = pColorManager->get(name);
+    PColorScheme scheme = mColorManager->get(name);
     if (scheme && scheme->customed()) {
         ui->cbScheme->setFont(mModifiedSchemeComboFont);
     } else {
@@ -339,7 +340,7 @@ void EditorColorSchemeWidget::doSave()
 {
     try {
         foreach (const QString &name, mModifiedSchemes) {
-            pColorManager->saveScheme(name);
+            mColorManager->saveScheme(name);
         }
         pSettings->editor().setColorScheme(ui->cbScheme->currentText());
         pSettings->editor().setRainbowParenthesis(ui->chkRainborParenthesis->isChecked());
@@ -354,7 +355,7 @@ void EditorColorSchemeWidget::doSave()
 
 void EditorColorSchemeWidget::on_actionCopy_Scheme_triggered()
 {
-    QString newName = pColorManager->copy(ui->cbScheme->currentText());
+    QString newName = mColorManager->copy(ui->cbScheme->currentText());
     if (newName.isEmpty())
         return;
     ui->cbScheme->addItem(newName);
@@ -375,7 +376,7 @@ void EditorColorSchemeWidget::on_btnSchemeMenu_pressed()
             menu.addAction(ui->actionDelete_Scheme);
         }
         QString name = ui->cbScheme->currentText();
-        if (!pColorManager->exists(name+ " Copy"))
+        if (!mColorManager->exists(name+ " Copy"))
             menu.addAction(ui->actionCopy_Scheme);
         menu.addAction(ui->actionExport_Scheme);
         menu.addSeparator();
@@ -400,13 +401,13 @@ void EditorColorSchemeWidget::on_actionImport_Scheme_triggered()
         return;
     name.remove(name.length()-suffix.length(),suffix.length());
     name.replace('_',' ');
-    if (!pColorManager->isValidName(name)) {
+    if (!mColorManager->isValidName(name)) {
         QMessageBox::critical(this,tr("Error"),tr("'%1' is not a valid name for color scheme file."));
         return;
     }
     try {
         PColorScheme scheme = ColorScheme::load(filename);
-        pColorManager->add(name, scheme);
+        mColorManager->add(name, scheme);
         ui->cbScheme->addItem(name);
         ui->cbScheme->setCurrentText(name);
     } catch (FileError e) {
@@ -422,12 +423,12 @@ void EditorColorSchemeWidget::on_actionRename_Scheme_triggered()
     QString newName = QInputDialog::getText(this,tr("New scheme name"),tr("New scheme name"),
                                             QLineEdit::Normal,name,&isOk);
     if (isOk) {
-        if (!pColorManager->isValidName(newName)) {
+        if (!mColorManager->isValidName(newName)) {
             QMessageBox::critical(this,tr("Error"),tr("'%1' is not a valid scheme name!").arg(newName));
             return;
         }
         try {
-            pColorManager->rename(name,newName);
+            mColorManager->rename(name,newName);
             ui->cbScheme->setItemText(
                         ui->cbScheme->currentIndex(),
                         newName
@@ -444,7 +445,7 @@ void EditorColorSchemeWidget::on_actionRename_Scheme_triggered()
 void EditorColorSchemeWidget::on_actionReset_Scheme_triggered()
 {
     try {
-        if (pColorManager->restoreToDefault(ui->cbScheme->currentText())) {
+        if (mColorManager->restoreToDefault(ui->cbScheme->currentText())) {
             ui->cbScheme->setItemData(
                         ui->cbScheme->currentIndex(),
                         mDefaultSchemeComboFont,
@@ -483,7 +484,7 @@ void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
                    QMessageBox::Yes, QMessageBox::No)!=QMessageBox::Yes)
         return;
     try {
-        if (pColorManager->remove(name)) {
+        if (mColorManager->remove(name)) {
             if (mModifiedSchemes.contains(name))
                 mModifiedSchemes.remove(name);
             ui->cbScheme->removeItem(ui->cbScheme->currentIndex());

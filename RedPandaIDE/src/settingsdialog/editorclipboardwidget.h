@@ -24,12 +24,14 @@ namespace Ui {
 class EditorClipboardWidget;
 }
 
+class ColorManager;
+
 class EditorClipboardWidget : public SettingsWidget
 {
     Q_OBJECT
 
 public:
-    explicit EditorClipboardWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorClipboardWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EditorClipboardWidget();
 
 public slots:
@@ -37,7 +39,7 @@ public slots:
 
 private:
     Ui::EditorClipboardWidget *ui;
-
+    ColorManager *mColorManager;
     // SettingsWidget interface
 protected:
     void doLoad();

@@ -45,7 +45,7 @@ EditorManager::EditorManager(QTabWidget* leftPageWidget,
 
 Editor* EditorManager::newEditor(const QString& filename, const QByteArray& encoding,
                               FileType fileType, const QString& contextFile,
-                              Project *pProject, bool newFile,
+                              bool inProject, bool newFile,
                               QTabWidget* page) {
     QTabWidget * parentPageControl = nullptr;
     if (page == nullptr)
@@ -60,6 +60,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     Editor * e = new Editor(parentPageControl);
     e->setEditorSettings(&pSettings->editor());
     e->setCodeCompletionSettings(&pSettings->codeCompletion());
+    e->setColorManager(pMainWindow->colorManager());
     e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(
@@ -86,7 +87,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->applySettings();
     e->setEditorEncoding(encoding);
     e->setFilename(filename);
-    e->setInProject(true, false);
+    e->setInProject(inProject, false);
     e->setFileType(fileType, false);
     e->setContextFile(contextFile, false);
     if (!newFile) {
@@ -548,7 +549,7 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
             PProjectUnit unit = pMainWindow->project()->findUnit(editor);
             pMainWindow->project()->closeUnit(unit);
         } else {
-            editor->setInProject(false);
+            editor->setInProject(false,false);
         }
     } else {
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {

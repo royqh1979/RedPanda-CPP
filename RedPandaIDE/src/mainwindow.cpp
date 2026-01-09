@@ -181,6 +181,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mEditorManager, &EditorManager::editorClosed,
                this, &MainWindow::onEditorClosed);
     mProject = nullptr;
+
+    mColorManager = std::make_unique<ColorManager>(&pSettings->dirs());
     //delete in the destructor
     mProjectProxyModel = new ProjectModelSortFilterProxy();
     QItemSelectionModel *m=ui->projectView->selectionModel();
@@ -454,11 +456,11 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onDirChanged);
 
     mStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
-    mCompletionPopup = new CodeCompletionPopup(this);
+    mCompletionPopup = new CodeCompletionPopup(mColorManager.get(), this);
     mCompletionPopup->setColors(mStatementColors);
     mCompletionPopup->setSymbolUsageManager(mSymbolUsageManager);
     mCompletionPopup->setShowEditorCaretFunc(std::bind(&EditorManager::showActiveEditorCaret,mEditorManager));
-    mHeaderCompletionPopup = new HeaderCompletionPopup(this);
+    mHeaderCompletionPopup = new HeaderCompletionPopup(mColorManager.get(), this);
     mHeaderCompletionPopup->setShowEditorCaretFunc(std::bind(&EditorManager::showActiveEditorCaret,mEditorManager));
     mFunctionTip = new FunctionTooltipWidget(this);
 
@@ -935,7 +937,7 @@ void MainWindow::updateEditorColorSchemes()
 
     mEditorManager->applyColorSchemes(pSettings->editor().colorScheme());
     QString schemeName = pSettings->editor().colorScheme();
-    pColorManager->updateStatementColors(mStatementColors,schemeName);
+    mColorManager->updateStatementColors(mStatementColors,schemeName);
     //color for code completion popup
     PColorSchemeItem item;
     QColor localHeaderColor=palette().color(QPalette::Text);
@@ -943,36 +945,36 @@ void MainWindow::updateEditorColorSchemes()
     QColor projectHeaderColor=palette().color(QPalette::Text);
     QColor headerFolderColor=palette().color(QPalette::Text);
     QColor baseColor = palette().color(QPalette::Base);
-    item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
+    item = mColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
         localHeaderColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
+    item = mColorManager->getItem(schemeName, SYNS_AttrPreprocessor);
     if (item) {
         systemHeaderColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName, SYNS_AttrString);
+    item = mColorManager->getItem(schemeName, SYNS_AttrString);
     if (item) {
         projectHeaderColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName, SYNS_AttrStringEscapeSequences);
+    item = mColorManager->getItem(schemeName, SYNS_AttrStringEscapeSequences);
     if (item) {
         headerFolderColor = item->foreground();
     }
-    item = pColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
+    item = mColorManager->getItem(schemeName, COLOR_SCHEME_ERROR);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {
         mErrorColor = item->foreground();
     } else {
         mErrorColor = palette().color(QPalette::Text);
     }
     ui->tableIssues->setErrorColor(mErrorColor);
-    item = pColorManager->getItem(schemeName, COLOR_SCHEME_WARNING);
+    item = mColorManager->getItem(schemeName, COLOR_SCHEME_WARNING);
     if (item && haveGoodContrast(item->foreground(), baseColor)) {
         ui->tableIssues->setWarningColor(item->foreground());
     } else {
         ui->tableIssues->setWarningColor(palette().color(QPalette::Text));
     }
-    item = pColorManager->getItem(schemeName, COLOR_SCHEME_TEXT);
+    item = mColorManager->getItem(schemeName, COLOR_SCHEME_TEXT);
     if (item) {
         QPalette pal = palette();
         pal.setColor(QPalette::Base,item->background());
@@ -992,7 +994,7 @@ void MainWindow::updateEditorColorSchemes()
         ui->txtProblemCaseExpected->setPalette(pal);
         ui->txtProblemCaseOutput->setPalette(pal);
     }
-    item = pColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER);
+    item = mColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER);
     if (item) {
         ui->txtProblemCaseInput->setLineNumberAreaForeground(item->foreground());
         ui->txtProblemCaseInput->setLineNumberAreaBackground(item->background());
@@ -1009,7 +1011,7 @@ void MainWindow::updateEditorColorSchemes()
         ui->txtProblemCaseExpected->setLineNumberAreaForeground(pal.color(QPalette::ButtonText));
         ui->txtProblemCaseExpected->setLineNumberAreaBackground(pal.color(QPalette::Button));
     }
-    item = pColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER_ACTIVE_LINE);
+    item = mColorManager->getItem(schemeName, COLOR_SCHEME_GUTTER_ACTIVE_LINE);
     if (item) {
         ui->txtProblemCaseInput->setLineNumberAreaCurrentLine(item->foreground());
         ui->txtProblemCaseOutput->setLineNumberAreaCurrentLine(item->foreground());
@@ -1871,12 +1873,11 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         bool inProject = (mProject && unit);
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding() ? QByteArray(ENCODING_AUTO_DETECT) : pSettings->editor().defaultEncoding());
-        Project * pProject = (inProject?mProject.get():nullptr);
-        if (pProject && encoding==ENCODING_PROJECT)
-            encoding=pProject->options().encoding;
+        if (inProject && encoding==ENCODING_PROJECT)
+            encoding=mProject->options().encoding;
         editor = mEditorManager->newEditor(filename,encoding,
                                         fileType, contextFile,
-                                        pProject, false, nullptr);
+                                        inProject, false, nullptr);
 
         if (activate) {
             mEditorManager->activeEditor(editor,true);
@@ -1999,7 +2000,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
 
 void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
 {
-    PSettingsDialog settingsDialog = SettingsDialog::optionDialog(this);
+    PSettingsDialog settingsDialog = SettingsDialog::optionDialog(mColorManager.get(), this);
     if (!groupName.isEmpty()) {
         settingsDialog->setCurrentWidget(widgetName, groupName);
     }
@@ -2846,7 +2847,7 @@ void MainWindow::showCPUInfoDialog()
 {
     if (mCPUDialog==nullptr) {
         //main window takes the owner
-        mCPUDialog = new CPUDialog(this);
+        mCPUDialog = new CPUDialog(mColorManager.get(),this);
         connect(mCPUDialog, &CPUDialog::closed, this, &MainWindow::cleanUpCPUDialog);
         updateCompileActions();
     }
@@ -3632,10 +3633,9 @@ void MainWindow::loadLastOpens()
             encoding = unit ? unit->encoding() :
                                          (pSettings->editor().autoDetectFileEncoding()? QByteArray(ENCODING_AUTO_DETECT) : pSettings->editor().defaultEncoding());
         }
-        Project* pProject = (inProject?mProject.get():nullptr);
-        if (pProject && encoding==ENCODING_PROJECT)
-            encoding=pProject->options().encoding;
-        Editor * editor = mEditorManager->newEditor(editorFilename, encoding, fileType, contextFile, pProject,false,page);
+        if (inProject && encoding==ENCODING_PROJECT)
+            encoding=mProject->options().encoding;
+        Editor * editor = mEditorManager->newEditor(editorFilename, encoding, fileType, contextFile, inProject,false,page);
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
         }
@@ -3734,7 +3734,7 @@ void MainWindow::newEditor(const QString& suffix)
         Editor * editor=mEditorManager->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
                                                FileType::None, QString(),
-                                               nullptr,true);
+                                               false,true);
         mEditorManager->activeEditor(editor,true);
         //updateForEncodingInfo();
     }  catch (FileError e) {
@@ -8687,7 +8687,7 @@ void MainWindow::on_btnReplace_clicked()
             pEditor = std::make_shared<Editor>(nullptr);
             editor = pEditor.get();
             QByteArray encoding;
-            editor->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
+            editor->setSyntaxer(SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
             try {
                 editor->loadFromFile(file->filename,ENCODING_AUTO_DETECT,encoding);
             } catch(FileError e) {
@@ -10775,6 +10775,11 @@ void MainWindow::on_actionNASM_triggered()
     if (editor) {
         editor->setFileType(FileType::NASM);
     }
+}
+
+ColorManager* MainWindow::colorManager() const
+{
+    return mColorManager.get();
 }
 
 OJProblemModel *MainWindow::getOJProblemModel() const

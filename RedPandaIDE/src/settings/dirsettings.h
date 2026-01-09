@@ -30,13 +30,13 @@ public:
         Template
     };
     explicit DirSettings(SettingsPersistor * persistor);
-    QString appDir() const;
-    QString appResourceDir() const;
-    QString appLibexecDir() const;
+    static QString appDir();
+    static QString appResourceDir();
+    static QString appLibexecDir();
     QString projectDir() const;
-    QString data(DataType dataType = DataType::None) const;
+    static QString data(DataType dataType = DataType::None);
     QString config(DataType dataType = DataType::None) const;
-    QString executable() const;
+    static QString executable();
 
     void setProjectDir(const QString &newProjectDir);
 

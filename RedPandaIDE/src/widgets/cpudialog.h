@@ -24,12 +24,13 @@ namespace Ui {
 class CPUDialog;
 }
 
+class ColorManager;
 class CPUDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit CPUDialog(QWidget *parent = nullptr);
+    explicit CPUDialog(ColorManager *colorManager, QWidget *parent = nullptr);
     ~CPUDialog();
     void updateInfo();
     void updateButtonStates(bool enable);
@@ -46,6 +47,7 @@ private:
     Ui::CPUDialog *ui;
     bool mInited;
     bool mSetting;
+    ColorManager *mColorManager;
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;

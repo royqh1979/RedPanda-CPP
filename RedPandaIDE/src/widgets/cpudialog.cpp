@@ -24,7 +24,7 @@
 #include "../colorscheme.h"
 #include "../iconsmanager.h"
 
-CPUDialog::CPUDialog(QWidget *parent) :
+CPUDialog::CPUDialog(ColorManager *colorManager, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CPUDialog),
     mInited(false),
@@ -33,6 +33,8 @@ CPUDialog::CPUDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
+    mColorManager = colorManager;
+    ui->txtCode->setColorManager(colorManager);
     ui->txtCode->setEditorSettings(&pSettings->editor());
     updateSyntaxer();
     ui->txtCode->setReadOnly(true);
@@ -49,11 +51,11 @@ CPUDialog::CPUDialog(QWidget *parent) :
     options.setFlag(QSynedit::EditorOption::ScrollPastEol,false);
     options.setFlag(QSynedit::EditorOption::ShowRainbowColor, false);
     ui->txtCode->setOptions(options);
-    PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
+    PColorSchemeItem item = colorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         ui->txtCode->setActiveLineColor(item->background());
     }
-    item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_TEXT);
+    item = colorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_TEXT);
     if (item) {
         ui->txtCode->setForegroundColor(item->foreground());
         ui->txtCode->setBackgroundColor(alphaBlend(palette().color(QPalette::Base), item->background()));
@@ -161,8 +163,8 @@ void CPUDialog::sendSyntaxCommand()
 
 void CPUDialog::updateSyntaxer()
 {
-    ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
-    syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
+    ui->txtCode->setSyntaxer(SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
+    mColorManager->applySchemeToSyntaxer(ui->txtCode->syntaxer(),
                                         pSettings->editor().colorScheme());
 }
 

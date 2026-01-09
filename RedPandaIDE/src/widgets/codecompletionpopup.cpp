@@ -30,13 +30,13 @@
 #include <QApplication>
 #include <QPainter>
 
-CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
+CodeCompletionPopup::CodeCompletionPopup(ColorManager *colorManager,QWidget *parent) :
     QWidget(parent),
     mListView(nullptr),
     mMutex()
 {
     setWindowFlags(Qt::Popup);
-
+    mColorManager = colorManager;
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
     mDelegate = new CodeCompletionListItemDelegate(mModel,this);
@@ -162,17 +162,17 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
 
     if (!mCompletionStatementList.isEmpty()) {
         QString schemaName = pSettings->editor().colorScheme();
-        PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        PColorSchemeItem item = mColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
         if (item && item->background().isValid())
             mDelegate->setCurrentSelectionColor(item->background());
         else
             mDelegate->setCurrentSelectionColor(palette().highlight().color());
-        item = pColorManager->getItem(schemaName, COLOR_SCHEME_TEXT);
+        item = mColorManager->getItem(schemaName, COLOR_SCHEME_TEXT);
         if (item && item->foreground().isValid())
             mDelegate->setNormalColor(item->foreground());
         else
             mDelegate->setNormalColor(palette().color(QPalette::Text));
-        item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
+        item = mColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
         if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else

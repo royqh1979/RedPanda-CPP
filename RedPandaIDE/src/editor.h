@@ -22,12 +22,9 @@
 #include "utils/parsemacros.h"
 #include "utils.h"
 #include "qsynedit/qsynedit.h"
-#include "colorscheme.h"
 #include "common.h"
 #include "widgets/codecompletionpopup.h"
 #include "widgets/headercompletionpopup.h"
-#include "settings/codecompletionsettings.h"
-#include "settings/editorsettings.h"
 #include "compiler/compilerinfo.h"
 #include "reformatter/basereformatter.h"
 
@@ -45,6 +42,9 @@ class BreakpointModel;
 class BookmarkModel;
 class Settings;
 class CodeSnippetsManager;
+class EditorSettings;
+class CodeCompletionSettings;
+class ColorManager;
 struct TabStop {
     int x;
     int endX;
@@ -517,6 +517,7 @@ private:
 #endif
     QFileSystemWatcher *mFileSystemWatcher;
 
+    ColorManager *mColorManager;
     const EditorSettings *mEditorSettings;
     const CodeCompletionSettings *mCodeCompletionSettings;
 
@@ -535,6 +536,9 @@ public:
 
     const GetCppParserFunc &getCppParserFunc() const;
     void setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc);
+
+    ColorManager *colorManager() const;
+    void setColorManager(ColorManager *newColorManager);
 
 protected:
     // QWidget interface

@@ -29,14 +29,12 @@
 
 #include "colorscheme.h"
 
-SyntaxerManager syntaxerManager;
-
 SyntaxerManager::SyntaxerManager()
 {
 
 }
 
-QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language) const
+QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language)
 {
     switch(language) {
     case QSynedit::ProgrammingLanguage::CPP:
@@ -64,7 +62,7 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
     }
 }
 
-QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage language) const
+QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage language)
 {
     switch(language) {
     case QSynedit::ProgrammingLanguage::CPP:
@@ -104,7 +102,7 @@ QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage
 //    return QSynedit::ProgrammingLanguage::Textfile;
 //}
 
-QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType) const
+QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType)
 {
     switch(fileType) {
     case FileType::GAS:
@@ -131,30 +129,9 @@ QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType) co
     }
 }
 
-QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer) const
+QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer)
 {
     if (!syntaxer)
         return QSynedit::PSyntaxer();
     return getSyntaxer(syntaxer->language());
-}
-
-void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString &schemeName) const
-{
-    if (!syntaxer)
-        return;
-
-    foreach (const QString &name, syntaxer->attributes().keys()) {
-        PColorSchemeItem item = pColorManager->getItem(schemeName,name);
-        if (item) {
-            QSynedit::PTokenAttribute attr = syntaxer->attributes()[name];
-            attr->setBackground(item->background());
-            attr->setForeground(item->foreground());
-            QSynedit::FontStyles styles = QSynedit::FontStyle::fsNone;
-            styles.setFlag(QSynedit::FontStyle::fsBold, item->bold());
-            styles.setFlag(QSynedit::FontStyle::fsItalic, item->italic());
-            styles.setFlag(QSynedit::FontStyle::fsUnderline, item->underlined());
-            styles.setFlag(QSynedit::FontStyle::fsStrikeOut, item->strikeout());
-            attr->setStyles(styles);
-        }
-    }
 }

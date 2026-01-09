@@ -137,7 +137,7 @@ void SettingsDialog::selectFirstWidget()
     showWidget(widgetIndex);
 }
 
-PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
+PSettingsDialog SettingsDialog::optionDialog(ColorManager *colorManager, QWidget *parent)
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>(parent);
 
@@ -186,10 +186,10 @@ PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
     widget = new EditorFontWidget(tr("Font"),tr("Editor"));
     dialog->addWidget(widget);
 
-    widget = new EditorClipboardWidget(tr("Copy & Export"),tr("Editor"));
+    widget = new EditorClipboardWidget(colorManager, tr("Copy & Export"),tr("Editor"));
     dialog->addWidget(widget);
 
-    widget = new EditorColorSchemeWidget(tr("Color"),tr("Editor"));
+    widget = new EditorColorSchemeWidget(colorManager, tr("Color"),tr("Editor"));
     dialog->addWidget(widget);
 
     widget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
@@ -198,7 +198,7 @@ PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
     widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
     dialog->addWidget(widget);
 
-    widget = new EditorSnippetWidget(tr("Snippet"),tr("Editor"));
+    widget = new EditorSnippetWidget(colorManager, tr("Snippet"),tr("Editor"));
     dialog->addWidget(widget);
 
     widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
@@ -230,7 +230,7 @@ PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
     widget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
     dialog->addWidget(widget);
 
-    widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
+    widget = new FormatterGeneralWidget(colorManager, tr("General"),tr("Code Formatter"));
     dialog->addWidget(widget);
 
     widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));

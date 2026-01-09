@@ -28,6 +28,7 @@ namespace Ui {
 class EditorColorSchemeWidget;
 }
 
+class ColorManager;
 class ColorSchemeItemDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
@@ -47,7 +48,7 @@ public:
     enum {
         NameRole = Qt::UserRole+1
     };
-    explicit EditorColorSchemeWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorColorSchemeWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EditorColorSchemeWidget();
 
 public slots:
@@ -75,7 +76,7 @@ private:
     QMenu mMenu;
     QStyledItemDelegate *mItemDelegate;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
-
+    ColorManager *mColorManager;
     // SettingsWidget interface
 protected:
     void doLoad() override;

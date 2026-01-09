@@ -25,12 +25,13 @@ namespace Ui {
 class EditorSnippetWidget;
 }
 
+class ColorManager;
 class EditorSnippetWidget : public SettingsWidget
 {
     Q_OBJECT
 
 public:
-    explicit EditorSnippetWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorSnippetWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EditorSnippetWidget();
 
 private:

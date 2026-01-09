@@ -27,6 +27,7 @@ namespace Ui {
 class SettingsDialog;
 }
 
+class ColorManager;
 class SettingsDialog;
 using PSettingsDialog = std::shared_ptr<SettingsDialog>;
 class SettingsDialog : public QDialog
@@ -44,7 +45,7 @@ public:
 
     void selectFirstWidget();
 
-    static PSettingsDialog optionDialog(QWidget *parent);
+    static PSettingsDialog optionDialog(ColorManager *colorManager, QWidget *parent);
     static PSettingsDialog projectOptionDialog(QWidget *parent);
 
     bool setCurrentWidget(const QString &widgetName, const QString &groupName);

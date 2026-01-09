@@ -86,12 +86,13 @@ private:
     float mLineHeightFactor;
 };
 
+class ColorManager;
 class CodeCompletionPopup : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit CodeCompletionPopup(QWidget *parent = nullptr);
+    explicit CodeCompletionPopup(ColorManager *colorManager,QWidget *parent = nullptr);
     ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);
@@ -208,7 +209,7 @@ private:
     bool mHideSymbolsStartWithTwoUnderline;
 
     SymbolUsageManager *mSymbolUsageManager;
-
+    ColorManager *mColorManager;
     // QWidget interface
 protected:
     void hideEvent(QHideEvent *event) override;

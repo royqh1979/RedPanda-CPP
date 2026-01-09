@@ -141,10 +141,10 @@ private:
 };
 
 using PColorSchemeItemDefine = std::shared_ptr<ColorSchemeItemDefine>;
-
+class DirSettings;
 class ColorManager {
 public:
-    explicit ColorManager();
+    explicit ColorManager(DirSettings *dirSettings);
     void init();
     void reload();
     QStringList getSchemes(const QString& themeType = QString());
@@ -166,6 +166,8 @@ public:
     void updateStatementColors(
             std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > statementColors,
             const QString& schemeName);
+    void applySchemeToSyntaxer(QSynedit::PSyntaxer syntaxer, const QString& schemeName);
+
 private:
     QString generateFullPathname(const QString& name, bool isBundled, bool isCustomed);
     QString generateFilename(const QString& name, bool isCustomed);
@@ -175,8 +177,6 @@ private:
     QMap<QString,PColorSchemeItemDefine> mSchemeItemDefines;
     QMap<QString,PColorScheme> mSchemes;
     PColorSchemeItemDefine mDefaultSchemeItemDefine;
+    DirSettings *mDirSettings;
 };
-
-extern ColorManager * pColorManager;
-
 #endif // COLORSCHEME_H

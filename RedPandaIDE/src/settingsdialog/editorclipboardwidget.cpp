@@ -20,20 +20,17 @@
 #include "../mainwindow.h"
 #include "../colorscheme.h"
 
-EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString& group, QWidget *parent) :
+EditorClipboardWidget::EditorClipboardWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
     ui(new Ui::EditorClipboardWidget)
 {
     ui->setupUi(this);
+    mColorManager = colorManager;
     ui->cbCopyWithFormatAs->addItem("None");
 #ifdef Q_OS_WIN
     ui->cbCopyWithFormatAs->addItem("HTML");
 #endif
 
-    foreach (const QString &name, pColorManager->getSchemes()) {
-        ui->cbHTMLColorScheme->addItem(name);
-        ui->cbRTFColorScheme->addItem(name);
-    }
     connect(ui->chkCopyRTFUseEditorColor,
             &QCheckBox::stateChanged,
             this,
@@ -63,6 +60,13 @@ void EditorClipboardWidget::doLoad()
 {
     //pSettings->editor().load();
     //copy
+    ui->cbHTMLColorScheme->clear();
+    ui->cbRTFColorScheme->clear();
+    foreach (const QString &name, mColorManager->getSchemes()) {
+        ui->cbHTMLColorScheme->addItem(name);
+        ui->cbRTFColorScheme->addItem(name);
+    }
+
     ui->cbCopyWithFormatAs->setCurrentIndex(std::max(0,std::min(ui->cbCopyWithFormatAs->count(),
                                                                 pSettings->editor().copyWithFormatAs())) );
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());

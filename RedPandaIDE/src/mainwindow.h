@@ -73,6 +73,7 @@ struct ProjectModelNode;
 class ProjectUnit;
 class ColorSchemeItem;
 class VisitHistoryManager;
+class ColorManager;
 
 #define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
 
@@ -932,6 +933,7 @@ private:
 
     std::shared_ptr<VisitHistoryManager> mVisitHistoryManager;
 
+    std::unique_ptr<ColorManager> mColorManager;
     TodoModel *mTodoModel;
     SearchResultModel *mSearchResultModel;
     BookmarkModel *mBookmarkModel;
@@ -1083,6 +1085,7 @@ public:
 
     OJProblemSetModel *getOJProblemSetModel() const;
     OJProblemModel *getOJProblemModel() const;
+    ColorManager* colorManager() const;
 };
 
 extern MainWindow* pMainWindow;
