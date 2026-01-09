@@ -253,7 +253,7 @@ void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *
                 );
     PSearchResultTreeItem item = findOccurenceInFile(
                 editor->filename(),
-                editor->encodingOption(),
+                editor->editorEncoding(),
                 statement,
                 parser);
     if (item && !(item->results.isEmpty())) {
@@ -457,8 +457,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         QByteArray realEncoding;
         QFile file(filename);
         try {
-            editor.document()->saveToFile(file,ENCODING_AUTO_DETECT,
-                                       pSettings->editor().defaultEncoding(),
+            editor.document()->saveToFile(file,editor.editorEncoding(),
                                        realEncoding);
         } catch(FileError e) {
             QMessageBox::critical(mMainWindow,

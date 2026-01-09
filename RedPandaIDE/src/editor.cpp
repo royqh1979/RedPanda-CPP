@@ -50,7 +50,6 @@
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
 #include <QDebug>
-#include "project.h"
 #include <qt_utils/charsetinfo.h>
 #include "utils/escape.h"
 #include "widgets/functiontooltipwidget.h"
@@ -88,8 +87,8 @@ Editor::Editor(QWidget *parent):
 {
     mEditorEncoding = ENCODING_UTF8;
     mFileEncoding = ENCODING_ASCII;
-    mProject = nullptr;
     mIsNew = true;
+    mInProject = false;
     mCodeCompletionEnabled = false;
 
     mCodeSnippetsManager = nullptr;
@@ -192,7 +191,23 @@ void Editor::loadFile(QString filename, bool parse) {
     }
 
     //FileError should by catched by the caller of loadFile();
-    loadContent(filename);
+    QByteArray oldEditorEncoding = mEditorEncoding;
+    QByteArray oldFileEncoding = mFileEncoding;
+    loadFromFile(filename,mEditorEncoding,mFileEncoding);
+    if (mEditorEncoding==ENCODING_AUTO_DETECT) {
+        if (mFileEncoding==ENCODING_ASCII)
+            mEditorEncoding=mEditorSettings->defaultEncoding();
+        else
+            mEditorEncoding=mFileEncoding;
+    }
+    if (oldEditorEncoding!=mEditorEncoding)
+        emit editorEncodingChanged(this);
+    if (oldFileEncoding!=mFileEncoding)
+        emit fileEncodingChanged(this);
+
+    applyColorScheme(mEditorSettings->colorScheme());
+    mIsNew = false;
+    saveAutoBackup();
     setStatusChanged(QSynedit::StatusChange::Custom0);
 
     if (shouldOpenInReadonly()) {
@@ -208,12 +223,13 @@ void Editor::loadFile(QString filename, bool parse) {
 }
 
 void Editor::saveFile(QString filename) {
+    Q_ASSERT(mEditorEncoding!=ENCODING_AUTO_DETECT);
+    Q_ASSERT(mEditorEncoding!=ENCODING_PROJECT);
     QFile file(filename);
-    QByteArray encoding = mEditorEncoding;
-    this->document()->saveToFile(file,encoding,
-                              mEditorSettings->defaultEncoding(),
-                              mFileEncoding);
-    emit fileEncodingChanged(this);
+    QByteArray oldFileEncoding = mFileEncoding;
+    this->document()->saveToFile(file, mEditorEncoding, mFileEncoding);
+    if (oldFileEncoding != mFileEncoding)
+        emit fileEncodingChanged(this);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -267,7 +283,7 @@ bool Editor::save(bool force, bool doReparse) {
     return true;
 }
 
-bool Editor::saveAs(const QString &name, bool fromProject){
+bool Editor::saveAs(const QString &name){
     QString newName = name;
     QString oldName = mFilename;
     if (name.isEmpty()) {
@@ -325,12 +341,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         return false;
     }
     // Update project information
-    if (mProject && !fromProject) {
-        PProjectUnit unit = mProject->findUnit(newName);
-        if (!unit) {
-            setProject(nullptr);
-        }
-    }
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
@@ -343,9 +353,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         trimTrailingSpaces();
     }
     mFilename = newName;
-    if (mProject && !fromProject) {
-        mProject->associateEditor(this);
-    }
     setFileType(getFileType(mFilename));
     if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
@@ -358,11 +365,10 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     setStatusChanged(QSynedit::StatusChange::Custom0);
 
-
-    emit fileSaveAsed(this, mFilename, newName);
-
     if (mFileSystemWatcher)
         mFileSystemWatcher->removePath(oldName);
+
+    emit fileSaveAsed(this, oldName, newName);
 
     try {
         // must emit fileSaving/fileSaved signal out of saveFile(),
@@ -426,7 +432,7 @@ void Editor::setFilename(const QString &newName)
     mFilename = newName;
 }
 
-const QByteArray& Editor::encodingOption() const noexcept{
+const QByteArray& Editor::editorEncoding() const noexcept{
     return mEditorEncoding;
 }
 
@@ -434,8 +440,7 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
     if (encoding.isEmpty())
         return;
     QByteArray newEncoding=encoding;
-    if (mProject && encoding==ENCODING_PROJECT)
-        newEncoding=mProject->options().encoding;
+    Q_ASSERT(encoding!=ENCODING_PROJECT);
     if (mEditorEncoding == newEncoding)
         return;
     mEditorEncoding = newEncoding;
@@ -455,7 +460,6 @@ void Editor::setEditorEncoding(const QByteArray& encoding) noexcept{
                                   e.reason());
         }
     }
-    resolveAutoDetectEncodingOption();
     emit editorEncodingChanged(this);
 }
 const QByteArray& Editor::fileEncoding() const noexcept{
@@ -465,8 +469,9 @@ const QString& Editor::filename() const noexcept{
     return mFilename;
 }
 bool Editor::inProject() const noexcept{
-    return mProject!=nullptr;
+    return mInProject;
 }
+
 bool Editor::isNew() const noexcept {
     return mIsNew;
 }
@@ -1971,21 +1976,7 @@ bool Editor::functionTooltipVisible() const
 
 void Editor::loadContent(const QString& filename)
 {
-    loadFromFile(filename,mEditorEncoding,mFileEncoding);
-    applyColorScheme(mEditorSettings->colorScheme());
-    mIsNew = false;
-    emit fileEncodingChanged(this);
-    saveAutoBackup();
-}
 
-void Editor::resolveAutoDetectEncodingOption()
-{
-    if (mEditorEncoding==ENCODING_AUTO_DETECT) {
-        if (mFileEncoding==ENCODING_ASCII)
-            mEditorEncoding=mEditorSettings->defaultEncoding();
-        else
-            mEditorEncoding=mFileEncoding;
-    }
 }
 
 bool Editor::isBraceChar(QChar ch) const
@@ -4365,11 +4356,6 @@ int Editor::previousIdChars(const CharPos &pos)
     return 0;
 }
 
-const QByteArray &Editor::editorEncoding() const
-{
-    return mEditorEncoding;
-}
-
 const GetCppParserFunc &Editor::getCppParserFunc() const
 {
     return mGetCppParserFunc;
@@ -4605,11 +4591,11 @@ void Editor::setStatementColors(const std::shared_ptr<QHash<StatementKind, std::
     mStatementColors = newStatementColors;
 }
 
-void Editor::setProject(Project *pProject, bool parse)
+void Editor::setInProject(bool newInProject, bool parse)
 {
-    if (mProject == pProject)
+    if (mInProject == newInProject)
         return;
-    mProject = pProject;
+    mInProject = newInProject;
     if (parse) {
         setCppParser();
         reparse(false);

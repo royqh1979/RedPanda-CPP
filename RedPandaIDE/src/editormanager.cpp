@@ -86,7 +86,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->applySettings();
     e->setEditorEncoding(encoding);
     e->setFilename(filename);
-    e->setProject(pProject, false);
+    e->setInProject(true, false);
     e->setFileType(fileType, false);
     e->setContextFile(contextFile, false);
     if (!newFile) {
@@ -134,7 +134,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::showOccured, this, &EditorManager::onEditorShown);
     connect(e, &Editor::fileSaving, this, &EditorManager::onFileSaving);
     connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
-    connect(e, &Editor::fileSaveAsed, this, &EditorManager::onFileRenamed);
+    connect(e, &Editor::fileSaveAsed, this, &EditorManager::onFileSaveAsed);
     connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
     connect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
     connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
@@ -142,7 +142,6 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::statusChanged, this, &EditorManager::onEditorStatusChanged);
     connect(e, &Editor::fontSizeChangedByWheel, this, &EditorManager::onEditorFontSizeChangedByWheel);
     connect(e, &Editor::fileEncodingChanged, this, &EditorManager::onEditorFileEncodingChanged);
-    connect(e, &Editor::editorEncodingChanged, this, &EditorManager::onEditorEditorEncodingChanged);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -335,14 +334,14 @@ void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const Q
         pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
         pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
     }
+}
 
-    // Update project information
-    if (pMainWindow->project() && pMainWindow->project()->inProject(e)) {
-        PProjectUnit unit = pMainWindow->project()->findUnit(oldFilename);
-        if (unit) {
-            pMainWindow->project()->renameUnit(unit, newFilename);
-        }
-        pMainWindow->project()->associateEditor(e);
+void EditorManager::onFileSaveAsed(Editor *e, const QString &oldFilename, const QString &newFilename)
+{
+    pMainWindow->getOJProblemSetModel()->updateProblemAnswerFilename(oldFilename, newFilename);
+    if (!e->inProject()) {
+        pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
+        pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
     }
 }
 
@@ -429,18 +428,6 @@ void EditorManager::onEditorFileEncodingChanged(Editor *e)
         }
     }
 }
-
-void EditorManager::onEditorEditorEncodingChanged(Editor *e)
-{
-    if (pMainWindow->project() && pMainWindow->project()->inProject(e)) {
-        PProjectUnit unit = pMainWindow->project()->findUnit(e);
-        if (unit) {
-            unit->setEncoding(e->editorEncoding());
-            unit->setRealEncoding(e->fileEncoding());
-        }
-    }
-}
-
 
 QTabWidget *EditorManager::rightPageWidget() const
 {
@@ -561,7 +548,7 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
             PProjectUnit unit = pMainWindow->project()->findUnit(editor);
             pMainWindow->project()->closeUnit(unit);
         } else {
-            editor->setProject(nullptr);
+            editor->setInProject(false);
         }
     } else {
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {

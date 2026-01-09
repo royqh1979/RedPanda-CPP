@@ -153,7 +153,7 @@ public:
     Editor& operator=(const Editor&) = delete;
     Editor& operator=(const Editor&&) = delete;
 
-    const QByteArray& encodingOption() const noexcept;
+    const QByteArray& editorEncoding() const noexcept;
     void setEditorEncoding(const QByteArray& encoding) noexcept;
     const QByteArray& fileEncoding() const noexcept;
     void convertToEncoding(const QByteArray& encoding);
@@ -165,7 +165,7 @@ public:
     void loadFile(QString filename = "", bool parse = true);
     void saveFile(QString filename);
     bool save(bool force=false, bool reparse=true);
-    bool saveAs(const QString& name="", bool fromProject = false);
+    bool saveAs(const QString& name="");
     void rename(const QString& newName);
     void setFilename(const QString& newName);
     QString caption();
@@ -262,7 +262,7 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    void setProject(Project* pProject, bool parse = true);
+    void setInProject(bool newInProject, bool parse = true);
 
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
     void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
@@ -369,7 +369,6 @@ private:
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;
     void loadContent(const QString& filename);
-    void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch) const;
     bool shouldOpenInReadonly();
     QChar getCurrentChar();
@@ -445,8 +444,8 @@ private:
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
     //QTabWidget* mParentPageControl;
-    Project* mProject;
     bool mIsNew;
+    bool mInProject;
 
     bool mCodeCompletionEnabled;
 
@@ -536,8 +535,6 @@ public:
 
     const GetCppParserFunc &getCppParserFunc() const;
     void setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc);
-
-    const QByteArray &editorEncoding() const;
 
 protected:
     // QWidget interface

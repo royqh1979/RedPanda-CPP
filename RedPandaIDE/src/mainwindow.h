@@ -343,6 +343,7 @@ private:
 
     void updateProblemSetName();
     void saveProblemSet(const QString& filePath);
+    void setEditorEncoding(Editor *e, const QByteArray &encoding);
 
 private slots:
     void setupSlotsForProject();

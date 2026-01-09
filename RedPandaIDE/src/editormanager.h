@@ -128,6 +128,7 @@ private slots:
     void onFileSaving(Editor *e, const QString& filename);
     void onFileSaved(Editor *e, const QString& filename);
     void onFileRenamed(Editor *e, const QString &oldFilename, const QString &newFilename);
+    void onFileSaveAsed(Editor *e, const QString &oldFilename, const QString &newFilename);
     void onFileSaveError(Editor *e, const QString& filename, const QString& reason);
     void onEditorLinesInserted(int startLine, int count);
     void onEditorLinesRemoved(int startLine, int count);
@@ -135,7 +136,6 @@ private slots:
     void onEditorStatusChanged(QSynedit::StatusChanges changes);
     void onEditorFontSizeChangedByWheel(int newSize);
     void onEditorFileEncodingChanged(Editor *e);
-    void onEditorEditorEncodingChanged(Editor *e);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;

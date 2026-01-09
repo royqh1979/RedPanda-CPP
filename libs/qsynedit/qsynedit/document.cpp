@@ -732,9 +732,9 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
 
 
 
-void Document::saveToFile(QFile &file, const QByteArray& encoding,
-                                   const QByteArray& defaultEncoding, QByteArray& realEncoding) const
+void Document::saveToFile(QFile &file, const QByteArray& encoding, QByteArray& realEncoding) const
 {
+    Q_ASSERT(encoding!=ENCODING_AUTO_DETECT);
     QMutexLocker locker(&mMutex);
     std::optional<TextEncoder> encoder;
     realEncoding = encoding;
@@ -751,9 +751,6 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
         encoder = TextEncoder::encoderForSystem();
         codecName = realEncoding;
-    } else if (realEncoding == ENCODING_AUTO_DETECT) {
-        encoder = TextEncoder(defaultEncoding);
-        codecName = defaultEncoding;
     } else {
         encoder = TextEncoder(realEncoding);
     }

@@ -546,21 +546,21 @@ void MainWindow::updateForEncodingInfo(const Editor* editor) {
     if (mQuitting)
         return;
     if (editor!=nullptr && editor->isVisible()) {
-        if (editor->encodingOption() != editor->fileEncoding()) {
+        if (editor->editorEncoding() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
                         QString(" %1(%2) ")
-                        .arg(QString(editor->encodingOption())
+                        .arg(QString(editor->editorEncoding())
                              ,QString(editor->fileEncoding())));
         } else {
             mFileEncodingStatus->setText(
                         QString(" %1 ")
-                        .arg(QString(editor->encodingOption()))
+                        .arg(QString(editor->editorEncoding()))
                         );
         }
         //ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
-        ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
-        ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
-        ui->actionEncode_in_UTF_8_BOM->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
+        ui->actionEncode_in_ANSI->setChecked(editor->editorEncoding() == ENCODING_SYSTEM_DEFAULT);
+        ui->actionEncode_in_UTF_8->setChecked(editor->editorEncoding() == ENCODING_UTF8);
+        ui->actionEncode_in_UTF_8_BOM->setChecked(editor->editorEncoding() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
         //ui->actionAuto_Detect->setChecked(false);
@@ -602,10 +602,10 @@ void MainWindow::updateEncodingActions(const Editor *e)
         ui->actionEncode_in_UTF_8->setEnabled(true);
         ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
         mMenuEncoding->setEnabled(true);
-        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
+        ui->actionConvert_to_ANSI->setEnabled(e->editorEncoding()!=ENCODING_SYSTEM_DEFAULT
                 && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
-        ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
-        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
+        ui->actionConvert_to_UTF_8->setEnabled(e->editorEncoding()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
+        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->editorEncoding()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
     }
 }
 
@@ -1878,9 +1878,6 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
                                         fileType, contextFile,
                                         pProject, false, nullptr);
 
-//        if (mProject) {
-//            mProject->associateEditorToUnit(editor,unit);
-//        }
         if (activate) {
             mEditorManager->activeEditor(editor,true);
         } else {
@@ -3533,7 +3530,7 @@ bool MainWindow::saveLastOpens()
       fileObj["top"] = editor->topPos();
       fileObj["left"] = editor->leftPos();
       fileObj["fileType"] =  fileTypeToName(editor->fileType());
-      fileObj["encodingOption"] = QLatin1String(editor->encodingOption());
+      fileObj["encodingOption"] = QLatin1String(editor->editorEncoding());
       fileObj["contextFile"] = editor->contextFile();
       fileObj["readonly"] = editor->readOnly();
       filesArray.append(fileObj);
@@ -3849,14 +3846,14 @@ void MainWindow::buildEncodingMenu()
                 QAction * action = new QAction(info->name);
                 action->setCheckable(true);
                 if (editor)
-                    action->setChecked(info->name == editor->encodingOption());
+                    action->setChecked(info->name == editor->editorEncoding());
                 connect(action, &QAction::triggered,
                         [info,this](){
                     Editor * editor = mEditorManager->getEditor();
                     if (editor == nullptr)
                         return;
                     try {
-                        editor->setEditorEncoding(info->name);
+                        setEditorEncoding(editor, info->name);
                     } catch(FileError e) {
                         QMessageBox::critical(this,tr("Error"),e.reason());
                     }
@@ -5793,9 +5790,17 @@ void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QStri
         mEditorManager->activeEditor(e,true);
         return;
     }
+    if (mProject && mProject->inProject(oldFile)) {
+        PProjectUnit unit = mProject->findUnit(oldFile);
+        mProject->renameUnit(unit,newFile);
+    }
     e = mEditorManager->getOpenedEditor(oldFile);
     if (e) {
-        e->rename(newFile);
+        e->rename(newFile);        
+    }
+    if (mProject && mProject->inProject(newFile)) {
+        e = mEditorManager->getOpenedEditor(newFile);
+        mProject->associateEditor(e);
     }
 }
 
@@ -6028,9 +6033,11 @@ void MainWindow::on_actionSave_triggered()
 void MainWindow::on_actionSaveAs_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
-    if (editor) {
-        editor->saveAs();
-    }
+    if (!editor)
+        return;
+    editor->saveAs();
+    if (mProject)
+        mProject->associateEditor(editor);
 }
 
 void MainWindow::on_actionOptions_triggered()
@@ -6535,7 +6542,7 @@ void MainWindow::on_actionEncode_in_ANSI_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEditorEncoding(ENCODING_SYSTEM_DEFAULT);
+        setEditorEncoding(editor, ENCODING_SYSTEM_DEFAULT);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -6547,7 +6554,7 @@ void MainWindow::on_actionEncode_in_UTF_8_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEditorEncoding(ENCODING_UTF8);
+        setEditorEncoding(editor, ENCODING_UTF8);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }
@@ -6558,7 +6565,7 @@ void MainWindow::on_actionAuto_Detect_triggered()
     Editor * editor = mEditorManager->getEditor();
     if (editor == nullptr)
         return;
-    editor->setEditorEncoding(ENCODING_AUTO_DETECT);
+    setEditorEncoding(editor, ENCODING_AUTO_DETECT);
 }
 
 void MainWindow::on_actionConvert_to_ANSI_triggered()
@@ -8126,6 +8133,20 @@ void MainWindow::saveProblemSet(const QString &filePath)
     }
 }
 
+void MainWindow::setEditorEncoding(Editor *e, const QByteArray &encoding)
+{
+    if (!e)
+        return;
+    e->setEditorEncoding(encoding);
+    if (mProject && mProject->inProject(e)) {
+        PProjectUnit unit = mProject->findUnit(e);
+        if (unit) {
+            unit->setEncoding(e->editorEncoding());
+            unit->setRealEncoding(e->fileEncoding());
+        }
+    }
+}
+
 void MainWindow::setupSlotsForProject()
 {
     connect(mProject.get(), &Project::unitAdded,
@@ -8698,9 +8719,7 @@ void MainWindow::on_btnReplace_clicked()
             QByteArray realEncoding;
             QFile toFile(file->filename);
             try {
-                editor->document()->saveToFile(toFile,ENCODING_AUTO_DETECT,
-                                       pSettings->editor().defaultEncoding(),
-                                       realEncoding);
+                editor->document()->saveToFile(toFile,editor->editorEncoding(), realEncoding);
             } catch(FileError e) {
                 QMessageBox::critical(this,
                                       tr("Replace Error"),
@@ -10116,7 +10135,7 @@ void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
     if (editor == nullptr)
         return;
     try {
-        editor->setEditorEncoding(ENCODING_UTF8_BOM);
+        setEditorEncoding(editor,ENCODING_UTF8_BOM);
     } catch(FileError e) {
         QMessageBox::critical(this,tr("Error"),e.reason());
     }

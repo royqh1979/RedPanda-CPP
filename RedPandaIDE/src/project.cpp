@@ -110,7 +110,7 @@ Project::~Project()
     foreach (const PProjectUnit& unit, mUnits) {
         Editor * editor = unitEditor(unit);
         if (editor) {
-            editor->setProject(nullptr);
+            editor->setInProject(false,false);
             if (fileExists(directory()))
                 mEditorManager->forceCloseEditor(editor);
         }
@@ -383,7 +383,7 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
 
         Editor * editor = mEditorManager->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
-            editor->setProject(this);
+            associateEditor(editor);
             mEditorManager->activeEditor(editor,true);
             return editor;
         }
@@ -393,13 +393,9 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
             encoding=options().encoding;
 
         editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
-        if (editor) {
-            //editor->setProject(this);
-            //unit->setEncoding(encoding);
-            loadUnitLayout(editor);
-            mEditorManager->activeEditor(editor,true);
-            return editor;
-        }
+        loadUnitLayout(editor);
+        mEditorManager->activeEditor(editor,true);
+        return editor;
     }
     return nullptr;
 }
@@ -413,7 +409,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
 
         Editor * editor = mEditorManager->getOpenedEditor(unit->fileName());
         if (editor) {//already opened in the editors
-            editor->setProject(this);
+            associateEditor(editor);
             mEditorManager->activeEditor(editor,true);
             return editor;
         }
@@ -531,7 +527,7 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
     if (doClose) {
         Editor* editor = unitEditor(unit);
         if (editor) {
-            editor->setProject(nullptr);
+            editor->setInProject(false,false);
             mEditorManager->closeEditor(editor);
         }
     }
@@ -705,12 +701,10 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
 
     if (mParser)
         mParser->invalidateFile(unit->fileName());
-    Editor * editor=unitEditor(unit);
+    Editor *editor=unitEditor(unit);
+    copyFile(unit->fileName(),newFileName,true);
     if (editor) {
-        //prevent recurse
-        editor->saveAs(newFileName,true);
-    } else {
-        copyFile(unit->fileName(),newFileName,true);
+        editor->rename(newFileName);
     }
     if (mParser)
         parseFileNonBlocking(mParser,newFileName,true, editor->contextFile());
@@ -804,11 +798,16 @@ PProjectUnit Project::findUnit(const Editor *editor) const
     return findUnit(editor->filename());
 }
 
+bool Project::inProject(const QString &filename) const
+{
+    return mUnits.contains(filename);
+}
+
 bool Project::inProject(const Editor *editor) const
 {
     if (!editor)
         return false;
-    return mUnits.contains(editor->filename());
+    return inProject(editor->filename());
 }
 
 void Project::associateEditor(Editor *editor)
@@ -821,30 +820,17 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 {
     if (!unit) {
         if (editor)
-            editor->setProject(nullptr);
+            editor->setInProject(false);
         return;
     }
     if (editor) {
-        Editor * e= unitEditor(unit);
-        if (e) {
-            if (editor==e)
-                return;
-            e->setProject(nullptr);
-            e->close();
-        }
-        editor->setProject(this);
-//        if (editor->encodingOption()==ENCODING_AUTO_DETECT) {
-//            if (editor->fileEncoding()==ENCODING_ASCII) {
-//                editor->setEncodingOption(mOptions.encoding);
-//            } else {
-//                editor->setEncodingOption(editor->fileEncoding());
-//            }
-//        }
+        Q_ASSERT(editor != unitEditor(unit));
+        editor->setInProject(true);
         if (unit->encoding()==ENCODING_PROJECT) {
-            if (editor->encodingOption()!=mOptions.encoding)
-                unit->setEncoding(editor->encodingOption());
-        } else if (editor->encodingOption()!=unit->encoding()) {
-            unit->setEncoding(editor->encodingOption());
+            if (editor->editorEncoding()!=mOptions.encoding)
+                unit->setEncoding(editor->editorEncoding());
+        } else if (editor->editorEncoding()!=unit->encoding()) {
+            unit->setEncoding(editor->editorEncoding());
         }
         unit->setRealEncoding(editor->fileEncoding());
     }
@@ -1164,7 +1150,7 @@ void Project::setEncoding(const QByteArray &encoding)
                 continue;
             Editor * e=unitEditor(unit);
             if (e) {
-                e->setEditorEncoding(ENCODING_PROJECT);
+                e->setEditorEncoding(mOptions.encoding);
                 unit->setEncoding(ENCODING_PROJECT);
             }
         }
@@ -1313,9 +1299,6 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     Editor * e= unitEditor(newUnit);
     if (e) {
         associateEditorToUnit(e,newUnit);
-//        newUnit->setEncoding(e->encodingOption());
-//        newUnit->setRealEncoding(e->fileEncoding());
-//        e->setProject(this);
     } else {
         newUnit->setEncoding(ENCODING_PROJECT);
     }

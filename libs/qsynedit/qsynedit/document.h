@@ -498,8 +498,7 @@ public:
     PDocumentLine findLineBySeq(size_t lineSeq) const;
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
-    void saveToFile(QFile& file, const QByteArray& encoding,
-                    const QByteArray& defaultEncoding, QByteArray& realEncoding) const;
+    void saveToFile(QFile& file, const QByteArray& encoding, QByteArray& realEncoding) const;
 
     QString glyph(int line, int glyphIdx) const;
     QString glyphAt(int line, int charPos) const;

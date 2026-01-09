@@ -256,6 +256,7 @@ public:
 
     PProjectUnit findUnit(const QString& filename) const;
     PProjectUnit findUnit(const Editor* editor) const;
+    bool inProject(const QString& filename) const;
     bool inProject(const Editor* editor) const;
 
     void associateEditor(Editor* editor);
