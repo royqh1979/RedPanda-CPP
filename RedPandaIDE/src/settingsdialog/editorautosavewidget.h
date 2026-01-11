@@ -29,7 +29,7 @@ class EditorAutoSaveWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorAutoSaveWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorAutoSaveWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EditorAutoSaveWidget();
 
 private:

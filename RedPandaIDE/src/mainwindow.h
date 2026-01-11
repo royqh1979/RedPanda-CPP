@@ -74,6 +74,7 @@ class ProjectUnit;
 class ColorSchemeItem;
 class VisitHistoryManager;
 class ColorManager;
+class IconsManager;
 
 #define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
 
@@ -934,6 +935,8 @@ private:
     std::shared_ptr<VisitHistoryManager> mVisitHistoryManager;
 
     std::unique_ptr<ColorManager> mColorManager;
+    std::unique_ptr<IconsManager> mIconsManager;
+    std::unique_ptr<CustomFileIconProvider> mFileSystemModelIconProvider;
     TodoModel *mTodoModel;
     SearchResultModel *mSearchResultModel;
     BookmarkModel *mBookmarkModel;
@@ -947,7 +950,6 @@ private:
     PTodoParser mTodoParser;
     ToolsManager *mToolsManager;
     CustomFileSystemModel *mFileSystemModel;
-    CustomFileIconProvider mFileSystemModelIconProvider;
     OJProblemSetModel *mOJProblemSetModel;
     OJProblemModel *mOJProblemModel;
     int mOJProblemSetNameCounter;
@@ -1086,6 +1088,7 @@ public:
     OJProblemSetModel *getOJProblemSetModel() const;
     OJProblemModel *getOJProblemModel() const;
     ColorManager* colorManager() const;
+    IconsManager* iconsManager() const;
 };
 
 extern MainWindow* pMainWindow;

@@ -21,14 +21,16 @@
 
 #include <QFileDialog>
 
-NewProjectUnitDialog::NewProjectUnitDialog(QWidget *parent) :
+NewProjectUnitDialog::NewProjectUnitDialog(IconsManager *iconsManager, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewProjectUnitDialog),
     mSuffix("cpp")
 {
     ui->setupUi(this);
+    Q_ASSERT(iconsManager!=nullptr);
+    mIconsManager = iconsManager;
     onUpdateIcons();
-    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+    connect(mIconsManager,&IconsManager::actionIconsUpdated,
             this, &NewProjectUnitDialog::onUpdateIcons);
 }
 
@@ -84,7 +86,7 @@ void NewProjectUnitDialog::setFilename(const QString &filename)
 
 void NewProjectUnitDialog::onUpdateIcons()
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    mIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 void NewProjectUnitDialog::on_btnBrowse_clicked()

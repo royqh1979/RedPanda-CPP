@@ -70,7 +70,7 @@ class EnvironmentShortcutWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentShortcutWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentShortcutWidget();
 
 private:

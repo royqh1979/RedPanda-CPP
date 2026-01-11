@@ -25,6 +25,7 @@ class CompilerSetDirectoriesWidget;
 }
 
 class QItemSelection;
+class IconsManager;
 
 class CompilerSetDirectoriesWidget : public QWidget
 {
@@ -36,7 +37,7 @@ class CompilerSetDirectoriesWidget : public QWidget
     };
 
 public:
-    explicit CompilerSetDirectoriesWidget(QWidget *parent = nullptr);
+    explicit CompilerSetDirectoriesWidget(IconsManager *iconsManager,QWidget *parent = nullptr);
     ~CompilerSetDirectoriesWidget();
 
     void setDirList(const QStringList& list);
@@ -56,6 +57,7 @@ private slots:
 private:
     Ui::CompilerSetDirectoriesWidget *ui;
     ListModel mModel;
+    IconsManager *mIconsManager;
 };
 
 #endif // COMPILERSETDIRECTORIESWIDGET_H

@@ -8,8 +8,8 @@
 
 #include <QFileDialog>
 
-ToolsGitWidget::ToolsGitWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ToolsGitWidget::ToolsGitWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::ToolsGitWidget)
 {
     ui->setupUi(this);
@@ -35,7 +35,7 @@ void ToolsGitWidget::doSave()
 
 void ToolsGitWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnBrowseGit,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnBrowseGit,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 void ToolsGitWidget::on_btnBrowseGit_clicked()

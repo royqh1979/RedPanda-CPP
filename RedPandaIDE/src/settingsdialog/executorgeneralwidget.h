@@ -29,7 +29,7 @@ class ExecutorGeneralWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ExecutorGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ExecutorGeneralWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent = nullptr);
     ~ExecutorGeneralWidget();
 
 private:

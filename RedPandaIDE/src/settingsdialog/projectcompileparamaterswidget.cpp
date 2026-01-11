@@ -28,8 +28,8 @@
 
 #include <QFileDialog>
 
-ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectCompileParamatersWidget)
 {
     ui->setupUi(this);
@@ -92,7 +92,7 @@ void ProjectCompileParamatersWidget::on_btnChooseLib_clicked()
 
 void ProjectCompileParamatersWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnChooseLib, IconsManager::ACTION_MISC_FOLDER);
+    iconsManager()->setIcon(ui->btnChooseLib, IconsManager::ACTION_MISC_FOLDER);
 }
 
 

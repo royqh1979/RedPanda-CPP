@@ -21,8 +21,9 @@
 #include "../symbolusagemanager.h"
 
 EditorCodeCompletionWidget::EditorCodeCompletionWidget(const QString& name, const QString& group,
+                                                       IconsManager *iconsManager,
                                                        QWidget *parent) :
-    SettingsWidget(name,group,parent),
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::EditorCodeCompletionWidget)
 {
     ui->setupUi(this);

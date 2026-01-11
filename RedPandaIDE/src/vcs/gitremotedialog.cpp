@@ -4,17 +4,18 @@
 #include "../iconsmanager.h"
 #include "../widgets/infomessagebox.h"
 
-GitRemoteDialog::GitRemoteDialog(const QString& folder, QWidget *parent) :
+GitRemoteDialog::GitRemoteDialog(const QString& folder, IconsManager *iconsManager,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GitRemoteDialog),
     mFolder(folder),
     mChooseMode(false)
 {
     ui->setupUi(this);
+    mIconsManager = iconsManager;
     GitManager manager;
     mRemotes = manager.listRemotes(folder);
     ui->lstRemotes->addItems(mRemotes);
-    connect(pIconsManager, &IconsManager::actionIconsUpdated,
+    connect(mIconsManager, &IconsManager::actionIconsUpdated,
             this, &GitRemoteDialog::onUpdateIcons);
     ui->btnRemove->setEnabled(false);
     ui->pnlProcess->setVisible(false);
@@ -44,8 +45,8 @@ QString GitRemoteDialog::chooseRemote()
 
 void GitRemoteDialog::onUpdateIcons()
 {
-    ui->btnAdd->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
-    ui->btnRemove->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE));
+    ui->btnAdd->setIcon(mIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
+    ui->btnRemove->setIcon(mIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE));
 }
 
 void GitRemoteDialog::onRemotesSelectionChanged()

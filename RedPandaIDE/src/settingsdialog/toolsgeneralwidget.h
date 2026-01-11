@@ -62,7 +62,7 @@ class ToolsGeneralWidget : public SettingsWidget
 {
     Q_OBJECT
 public:
-    explicit ToolsGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ToolsGeneralWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ToolsGeneralWidget();
 private:
     void finishEditing(bool askSave);

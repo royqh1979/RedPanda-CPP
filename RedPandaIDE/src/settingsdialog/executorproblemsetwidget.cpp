@@ -19,8 +19,8 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 
-ExecutorProblemSetWidget::ExecutorProblemSetWidget(const QString& name, const QString& group, QWidget *parent):
-    SettingsWidget(name,group,parent),
+ExecutorProblemSetWidget::ExecutorProblemSetWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent):
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ExecutorProblemSetWidget)
 {
     ui->setupUi(this);

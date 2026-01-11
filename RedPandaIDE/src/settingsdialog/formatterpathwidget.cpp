@@ -6,8 +6,8 @@
 
 #include <QFileDialog>
 
-FormatterPathWidget::FormatterPathWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+FormatterPathWidget::FormatterPathWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::FormatterPathWidget)
 {
     ui->setupUi(this);
@@ -30,7 +30,7 @@ void FormatterPathWidget::doSave()
 
 void FormatterPathWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnChooseAstyle, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnChooseAstyle, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 void FormatterPathWidget::on_btnChooseAstyle_clicked()

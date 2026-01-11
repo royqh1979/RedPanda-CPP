@@ -19,8 +19,8 @@
 #include "ui_formattergeneralwidget.h"
 #include "../settings.h"
 
-FormatterGeneralWidget::FormatterGeneralWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent):
-    SettingsWidget(name,group,parent),
+FormatterGeneralWidget::FormatterGeneralWidget(ColorManager *colorManager, const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent):
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::FormatterGeneralWidget)
 {
     ui->setupUi(this);

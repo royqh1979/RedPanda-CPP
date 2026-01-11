@@ -27,8 +27,8 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString& group, QWidget *parent):
-    SettingsWidget(name,group,parent),
+ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent):
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ExecutorGeneralWidget)
 {
     ui->setupUi(this);
@@ -87,7 +87,7 @@ void ExecutorGeneralWidget::on_btnBrowse_clicked()
 
 void ExecutorGeneralWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

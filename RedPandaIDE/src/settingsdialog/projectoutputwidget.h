@@ -29,7 +29,7 @@ class ProjectOutputWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectOutputWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectOutputWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectOutputWidget();
 
 private:

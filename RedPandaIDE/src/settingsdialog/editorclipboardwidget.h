@@ -31,7 +31,7 @@ class EditorClipboardWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorClipboardWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorClipboardWidget(ColorManager *colorManager, const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EditorClipboardWidget();
 
 public slots:

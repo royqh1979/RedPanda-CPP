@@ -21,15 +21,17 @@
 
 #include <QFileDialog>
 
-NewHeaderDialog::NewHeaderDialog(QWidget *parent) :
+NewHeaderDialog::NewHeaderDialog(IconsManager *iconsManager, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewHeaderDialog)
 {
+    Q_ASSERT(iconsManager!=nullptr);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
+    mIconsManager = iconsManager;
     resize(pSettings->ui().newHeaderDialogWidth(),pSettings->ui().newHeaderDialogHeight());
     onUpdateIcons();
-    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+    connect(mIconsManager,&IconsManager::actionIconsUpdated,
             this, &NewHeaderDialog::onUpdateIcons);
     ui->txtHeader->setFocus();
 }
@@ -66,7 +68,7 @@ void NewHeaderDialog::setPath(const QString &location)
 
 void NewHeaderDialog::onUpdateIcons()
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    mIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 void NewHeaderDialog::closeEvent(QCloseEvent */*event*/)

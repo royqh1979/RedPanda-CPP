@@ -7,12 +7,13 @@ namespace Ui {
 class GitRemoteDialog;
 }
 
+class IconsManager;
 class GitRemoteDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit GitRemoteDialog(const QString& folder, QWidget *parent = nullptr);
+    explicit GitRemoteDialog(const QString& folder, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~GitRemoteDialog();
     QString chooseRemote();
 
@@ -38,6 +39,7 @@ private:
     QString mFolder;
     QStringList mRemotes;
     bool mChooseMode;
+    IconsManager *mIconsManager,
 };
 
 #endif // GITREMOTEDIALOG_H

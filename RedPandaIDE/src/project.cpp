@@ -46,6 +46,7 @@
 #include "utils/parser.h"
 Project::Project(const QString &filename, const QString &name,
                  EditorManager* editorList,
+                 IconsManager * iconsManager,
                  QFileSystemWatcher* fileSystemWatcher,
                  QObject *parent) :
     QObject(parent),
@@ -53,6 +54,7 @@ Project::Project(const QString &filename, const QString &name,
     mModified(false),
     mModel(this),
     mEditorManager(editorList),
+    mIconsManager(iconsManager),
     mFileSystemWatcher(fileSystemWatcher)
 {
     mFilename = QFileInfo(filename).absoluteFilePath();
@@ -65,11 +67,14 @@ Project::Project(const QString &filename, const QString &name,
     mFileSystemWatcher->addPath(directory());
 }
 
-std::shared_ptr<Project> Project::load(const QString &filename, EditorManager *editorList, QFileSystemWatcher *fileSystemWatcher, QObject *parent)
+std::shared_ptr<Project> Project::load(const QString &filename, EditorManager *editorList,
+                                       IconsManager * iconsManager,
+                                       QFileSystemWatcher *fileSystemWatcher, QObject *parent)
 {
     std::shared_ptr<Project> project=std::make_shared<Project>(filename,
                                                                "",
                                                                editorList,
+                                                               iconsManager,
                                                                fileSystemWatcher,
                                                                parent);
     project->open();
@@ -80,13 +85,15 @@ std::shared_ptr<Project> Project::load(const QString &filename, EditorManager *e
 
 std::shared_ptr<Project> Project::create(
         const QString &filename, const QString &name,
-        EditorManager *editorList, QFileSystemWatcher *fileSystemWatcher,
+        EditorManager *editorList,
+        IconsManager * iconsManager, QFileSystemWatcher *fileSystemWatcher,
         const std::shared_ptr<ProjectTemplate> pTemplate,
         bool useCpp,  QObject *parent)
 {
     std::shared_ptr<Project> project=std::make_shared<Project>(filename,
                                                                name,
                                                                editorList,
+                                                               iconsManager,
                                                                fileSystemWatcher,
                                                                parent);
     SimpleIni ini;
@@ -2233,6 +2240,11 @@ void Project::updateCompilerSetting()
     }
 }
 
+IconsManager *Project::iconsManager() const
+{
+    return mIconsManager;
+}
+
 QFileSystemWatcher *Project::fileSystemWatcher() const
 {
     return mFileSystemWatcher;
@@ -2489,12 +2501,7 @@ ProjectModel::ProjectModel(Project *project, QObject *parent):
 {
     mUpdateCount = 0;
     //delete in the destructor
-    mIconProvider = new CustomFileIconProvider();
-}
-
-ProjectModel::~ProjectModel()
-{
-    delete mIconProvider;
+    mIconProvider = std::make_unique<CustomFileIconProvider>(mProject->iconsManager());
 }
 
 void ProjectModel::beginUpdate()
@@ -2516,7 +2523,7 @@ void ProjectModel::endUpdate()
 
 CustomFileIconProvider *ProjectModel::iconProvider() const
 {
-    return mIconProvider;
+    return mIconProvider.get();
 }
 
 bool ProjectModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -2616,18 +2623,18 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
 #ifdef ENABLE_VCS
                 QString branch;
                 if (mIconProvider->VCSRepository()->hasRepository(branch))
-                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
+                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_GIT);
 #endif
             } else {
                 switch(p->folderNodeType) {
                 case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
-                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
+                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
                     break;
                 case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
-                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
+                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
                     break;
                 default:
-                    icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_FOLDER);
                 }
             }
             if (icon.isNull())

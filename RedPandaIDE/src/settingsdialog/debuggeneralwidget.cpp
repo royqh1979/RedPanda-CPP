@@ -19,8 +19,8 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 
-DebugGeneralWidget::DebugGeneralWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+DebugGeneralWidget::DebugGeneralWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::DebugGeneralWidget)
 {
     ui->setupUi(this);

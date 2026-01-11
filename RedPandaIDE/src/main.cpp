@@ -386,8 +386,6 @@ int main(int argc, char *argv[])
 #endif
         }
         //Color scheme settings must be loaded after translation
-        IconsManager iconsManager;
-        pIconsManager = &iconsManager;
         AutolinkManager autolinkManager;
         pAutolinkManager = &autolinkManager;
         try {

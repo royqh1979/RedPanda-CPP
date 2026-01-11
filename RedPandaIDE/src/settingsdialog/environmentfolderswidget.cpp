@@ -25,8 +25,8 @@
 #include <QMessageBox>
 #include <QUrl>
 
-EnvironmentFoldersWidget::EnvironmentFoldersWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EnvironmentFoldersWidget::EnvironmentFoldersWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EnvironmentFoldersWidget)
 {
     ui->setupUi(this);
@@ -79,9 +79,9 @@ void EnvironmentFoldersWidget::on_btnResetDefault_clicked()
 
 void EnvironmentFoldersWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnOpenThemeFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnOpenIconSetFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnOpenConfigFolderInBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnOpenThemeFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnOpenIconSetFolderInFileBrowser,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

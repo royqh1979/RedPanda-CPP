@@ -29,7 +29,7 @@ class ProjectVersionInfoWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectVersionInfoWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectVersionInfoWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectVersionInfoWidget();
 
 private:

@@ -113,6 +113,7 @@ Editor::Editor(QWidget *parent):
     mColorManager = nullptr;
     mCodeCompletionSettings = nullptr;
     mEditorSettings = nullptr;
+    mIconsManager = nullptr;
 
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >();
     mAutoBackupEnabled = false;
@@ -982,12 +983,14 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
 
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 {
+    if(mIconsManager==nullptr)
+        return;
     IconsManager::PPixmap icon;
 
     if (mActiveBreakpointLine == aLine) {
-        icon = pIconsManager->getPixmap(IconsManager::GUTTER_ACTIVEBREAKPOINT);
+        icon = mIconsManager->getPixmap(IconsManager::GUTTER_ACTIVEBREAKPOINT);
     } else if (hasBreakpoint(aLine)) {
-        icon = pIconsManager->getPixmap(IconsManager::GUTTER_BREAKPOINT);
+        icon = mIconsManager->getPixmap(IconsManager::GUTTER_BREAKPOINT);
     } else {
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
@@ -999,12 +1002,12 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
                 }
             }
             if (hasError) {
-                icon = pIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_ERROR);
+                icon = mIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_ERROR);
             } else {
-                icon = pIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_WARNING);
+                icon = mIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_WARNING);
             }
         } else if (hasBookmark(aLine)) {
-            icon = pIconsManager->getPixmap(IconsManager::GUTTER_BOOKMARK);
+            icon = mIconsManager->getPixmap(IconsManager::GUTTER_BOOKMARK);
         }
     }
     if (icon) {
@@ -4349,6 +4352,19 @@ int Editor::previousIdChars(const CharPos &pos)
             return pos.ch - start;
     }
     return 0;
+}
+
+IconsManager *Editor::iconsManager() const
+{
+    return mIconsManager;
+}
+
+void Editor::setIconsManager(IconsManager *newIconsManager)
+{
+    if (mIconsManager!=newIconsManager) {
+        mIconsManager = newIconsManager;
+        invalidateGutter();
+    }
 }
 
 ColorManager *Editor::colorManager() const

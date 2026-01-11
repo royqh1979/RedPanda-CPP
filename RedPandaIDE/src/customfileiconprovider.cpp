@@ -20,8 +20,10 @@
 #include "vcs/gitrepository.h"
 #endif
 
-CustomFileIconProvider::CustomFileIconProvider()
+CustomFileIconProvider::CustomFileIconProvider(IconsManager *iconsManager)
 {
+    Q_ASSERT(iconsManager!=nullptr);
+    mIconsManager = iconsManager;
     //provider delete it in the destructor
 #ifdef ENABLE_VCS
     mVCSRepository = new GitRepository("");
@@ -61,7 +63,7 @@ GitRepository *CustomFileIconProvider::VCSRepository() const
 QIcon CustomFileIconProvider::icon(IconType type) const
 {
     if (type == IconType::Folder) {
-        QIcon icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+        QIcon icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
         if (!icon.isNull())
             return icon;
     }
@@ -76,85 +78,85 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_NOCHANGE);
         } else
 #endif
-            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
+            icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
     } else if (!info.exists()) {
-        icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
+        icon = mIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
     } else  if (isHFile(info.fileName())) {
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_NOCHANGE);
         } else
 #endif
-            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
+            icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
     } else if (isCppFile(info.fileName())) {
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_NOCHANGE);
         } else
 #endif
-            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
+            icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
     } else if (isCFile(info.fileName())) {
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_NOCHANGE);
         } else
 #endif
-            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
+            icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
     } else if (info.suffix()=="dev") {
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_NOCHANGE);
         } else
 #endif
-            icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
+            icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
     } else {
 #ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CONFLICT);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CONFLICT);
             else if (mVCSRepository->isFileStaged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_STAGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_STAGED);
             else if (mVCSRepository->isFileChanged(info))
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CHANGED);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CHANGED);
             else
-                icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_NOCHANGE);
+                icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_NOCHANGE);
         }
 #endif
         //use default system icon

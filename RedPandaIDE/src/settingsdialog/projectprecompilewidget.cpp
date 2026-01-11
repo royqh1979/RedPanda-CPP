@@ -22,8 +22,8 @@
 
 #include <QFileDialog>
 
-ProjectPreCompileWidget::ProjectPreCompileWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectPreCompileWidget::ProjectPreCompileWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectPreCompileWidget)
 {
     ui->setupUi(this);
@@ -70,6 +70,6 @@ void ProjectPreCompileWidget::on_btnBrowse_clicked()
 
 void ProjectPreCompileWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

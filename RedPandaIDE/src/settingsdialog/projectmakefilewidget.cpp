@@ -25,13 +25,13 @@
 
 #include <QFileDialog>
 
-ProjectMakefileWidget::ProjectMakefileWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectMakefileWidget::ProjectMakefileWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectMakefileWidget)
 {
     ui->setupUi(this);
 
-    mIncludesDirWidget = new CompilerSetDirectoriesWidget(this);
+    mIncludesDirWidget = new CompilerSetDirectoriesWidget(iconsManager,this);
     ui->verticalLayout->addWidget(mIncludesDirWidget);
 }
 
@@ -75,8 +75,8 @@ void ProjectMakefileWidget::on_btnBrowse_clicked()
 
 void ProjectMakefileWidget::updateIcons(const QSize &)
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnInfo, IconsManager::ACTION_MISC_HELP);
+    iconsManager()->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnInfo, IconsManager::ACTION_MISC_HELP);
 }
 
 

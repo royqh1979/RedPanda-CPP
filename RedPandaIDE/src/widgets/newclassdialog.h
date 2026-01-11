@@ -44,12 +44,13 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 };
 
+class IconsManager;
 class NewClassDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit NewClassDialog(PCppParser parser, QWidget *parent = nullptr);
+    explicit NewClassDialog(PCppParser parser, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~NewClassDialog();
 
     QString className() const;
@@ -72,6 +73,7 @@ private:
     Ui::NewClassDialog *ui;
     QList<PStatement> mClasses;
     NewClassCandidatesModel mModel;
+    IconsManager *mIconsManager;
 private:
     void onUpdateIcons();
 

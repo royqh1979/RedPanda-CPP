@@ -2,8 +2,8 @@
 #include "ui_languageasmgenerationwidget.h"
 #include "../settings.h"
 
-LanguageAsmGenerationWidget::LanguageAsmGenerationWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+LanguageAsmGenerationWidget::LanguageAsmGenerationWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::LanguageAsmGenerationWidget)
 {
     ui->setupUi(this);

@@ -20,19 +20,19 @@
 #include "../project.h"
 #include "../mainwindow.h"
 
-ProjectDirectoriesWidget::ProjectDirectoriesWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectDirectoriesWidget::ProjectDirectoriesWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectDirectoriesWidget)
 {
     ui->setupUi(this);
 
-    mBinDirWidget = new CompilerSetDirectoriesWidget();
+    mBinDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->tabDirs->addTab(mBinDirWidget,tr("Binaries"));
-    mLibDirWidget = new CompilerSetDirectoriesWidget();
+    mLibDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->tabDirs->addTab(mLibDirWidget,tr("Libraries"));
-    mIncludeDirWidget = new CompilerSetDirectoriesWidget();
+    mIncludeDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->tabDirs->addTab(mIncludeDirWidget,tr("Includes"));
-    mResourceDirWidget = new CompilerSetDirectoriesWidget();
+    mResourceDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->tabDirs->addTab(mResourceDirWidget,tr("Resources"));
 }
 

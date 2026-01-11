@@ -29,7 +29,7 @@ class ProjectDLLHostWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectDLLHostWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectDLLHostWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectDLLHostWidget();
 
 private:

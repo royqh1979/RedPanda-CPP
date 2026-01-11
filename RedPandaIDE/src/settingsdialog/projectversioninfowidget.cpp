@@ -40,8 +40,8 @@ static BOOL CALLBACK localeEnumProc(
     return TRUE;
 }
 
-ProjectVersionInfoWidget::ProjectVersionInfoWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectVersionInfoWidget::ProjectVersionInfoWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectVersionInfoWidget)
 {
     ui->setupUi(this);

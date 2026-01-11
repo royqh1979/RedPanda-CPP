@@ -30,7 +30,7 @@ class ProjectMakefileWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectMakefileWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectMakefileWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectMakefileWidget();
 
 private:

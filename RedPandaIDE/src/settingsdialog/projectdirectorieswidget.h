@@ -30,7 +30,7 @@ class ProjectDirectoriesWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectDirectoriesWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectDirectoriesWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectDirectoriesWidget();
 
 private:

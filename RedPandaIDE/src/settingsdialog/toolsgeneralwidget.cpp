@@ -30,8 +30,8 @@
 #include <QMimeData>
 #include <QUuid>
 
-ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ToolsGeneralWidget)
 {
     ui->setupUi(this);
@@ -330,11 +330,11 @@ void ToolsGeneralWidget::doSave()
 
 void ToolsGeneralWidget::updateIcons(const QSize &)
 {
-    pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnEdit, IconsManager::ACTION_MISC_RENAME);
-    pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnBrowseWorkingDirectory,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    iconsManager()->setIcon(ui->btnEdit, IconsManager::ACTION_MISC_RENAME);
+    iconsManager()->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnBrowseWorkingDirectory,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

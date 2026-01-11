@@ -8,8 +8,8 @@
 
 #include <QFileDialog>
 
-CompilerNASMWidget::CompilerNASMWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+CompilerNASMWidget::CompilerNASMWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::CompilerNASMWidget)
 {
     ui->setupUi(this);
@@ -38,7 +38,7 @@ void CompilerNASMWidget::doSave()
 
 void CompilerNASMWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnBrowserNASM, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnBrowserNASM, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

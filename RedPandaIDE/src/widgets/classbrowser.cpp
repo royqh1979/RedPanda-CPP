@@ -199,7 +199,7 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return pMainWindow->palette().color(QPalette::Text);
     } else if (role == Qt::DecorationRole) {
         if (node->statement) {
-            return pIconsManager->getPixmapForStatement(node->statement);
+            return pMainWindow->iconsManager()->getPixmapForStatement(node->statement);
         }
     }
     return QVariant();

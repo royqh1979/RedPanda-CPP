@@ -22,8 +22,8 @@
 
 #include <QMessageBox>
 
-CompilerAutolinkWidget::CompilerAutolinkWidget(const QString& name, const QString& group, QWidget* parent) :
-    SettingsWidget(name,group,parent),
+CompilerAutolinkWidget::CompilerAutolinkWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget* parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     mModel(this),
     ui(new Ui::CompilerAutolinkWidget)
 {
@@ -254,7 +254,7 @@ void CompilerAutolinkWidget::on_btnRemove_pressed()
 
 void CompilerAutolinkWidget::updateIcons(const QSize &)
 {
-    pIconsManager->setIcon(ui->btnAdd, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnAdd, IconsManager::ACTION_MISC_ADD);
+    iconsManager()->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_REMOVE);
 }
 

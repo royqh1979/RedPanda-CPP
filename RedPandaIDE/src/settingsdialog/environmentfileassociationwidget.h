@@ -74,7 +74,7 @@ class EnvironmentFileAssociationWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentFileAssociationWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentFileAssociationWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentFileAssociationWidget();
 
 private:

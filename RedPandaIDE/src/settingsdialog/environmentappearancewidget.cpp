@@ -25,8 +25,8 @@
 #include "../thememanager.h"
 #include "../iconsmanager.h"
 
-EnvironmentAppearanceWidget::EnvironmentAppearanceWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EnvironmentAppearanceWidget::EnvironmentAppearanceWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EnvironmentAppearanceWidget)
 {
     ui->setupUi(this);
@@ -93,10 +93,10 @@ void EnvironmentAppearanceWidget::doSave()
 void EnvironmentAppearanceWidget::updateIcons(const QSize & size)
 {
     Q_UNUSED(size);
-    pIconsManager->setIcon(ui->btnCustomize, IconsManager::ACTION_EDIT_COPY);
-    pIconsManager->setIcon(ui->btnOpenCustomThemeFolder, IconsManager::ACTION_MISC_FOLDER);
-    pIconsManager->setIcon(ui->btnRemoveCustomTheme, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnReload, IconsManager::ACTION_MISC_RESET);
+    iconsManager()->setIcon(ui->btnCustomize, IconsManager::ACTION_EDIT_COPY);
+    iconsManager()->setIcon(ui->btnOpenCustomThemeFolder, IconsManager::ACTION_MISC_FOLDER);
+    iconsManager()->setIcon(ui->btnRemoveCustomTheme, IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnReload, IconsManager::ACTION_MISC_RESET);
 }
 
 void EnvironmentAppearanceWidget::init()
@@ -111,7 +111,7 @@ void EnvironmentAppearanceWidget::init()
     ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
     ui->cbLanguage->addItem(tr("Traditional Chinese"),"zh_TW");
     ui->cbLanguage->addItem(tr("Russian"),"ru_RU");
-    QList<PIconSet> iconSets = pIconsManager->listIconSets();
+    QList<PIconSet> iconSets = iconsManager()->listIconSets();
     foreach(const PIconSet& iconSet, iconSets) {
         ui->cbIconSet->addItem(iconSet->displayName,iconSet->name);
     }

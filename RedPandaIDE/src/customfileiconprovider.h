@@ -19,11 +19,14 @@
 
 #include <QFileIconProvider>
 
+class IconsManager;
+#ifdef ENABLE_VCS
 class GitRepository;
+#endif
 class CustomFileIconProvider : public QFileIconProvider
 {
 public:
-    CustomFileIconProvider();
+    CustomFileIconProvider(IconsManager *iconsManager);
     ~CustomFileIconProvider();
     void setRootFolder(const QString& folder);
     void update();
@@ -31,6 +34,7 @@ private:
 #ifdef ENABLE_VCS
     GitRepository* mVCSRepository;
 #endif
+    IconsManager *mIconsManager;
     // QFileIconProvider interface
 public:
     QIcon icon(IconType type) const override;

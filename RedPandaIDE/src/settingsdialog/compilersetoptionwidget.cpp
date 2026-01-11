@@ -29,19 +29,19 @@
 #include <QFileDialog>
 #include <QInputDialog>
 
-CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QString& group, QWidget* parent) :
-    SettingsWidget(name,group,parent),
+CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget* parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::CompilerSetOptionWidget)
 {
     ui->setupUi(this);
 
-    mBinDirWidget = new CompilerSetDirectoriesWidget();
+    mBinDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->dirTabs->addTab(mBinDirWidget,QObject::tr("Binaries"));
-    mLibDirWidget = new CompilerSetDirectoriesWidget();
+    mLibDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->dirTabs->addTab(mLibDirWidget,QObject::tr("Libraries"));
-    mCIncludeDirWidget = new CompilerSetDirectoriesWidget();
+    mCIncludeDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->dirTabs->addTab(mCIncludeDirWidget,QObject::tr("C Includes"));
-    mCppIncludeDirWidget = new CompilerSetDirectoriesWidget();
+    mCppIncludeDirWidget = new CompilerSetDirectoriesWidget(iconsManager);
     ui->dirTabs->addTab(mCppIncludeDirWidget,QObject::tr("C++ Includes"));
 
     connect(ui->chkUseCustomCompilerParams, &QCheckBox::stateChanged,
@@ -182,7 +182,7 @@ void CompilerSetOptionWidget::doLoad()
         ui->btnRemoveCompilerSet->setEnabled(true);
     }
     int index=pSettings->compilerSets().defaultIndex();
-    QIcon icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
+    QIcon icon = iconsManager()->getIcon(IconsManager::ACTION_MISC_CROSS);
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
         PCompilerSet set = pSettings->compilerSets().getSet(i);
         if (set->findErrors().isEmpty())
@@ -213,7 +213,7 @@ void CompilerSetOptionWidget::doSave()
         if (set->findErrors().isEmpty())
             ui->cbCompilerSet->setItemIcon(idx, QIcon());
         else
-            ui->cbCompilerSet->setItemIcon(idx, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+            ui->cbCompilerSet->setItemIcon(idx,iconsManager()->getIcon(IconsManager::ACTION_MISC_CROSS));
     }
 }
 
@@ -407,24 +407,24 @@ void CompilerSetOptionWidget::on_btnRemoveCompilerSet_clicked()
 
 void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
 {
-    pIconsManager->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
-    pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnAddCompilerSetByFile, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnCopyCompilerSet, IconsManager::ACTION_EDIT_COPY);
-    pIconsManager->setIcon(ui->btnAddBlankCompilerSet, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);
+    iconsManager()->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
+    iconsManager()->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnAddCompilerSetByFile, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnCopyCompilerSet, IconsManager::ACTION_EDIT_COPY);
+    iconsManager()->setIcon(ui->btnAddBlankCompilerSet, IconsManager::ACTION_MISC_ADD);
+    iconsManager()->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);
 
-    pIconsManager->setIcon(ui->btnChooseCCompiler, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnChooseCppCompiler, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnChooseGDB, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnChooseGDBServer, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnChooseMake, IconsManager::ACTION_FILE_LOCATE);
-    pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseCCompiler, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseCppCompiler, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseGDB, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseGDBServer, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseMake, IconsManager::ACTION_FILE_LOCATE);
+    iconsManager()->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_LOCATE);
 
     for(int i=0;i<ui->cbCompilerSet->count();i++) {
         if (!ui->cbCompilerSet->itemIcon(i).isNull()) {
-            ui->cbCompilerSet->setItemIcon(i, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+            ui->cbCompilerSet->setItemIcon(i, iconsManager()->getIcon(IconsManager::ACTION_MISC_CROSS));
         }
     }
 }

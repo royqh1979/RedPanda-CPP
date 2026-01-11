@@ -30,7 +30,7 @@ class ProjectCompilerWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectCompilerWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectCompilerWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectCompilerWidget();
 private:
     void refreshOptions();

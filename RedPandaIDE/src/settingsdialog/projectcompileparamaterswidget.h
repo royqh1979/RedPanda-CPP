@@ -28,7 +28,7 @@ class ProjectCompileParamatersWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ProjectCompileParamatersWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ProjectCompileParamatersWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ProjectCompileParamatersWidget();
 
 private:

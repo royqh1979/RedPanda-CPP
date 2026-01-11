@@ -48,7 +48,8 @@ public:
     enum {
         NameRole = Qt::UserRole+1
     };
-    explicit EditorColorSchemeWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorColorSchemeWidget(ColorManager *colorManager, const QString& name,
+                                     const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EditorColorSchemeWidget();
 
 public slots:

@@ -22,12 +22,12 @@
 #include <QStringListModel>
 #include <QDebug>
 
-CompilerSetDirectoriesWidget::CompilerSetDirectoriesWidget(QWidget *parent) :
+CompilerSetDirectoriesWidget::CompilerSetDirectoriesWidget(IconsManager *iconsManager,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::CompilerSetDirectoriesWidget)
 {
     ui->setupUi(this);
-
+    mIconsManager = iconsManager;
     QItemSelectionModel *m=ui->listView->selectionModel();
     ui->listView->setModel(&mModel);
     delete m;
@@ -111,7 +111,7 @@ void CompilerSetDirectoriesWidget::on_btnRemoveInvalid_pressed()
 
 void CompilerSetDirectoriesWidget::onUpdateIcons()
 {
-    pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnDelete, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnRemoveInvalid, IconsManager::ACTION_MISC_VALIDATE);
+    mIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    mIconsManager->setIcon(ui->btnDelete, IconsManager::ACTION_MISC_REMOVE);
+    mIconsManager->setIcon(ui->btnRemoveInvalid, IconsManager::ACTION_MISC_VALIDATE);
 }

@@ -13,7 +13,7 @@ class CompilerNASMWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit CompilerNASMWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit CompilerNASMWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~CompilerNASMWidget();
 
 private:

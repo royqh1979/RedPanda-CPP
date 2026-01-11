@@ -22,8 +22,8 @@
 #include <qt_utils/charsetinfo.h>
 #include <QMessageBox>
 
-ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectCompilerWidget)
 {
     ui->setupUi(this);

@@ -29,7 +29,7 @@ class EnvironmentPerformanceWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentPerformanceWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentPerformanceWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentPerformanceWidget();
 
     void doLoad() override;

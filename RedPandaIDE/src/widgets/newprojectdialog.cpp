@@ -25,12 +25,14 @@
 #include <QPainter>
 #include <QPushButton>
 
-NewProjectDialog::NewProjectDialog(QWidget *parent) :
+NewProjectDialog::NewProjectDialog(IconsManager *iconsManager, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewProjectDialog)
 {
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
+    Q_ASSERT(iconsManager!=nullptr);
+    mIconsManager = iconsManager;
     ui->lstTemplates->setItemAlignment(Qt::AlignCenter);
     mTemplatesTabBar = new QTabBar(this);
     mTemplatesTabBar->setExpanding(false);
@@ -65,7 +67,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
     onUpdateIcons();
-    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+    connect(mIconsManager,&IconsManager::actionIconsUpdated,
             this, &NewProjectDialog::onUpdateIcons);
 }
 
@@ -295,7 +297,7 @@ void NewProjectDialog::on_btnBrowse_clicked()
 
 void NewProjectDialog::onUpdateIcons()
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    mIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
 

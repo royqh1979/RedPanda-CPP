@@ -29,7 +29,7 @@
 #include <QApplication>
 #include <QPainter>
 
-CodeCompletionPopup::CodeCompletionPopup(ColorManager *colorManager,QWidget *parent) :
+CodeCompletionPopup::CodeCompletionPopup(ColorManager *colorManager,IconsManager *iconsManager,QWidget *parent) :
     QWidget(parent),
     mListView(nullptr),
     mMutex()
@@ -37,7 +37,7 @@ CodeCompletionPopup::CodeCompletionPopup(ColorManager *colorManager,QWidget *par
     setWindowFlags(Qt::Popup);
     mColorManager = colorManager;
     mListView = new CodeCompletionListView(this);
-    mModel=new CodeCompletionListModel(&mCompletionStatementList);
+    mModel=new CodeCompletionListModel(&mCompletionStatementList,iconsManager);
     mDelegate = new CodeCompletionListItemDelegate(mModel,this);
     QItemSelectionModel *m=mListView->selectionModel();
     mListView->setModel(mModel);
@@ -1342,11 +1342,11 @@ bool CodeCompletionPopup::event(QEvent *event)
     return result;
 }
 
-CodeCompletionListModel::CodeCompletionListModel(const StatementList *statements, QObject *parent):
+CodeCompletionListModel::CodeCompletionListModel(const StatementList *statements, IconsManager *iconsManager,QObject *parent):
     QAbstractListModel(parent),
     mStatements(statements)
 {
-
+    mIconsManager = iconsManager;
 }
 
 int CodeCompletionListModel::rowCount(const QModelIndex &) const
@@ -1386,7 +1386,7 @@ QPixmap CodeCompletionListModel::statementIcon(const QModelIndex &index, int siz
     if (index.row()>=mStatements->count())
         return QPixmap();
     PStatement statement = mStatements->at(index.row());
-    return pIconsManager->getPixmapForStatement(statement, size);
+    return mIconsManager->getPixmapForStatement(statement, size);
 }
 
 void CodeCompletionListModel::notifyUpdated()

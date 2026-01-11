@@ -20,8 +20,8 @@
 #include "../systemconsts.h"
 #include <qt_utils/charsetinfo.h>
 
-ProjectFilesWidget::ProjectFilesWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectFilesWidget::ProjectFilesWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectFilesWidget)
 {
     ui->setupUi(this);

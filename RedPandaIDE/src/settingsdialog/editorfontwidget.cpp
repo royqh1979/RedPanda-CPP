@@ -37,8 +37,9 @@ Qt::ItemFlags EditorFontModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-EditorFontWidget::EditorFontWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorFontWidget::EditorFontWidget(const QString& name, const QString& group,
+                                   IconsManager *iconsManager,  QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EditorFontWidget),
     mModel(pSettings->editor().fontFamilies())
 {
@@ -199,14 +200,14 @@ void EditorFontWidget::doSave()
 }
 
 void EditorFontWidget::updateIcons(const QSize &/*size*/) {
-    pIconsManager->setIcon(ui->btnAddFont, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemoveFont, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnModifyFont, IconsManager::ACTION_MISC_RENAME);
-    pIconsManager->setIcon(ui->btnResetFonts, IconsManager::ACTION_MISC_RESET);
-    pIconsManager->setIcon(ui->btnMoveFontToTop, IconsManager::ACTION_MISC_MOVETOP);
-    pIconsManager->setIcon(ui->btnMoveFontUp, IconsManager::ACTION_MISC_MOVEUP);
-    pIconsManager->setIcon(ui->btnMoveFontDown, IconsManager::ACTION_MISC_MOVEDOWN);
-    pIconsManager->setIcon(ui->btnMoveFontToBottom, IconsManager::ACTION_MISC_MOVEBOTTOM);
+    iconsManager()->setIcon(ui->btnAddFont, IconsManager::ACTION_MISC_ADD);
+    iconsManager()->setIcon(ui->btnRemoveFont, IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnModifyFont, IconsManager::ACTION_MISC_RENAME);
+    iconsManager()->setIcon(ui->btnResetFonts, IconsManager::ACTION_MISC_RESET);
+    iconsManager()->setIcon(ui->btnMoveFontToTop, IconsManager::ACTION_MISC_MOVETOP);
+    iconsManager()->setIcon(ui->btnMoveFontUp, IconsManager::ACTION_MISC_MOVEUP);
+    iconsManager()->setIcon(ui->btnMoveFontDown, IconsManager::ACTION_MISC_MOVEDOWN);
+    iconsManager()->setIcon(ui->btnMoveFontToBottom, IconsManager::ACTION_MISC_MOVEBOTTOM);
 }
 
 void EditorFontWidget::on_lstFontList_doubleClicked(const QModelIndex &index)

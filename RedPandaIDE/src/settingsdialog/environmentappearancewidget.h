@@ -29,7 +29,7 @@ class EnvironmentAppearanceWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentAppearanceWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentAppearanceWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentAppearanceWidget();
 
 private:

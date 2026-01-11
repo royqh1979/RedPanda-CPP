@@ -366,9 +366,10 @@ bool OJProblemSetModel::moveRows(const QModelIndex &/*sourceParent*/, int source
     return true;
 }
 
-OJProblemModel::OJProblemModel(QObject *parent): QAbstractTableModel(parent)
+OJProblemModel::OJProblemModel(IconsManager *iconsManager, QObject *parent): QAbstractTableModel(parent)
 {
-
+    Q_ASSERT(iconsManager!=nullptr);
+    mIconsManager = iconsManager;
 }
 
 const POJProblem &OJProblemModel::problem() const
@@ -547,11 +548,11 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         } else if (role == Qt::DecorationRole) {
             switch (mProblem->cases()[index.row()]->testState) {
             case ProblemCaseTestState::Failed:
-                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
+                return mIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
             case ProblemCaseTestState::Passed:
-                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PASSED);
+                return mIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PASSED);
             case ProblemCaseTestState::Testing:
-                return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_TESTING);
+                return mIconsManager->getIcon(IconsManager::ACTION_PROBLEM_TESTING);
             default:
                 return QVariant();
             }

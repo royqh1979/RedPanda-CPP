@@ -13,7 +13,7 @@ class CompilerGASWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit CompilerGASWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit CompilerGASWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~CompilerGASWidget();
 
 private:

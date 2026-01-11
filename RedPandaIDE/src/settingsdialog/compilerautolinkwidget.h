@@ -58,7 +58,7 @@ class CompilerAutolinkWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit CompilerAutolinkWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit CompilerAutolinkWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~CompilerAutolinkWidget();
 
 private:

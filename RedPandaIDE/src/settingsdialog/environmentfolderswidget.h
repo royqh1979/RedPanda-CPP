@@ -29,7 +29,7 @@ class EnvironmentFoldersWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentFoldersWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentFoldersWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentFoldersWidget();
 signals:
     void shouldQuitApp();

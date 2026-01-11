@@ -29,7 +29,7 @@ class EditorGeneralWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorGeneralWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent = nullptr);
     ~EditorGeneralWidget();
 
 private:

@@ -30,6 +30,8 @@ struct IconSet {
 
 using PIconSet = std::shared_ptr<IconSet>;
 
+class DirSettings;
+
 class QToolButton;
 class QPushButton;
 class IconsManager : public QObject
@@ -196,7 +198,7 @@ public:
         ACTION_PROBLEM_FALIED,
         ACTION_PROBLEM_TESTING
     };
-    explicit IconsManager(QObject *parent = nullptr);
+    explicit IconsManager(DirSettings *dirSettings, const QString& language, QObject *parent = nullptr);
 
     void updateEditorGutterIcons(const QString& iconSet, int size);
     void updateParserIcons(const QString& iconSet, int size);
@@ -244,8 +246,9 @@ private:
     int mCachedParserIconSize;
     QMap<IconName,PPixmap> mCachedParserIconPixmaps;
 
+    DirSettings *mDirSettings;
+    QString mLanguage;
     bool mMakeDisabledIconDarker;
 };
 
-extern IconsManager* pIconsManager;
 #endif // ICONSMANAGER_H

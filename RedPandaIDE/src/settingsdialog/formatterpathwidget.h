@@ -13,7 +13,7 @@ class FormatterPathWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit FormatterPathWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit FormatterPathWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~FormatterPathWidget();
 
 private:

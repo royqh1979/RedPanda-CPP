@@ -18,8 +18,8 @@
 #include "ui_editorsyntaxcheckwidget.h"
 #include "../settings.h"
 
-EditorSyntaxCheckWidget::EditorSyntaxCheckWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorSyntaxCheckWidget::EditorSyntaxCheckWidget(const QString &name, const QString &group,IconsManager *iconsManager,  QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EditorSyntaxCheckWidget)
 {
     ui->setupUi(this);

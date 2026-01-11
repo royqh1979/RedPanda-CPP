@@ -31,17 +31,18 @@
 #include "../utils.h"
 #include "../iconsmanager.h"
 
-SettingsWidget::SettingsWidget(const QString &name, const QString &group, QWidget *parent):
+SettingsWidget::SettingsWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent):
     QWidget(parent),
     mSettingsChanged(false),
     mGroup(group),
     mName(name)
 {
+    mIconsManager = iconsManager;
 }
 
 void SettingsWidget::init()
 {
-    connect(pIconsManager,&IconsManager::actionIconsUpdated,
+    connect(mIconsManager,&IconsManager::actionIconsUpdated,
             this, &SettingsWidget::onUpdateIcons);
     onUpdateIcons();
     //load();
@@ -203,6 +204,11 @@ void SettingsWidget::clearSettingsChanged()
     emit settingsChanged(false);
 }
 
+IconsManager *SettingsWidget::iconsManager() const
+{
+    return mIconsManager;
+}
+
 void SettingsWidget::showEvent(QShowEvent *event)
 {
     Q_UNUSED(event);
@@ -211,7 +217,7 @@ void SettingsWidget::showEvent(QShowEvent *event)
 
 void SettingsWidget::onUpdateIcons()
 {
-    updateIcons(pIconsManager->actionIconSize());
+    updateIcons(mIconsManager->actionIconSize());
 }
 
 void SettingsWidget::onLoaded()

@@ -27,8 +27,10 @@
 #include <QFileDialog>
 #include <qsynedit/document.h>
 
-EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, const QString& name,
+                                                 const QString& group, IconsManager *iconsManager,
+                                                 QWidget *parent) :
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::EditorColorSchemeWidget)
 {
     ui->setupUi(this);
@@ -74,6 +76,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
             &EditorColorSchemeWidget::onSettingChanged);
     ui->editDemo->setEditorSettings(&pSettings->editor());
     ui->editDemo->setColorManager(mColorManager);
+    ui->editDemo->setIconsManager(iconsManager);
     ui->editDemo->applySettings();
     ui->editDemo->setUseCodeFolding(true);
     ui->editDemo->setContent(

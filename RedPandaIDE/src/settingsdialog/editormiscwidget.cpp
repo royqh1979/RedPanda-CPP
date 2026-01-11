@@ -21,8 +21,9 @@
 #include "../mainwindow.h"
 
 EditorMiscWidget::EditorMiscWidget(const QString& name, const QString& group,
+                                   IconsManager *iconsManager,
                                    QWidget *parent) :
-    SettingsWidget(name,group,parent),
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::EditorMiscWidget)
 {
     ui->setupUi(this);

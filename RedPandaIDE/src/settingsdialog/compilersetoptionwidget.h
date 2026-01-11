@@ -30,7 +30,7 @@ class CompilerSetOptionWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit CompilerSetOptionWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit CompilerSetOptionWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~CompilerSetOptionWidget();
 
 private:

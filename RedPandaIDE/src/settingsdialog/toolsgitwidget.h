@@ -13,7 +13,7 @@ class ToolsGitWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit ToolsGitWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit ToolsGitWidget(const QString& name, const QString& group,IconsManager *iconsManager, QWidget *parent = nullptr);
     ~ToolsGitWidget();
 
 private:

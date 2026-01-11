@@ -21,10 +21,11 @@
 #include <memory>
 #include "../problems/ojproblemset.h"
 
+class IconsManager;
 class OJProblemModel: public QAbstractTableModel {
     Q_OBJECT
 public:
-    explicit OJProblemModel(QObject *parent = nullptr);
+    explicit OJProblemModel(IconsManager *iconsManager, QObject *parent = nullptr);
     const POJProblem &problem() const;
     void setProblem(const POJProblem &newProblem);
     void addCase(POJProblemCase problemCase);
@@ -46,7 +47,7 @@ private slots:
 private:
     POJProblem mProblem;
     int mMoveTargetRow;
-
+    IconsManager *mIconsManager;
     // QAbstractItemModel interface
 public:
     int rowCount(const QModelIndex &parent) const override;

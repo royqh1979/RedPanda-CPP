@@ -26,12 +26,13 @@ namespace Ui {
 class NewProjectDialog;
 }
 
+class IconsManager;
 class NewProjectDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit NewProjectDialog(QWidget *parent = nullptr);
+    explicit NewProjectDialog(IconsManager *iconsManager, QWidget *parent = nullptr);
     ~NewProjectDialog();
     PProjectTemplate getTemplate();
     QString getLocation();
@@ -64,6 +65,7 @@ private:
     QList<PProjectTemplate> mTemplates;
     QTabBar* mTemplatesTabBar;
     QMap<QString,int> mCategories;
+    IconsManager *mIconsManager;
 };
 
 #endif // NEWPROJECTDIALOG_H

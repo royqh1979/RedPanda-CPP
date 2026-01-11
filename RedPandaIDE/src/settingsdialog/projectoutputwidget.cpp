@@ -24,8 +24,8 @@
 #include <QFileDialog>
 
 
-ProjectOutputWidget::ProjectOutputWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectOutputWidget::ProjectOutputWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::ProjectOutputWidget)
 {
     ui->setupUi(this);
@@ -105,8 +105,8 @@ void ProjectOutputWidget::on_btnCompileLog_clicked()
 
 void ProjectOutputWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnCompileLog, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnObjOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnCompileLog, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnObjOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnOutputDir, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 

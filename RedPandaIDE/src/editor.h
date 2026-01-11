@@ -44,6 +44,7 @@ class CodeSnippetsManager;
 class EditorSettings;
 class CodeCompletionSettings;
 class ColorManager;
+class IconsManager;
 struct TabStop {
     int x;
     int endX;
@@ -517,6 +518,7 @@ private:
     QFileSystemWatcher *mFileSystemWatcher;
 
     ColorManager *mColorManager;
+    IconsManager *mIconsManager;
     const EditorSettings *mEditorSettings;
     const CodeCompletionSettings *mCodeCompletionSettings;
 
@@ -538,6 +540,9 @@ public:
 
     ColorManager *colorManager() const;
     void setColorManager(ColorManager *newColorManager);
+
+    IconsManager *iconsManager() const;
+    void setIconsManager(IconsManager *newIconsManager);
 
 protected:
     // QWidget interface

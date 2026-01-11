@@ -25,10 +25,11 @@
 
 class SymbolUsageManager;
 class ColorSchemeItem;
+class IconsManager;
 class CodeCompletionListModel : public QAbstractListModel {
     Q_OBJECT
 public:
-    explicit CodeCompletionListModel(const StatementList* statements,QObject *parent = nullptr);
+    explicit CodeCompletionListModel(const StatementList* statements,IconsManager *iconsManager,QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     PStatement statement(const QModelIndex &index) const;
@@ -37,6 +38,7 @@ public:
 
 private:
     const StatementList* mStatements;
+    IconsManager *mIconsManager;
 };
 
 enum class CodeCompletionType {
@@ -92,7 +94,7 @@ class CodeCompletionPopup : public QWidget
     Q_OBJECT
 
 public:
-    explicit CodeCompletionPopup(ColorManager *colorManager,QWidget *parent = nullptr);
+    explicit CodeCompletionPopup(ColorManager *colorManager,IconsManager *iconsManager,QWidget *parent = nullptr);
     ~CodeCompletionPopup();
 
     void setKeypressedCallback(const KeyPressedCallback &newKeypressedCallback);

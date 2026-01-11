@@ -18,8 +18,8 @@
 #include "ui_editortooltipswidget.h"
 #include "../settings.h"
 
-EditorTooltipsWidget::EditorTooltipsWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorTooltipsWidget::EditorTooltipsWidget(const QString &name, const QString &group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::EditorTooltipsWidget)
 {
     ui->setupUi(this);

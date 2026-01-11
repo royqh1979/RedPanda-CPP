@@ -30,7 +30,7 @@ class EnvironmentProgramsWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentProgramsWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EnvironmentProgramsWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
     ~EnvironmentProgramsWidget();
 
 private:

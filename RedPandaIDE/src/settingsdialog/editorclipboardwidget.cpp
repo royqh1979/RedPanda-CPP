@@ -20,8 +20,9 @@
 #include "../mainwindow.h"
 #include "../colorscheme.h"
 
-EditorClipboardWidget::EditorClipboardWidget(ColorManager *colorManager, const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorClipboardWidget::EditorClipboardWidget(ColorManager *colorManager, const QString& name,
+                                             const QString& group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EditorClipboardWidget)
 {
     ui->setupUi(this);

@@ -22,8 +22,8 @@
 #include <QMenu>
 #include <QMessageBox>
 
-EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent) :
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::EnvironmentShortcutWidget)
 {
     ui->setupUi(this);

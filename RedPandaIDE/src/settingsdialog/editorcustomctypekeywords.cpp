@@ -3,8 +3,8 @@
 #include "../settings.h"
 #include "../iconsmanager.h"
 
-EditorCustomCTypeKeywordsWidget::EditorCustomCTypeKeywordsWidget(const QString& name, const QString& group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+EditorCustomCTypeKeywordsWidget::EditorCustomCTypeKeywordsWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent) :
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::editorcustomctypekeywords)
 {
     ui->setupUi(this);
@@ -42,9 +42,9 @@ void EditorCustomCTypeKeywordsWidget::doSave()
 
 void EditorCustomCTypeKeywordsWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnAdd, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnRemoveAll, IconsManager::ACTION_MISC_CLEAN);
+    iconsManager()->setIcon(ui->btnAdd, IconsManager::ACTION_MISC_ADD);
+    iconsManager()->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_REMOVE);
+    iconsManager()->setIcon(ui->btnRemoveAll, IconsManager::ACTION_MISC_CLEAN);
 }
 
 QListWidgetItem * EditorCustomCTypeKeywordsWidget::addKeyword(const QString &keyword)

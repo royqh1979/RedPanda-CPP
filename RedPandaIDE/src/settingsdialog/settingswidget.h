@@ -20,11 +20,12 @@
 #include <QWidget>
 
 class QAbstractItemView;
+class IconsManager;
 class SettingsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SettingsWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit SettingsWidget(const QString& name, const QString& group, IconsManager *iconsManager, QWidget *parent = nullptr);
 
     virtual void init();
 
@@ -48,16 +49,16 @@ public:
     bool isSettingsChanged();
     void connectInputs();
     void disconnectInputs();
+    IconsManager *iconsManager() const;
+
 public slots:
     void setSettingsChanged();
     void clearSettingsChanged();
 private:
-
-private:
     bool mSettingsChanged;
     QString mGroup;
     QString mName;
-
+    IconsManager *mIconsManager;
     // QWidget interface
 protected:
     void showEvent(QShowEvent *event) override;

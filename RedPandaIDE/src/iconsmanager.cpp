@@ -32,10 +32,12 @@
 #include "widgets/customdisablediconengine.h"
 #include <QApplication>
 
-IconsManager* pIconsManager;
-
-IconsManager::IconsManager(QObject *parent) : QObject(parent)
+IconsManager::IconsManager(DirSettings *dirSettings, const QString& language, QObject *parent) : QObject(parent)
 {
+    Q_ASSERT(dirSettings!=nullptr);
+    Q_ASSERT(!language.isEmpty());
+    mDirSettings = dirSettings;
+    mLanguage = language;
     mDefaultIconPixmap = std::make_shared<QPixmap>();
     mIconSetTemplate = "%1/%2/%3/";
     mMakeDisabledIconDarker = false;
@@ -259,7 +261,7 @@ void IconsManager::prepareCustomIconSet(const QString &customIconSet)
 {
     if (QFile(customIconSet).exists())
         return;
-    copyFolder(pSettings->dirs().data(DirSettings::DataType::IconSet),customIconSet);
+    copyFolder(mDirSettings->data(DirSettings::DataType::IconSet),customIconSet);
 }
 
 QPixmap IconsManager::getPixmapForStatement(PStatement statement)
@@ -289,7 +291,7 @@ IconsManager::PPixmap IconsManager::getPixmap(const QMap<IconName, PPixmap> &ico
 const QString IconsManager::iconSetsFolder() const
 {
     if (mIconSetsFolder.isEmpty())
-        return pSettings->dirs().data(DirSettings::DataType::IconSet);
+        return mDirSettings->data(DirSettings::DataType::IconSet);
     return mIconSetsFolder;
 }
 
@@ -319,7 +321,7 @@ QList<PIconSet> IconsManager::listIconSets()
                 if (error.error  == QJsonParseError::NoError) {
                     QJsonObject obj=doc.object();
                     pSet->displayName = obj["name"].toString();
-                    QString localeName = obj["name_"+pSettings->environment().language()].toString();
+                    QString localeName = obj["name_"+mLanguage].toString();
                     if (!localeName.isEmpty())
                         pSet->displayName = localeName;
                 }

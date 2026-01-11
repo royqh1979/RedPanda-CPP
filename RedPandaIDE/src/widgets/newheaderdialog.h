@@ -23,12 +23,13 @@ namespace Ui {
 class NewHeaderDialog;
 }
 
+class IconsManager;
 class NewHeaderDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit NewHeaderDialog(QWidget *parent = nullptr);
+    explicit NewHeaderDialog(IconsManager *iconsManager, QWidget *parent = nullptr);
     ~NewHeaderDialog();
     QString headerName() const;
     QString path() const;
@@ -37,6 +38,7 @@ public:
 
 private:
     Ui::NewHeaderDialog *ui;
+    IconsManager *mIconsManager;
 
 private:
     void onUpdateIcons();

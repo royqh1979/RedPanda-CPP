@@ -23,12 +23,13 @@ namespace Ui {
 class NewProjectUnitDialog;
 }
 
+class IconsManager;
 class NewProjectUnitDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit NewProjectUnitDialog(QWidget *parent = nullptr);
+    explicit NewProjectUnitDialog(IconsManager *iconsManager, QWidget *parent = nullptr);
     ~NewProjectUnitDialog();
 
     QString folder() const;
@@ -57,6 +58,7 @@ private:
     Ui::NewProjectUnitDialog *ui;
 private:
     QString mSuffix;
+    IconsManager *mIconsManager;
 
     // QWidget interface
 protected:

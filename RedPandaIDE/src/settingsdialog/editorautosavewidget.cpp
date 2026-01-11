@@ -21,9 +21,9 @@
 
 #include <QDateTime>
 
-EditorAutoSaveWidget::EditorAutoSaveWidget(const QString& name, const QString& group,
+EditorAutoSaveWidget::EditorAutoSaveWidget(const QString& name, const QString& group,IconsManager *iconsManager,
                                                              QWidget *parent) :
-    SettingsWidget(name,group,parent),
+    SettingsWidget(name,group,iconsManager,parent),
     ui(new Ui::EditorAutoSaveWidget)
 {
     ui->setupUi(this);

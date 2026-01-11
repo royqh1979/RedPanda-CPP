@@ -29,7 +29,7 @@ class EditorSyntaxCheckWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorSyntaxCheckWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorSyntaxCheckWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent = nullptr);
     ~EditorSyntaxCheckWidget();
 
 private:

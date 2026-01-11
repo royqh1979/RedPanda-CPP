@@ -29,7 +29,7 @@ class EditorMiscWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorMiscWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorMiscWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent = nullptr);
     ~EditorMiscWidget();
 
 private:

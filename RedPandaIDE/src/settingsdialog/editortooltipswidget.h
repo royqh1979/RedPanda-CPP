@@ -29,7 +29,7 @@ class EditorTooltipsWidget : public SettingsWidget
     Q_OBJECT
 
 public:
-    explicit EditorTooltipsWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    explicit EditorTooltipsWidget(const QString& name, const QString& group,IconsManager *iconsManager,  QWidget *parent = nullptr);
     ~EditorTooltipsWidget();
 
 private:

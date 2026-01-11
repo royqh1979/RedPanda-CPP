@@ -137,110 +137,110 @@ void SettingsDialog::selectFirstWidget()
     showWidget(widgetIndex);
 }
 
-PSettingsDialog SettingsDialog::optionDialog(ColorManager *colorManager, QWidget *parent)
+PSettingsDialog SettingsDialog::optionDialog(ColorManager *colorManager, IconsManager *iconsManager, QWidget *parent)
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>(parent);
 
     dialog->setWindowTitle(tr("Options"));
 
     SettingsWidget* widget;
-    widget = new EnvironmentAppearanceWidget(tr("Appearance"),tr("Environment"));
+    widget = new EnvironmentAppearanceWidget(tr("Appearance"),tr("Environment"),iconsManager);
     dialog->addWidget(widget);
 
 #ifdef Q_OS_WIN
-    widget = new EnvironmentFileAssociationWidget(tr("File Association"),tr("Environment"));
+    widget = new EnvironmentFileAssociationWidget(tr("File Association"),tr("Environment"),iconsManager);
     dialog->addWidget(widget);
 #endif
 
-    widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
+    widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
+    widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
+    widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EnvironmentFoldersWidget(tr("Folders / Restore Default Settings"),tr("Environment"));
+    widget = new EnvironmentFoldersWidget(tr("Folders / Restore Default Settings"),tr("Environment"),iconsManager);
     connect((EnvironmentFoldersWidget*)widget,
             &EnvironmentFoldersWidget::shouldQuitApp,
             dialog.get(),
             &SettingsDialog::closeAndQuit);
     dialog->addWidget(widget);
 
-    widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
+    widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
+    widget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new CompilerGASWidget(tr("GNU Assembler"),tr("Compiler"));
+    widget = new CompilerGASWidget(tr("GNU Assembler"),tr("Compiler"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new CompilerNASMWidget(tr("NASM"),tr("Compiler"));
+    widget = new CompilerNASMWidget(tr("NASM"),tr("Compiler"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorGeneralWidget(tr("General"),tr("Editor"));
+    widget = new EditorGeneralWidget(tr("General"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorFontWidget(tr("Font"),tr("Editor"));
+    widget = new EditorFontWidget(tr("Font"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorClipboardWidget(colorManager, tr("Copy & Export"),tr("Editor"));
+    widget = new EditorClipboardWidget(colorManager, tr("Copy & Export"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorColorSchemeWidget(colorManager, tr("Color"),tr("Editor"));
+    widget = new EditorColorSchemeWidget(colorManager, tr("Color"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"));
+    widget = new EditorCodeCompletionWidget(tr("Code Completion"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"));
+    widget = new EditorSymbolCompletionWidget(tr("Symbol Completion"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorSnippetWidget(colorManager, tr("Snippet"),tr("Editor"));
+    widget = new EditorSnippetWidget(colorManager, tr("Snippet"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"));
+    widget = new EditorSyntaxCheckWidget(tr("Auto Syntax Checking"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorTooltipsWidget(tr("Tooltips"),tr("Editor"));
+    widget = new EditorTooltipsWidget(tr("Tooltips"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
+    widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
+    widget = new EditorMiscWidget(tr("Misc"),tr("Editor"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Languages"));
+    widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Languages"),iconsManager);
     dialog->addWidget(widget);
 
-//    widget = new LanguageCFormatWidget(tr("C/C++ Format"),tr("Languages"));
+//    widget = new LanguageCFormatWidget(tr("C/C++ Format"),tr("Languages"),iconsManager);
 //    dialog->addWidget(widget);
-    widget = new LanguageAsmGenerationWidget(tr("ASM Generation"),tr("Languages"));
+    widget = new LanguageAsmGenerationWidget(tr("ASM Generation"),tr("Languages"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));
+    widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ExecutorProblemSetWidget(tr("Problem Set"),tr("Program Runner"));
+    widget = new ExecutorProblemSetWidget(tr("Problem Set"),tr("Program Runner"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new DebugGeneralWidget(tr("General"),tr("Debugger"));
+    widget = new DebugGeneralWidget(tr("General"),tr("Debugger"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new FormatterGeneralWidget(colorManager, tr("General"),tr("Code Formatter"));
+    widget = new FormatterGeneralWidget(colorManager, tr("General"),tr("Code Formatter"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));
+    widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
+    widget = new ToolsGeneralWidget(tr("General"),tr("Tools"),iconsManager);
     dialog->addWidget(widget);
 
 #ifdef ENABLE_VCS
-    widget = new ToolsGitWidget(tr("Git"),tr("Tools"));
+    widget = new ToolsGitWidget(tr("Git"),tr("Tools"),iconsManager);
     dialog->addWidget(widget);
 #endif
 
@@ -249,7 +249,7 @@ PSettingsDialog SettingsDialog::optionDialog(ColorManager *colorManager, QWidget
     return dialog;
 }
 
-PSettingsDialog SettingsDialog::projectOptionDialog(QWidget *parent)
+PSettingsDialog SettingsDialog::projectOptionDialog(IconsManager *iconsManager, QWidget *parent)
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>(parent);
 
@@ -263,40 +263,40 @@ PSettingsDialog SettingsDialog::projectOptionDialog(QWidget *parent)
 
     dialog->setWindowTitle(tr("Project Options"));
 
-    SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
+    SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ProjectFilesWidget(tr("Files"),tr("Project"));
+    widget = new ProjectFilesWidget(tr("Files"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ProjectCompilerWidget(tr("Compiler Set"),tr("Project"));
+    widget = new ProjectCompilerWidget(tr("Compiler Set"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ProjectCompileParamatersWidget(tr("Custom Compile options"),tr("Project"));
+    widget = new ProjectCompileParamatersWidget(tr("Custom Compile options"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ProjectDirectoriesWidget(tr("Directories"),tr("Project"));
+    widget = new ProjectDirectoriesWidget(tr("Directories"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
     if (!isMicroControllerProject) {
-        widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"));
+        widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"),iconsManager);
         dialog->addWidget(widget);
     }
 
-    widget = new ProjectMakefileWidget(tr("Makefile"),tr("Project"));
+    widget = new ProjectMakefileWidget(tr("Makefile"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
-    widget = new ProjectOutputWidget(tr("Output"),tr("Project"));
+    widget = new ProjectOutputWidget(tr("Output"),tr("Project"),iconsManager);
     dialog->addWidget(widget);
 
     if (!isMicroControllerProject) {
-        widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"));
+        widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"),iconsManager);
         dialog->addWidget(widget);
     }
 
 #ifdef Q_OS_WIN
     if (!isMicroControllerProject) {
-        widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
+        widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"),iconsManager);
         dialog->addWidget(widget);
     }
 #endif

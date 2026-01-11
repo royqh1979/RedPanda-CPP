@@ -23,8 +23,8 @@
 
 #include <QFileDialog>
 
-ProjectDLLHostWidget::ProjectDLLHostWidget(const QString &name, const QString &group, QWidget *parent) :
-    SettingsWidget(name,group,parent),
+ProjectDLLHostWidget::ProjectDLLHostWidget(const QString &name, const QString &group,IconsManager *iconsManager,  QWidget *parent) :
+    SettingsWidget(name,group,iconsManager, parent),
     ui(new Ui::ProjectDLLHostWidget)
 {
     ui->setupUi(this);
@@ -64,6 +64,6 @@ void ProjectDLLHostWidget::on_btnBrowse_clicked()
 
 void ProjectDLLHostWidget::updateIcons(const QSize &/*size*/)
 {
-    pIconsManager->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    iconsManager()->setIcon(ui->btnBrowse, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
