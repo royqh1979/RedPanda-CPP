@@ -25,6 +25,7 @@
 #include "systemconsts.h"
 #include "visithistorymanager.h"
 #include "debugger/debugger.h"
+#include "utils/parser.h"
 #include <QApplication>
 
 EditorManager::EditorManager(QTabWidget* leftPageWidget,
@@ -96,7 +97,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
         e->reparseTodo();
     }
     e->setCppParser();
-    e->reparse(false);
+    e->reparse();
 
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
@@ -158,7 +159,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     if (!pMainWindow->openingFiles()
             && !pMainWindow->openingProject()) {
         if (e->inProject()) {
-            e->reparse(false);
+            e->reparse();
             e->reparseTodo();
         }
         //checkSyntaxInBack();
@@ -294,7 +295,8 @@ void EditorManager::onEditorShown(Editor *e)
             if (pSettings->codeCompletion().clearWhenEditorHidden()
                 && pSettings->codeCompletion().shareParser()
                 && !e->inProject()) {
-                e->resetParserIfNeeded();
+                if (e->needReparse())
+                    resetCppParser(e->parser());
             }
             e->reparseIfNeeded();
         }

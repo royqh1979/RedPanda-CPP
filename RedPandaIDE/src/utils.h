@@ -70,9 +70,6 @@ constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
 
 bool programIsWin32GuiApp(const QString& filename);
 
-class CppParser;
-void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
-
 int getNewFileNumber();
 
 struct ProcessOutput

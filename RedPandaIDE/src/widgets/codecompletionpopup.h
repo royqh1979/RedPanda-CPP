@@ -105,7 +105,7 @@ public:
                        int line,
                        CodeCompletionType completionType,
                        const QSet<QString>& customKeywords);
-    bool search(const QString& memberPhrase, bool autoHideOnSingleResult);
+    bool search(const QString& memberPhrase, bool autoHideOnSingleResult, const QString& schemeName);
 
     PStatement selectedStatement();
 

@@ -56,6 +56,7 @@
 #include "debugger/debugger.h"
 #include "utils/escape.h"
 #include "utils/parsearg.h"
+#include "utils/parser.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
 #include "widgets/filenameeditdelegate.h"
@@ -1814,7 +1815,7 @@ void MainWindow::openFiles(const QStringList &files)
         mOpeningFiles=false;
         Editor* e=mEditorManager->getEditor();
         if (e) {
-            e->reparse(false);
+            e->reparse();
             e->checkSyntaxInBack();
             e->reparseTodo();
             mEditorManager->activeEditor(e,true);
@@ -3672,7 +3673,7 @@ void MainWindow::loadLastOpens()
     if (focusedEditor) {
         updateEditorActions();
         updateForEncodingInfo(mEditorManager->getEditor());
-        focusedEditor->reparse(false);
+        focusedEditor->reparse();
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
         mEditorManager->activeEditor(focusedEditor,true);
@@ -7939,14 +7940,21 @@ void MainWindow::reparseNonProjectEditors()
             if (parser)
                 resetCppParser(parser);
         }
+    } else {
+        for (int i=0;i<mEditorManager->pageCount();i++) {
+            Editor* e=(*mEditorManager)[i];
+            if (!e->inProject()) {
+                if (!pSettings->codeCompletion().shareParser()) {
+                    resetCppParser(e->parser());
+                }
+            }
+        }
     }
     for (int i=0;i<mEditorManager->pageCount();i++) {
         Editor* e=(*mEditorManager)[i];
         if (!e->inProject()) {
-//            if (!pSettings->codeCompletion().clearWhenEditorHidden() || e->isVisible()) {
             if (e->isVisible()) {
-                e->reparse(true);
-                e->checkSyntaxInBack();
+                e->reparse();
             }
         }
     }
@@ -8503,7 +8511,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     } else {
         refactor.renameSymbol(editor,oldCaret,newWord);
     }
-    editor->reparse(true);
+    editor->reparse();
     editor->checkSyntaxInBack();
     editor->reparseTodo();
 }

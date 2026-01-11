@@ -22,7 +22,6 @@
 #include "../symbolusagemanager.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"
-#include "../settings.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
@@ -134,7 +133,7 @@ void CodeCompletionPopup::prepareSearch(
     setCursor(oldCursor);
 }
 
-bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSingleResult)
+bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSingleResult, const QString& schemeName)
 {
     QMutexLocker locker(&mMutex);
 
@@ -161,18 +160,18 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
     setCursor(oldCursor);
 
     if (!mCompletionStatementList.isEmpty()) {
-        QString schemaName = pSettings->editor().colorScheme();
-        PColorSchemeItem item = mColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        Q_ASSERT(!schemeName.isEmpty());
+        PColorSchemeItem item = mColorManager->getItem(schemeName, COLOR_SCHEME_ACTIVE_LINE);
         if (item && item->background().isValid())
             mDelegate->setCurrentSelectionColor(item->background());
         else
             mDelegate->setCurrentSelectionColor(palette().highlight().color());
-        item = mColorManager->getItem(schemaName, COLOR_SCHEME_TEXT);
+        item = mColorManager->getItem(schemeName, COLOR_SCHEME_TEXT);
         if (item && item->foreground().isValid())
             mDelegate->setNormalColor(item->foreground());
         else
             mDelegate->setNormalColor(palette().color(QPalette::Text));
-        item = mColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
+        item = mColorManager->getItem(schemeName, SYNS_AttrReserveWord_Type);
         if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else

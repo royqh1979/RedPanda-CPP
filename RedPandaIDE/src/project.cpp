@@ -43,7 +43,7 @@
 #include <QMimeData>
 #include "settings.h"
 #include "vcs/gitrepository.h"
-
+#include "utils/parser.h"
 Project::Project(const QString &filename, const QString &name,
                  EditorManager* editorList,
                  QFileSystemWatcher* fileSystemWatcher,

@@ -3,9 +3,6 @@
 
 add_executable(RedPandaIDE WIN32 MACOSX_BUNDLE)
 
-target_sources(RedPandaIDE PRIVATE
-    src/utils/types.h
-    )
 target_qt_plain_cpp(RedPandaIDE
     src/autolinkmanager
     src/colorscheme
@@ -49,7 +46,9 @@ target_qt_plain_cpp(RedPandaIDE
     src/utils/escape
     src/utils/font
     src/utils/parsearg
-    src/utils/parsemacros)
+    src/utils/parser
+    src/utils/parsemacros
+    )
 
 target_moc_classes(RedPandaIDE
     src/caretlist
@@ -216,27 +215,47 @@ target_link_options(RedPandaIDE PRIVATE
 #add_executable(test-editor test/test-editor-main.cpp)
 
 #target_qt_plain_cpp(test-editor
+#    #settings
+#    src/settings/basesettings
+#    src/settings/dirsettings
+#    src/settings/editorsettings
+#    src/settings/codecompletionsettings
+
+#    src/parser/cppparser
+#    src/parser/cpppreprocessor
+#    src/parser/cpptokenizer
+#    src/parser/parserutils
+#    src/parser/statementmodel
+
 #    # utils
 #    src/utils/escape
 #    src/utils/font
-#    src/utils/parsearg)
+#    src/utils/parsearg
+#    src/utils/parsemacros
+#    src/colorscheme
+#    src/syntaxermanager
+#    src/iconsmanager
+#    src/systemconsts
+#    src/compiler/compilerinfo
+#    src/reformatter/basereformatter
+#    )
 
 #target_moc_classes(test-editor
 #    src/editor
-#    src/editormanager
-#    src/settings
+
+#    src/widgets/codecompletionlistview
+#    src/widgets/codecompletionpopup
+#    src/widgets/headercompletionpopup
+
+#    #test
+#    test/test_editor
 #)
-
-#target_ui_classes(RedPandaIDE
-#    src/mainwindow)
-
 #target_include_directories(test-editor PRIVATE
 #    ${CMAKE_CURRENT_SOURCE_DIR})
 
 #target_link_libraries(test-editor PRIVATE
 #        Qt::Core
 #        Qt::Gui
-#        Qt::Network
 #        Qt::PrintSupport
 #        Qt::Svg
 #        Qt::Test

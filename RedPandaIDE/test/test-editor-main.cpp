@@ -1,11 +1,6 @@
 #include <QTest>
 #include <QGuiApplication>
-#include "test_charpos.h"
-#include "test_document.h"
-#include "test_qsynedit_cpp.h"
-#include "test_qsynedit_emoji.h"
-#include "test_qsynedit_cpp_search_replace.h"
-#include "qsynedit/types.h"
+#include "test_editor.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -14,31 +9,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc,argv);
     //CharPos Test
     {
-        QSynedit::TestCharPos tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
-    {
-        QSynedit::TestDocumentHelpers tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
-
-    //QDocument Test
-    {
-        QSynedit::TestDocument tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
-
-    {
-        QSynedit::TestQSyneditCpp tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
-
-    {
-        QSynedit::TestQSyneditEmoji tc;
-        status |= QTest::qExec(&tc, argc, argv);
-    }
-    {
-        QSynedit::TestQSyneditCppSearchReplace tc;
+        TestEditor tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

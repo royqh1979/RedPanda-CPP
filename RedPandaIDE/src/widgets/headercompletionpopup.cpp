@@ -23,7 +23,6 @@
 #include "qpainter.h"
 #include "../systemconsts.h"
 #include "../utils.h"
-#include "../settings.h"
 #include "../colorscheme.h"
 #include <qsynedit/constants.h>
 
@@ -66,7 +65,7 @@ void HeaderCompletionPopup::prepareSearch(const QString &phrase, const QString &
     setCursor(oldCursor);
 }
 
-bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleResult)
+bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleResult, const QString& schemeName)
 {
     mPhrase = phrase;
     if (mPhrase.isEmpty()) {
@@ -94,13 +93,12 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
     setCursor(oldCursor);
 
     if (!mCompletionList.isEmpty()) {
-        QString schemaName = pSettings->editor().colorScheme();
-        PColorSchemeItem item = mColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        PColorSchemeItem item = mColorManager->getItem(schemeName, COLOR_SCHEME_ACTIVE_LINE);
         if (item && item->background().isValid())
             mDelegate->setCurrentSelectionBackColor(item->background());
         else
             mDelegate->setCurrentSelectionBackColor(palette().highlight().color());
-        item = mColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
+        item = mColorManager->getItem(schemeName, SYNS_AttrReserveWord_Type);
         if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else

@@ -20,7 +20,6 @@
 #include <QObject>
 #include "utils/types.h"
 #include "utils/parsemacros.h"
-#include "utils.h"
 #include "qsynedit/qsynedit.h"
 #include "common.h"
 #include "widgets/codecompletionpopup.h"
@@ -207,9 +206,8 @@ public:
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::CharPos& pos);
     void gotoDefinition(const QSynedit::CharPos& pos);
-    void reparse(bool resetParser);
+    void reparse();
     void reparseIfNeeded();
-    void resetParserIfNeeded();
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
@@ -274,6 +272,8 @@ public:
     void setCanAutoSave(bool newCanAutoSave);
 
     quint64 lastFocusOutTime() const;
+
+    bool needReparse() const;
 
     FileType fileType() const;
     void setFileType(FileType newFileType, bool parse = true);
@@ -430,7 +430,6 @@ private:
     void doSetFileType(FileType newFileType);
 
     void openFileInContext(const QString& filename, const QSynedit::CharPos& caretPos);
-    bool needReparse();
 
     PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::CharPos& p);
 

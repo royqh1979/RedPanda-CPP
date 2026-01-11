@@ -220,7 +220,7 @@ void Editor::loadFile(QString filename, bool parse) {
     }
     if (parse) {
         setCppParser();
-        reparse(false);
+        reparse();
         reparseTodo();
         checkSyntaxInBack();
     }
@@ -278,7 +278,7 @@ bool Editor::save(bool force, bool doReparse) {
     }
 
     if (doReparse && isVisible()) {
-        reparse(false);
+        reparse();
         if (mEditorSettings->syntaxCheckWhenSave())
             checkSyntaxInBack();
         reparseTodo();
@@ -361,7 +361,7 @@ bool Editor::saveAs(const QString &name){
     if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
-    reparse(false);
+    reparse();
     if (mEditorSettings->syntaxCheckWhenSave())
         checkSyntaxInBack();
     if (!shouldOpenInReadonly()) {
@@ -1599,7 +1599,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             && !changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
             && changes.testFlag(QSynedit::StatusChange::CaretY))) {
         mCurrentLineModified = false;
-        reparse(false);
+        reparse();
         if (mEditorSettings->syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
         reparseTodo();
@@ -2933,7 +2933,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     return Result;
 }
 
-void Editor::reparse(bool resetParser)
+void Editor::reparse()
 {
     if (!mInited)
         return;
@@ -2946,23 +2946,14 @@ void Editor::reparse(bool resetParser)
         return;
 //    qDebug()<<"reparse "<<mFilename;
     //mParser->setEnabled(mCodeCompletionSettings->enabled());
-    if (resetParser && !mParser->sharedByFiles()) {
-        resetCppParser(mParser);
-    }
     parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
 }
 
 void Editor::reparseIfNeeded()
 {
     if (needReparse()) {
-        reparse(false);
+        reparse();
     }
-}
-
-void Editor::resetParserIfNeeded()
-{
-    if (needReparse())
-        resetCppParser(mParser);
 }
 
 void Editor::reparseTodo()
@@ -3360,7 +3351,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     }
 
     // Filter the whole statement list
-    if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing
+    if (mCompletionPopup->search(word, autoComplete, mEditorSettings->colorScheme())) { //only one suggestion and it's not input while typing
         completionInsert(mCodeCompletionSettings->appendFunc());
     }
 }
@@ -3427,7 +3418,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     mHeaderCompletionPopup->prepareSearch(word, mFilename);
 
     // Filter the whole statement list
-    if (mHeaderCompletionPopup->search(word, autoComplete)) //only one suggestion and it's not input while typing
+    if (mHeaderCompletionPopup->search(word, autoComplete, mEditorSettings->colorScheme())) //only one suggestion and it's not input while typing
         headerCompletionInsert(); // if only have one suggestion, just use it
 }
 
@@ -3662,7 +3653,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         if (phrase.isEmpty()) {
             mCompletionPopup->hide();
         } else {
-            mCompletionPopup->search(phrase, false);
+            mCompletionPopup->search(phrase, false, mEditorSettings->colorScheme());
         }
         return true;
     case Qt::Key_Escape:
@@ -3690,7 +3681,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
             phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             purpose);
-        mCompletionPopup->search(phrase, false);
+        mCompletionPopup->search(phrase, false, mEditorSettings->colorScheme());
         return true;
     } else {
         //stop completion
@@ -3717,7 +3708,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         phrase = getWordAtPosition(this,caretXY(),
                                    pBeginPos,pEndPos,
                                    WordPurpose::wpHeaderCompletion);
-        mHeaderCompletionPopup->search(phrase, false);
+        mHeaderCompletionPopup->search(phrase, false, mEditorSettings->colorScheme());
         return true;
     case Qt::Key_Escape:
         mHeaderCompletionPopup->hide();
@@ -3746,7 +3737,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             WordPurpose::wpHeaderCompletion);
-        mHeaderCompletionPopup->search(phrase, false);
+        mHeaderCompletionPopup->search(phrase, false, mEditorSettings->colorScheme());
         return true;
     } else {
         //stop completion
@@ -3765,7 +3756,7 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
     QString s=event->commitString();
     if (mCompletionPopup && mParser && !s.isEmpty()) {
         QString phrase = getWordForCompletionSearch(caretXY(),mCompletionPopup->memberOperator()=="::");
-        mCompletionPopup->search(phrase, false);
+        mCompletionPopup->search(phrase, false, mEditorSettings->colorScheme());
         return true;
     }
     return processed;
@@ -4291,7 +4282,7 @@ void Editor::setFileType(FileType newFileType, bool parse)
     applyColorScheme(mEditorSettings->colorScheme());
     if (parse && oldLanguage!=calcParserLanguage()) {
         setCppParser();
-        reparse(false);
+        reparse();
     }
     if (parse && syntaxer()->language() != oldSyntaxer->language()) {
         reparseTodo();
@@ -4318,7 +4309,7 @@ void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)
     emit openFileRequested(filename, fileType,contextFile, caretPos);
 }
 
-bool Editor::needReparse()
+bool Editor::needReparse() const
 {
     return mParser && ((isC_CPPHeaderFile(mFileType)
                         && !mContextFile.isEmpty()
@@ -4566,7 +4557,7 @@ void Editor::setContextFile(const QString &newContextFile, bool parse)
     mContextFile = s;
     if (parse && oldLanguage!=calcParserLanguage()) {
         setCppParser();
-        reparse(false);
+        reparse();
     }
 }
 
@@ -4612,7 +4603,7 @@ void Editor::setInProject(bool newInProject, bool parse)
     mInProject = newInProject;
     if (parse) {
         setCppParser();
-        reparse(false);
+        reparse();
     }
 }
 
@@ -5092,7 +5083,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
     endEditing();
 
     if (doReparse) {
-        reparse(false);
+        reparse();
         checkSyntaxInBack();
         reparseTodo();
     }

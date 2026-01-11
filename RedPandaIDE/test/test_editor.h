@@ -1,18 +1,17 @@
-#ifndef TEST_CHARPOS_H
-#define TEST_CHARPOS_H
+#ifndef TEST_EDITOR_H
+#define TEST_EDITOR_H
 #include <QObject>
 
-namespace QSynedit {
-class TestCharPos : public QObject
+class Editor;
+class TestEditor : public QObject
 {
     Q_OBJECT
-
+public:
+	TestEditor(QObject *parent=nullptr);
 private slots:
-    void test_default_constructor();
-    void test_constructor();
-    void test_copy_constructor();
-    void test_isInvalid();
     void test_compare();
+protected:
+	Editor *mEditor;
 };
-}
+
 #endif
