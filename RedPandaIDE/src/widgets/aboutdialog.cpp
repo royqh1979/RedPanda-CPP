@@ -17,6 +17,7 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
 #include "../systemconsts.h"
+#include "../utils/os.h"
 #include "../utils.h"
 #include "../settings.h"
 #include <QDebug>

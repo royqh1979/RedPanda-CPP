@@ -28,7 +28,9 @@
 #include "executablerunner.h"
 #include "ojproblemcasesrunner.h"
 #include "../utils.h"
+#include "../utils/os.h"
 #include "../utils/parsearg.h"
+#include "../utils/terminal.h"
 #include "../systemconsts.h"
 #include "../settings.h"
 #include <QMessageBox>
@@ -319,7 +321,8 @@ void CompilerManager::run(
             auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
                 pSettings->environment().terminalPath(),
                 pSettings->environment().terminalArgumentsPattern(),
-                execArgs
+                execArgs,
+                &pSettings->dirs()
             );
             //delete when thread finished
             execRunner = new ExecutableRunner(filename, args, workDir);

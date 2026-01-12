@@ -21,7 +21,7 @@
 #include "utils.h"
 #include "systemconsts.h"
 #include "parser/cppparser.h"
-#include "utils.h"
+#include "utils/file.h"
 #include "qt_utils/charsetinfo.h"
 #include "projecttemplate.h"
 #include "systemconsts.h"

@@ -25,6 +25,7 @@
 #include "editormanager.h"
 #include "syntaxermanager.h"
 #include "project.h"
+#include "utils/file.h"
 
 using QSynedit::CharPos;
 CppRefacter::CppRefacter(MainWindow * pMain, QObject *parent) : QObject(parent)

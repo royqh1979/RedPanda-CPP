@@ -28,11 +28,12 @@ struct SymbolUsage {
 };
 using PSymbolUsage = std::shared_ptr<SymbolUsage>;
 
+class DirSettings;
 class SymbolUsageManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit SymbolUsageManager(QObject *parent = nullptr);
+    explicit SymbolUsageManager(DirSettings *dirSettings, QObject *parent = nullptr);
     void load();
     void save();
     void reset();
@@ -41,6 +42,7 @@ public slots:
     void updateUsage(const QString& symbol, int count);
 private:
     QHash<QString, PSymbolUsage> mUsages;
+    DirSettings *mDirSettings;
 };
 
 using PSymbolUsageManager = std::shared_ptr<SymbolUsageManager>;

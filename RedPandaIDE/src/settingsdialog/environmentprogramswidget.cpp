@@ -20,9 +20,9 @@
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
 #include "../compiler/executablerunner.h"
-#include "../utils.h"
 #include "../utils/escape.h"
 #include "../utils/font.h"
+#include "../utils/terminal.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -46,7 +46,7 @@ EnvironmentProgramsWidget::~EnvironmentProgramsWidget()
 auto EnvironmentProgramsWidget::resolveExecArguments(const QString &terminalPath, const QString &argsPattern)
     -> std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner>
 {
-    return wrapCommandForTerminalEmulator(terminalPath, argsPattern, platformCommandForTerminalArgsPreview());
+    return wrapCommandForTerminalEmulator(terminalPath, argsPattern, platformCommandForTerminalArgsPreview(),&pSettings->dirs());
 }
 
 void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath, const QString &argsPattern)

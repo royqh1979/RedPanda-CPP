@@ -18,6 +18,7 @@
 #include "mainwindow.h"
 #include "editor.h"
 #include "editormanager.h"
+#include "utils/file.h"
 
 #include <QRegularExpression>
 

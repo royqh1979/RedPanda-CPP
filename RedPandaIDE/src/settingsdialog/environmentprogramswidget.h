@@ -20,6 +20,7 @@
 #include "../settings.h"
 #include "settingswidget.h"
 #include "../utils.h"
+#include "../utils/file.h"
 
 namespace Ui {
 class EnvironmentProgramsWidget;

@@ -9,7 +9,7 @@ class TestEditor : public QObject
 public:
 	TestEditor(QObject *parent=nullptr);
 private slots:
-    void test_compare();
+    void test_complete_double_quote();
 protected:
 	Editor *mEditor;
 };

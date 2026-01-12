@@ -52,6 +52,7 @@
 #include <QDebug>
 #include <qt_utils/charsetinfo.h>
 #include "utils/escape.h"
+#include "utils/ui.h"
 #include "widgets/functiontooltipwidget.h"
 #include "widgets/bookmarkmodel.h"
 #include "codesnippetsmanager.h"
@@ -73,6 +74,26 @@ static QSet<QString> CppTypeQualifiers {
     "volatile",
     "inline"
 };
+
+static bool findComplement(const QString &s, const QChar &fromToken, const QChar &toToken, int &curPos, int increment)
+{
+    int curPosBackup = curPos;
+    int level = 0;
+    //todo: skip comment, char and strings
+    while ((curPos < s.length()) && (curPos >= 0)) {
+        if (s[curPos] == fromToken) {
+            level++;
+        } else if (s[curPos] == toToken) {
+            level--;
+            if (level == 0)
+                return true;
+        }
+        curPos += increment;
+    }
+    curPos = curPosBackup;
+    return false;
+}
+
 
 Editor::Editor(QWidget *parent):
     QSynEdit{parent},

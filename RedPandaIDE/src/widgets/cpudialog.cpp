@@ -23,6 +23,8 @@
 #include "../settings.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"
+#include "../utils/ui.h"
+
 
 CPUDialog::CPUDialog(ColorManager *colorManager, QWidget *parent) :
     QDialog(parent),

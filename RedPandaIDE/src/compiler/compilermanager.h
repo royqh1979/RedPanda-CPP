@@ -21,6 +21,7 @@
 #include <QMutex>
 #include "qt_utils/utils.h"
 #include "../utils.h"
+#include "../utils/file.h"
 #include "../common.h"
 
 class MainWindow;

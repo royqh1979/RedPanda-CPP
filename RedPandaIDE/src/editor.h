@@ -18,6 +18,7 @@
 #define EDITOR_H
 
 #include <QObject>
+#include "utils/file.h"
 #include "utils/types.h"
 #include "utils/parsemacros.h"
 #include "qsynedit/qsynedit.h"
@@ -143,7 +144,7 @@ public:
     using SyntaxIssueList = QVector<PSyntaxIssue>;
     using PSyntaxIssueList = std::shared_ptr<SyntaxIssueList>;
 
-    explicit Editor(QWidget *parent);
+    explicit Editor(QWidget *parent=nullptr);
 
     ~Editor();
 

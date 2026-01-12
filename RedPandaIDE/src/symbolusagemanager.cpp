@@ -15,23 +15,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "symbolusagemanager.h"
-#include "settings.h"
+#include "settings/dirsettings.h"
 #include "systemconsts.h"
-
+#include <qt_utils/utils.h>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
 
-SymbolUsageManager::SymbolUsageManager(QObject *parent) : QObject(parent)
+SymbolUsageManager::SymbolUsageManager(DirSettings *dirSettings, QObject *parent) : QObject(parent)
 {
-
+    Q_ASSERT(dirSettings!=nullptr);
+    mDirSettings = dirSettings;
 }
 
 void SymbolUsageManager::load()
 {
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config())
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config())
             + DEV_SYMBOLUSAGE_FILE;
     if (!fileExists(filename))
         return;
@@ -70,7 +71,7 @@ void SymbolUsageManager::load()
 
 void SymbolUsageManager::save()
 {
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config())
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config())
             + DEV_SYMBOLUSAGE_FILE;
     QFile file(filename);
     if (!file.open(QFile::WriteOnly | QFile::Truncate)) {

@@ -18,7 +18,7 @@
 #define SYNTAXERMANAGER_H
 #include "qsynedit/syntaxer/syntaxer.h"
 #include "qsynedit/formatter/formatter.h"
-#include "utils.h"
+#include "utils/file.h"
 
 class SyntaxerManager
 {

@@ -57,6 +57,7 @@
 #include "utils/escape.h"
 #include "utils/parsearg.h"
 #include "utils/parser.h"
+#include "utils/ui.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
 #include "widgets/filenameeditdelegate.h"
@@ -307,7 +308,7 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onDebugMemoryAddressInput);
 
     mTodoParser = std::make_shared<TodoParser>();
-    mSymbolUsageManager = new SymbolUsageManager{this};
+    mSymbolUsageManager = new SymbolUsageManager{&pSettings->dirs(),this};
     try {
         mSymbolUsageManager->load();
     } catch (FileError &e) {
@@ -316,7 +317,7 @@ MainWindow::MainWindow(QWidget *parent)
                          e.reason());
     }
 
-    mCodeSnippetManager = new CodeSnippetsManager{this};
+    mCodeSnippetManager = new CodeSnippetsManager{&pSettings->dirs(), this};
     try {
         mCodeSnippetManager->load();
     } catch (FileError &e) {

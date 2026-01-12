@@ -18,6 +18,7 @@
 #include "ui_newprojectunitdialog.h"
 #include "../iconsmanager.h"
 #include "../utils.h"
+#include "../utils/file.h"
 
 #include <QFileDialog>
 

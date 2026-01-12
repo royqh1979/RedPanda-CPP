@@ -18,6 +18,7 @@
 #include <QLocale>
 #include <QDir>
 #include "../utils/font.h"
+#include "../utils/os.h"
 #include "../utils/parsearg.h"
 #include "../utils.h"
 #include "../systemconsts.h"

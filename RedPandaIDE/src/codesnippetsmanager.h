@@ -49,11 +49,12 @@ private:
     QList<PCodeSnippet> mSnippets;
 };
 
+class DirSettings;
 class CodeSnippetsManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit CodeSnippetsManager(QObject *parent = nullptr);
+    explicit CodeSnippetsManager(DirSettings *dirSettings, QObject *parent = nullptr);
 
     void load();
     void save();
@@ -83,6 +84,7 @@ private:
     QString mNewCppFileTemplate; //C++ file template
     QString mNewCFileTemplate;
     QString mNewGASFileTemplate;
+    DirSettings *mDirSettings;
 };
 
 using PCodeSnippetManager = std::shared_ptr<CodeSnippetsManager>;

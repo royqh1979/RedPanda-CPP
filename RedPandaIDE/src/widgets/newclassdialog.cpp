@@ -20,6 +20,7 @@
 #include "../settings.h"
 #include <QFileDialog>
 #include <algorithm>
+#include "../utils/file.h"
 
 NewClassDialog::NewClassDialog(PCppParser parser, IconsManager *iconsManager, QWidget *parent) :
     QDialog(parent),

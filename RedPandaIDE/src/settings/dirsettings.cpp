@@ -16,6 +16,7 @@
  */
 #include "dirsettings.h"
 #include "../utils.h"
+#include "../utils/os.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>

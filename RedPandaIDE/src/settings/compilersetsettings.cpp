@@ -18,6 +18,7 @@
 #include "../utils.h"
 #include "../systemconsts.h"
 #include "../utils/escape.h"
+#include "../utils/os.h"
 #include "../utils/parsearg.h"
 #include <QDir>
 #include <QJsonObject>

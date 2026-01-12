@@ -18,6 +18,7 @@
 #include "ui_environmentfileassociationwidget.h"
 #include "../systemconsts.h"
 #include "../settings.h"
+#include "../utils/os.h"
 
 #include <QMessageBox>
 #include <windows.h>

@@ -26,7 +26,7 @@
 #include <QJsonParseError>
 #include <QSet>
 #include <QDateTime>
-#include "../utils.h"
+#include <qt_utils/utils.h>
 
 BookmarkModel::BookmarkModel(QObject* parent):QAbstractTableModel(parent),
     mIsForProject(false)

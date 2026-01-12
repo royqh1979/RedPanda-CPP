@@ -22,6 +22,7 @@
 #include "../systemconsts.h"
 #include "../iconsmanager.h"
 #include "qt_utils/charsetinfo.h"
+#include "../utils/file.h"
 
 #include <QFileDialog>
 #include <QIcon>

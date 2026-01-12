@@ -21,6 +21,7 @@
 #include "../settings.h"
 #include "../common.h"
 #include "../parser/cppparser.h"
+#include "../utils/file.h"
 
 class Project;
 class Compiler : public QThread

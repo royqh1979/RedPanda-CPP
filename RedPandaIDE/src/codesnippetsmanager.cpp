@@ -15,8 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "codesnippetsmanager.h"
-#include "settings.h"
+#include "settings/dirsettings.h"
 #include "systemconsts.h"
+#include <qt_utils/utils.h>
 #include <QMessageBox>
 
 #include <QFile>
@@ -24,9 +25,10 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-CodeSnippetsManager::CodeSnippetsManager(QObject *parent) : QObject(parent)
+CodeSnippetsManager::CodeSnippetsManager(DirSettings *dirSettings, QObject *parent) : QObject(parent)
 {
-
+    Q_ASSERT(dirSettings!=nullptr);
+    mDirSettings = dirSettings;
 }
 
 void CodeSnippetsManager::load()
@@ -48,7 +50,7 @@ void CodeSnippetsManager::save()
 void CodeSnippetsManager::loadSnippets()
 {
     //if config file not exists, copy it from data
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config()) + DEV_CODESNIPPET_FILE;
     if (!fileExists(filename)) {
         QString preFileName = ":/config/codesnippets.json";
         QFile preFile(preFileName);
@@ -108,7 +110,7 @@ void CodeSnippetsManager::loadSnippets()
 
 void CodeSnippetsManager::saveSnippets()
 {
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_CODESNIPPET_FILE;
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config()) + DEV_CODESNIPPET_FILE;
     QFile file(filename);
     if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
         QMessageBox::critical(nullptr,
@@ -140,7 +142,7 @@ void CodeSnippetsManager::saveSnippets()
 
 QString CodeSnippetsManager::loadNewFileTemplate(const QString &fn)
 {
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + fn;
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config()) + fn;
     QFile file(filename);
     if (!file.exists()) {
         return "";
@@ -157,7 +159,7 @@ QString CodeSnippetsManager::loadNewFileTemplate(const QString &fn)
 
 void CodeSnippetsManager::saveNewFileTemplate(const QString &fn, const QString &templateContent)
 {
-    QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + fn;
+    QString filename = includeTrailingPathDelimiter(mDirSettings->config()) + fn;
     QFile file(filename);
     if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
         QMessageBox::critical(nullptr,

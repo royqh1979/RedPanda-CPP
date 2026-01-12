@@ -23,6 +23,7 @@
 #include "qt_utils/utils.h"
 #include "../utils.h"
 #include "../utils/escape.h"
+#include "../utils/file.h"
 #include "../utils/parsearg.h"
 #include "../utils/parsemacros.h"
 #include "../mainwindow.h"

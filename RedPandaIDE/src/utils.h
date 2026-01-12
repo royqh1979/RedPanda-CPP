@@ -37,41 +37,6 @@
 using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
 
-struct NonExclusiveTemporaryFileOwner {
-    const QString filename;
-
-    // take ownership
-    explicit NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile);
-
-    NonExclusiveTemporaryFileOwner(const NonExclusiveTemporaryFileOwner &) = delete;
-    NonExclusiveTemporaryFileOwner(NonExclusiveTemporaryFileOwner &&) = delete;
-    NonExclusiveTemporaryFileOwner& operator=(const NonExclusiveTemporaryFileOwner &) = delete;
-    NonExclusiveTemporaryFileOwner& operator=(NonExclusiveTemporaryFileOwner &&) = delete;
-    ~NonExclusiveTemporaryFileOwner();
-};
-
-using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
-
-FileType getFileType(const QString& filename);
-QString fileTypeToName(FileType fileType);
-FileType nameToFileType(const QString& name);
-constexpr bool isASMSourceFile(FileType fileType) {
-    return fileType == FileType::NASM || fileType == FileType::GAS;
-}
-constexpr bool isC_CPPSourceFile(FileType fileType) {
-    return fileType == FileType::CSource || fileType == FileType::CppSource;
-}
-constexpr bool isC_CPPHeaderFile(FileType fileType) {
-    return fileType == FileType::CCppHeader;
-}
-constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
-    return isC_CPPSourceFile(fileType) || isASMSourceFile(fileType);
-}
-
-bool programIsWin32GuiApp(const QString& filename);
-
-int getNewFileNumber();
-
 struct ProcessOutput
 {
     QByteArray standardOutput;
@@ -92,25 +57,7 @@ void executeFile(const QString& fileName,
                  const QString& workingDir,
                  const QString& tempFile);
 
-#ifdef Q_OS_WIN
-bool isGreenEdition();
-#else
-constexpr bool isGreenEdition() { return false; }
-#endif
-
-#ifdef Q_OS_WIN
-bool readRegistry(HKEY key, const QString& subKey, const QString& name, QString& value);
-#endif
-
 qulonglong stringToHex(const QString& str, bool &isOk);
-
-bool findComplement(const QString& s,
-                       const QChar& fromToken,
-                       const QChar& toToken,
-                       int& curPos,
-                       int increment);
-
-bool haveGoodContrast(const QColor& c1, const QColor &c2);
 
 QByteArray getHTTPBody(const QByteArray& content);
 
@@ -120,41 +67,15 @@ class QComboBox;
 void setComboTextAndHistory(QComboBox *cb, const QString& newText, QStringList &historyList);
 void updateComboHistory(QStringList &historyList, const QString &newKey);
 
-QColor alphaBlend(const QColor &lower, const QColor &upper);
-
 QStringList getExecutableSearchPaths();
 
 QStringList platformCommandForTerminalArgsPreview();
-
-QString appArch();
-QString osArch();
 
 QString byteArrayToString(const QByteArray &content, bool isUTF8);
 QByteArray stringToByteArray(const QString& content, bool isUTF8);
 
 #ifdef _MSC_VER
 #define __builtin_unreachable() (__assume(0))
-#endif
-
-std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
-
-std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
-
-struct ExternalResource {
-    ExternalResource();
-    ~ExternalResource();
-};
-
-template <typename T, typename D>
-std::unique_ptr<T, D> resourcePointer(T *pointer, D deleter)
-{
-    return {pointer, deleter};
-}
-
-#ifdef Q_OS_WINDOWS
-bool applicationHasUtf8Manifest(const wchar_t *path);
-bool osSupportsUtf8Manifest();
-bool applicationIsUtf8(const QString &path);
 #endif
 
 #endif // UTILS_H

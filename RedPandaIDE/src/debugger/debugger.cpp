@@ -17,7 +17,9 @@
 #include "debugger.h"
 #include "gdbmidebugger.h"
 #include "../utils.h"
+#include "../utils/os.h"
 #include "../utils/parsearg.h"
+#include "../utils/file.h"
 #include "../mainwindow.h"
 #include "../settings.h"
 #include "../widgets/cpudialog.h"
@@ -35,6 +37,7 @@
 #include "../widgets/signalmessagedialog.h"
 #include <QApplication>
 #include <QRegularExpression>
+#include "../utils/terminal.h"
 
 Debugger::Debugger(QObject *parent) : QObject{parent},
     mForceUTF8{false},
@@ -1222,7 +1225,8 @@ void DebugTarget::run()
         std::tie(cmd, arguments, fileOwner) = wrapCommandForTerminalEmulator(
             pSettings->environment().terminalPath(),
             pSettings->environment().terminalArgumentsPattern(),
-            execArgs
+            execArgs,
+            &pSettings->dirs()
         );
     } else {
         cmd = execArgs[0];
@@ -1232,7 +1236,8 @@ void DebugTarget::run()
     std::tie(cmd, arguments, fileOwner) = wrapCommandForTerminalEmulator(
         pSettings->environment().terminalPath(),
         pSettings->environment().terminalArgumentsPattern(),
-        execArgs
+        execArgs,
+        &pSettings->dirs()
     );
 #endif
     QString workingDir = QFileInfo(mInferior).path();

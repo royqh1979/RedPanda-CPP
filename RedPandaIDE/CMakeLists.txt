@@ -44,10 +44,14 @@ target_qt_plain_cpp(RedPandaIDE
     src/settings/uisettings
     # utils
     src/utils/escape
+    src/utils/file
     src/utils/font
+    src/utils/os
     src/utils/parsearg
     src/utils/parser
     src/utils/parsemacros
+    src/utils/terminal
+    src/utils/ui
     )
 
 target_moc_classes(RedPandaIDE
@@ -212,75 +216,84 @@ target_link_options(RedPandaIDE PRIVATE
 # test-editor       #
 #####################
 
-#add_executable(test-editor test/test-editor-main.cpp)
+add_executable(test-editor test/test-editor-main.cpp)
 
-#target_qt_plain_cpp(test-editor
-#    #settings
-#    src/settings/basesettings
-#    src/settings/dirsettings
-#    src/settings/editorsettings
-#    src/settings/codecompletionsettings
+target_qt_plain_cpp(test-editor
+    #settings
+    src/settings/basesettings
+    src/settings/dirsettings
+    src/settings/editorsettings
+    src/settings/codecompletionsettings
 
-#    src/parser/cppparser
-#    src/parser/cpppreprocessor
-#    src/parser/cpptokenizer
-#    src/parser/parserutils
-#    src/parser/statementmodel
+    src/parser/cppparser
+    src/parser/cpppreprocessor
+    src/parser/cpptokenizer
+    src/parser/parserutils
+    src/parser/statementmodel
 
-#    # utils
-#    src/utils/escape
-#    src/utils/font
-#    src/utils/parsearg
-#    src/utils/parsemacros
-#    src/colorscheme
-#    src/syntaxermanager
-#    src/iconsmanager
-#    src/systemconsts
-#    src/compiler/compilerinfo
-#    src/reformatter/basereformatter
-#    )
+    # utils
+    src/utils/escape
+    src/utils/file
+    src/utils/font
+    src/utils/os
+    src/utils/parsearg
+    src/utils/parsemacros
+    src/utils/ui
 
-#target_moc_classes(test-editor
-#    src/editor
+    src/colorscheme
+    src/syntaxermanager
+    src/iconsmanager
+    src/systemconsts
+    src/compiler/compilerinfo
+    src/reformatter/basereformatter
+    )
 
-#    src/widgets/codecompletionlistview
-#    src/widgets/codecompletionpopup
-#    src/widgets/headercompletionpopup
+target_moc_classes(test-editor
+    src/editor
 
-#    #test
-#    test/test_editor
-#)
-#target_include_directories(test-editor PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR})
+    src/widgets/bookmarkmodel
+    src/widgets/codecompletionlistview
+    src/widgets/codecompletionpopup
+    src/widgets/customdisablediconengine
+    src/widgets/functiontooltipwidget
+    src/widgets/headercompletionpopup
 
-#target_link_libraries(test-editor PRIVATE
-#        Qt::Core
-#        Qt::Gui
-#        Qt::PrintSupport
-#        Qt::Svg
-#        Qt::Test
-#        Qt::Widgets
-#        Qt::Xml
-#        qsynedit
-#        redpanda_qt_utils)
+    src/symbolusagemanager
+    src/codesnippetsmanager
+    #test
+    test/test_editor
+)
+target_include_directories(test-editor PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-editor PRIVATE
+        Qt::Core
+        Qt::Gui
+        Qt::PrintSupport
+        Qt::Svg
+        Qt::Test
+        Qt::Widgets
+        Qt::Xml
+        qsynedit
+        redpanda_qt_utils)
 
 
-#add_custom_command(
-#    TARGET test-editor POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory
-#        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
-#        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
+add_custom_command(
+    TARGET test-editor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
+        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
 
-#target_compile_definitions(test-editor PUBLIC
-#    ${GLOBAL_COMPILE_DEFINITIONS}
-#    ARCH_X86_64=1
-#    ARCH_X86=1)
+target_compile_definitions(test-editor PUBLIC
+    ${GLOBAL_COMPILE_DEFINITIONS}
+    ARCH_X86_64=1
+    ARCH_X86=1)
 
-#add_test(
-#    NAME test-editor
-#    COMMAND test-editor)
+add_test(
+    NAME test-editor
+    COMMAND test-editor)
 
-#add_dependencies(all-test-targets test-editor)
+add_dependencies(all-test-targets test-editor)
 #####################
 # Platform-specific #
 #####################

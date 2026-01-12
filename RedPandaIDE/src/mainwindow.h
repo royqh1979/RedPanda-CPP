@@ -41,6 +41,7 @@
 #include "customfileiconprovider.h"
 #include "problems/competitivecompenionhandler.h"
 #include "utils/parsemacros.h"
+#include "utils/file.h"
 
 
 QT_BEGIN_NAMESPACE

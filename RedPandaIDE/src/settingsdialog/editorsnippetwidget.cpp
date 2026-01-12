@@ -22,6 +22,8 @@
 #include "../iconsmanager.h"
 #include "../syntaxermanager.h"
 #include "../settings.h"
+#include "../utils/file.h"
+
 
 #include <QItemSelectionModel>
 

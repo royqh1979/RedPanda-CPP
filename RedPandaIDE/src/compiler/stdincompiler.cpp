@@ -16,6 +16,7 @@
  */
 #include "stdincompiler.h"
 #include "compilermanager.h"
+#include "../utils/file.h"
 #include <QFile>
 #include <QFileInfo>
 
