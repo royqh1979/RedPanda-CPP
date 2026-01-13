@@ -1,6 +1,7 @@
 #include <QtTest>
 #include <QGuiApplication>
 #include "test_charpos.h"
+#include "test_cppsyntaxer.h"
 #include "test_document.h"
 #include "test_qsynedit_cpp.h"
 #include "test_qsynedit_emoji.h"
@@ -28,6 +29,13 @@ int main(int argc, char *argv[]) {
         status |= QTest::qExec(&tc, argc, argv);
     }
 
+    //Cpp Syntaxer Test
+    {
+        TestCppSyntaxer tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    //SynEdit Test
     {
         QSynedit::TestQSyneditCpp tc;
         status |= QTest::qExec(&tc, argc, argv);

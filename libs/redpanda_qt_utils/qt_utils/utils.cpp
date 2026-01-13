@@ -317,7 +317,7 @@ static QStringList tryLoadFileByEncoding(QByteArray encodingName, QFile& file, b
 QStringList readFileToLines(const QString &fileName)
 {
     QFile file(fileName);
-    if (file.size()<=0)
+    if (!file.exists())
         return QStringList();
     QStringList result;
     if (file.open(QFile::ReadOnly)) {

@@ -93,6 +93,8 @@ public:
 
     const PTokenAttribute &octAttribute() const { return mOctAttribute; }
 
+    const PTokenAttribute &binAttribute() const { return mOctAttribute; }
+
     const PTokenAttribute &stringEscapeSequenceAttribute() const { return mStringEscapeSequenceAttribute; }
 
     const PTokenAttribute &charAttribute() const { return mCharAttribute; }
