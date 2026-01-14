@@ -16,6 +16,8 @@ private slots:
 
     void test_float_literal1();
 
+    void test_string_literal1();
+    void test_string_literal2();
 
 private:
     QSynedit::CppSyntaxer mSyntaxer;

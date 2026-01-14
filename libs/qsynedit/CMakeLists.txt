@@ -130,11 +130,21 @@ if (QT_FEATURE_static)
         INCLUDE Qt::QOffscreenIntegrationPlugin)
 endif()
 
-add_custom_command(
-    TARGET test-qsynedit POST_BUILD
+#add_custom_command(
+#    TARGET test-qsynedit POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "$<TARGET_PROPERTY:test-qsynedit,SOURCE_DIR>/test/resources"
+#        "$<TARGET_PROPERTY:test-qsynedit,BINARY_DIR>/resources")
+
+add_custom_target(
+    copy_test_qsynedit_resources
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:test-qsynedit,SOURCE_DIR>/test/resources"
-        "$<TARGET_PROPERTY:test-qsynedit,BINARY_DIR>/resources")
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/resources
+    ${CMAKE_CURRENT_BINARY_DIR}/resources
+    COMMENT "Copying test-qsynedit resources"
+)
+
+add_dependencies(test-qsynedit copy_test_qsynedit_resources)
 
 target_compile_definitions(test-qsynedit PUBLIC
     ${GLOBAL_COMPILE_DEFINITIONS}

@@ -92,5 +92,61 @@ void TestCppSyntaxer::test_integer_literal3()
 
 void TestCppSyntaxer::test_float_literal1()
 {
+    QStringList text = readFileToLines("resources/float_literal.cpp");
+    QVERIFY(!text.isEmpty());
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    QCOMPARE(filterTokens(tokenInfos, mSyntaxer.floatAttribute()),
+             QStringList({
+                             "58.","4e2","123.456e-67",
+                             "123.456e-67f",".1E4f",
+                             "0x10.1p0",
+                             "0x1p5",
+                             // "0x1e5", /* integer, not a float */
+                             "3.14'15'92","1.18e-4932l",
+                             "3.4028234e38f",
+                             "3.4028234e38",
+                             "3.4028234e38l",
+                             "3.4028234e38f",
+                             "3.4028234e38f","3.4028235e38f",
+                             "3.4028234e38","3.4028235e38",
+                             "3.4028234e38f","3.4028234e38"
+             }));
+    QCOMPARE(filterTokens(tokenInfos, mSyntaxer.hexAttribute()),
+             QStringList({
+                             "0x1e5"
+                         }));
+}
 
+void TestCppSyntaxer::test_string_literal1()
+{
+    TokenInfoList tokenInfos = parseLine(&mSyntaxer,"\"Hello World\";");
+    QCOMPARE(tokenInfos[0]->token, "\"");
+    QCOMPARE(tokenInfos[0]->attribute, mSyntaxer.stringAttribute());
+    QCOMPARE(tokenInfos[1]->token, "Hello");
+    QCOMPARE(tokenInfos[1]->attribute, mSyntaxer.stringAttribute());
+    QCOMPARE(tokenInfos[2]->token, " ");
+    QCOMPARE(tokenInfos[2]->attribute, mSyntaxer.whitespaceAttribute());
+    QCOMPARE(tokenInfos[3]->token, "World");
+    QCOMPARE(tokenInfos[3]->attribute, mSyntaxer.stringAttribute());
+    QCOMPARE(tokenInfos[4]->token, "\"");
+    QCOMPARE(tokenInfos[4]->attribute, mSyntaxer.stringAttribute());
+    QCOMPARE(tokenInfos[5]->token, ";");
+    QCOMPARE(tokenInfos[5]->attribute, mSyntaxer.symbolAttribute());
+}
+
+void TestCppSyntaxer::test_string_literal2()
+{
+    QStringList text{
+        "char array1[] = \"Foo\" \"bar\";"
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    QStringList strings = filterTokens(tokenInfos, mSyntaxer.stringAttribute());
+    QCOMPARE(strings,QStringList({
+                 "\"",
+                 "Foo",
+                 "\"",
+                 "\"",
+                 "bar",
+                 "\""
+             }));
 }
