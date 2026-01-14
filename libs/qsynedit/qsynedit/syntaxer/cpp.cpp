@@ -990,49 +990,49 @@ void CppSyntaxer::procQuestion()
 
 void CppSyntaxer::procRawString()
 {
-    mTokenId = TokenId::RawString;
-    QString rawStringInitialDCharSeq;
-    if (mRange.state == RangeState::rsRawString)
+    if (mRange.state == RangeState::rsRawString) {
+        QString rawStringInitialDCharSeq;
         mRange.initialDCharSeq = "";
-    while (mRun<mLineSize) {
-        if (mRange.state!=RangeState::rsRawStringNotEscaping &&
-                (mLine[mRun].isSpace()
-                 || mLine[mRun].unicode()>127
-                 || mLine[mRun].unicode()<=32)) {
-            mRange.state = RangeState::rsUnknown;
-            mRun+=1;
-            return;
-        }
-        switch (mLine[mRun].unicode()) {
-        case ' ':
-        case '\t':
-            return;
-        case '(':
-            if (mRange.state==RangeState::rsRawString) {
+        mTokenId = TokenId::RawStringStart;
+        while (mRun<mLineSize) {
+            if (!isValidDChar(mLine[mRun])) {
+                mRange.state = RangeState::rsUnknown;
+                return;
+            }
+            if (mLine[mRun].unicode()=='(') {
                 mRange.state = RangeState::rsRawStringNotEscaping;
                 mRange.initialDCharSeq = rawStringInitialDCharSeq;
-            }
-            break;
-        case ')':
-            if (mRange.state == RangeState::rsRawStringNotEscaping) {
-                rawStringInitialDCharSeq = mRange.initialDCharSeq;
-                if ( mLine.mid(mRun+1,rawStringInitialDCharSeq.length()) == rawStringInitialDCharSeq) {
-                    mRun = mRun+rawStringInitialDCharSeq.length();
-                    mRange.state = RangeState::rsRawStringEnd;
-                }
-            }
-            break;
-        case '\"':
-            if (mRange.state == RangeState::rsRawStringEnd) {
-                mRange.state = RangeState::rsUnknown;
+                mTokenId = TokenId::RawStringStart;
                 mRun++;
                 return;
             }
-            break;
-        }
-        if (mRange.state == RangeState::rsRawString)
             rawStringInitialDCharSeq += mLine[mRun];
-        mRun++;
+            mRun++;
+        }
+    } else if (mRange.state == RangeState::rsRawStringNotEscaping) {
+        mTokenId = TokenId::RawStringNotEscaping;
+        while (mRun<mLineSize) {
+            switch (mLine[mRun].unicode()) {
+            case ' ':
+            case '\t':
+                return;
+            case ')':
+                if (mRun+mRange.initialDCharSeq.length()+1<mLineSize
+                        && mLine.mid(mRun+1,mRange.initialDCharSeq.length()) == mRange.initialDCharSeq
+                        && mLine[mRun+1+mRange.initialDCharSeq.length()] == '\"') {
+                    if (mRun==mTokenPos) {
+                        mRun = mRun+mRange.initialDCharSeq.length()+1;
+                        mTokenId = TokenId::RawStringEnd;
+                        mRange.state = RangeState::rsUnknown;
+                        mRun++;
+                        mRange.initialDCharSeq = "";
+                    }
+                    return;
+                }
+                break;
+            }
+            mRun++;
+        }
     }
 }
 
@@ -1465,6 +1465,16 @@ void CppSyntaxer::popStatementIndents()
     }
 }
 
+bool CppSyntaxer::isValidDChar(const QChar &ch)
+{
+    //valid d-seq-char, see https://cppreference.com/w/cpp/language/string_literal.html
+    return (ch.unicode()==0x9)
+            || (ch.unicode()>=0xB && ch.unicode()<=0xC)
+            || (ch.unicode()>=0x20 && ch.unicode() <=0x21)
+            || (ch.unicode()>=0x23 && ch.unicode() <=0x5B)
+            || (ch.unicode()>=0x5D && ch.unicode() <=0x7E);
+}
+
 bool CppSyntaxer::handleLastBackSlash() const
 {
     return mHandleLastBackSlash;
@@ -1584,7 +1594,9 @@ const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
         return mStringAttribute;
     case TokenId::StringEscapeSeq:
         return mStringEscapeSequenceAttribute;
-    case TokenId::RawString:
+    case TokenId::RawStringStart:
+    case TokenId::RawStringNotEscaping:
+    case TokenId::RawStringEnd:
         return mStringAttribute;
     case TokenId::Char:
         return mCharAttribute;
@@ -1824,6 +1836,7 @@ PSyntaxState CppSyntaxer::getState() const
 {
     std::shared_ptr<CppSyntaxState> syntaxstate = std::make_shared<CppSyntaxState>();
     *syntaxstate = mRange;
+    syntaxstate->tokenId = mTokenId;
     return syntaxstate;
 
 }

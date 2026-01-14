@@ -49,7 +49,9 @@ public:
         Char,
         Float,
         HexFloat,
-        RawString,
+        RawStringStart,
+        RawStringNotEscaping,
+        RawStringEnd,
         LastBackSlash,
         SpaceAfterBackSlash
     };
@@ -60,7 +62,7 @@ public:
         rsMultiLineDirective, rsCppComment,
         rsDocstring,
         rsStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,
+        rsRawString, rsSpace,rsRawStringNotEscaping,
         rsChar, rsCharEscaping,
         rsDefineIdentifier, rsDefineRemaining,
     };
@@ -73,9 +75,12 @@ public:
         bool mergeWithNextLine;
         QString lastToken;
         RangeState stateBeforeLastToken;
+        TokenId tokenId;
 
         bool equals(const std::shared_ptr<SyntaxState>& s2) const override;
     };
+
+    using PCppSyntaxState = std::shared_ptr<CppSyntaxState>;
 
     explicit CppSyntaxer();
     CppSyntaxer(const CppSyntaxer&)=delete;
@@ -115,9 +120,9 @@ public:
 
     static const QSet<QString> StandardAttributes;
 
-    bool isRawStringStart(const PSyntaxState &state) const { return state->state == RangeState::rsRawString; }
-    bool isRawStringNoEscape(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringNotEscaping; }
-    bool isRawStringEnd(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringEnd; }
+    bool isRawStringStart(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId== TokenId::RawStringStart; }
+    bool isRawStringNoEscape(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringNotEscaping && !isRawStringStart(state); }
+    bool isRawStringEnd(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId == TokenId::RawStringEnd; }
     bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }
     bool isCharEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsCharEscaping; }
     bool isStringEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsStringEscapeSeq; }
@@ -179,6 +184,8 @@ private:
     void popIndents(IndentType indentType);
     void pushIndents(IndentType indentType, size_t lineSeq, const QString& keyword = QString());
     void popStatementIndents();
+
+    bool isValidDChar(const QChar& ch);
 
 private:
     CppSyntaxState mRange;

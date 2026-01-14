@@ -3,6 +3,7 @@
 #include "test_cppsyntaxer.h"
 #include "test_utils.h"
 
+using QSynedit::CppSyntaxer;
 TestCppSyntaxer::TestCppSyntaxer(QObject *parent) : QObject(parent)
 {
 
@@ -148,5 +149,121 @@ void TestCppSyntaxer::test_string_literal2()
                  "\"",
                  "bar",
                  "\""
-             }));
+                                 }));
+}
+
+void TestCppSyntaxer::test_string_literal3()
+{
+    //string not correctly enclosed at line end
+    QStringList text{
+        "char array1[] = \"Foo\" \"bar;",
+        "test test\";"
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    QStringList strings = filterTokens(tokenInfos, mSyntaxer.stringAttribute());
+    QCOMPARE(strings,QStringList({
+                 "\"",
+                 "Foo",
+                 "\"",
+                 "\"",
+                 "bar",
+                 ";",
+                 "\"",
+                 ";"
+                                 }));
+}
+
+void TestCppSyntaxer::test_string_rawstring_literal1()
+{
+    QStringList text{
+        "const char* s1 = R\"foo(",
+        "Hello",
+        "  World",
+        ")foo\";"
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    PTokenInfo tokenInfo;
+    tokenInfo = tokenInfos[0][9];
+    QCOMPARE(tokenInfo->token,"R\"foo(");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+
+    tokenInfo = tokenInfos[1][0];
+    QCOMPARE(tokenInfo->token,"Hello");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+
+    tokenInfo = tokenInfos[2][0];
+    QCOMPARE(tokenInfo->token,"  ");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.whitespaceAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+
+    tokenInfo = tokenInfos[2][1];
+    QCOMPARE(tokenInfo->token,"World");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+
+    tokenInfo = tokenInfos[3][0];
+    QCOMPARE(tokenInfo->token,")foo\"");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringEnd(tokenInfo->state));
+}
+
+void TestCppSyntaxer::test_string_rawstring_literal2()
+{
+    QStringList text{
+        "R\"foo(asdfsdfoo()foo)foo\"",
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    PTokenInfo tokenInfo;
+    tokenInfo = tokenInfos[0][0];
+    QCOMPARE(tokenInfo->token,"R\"foo(");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+    tokenInfo = tokenInfos[0][1];
+    QCOMPARE(tokenInfo->token,"asdfsdfoo()foo");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+    tokenInfo = tokenInfos[0][2];
+    QCOMPARE(tokenInfo->token,")foo\"");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringEnd(tokenInfo->state));
+}
+
+void TestCppSyntaxer::test_string_rawstring_literal3()
+{
+    //not enclosed at line end(no crash)
+    QStringList text{
+        "R\"foo(asdfsdfoo()foo)foo",
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    PTokenInfo tokenInfo;
+    tokenInfo = tokenInfos[0][0];
+    QCOMPARE(tokenInfo->token,"R\"foo(");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
+    tokenInfo = tokenInfos[0][1];
+    QCOMPARE(tokenInfo->token,"asdfsdfoo()foo)foo");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
+    QVERIFY(mSyntaxer.isRawStringNoEscape(tokenInfo->state));
+    QVERIFY(!mSyntaxer.isRawStringEnd(tokenInfo->state));
 }

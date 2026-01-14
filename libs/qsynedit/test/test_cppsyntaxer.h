@@ -18,7 +18,11 @@ private slots:
 
     void test_string_literal1();
     void test_string_literal2();
+    void test_string_literal3();
 
+    void test_string_rawstring_literal1();
+    void test_string_rawstring_literal2();
+    void test_string_rawstring_literal3();
 private:
     QSynedit::CppSyntaxer mSyntaxer;
 
