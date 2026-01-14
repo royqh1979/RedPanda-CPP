@@ -175,6 +175,7 @@ void TestCppSyntaxer::test_string_literal3()
 
 void TestCppSyntaxer::test_string_rawstring_literal1()
 {
+    //multiline
     QStringList text{
         "const char* s1 = R\"foo(",
         "Hello",
