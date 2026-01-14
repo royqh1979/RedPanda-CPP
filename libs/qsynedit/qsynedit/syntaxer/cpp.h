@@ -126,6 +126,7 @@ public:
     bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }
     bool isCharEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsCharEscaping; }
     bool isStringEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsStringEscapeSeq; }
+    bool mergeWithNextLine(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->mergeWithNextLine; }
 
     TokenId getTokenId() { return mTokenId; }
 private:

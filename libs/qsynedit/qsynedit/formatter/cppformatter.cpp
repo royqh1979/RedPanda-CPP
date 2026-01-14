@@ -24,10 +24,10 @@ namespace QSynedit {
         line = std::min(line, editor->lineCount());
         if (line<=0)
             return 0;
+        std::shared_ptr<CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<CppSyntaxer>(editor->syntaxer());
         // test if previous line ending with '\', keep originalSpaces
-        std::shared_ptr<CppSyntaxer::CppSyntaxState>
-                statePrevLine = std::dynamic_pointer_cast<CppSyntaxer::CppSyntaxState>(editor->document()->getSyntaxState(line-1));
-        if (statePrevLine->mergeWithNextLine)
+        PSyntaxState  statePrevLine = editor->document()->getSyntaxState(line-1);
+        if (cppSyntaxer->mergeWithNextLine(statePrevLine))
             return editor->leftSpaces(lineText);
         // test if last line is non-end string
         int lastLine = line-1;

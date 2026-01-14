@@ -121,18 +121,31 @@ void TestCppSyntaxer::test_float_literal1()
 void TestCppSyntaxer::test_string_literal1()
 {
     TokenInfoList tokenInfos = parseLine(&mSyntaxer,"\"Hello World\";");
-    QCOMPARE(tokenInfos[0]->token, "\"");
-    QCOMPARE(tokenInfos[0]->attribute, mSyntaxer.stringAttribute());
-    QCOMPARE(tokenInfos[1]->token, "Hello");
-    QCOMPARE(tokenInfos[1]->attribute, mSyntaxer.stringAttribute());
-    QCOMPARE(tokenInfos[2]->token, " ");
-    QCOMPARE(tokenInfos[2]->attribute, mSyntaxer.whitespaceAttribute());
-    QCOMPARE(tokenInfos[3]->token, "World");
-    QCOMPARE(tokenInfos[3]->attribute, mSyntaxer.stringAttribute());
-    QCOMPARE(tokenInfos[4]->token, "\"");
-    QCOMPARE(tokenInfos[4]->attribute, mSyntaxer.stringAttribute());
-    QCOMPARE(tokenInfos[5]->token, ";");
-    QCOMPARE(tokenInfos[5]->attribute, mSyntaxer.symbolAttribute());
+    PTokenInfo tokenInfo;
+    tokenInfo = tokenInfos[0];
+    QCOMPARE(tokenInfo->token, "\"");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isStringNotFinished(tokenInfo->state));
+    tokenInfo = tokenInfos[1];
+    QCOMPARE(tokenInfo->token, "Hello");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isStringNotFinished(tokenInfo->state));
+    tokenInfo = tokenInfos[2];
+    QCOMPARE(tokenInfo->token, " ");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.whitespaceAttribute());
+    QVERIFY(mSyntaxer.isStringNotFinished(tokenInfo->state));
+    tokenInfo = tokenInfos[3];
+    QCOMPARE(tokenInfo->token, "World");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.stringAttribute());
+    QVERIFY(mSyntaxer.isStringNotFinished(tokenInfo->state));
+    tokenInfo = tokenInfos[4];
+    QCOMPARE(tokenInfo->token, "\"");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.stringAttribute());
+    QVERIFY(!mSyntaxer.isStringNotFinished(tokenInfo->state));
+
+    tokenInfo = tokenInfos[5];
+    QCOMPARE(tokenInfo->token, ";");
+    QCOMPARE(tokenInfo->attribute, mSyntaxer.symbolAttribute());
 }
 
 void TestCppSyntaxer::test_string_literal2()
@@ -300,4 +313,74 @@ void TestCppSyntaxer::test_rawstring_literal4()
     QVERIFY(!mSyntaxer.isRawStringStart(tokenInfo->state));
     QVERIFY(!mSyntaxer.isRawStringNoEscape(tokenInfo->state));
     QVERIFY(mSyntaxer.isRawStringEnd(tokenInfo->state));
+}
+
+void TestCppSyntaxer::test_backslash_at_line_end1()
+{
+    //backslash at line end, see: https://cppreference.com/w/c/language/translation_phases.html#Phase_2
+    QStringList text = readFileToLines("resources/backslash.cpp");
+    QVERIFY(!text.isEmpty());
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    PTokenInfo tokenInfo;
+    tokenInfo = tokenInfos[2][4];
+    QCOMPARE(tokenInfo->token,"p");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.preprocessorAttribute());
+    tokenInfo = tokenInfos[2][5];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[3][0];
+    QCOMPARE(tokenInfo->token,"u");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.preprocessorAttribute());
+    tokenInfo = tokenInfos[3][1];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[4][0];
+    QCOMPARE(tokenInfo->token,"t");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.preprocessorAttribute());
+    tokenInfo = tokenInfos[4][1];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[5][0];
+    QCOMPARE(tokenInfo->token,"s");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.preprocessorAttribute());
+    QVERIFY(!mSyntaxer.mergeWithNextLine(tokenInfo->state));
+
+
+    tokenInfo = tokenInfos[13][17];
+    QCOMPARE(tokenInfo->token,"PUT");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.identifierAttribute());
+    tokenInfo = tokenInfos[13][18];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[14][0];
+    QCOMPARE(tokenInfo->token,"S");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.identifierAttribute());
+    tokenInfo = tokenInfos[14][1];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[15][0];
+    QCOMPARE(tokenInfo->token,"(");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    tokenInfo = tokenInfos[15][7];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringEscapeSequenceAttribute());
+    tokenInfo = tokenInfos[15][8];
+    QCOMPARE(tokenInfo->token,"\\");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.symbolAttribute());
+    QVERIFY(mSyntaxer.mergeWithNextLine(tokenInfo->state));
+    tokenInfo = tokenInfos[16][0];
+    QCOMPARE(tokenInfo->token,"0");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringEscapeSequenceAttribute());
+    tokenInfo = tokenInfos[16][1];
+    QCOMPARE(tokenInfo->token,"Not");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.stringAttribute());
+    tokenInfo = tokenInfos[16].last();
+    QCOMPARE(tokenInfo->token,"backslash");
+    QCOMPARE(tokenInfo->attribute,mSyntaxer.commentAttribute());
+    QVERIFY(!mSyntaxer.mergeWithNextLine(tokenInfo->state));
 }

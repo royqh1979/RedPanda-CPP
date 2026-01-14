@@ -1781,7 +1781,7 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mProcessStage = ProcessStage::Normal;
     next();
     if (mergeWithPrevLine) {
-        while (mRun <= mRange.lastToken.length() && !eol()) {
+        while (mRun <= mPrevLineLastTokenSize && !eol()) {
             next();
         }
     }

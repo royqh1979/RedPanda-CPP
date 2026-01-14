@@ -24,6 +24,8 @@ private slots:
     void test_rawstring_literal2();
     void test_rawstring_literal3();
     void test_rawstring_literal4();
+
+    void test_backslash_at_line_end1();
 private:
     QSynedit::CppSyntaxer mSyntaxer;
 
