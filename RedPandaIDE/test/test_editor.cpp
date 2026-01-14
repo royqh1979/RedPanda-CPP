@@ -6,27 +6,25 @@
 #include "src/editor.h"
 #include "test_editor.h"
 
+using QSynedit::CharPos;
 
 TestEditor::TestEditor(QObject *parent):
     QObject{parent}
 {
-
+    mSettingsPersistor = std::make_unique<SettingsPersistor>("test-editor.ini");
+    mDirSettings = std::make_unique<DirSettings>(mSettingsPersistor.get());
+    mEditorSettings = std::make_unique<EditorSettings>(mSettingsPersistor.get());
+    mDirSettings->load();
+    mEditorSettings->load();
+    mColorManager = std::make_unique<ColorManager>(mDirSettings.get());
+    mEditor = std::make_unique<Editor>();
+    mEditor->setEditorSettings(mEditorSettings.get());
+    mEditor->setColorManager(mColorManager.get());
+    mEditor->applySettings();
 }
 
 void TestEditor::test_complete_double_quote()
 {
-    SettingsPersistor settingsPersistor("test-editor.ini");
-    DirSettings dirSettings(&settingsPersistor);
-    EditorSettings editorSettings(&settingsPersistor);
-    dirSettings.load();
-    editorSettings.load();
-    ColorManager colorManager(&dirSettings);
-
-    Editor editor;
-    editor.setEditorSettings(&editorSettings);
-    editor.setColorManager(&colorManager);
-    editor.applySettings();
-
 
     QStringList text{
         "",
@@ -34,10 +32,11 @@ void TestEditor::test_complete_double_quote()
     QStringList text1{
         "\"\"",
     };
-    editor.setContent(text);
-    QTest::keyPress(&editor,'"');
-    QCOMPARE(editor.content(), text1);
+    mEditor->setContent(text);
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text1);
+    QCOMPARE(mEditor->caretXY(),CharPos({1,0}));
 
-    editor.undo();
-    QCOMPARE(editor.content(), text);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
 }
