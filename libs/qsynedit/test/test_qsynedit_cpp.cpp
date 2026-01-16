@@ -2553,6 +2553,36 @@ void TestQSyneditCpp::test_input_string_in_overwrite_mode()
     QVERIFY(!mEdit->modified());
 }
 
+void TestQSyneditCpp::test_input_input_chars_undo()
+{
+    QStringList text {
+        "01234",
+    };
+    QStringList text1 {
+        "0abc1234",
+    };
+    QStringList text2 {
+        "0abc1efg234",
+    };
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretXY(CharPos{1,0});
+    QTest::keyPress(mEdit.get(),'a');
+    QTest::keyPress(mEdit.get(),'b');
+    QTest::keyPress(mEdit.get(),'c');
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+    QTest::keyPress(mEdit.get(),'e');
+    QTest::keyPress(mEdit.get(),'f');
+    QTest::keyPress(mEdit.get(),'g');
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text);
+}
+
 void TestQSyneditCpp::test_replace_line_in_empty_file()
 {
     clearContent();
@@ -3362,6 +3392,72 @@ void QSynedit::TestQSyneditCpp::test_delete_chars_at_file_begin_end()
     QCOMPARE(mReparseCounts, QList<int>({1}));
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_delete_chars_undo()
+{
+    QStringList text {
+        "0abc1efg234",
+    };
+    QStringList text1 {
+        "01efg234",
+    };
+    QStringList text2 {
+        "01234",
+    };
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretXY(CharPos{1,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text);
+}
+
+void TestQSyneditCpp::test_delete_chars_undo2()
+{
+    QStringList text {
+        "0abc efg234",
+    };
+    QStringList text1 {
+        "0 efg234",
+    };
+    QStringList text2 {
+        "0efg234",
+    };
+    QStringList text3 {
+        "0234",
+    };
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretXY(CharPos{1,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text2);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text3);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text);
 }
 
 void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
@@ -4244,6 +4340,40 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
     QVERIFY(mEdit->hasCodeBlock(1,3));
 }
 
+void TestQSyneditCpp::test_delete_prev_chars_undo()
+{
+    QStringList text {
+        "0abc1efg234",
+    };
+    QStringList text1 {
+        "01efg234",
+    };
+    QStringList text2 {
+        "01234",
+    };
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretXY(CharPos{4,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+    QTest::keyPress(mEdit.get(),Qt::Key_Right);
+
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text);
+}
+
 void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
 {
     //merge one line before '{'
@@ -4881,6 +5011,35 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block3()
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
+}
+
+void TestQSyneditCpp::test_delete_and_backspace_chars_undo()
+{
+    QStringList text {
+        "0abcefg234",
+    };
+    QStringList text1 {
+        "0efg234",
+    };
+    QStringList text2 {
+        "0234",
+    };
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretXY(CharPos{4,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(),text2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text);
 }
 
 void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()

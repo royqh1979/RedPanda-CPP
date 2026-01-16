@@ -56,6 +56,7 @@ private slots:
     void test_input_char_at_end_of_first_line_of_collapsed_block();
     void test_input_string_in_empty_file();
     void test_input_string_in_overwrite_mode();
+    void test_input_input_chars_undo();
 
     void test_replace_line_in_empty_file();
     void test_replace_line_at_file_begin_end();
@@ -63,15 +64,20 @@ private slots:
     void test_delete_chars_in_empty_file();
     void test_delete_chars_in_file();
     void test_delete_chars_at_file_begin_end();
+    void test_delete_chars_undo();
+    void test_delete_chars_undo2();
     void test_merge_with_next_line_with_collapsed_block();
     void test_merge_with_next_line_with_collapsed_block2();
     void test_merge_with_next_line_with_collapsed_block3();
 
     void test_delete_prev_chars_in_empty_file();
     void test_delete_prev_chars_at_file_begin_end();
+    void test_delete_prev_chars_undo();
     void test_merge_with_prev_line_with_collapsed_block();
     void test_merge_with_prev_line_with_collapsed_block2();
     void test_merge_with_prev_line_with_collapsed_block3();
+
+    void test_delete_and_backspace_chars_undo();
 
     void test_break_line_in_empty_file();
     void test_break_lines();
