@@ -25,7 +25,7 @@ TestEditor::TestEditor(QObject *parent):
     mEditor->applySettings();
 }
 
-void TestEditor::test_complete_double_quote1()
+void TestEditor::test_complete_double_quote_for_string1()
 {
     // auto add another '"' when input '"' and put the caret in the middle
     // auto skip the inputted '"' when caret before then enclosing '"' of string
@@ -86,7 +86,7 @@ void TestEditor::test_complete_double_quote1()
 
 }
 
-void TestEditor::test_complete_double_quote2()
+void TestEditor::test_complete_double_quote_for_string2()
 {
     //dont skip the inputted '"' when it's in a escaping sequence
     QStringList text{
@@ -134,7 +134,7 @@ void TestEditor::test_complete_double_quote2()
 
 }
 
-void TestEditor::test_complete_double_quote3()
+void TestEditor::test_complete_double_quote_for_string3()
 {
     // correct input '"' in a un-enclosed string
     QStringList text{
@@ -170,4 +170,30 @@ void TestEditor::test_complete_double_quote3()
     QCOMPARE(mEditor->content(), text);
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
+}
+
+void TestEditor::test_complete_double_quote_for_raw_string()
+{
+    // input '"' at start of raw string and
+    // input '"' at end of raw string
+    QStringList text{
+        "const char *s = R",
+    };
+    QStringList text1{
+        "const char *s = R\"\"",
+    };
+    QStringList text2{
+        "const char *s = R\"(ab)\"",
+    };
+    QStringList text3{
+        "const char *s = R\"(ab)\"",
+    };
+    QStringList text4{
+        "const char *s = R\"(ab)\"\"\"",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text1);
+
 }

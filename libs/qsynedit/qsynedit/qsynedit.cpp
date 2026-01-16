@@ -1289,6 +1289,18 @@ CharPos QSynEdit::nextWordEnd(const CharPos &pos) const
     return (p.isValid())?p:fileEnd();
 }
 
+CharPos QSynEdit::lineBegin(int line) const
+{
+    Q_ASSERT(line>=0 && line<mDocument->count());
+    return CharPos{0, line};
+}
+
+CharPos QSynEdit::lineEnd(int line) const
+{
+    Q_ASSERT(line>=0 && line<mDocument->count());
+    return CharPos{(int)mDocument->getLine(line).length(), line};
+}
+
 CharPos QSynEdit::fileEnd() const
 {
     int line = mDocument->count()-1;
@@ -2032,7 +2044,7 @@ void QSynEdit::doDeleteCurrentLine()
     if (isLastLine) {
         setCaretXY(fileEnd());
     } else
-        setCaretXY(CharPos{0, oldCaretY});
+        setCaretXY(lineBegin(oldCaretY));
 }
 
 void QSynEdit::doDuplicate()

@@ -232,6 +232,8 @@ public:
     CharPos nextWordEnd(const CharPos &pos) const;
     CharPos fileBegin() const { return CharPos{0,0}; }
     CharPos fileEnd() const;
+    CharPos lineBegin(int line) const;
+    CharPos lineEnd(int line) const;
 
     //Caret
     void showCaret();
