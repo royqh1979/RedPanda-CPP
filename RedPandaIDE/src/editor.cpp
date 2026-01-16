@@ -2544,7 +2544,7 @@ bool Editor::handleParentheseSkip()
       if (getCurrentChar() != ')')
           return false;
       QuoteStatus status = getQuoteStatus();
-      if (status == QuoteStatus::RawStringNoEscape) {
+      if (status == QuoteStatus::RawStringEnd) {
           setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
           return true;
       }
@@ -2927,11 +2927,19 @@ ParserLanguage Editor::calcParserLanguage() const
 
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
-    QuoteStatus Result = QuoteStatus::NotQuote;
     if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
-        QString s = lineText().mid(0,caretX());
-        QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY(), s, false);
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
+        QSynedit::PSyntaxState state;
+
+        //raw string end must be determined with the following '"'
+        QString token;
+        QSynedit::PTokenAttribute attribute;
+        if (getTokenAttriAtRowCol(caretXY(),token,attribute,state)
+                && cppSyntaxer->isRawStringEnd(state))
+            return QuoteStatus::RawStringEnd;
+
+        QString s = lineText().mid(0,caretX());
+        state = calcSyntaxStateAtLine(caretY(), s, false);
         if (syntaxer()->isStringNotFinished(state)) {
             if (cppSyntaxer->isStringEscaping(state))
                 return QuoteStatus::DoubleQuoteEscape;
@@ -2948,13 +2956,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
             return QuoteStatus::RawStringNoEscape;
         if (cppSyntaxer->isRawStringStart(state))
             return QuoteStatus::RawString;
-        if (cppSyntaxer->isRawStringEnd(state))
-            return QuoteStatus::RawStringEnd;
-        return QuoteStatus::NotQuote;
-    } else {
-        return QuoteStatus::NotQuote;
     }
-    return Result;
+    return QuoteStatus::NotQuote;
 }
 
 void Editor::reparse()

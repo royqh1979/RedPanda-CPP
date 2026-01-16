@@ -195,5 +195,13 @@ void TestEditor::test_complete_double_quote_for_raw_string()
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text1);
-
+    QTest::keyPress(mEditor.get(),'(');
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QTest::keyPress(mEditor.get(),')');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text3);
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text4);
 }
