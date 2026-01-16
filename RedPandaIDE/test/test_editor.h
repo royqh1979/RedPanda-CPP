@@ -16,6 +16,8 @@ public:
 	TestEditor(QObject *parent=nullptr);
 private slots:
     void test_complete_double_quote1();
+    void test_complete_double_quote2();
+    void test_complete_double_quote3();
 protected:
     std::shared_ptr<Editor> mEditor;
     std::shared_ptr<SettingsPersistor> mSettingsPersistor;
