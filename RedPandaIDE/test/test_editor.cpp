@@ -155,11 +155,15 @@ void TestEditor::test_complete_double_quote_for_string3()
 
     //undo
     mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
     QCOMPARE(mEditor->content(), text);
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
 
     //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
     mEditor->redo();
     QCOMPARE(mEditor->content(), text2);
     QVERIFY(!mEditor->canRedo());
@@ -167,12 +171,14 @@ void TestEditor::test_complete_double_quote_for_string3()
 
     //undo again
     mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
     QCOMPARE(mEditor->content(), text);
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_raw_string()
+void TestEditor::test_complete_double_quote_for_raw_string1()
 {
     // input '"' at start of raw string and
     // input '"' at end of raw string
@@ -204,4 +210,55 @@ void TestEditor::test_complete_double_quote_for_raw_string()
     QCOMPARE(mEditor->content(), text3);
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text4);
+}
+
+void TestEditor::test_complete_double_quote_for_raw_string2()
+{
+    QStringList text{
+        "const char *s = R\"\""
+    };
+    QStringList text1{
+        "const char *s = R\"\"a\""
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),'"');
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text1);
+}
+
+void TestEditor::test_complete_double_quote_for_raw_string3()
+{
+    QStringList text{
+        "const char *s = R\"(\")\""
+    };
+    QStringList text1{
+        "const char *s = R\"(\"a\")\""
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),'"');
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text1);
+}
+
+void TestEditor::test_complete_double_quote_for_raw_string4()
+{
+    QStringList text{
+        "const char *s = R\"\""
+    };
+    QStringList text1{
+        "const char *s = R\"a\"\"\""
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),'"');
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text1);
 }

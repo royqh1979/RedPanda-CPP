@@ -2798,21 +2798,15 @@ bool Editor::handleDoubleQuoteCompletion()
 {
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
-    if (ch == '"') {
-        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
+    if ((ch == '"') && (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
             && !selAvail()) {
-            setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
-            return true;
-        }
+        setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+        return true;
     } else {
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
                 QString text=selText();
-                beginEditing();
-                processCommand(QSynedit::EditCommand::Input,'"');
-                setSelText(text);
-                processCommand(QSynedit::EditCommand::Input,'"');
-                endEditing();
+                setSelText('"'+text+'"');
                 return true;
             }
             if ((ch == 0)
@@ -2820,10 +2814,9 @@ bool Editor::handleDoubleQuoteCompletion()
                              || syntaxer()->isSpaceChar(ch))) {
                 // insert ""
                 beginEditing();
-                processCommand(QSynedit::EditCommand::Input,'"');
-                CharPos oldCaret = caretXY();
-                processCommand(QSynedit::EditCommand::Input,'"');
-                setCaretXY(oldCaret);
+                int oldCaretX = caretX();
+                processCommand(QSynedit::EditCommand::Input,"\"\"");
+                setCaretX(oldCaretX+1);
                 endEditing();
                 return true;
             }

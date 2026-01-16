@@ -19,7 +19,10 @@ private slots:
     void test_complete_double_quote_for_string2();
     void test_complete_double_quote_for_string3();
 
-    void test_complete_double_quote_for_raw_string();
+    void test_complete_double_quote_for_raw_string1();
+    void test_complete_double_quote_for_raw_string2();
+    void test_complete_double_quote_for_raw_string3();
+    void test_complete_double_quote_for_raw_string4();
 
 protected:
     std::shared_ptr<Editor> mEditor;

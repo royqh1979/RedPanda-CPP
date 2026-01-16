@@ -62,7 +62,7 @@ public:
         rsMultiLineDirective, rsCppComment,
         rsDocstring,
         rsStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringNotEscaping,
+        rsRawStringStart, rsSpace,rsRawStringNotEscaping,
         rsChar, rsCharEscaping,
         rsDefineIdentifier, rsDefineRemaining,
     };
@@ -120,7 +120,7 @@ public:
 
     static const QSet<QString> StandardAttributes;
 
-    bool isRawStringStart(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId== TokenId::RawStringStart; }
+    bool isRawStringStart(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringStart || std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId== TokenId::RawStringStart; }
     bool isRawStringNoEscape(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringNotEscaping && !isRawStringStart(state); }
     bool isRawStringEnd(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId == TokenId::RawStringEnd; }
     bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }

@@ -990,13 +990,13 @@ void CppSyntaxer::procQuestion()
 
 void CppSyntaxer::procRawString()
 {
-    if (mRange.state == RangeState::rsRawString) {
+    if (mRange.state == RangeState::rsRawStringStart) {
         QString rawStringInitialDCharSeq;
         mRange.initialDCharSeq = "";
         mTokenId = TokenId::RawStringStart;
         while (mRun<mLineSize) {
             if (!isValidDChar(mLine[mRun])) {
-                mRange.state = RangeState::rsUnknown;
+                mRun = mLineSize;
                 return;
             }
             if (mLine[mRun].unicode()=='(') {
@@ -1685,7 +1685,7 @@ void CppSyntaxer::next()
             procDefineRemaining();
             break;
         case RangeState::rsRawStringNotEscaping:
-        case RangeState::rsRawString:
+        case RangeState::rsRawStringStart:
             //qDebug()<<"*9-0-0*";
             procRawString();
             break;
@@ -1698,15 +1698,15 @@ void CppSyntaxer::next()
             } else if (mRun+1<mLineSize && mLine[mRun] == 'R' && mLine[mRun+1] == '"') {
                 //qDebug()<<"*c-0-0*";
                 mRun+=2;
-                mRange.state = RangeState::rsRawString;
+                mRange.state = RangeState::rsRawStringStart;
                 procRawString();
             } else if (mRun+2<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U')  && mLine[mRun+1] == 'R' && mLine[mRun+2]=='\"') {
                 mRun+=3;
-                mRange.state = RangeState::rsRawString;
+                mRange.state = RangeState::rsRawStringStart;
                 procRawString();
             } else if (mRun+3<mLineSize && mLine[mRun] == 'u' && mLine[mRun+1] == '8' && mLine[mRun+2] == 'R' && mLine[mRun+3]=='\"') {
                 mRun+=4;
-                mRange.state = RangeState::rsRawString;
+                mRange.state = RangeState::rsRawStringStart;
                 procRawString();
             } else if (mRun+1<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
                 //qDebug()<<"*d-0-0*";
@@ -1767,6 +1767,7 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     } else {
         if ((mRange.state == RangeState::rsString)
                 || (mRange.state == RangeState::rsStringEscapeSeq)
+                || (mRange.state == RangeState::rsRawStringStart)
                 || (mRange.state == RangeState::rsChar)
                 || (mRange.state == RangeState::rsCharEscaping)
                 || (mRange.state == RangeState::rsCppComment)
