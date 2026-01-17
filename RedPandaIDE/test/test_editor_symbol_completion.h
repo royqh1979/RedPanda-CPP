@@ -12,6 +12,9 @@ private slots:
     void test_input_double_quotes_in_string2();
     void test_input_double_quotes_in_string3();
     void test_input_double_quotes_in_string4();
+    void test_input_double_quotes_in_string5();
+
+    void test_input_double_quotes_on_selection();
 
     void test_input_double_quotes_in_raw_string1();
     void test_input_double_quotes_in_raw_string2();
@@ -22,6 +25,10 @@ private slots:
     void test_input_double_quotes_in_char_literals2();
 
     void test_input_single_quotes_in_char_literals1();
+    void test_input_single_quotes_in_char_literals2();
+    void test_input_single_quotes_in_char_literals3();
+
+    void test_input_single_quotes_on_selection();
 
 };
 

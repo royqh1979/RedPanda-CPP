@@ -2770,20 +2770,15 @@ bool Editor::handleSingleQuoteCompletion()
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
                 QString text=selText();
-                beginEditing();
-                processCommand(QSynedit::EditCommand::Input,'\'');
-                setSelText(text);
-                processCommand(QSynedit::EditCommand::Input,'\'');
-                endEditing();
+                setSelText('\''+text+'\''); //use setSelText to break group undo
                 return true;
             }
             if (ch == 0 || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
+                int oldCaretX = caretX();
                 // insert ''
                 beginEditing();
-                processCommand(QSynedit::EditCommand::Input,'\'');
-                CharPos oldCaret = caretXY();
-                processCommand(QSynedit::EditCommand::Input,'\'');
-                setCaretXY(oldCaret);
+                setSelText("\'\'"); //use setSelText to break group undo
+                setCaretX(oldCaretX+1);
                 endEditing();
                 return true;
             }
@@ -2804,16 +2799,16 @@ bool Editor::handleDoubleQuoteCompletion()
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
                 QString text=selText();
-                setSelText('"'+text+'"');
+                setSelText('"'+text+'"'); //use setSelText to break group undo
                 return true;
             }
             if ((ch == 0)
                     || ( syntaxer()->isWordBreakChar(ch)
                              || syntaxer()->isSpaceChar(ch))) {
+                int oldCaretX = caretX();
                 // insert ""
                 beginEditing();
-                int oldCaretX = caretX();
-                processCommand(QSynedit::EditCommand::Input,"\"\"");
+                setSelText("\"\""); //use setSelText to break group undo
                 setCaretX(oldCaretX+1);
                 endEditing();
                 return true;
