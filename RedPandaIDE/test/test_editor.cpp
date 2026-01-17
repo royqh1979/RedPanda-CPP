@@ -96,7 +96,7 @@ void TestEditor::test_complete_double_quote_for_string2()
         "const char *s = \"ab\\\"cdef\"",
     };
     QStringList text2{
-        "const char *s = \"ab\\\"\"cdef\"",
+        "const char *s = \"ab\\\"-\"cdef\"",
     };
     mEditor->setContent(text);
     mEditor->setCaretXY(mEditor->fileEnd());
@@ -106,6 +106,7 @@ void TestEditor::test_complete_double_quote_for_string2()
     QCOMPARE(mEditor->content(), text1);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'"');
+    QTest::keyPress(mEditor.get(),'-');
     QCOMPARE(mEditor->content(), text2);
 
     //undo
@@ -137,6 +138,7 @@ void TestEditor::test_complete_double_quote_for_string2()
 void TestEditor::test_complete_double_quote_for_string3()
 {
     // correct input '"' in a un-enclosed string
+    // correct input '"' after string
     QStringList text{
         "const char *s = \"abcdef",
     };
@@ -178,6 +180,53 @@ void TestEditor::test_complete_double_quote_for_string3()
     QVERIFY(!mEditor->modified());
 }
 
+void TestEditor::test_complete_double_quote_for_string4()
+{
+    // correct input '"' before '"'
+    QStringList text{
+        "const char *s = \"\"",
+    };
+    QStringList text1{
+        "const char *s = \"\"\"\"",
+    };
+    QStringList text2{
+        "const char *s = \"ab\"\"\"",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),'\"');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
 void TestEditor::test_complete_double_quote_for_raw_string1()
 {
     // input '"' at start of raw string and
@@ -189,7 +238,7 @@ void TestEditor::test_complete_double_quote_for_raw_string1()
         "const char *s = R\"\"",
     };
     QStringList text2{
-        "const char *s = R\"(ab)\"",
+        "const char *s = R\"()\"",
     };
     QStringList text3{
         "const char *s = R\"(ab)\"",
@@ -202,38 +251,109 @@ void TestEditor::test_complete_double_quote_for_raw_string1()
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text1);
     QTest::keyPress(mEditor.get(),'(');
+    QCOMPARE(mEditor->content(), text2);
     QTest::keyPress(mEditor.get(),'a');
     QTest::keyPress(mEditor.get(),'b');
-    QTest::keyPress(mEditor.get(),')');
-    QCOMPARE(mEditor->content(), text2);
-    QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text3);
+    QTest::keyPress(mEditor.get(),')');
+    QCOMPARE(mEditor->content(), text3); // auto skip ')'
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text3); // auto skip '"'
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text4);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text3);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text3);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text4);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text3);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditor::test_complete_double_quote_for_raw_string2()
 {
+    // input '"' in a raw string
     QStringList text{
         "const char *s = R\"\""
     };
     QStringList text1{
+        "const char *s = R\"\"\""
+    };
+    QStringList text2{
         "const char *s = R\"\"a\""
     };
     mEditor->setContent(text);
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'"');
-    QTest::keyPress(mEditor.get(),'a');
     QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditor::test_complete_double_quote_for_raw_string3()
 {
+    // input '"' in a raw string (not escaping)
     QStringList text{
         "const char *s = R\"(\")\""
     };
     QStringList text1{
+        "const char *s = R\"(\"\")\""
+    };
+    QStringList text2{
         "const char *s = R\"(\"a\")\""
     };
     mEditor->setContent(text);
@@ -242,16 +362,45 @@ void TestEditor::test_complete_double_quote_for_raw_string3()
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'"');
-    QTest::keyPress(mEditor.get(),'a');
     QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditor::test_complete_double_quote_for_raw_string4()
 {
+    // input '\"' before raw string's starting '"'
     QStringList text{
         "const char *s = R\"\""
     };
     QStringList text1{
+        "const char *s = R\"\"\"\""
+    };
+    QStringList text2{
         "const char *s = R\"a\"\"\""
     };
     mEditor->setContent(text);
@@ -259,6 +408,32 @@ void TestEditor::test_complete_double_quote_for_raw_string4()
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'"');
-    QTest::keyPress(mEditor.get(),'a');
     QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QCOMPARE(mEditor->content(), text2);
+
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }

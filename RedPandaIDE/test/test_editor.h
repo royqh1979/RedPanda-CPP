@@ -18,6 +18,7 @@ private slots:
     void test_complete_double_quote_for_string1();
     void test_complete_double_quote_for_string2();
     void test_complete_double_quote_for_string3();
+    void test_complete_double_quote_for_string4();
 
     void test_complete_double_quote_for_raw_string1();
     void test_complete_double_quote_for_raw_string2();
