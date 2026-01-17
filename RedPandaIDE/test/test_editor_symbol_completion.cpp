@@ -4,28 +4,17 @@
 #include "src/settings/editorsettings.h"
 #include "src/colorscheme.h"
 #include "src/editor.h"
-#include "test_editor.h"
+#include "test_editor_symbol_completion.h"
 #include <qsynedit/syntaxer/cpp.h>
 
 using QSynedit::CharPos;
 
-TestEditor::TestEditor(QObject *parent):
-    QObject{parent}
+TestEditorSymbolCompletion::TestEditorSymbolCompletion(QObject *parent):
+    TestEditorBase{parent}
 {
-    mSettingsPersistor = std::make_unique<SettingsPersistor>("test-editor.ini");
-    mDirSettings = std::make_unique<DirSettings>(mSettingsPersistor.get());
-    mEditorSettings = std::make_unique<EditorSettings>(mSettingsPersistor.get());
-    mDirSettings->load();
-    mEditorSettings->load();
-    mColorManager = std::make_unique<ColorManager>(mDirSettings.get());
-    mEditor = std::make_unique<Editor>();
-    mEditor->setEditorSettings(mEditorSettings.get());
-    mEditor->setColorManager(mColorManager.get());
-    mEditor->setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
-    mEditor->applySettings();
 }
 
-void TestEditor::test_complete_double_quote_for_string1()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_string1()
 {
     // auto add another '"' when input '"' and put the caret in the middle
     // auto skip the inputted '"' when caret before then enclosing '"' of string
@@ -86,7 +75,7 @@ void TestEditor::test_complete_double_quote_for_string1()
 
 }
 
-void TestEditor::test_complete_double_quote_for_string2()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_string2()
 {
     //dont skip the inputted '"' when it's in a escaping sequence
     QStringList text{
@@ -135,7 +124,7 @@ void TestEditor::test_complete_double_quote_for_string2()
 
 }
 
-void TestEditor::test_complete_double_quote_for_string3()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_string3()
 {
     // correct input '"' in a un-enclosed string
     // correct input '"' after string
@@ -180,7 +169,7 @@ void TestEditor::test_complete_double_quote_for_string3()
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_string4()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_string4()
 {
     // correct input '"' before '"'
     QStringList text{
@@ -227,7 +216,7 @@ void TestEditor::test_complete_double_quote_for_string4()
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_raw_string1()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string1()
 {
     // input '"' at start of raw string and
     // input '"' at end of raw string
@@ -299,7 +288,7 @@ void TestEditor::test_complete_double_quote_for_raw_string1()
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_raw_string2()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string2()
 {
     // input '"' in a raw string
     QStringList text{
@@ -344,7 +333,7 @@ void TestEditor::test_complete_double_quote_for_raw_string2()
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_raw_string3()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string3()
 {
     // input '"' in a raw string (not escaping)
     QStringList text{
@@ -391,9 +380,9 @@ void TestEditor::test_complete_double_quote_for_raw_string3()
     QVERIFY(!mEditor->modified());
 }
 
-void TestEditor::test_complete_double_quote_for_raw_string4()
+void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string4()
 {
-    // input '\"' before raw string's starting '"'
+    // input '"' before raw string's starting '"'
     QStringList text{
         "const char *s = R\"\""
     };
@@ -436,4 +425,142 @@ void TestEditor::test_complete_double_quote_for_raw_string4()
     QCOMPARE(mEditor->content(), text);
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_double_quotes_in_char_literals1()
+{
+    // input '"' in char literal
+    QStringList text{
+        "char ch = "
+    };
+    QStringList text1{
+        "char ch = ''"
+    };
+    QStringList text2{
+        "char ch = '\"'"
+    };
+    QStringList text3{
+        "char ch = '\"';"
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'"');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text2);  // auto skip '\''
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text3);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text3);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_double_quotes_in_char_literals2()
+{
+    // input '\' '"' in char literal
+    QStringList text{
+        "char ch = "
+    };
+    QStringList text1{
+        "char ch = ''"
+    };
+    QStringList text2{
+        "char ch = '\\\"'"
+    };
+    QStringList text3{
+        "char ch = '\\\"';"
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'\\');
+    QTest::keyPress(mEditor.get(),'\"');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text2);  // auto skip '\''
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text3);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text3);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals1()
+{
+    //input '\'' before ''
+    QStringList text{
+        "char ch = ''"
+    };
+    QStringList text1{
+        "char ch = ''''"
+    };
+    QStringList text2{
+        "char ch = 'ab'''"
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), Qt::Key_Left);
+    QTest::keyPress(mEditor.get(), Qt::Key_Left);
+    QTest::keyPress(mEditor.get(), '\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(), 'a');
+    QTest::keyPress(mEditor.get(), 'b');
+    QCOMPARE(mEditor->content(), text2);
 }

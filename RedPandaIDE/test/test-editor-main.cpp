@@ -1,6 +1,6 @@
 #include <QTest>
 #include <QGuiApplication>
-#include "test_editor.h"
+#include "test_editor_symbol_completion.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc,argv);
     //CharPos Test
     {
-        TestEditor tc;
+        TestEditorSymbolCompletion tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

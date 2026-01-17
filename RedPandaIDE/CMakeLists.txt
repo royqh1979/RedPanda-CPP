@@ -261,7 +261,8 @@ target_moc_classes(test-editor
     src/symbolusagemanager
     src/codesnippetsmanager
     #test
-    test/test_editor
+    test/test_editor_base
+    test/test_editor_symbol_completion
 )
 target_include_directories(test-editor PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR})

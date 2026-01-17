@@ -2763,11 +2763,9 @@ bool Editor::handleSingleQuoteCompletion()
 {
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
-    if (ch == '\'') {
-        if (status == QuoteStatus::SingleQuote && !selAvail()) {
-            setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
-            return true;
-        }
+    if ((ch == '\'') && (status == QuoteStatus::SingleQuote && !selAvail())) {
+        setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+        return true;
     } else {
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
