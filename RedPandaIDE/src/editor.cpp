@@ -2522,16 +2522,13 @@ bool Editor::handleParentheseCompletion()
         if (selAvail() && status == QuoteStatus::NotQuote) {
             QString text=selText();
             beginEditing();
-            processCommand(QSynedit::EditCommand::Input,'(');
-            setSelText(text);
-            processCommand(QSynedit::EditCommand::Input,')');
+            setSelText('('+text+')');
             endEditing();
         } else {
+            int oldCaretX = caretX();
             beginEditing();
-            processCommand(QSynedit::EditCommand::Input,'(');
-            CharPos oldCaret = caretXY();
-            processCommand(QSynedit::EditCommand::Input,')');
-            setCaretXY(oldCaret);
+            setSelText("()");
+            setCaretX(oldCaretX+1);
             endEditing();
         }
         return true;
@@ -2556,13 +2553,13 @@ bool Editor::handleParentheseSkip()
       if (syntaxer()->supportBraceLevel()) {
           QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
           if (lastLineState->parenthesisLevel==0) {
-              setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+              setCaretX(caretX() + 1); // skip over
               return true;
           }
       } else {
           CharPos pos = getMatchingBracket();
           if (pos.isValid()) {
-              setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+              setCaretX(caretX() + 1); // skip over
               return true;
           }
       }
@@ -2577,16 +2574,13 @@ bool Editor::handleBracketCompletion()
     if (selAvail() && status == QuoteStatus::NotQuote) {
         QString text=selText();
         beginEditing();
-        processCommand(QSynedit::EditCommand::Input,'[');
-        setSelText(text);
-        processCommand(QSynedit::EditCommand::Input,']');
+        setSelText('['+text+']');
         endEditing();
     } else {
+        int oldCaretX = caretX();
         beginEditing();
-        processCommand(QSynedit::EditCommand::Input,'[');
-        CharPos oldCaret = caretXY();
-        processCommand(QSynedit::EditCommand::Input,']');
-        setCaretXY(oldCaret);
+        setSelText("[]");
+        setCaretX(oldCaretX+1);
         endEditing();
     }
     return true;
@@ -2603,13 +2597,13 @@ bool Editor::handleBracketSkip()
     if (syntaxer()->supportBraceLevel()) {
         QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
         if (lastLineState->bracketLevel==0) {
-            setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+            setCaretX(caretX() + 1); // skip over
             return true;
         }
     } else {
         CharPos pos = getMatchingBracket();
         if (pos.isValid()) {
-            setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
+            setCaretX(caretX() + 1); // skip over
             return true;
         }
     }
@@ -2662,12 +2656,12 @@ bool Editor::handleBraceCompletion()
 
     beginEditing();
     if (!selAvail()) {
-        processCommand(QSynedit::EditCommand::Input,'{');
-        CharPos oldCaret = caretXY();
-        processCommand(QSynedit::EditCommand::Input,'}');
+        int oldCaretX = caretX();
         if (addSemicolon)
-            processCommand(QSynedit::EditCommand::Input,';');
-        setCaretXY(oldCaret);
+            setSelText("{};");
+        else
+            setSelText("{}");
+        setCaretX(oldCaretX+1);
     }  else {
         QString text = selText();
         CharPos oldSelBegin = selBegin();
@@ -2714,24 +2708,17 @@ bool Editor::handleBraceSkip()
     if (lineCount()==0)
         return false;
 
+    bool shouldSkip = false;
     if (syntaxer()->supportBraceLevel() && caretY()>=1) {
         QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(caretY()-1);
-        if (lastLineState->braceLevel==0) {
-            bool oldInsertMode = insertMode();
-            setInsertMode(false); //set mode to overwrite
-            processCommand(QSynedit::EditCommand::Input,'}');
-            setInsertMode(oldInsertMode);
-            return true;
-        }
+        shouldSkip = (lastLineState->braceLevel==0);
     } else {
         CharPos pos = getMatchingBracket();
-        if (pos.isValid()) {
-            bool oldInsertMode = insertMode();
-            setInsertMode(false); //set mode to overwrite
-            processCommand(QSynedit::EditCommand::Input,'}');
-            setInsertMode(oldInsertMode);
-            return true;
-        }
+        shouldSkip = (pos.isValid());
+    }
+    if (shouldSkip) {
+        setCaretX(caretX()+1);
+        return true;
     }
     return false;
 }
@@ -2740,10 +2727,7 @@ bool Editor::handleSemiColonSkip()
 {
     if (getCurrentChar() != ';')
         return false;
-    bool oldInsertMode = insertMode();
-    setInsertMode(false); //set mode to overwrite
-    processCommand(QSynedit::EditCommand::Input,';');
-    setInsertMode(oldInsertMode);
+    setCaretX(caretX()+1);
     return true;
 }
 
@@ -2751,11 +2735,7 @@ bool Editor::handlePeriodSkip()
 {
     if (getCurrentChar() != ',')
         return false;
-
-    bool oldInsertMode = insertMode();
-    setInsertMode(false); //set mode to overwrite
-    processCommand(QSynedit::EditCommand::Input,',');
-    setInsertMode(oldInsertMode);
+    setCaretX(caretX()+1);
     return true;
 }
 
@@ -2825,11 +2805,10 @@ bool Editor::handleGlobalIncludeCompletion()
     QString s= lineText().mid(1).trimmed();
     if (!s.startsWith("include"))  //it's not #include
         return false;
+    int oldCaretX = caretX();
     beginEditing();
-    processCommand(QSynedit::EditCommand::Input,'<');
-    CharPos oldCaret = caretXY();
-    processCommand(QSynedit::EditCommand::Input,'>');
-    setCaretXY(oldCaret);
+    setSelText("<>");
+    setCaretX(oldCaretX+1);
     endEditing();
     return true;
 }

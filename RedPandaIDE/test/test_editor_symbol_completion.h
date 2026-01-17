@@ -30,6 +30,10 @@ private slots:
 
     void test_input_single_quotes_on_selection();
 
+    void test_input_parenthesis1();
+    void test_input_bracket1();
+    void test_input_brace1();
+
 };
 
 #endif
