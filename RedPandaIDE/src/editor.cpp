@@ -2405,41 +2405,44 @@ bool Editor::handleSymbolCompletion(QChar key)
     bool inComment = false;
     bool inString = false;
     bool inNumber = false;
-    if (caretX() <= 0) {
-        if (caretY()>0) {
-            inComment = syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1));
-            inString = syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1));
+    QuoteStatus status = QuoteStatus::NotQuote;
+    if (!selAvail()) {
+        if (caretX() <= 0) {
+            if (caretY()>0) {
+                inComment = syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1));
+                inString = syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1));
+            }
+        } else {
+            CharPos  highlightPos = CharPos{caretX()-1, caretY()};
+            // Check if that line is highlighted as  comment
+            QSynedit::PTokenAttribute attr;
+            QString token;
+            QSynedit::PSyntaxState syntaxState;
+            if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
+                inComment = syntaxer()->isCommentNotFinished(syntaxState);
+                inString = syntaxer()->isStringNotFinished(syntaxState);
+                inNumber = attr->name() == "SYNS_AttrNumber";
+            }
         }
-    } else {
-        CharPos  highlightPos = CharPos{caretX()-1, caretY()};
-        // Check if that line is highlighted as  comment
-        QSynedit::PTokenAttribute attr;
-        QString token;
-        QSynedit::PSyntaxState syntaxState;
-        if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
-            inComment = syntaxer()->isCommentNotFinished(syntaxState);
-            inString = syntaxer()->isStringNotFinished(syntaxState);
-            inNumber = attr->name() == "SYNS_AttrNumber";
-        }
-    }
 
-    if (inComment)
-        return false;
-    QuoteStatus status = getQuoteStatus();
-    if (status == QuoteStatus::SingleQuoteEscape || status == QuoteStatus::DoubleQuoteEscape)
-        return false;
-    if (status == QuoteStatus::SingleQuote && key != '\'')
-        return false;
-    if (status == QuoteStatus::RawString && key != '(')
-        return false;
-    if (status == QuoteStatus::RawStringEnd && key != ')' && key!= '"')
-        return false;
-    if (status == QuoteStatus::DoubleQuote && key!='"')
-        return false;
+        if (inComment)
+            return false;
+        status = getQuoteStatus();
+        if (status == QuoteStatus::SingleQuoteEscape || status == QuoteStatus::DoubleQuoteEscape)
+            return false;
+        if (status == QuoteStatus::SingleQuote && key != '\'')
+            return false;
+        if (status == QuoteStatus::RawString && key != '(')
+            return false;
+        if (status == QuoteStatus::RawStringEnd && key != ')' && key!= '"')
+            return false;
+        if (status == QuoteStatus::DoubleQuote && key!='"')
+            return false;
+    }
     switch(key.unicode()) {
     case '(':
         if (mEditorSettings->completeParenthese()) {
-            return handleParentheseCompletion(status);
+            return handleParentheseCompletion();
         }
         break;
     case ')':
@@ -2451,7 +2454,7 @@ bool Editor::handleSymbolCompletion(QChar key)
         break;
     case '[':
         if (mEditorSettings->completeBracket()) {
-            return handleBracketCompletion(status);
+            return handleBracketCompletion();
         }
         break;
     case ']':
@@ -2494,7 +2497,7 @@ bool Editor::handleSymbolCompletion(QChar key)
     case '<':
         if (selAvail())
             return false;
-        if (mParser && !mParser->isIncludeLine(lineText()))
+        if (!mParser || !mParser->isIncludeLine(lineText()))
             return false;
         if (mEditorSettings->completeGlobalInclude()) { // #include <>
             return handleGlobalIncludeCompletion(status);
@@ -2503,7 +2506,7 @@ bool Editor::handleSymbolCompletion(QChar key)
     case '>':
         if (selAvail())
             return false;
-        if (mParser && !mParser->isIncludeLine(lineText()))
+        if (!mParser || !mParser->isIncludeLine(lineText()))
             return false;
         if (mEditorSettings->completeGlobalInclude() && mEditorSettings->overwriteSymbols()) { // #include <>
             return handleGlobalIncludeSkip(status);
@@ -2527,7 +2530,7 @@ bool Editor::handleSymbolCompletion(QChar key)
     return false;
 }
 
-bool Editor::handleParentheseCompletion(QuoteStatus status)
+bool Editor::handleParentheseCompletion()
 {
     if (selAvail()) {
         QString text=selText();
@@ -2546,38 +2549,20 @@ bool Editor::handleParentheseCompletion(QuoteStatus status)
 
 bool Editor::handleParentheseSkip(QuoteStatus status)
 {
-      if (getCurrentChar() != ')')
-          return false;
-      if (status == QuoteStatus::RawStringEnd) {
-          setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
-          return true;
-      }
-      if (status != QuoteStatus::NotQuote)
-          return false;
-
-      if (lineCount()==0)
-          return false;
-      if (syntaxer()->supportBraceLevel()) {
-          QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
-          if (lastLineState->parenthesisLevel==0) {
-              setCaretX(caretX() + 1); // skip over
-              return true;
-          }
-      } else {
-          CharPos pos = getMatchingBracket();
-          if (pos.isValid()) {
-              setCaretX(caretX() + 1); // skip over
-              return true;
-          }
-      }
-      return false;
+    Q_ASSERT(lineCount()!=0);
+    if (selAvail())
+        return false;
+    if (getCurrentChar() != ')')
+        return false;
+    setCaretX(caretX()+1);
+    return true;
 }
 
-bool Editor::handleBracketCompletion(QuoteStatus status)
+bool Editor::handleBracketCompletion()
 {
 //    QuoteStatus status = getQuoteStatus();
 //    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
-    if (selAvail() && status == QuoteStatus::NotQuote) {
+    if (selAvail()) {
         QString text=selText();
         beginEditing();
         setSelText('['+text+']');
@@ -2595,42 +2580,26 @@ bool Editor::handleBracketCompletion(QuoteStatus status)
 
 bool Editor::handleBracketSkip(QuoteStatus status)
 {
+    Q_ASSERT(lineCount()!=0);
+    if (selAvail())
+        return false;
     if (getCurrentChar() != ']')
         return false;
-
-    if (lineCount()==0)
-        return false;
-    if (syntaxer()->supportBraceLevel()) {
-        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
-        if (lastLineState->bracketLevel==0) {
-            setCaretX(caretX() + 1); // skip over
-            return true;
-        }
-    } else {
-        CharPos pos = getMatchingBracket();
-        if (pos.isValid()) {
-            setCaretX(caretX() + 1); // skip over
-            return true;
-        }
-    }
-    return false;
+    setCaretX(caretX()+1);
+    return true;
 }
 
 bool Editor::handleMultilineCommentCompletion(QuoteStatus status)
 {
-    if ((caretX()-1>=0) && (caretX()-1 < lineText().length()) && (lineText()[caretX()] == '/')) {
-        QString text=selText();
+    if (selAvail())
+        return false;
+    if (status!=QuoteStatus::NotQuote)
+        return false;
+    if ((caretX()-1>=0) && ( charAt(CharPos{caretX()-1,caretY()}) == '/')) {
+        int oldCaretX = caretX();
         beginEditing();
-        processCommand(QSynedit::EditCommand::Input,'*');
-        CharPos oldCaret;
-        if (text.isEmpty())
-            oldCaret = caretXY();
-        else
-            setSelText(text);
-        processCommand(QSynedit::EditCommand::Input,'*');
-        processCommand(QSynedit::EditCommand::Input,'/');
-        if (text.isEmpty())
-            setCaretXY(oldCaret);
+        setSelText("**/");
+        setCaretX(oldCaretX+1);
         endEditing();
         return true;
     }
@@ -2640,8 +2609,13 @@ bool Editor::handleMultilineCommentCompletion(QuoteStatus status)
 bool Editor::handleBraceCompletion(QuoteStatus status)
 {
     bool addSemicolon=false;
-    QString sLine = lineText().trimmed();
-    int i= caretY();
+    CharPos p;
+    if (selAvail())
+        p = selBegin();
+    else
+        p = caretXY();
+    QString sLine = lineText(p.line).left(p.ch).trimmed();
+    int i = p.line;
     while ((sLine.isEmpty()) && (i>=0)) {
         sLine=lineText(i).trimmed();
         i--;
@@ -2657,8 +2631,14 @@ bool Editor::handleBraceCompletion(QuoteStatus status)
           && !sLine.contains(';')
         ) || sLine.endsWith('=')) {
         addSemicolon = true;
-//        processCommand(QSynedit::EditCommand::Input,';');
     }
+
+    if (selAvail())
+        p = selEnd();
+    else
+        p = caretXY();
+    if (charAt(p) == ';')
+        addSemicolon = false;
 
     beginEditing();
     if (!selAvail()) {
@@ -2708,29 +2688,22 @@ bool Editor::handleBraceCompletion(QuoteStatus status)
 
 bool Editor::handleBraceSkip(QuoteStatus status)
 {
+    Q_ASSERT(lineCount()!=0);
+    if (selAvail())
+        return false;
     if (getCurrentChar() != '}')
         return false;
 
-    if (lineCount()==0)
-        return false;
-
-    bool shouldSkip = false;
-    if (syntaxer()->supportBraceLevel() && caretY()>=1) {
-        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(caretY()-1);
-        shouldSkip = (lastLineState->braceLevel==0);
-    } else {
-        CharPos pos = getMatchingBracket();
-        shouldSkip = (pos.isValid());
-    }
-    if (shouldSkip) {
-        setCaretX(caretX()+1);
-        return true;
-    }
-    return false;
+    setCaretX(caretX()+1);
+    return true;
 }
 
 bool Editor::handleSemiColonSkip(QuoteStatus status)
 {
+    if (status!=QuoteStatus::NotQuote)
+        return false;
+    if (selAvail())
+        return false;
     if (getCurrentChar() != ';')
         return false;
     setCaretX(caretX()+1);
@@ -2739,6 +2712,10 @@ bool Editor::handleSemiColonSkip(QuoteStatus status)
 
 bool Editor::handlePeriodSkip(QuoteStatus status)
 {
+    if (status!=QuoteStatus::NotQuote)
+        return false;
+    if (selAvail())
+        return false;
     if (getCurrentChar() != ',')
         return false;
     setCaretX(caretX()+1);
@@ -2748,26 +2725,21 @@ bool Editor::handlePeriodSkip(QuoteStatus status)
 bool Editor::handleSingleQuoteCompletion(QuoteStatus status)
 {
     QChar ch = getCurrentChar();
-    if ((ch == '\'') && (status == QuoteStatus::SingleQuote && !selAvail())) {
+    if (selAvail()) {
+        QString text=selText();
+        setSelText('\''+text+'\''); //use setSelText to break group undo
+        return true;
+    } else if ((ch == '\'') && (status == QuoteStatus::SingleQuote)) {
         setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
         return true;
-    } else {
-        if (status == QuoteStatus::NotQuote) {
-            if (selAvail()) {
-                QString text=selText();
-                setSelText('\''+text+'\''); //use setSelText to break group undo
-                return true;
-            }
-            if (ch == 0 || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
-                int oldCaretX = caretX();
-                // insert ''
-                beginEditing();
-                setSelText("\'\'"); //use setSelText to break group undo
-                setCaretX(oldCaretX+1);
-                endEditing();
-                return true;
-            }
-        }
+    } else if (status == QuoteStatus::NotQuote) {
+        int oldCaretX = caretX();
+        // insert ''
+        beginEditing();
+        setSelText("\'\'"); //use setSelText to break group undo
+        setCaretX(oldCaretX+1);
+        endEditing();
+        return true;
     }
     return false;
 }
@@ -2775,39 +2747,31 @@ bool Editor::handleSingleQuoteCompletion(QuoteStatus status)
 bool Editor::handleDoubleQuoteCompletion(QuoteStatus status)
 {
     QChar ch = getCurrentChar();
-    if ((ch == '"') && (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
+    if (selAvail()) {
+            QString text=selText();
+            setSelText('"'+text+'"'); //use setSelText to break group undo
+            return true;
+    } else if ((ch == '"') && (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
             && !selAvail()) {
         setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
         return true;
-    } else {
-        if (status == QuoteStatus::NotQuote) {
-            if (selAvail()) {
-                QString text=selText();
-                setSelText('"'+text+'"'); //use setSelText to break group undo
-                return true;
-            }
-            if ((ch == 0)
-                    || ( syntaxer()->isWordBreakChar(ch)
-                             || syntaxer()->isSpaceChar(ch))) {
-                int oldCaretX = caretX();
-                // insert ""
-                beginEditing();
-                setSelText("\"\""); //use setSelText to break group undo
-                setCaretX(oldCaretX+1);
-                endEditing();
-                return true;
-            }
-        }
+    } else if (status == QuoteStatus::NotQuote) {
+        int oldCaretX = caretX();
+        // insert ""
+        beginEditing();
+        setSelText("\"\""); //use setSelText to break group undo
+        setCaretX(oldCaretX+1);
+        endEditing();
+        return true;
     }
     return false;
 }
 
 bool Editor::handleGlobalIncludeCompletion(QuoteStatus status)
 {
-    if (!lineText().startsWith('#'))
+    if (status != QuoteStatus::NotQuote)
         return false;
-    QString s= lineText().mid(1).trimmed();
-    if (!s.startsWith("include"))  //it's not #include
+    if (selAvail())
         return false;
     int oldCaretX = caretX();
     beginEditing();
@@ -2819,17 +2783,12 @@ bool Editor::handleGlobalIncludeCompletion(QuoteStatus status)
 
 bool Editor::handleGlobalIncludeSkip(QuoteStatus status)
 {
+    if (status != QuoteStatus::NotQuote)
+        return false;
     if (getCurrentChar()!='>')
         return false;
-    QString s= lineText().mid(1).trimmed();
-    if (!s.startsWith("include"))  //it's not #include
-        return false;
-    CharPos pos = getMatchingBracket();
-    if (pos.isValid()) {
-        setCaretXY(CharPos{caretX()+1, caretY()}); // skip over
-        return true;
-    }
-    return false;
+    setCaretXY(CharPos{caretX()+1, caretY()}); // skip over
+    return true;
 }
 
 bool Editor::handleCodeCompletion(QChar key)

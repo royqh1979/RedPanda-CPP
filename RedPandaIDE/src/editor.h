@@ -375,9 +375,9 @@ private:
     bool shouldOpenInReadonly();
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
-    bool handleParentheseCompletion(QuoteStatus status);
+    bool handleParentheseCompletion();
     bool handleParentheseSkip(QuoteStatus status);
-    bool handleBracketCompletion(QuoteStatus status);
+    bool handleBracketCompletion();
     bool handleBracketSkip(QuoteStatus status);
     bool handleMultilineCommentCompletion(QuoteStatus status);
     bool handleBraceCompletion(QuoteStatus status);
