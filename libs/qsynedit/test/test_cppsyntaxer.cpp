@@ -48,10 +48,10 @@ void TestCppSyntaxer::test_integer_literal1()
 void TestCppSyntaxer::test_integer_literal2()
 {
     QStringList example{
-        "unsigned long long l1 = 18446744073709550592ull;       // C++11",
-        "unsigned long long l2 = 18'446'744'073'709'550'592llu; // C++14",
-        "unsigned long long l3 = 1844'6744'0737'0955'0592uLL;   // C++14",
-        "unsigned long long l4 = 184467'440737'0'95505'92LLU;   // C++14"
+        "unsigned long long l1 = 18446744073709550592ull;       // C++11 ",
+        "unsigned long long l2 = 18'446'744'073'709'550'592llu; // C++14 ",
+        "unsigned long long l3 = 1844'6744'0737'0955'0592uLL;   // C++14 ",
+        "unsigned long long l4 = 184467'440737'0'95505'92LLU;   // C++14 "
     };
     QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,example);
 

@@ -1117,9 +1117,6 @@ void CppSyntaxer::procSpace()
         mRun+=1;
     if (mRun>=mLineSize) {
         mRange.hasTrailingSpaces = true;
-        if (!mMergeWithNextLine && (mRange.state==RangeState::rsCppComment
-                || mRange.state == RangeState::rsDefineRemaining))
-            mRange.state = RangeState::rsUnknown;
     }
 }
 
@@ -1768,6 +1765,7 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
                 || (mRange.state == RangeState::rsCppComment)
                 || (mRange.state == RangeState::rsCharEscaping)
                 || (mRange.state == RangeState::rsCppComment)
+                || (mRange.state == RangeState::rsDefineRemaining)
                 || (mRange.state == RangeState::rsMultiLineDirective) )
             mRange.state=RangeState::rsUnknown;
         mPrevLineLastTokenSize = 0;

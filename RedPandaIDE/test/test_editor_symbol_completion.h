@@ -20,6 +20,7 @@ private slots:
     void test_input_double_quotes_in_raw_string4();
     void test_input_double_quotes_in_char_literals1();
     void test_input_double_quotes_in_char_literals2();
+    void test_input_double_quotes_in_comments();
 
     void test_input_single_quotes_in_char_literals1();
     void test_input_single_quotes_in_char_literals2();

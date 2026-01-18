@@ -2402,7 +2402,7 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
-    if (!selAvail() && (key == '\'' || key == '*')) {
+    if (!selAvail() && (key == '\'' || key == '*' || key == '\"')) {
         bool inComment = false;
         bool inNumber = false;
         if (caretX() <= 0) {
@@ -2420,7 +2420,9 @@ bool Editor::handleSymbolCompletion(QChar key)
                 inNumber = attr->name() == "SYNS_AttrNumber";
             }
         }
-        if (inComment || inNumber)
+        if (inComment)
+            return false;
+        if (inNumber && key == '\'')
             return false;
     }
     QuoteStatus status = QuoteStatus::NotQuote;
