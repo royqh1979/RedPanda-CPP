@@ -1,0 +1,87 @@
+name: Build Windows
+
+on:
+  push:
+    paths-ignore:
+      - ".github/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - ".github/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+jobs:
+  windows_legacy:
+    name: Windows NT 5.x
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - 64-ucrt
+          - 32-ucrt
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+
+      - name: Build
+        run: |
+          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows NT 5.x - profile=${{ matrix.profile }}
+          path: dist/*
+
+  windows_legacy_qmake:
+    name: Windows NT 5.x (qmake)
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - 64-ucrt
+          - 32-ucrt
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+
+      - name: Build
+        run: |
+          ./packages/mingw/build-xp-qmake.sh -p ${{ matrix.profile }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows NT 5.x (qmake) - profile=${{ matrix.profile }}
+          path: dist/*
