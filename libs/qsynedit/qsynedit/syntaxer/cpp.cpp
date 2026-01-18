@@ -292,10 +292,6 @@ void CppSyntaxer::procCppStyleComment()
         }
         mRun++;
     }
-    if (mRun<mLineSize) {
-        mRange.state = RangeState::rsCppComment;
-    } else
-        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procDocstring()
@@ -1769,6 +1765,7 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
                 || (mRange.state == RangeState::rsStringEscapeSeq)
                 || (mRange.state == RangeState::rsRawStringStart)
                 || (mRange.state == RangeState::rsChar)
+                || (mRange.state == RangeState::rsCppComment)
                 || (mRange.state == RangeState::rsCharEscaping)
                 || (mRange.state == RangeState::rsCppComment)
                 || (mRange.state == RangeState::rsMultiLineDirective) )

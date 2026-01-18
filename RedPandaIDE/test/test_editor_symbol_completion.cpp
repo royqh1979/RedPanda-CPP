@@ -729,7 +729,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals2()
 
 void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals3()
 {
-    //input '\''\'' in ''
+    //input '\\' '\'' in ''
     QStringList text{
         "char ch = "
     };
@@ -770,6 +770,89 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals3()
     QCOMPARE(mEditor->content(), text);
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_single_quotes_in_string_literals()
+{
+    QStringList text = {
+        "\"\"",
+    };
+    QStringList text1 = {
+        "\"\'\"",
+    };
+    QStringList text2 = {
+        "\"\'\'\"",
+    };
+    QStringList text3 = {
+        "\"\'ab\'\"",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), Qt::Key_Left);
+    QTest::keyPress(mEditor.get(), '\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(), Qt::Key_Left);
+    QTest::keyPress(mEditor.get(), '\'');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(), 'a');
+    QTest::keyPress(mEditor.get(), 'b');
+    QCOMPARE(mEditor->content(), text3);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text3);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_single_quotes_in_comments()
+{
+    QStringList text = {
+        "// test",
+    };
+    QStringList text1 = {
+        "// test\'",
+    };
+    QStringList text2 = {
+        "// test\'\'",
+    };
+    QStringList text3 = {
+        "// test\'ab\'",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), '\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(), Qt::Key_Left);
+    QTest::keyPress(mEditor.get(), '\'');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(), 'a');
+    QTest::keyPress(mEditor.get(), 'b');
+    QCOMPARE(mEditor->content(), text3);
 }
 
 void TestEditorSymbolCompletion::test_input_single_quotes_on_selection()

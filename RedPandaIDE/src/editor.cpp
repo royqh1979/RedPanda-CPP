@@ -2402,13 +2402,13 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
+    bool inComment = false;
+    bool inString = false;
+    bool inNumber = false;
     if (caretX() <= 0) {
         if (caretY()>0) {
-            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1)))
-                return false;
-            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1))
-                    && (key!='\"') && (key!='\''))
-                return false;
+            inComment = syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1));
+            inString = syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1));
         }
     } else {
         CharPos  highlightPos = CharPos{caretX()-1, caretY()};
@@ -2417,130 +2417,137 @@ bool Editor::handleSymbolCompletion(QChar key)
         QString token;
         QSynedit::PSyntaxState syntaxState;
         if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
-            if (syntaxer()->isCommentNotFinished(syntaxState))
-                return false;
-            if (syntaxer()->isStringNotFinished(syntaxState)
-                    && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
-                return false;
-            if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
-                return false;
-            if ((key == '\'') && (attr->name() == "SYNS_AttrNumber"))
-                return false;
+            inComment = syntaxer()->isCommentNotFinished(syntaxState);
+            inString = syntaxer()->isStringNotFinished(syntaxState);
+            inNumber = attr->name() == "SYNS_AttrNumber";
         }
     }
 
-    QuoteStatus status;
+    if (inComment)
+        return false;
+    QuoteStatus status = getQuoteStatus();
+    if (status == QuoteStatus::SingleQuoteEscape || status == QuoteStatus::DoubleQuoteEscape)
+        return false;
+    if (status == QuoteStatus::SingleQuote && key != '\'')
+        return false;
+    if (status == QuoteStatus::RawString && key != '(')
+        return false;
+    if (status == QuoteStatus::RawStringEnd && key != ')' && key!= '"')
+        return false;
+    if (status == QuoteStatus::DoubleQuote && key!='"')
+        return false;
     switch(key.unicode()) {
     case '(':
         if (mEditorSettings->completeParenthese()) {
-            return handleParentheseCompletion();
+            return handleParentheseCompletion(status);
         }
-        return false;
+        break;
     case ')':
         if (selAvail())
             return false;
         if (mEditorSettings->completeParenthese() && mEditorSettings->overwriteSymbols()) {
-            return handleParentheseSkip();
+            return handleParentheseSkip(status);
         }
-        return false;
+        break;
     case '[':
-          if (mEditorSettings->completeBracket()) {
-              return handleBracketCompletion();
-          }
-          return false;
+        if (mEditorSettings->completeBracket()) {
+            return handleBracketCompletion(status);
+        }
+        break;
     case ']':
         if (selAvail())
             return false;
         if (mEditorSettings->completeBracket() && mEditorSettings->overwriteSymbols()) {
-            return handleBracketSkip();
+            return handleBracketSkip(status);
         }
-        return false;
+        break;
     case '*':
         status = getQuoteStatus();
         if (mEditorSettings->completeComment() && (status == QuoteStatus::NotQuote)) {
-            return handleMultilineCommentCompletion();
+            return handleMultilineCommentCompletion(status);
         }
-        return false;
+        break;
     case '{':
         if (mEditorSettings->completeBrace()) {
-            return handleBraceCompletion();
+            return handleBraceCompletion(status);
         }
-        return false;
+        break;
     case '}':
         if (selAvail())
             return false;
         if (mEditorSettings->completeBrace() && mEditorSettings->overwriteSymbols()) {
-            return handleBraceSkip();
+            return handleBraceSkip(status);
         }
-        return false;
+        break;
     case '\'':
+        if (inNumber || inComment || inString)
+            return false;
         if (mEditorSettings->completeSingleQuote()) {
-            return handleSingleQuoteCompletion();
+            return handleSingleQuoteCompletion(status);
         }
-        return false;
+        break;
     case '\"':
         if (mEditorSettings->completeDoubleQuote()) {
-            return handleDoubleQuoteCompletion();
+            return handleDoubleQuoteCompletion(status);
         }
-        return false;
+        break;
     case '<':
         if (selAvail())
             return false;
+        if (mParser && !mParser->isIncludeLine(lineText()))
+            return false;
         if (mEditorSettings->completeGlobalInclude()) { // #include <>
-            return handleGlobalIncludeCompletion();
+            return handleGlobalIncludeCompletion(status);
         }
-        return false;
+        break;
     case '>':
         if (selAvail())
             return false;
+        if (mParser && !mParser->isIncludeLine(lineText()))
+            return false;
         if (mEditorSettings->completeGlobalInclude() && mEditorSettings->overwriteSymbols()) { // #include <>
-            return handleGlobalIncludeSkip();
+            return handleGlobalIncludeSkip(status);
         }
-        return false;
+        break;
     case ';':
         if (selAvail())
             return false;
         if (mEditorSettings->overwriteSymbols()) {
-            return handleSemiColonSkip();
+            return handleSemiColonSkip(status);
         }
-        return false;
+        break;
     case ',':
         if (selAvail())
             return false;
         if (mEditorSettings->overwriteSymbols()) {
-            return handlePeriodSkip();
+            return handlePeriodSkip(status);
         }
-        return false;
+        break;
     }
     return false;
 }
 
-bool Editor::handleParentheseCompletion()
+bool Editor::handleParentheseCompletion(QuoteStatus status)
 {
-    QuoteStatus status = getQuoteStatus();
-    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
-        if (selAvail() && status == QuoteStatus::NotQuote) {
-            QString text=selText();
-            beginEditing();
-            setSelText('('+text+')');
-            endEditing();
-        } else {
-            int oldCaretX = caretX();
-            beginEditing();
-            setSelText("()");
-            setCaretX(oldCaretX+1);
-            endEditing();
-        }
-        return true;
+    if (selAvail()) {
+        QString text=selText();
+        beginEditing();
+        setSelText('('+text+')');
+        endEditing();
+    } else {
+        int oldCaretX = caretX();
+        beginEditing();
+        setSelText("()");
+        setCaretX(oldCaretX+1);
+        endEditing();
     }
-    return false;
+    return true;
 }
 
-bool Editor::handleParentheseSkip()
+bool Editor::handleParentheseSkip(QuoteStatus status)
 {
       if (getCurrentChar() != ')')
           return false;
-      QuoteStatus status = getQuoteStatus();
       if (status == QuoteStatus::RawStringEnd) {
           setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
           return true;
@@ -2566,11 +2573,10 @@ bool Editor::handleParentheseSkip()
       return false;
 }
 
-bool Editor::handleBracketCompletion()
+bool Editor::handleBracketCompletion(QuoteStatus status)
 {
 //    QuoteStatus status = getQuoteStatus();
 //    if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
-    QuoteStatus status = getQuoteStatus();
     if (selAvail() && status == QuoteStatus::NotQuote) {
         QString text=selText();
         beginEditing();
@@ -2587,7 +2593,7 @@ bool Editor::handleBracketCompletion()
         //    }
 }
 
-bool Editor::handleBracketSkip()
+bool Editor::handleBracketSkip(QuoteStatus status)
 {
     if (getCurrentChar() != ']')
         return false;
@@ -2610,7 +2616,7 @@ bool Editor::handleBracketSkip()
     return false;
 }
 
-bool Editor::handleMultilineCommentCompletion()
+bool Editor::handleMultilineCommentCompletion(QuoteStatus status)
 {
     if ((caretX()-1>=0) && (caretX()-1 < lineText().length()) && (lineText()[caretX()] == '/')) {
         QString text=selText();
@@ -2631,7 +2637,7 @@ bool Editor::handleMultilineCommentCompletion()
     return false;
 }
 
-bool Editor::handleBraceCompletion()
+bool Editor::handleBraceCompletion(QuoteStatus status)
 {
     bool addSemicolon=false;
     QString sLine = lineText().trimmed();
@@ -2700,7 +2706,7 @@ bool Editor::handleBraceCompletion()
     return true;
 }
 
-bool Editor::handleBraceSkip()
+bool Editor::handleBraceSkip(QuoteStatus status)
 {
     if (getCurrentChar() != '}')
         return false;
@@ -2723,7 +2729,7 @@ bool Editor::handleBraceSkip()
     return false;
 }
 
-bool Editor::handleSemiColonSkip()
+bool Editor::handleSemiColonSkip(QuoteStatus status)
 {
     if (getCurrentChar() != ';')
         return false;
@@ -2731,7 +2737,7 @@ bool Editor::handleSemiColonSkip()
     return true;
 }
 
-bool Editor::handlePeriodSkip()
+bool Editor::handlePeriodSkip(QuoteStatus status)
 {
     if (getCurrentChar() != ',')
         return false;
@@ -2739,9 +2745,8 @@ bool Editor::handlePeriodSkip()
     return true;
 }
 
-bool Editor::handleSingleQuoteCompletion()
+bool Editor::handleSingleQuoteCompletion(QuoteStatus status)
 {
-    QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if ((ch == '\'') && (status == QuoteStatus::SingleQuote && !selAvail())) {
         setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
@@ -2767,9 +2772,8 @@ bool Editor::handleSingleQuoteCompletion()
     return false;
 }
 
-bool Editor::handleDoubleQuoteCompletion()
+bool Editor::handleDoubleQuoteCompletion(QuoteStatus status)
 {
-    QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if ((ch == '"') && (status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
             && !selAvail()) {
@@ -2798,7 +2802,7 @@ bool Editor::handleDoubleQuoteCompletion()
     return false;
 }
 
-bool Editor::handleGlobalIncludeCompletion()
+bool Editor::handleGlobalIncludeCompletion(QuoteStatus status)
 {
     if (!lineText().startsWith('#'))
         return false;
@@ -2813,7 +2817,7 @@ bool Editor::handleGlobalIncludeCompletion()
     return true;
 }
 
-bool Editor::handleGlobalIncludeSkip()
+bool Editor::handleGlobalIncludeSkip(QuoteStatus status)
 {
     if (getCurrentChar()!='>')
         return false;
