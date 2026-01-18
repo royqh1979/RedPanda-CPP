@@ -2402,15 +2402,12 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
-    bool inComment = false;
-    bool inString = false;
-    bool inNumber = false;
-    QuoteStatus status = QuoteStatus::NotQuote;
-    if (!selAvail()) {
+    if (!selAvail() && (key == '\'' || key == '*')) {
+        bool inComment = false;
+        bool inNumber = false;
         if (caretX() <= 0) {
             if (caretY()>0) {
                 inComment = syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 1));
-                inString = syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 1));
             }
         } else {
             CharPos  highlightPos = CharPos{caretX()-1, caretY()};
@@ -2420,24 +2417,25 @@ bool Editor::handleSymbolCompletion(QChar key)
             QSynedit::PSyntaxState syntaxState;
             if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
                 inComment = syntaxer()->isCommentNotFinished(syntaxState);
-                inString = syntaxer()->isStringNotFinished(syntaxState);
                 inNumber = attr->name() == "SYNS_AttrNumber";
             }
         }
-
-        if (inComment)
+        if (inComment || inNumber)
             return false;
+    }
+    QuoteStatus status = QuoteStatus::NotQuote;
+    if (!selAvail()) {
         status = getQuoteStatus();
         if (status == QuoteStatus::SingleQuoteEscape || status == QuoteStatus::DoubleQuoteEscape)
             return false;
         if (status == QuoteStatus::SingleQuote && key != '\'')
             return false;
-        if (status == QuoteStatus::RawString && key != '(')
-            return false;
-        if (status == QuoteStatus::RawStringEnd && key != ')' && key!= '"')
-            return false;
-        if (status == QuoteStatus::DoubleQuote && key!='"')
-            return false;
+//        if (status == QuoteStatus::RawString && key != '(')
+//            return false;
+//        if (status == QuoteStatus::RawStringEnd && key != ')' && key!= '"')
+//            return false;
+//        if (status == QuoteStatus::DoubleQuote && key!='"')
+//            return false;
     }
     switch(key.unicode()) {
     case '(':
@@ -2483,8 +2481,6 @@ bool Editor::handleSymbolCompletion(QChar key)
         }
         break;
     case '\'':
-        if (inNumber || inComment || inString)
-            return false;
         if (mEditorSettings->completeSingleQuote()) {
             return handleSingleQuoteCompletion(status);
         }
