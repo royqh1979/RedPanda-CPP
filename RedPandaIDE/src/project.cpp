@@ -831,7 +831,6 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
         return;
     }
     if (editor) {
-        Q_ASSERT(editor != unitEditor(unit));
         editor->setInProject(true);
         if (unit->encoding()==ENCODING_PROJECT) {
             if (editor->editorEncoding()!=mOptions.encoding)
