@@ -2721,7 +2721,7 @@ void QSynEdit::doInputStr(const QString& s)
                 }
                 internalInputStr(inputStr);
             } else {
-                if (lastCh!=0 && isSpaceChar(lastCh) || isIdentChar(lastCh)) {
+                if ((lastCh!=0 && isSpaceChar(lastCh)) || isIdentChar(lastCh)) {
                     addGroupUndoBreak();
                 }
                 int oldCaretX=mCaretX;
