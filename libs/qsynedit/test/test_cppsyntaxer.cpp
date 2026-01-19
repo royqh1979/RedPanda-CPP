@@ -384,3 +384,57 @@ void TestCppSyntaxer::test_backslash_at_line_end1()
     QCOMPARE(tokenInfo->attribute,mSyntaxer.commentAttribute());
     QVERIFY(!mSyntaxer.mergeWithNextLine(tokenInfo->state));
 }
+
+void TestCppSyntaxer::test_cpp_style_comments()
+{
+    QStringList text{
+        "int x=10; // const char * s=\"sdfsa sadfsadf\"; int y=10; ",
+        "int y=10; const char * s=\"sdfsa sadfsadf\";",
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    QStringList tokens = filterTokens(tokenInfos, mSyntaxer.commentAttribute());
+    QCOMPARE(tokens, QStringList({
+                                     "//",
+                                     "const",
+                                     "char",
+                                     "*",
+                                     "s",
+                                     "=\"",
+                                     "sdfsa",
+                                     "sadfsadf",
+                                     "\";",
+                                     "int",
+                                     "y",
+                                     "=",
+                                     "10",
+                                     ";"
+                                 }));
+}
+
+void TestCppSyntaxer::test_ansi_c_comments()
+{
+    QStringList text{
+        "int x=10; /* const char * s=\"sdfsa sadfsadf\";",
+        "int y=10; */int y=10;",
+        "const char * s=\"sdfsa sadfsadf\";",
+    };
+    QList<TokenInfoList> tokenInfos = parseLines(&mSyntaxer,text);
+    QStringList tokens = filterTokens(tokenInfos, mSyntaxer.commentAttribute());
+    QCOMPARE(tokens, QStringList({
+                                     "/*",
+                                     "const",
+                                     "char",
+                                     "*",
+                                     "s",
+                                     "=\"",
+                                     "sdfsa",
+                                     "sadfsadf",
+                                     "\";",
+                                     "int",
+                                     "y",
+                                     "=",
+                                     "10",
+                                     ";",
+                                     "*/"
+                                 }));
+}
