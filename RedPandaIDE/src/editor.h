@@ -376,8 +376,10 @@ private:
     QChar getCurrentChar();
     bool handleSymbolCompletion(QChar key);
     bool handleParentheseCompletion();
+    bool handleParentheseCompletionForSelection();
     bool handleParentheseSkip(QuoteStatus status);
     bool handleBracketCompletion();
+    bool handleBracketCompletionForSelection();
     bool handleBracketSkip(QuoteStatus status);
     bool handleMultilineCommentCompletion(QuoteStatus status);
     bool handleBraceCompletion(QuoteStatus status);

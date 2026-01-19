@@ -35,16 +35,31 @@ private slots:
     void test_input_single_quotes_in_number();
 
     void test_input_parenthesis1();
-    void test_input_brackets1();
-    void test_input_braces1();
     void test_input_parenthesis_in_string();
     void test_input_parenthesis_in_comment();
+    void test_input_parenthesis_in_escaping_sequence();
+    void test_input_parenthesis_on_selection();
 
-    void test_input_asterisk();
-    void test_input_asterisk1();
-    void test_input_asterisk2();
-    void test_input_asterisk3();
+    void test_input_brackets1();
+    void test_input_brackets_in_string();
+    void test_input_brackets_in_comment();
+    void test_input_brackets_in_escaping_sequence();
+    void test_input_brackets_on_selection();
 
+    void test_input_braces1();
+    void test_input_braces_in_string();
+    void test_input_braces_in_comment();
+    void test_input_braces_in_escaping_sequence();
+    void test_input_braces_on_selection();
+
+    void test_input_asterisk_for_ansi_c_comments();
+    void test_input_asterisk_in_comments();
+    void test_input_asterisk_in_comments2();
+    void test_input_asterisk_in_char_literal();
+    void test_input_asterisk_in_string_literal();
+    void test_input_asterisk_in_rawstring_begin();
+    void test_input_asterisk_in_rawstring();
+    void test_input_asterisk_in_rawstring_end();
 };
 
 #endif
