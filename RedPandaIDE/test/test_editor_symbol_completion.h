@@ -32,6 +32,7 @@ private slots:
     void test_input_single_quotes_in_comments1();
     void test_input_single_quotes_in_comments2();
     void test_input_single_quotes_on_selection();
+    void test_input_single_quotes_in_number();
 
     void test_input_parenthesis1();
     void test_input_brackets1();

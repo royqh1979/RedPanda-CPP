@@ -1035,6 +1035,61 @@ void TestEditorSymbolCompletion::test_input_single_quotes_on_selection()
     QVERIFY(!mEditor->modified());
 }
 
+void TestEditorSymbolCompletion::test_input_single_quotes_in_number()
+{
+    QStringList text{
+        "double x = 2.13",
+    };
+    QStringList text1{
+        "double x = 2.13'",
+    };
+    QStringList text2{
+        "double x = 2.13'45",
+    };
+    QStringList text3{
+        "double x = 2.13'45'",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'4');
+    QTest::keyPress(mEditor.get(),'5');
+    QCOMPARE(mEditor->content(), text2);
+    QTest::keyPress(mEditor.get(),'\'');
+    QCOMPARE(mEditor->content(), text3);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text3);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
 void TestEditorSymbolCompletion::test_input_parenthesis1()
 {
     QStringList text{

@@ -2417,7 +2417,7 @@ bool Editor::handleSymbolCompletion(QChar key)
             QSynedit::PSyntaxState syntaxState;
             if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
                 inComment = syntaxer()->isCommentNotFinished(syntaxState);
-                inNumber = attr->name() == "SYNS_AttrNumber";
+                inNumber = attr->tokenType() == QSynedit::TokenType::Number;
             }
         }
         if (inComment)
