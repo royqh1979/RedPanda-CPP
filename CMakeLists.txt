@@ -15,6 +15,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
 option(FORCE_QT5 "Force Qt 5 when building with system Qt" OFF)
 option(LUA_ADDON "Enable Lua add-ons" OFF)
 option(SDCC "Enable SDCC compiler support" ON)

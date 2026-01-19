@@ -285,8 +285,11 @@ add_custom_command(
         "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
         "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
 
-target_compile_definitions(test-editor PUBLIC
+target_compile_definitions(test-editor PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
+    APP_NAME=\"test-editor\"
+    LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
+    REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
     ARCH_X86_64=1
     ARCH_X86=1)
 
