@@ -132,7 +132,7 @@ class CustomFileIconProvider;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit ProjectModel(Project* project, QObject* parent=nullptr);
+    explicit ProjectModel(Project* project);
     void beginUpdate();
     void endUpdate();
 private:
@@ -363,8 +363,8 @@ private:
     QHash<QString, PProjectModelNode> mFileSystemFolderNodes;
 
     QList<PProjectModelNode> mCustomFolderNodes;
-    ProjectModel mModel;
     IconsManager *mIconsManager;
+    ProjectModel *mModel;
     EditorManager *mEditorManager;
     QFileSystemWatcher* mFileSystemWatcher;
 };

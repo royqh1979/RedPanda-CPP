@@ -52,11 +52,11 @@ Project::Project(const QString &filename, const QString &name,
     QObject(parent),
     mName(name),
     mModified(false),
-    mModel(this),
     mEditorManager(editorList),
-    mIconsManager(iconsManager),
     mFileSystemWatcher(fileSystemWatcher)
 {
+    mIconsManager = iconsManager;
+    mModel = new ProjectModel(this);
     mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
     mParser->setSharedByFiles(true);
@@ -216,9 +216,9 @@ bool Project::modifiedSince(const QDateTime &time)
 
 void Project::open()
 {
-    mModel.beginUpdate();
+    mModel->beginUpdate();
     auto action = finally([this]{
-        mModel.endUpdate();
+        mModel->endUpdate();
     });
 //    QFile fileInfo(mFilename);
     SimpleIni ini;
@@ -317,9 +317,9 @@ PProjectModelNode Project::makeNewFolderNode(
     node->isUnit=false;
     node->priority = priority;
     node->folderNodeType = nodeType;
-    QModelIndex parentIndex=mModel.getNodeIndex(newParent.get());
+    QModelIndex parentIndex=mModel->getNodeIndex(newParent.get());
     newParent->children.append(node);
-    mModel.insertRow(newParent->children.count()-1,parentIndex);
+    mModel->insertRow(newParent->children.count()-1,parentIndex);
     return node;
 }
 
@@ -340,8 +340,8 @@ PProjectModelNode Project::makeNewFileNode(PProjectUnit unit,int priority, PProj
     node->folderNodeType = ProjectModelNodeType::File;
 
     newParent->children.append(node);
-    QModelIndex parentIndex=mModel.getNodeIndex(newParent.get());
-    mModel.insertRow(newParent->children.count()-1,parentIndex);
+    QModelIndex parentIndex=mModel->getNodeIndex(newParent.get());
+    mModel->insertRow(newParent->children.count()-1,parentIndex);
     return node;
 }
 
@@ -472,7 +472,7 @@ QStringList Project::unitFiles()
 
 void Project::rebuildNodes()
 {
-    mModel.beginUpdate();
+    mModel->beginUpdate();
     // Delete everything
     mRootNode->children.clear();
     mCustomFolderNodes.clear();
@@ -510,7 +510,7 @@ void Project::rebuildNodes()
         break;
     }
 
-    mModel.endUpdate();
+    mModel->endUpdate();
 }
 
 bool Project::removeUnit(PProjectUnit& unit, bool doClose , bool removeFile)
@@ -558,9 +558,9 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
         return true;
     }
 
-    QModelIndex parentIndex = mModel.getNodeIndex(parentNode.get());
+    QModelIndex parentIndex = mModel->getNodeIndex(parentNode.get());
 
-    mModel.removeRow(row,parentIndex);
+    mModel->removeRow(row,parentIndex);
     mUnits.remove(unit->fileName());
 
     //remove empty parent node
@@ -572,8 +572,8 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
         row = parentNode->children.indexOf(currentNode);
         if (row<0)
             break;
-        parentIndex = mModel.getNodeIndex(parentNode.get());
-        mModel.removeRow(row,parentIndex);
+        parentIndex = mModel->getNodeIndex(parentNode.get());
+        mModel->removeRow(row,parentIndex);
         currentNode = parentNode;
     }
 
@@ -583,9 +583,9 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
 
 bool Project::removeFolder(PProjectModelNode node)
 {
-    mModel.beginUpdate();
+    mModel->beginUpdate();
     auto action = finally([this]{
-        mModel.endUpdate();
+        mModel->endUpdate();
     });
     // Sanity check
     if (!node)
@@ -933,7 +933,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
         return false;
     }
 
-    mModel.beginUpdate();
+    mModel->beginUpdate();
     mRootNode = makeProjectNode();
     rebuildNodes();
     mOptions = aTemplate->options();
@@ -1030,7 +1030,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
         }
         mEditorManager->activeEditor(lastNewEditor,true);
     }
-    mModel.endUpdate();
+    mModel->endUpdate();
     return true;
 }
 
@@ -1260,9 +1260,9 @@ PProjectModelNode Project::addFolder(PProjectModelNode parentFolder,const QStrin
         fullPath = path + '/' +s;
     }
     if (mFolders.indexOf(fullPath)<0) {
-        mModel.beginUpdate();
+        mModel->beginUpdate();
         auto action = finally([this]{
-            mModel.endUpdate();
+            mModel->endUpdate();
         });
         mFolders.append(fullPath);
         PProjectModelNode node = makeNewFolderNode(s,parentFolder);
@@ -2311,7 +2311,7 @@ ProjectOptions &Project::options()
 
 ProjectModel *Project::model()
 {
-    return &mModel;
+    return mModel;
 }
 
 const PProjectModelNode &Project::rootNode() const
@@ -2495,11 +2495,12 @@ void ProjectUnit::setNode(const PProjectModelNode &newNode)
 //    mFileMissing = newDontSave;
 //}
 
-ProjectModel::ProjectModel(Project *project, QObject *parent):
-    QAbstractItemModel(parent),
+ProjectModel::ProjectModel(Project *project):
+    QAbstractItemModel(project),
     mProject(project)
 {
     mUpdateCount = 0;
+    Q_ASSERT(mProject->iconsManager()!=nullptr);
     //delete in the destructor
     mIconProvider = std::make_unique<CustomFileIconProvider>(mProject->iconsManager());
 }
