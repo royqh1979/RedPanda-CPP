@@ -1949,6 +1949,24 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_comments()
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditorSymbolCompletion::test_input_asterisk_in_comments2()
@@ -1977,6 +1995,24 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_char_literal()
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditorSymbolCompletion::test_input_asterisk_in_string_literal()
@@ -1991,6 +2027,24 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_string_literal()
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_begin()
@@ -2005,6 +2059,24 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_begin()
     mEditor->setCaretXY(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }
 
 void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring()
@@ -2022,6 +2094,24 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring()
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
 
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
 }
 
 void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_end()
@@ -2037,4 +2127,159 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_end()
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_periods1()
+{
+    QStringList text{
+        "int x=10;",
+    };
+    QStringList text1{
+        "int x=10;ab",
+    };
+    QStringList text2{
+        "int x=10;ab;",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text); // auto skip ;
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_periods_in_comments()
+{
+    QStringList text{
+        "// int x=10;",
+    };
+    QStringList text1{
+        "// int x=10;;",
+    };
+    QStringList text2{
+        "// int x=10;ab;",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
+void TestEditorSymbolCompletion::test_input_periods_in_string()
+{
+    QStringList text{
+        "\" int x=10;",
+    };
+    QStringList text1{
+        "\" int x=10;;",
+    };
+    QStringList text2{
+        "\" int x=10;ab;",
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(),Qt::Key_Left);
+    QTest::keyPress(mEditor.get(),';');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
 }

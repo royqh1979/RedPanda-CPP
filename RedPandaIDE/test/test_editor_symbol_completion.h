@@ -60,6 +60,10 @@ private slots:
     void test_input_asterisk_in_rawstring_begin();
     void test_input_asterisk_in_rawstring();
     void test_input_asterisk_in_rawstring_end();
+
+    void test_input_periods1();
+    void test_input_periods_in_comments();
+    void test_input_periods_in_string();
 };
 
 #endif
