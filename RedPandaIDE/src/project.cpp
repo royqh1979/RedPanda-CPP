@@ -55,8 +55,7 @@ Project::Project(const QString &filename, const QString &name,
     mEditorManager(editorList),
     mFileSystemWatcher(fileSystemWatcher)
 {
-    mIconsManager = iconsManager;
-    mModel = new ProjectModel(this);
+    mModel = new ProjectModel(iconsManager, this);
     mFilename = QFileInfo(filename).absoluteFilePath();
     mParser = std::make_shared<CppParser>();
     mParser->setSharedByFiles(true);
@@ -2239,11 +2238,6 @@ void Project::updateCompilerSetting()
     }
 }
 
-IconsManager *Project::iconsManager() const
-{
-    return mIconsManager;
-}
-
 QFileSystemWatcher *Project::fileSystemWatcher() const
 {
     return mFileSystemWatcher;
@@ -2494,14 +2488,15 @@ void ProjectUnit::setNode(const PProjectModelNode &newNode)
 //    mFileMissing = newDontSave;
 //}
 
-ProjectModel::ProjectModel(Project *project):
+ProjectModel::ProjectModel(IconsManager * iconsManager, Project *project):
     QAbstractItemModel(project),
     mProject(project)
 {
     mUpdateCount = 0;
-    Q_ASSERT(mProject->iconsManager()!=nullptr);
+    Q_ASSERT(iconsManager!=nullptr);
     //delete in the destructor
-    mIconProvider = std::make_unique<CustomFileIconProvider>(mProject->iconsManager());
+    mIconsManager = iconsManager;
+    mIconProvider = std::make_unique<CustomFileIconProvider>(iconManager);
 }
 
 void ProjectModel::beginUpdate()
@@ -2628,13 +2623,13 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
             } else {
                 switch(p->folderNodeType) {
                 case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
-                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
+                    icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_HEADERS_FOLDER);
                     break;
                 case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
-                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
+                    icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_SOURCES_FOLDER);
                     break;
                 default:
-                    icon = mProject->iconsManager()->getIcon(IconsManager::FILESYSTEM_FOLDER);
+                    icon = mIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
                 }
             }
             if (icon.isNull())

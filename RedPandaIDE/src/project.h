@@ -132,11 +132,12 @@ class CustomFileIconProvider;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit ProjectModel(Project* project);
+    explicit ProjectModel(IconsManager * iconManager, Project* project);
     void beginUpdate();
     void endUpdate();
 private:
     Project* mProject;
+    IconsManager *mIconsManager;
     int mUpdateCount;
     std::unique_ptr<CustomFileIconProvider> mIconProvider;
 
@@ -302,7 +303,6 @@ public:
 
     void renameFolderNode(PProjectModelNode node, const QString newName);
     void loadUnitLayout(Editor *e);
-    IconsManager *iconsManager() const;
 
 signals:
     void unitRemoved(const QString& fileName);
@@ -363,7 +363,6 @@ private:
     QHash<QString, PProjectModelNode> mFileSystemFolderNodes;
 
     QList<PProjectModelNode> mCustomFolderNodes;
-    IconsManager *mIconsManager;
     ProjectModel *mModel;
     EditorManager *mEditorManager;
     QFileSystemWatcher* mFileSystemWatcher;
