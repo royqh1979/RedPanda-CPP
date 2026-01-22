@@ -2496,7 +2496,7 @@ ProjectModel::ProjectModel(IconsManager * iconsManager, Project *project):
     Q_ASSERT(iconsManager!=nullptr);
     //delete in the destructor
     mIconsManager = iconsManager;
-    mIconProvider = std::make_unique<CustomFileIconProvider>(iconManager);
+    mIconProvider = std::make_unique<CustomFileIconProvider>(iconsManager);
 }
 
 void ProjectModel::beginUpdate()

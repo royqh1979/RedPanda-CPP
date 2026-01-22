@@ -22,7 +22,7 @@
 #include <QDebug>
 #include <QGlobalStatic>
 #include "../systemconsts.h"
-#include "../utils.h"
+#include <qt_utils/utils.h>
 
 QStringList CppDirectives;
 QStringList JavadocTags;

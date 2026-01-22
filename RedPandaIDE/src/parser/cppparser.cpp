@@ -16,9 +16,8 @@
  */
 #include "cppparser.h"
 #include "parserutils.h"
-#include "../utils.h"
 #include "qsynedit/syntaxer/cpp.h"
-
+#include <qt_utils/utils.h>
 #include <QApplication>
 #include <QDate>
 #include <QHash>

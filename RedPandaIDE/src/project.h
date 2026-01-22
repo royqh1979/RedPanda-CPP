@@ -132,7 +132,7 @@ class CustomFileIconProvider;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    explicit ProjectModel(IconsManager * iconManager, Project* project);
+    explicit ProjectModel(IconsManager * iconsManager, Project* project);
     void beginUpdate();
     void endUpdate();
 private:

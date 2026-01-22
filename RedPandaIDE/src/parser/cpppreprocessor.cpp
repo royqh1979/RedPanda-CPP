@@ -19,7 +19,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QMessageBox>
-#include "../utils.h"
+#include <qt_utils/utils.h>
 
 CppPreprocessor::CppPreprocessor()
 {

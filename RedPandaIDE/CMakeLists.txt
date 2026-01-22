@@ -298,6 +298,55 @@ add_test(
     COMMAND test-editor)
 
 add_dependencies(all-test-targets test-editor)
+
+#####################
+# test-cppparser    #
+#####################
+
+add_executable(test-cppparser test/test-cppparser-main.cpp)
+
+target_qt_plain_cpp(test-cppparser
+    src/parser/cppparser
+    src/parser/cpppreprocessor
+    src/parser/cpptokenizer
+    src/parser/parserutils
+    src/parser/statementmodel
+    )
+
+target_moc_classes(test-cppparser
+    #test
+    test/test_cppparser_base
+)
+target_include_directories(test-cppparser PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-cppparser PRIVATE
+        Qt::Core
+        Qt::Test
+        qsynedit
+        redpanda_qt_utils)
+
+
+add_custom_command(
+    TARGET test-cppparser POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
+        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
+
+target_compile_definitions(test-cppparser PRIVATE
+    ${GLOBAL_COMPILE_DEFINITIONS}
+    APP_NAME=\"test-cppparser\"
+    LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
+    REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
+    ARCH_X86_64=1
+    ARCH_X86=1)
+
+add_test(
+    NAME test-cppparser
+    COMMAND test-cppparser)
+
+add_dependencies(all-test-targets test-cppparser)
+
 #####################
 # Platform-specific #
 #####################
