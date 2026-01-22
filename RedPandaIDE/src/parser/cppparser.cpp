@@ -6930,6 +6930,21 @@ void CppParser::setSharedByFiles(bool newSharedByFiles)
     mSharedByFiles = newSharedByFiles;
 }
 
+void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject, const QString &contextFilename, bool onlyIfNotParsed, bool updateView)
+{
+    if (!parser)
+        return;
+    if (!parser->enabled())
+        return;
+    while (parser->parsing()) {
+        QThread::msleep(100);
+        QApplication *app=dynamic_cast<QApplication*>(
+                    QApplication::instance());
+        app->processEvents();
+    }
+    parser->parseFile(fileName, inProject, contextFilename, onlyIfNotParsed, updateView);
+}
+
 const QSet<QString> &CppParser::projectFiles() const
 {
     return mProjectFiles;
@@ -7095,7 +7110,7 @@ void CppFileListParserThread::run()
     }
 }
 
-void parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inProject, const QString &contextFilename,
+void CppParser::parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inProject, const QString &contextFilename,
                           bool onlyIfNotParsed, bool updateView)
 {
     if (!parser)
@@ -7106,7 +7121,7 @@ void parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inPro
     thread->start();
 }
 
-void parseFileListNonBlocking(PCppParser parser, bool updateView)
+void CppParser::parseFileListNonBlocking(PCppParser parser, bool updateView)
 {
     if (!parser)
         return;
@@ -7116,18 +7131,3 @@ void parseFileListNonBlocking(PCppParser parser, bool updateView)
     thread->start();
 }
 
-void parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject, const QString &contextFilename,
-                       bool onlyIfNotParsed, bool updateView)
-{
-    if (!parser)
-        return;
-    if (!parser->enabled())
-        return;
-    while (parser->parsing()) {
-        QThread::msleep(100);
-        QApplication *app=dynamic_cast<QApplication*>(
-                    QApplication::instance());
-        app->processEvents();
-    }
-    parser->parseFile(fileName, inProject, contextFilename, onlyIfNotParsed, updateView);
-}

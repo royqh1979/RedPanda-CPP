@@ -176,6 +176,27 @@ public:
     bool sharedByFiles() const;
     void setSharedByFiles(bool newSharedByFiles);
 
+    static void parseFileBlocking(
+        PCppParser parser,
+        const QString &fileName,
+        bool inProject,
+        const QString &contextFilename,
+            bool onlyIfNotParsed = false,
+            bool updateView = true);
+
+    static void parseFileNonBlocking(
+        PCppParser parser,
+        const QString &fileName,
+        bool inProject,
+        const QString &contextFilename,
+        bool onlyIfNotParsed = false,
+        bool updateView = true);
+
+    static void parseFileListNonBlocking(
+            PCppParser parser,
+            bool updateView = true);
+
+
 signals:
     void progress(const QString& fileName, int total, int current);
     void onBusy();
@@ -756,13 +777,6 @@ private:
     friend class CppFileListParserThread;
     friend class CppFileParserThread;
 
-    friend void parseFileBlocking(
-        PCppParser parser,
-        const QString &fileName,
-        bool inProject,
-        const QString &contextFilename,
-        bool onlyIfNotParsed,
-        bool updateView);
 };
 
 class CppFileParserThread : public QThread {
@@ -806,26 +820,5 @@ private:
 protected:
     void run() override;
 };
-
-void parseFileNonBlocking(
-    PCppParser parser,
-    const QString &fileName,
-    bool inProject,
-    const QString &contextFilename,
-    bool onlyIfNotParsed = false,
-    bool updateView = true);
-
-void parseFileBlocking(
-    PCppParser parser,
-    const QString &fileName,
-    bool inProject,
-    const QString &contextFilename,
-    bool onlyIfNotParsed = false,
-    bool updateView = true);
-
-void parseFileListNonBlocking(
-        PCppParser parser,
-        bool updateView = true);
-
 
 #endif // CPPPARSER_H

@@ -3483,7 +3483,7 @@ void MainWindow::scanActiveProject(bool parse)
     if (parse) {
         resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
-        parseFileListNonBlocking(mProject->cppParser());
+        CppParser::parseFileListNonBlocking(mProject->cppParser());
     } else {
         mProject->resetParserProjectFiles();
     };
@@ -7490,7 +7490,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
-        parseFileListNonBlocking(mProject->cppParser());
+        CppParser::parseFileListNonBlocking(mProject->cppParser());
     }
 }
 
@@ -7843,7 +7843,7 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 
     mProject->saveAll();
 
-    parseFileListNonBlocking(mProject->cppParser());
+    CppParser::parseFileListNonBlocking(mProject->cppParser());
     Editor * editor = mProject->openUnit(newUnit, false);
     mEditorManager->activeEditor(editor,true);
 #ifdef ENABLE_VCS
@@ -8194,7 +8194,7 @@ void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString 
     mProject->cppParser()->invalidateFile(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
     mProject->cppParser()->addProjectFile(newFilename,true);
-    parseFileListNonBlocking(mProject->cppParser());
+    CppParser::parseFileListNonBlocking(mProject->cppParser());
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(oldFilename);
         mTodoParser->parseFile(newFilename,true);
@@ -8444,7 +8444,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
             Editor * e=(*mEditorManager)[i];
             if (e->modified())  {
                 //here we must reparse the file in sync, or rename may fail
-                parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
+                CppParser::parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
             }
         }
 
@@ -8507,7 +8507,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
     if (!editor->inProject() && editor->modified() ) {
         //here we must reparse the file in sync, or rename may fail
-        parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
+        CppParser::parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
     }
     CppRefacter refactor(this);
 
@@ -9531,7 +9531,7 @@ void MainWindow::on_actionNew_Header_triggered()
         PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->saveAll();
 
-        parseFileListNonBlocking(mProject->cppParser());
+        CppParser::parseFileListNonBlocking(mProject->cppParser());
         setProjectViewCurrentUnit(newUnit);
         updateProjectView();
 
@@ -9608,7 +9608,7 @@ void MainWindow::on_actionNew_Class_triggered()
         newUnit=mProject->addUnit(sourceFilename,mProject->rootNode());
         setProjectViewCurrentUnit(newUnit);
         mProject->saveAll();
-        parseFileListNonBlocking(mProject->cppParser());
+        CppParser::parseFileListNonBlocking(mProject->cppParser());
         updateProjectView();
 
         openFile(headerFilename);

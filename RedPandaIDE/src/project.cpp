@@ -713,7 +713,7 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
         editor->rename(newFileName);
     }
     if (mParser)
-        parseFileNonBlocking(mParser,newFileName,true, editor->contextFile());
+        CppParser::parseFileNonBlocking(mParser,newFileName,true, editor->contextFile());
 
     internalRemoveUnit(unit,false,true);
 

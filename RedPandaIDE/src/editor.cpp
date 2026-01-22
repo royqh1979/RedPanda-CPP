@@ -2925,7 +2925,7 @@ void Editor::reparse()
         return;
 //    qDebug()<<"reparse "<<mFilename;
     //mParser->setEnabled(mCodeCompletionSettings->enabled());
-    parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
+    CppParser::parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
 }
 
 void Editor::reparseIfNeeded()

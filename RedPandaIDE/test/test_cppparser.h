@@ -1,18 +1,18 @@
-#ifndef TEST_CPPPARSER_BASE_H
-#define TEST_CPPPARSER_BASE_H
+#ifndef TEST_CPPPARSER_H
+#define TEST_CPPPARSER_H
 #include <QObject>
 #include <memory>
 
 class CppParser;
 
-class TestCppParserBase: public QObject
+class TestCppParser: public QObject
 {
     Q_OBJECT
 public:
-    TestCppParserBase(QObject *parent=nullptr);
+    TestCppParser(QObject *parent=nullptr);
 protected:
     void init_parser();
-
+    void test_parse_var();
 protected:
     std::shared_ptr<CppParser> mParser;
 };

@@ -315,7 +315,7 @@ target_qt_plain_cpp(test-cppparser
 
 target_moc_classes(test-cppparser
     #test
-    test/test_cppparser_base
+    test/test_cppparser
 )
 target_include_directories(test-cppparser PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR})
