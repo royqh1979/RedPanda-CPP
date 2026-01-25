@@ -146,11 +146,17 @@ add_custom_target(
 
 add_dependencies(test-qsynedit copy_test_qsynedit_resources)
 
-target_compile_definitions(test-qsynedit PUBLIC
+target_compile_definitions(test-qsynedit PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
     QSYNEDIT_TEST
     ARCH_X86_64=1
     ARCH_X86=1)
+
+
+if (CMAKE_HOST_LINUX AND CMAKE_COMPILER_IS_GNUCXX)
+    target_compile_options(test-qsynedit PRIVATE "-fsanitize=undefined" "-fno-omit-frame-pointer")
+    target_link_options(test-qsynedit PRIVATE "-fsanitize=undefined")
+endif()
 
 add_test(
     NAME test-qsynedit
