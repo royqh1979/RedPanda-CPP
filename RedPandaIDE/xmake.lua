@@ -11,7 +11,7 @@ target("RedPandaIDE_main_glibc_hwcaps")
 
     add_deps('RedPandaIDE')
 
-    add_files("main_glibc_hwcaps.c")
+    add_files("src/main_glibc_hwcaps.c")
 
 target("RedPandaIDE")
     if has_config("glibc-hwcaps") then
@@ -64,156 +64,179 @@ target("RedPandaIDE")
     -- files
 
     add_files(
-        "autolinkmanager.cpp",
-        "colorscheme.cpp",
-        "customfileiconprovider.cpp",
-        "projectoptions.cpp",
-        "settings.cpp",
-        "syntaxermanager.cpp",
-        "systemconsts.cpp",
-        "utils.cpp",
-        "visithistorymanager.cpp",
+        "src/autolinkmanager.cpp",
+        "src/colorscheme.cpp",
+        "src/customfileiconprovider.cpp",
+        "src/projectoptions.cpp",
+        "src/settings.cpp",
+        "src/syntaxermanager.cpp",
+        "src/systemconsts.cpp",
+        "src/utils.cpp",
+        "src/visithistorymanager.cpp",
         -- compiler
-        "compiler/compilerinfo.cpp",
+        "src/compiler/compilerinfo.cpp",
         -- debugger
-        "debugger/dapprotocol.cpp",
-        "debugger/gdbmiresultparser.cpp",
+        "src/debugger/dapprotocol.cpp",
+        "src/debugger/gdbmiresultparser.cpp",
         -- parser
-        "parser/cpppreprocessor.cpp",
-        "parser/cpptokenizer.cpp",
-        "parser/parserutils.cpp",
+        "src/parser/cpppreprocessor.cpp",
+        "src/parser/cpptokenizer.cpp",
+        "src/parser/parserutils.cpp",
         -- problems
-        "problems/freeprojectsetformat.cpp",
-        "problems/problemcasevalidator.cpp",
+        "src/problems/freeprojectsetformat.cpp",
+        "src/problems/problemcasevalidator.cpp",
+        -- settings
+        "src/settings/basesettings.cpp",
+        "src/settings/codecompletionsettings.cpp",
+        "src/settings/codeformattersettings.cpp",
+        "src/settings/compilersetsettings.cpp",
+        "src/settings/compilesettings.cpp",
+        "src/settings/debuggersettings.cpp",
+        "src/settings/dirsettings.cpp",
+        "src/settings/editorsettings.cpp",
+        "src/settings/environmentsettings.cpp",
+        "src/settings/executorsettings.cpp",
+        "src/settings/languagesettings.cpp",
+        "src/settings/uisettings.cpp",
         -- utils
-        "utils/escape.cpp",
-        "utils/font.cpp",
-        "utils/parsearg.cpp")
+        "src/utils/escape.cpp",
+        "src/utils/file.cpp",
+        "src/utils/font.cpp",
+        "src/utils/os.cpp",
+        "src/utils/parsearg.cpp",
+        "src/utils/parser.cpp",
+        "src/utils/parsemacros.cpp",
+        "src/utils/terminal.cpp",
+        "src/utils/ui.cpp")
 
     add_moc_classes(
-        "caretlist",
-        "codesnippetsmanager",
-        "cpprefacter",
-        "editor",
-        "editormanager",
-        "iconsmanager",
-        "main",
-        "project",
-        "projecttemplate",
-        "shortcutmanager",
-        "symbolusagemanager",
-        "thememanager",
-        "todoparser",
-        "toolsmanager",
+        "src/caretlist",
+        "src/codesnippetsmanager",
+        "src/cpprefacter",
+        "src/editor",
+        "src/editormanager",
+        "src/iconsmanager",
+        "src/main",
+        "src/project",
+        "src/projecttemplate",
+        "src/shortcutmanager",
+        "src/symbolusagemanager",
+        "src/thememanager",
+        "src/todoparser",
+        "src/toolsmanager",
         -- compiler
-        "compiler/compiler",
-        "compiler/compilermanager",
-        "compiler/executablerunner",
-        "compiler/filecompiler",
-        "compiler/nasmfilecompiler",
-        "compiler/ojproblemcasesrunner",
-        "compiler/projectcompiler",
-        "compiler/runner",
-        "compiler/stdincompiler",
+        "src/compiler/compiler",
+        "src/compiler/compilermanager",
+        "src/compiler/executablerunner",
+        "src/compiler/filecompiler",
+        "src/compiler/nasmfilecompiler",
+        "src/compiler/ojproblemcasesrunner",
+        "src/compiler/projectcompiler",
+        "src/compiler/runner",
+        "src/compiler/stdincompiler",
         -- debugger
-        "debugger/dapdebugger",
-        "debugger/debugger",
-        "debugger/gdbmidebugger",
+        "src/debugger/dapdebugger",
+        "src/debugger/debugger",
+        "src/debugger/debuggermodels",
+        "src/debugger/gdbmidebugger",
         -- parser
-        "parser/cppparser",
-        "parser/statementmodel",
+        "src/parser/cppparser",
+        "src/parser/statementmodel",
         -- problems
-        "problems/competitivecompenionhandler",
-        "problems/ojproblemset",
+        "src/problems/competitivecompenionhandler",
+        "src/problems/ojproblemset",
+        -- reformatter
+        "src/reformatter/astyleformatter",
+        "src/reformatter/basereformatter",
         -- settings dialog
-        "settingsdialog/settingswidget",
+        "src/settingsdialog/settingswidget",
         -- widgets
-        "widgets/bookmarkmodel",
-        "widgets/classbrowser",
-        "widgets/classbrowser",
-        "widgets/codecompletionlistview",
-        "widgets/codecompletionpopup",
-        "widgets/coloredit",
-        "widgets/compileargumentswidget",
-        "widgets/customdisablediconengine",
-        "widgets/customfilesystemmodel",
-        "widgets/darkfusionstyle",
-        "widgets/editorstabwidget",
-        "widgets/filenameeditdelegate",
-        "widgets/functiontooltipwidget",
-        "widgets/headercompletionpopup",
-        "widgets/issuestable",
-        "widgets/labelwithmenu",
-        "widgets/lightfusionstyle",
-        "widgets/linenumbertexteditor",
-        "widgets/macroinfomodel",
-        "widgets/ojproblemsetmodel",
-        "widgets/qconsole",
-        "widgets/qpatchedcombobox",
-        "widgets/searchresultview",
-        "widgets/shortcutinputedit",
-        "widgets/shrinkabletabwidget")
+        "src/widgets/bookmarkmodel",
+        "src/widgets/classbrowser",
+        "src/widgets/classbrowser",
+        "src/widgets/codecompletionlistview",
+        "src/widgets/codecompletionpopup",
+        "src/widgets/coloredit",
+        "src/widgets/compileargumentswidget",
+        "src/widgets/customdisablediconengine",
+        "src/widgets/customfilesystemmodel",
+        "src/widgets/darkfusionstyle",
+        "src/widgets/editorstabwidget",
+        "src/widgets/filenameeditdelegate",
+        "src/widgets/functiontooltipwidget",
+        "src/widgets/headercompletionpopup",
+        "src/widgets/issuestable",
+        "src/widgets/labelwithmenu",
+        "src/widgets/lightfusionstyle",
+        "src/widgets/linenumbertexteditor",
+        "src/widgets/macroinfomodel",
+        "src/widgets/ojproblemsetmodel",
+        "src/widgets/qconsole",
+        "src/widgets/qpatchedcombobox",
+        "src/widgets/searchresultview",
+        "src/widgets/shortcutinputedit",
+        "src/widgets/shrinkabletabwidget")
 
     add_ui_classes(
-        "mainwindow",
+        "src/mainwindow",
         -- settings dialog
-        "settingsdialog/compilerautolinkwidget",
-        "settingsdialog/compilergaswidget",
-        "settingsdialog/compilernasmwidget",
-        "settingsdialog/compilersetdirectorieswidget",
-        "settingsdialog/compilersetoptionwidget",
-        "settingsdialog/debuggeneralwidget",
-        "settingsdialog/editorautosavewidget",
-        "settingsdialog/editorclipboardwidget",
-        "settingsdialog/editorcodecompletionwidget",
-        "settingsdialog/editorcolorschemewidget",
-        "settingsdialog/editorcustomctypekeywords",
-        "settingsdialog/editorfontwidget",
-        "settingsdialog/editorgeneralwidget",
-        "settingsdialog/editormiscwidget",
-        "settingsdialog/editorsnippetwidget",
-        "settingsdialog/editorsymbolcompletionwidget",
-        "settingsdialog/editorsyntaxcheckwidget",
-        "settingsdialog/editortooltipswidget",
-        "settingsdialog/environmentappearancewidget",
-        "settingsdialog/environmentfolderswidget",
-        "settingsdialog/environmentperformancewidget",
-        "settingsdialog/environmentprogramswidget",
-        "settingsdialog/environmentshortcutwidget",
-        "settingsdialog/executorgeneralwidget",
-        "settingsdialog/executorproblemsetwidget",
-        "settingsdialog/formattergeneralwidget",
-        "settingsdialog/formatterpathwidget",
-        "settingsdialog/languageasmgenerationwidget",
-        "settingsdialog/projectcompileparamaterswidget",
-        "settingsdialog/projectcompilerwidget",
-        "settingsdialog/projectdirectorieswidget",
-        "settingsdialog/projectdllhostwidget",
-        "settingsdialog/projectfileswidget",
-        "settingsdialog/projectgeneralwidget",
-        "settingsdialog/projectmakefilewidget",
-        "settingsdialog/projectoutputwidget",
-        "settingsdialog/projectprecompilewidget",
-        "settingsdialog/settingsdialog",
-        "settingsdialog/toolsgeneralwidget",
+        "src/settingsdialog/compilerautolinkwidget",
+        "src/settingsdialog/compilergaswidget",
+        "src/settingsdialog/compilernasmwidget",
+        "src/settingsdialog/compilersetdirectorieswidget",
+        "src/settingsdialog/compilersetoptionwidget",
+        "src/settingsdialog/debuggeneralwidget",
+        "src/settingsdialog/editorautosavewidget",
+        "src/settingsdialog/editorclipboardwidget",
+        "src/settingsdialog/editorcodecompletionwidget",
+        "src/settingsdialog/editorcolorschemewidget",
+        "src/settingsdialog/editorcustomctypekeywords",
+        "src/settingsdialog/editorfontwidget",
+        "src/settingsdialog/editorgeneralwidget",
+        "src/settingsdialog/editormiscwidget",
+        "src/settingsdialog/editorsnippetwidget",
+        "src/settingsdialog/editorsymbolcompletionwidget",
+        "src/settingsdialog/editorsyntaxcheckwidget",
+        "src/settingsdialog/editortooltipswidget",
+        "src/settingsdialog/environmentappearancewidget",
+        "src/settingsdialog/environmentfolderswidget",
+        "src/settingsdialog/environmentperformancewidget",
+        "src/settingsdialog/environmentprogramswidget",
+        "src/settingsdialog/environmentshortcutwidget",
+        "src/settingsdialog/executorgeneralwidget",
+        "src/settingsdialog/executorproblemsetwidget",
+        "src/settingsdialog/formattergeneralwidget",
+        "src/settingsdialog/formatterpathwidget",
+        "src/settingsdialog/languageasmgenerationwidget",
+        "src/settingsdialog/projectcompileparamaterswidget",
+        "src/settingsdialog/projectcompilerwidget",
+        "src/settingsdialog/projectdirectorieswidget",
+        "src/settingsdialog/projectdllhostwidget",
+        "src/settingsdialog/projectfileswidget",
+        "src/settingsdialog/projectgeneralwidget",
+        "src/settingsdialog/projectmakefilewidget",
+        "src/settingsdialog/projectoutputwidget",
+        "src/settingsdialog/projectprecompilewidget",
+        "src/settingsdialog/settingsdialog",
+        "src/settingsdialog/toolsgeneralwidget",
         -- widgets
-        "widgets/aboutdialog",
-        "widgets/choosethemedialog",
-        "widgets/cpudialog",
-        "widgets/custommakefileinfodialog",
-        "widgets/editorfontdialog",
-        "widgets/filepropertiesdialog",
-        "widgets/infomessagebox",
-        "widgets/newclassdialog",
-        "widgets/newheaderdialog",
-        "widgets/newprojectdialog",
-        "widgets/newprojectunitdialog",
-        "widgets/newtemplatedialog",
-        "widgets/ojproblempropertywidget",
-        "widgets/projectalreadyopendialog",
-        "widgets/searchdialog",
-        "widgets/searchinfiledialog",
-        "widgets/signalmessagedialog")
+        "src/widgets/aboutdialog",
+        "src/widgets/choosethemedialog",
+        "src/widgets/cpudialog",
+        "src/widgets/custommakefileinfodialog",
+        "src/widgets/editorfontdialog",
+        "src/widgets/filepropertiesdialog",
+        "src/widgets/infomessagebox",
+        "src/widgets/newclassdialog",
+        "src/widgets/newheaderdialog",
+        "src/widgets/newprojectdialog",
+        "src/widgets/newprojectunitdialog",
+        "src/widgets/newtemplatedialog",
+        "src/widgets/ojproblempropertywidget",
+        "src/widgets/projectalreadyopendialog",
+        "src/widgets/searchdialog",
+        "src/widgets/searchinfiledialog",
+        "src/widgets/signalmessagedialog")
 
     add_files("*.qrc", "translations/*.ts")
 
@@ -226,42 +249,42 @@ target("RedPandaIDE")
 
     if is_os("windows") then
         add_ui_classes(
-            "settingsdialog/environmentfileassociationwidget",
-            "settingsdialog/projectversioninfowidget")
+            "src/settingsdialog/environmentfileassociationwidget",
+            "src/settingsdialog/projectversioninfowidget")
         add_files("resources/windows_icon.rc")
     end
 
     if has_config("lua-addon") then
         add_deps("lua")
         add_files(
-            "addon/luaapi.cpp",
-            "addon/luaexecutor.cpp",
-            "addon/luaruntime.cpp")
+            "src/addon/luaapi.cpp",
+            "src/addon/luaexecutor.cpp",
+            "src/addon/luaruntime.cpp")
         add_links("lua")
     end
 
     if has_config("sdcc") then
         add_moc_classes(
-            "compiler/sdccfilecompiler",
-            "compiler/sdccprojectcompiler")
+            "src/compiler/sdccfilecompiler",
+            "src/compiler/sdccprojectcompiler")
     end
 
     if has_config("vcs") then
         add_moc_classes(
-            "vcs/gitmanager",
-            "vcs/gitrepository",
-            "vcs/gitutils")
+            "src/vcs/gitmanager",
+            "src/vcs/gitrepository",
+            "src/vcs/gitutils")
         add_ui_classes(
-            "settingsdialog/toolsgitwidget",
-            "vcs/gitbranchdialog",
-            "vcs/gitfetchdialog",
-            "vcs/gitlogdialog",
-            "vcs/gitmergedialog",
-            "vcs/gitpulldialog",
-            "vcs/gitpushdialog",
-            "vcs/gitremotedialog",
-            "vcs/gitresetdialog",
-            "vcs/gituserconfigdialog")
+            "src/settingsdialog/toolsgitwidget",
+            "src/vcs/gitbranchdialog",
+            "src/vcs/gitfetchdialog",
+            "src/vcs/gitlogdialog",
+            "src/vcs/gitmergedialog",
+            "src/vcs/gitpulldialog",
+            "src/vcs/gitpushdialog",
+            "src/vcs/gitremotedialog",
+            "src/vcs/gitresetdialog",
+            "src/vcs/gituserconfigdialog")
     end
 
     -- libs
@@ -271,12 +294,13 @@ target("RedPandaIDE")
         add_links("psapi", "shlwapi")
     end
 
-target("test-escape")
+target("test-makefile-escape")
     set_kind("binary")
     add_rules("qt.console")
 
-    set_default(false)
-    add_tests("test-escape")
+    add_tests("default")
 
-    add_files("utils/escape.cpp", "test/escape.cpp")
+    add_files(
+        "src/utils/escape.cpp",
+        "test/test-makefile-escape.cpp")
     add_includedirs(".")

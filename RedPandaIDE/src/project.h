@@ -22,6 +22,7 @@
 #include <QSet>
 #include <QSortFilterProxyModel>
 #include <memory>
+#include "customfileiconprovider.h"
 #include "projectoptions.h"
 #include "utils.h"
 
@@ -128,7 +129,6 @@ private:
 using PProjectUnit = std::shared_ptr<ProjectUnit>;
 
 class GitRepository;
-class CustomFileIconProvider;
 class ProjectModel : public QAbstractItemModel {
     Q_OBJECT
 public:

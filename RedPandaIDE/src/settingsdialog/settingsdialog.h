@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QStandardItemModel>
 #include <memory>
+#include "src/iconsmanager.h"
 
 class SettingsWidget;
 namespace Ui {

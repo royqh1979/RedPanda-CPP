@@ -27,8 +27,8 @@ jobs:
           cd build
           QT_QPA_PLATFORM=offscreen make test -j$(nproc)
 
-  ubuntu_makefile_escape:
-    name: Unix makefile escape
+  xmake_test:
+    name: Xmake test targets
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -45,15 +45,12 @@ jobs:
         with:
           apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools
 
-      - name: Build
-        run: |
-          xmake f --qt=/usr
-          xmake b test-escape
-
-      - name: Test
+      - name: Build and test
         run: |
           export QT_ASSUME_STDERR_HAS_CONSOLE=1
-          xmake r test-escape
+
+          xmake f --qt=/usr
+          xmake test
 
   generated_code_consistency_addon:
     name: "Generated code consistency: add-on"
