@@ -278,6 +278,10 @@ target_link_libraries(test-editor PRIVATE
         qsynedit
         redpanda_qt_utils)
 
+if (QT_FEATURE_static)
+    qt_import_plugins(test-editor
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
 
 add_custom_command(
     TARGET test-editor POST_BUILD
@@ -326,6 +330,10 @@ target_link_libraries(test-cppparser PRIVATE
         qsynedit
         redpanda_qt_utils)
 
+if (QT_FEATURE_static)
+    qt_import_plugins(test-cppparser
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
 
 add_custom_command(
     TARGET test-cppparser POST_BUILD
