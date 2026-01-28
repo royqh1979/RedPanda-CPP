@@ -128,7 +128,7 @@ The package will be placed in `dist/`.
 Package format: AppImage, Debian (`.deb`), tarball (`.tar.gz`).
 
 ```bash
-podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260107.0 ./packages/linux/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260127.0 ./packages/linux/01-in-docker.sh
 ```
 
 The packages will be placed in `dist/`.

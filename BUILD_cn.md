@@ -129,7 +129,7 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 打包格式：AppImage、Debian (`*.deb`)、tar 包 (`.tar.gz`)。
 
 ```bash
-podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260107.0 ./packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260127.0 ./packages/appimage/01-in-docker.sh
 ```
 
 软件包位于 `dist/` 目录下。

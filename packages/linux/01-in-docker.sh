@@ -36,6 +36,7 @@ TARBALL_FILE=redpanda-cpp-bin-$VERSION-$ARCH.tar.gz
   cd /build/astyle
   cmake -S . -B . \
     -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
     -DCMAKE_EXE_LINKER_FLAGS="-static-pie"
@@ -49,6 +50,7 @@ TARBALL_FILE=redpanda-cpp-bin-$VERSION-$ARCH.tar.gz
   cd /build/redpanda
   cmake -S "$SRC_DIR" -B . \
     -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
     -DCMAKE_EXE_LINKER_FLAGS="-static-pie" \
