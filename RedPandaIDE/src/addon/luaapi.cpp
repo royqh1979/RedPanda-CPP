@@ -31,10 +31,10 @@
 
 #include <lua/lua.hpp>
 
-#include "utils.h"
-#include "settings.h"
-#include "thememanager.h"
 #include "luaruntime.h"
+#include "src/settings.h"
+#include "src/thememanager.h"
+#include "src/utils/os.h"
 
 #ifdef Q_OS_WINDOWS
 // added in Windows 11 21H2, declare our version to support old SDKs.

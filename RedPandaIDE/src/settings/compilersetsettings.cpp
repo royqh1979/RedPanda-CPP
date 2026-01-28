@@ -16,6 +16,7 @@
  */
 #include "compilersetsettings.h"
 #include "../utils.h"
+#include "../settings.h"
 #include "../systemconsts.h"
 #include "../utils/escape.h"
 #include "../utils/os.h"
@@ -24,6 +25,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QMessageBox>
+#include "src/addon/luaexecutor.h"
+#include "src/addon/luaruntime.h"
 
 static QStringList CompilerCompatibleIndex; // index for old settings compatibility
 

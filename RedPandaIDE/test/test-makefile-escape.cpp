@@ -7,11 +7,11 @@
 #include <QProcess>
 #include <QString>
 
-#include "utils/escape.h"
+#include "src/utils/escape.h"
 
 int testIndex = 0;
 
-QByteArray content = "main(){}";
+QByteArray content = "int main(){}";
 
 void testMake(QString name)
 {
