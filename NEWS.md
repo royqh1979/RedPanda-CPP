@@ -11,6 +11,7 @@ Red Panda C++ Version 3.5
   - fix: Chances to deadlock while parser is working and trying to close/switch editors.
   - fix: Can't goto definition / declaration in an unsaved new file.
   - fix: Actions in Run menu not correctly enabled/disabled when filetype changed.
+  - fix: Can't process relative file path passed by command line.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

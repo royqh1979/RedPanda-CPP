@@ -262,6 +262,7 @@ int main(int argc, char *argv[])
 #if QT_VERSION_MAJOR < 6
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
+    QDir startupDir = QDir::current();
     ExternalResource resource;
 
     QLockFile lockFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
@@ -412,7 +413,17 @@ int main(int argc, char *argv[])
         QStringList filesToOpen = app.arguments();
         filesToOpen.pop_front();
         if (!filesToOpen.isEmpty()) {
-            mainWindow.openFiles(filesToOpen);
+            QStringList absoluteFiles;
+            //convert all relative path to absolute path
+            foreach (const QString& path, filesToOpen) {
+                QFileInfo info{path};
+                if (info.isAbsolute()) {
+                    absoluteFiles.append(path);
+                } else {
+                    absoluteFiles.append(startupDir.absoluteFilePath(path));
+                }
+            }
+            mainWindow.openFiles(absoluteFiles);
         } else {
             if (pSettings->editor().autoLoadLastFiles())
                 mainWindow.loadLastOpens();
