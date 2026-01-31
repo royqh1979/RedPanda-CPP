@@ -208,8 +208,8 @@ target_link_libraries(RedPandaIDE PRIVATE
     redpanda_qt_utils)
 
 target_link_options(RedPandaIDE PRIVATE
-    $<$<CONFIG:Release>:-s>
-    $<$<CONFIG:MinSizeRel>:-s>
+    $<$<CONFIG:Release>:-s -static>
+    $<$<CONFIG:MinSizeRel>:-s -static>
 )
 
 #####################
