@@ -207,10 +207,10 @@ target_link_libraries(RedPandaIDE PRIVATE
     qsynedit
     redpanda_qt_utils)
 
-target_link_options(RedPandaIDE PRIVATE
-    $<$<CONFIG:Release>:-s -static>
-    $<$<CONFIG:MinSizeRel>:-s -static>
-)
+#target_link_options(RedPandaIDE PRIVATE
+#    $<$<CONFIG:Release>:-s -static>
+#    $<$<CONFIG:MinSizeRel>:-s -static>
+#)
 
 #####################
 # test-editor       #
