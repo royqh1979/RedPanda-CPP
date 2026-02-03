@@ -19,7 +19,6 @@ public:
     // IndentCalculator interface
 protected:
     int findCommentStartLine(int searchStartLine, const QSynEdit *editor);
-    void doInitOptions() override;
     int findLastParenthesis(int line, const QSynEdit *editor);
 };
 }

@@ -188,10 +188,6 @@ namespace QSynedit {
         return commentStartLine;
     }
 
-    void CppFormatter::doInitOptions()
-    {
-    }
-
     int CppFormatter::findLastParenthesis(int line, const QSynEdit *editor)
     {
         QString lineText = editor->lineText(line);
