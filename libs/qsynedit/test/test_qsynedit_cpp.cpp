@@ -10174,5 +10174,38 @@ void TestQSyneditCpp::test_move_down_before_collapsed_block()
     QVERIFY(mEdit->isCollapsed(10,12));
 }
 
+void TestQSyneditCpp::test_copy_paste_rawstring()
+{
+    QStringList text({
+        "int main() {",
+        "const char* s = R\"(",
+        "aa",
+        "\t\tab",
+        "  aa",
+        ")\";",
+        "int x=0;",
+        "}"
+    });
+    QStringList text1({
+        "int main() {",
+        "\tconst char* s = R\"(",
+        "aa",
+        "\t\tab",
+        "  aa",
+        ")\";",
+        "\tint x=0;",
+        "}"
+    });
+    QSynEdit edit;
+    edit.setContent(text);
+    QCOMPARE(edit.content(), text);
+    edit.selectAll();
+    edit.copyToClipboard();
+
+    clearContent();
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), text1);
+}
+
 }
 

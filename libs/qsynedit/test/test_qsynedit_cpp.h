@@ -120,6 +120,8 @@ private slots:
     void test_move_down_select_line_end_to_line_begin();
     void test_move_down_select_line_end_to_line_begin2();
     void test_move_down_before_collapsed_block();
+
+    void test_copy_paste_rawstring();
 };
 
 }
