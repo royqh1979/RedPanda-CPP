@@ -122,6 +122,7 @@ private slots:
     void test_move_down_before_collapsed_block();
 
     void test_copy_paste_rawstring();
+    void test_copy_paste_ending_with_backslash();
 };
 
 }

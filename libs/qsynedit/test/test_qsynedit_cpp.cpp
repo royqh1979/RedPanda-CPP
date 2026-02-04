@@ -10205,6 +10205,57 @@ void TestQSyneditCpp::test_copy_paste_rawstring()
     clearContent();
     mEdit->pasteFromClipboard();
     QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QVERIFY(mEdit->empty());
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList(""));
+}
+
+void TestQSyneditCpp::test_copy_paste_ending_with_backslash()
+{
+    QStringList text({
+        "int main() {",
+        "const char* s = \"\\",
+        "aa\\",
+        "\t\tab\\",
+        "  aa\\",
+        "\";",
+        "int x=0;",
+        "}"
+    });
+    QStringList text1({
+        "int main() {",
+        "\tconst char* s = \"\\",
+        "aa\\",
+        "\t\tab\\",
+        "  aa\\",
+        "\";",
+        "\tint x=0;",
+        "}"
+    });
+    QSynEdit edit;
+    edit.setContent(text);
+    QCOMPARE(edit.content(), text);
+    edit.selectAll();
+    edit.copyToClipboard();
+
+    clearContent();
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QVERIFY(mEdit->empty());
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList(""));
 }
 
 }

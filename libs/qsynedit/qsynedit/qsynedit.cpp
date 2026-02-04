@@ -1420,6 +1420,8 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
 
 bool QSynEdit::shouldRecalcIndent(int line)
 {
+    if (!mOptions.testFlag(EditorOption::AutoIndent))
+        return false;
     if (mFormatter) {
         return mFormatter->shouldRecalcIndent(line,this);
     }
@@ -2289,11 +2291,10 @@ void QSynEdit::doBreakLine()
     int indentSpaces = 0;
     if (!mUndoing
             && mSyntaxer->language() == ProgrammingLanguage::CPP
-            && mOptions.testFlag(EditorOption::AutoIndent)
             && mSyntaxer->getToken()=="else"
             && shouldRecalcIndent(mCaretY)) {
         indentSpaces = calcIndentSpaces(mCaretY,
-                                        trimmedleftLineText,mOptions.testFlag(EditorOption::AutoIndent)
+                                        trimmedleftLineText,true
                                         );
         QString indentSpacesForLeftLineText = genSpaces(indentSpaces);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
@@ -2311,11 +2312,10 @@ void QSynEdit::doBreakLine()
                 mSyntaxer->getState());
 
     indentSpaces = 0;
-    if (mOptions.testFlag(EditorOption::AutoIndent)
-            && shouldRecalcIndent(mCaretY+1)) {
+    if (shouldRecalcIndent(mCaretY+1)) {
         rightLineText=trimLeft(rightLineText);
         indentSpaces = calcIndentSpaces(mCaretY+1,
-                                        rightLineText,mOptions.testFlag(EditorOption::AutoIndent)
+                                        rightLineText,true
                                             );
     }
     QString indentSpacesForRightLineText = genSpaces(indentSpaces);
@@ -2741,7 +2741,6 @@ void QSynEdit::doInputStr(const QString& s)
                 internalInputStr(inputStr);
                 // auto indent
                 if (mActiveSelectionMode==SelectionMode::Normal
-                        && mOptions.testFlag(EditorOption::AutoIndent)
                         && shouldRecalcIndent(oldCaretY)
                         ) {
 
@@ -3885,13 +3884,9 @@ void QSynEdit::setBackgroundColor(const QColor &newBackgroundColor)
     mBackgroundColor = newBackgroundColor;
 }
 
-bool QSynEdit::isEmpty()
+bool QSynEdit::empty() const
 {
-    if (mDocument->count()>1)
-        return false;
-    if (mDocument->count()==1)
-        return mDocument->getLine(0).isEmpty();
-    return true;
+    return mDocument->empty();
 }
 
 const QColor &QSynEdit::foregroundColor() const
@@ -4932,11 +4927,6 @@ const std::shared_ptr<const Document> QSynEdit::document() const
     return mDocument;
 }
 
-bool QSynEdit::empty()
-{
-    return mDocument->empty();
-}
-
 bool QSynEdit::isSpaceChar(const QChar &ch) const
 {
     return mSyntaxer->isSpaceChar(ch);
@@ -5668,7 +5658,7 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
     int currentLine=pos.line;
     if (text.length()>1) {
         // step1: insert the first line of Value into current line
-        if (!mUndoing && mOptions.testFlag(EditorOption::AutoIndent)) {
+        if (!mUndoing) {
             QString s = text[0];
             if (sLeftSide.isEmpty() && shouldRecalcIndent(currentLine)) {
                 s=s.trimmed();
@@ -5697,7 +5687,7 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
                 if (i==text.length()-1)
                     str += sRightSide;
             }
-            if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)
+            if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP
                     && shouldRecalcIndent(currentLine)) {
                 int indentSpaces = calcIndentSpaces(currentLine,str,true);
                 str = genSpaces(indentSpaces)+trimLeft(str);

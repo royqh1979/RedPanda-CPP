@@ -410,7 +410,6 @@ public:
     bool findLineTextBySeq(size_t lineSeq, QString& text) const;
 
     const std::shared_ptr<const Document> document() const;
-    bool empty();
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void setContent(const QString& text);
@@ -489,7 +488,7 @@ public:
     const QColor &backgroundColor() const;
     void setBackgroundColor(const QColor &newBackgroundColor);
 
-    bool isEmpty();
+    bool empty() const;
 
     int mouseSelectionScrollSpeed() const;
     void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
