@@ -26,13 +26,15 @@ namespace QSynedit {
             return 0;
         std::shared_ptr<CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<CppSyntaxer>(editor->syntaxer());
         // test if previous line ending with '\', keep originalSpaces
-        PSyntaxState  statePrevLine = editor->document()->getSyntaxState(line-1);
-        if (cppSyntaxer->mergeWithNextLine(statePrevLine))
-            return editor->leftSpaces(lineText);
+        if (line>=1) {
+            PSyntaxState  statePrevLine = editor->document()->getSyntaxState(line-1);
+            if (cppSyntaxer->mergeWithNextLine(statePrevLine))
+                return editor->leftSpaces(lineText);
+        }
         // test if last line is non-end string
         int lastLine = line-1;
-        if (lastLine>=1) {
-            PSyntaxState rangeLastLine = editor->document()->getSyntaxState(lastLine-1);
+        if (lastLine>=0) {
+            PSyntaxState rangeLastLine = editor->document()->getSyntaxState(lastLine);
             if (editor->syntaxer()->isStringNotFinished(rangeLastLine) )
                 return editor->leftSpaces(lineText);
         }
@@ -171,13 +173,32 @@ namespace QSynedit {
         return std::max(0,indentSpaces);
     }
 
+    bool CppFormatter::shouldRecalcIndent(int line, const QSynEdit *editor)
+    {
+        Q_ASSERT(editor!=nullptr);
+        Q_ASSERT(line>=0);
+        if (line==0)
+            return true;
+        std::shared_ptr<CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<CppSyntaxer>(editor->syntaxer());
+        // test if previous line ending with '\', keep original indents
+        PSyntaxState  statePrevLine = editor->document()->getSyntaxState(line-1);
+        if (cppSyntaxer->mergeWithNextLine(statePrevLine))
+            return false;
+        // test if previous line is non-end string
+        if (cppSyntaxer->isRawStringNoEscape(statePrevLine))
+            return false;
+
+        return true;
+    }
+
     int CppFormatter::findCommentStartLine(int searchStartLine, const QSynEdit* editor)
     {
+        std::shared_ptr<CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<CppSyntaxer>(editor->syntaxer());
         int commentStartLine = searchStartLine;
         PSyntaxState range;
         while (commentStartLine>=0) {
             range = editor->document()->getSyntaxState(commentStartLine);
-            if (!editor->syntaxer()->isCommentNotFinished(range)){
+            if (!cppSyntaxer->isBlockCommentNotFinished(range)){
                 commentStartLine++;
                 break;
             }

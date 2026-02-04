@@ -14,6 +14,7 @@ namespace QSynedit {
         virtual ProgrammingLanguage supportLanguage()=0;
         virtual int calcIndentSpaces(int line, const QString& lineText, bool addIndent,
                              const QSynEdit *editor)=0;
+        virtual bool shouldRecalcIndent(int line, const QSynEdit *editor)=0;
     };
     using PFormatter = std::shared_ptr<Formatter>;
 }

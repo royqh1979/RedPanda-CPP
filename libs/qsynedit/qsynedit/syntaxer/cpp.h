@@ -57,7 +57,7 @@ public:
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment,
+        rsUnknown, rsAnsiCComment, rsDirective, rsDirectiveComment,
         rsString,
         rsMultiLineDirective, rsCppComment,
         rsDocstring,
@@ -120,6 +120,10 @@ public:
 
     static const QSet<QString> StandardAttributes;
 
+    bool isBlockCommentNotFinished(const PSyntaxState &state) const {
+        return state->state == RangeState::rsAnsiCComment
+                || state->state == RangeState::rsDirectiveComment
+                || state->state == RangeState::rsDocstring;}
     bool isRawStringStart(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringStart || std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId== TokenId::RawStringStart; }
     bool isRawStringNoEscape(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringNotEscaping && !isRawStringStart(state); }
     bool isRawStringEnd(const PSyntaxState &state) const { return std::dynamic_pointer_cast<CppSyntaxState>(state)->tokenId == TokenId::RawStringEnd; }

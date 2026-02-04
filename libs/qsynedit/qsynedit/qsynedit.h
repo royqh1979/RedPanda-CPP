@@ -630,7 +630,7 @@ private:
     void calcEffectiveFromToLine(const CharPos &beginPos, const CharPos &endPos, int &fromLine, int &toLine);
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
-
+    bool shouldRecalcIndent(int line);
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();

@@ -15,7 +15,7 @@ public:
     int calcIndentSpaces(int line, const QString &lineText, bool addIndent,
                          const QSynEdit *editor) override;
 
-
+    bool shouldRecalcIndent(int line, const QSynEdit *editor) override;
     // IndentCalculator interface
 protected:
     int findCommentStartLine(int searchStartLine, const QSynEdit *editor);

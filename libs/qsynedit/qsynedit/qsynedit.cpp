@@ -1418,6 +1418,14 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
     return std::max(0,indentSpaces);
 }
 
+bool QSynEdit::shouldRecalcIndent(int line)
+{
+    if (mFormatter) {
+        return mFormatter->shouldRecalcIndent(line,this);
+    }
+    return true;
+}
+
 void QSynEdit::doSelectAll()
 {
     beginInternalChanges();
@@ -2279,8 +2287,11 @@ void QSynEdit::doBreakLine()
     QString trimmedleftLineText=trimLeft(leftLineText);
     startParseLine(mSyntaxer.get(), mCaretY, trimmedleftLineText);
     int indentSpaces = 0;
-    if (!mUndoing && mSyntaxer->language() == ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)
-            && mSyntaxer->getToken()=="else") {
+    if (!mUndoing
+            && mSyntaxer->language() == ProgrammingLanguage::CPP
+            && mOptions.testFlag(EditorOption::AutoIndent)
+            && mSyntaxer->getToken()=="else"
+            && shouldRecalcIndent(mCaretY)) {
         indentSpaces = calcIndentSpaces(mCaretY,
                                         trimmedleftLineText,mOptions.testFlag(EditorOption::AutoIndent)
                                         );
@@ -2300,7 +2311,8 @@ void QSynEdit::doBreakLine()
                 mSyntaxer->getState());
 
     indentSpaces = 0;
-    if (mOptions.testFlag(EditorOption::AutoIndent)) {
+    if (mOptions.testFlag(EditorOption::AutoIndent)
+            && shouldRecalcIndent(mCaretY+1)) {
         rightLineText=trimLeft(rightLineText);
         indentSpaces = calcIndentSpaces(mCaretY+1,
                                         rightLineText,mOptions.testFlag(EditorOption::AutoIndent)
@@ -2730,8 +2742,8 @@ void QSynEdit::doInputStr(const QString& s)
                 // auto indent
                 if (mActiveSelectionMode==SelectionMode::Normal
                         && mOptions.testFlag(EditorOption::AutoIndent)
-                        && mSyntaxer->language() == ProgrammingLanguage::CPP
-                        && (oldCaretY<=mDocument->count()) ) {
+                        && shouldRecalcIndent(oldCaretY)
+                        ) {
 
                     //unindent if ':' at end of the line
                     if (inputStr == ":") {
@@ -5653,28 +5665,27 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
     QString line = mDocument->getLine(pos.line);
     sLeftSide = line.left(pos.ch);
     sRightSide = line.mid(pos.ch);
-    int caretY=pos.line;
+    int currentLine=pos.line;
     if (text.length()>1) {
         // step1: insert the first line of Value into current line
         if (!mUndoing && mOptions.testFlag(EditorOption::AutoIndent)) {
             QString s = text[0];
-            if (sLeftSide.isEmpty()) {
+            if (sLeftSide.isEmpty() && shouldRecalcIndent(currentLine)) {
                 s=s.trimmed();
-                sLeftSide = genSpaces(calcIndentSpaces(caretY,s,true));
+                sLeftSide = genSpaces(calcIndentSpaces(currentLine,s,true));
             }
             str = sLeftSide + s;
         } else
             str = sLeftSide + text[0];
         if (sLeftSide.trimmed().isEmpty()) {
-            properInsertLines(caretY, text.length()-1, false);
+            properInsertLines(currentLine, text.length()-1, false);
         } else {
-            properInsertLines(caretY+1, text.length()-1, false);
+            properInsertLines(currentLine+1, text.length()-1, false);
         }
-        properSetLine(caretY, str, false);
+        properSetLine(currentLine, str, false);
         // step2: insert remaining lines of Value
         for (int i=1;i<text.length();i++) {
-            bool notInComment = true;
-            caretY=pos.line+i;
+            currentLine=pos.line+i;
             if (text[i].isEmpty()) {
                 if (i==text.length()-1) {
                     str = sRightSide;
@@ -5686,15 +5697,16 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
                 if (i==text.length()-1)
                     str += sRightSide;
             }
-            if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent) && notInComment) {
-                int indentSpaces = calcIndentSpaces(caretY,str,true);
+            if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)
+                    && shouldRecalcIndent(currentLine)) {
+                int indentSpaces = calcIndentSpaces(currentLine,str,true);
                 str = genSpaces(indentSpaces)+trimLeft(str);
             }
-            properSetLine(caretY, str, i==text.length()-1);
+            properSetLine(currentLine, str, i==text.length()-1);
         }
     } else {
         str = sLeftSide + text[0] + sRightSide;
-        properSetLine(caretY, str, true);
+        properSetLine(currentLine, str, true);
     }
 
     bChangeScroll = !mOptions.testFlag(EditorOption::ScrollPastEol);
@@ -5703,7 +5715,7 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
         if (bChangeScroll)
             mOptions.setFlag(EditorOption::ScrollPastEol,false);
     });
-    CharPos newPos=CharPos{(int)str.length() - (int)sRightSide.length(),caretY};
+    CharPos newPos=CharPos{(int)str.length() - (int)sRightSide.length(),currentLine};
     //onLinesPutted(startLine-1,result+1);
     addChangeToUndo(ChangeReason::Insert,
             pos,newPos,

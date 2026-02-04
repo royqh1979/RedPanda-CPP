@@ -1080,11 +1080,11 @@ void CppSyntaxer::procSlash()
             if (mRange.state == RangeState::rsDirective) {
                 mRange.state = RangeState::rsDirectiveComment;
             } else {
-                mRange.state = RangeState::rsAnsiC;
+                mRange.state = RangeState::rsAnsiCComment;
             }
             mRun += 2;
             if (mRun < mLineSize) {
-                if (mRange.state == RangeState::rsAnsiC && mLine[mRun] == '*' ) {
+                if (mRange.state == RangeState::rsAnsiCComment && mLine[mRun] == '*' ) {
                     mRange.state = RangeState::rsDocstring;
                 }
             }
@@ -1520,7 +1520,7 @@ bool CppSyntaxer::needsLineState()
 
 bool CppSyntaxer::isCommentNotFinished(const PSyntaxState &state) const
 {
-    return (state->state == RangeState::rsAnsiC ||
+    return (state->state == RangeState::rsAnsiCComment ||
             state->state == RangeState::rsDirectiveComment||
             state->state == RangeState::rsDocstring ||
             state->state == RangeState::rsCppComment);
@@ -1637,7 +1637,7 @@ void CppSyntaxer::next()
             break;
         }
         switch (mRange.state) {
-        case RangeState::rsAnsiC:
+        case RangeState::rsAnsiCComment:
         case RangeState::rsDirectiveComment:
             //qDebug()<<"*0-0-0*";
             procAnsiCStyleComment();
