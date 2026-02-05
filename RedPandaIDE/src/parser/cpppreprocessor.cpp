@@ -257,8 +257,6 @@ QString CppPreprocessor::getNextPreprocessor()
     // Assemble whole line, convert newlines to space
     QString result = mBuffer[mIndex];
     mResult.append("");// defines resolve into empty files, except #define and #include
-    // Step over
-    mIndex++;
     return result;
 }
 
@@ -819,7 +817,7 @@ void CppPreprocessor::closeInclude()
     PParsedFile parsedFile = mIncludeStack.back();
 
     // Continue where we left off
-    mIndex = parsedFile->index;
+    mIndex = parsedFile->index+1;
     mFileName = parsedFile->fileName;
     // Point to previous buffer and start past the include we walked into
     mBuffer = parsedFile->buffer;
@@ -1152,6 +1150,8 @@ void CppPreprocessor::preprocessBuffer()
                     handlePreprocessor(s);
                 }
             }
+            // Step over
+            mIndex++;
         } while (!s.isEmpty());
         closeInclude();
     }
