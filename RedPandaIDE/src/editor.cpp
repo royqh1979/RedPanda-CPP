@@ -2827,15 +2827,15 @@ bool Editor::handleCodeCompletion(QChar key)
             return true;
         case '>':
             processCommand(QSynedit::EditCommand::Input, key);
-            if ((caretX() > 2) && (lineText().length() >= 2) &&
-                    (lineText()[caretX() - 3] == '-'))
+            if ((caretX() > 1) && (lineText().length() >= 2) &&
+                    (lineText()[caretX() - 2] == '-'))
                 showCompletion("",false,CodeCompletionType::Normal);
             return true;
         case ':':
             processCommand(QSynedit::EditCommand::Input,':');
             //setSelText(key);
-            if ((caretX() > 2) && (lineText().length() >= 2) &&
-                    (lineText()[caretX() - 3] == ':'))
+            if ((caretX() > 1) && (lineText().length() >= 2) &&
+                    (lineText()[caretX() - 2] == ':'))
                 showCompletion("",false,CodeCompletionType::Normal);
             return true;
         case '/':
