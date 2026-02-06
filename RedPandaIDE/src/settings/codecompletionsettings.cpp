@@ -235,5 +235,5 @@ void CodeCompletionSettings::doLoad()
 
     bool shouldShare= true;
     mShareParser = boolValue("share_parser",shouldShare);
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden", mShareParser);
+    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden", false);
 }
