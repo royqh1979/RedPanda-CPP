@@ -12,6 +12,7 @@ Red Panda C++ Version 3.5
   - fix: Can't goto definition / declaration in an unsaved new file.
   - fix: Actions in Run menu not correctly enabled/disabled when filetype changed.
   - fix: Can't process relative file path passed by command line.
+  - fix: Can't correctly complete folder name ending with "\\" in #include preprocessors.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

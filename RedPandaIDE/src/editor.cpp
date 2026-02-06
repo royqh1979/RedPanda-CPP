@@ -3577,20 +3577,22 @@ void Editor::headerCompletionInsert()
     while ((posBegin>0) &&
            (sLine[posBegin-1]!='\"'
             && sLine[posBegin-1]!='<'
-            && sLine[posBegin-1]!='/'))
+            && sLine[posBegin-1]!='/'
+            && sLine[posBegin-1]!='\\'))
         posBegin--;
 
     while ((posEnd < sLine.length()) &&
            (sLine[posEnd]!='\"'
             && sLine[posEnd]!='>'
-            && sLine[posEnd]!='/'))
+            && sLine[posEnd]!='/'
+            && sLine[posBegin-1]!='\\'))
         posEnd++;
     setSelBeginEnd(CharPos{posBegin, p.line}, CharPos{posEnd, p.line});
     setSelText(headerName);
 
     setCaretX(caretX());
 
-    if (headerName.endsWith("/")) {
+    if (headerName.endsWith("/") || headerName.endsWith("\\")) {
         showHeaderCompletion(false,true);
     } else {
         mHeaderCompletionPopup->hide();
