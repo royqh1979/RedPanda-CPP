@@ -246,7 +246,7 @@ CompilerType EditorManager::getCompilerTypeForEditor(const Editor *e) const
 {
     if (e) {
         PCompilerSet pSet;
-        if (e->inProject()) {
+        if (e->inProject() && pMainWindow->project()) {
             pSet = pSettings->compilerSets().getSet(pMainWindow->project()->options().compilerSet);
         } else if (!e->inProject()) {
             pSet = pSettings->compilerSets().defaultSet();
