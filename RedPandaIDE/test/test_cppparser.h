@@ -10,7 +10,7 @@ class TestCppParser: public QObject
     Q_OBJECT
 public:
     TestCppParser(QObject *parent=nullptr);
-protected:
+private slots:
     void init_parser();
     void test_parse_var();
 protected:

@@ -788,8 +788,8 @@ void CppPreprocessor::openInclude(QString fileName)
     // Process it
     mIndex = parsedFile->index;
     mFileName = parsedFile->fileName;
-    removeLastBackSlash(parsedFile->buffer);
-    removeComments(parsedFile->buffer);
+    combineLinesEndingWithBackslash(parsedFile->buffer);
+    replaceCommentsBySpaceChar(parsedFile->buffer);
     mBuffer = parsedFile->buffer;
 
 //    for (int i=0;i<mBuffer.count();i++) {
@@ -922,7 +922,7 @@ void CppPreprocessor::parseArgs(PDefine define)
     define->formatValue.squeeze();
 }
 
-void CppPreprocessor::removeLastBackSlash(QStringList &text)
+void CppPreprocessor::combineLinesEndingWithBackslash(QStringList &text)
 {
     if (text.isEmpty())
         return;
@@ -1016,11 +1016,13 @@ QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
     return tokens;
 }
 
-void CppPreprocessor::removeComments(QStringList &text)
+void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 {
     ContentType currentType = ContentType::Other;
     QString delimiter;
-
+    QList<int> blockCommentsBegins;
+    QList<int> blockCommentsEnds;
+    int blockCommentBegin = -1;
     for (int lineIdx = 0; lineIdx < text.length(); lineIdx++) {
         const QString& line = text[lineIdx];
         int pos = 0;
@@ -1033,6 +1035,12 @@ void CppPreprocessor::removeComments(QStringList &text)
                 if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                     pos+=2;
                     currentType = ContentType::Other;
+                    Q_ASSERT(blockCommentBegin>=0);
+                    Q_ASSERT(lineIdx>=blockCommentBegin);
+                    if (lineIdx!=blockCommentBegin) {
+                        blockCommentsBegins.append(blockCommentBegin);
+                        blockCommentsEnds.append(lineIdx);
+                    }
                 } else {
                     pos+=1;
                 }
@@ -1102,13 +1110,14 @@ void CppPreprocessor::removeComments(QStringList &text)
                 if (currentType == ContentType::Other) {
                     if (pos+1<lineLen && line[pos+1]=='/') {
                         // line comment
-                        pos = lineLen+1; // skip current line
+                        pos = lineLen+1; // skip chars left in the current line
                         break;
                     } else if (pos+1<lineLen && line[pos+1]=='*') {
                         /* ansi c comment */
                         s+=' '; // replace comments with a space
                         pos++;
                         currentType = ContentType::AnsiCComment;
+                        blockCommentBegin = lineIdx;
                         break;
                     }
                 }
@@ -1135,6 +1144,14 @@ void CppPreprocessor::removeComments(QStringList &text)
             pos++;
         }
         text[lineIdx] = s;
+    }
+    // merge lines split with block comments
+    for (int i=blockCommentsBegins.count()-1;i>=0;i--) {
+        QString s2=text[blockCommentsEnds[i]];
+        if (!s2.isEmpty()) {
+            text[blockCommentsBegins[i]].append(s2);
+            text[blockCommentsEnds[i]].clear();
+        }
     }
 }
 

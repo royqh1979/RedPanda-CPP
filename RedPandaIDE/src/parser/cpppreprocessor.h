@@ -132,7 +132,8 @@ public:
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
 
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
-
+    static void combineLinesEndingWithBackslash(QStringList& text);
+    static void replaceCommentsBySpaceChar(QStringList& text);
 private:
 
     enum class BranchResult {
@@ -201,9 +202,6 @@ private:
 
     void parseArgs(PDefine define);
 
-
-    void removeLastBackSlash(QStringList& text);
-    void removeComments(QStringList& text);
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */
