@@ -1,5 +1,7 @@
 #define TEST 1+/*
-test*/2
+test*/2/* test
+sadfasdf
+*/4
 
 int foo = 1;
 // int bar = 0xE+foo; // error: invalid preprocessing number 0xE+foo

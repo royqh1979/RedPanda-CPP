@@ -1020,15 +1020,25 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 {
     ContentType currentType = ContentType::Other;
     QString delimiter;
-    QList<int> blockCommentsBegins;
-    QList<int> blockCommentsEnds;
     int blockCommentBegin = -1;
     for (int lineIdx = 0; lineIdx < text.length(); lineIdx++) {
         const QString& line = text[lineIdx];
         int pos = 0;
         int lineLen=line.length();
+        int currentLineIdx = lineIdx;
         QString s;
         s.reserve(line.length());
+        // String & Char Literal can't to next line
+        if (currentType == ContentType::Character
+                || currentType ==  ContentType::String
+                || currentType ==  ContentType::EscapeSequence)
+            currentType = ContentType::Other;
+        if (currentType == ContentType::AnsiCComment) {
+            Q_ASSERT(blockCommentBegin>=0);
+            Q_ASSERT(lineIdx>=blockCommentBegin);
+            currentLineIdx = blockCommentBegin;
+            s = text[blockCommentBegin];
+        }
         while (pos<lineLen) {
             QChar ch =line[pos];
             if (currentType == ContentType::AnsiCComment) {
@@ -1037,10 +1047,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                     currentType = ContentType::Other;
                     Q_ASSERT(blockCommentBegin>=0);
                     Q_ASSERT(lineIdx>=blockCommentBegin);
-                    if (lineIdx!=blockCommentBegin) {
-                        blockCommentsBegins.append(blockCommentBegin);
-                        blockCommentsEnds.append(lineIdx);
-                    }
+                    blockCommentBegin = -1;
                 } else {
                     pos+=1;
                 }
@@ -1117,7 +1124,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                         s+=' '; // replace comments with a space
                         pos++;
                         currentType = ContentType::AnsiCComment;
-                        blockCommentBegin = lineIdx;
+                        blockCommentBegin = currentLineIdx;
                         break;
                     }
                 }
@@ -1143,15 +1150,9 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
             }
             pos++;
         }
-        text[lineIdx] = s;
-    }
-    // merge lines split with block comments
-    for (int i=blockCommentsBegins.count()-1;i>=0;i--) {
-        QString s2=text[blockCommentsEnds[i]];
-        if (!s2.isEmpty()) {
-            text[blockCommentsBegins[i]].append(s2);
-            text[blockCommentsEnds[i]].clear();
-        }
+        text[currentLineIdx] = s;
+        if (currentLineIdx!=lineIdx)
+            text[lineIdx].clear();
     }
 }
 

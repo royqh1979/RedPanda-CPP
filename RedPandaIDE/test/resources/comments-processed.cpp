@@ -1,4 +1,6 @@
-#define TEST 1+ 2
+#define TEST 1+ 2 4
+
+
 
 
 int foo = 1;
