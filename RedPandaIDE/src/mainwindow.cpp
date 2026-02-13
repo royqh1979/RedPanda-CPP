@@ -1243,25 +1243,19 @@ void MainWindow::removeActiveBreakpoints()
 {
     for (int i=0;i<mEditorManager->pageCount();i++) {
         Editor* e= (*mEditorManager)[i];
-        e->removeBreakpointFocus();
+        e->removeActiveBreakpoint();
     }
 }
 
-void MainWindow::setActiveBreakpoint(QString fileName, int line, bool setFocus)
+void MainWindow::setActiveBreakpoint(QString fileName, int line)
 {
     removeActiveBreakpoints();
     // Then active the current line in the current file
     Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
-        e->setActiveBreakpointFocus(line,setFocus);
-        if (setFocus)
-            mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
-        else
-            e->setCaretPosition(QSynedit::CharPos{0,line});
-
-        if (setFocus) {
-            activateWindow();
-        }
+        e->setActiveBreakpoint(line);
+        mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
+        activateWindow();
     } else {
         showHideMessagesTab(ui->tabDebug, true);
         ui->debugViews->setCurrentWidget(ui->tabStackTrace);

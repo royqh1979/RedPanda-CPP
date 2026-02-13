@@ -335,7 +335,7 @@ signals:
     void breakpointInfoGetted(const QString& filename, int line, int number);
     void inferiorContinued();
     void watchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
-    void inferiorStopped(const QString& filename, int line, bool setFocus);
+    void inferiorStopped(const QString& filename, int line);
     void localsUpdated(const QStringList& localsValue);
     void evalUpdated(const QString& value);
     void memoryUpdated(const QStringList& memoryValues);

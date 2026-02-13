@@ -5177,7 +5177,7 @@ void Editor::clearBookmarks()
     invalidateGutter();
 }
 
-void Editor::removeBreakpointFocus()
+void Editor::removeActiveBreakpoint()
 {
     if (mActiveBreakpointLine!=-1) {
         int oldLine = mActiveBreakpointLine;
@@ -5187,10 +5187,10 @@ void Editor::removeBreakpointFocus()
     }
 }
 
-void Editor::setActiveBreakpointFocus(int line, bool setFocus)
+void Editor::setActiveBreakpoint(int line)
 {
     if (line != mActiveBreakpointLine) {
-        removeBreakpointFocus();
+        removeActiveBreakpoint();
 
         // Put the caret at the active breakpoint
         mActiveBreakpointLine = line;

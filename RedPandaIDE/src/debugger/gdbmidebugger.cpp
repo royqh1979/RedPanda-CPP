@@ -794,7 +794,7 @@ void GDBMIDebuggerClient::processExecAsyncRecord(const QByteArray &line)
             //         return;
             // }
         }
-        emit inferiorStopped(mCurrentFile, mCurrentLine-1, false);
+        emit inferiorStopped(mCurrentFile, mCurrentLine-1);
     }
 }
 
