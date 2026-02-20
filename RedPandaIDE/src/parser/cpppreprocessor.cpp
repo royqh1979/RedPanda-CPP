@@ -1041,7 +1041,6 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
             Q_ASSERT(lineIdx>=blockCommentBegin);
             currentLineIdx = blockCommentBegin;
             s = text[blockCommentBegin];
-
         }
         while (pos<lineLen) {
             QChar ch =line[pos];

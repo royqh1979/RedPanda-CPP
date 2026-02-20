@@ -3181,6 +3181,7 @@ void QSynEdit::doUpdateVScrollbar()
     int nMax = maxScrollHeight();
     int nPage = mLinesInWindow * mTextHeight;
     int nPos = mTopPos;
+    qDebug()<<"doUpdateVScrollbar()"<<nMax<<nPos;
     verticalScrollBar()->setMinimum(nMin);
     verticalScrollBar()->setMaximum(nMax);
     verticalScrollBar()->setPageStep(nPage);
@@ -5488,6 +5489,7 @@ void QSynEdit::properInsertLine(int line, const QString &sLineText, bool parseTo
     else
         reparseLines(line,line+1, false);
     emit linesInserted(line, 1);
+    updateVScrollbar();
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
@@ -5499,6 +5501,7 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
     if (parseToEnd)
         onLinesDeleted(line,count);
     emit linesDeleted(line,count);
+    updateVScrollbar();
 }
 
 void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
@@ -5512,6 +5515,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
     else
         reparseLines(line,line+count, false);
     emit linesInserted(line, count);
+    updateVScrollbar();
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
@@ -5524,6 +5528,7 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     int maxLine = std::max(from,to);
     reparseLines(minLine, maxLine+1, parseToEnd && mSyntaxer->needsLineState());
     emit lineMoved(from, to);
+    updateVScrollbar();
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -6731,7 +6736,6 @@ void QSynEdit::onLinesDeleted(int line, int count)
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, line + count, true);
     }
-    updateVScrollbar();
 }
 
 void QSynEdit::onLinesInserted(int line, int count)
@@ -6739,7 +6743,6 @@ void QSynEdit::onLinesInserted(int line, int count)
     if (count<=0)
         return;
     reparseLines(line, line + count, mSyntaxer->needsLineState());
-    updateVScrollbar();
 }
 
 void QSynEdit::onUndoAdded()
