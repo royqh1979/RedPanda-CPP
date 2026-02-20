@@ -144,6 +144,7 @@ private:
         parentIsFalse
     };
 
+    bool supportCPP23() const;
     static QString expandFunction(PDefine define,const QString &args);
     void preprocessBuffer();
     void skipToPreprocessor();
@@ -173,6 +174,7 @@ private:
             return BranchResult::isTrue;
     }
     BranchResult calcElseBranchResult(BranchResult oldResult);
+    BranchResult calcUnsupportedElseBranchResult(BranchResult oldResult);
     bool sameResultWithCurrentBranch(BranchResult value) {
         return (getCurrentBranch()==BranchResult::isTrue && value == BranchResult::isTrue)
                 || (getCurrentBranch()!=BranchResult::isTrue && value != BranchResult::isTrue);
@@ -300,6 +302,7 @@ private:
 
     bool mParseSystem;
     bool mParseLocal;
+    bool mSupportCPP23;
 
     GetFileStreamFunc mOnGetFileStream;
 };

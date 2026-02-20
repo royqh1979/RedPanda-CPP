@@ -3181,7 +3181,6 @@ void QSynEdit::doUpdateVScrollbar()
     int nMax = maxScrollHeight();
     int nPage = mLinesInWindow * mTextHeight;
     int nPos = mTopPos;
-    qDebug()<<"doUpdateVScrollbar()"<<nMax<<nPos;
     verticalScrollBar()->setMinimum(nMin);
     verticalScrollBar()->setMaximum(nMax);
     verticalScrollBar()->setPageStep(nPage);

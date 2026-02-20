@@ -48,6 +48,7 @@ void CppPreprocessor::clear()
     mProjectIncludePathList.clear();
     //{ List of current compiler set's include path}
     mIncludePaths.clear();
+    mSupportCPP23=false;
 }
 
 void CppPreprocessor::clearTempResults()
@@ -80,6 +81,11 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     if (hardCoded) {
         mHardDefines.insert(name,define);
         mDefines.insert(name,define);
+        if (name == "__cplusplus") {
+            bool ok;
+            int version = value.toLong(&ok);
+            mSupportCPP23 = (ok && version >=202302);
+        }
     } else {
         PDefineMap defineMap = mFileDefines.value(mFileName,PDefineMap());
         if (!defineMap) {
@@ -262,7 +268,17 @@ QString CppPreprocessor::getNextPreprocessor()
 
 void CppPreprocessor::handleBranch(const QString &line)
 {
-    if (line.startsWith("ifdef")) {
+    QString command;
+    command.reserve(line.length());
+    auto it=line.constBegin();
+    while(it!=line.constEnd()) {
+        if (*it>='a' && *it<='z')
+            command.append(*it);
+        else
+            break;
+        ++it;
+    }
+    if (command == "ifdef") {
 //        // if a branch that is not at our level is false, current branch is false too;
 //        for (int i=0;i<=mBranchResults.count()-2;i++) {
 //            if (!mBranchResults[i]) {
@@ -278,7 +294,7 @@ void CppPreprocessor::handleBranch(const QString &line)
             setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
 
         }
-    } else if (line.startsWith("ifndef")) {
+    } else if (command == "ifndef") {
 //        // if a branch that is not at our level is false, current branch is false too;
 //        for (int i=0;i<=mBranchResults.count()-2;i++) {
 //            if (!mBranchResults[i]) {
@@ -293,7 +309,7 @@ void CppPreprocessor::handleBranch(const QString &line)
             QString name = line.mid(IFNDEF_LEN).trimmed();
             setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
-    } else if (line.startsWith("if")) {
+    } else if (command == "if") {
         //        // if a branch that is not at our level is false, current branch is false too;
         //        for (int i=0;i<=mBranchResults.count()-2;i++) {
         //            if (!mBranchResults[i]) {
@@ -310,11 +326,11 @@ void CppPreprocessor::handleBranch(const QString &line)
             bool testResult = evaluateIf(ifLine);
             setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
         }
-    } else if (line.startsWith("else")) {
+    } else if (command == "else") {
         BranchResult oldResult = getCurrentBranch(); // take either if or else
         removeCurrentBranch();
         setCurrentBranch(calcElseBranchResult(oldResult));
-    } else if (line.startsWith("elif")) {
+    } else if (command == "elif") {
         BranchResult oldResult = getCurrentBranch(); // take either if or else
         removeCurrentBranch();
         BranchResult elseResult = calcElseBranchResult(oldResult);
@@ -326,7 +342,37 @@ void CppPreprocessor::handleBranch(const QString &line)
         } else {
             setCurrentBranch(elseResult);
         }
-    } else if (line.startsWith("endif")) {
+    } else if (command == "elifdef") {
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        if (supportCPP23()) {
+            BranchResult elseResult = calcElseBranchResult(oldResult);
+            if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
+                constexpr int ELIFDEF_LEN = 7; //length of ifdef;
+                QString name = line.mid(ELIFDEF_LEN).trimmed();
+                setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            } else {
+                setCurrentBranch(elseResult);
+            }
+        } else {
+            setCurrentBranch(calcUnsupportedElseBranchResult(oldResult));
+        }
+    } else if (command == "elifndef") {
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        if (supportCPP23()) {
+            BranchResult elseResult = calcElseBranchResult(oldResult);
+            if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
+                constexpr int ELIFNDEF_LEN = 8; //length of ifndef;
+                QString name = line.mid(ELIFNDEF_LEN).trimmed();
+                setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            } else {
+                setCurrentBranch(elseResult);
+            }
+        } else {
+            setCurrentBranch(calcUnsupportedElseBranchResult(oldResult));
+        }
+    } else if (command == "endif") {
         removeCurrentBranch();
     }
 }
@@ -847,6 +893,18 @@ CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult
     return BranchResult::isFalse;
 }
 
+CppPreprocessor::BranchResult CppPreprocessor::calcUnsupportedElseBranchResult(BranchResult oldResult)
+{
+    switch(oldResult) {
+    case BranchResult::isTrue: return BranchResult::isFalse_but_trued;
+    case BranchResult::isFalse: return BranchResult::isFalse;
+    case BranchResult::isFalse_but_trued: return BranchResult::isFalse_but_trued;
+    case BranchResult::parentIsFalse: return BranchResult::parentIsFalse;
+    }
+    Q_ASSERT( false ); //We should fail here.
+    return BranchResult::isFalse;
+}
+
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
 {
     if (mProcessed.contains(fileName))
@@ -1157,6 +1215,11 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
         if (currentLineIdx!=lineIdx)
             text[lineIdx].clear();
     }
+}
+
+bool CppPreprocessor::supportCPP23() const
+{
+    return mSupportCPP23;
 }
 
 void CppPreprocessor::preprocessBuffer()
