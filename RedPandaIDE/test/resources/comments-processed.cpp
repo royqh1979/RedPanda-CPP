@@ -5,8 +5,8 @@
 
 int foo = 1;
 
-int bar = 0xE +foo; 
-
+int bar = 0xE 
++foo; 
 int baz = 0xE + foo; 
 int pub = bar+++baz; 
 int ham = bar++-++baz; 

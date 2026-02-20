@@ -1026,6 +1026,8 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
         int pos = 0;
         int lineLen=line.length();
         int currentLineIdx = lineIdx;
+        bool isDefineLine = (currentType == ContentType::AnsiCCommentInDefine)
+                || ((currentType == ContentType::Other) && line.startsWith("#"));
         QString s;
         s.reserve(line.length());
         // String & Char Literal can't to next line
@@ -1033,15 +1035,17 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                 || currentType ==  ContentType::String
                 || currentType ==  ContentType::EscapeSequence)
             currentType = ContentType::Other;
-        if (currentType == ContentType::AnsiCComment) {
+        // Really treat Ansi C Style Comment as a space (and merge lines) only when it's used to define macros.
+        if (currentType == ContentType::AnsiCCommentInDefine) {
             Q_ASSERT(blockCommentBegin>=0);
             Q_ASSERT(lineIdx>=blockCommentBegin);
             currentLineIdx = blockCommentBegin;
             s = text[blockCommentBegin];
+
         }
         while (pos<lineLen) {
             QChar ch =line[pos];
-            if (currentType == ContentType::AnsiCComment) {
+            if (currentType == ContentType::AnsiCComment || currentType == ContentType::AnsiCCommentInDefine) {
                 if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                     pos+=2;
                     currentType = ContentType::Other;
@@ -1123,7 +1127,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                         /* ansi c comment */
                         s+=' '; // replace comments with a space
                         pos++;
-                        currentType = ContentType::AnsiCComment;
+                        currentType = (isDefineLine)?ContentType::AnsiCCommentInDefine:ContentType::AnsiCComment;
                         blockCommentBegin = currentLineIdx;
                         break;
                     }
