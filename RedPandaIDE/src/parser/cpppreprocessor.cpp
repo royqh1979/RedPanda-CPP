@@ -23,6 +23,18 @@
 
 CppPreprocessor::CppPreprocessor()
 {
+    mPreprocessorHandlers.insert("if",[this](const QString& tokens){ handleIf(tokens);});
+    mPreprocessorHandlers.insert("ifdef",[this](const QString& tokens){ handleIfdef(tokens);});
+    mPreprocessorHandlers.insert("ifndef",[this](const QString& tokens){ handleIfndef(tokens);});
+    mPreprocessorHandlers.insert("elif",[this](const QString& tokens){ handleElif(tokens);});
+    mPreprocessorHandlers.insert("elifdef",[this](const QString& tokens){ handleElifdef(tokens);});
+    mPreprocessorHandlers.insert("elifndef",[this](const QString& tokens){ handleElifndef(tokens);});
+    mPreprocessorHandlers.insert("else",[this](const QString& tokens){ handleElse(tokens);});
+    mPreprocessorHandlers.insert("endif",[this](const QString& tokens){ handleEndif(tokens);});
+    mPreprocessorHandlers.insert("define",[this](const QString& tokens){ handleDefine(tokens);});
+    mPreprocessorHandlers.insert("undef",[this](const QString& tokens){ handleUndefine(tokens);});
+    mPreprocessorHandlers.insert("include",[this](const QString& tokens){ handleInclude(tokens);});
+    mPreprocessorHandlers.insert("include_next",[this](const QString& tokens){ handleIncludeNext(tokens);});
 }
 
 void CppPreprocessor::clear()
@@ -266,126 +278,19 @@ QString CppPreprocessor::getNextPreprocessor()
     return result;
 }
 
-void CppPreprocessor::handleBranch(const QString &line)
-{
-    QString command;
-    command.reserve(line.length());
-    auto it=line.constBegin();
-    while(it!=line.constEnd()) {
-        if (*it>='a' && *it<='z')
-            command.append(*it);
-        else
-            break;
-        ++it;
-    }
-    if (command == "ifdef") {
-//        // if a branch that is not at our level is false, current branch is false too;
-//        for (int i=0;i<=mBranchResults.count()-2;i++) {
-//            if (!mBranchResults[i]) {
-//                setCurrentBranch(false);
-//                return;
-//            }
-//        }
-        if (getCurrentBranch()!=BranchResult::isTrue) {
-            setCurrentBranch(BranchResult::parentIsFalse);
-        } else {
-            constexpr int IFDEF_LEN = 5; //length of ifdef;
-            QString name = line.mid(IFDEF_LEN).trimmed();
-            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
-
-        }
-    } else if (command == "ifndef") {
-//        // if a branch that is not at our level is false, current branch is false too;
-//        for (int i=0;i<=mBranchResults.count()-2;i++) {
-//            if (!mBranchResults[i]) {
-//                setCurrentBranch(false);
-//                return;
-//            }
-//        }
-        if (getCurrentBranch()!=BranchResult::isTrue) {
-            setCurrentBranch(BranchResult::parentIsFalse);
-        } else {
-            constexpr int IFNDEF_LEN = 6; //length of ifndef;
-            QString name = line.mid(IFNDEF_LEN).trimmed();
-            setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
-        }
-    } else if (command == "if") {
-        //        // if a branch that is not at our level is false, current branch is false too;
-        //        for (int i=0;i<=mBranchResults.count()-2;i++) {
-        //            if (!mBranchResults[i]) {
-        //                setCurrentBranch(false);
-        //                return;
-        //            }
-        //        }
-        if (getCurrentBranch()!=BranchResult::isTrue) {// we are already inside an if that is NOT being taken
-            setCurrentBranch(BranchResult::parentIsFalse);// so don't take this one either
-        } else {
-            constexpr int IF_LEN = 2; //length of if;
-            QString ifLine = line.mid(IF_LEN).trimmed();
-
-            bool testResult = evaluateIf(ifLine);
-            setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
-        }
-    } else if (command == "else") {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
-        setCurrentBranch(calcElseBranchResult(oldResult));
-    } else if (command == "elif") {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
-        BranchResult elseResult = calcElseBranchResult(oldResult);
-        if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
-            constexpr int ELIF_LEN = 4; //length of if;
-            QString ifLine = line.mid(ELIF_LEN).trimmed();
-            bool testResult = evaluateIf(ifLine);
-            setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
-        } else {
-            setCurrentBranch(elseResult);
-        }
-    } else if (command == "elifdef") {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
-        if (supportCPP23()) {
-            BranchResult elseResult = calcElseBranchResult(oldResult);
-            if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
-                constexpr int ELIFDEF_LEN = 7; //length of ifdef;
-                QString name = line.mid(ELIFDEF_LEN).trimmed();
-                setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
-            } else {
-                setCurrentBranch(elseResult);
-            }
-        } else {
-            setCurrentBranch(calcUnsupportedElseBranchResult(oldResult));
-        }
-    } else if (command == "elifndef") {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
-        if (supportCPP23()) {
-            BranchResult elseResult = calcElseBranchResult(oldResult);
-            if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
-                constexpr int ELIFNDEF_LEN = 8; //length of ifndef;
-                QString name = line.mid(ELIFNDEF_LEN).trimmed();
-                setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
-            } else {
-                setCurrentBranch(elseResult);
-            }
-        } else {
-            setCurrentBranch(calcUnsupportedElseBranchResult(oldResult));
-        }
-    } else if (command == "endif") {
-        removeCurrentBranch();
-    }
-}
-
-void CppPreprocessor::handleDefine(const QString &line)
+void CppPreprocessor::handleDefine(const QString &tokens)
 {
     if (getCurrentBranch() == BranchResult::isTrue) {
-        addDefineByLine(line, false);
-        mResult[mPreProcIndex] = '#' + line; // add define to result file so the parser can handle it
+        QString name,args,value;
+        getDefineParts(tokens, name, args, value);
+
+        // Add to the list
+        addDefineByParts(name, args, value, false);
+        mResult[mPreProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
     }
 }
 
-void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
+void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
 {
     if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
@@ -416,20 +321,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         projectIncludes = mProjectIncludePathList;
     }
 
-    int i=1; // skip '#'
-    int len=line.length();
-    //skip spaces
-    while (i<len && isSpaceChar(line[i]))
-        i++;
-    //skip 'include'
-    while (i<len && isIdentChar(line[i]))
-        i++;
-    //skip spaces
-    while (i<len && isSpaceChar(line[i]))
-        i++;
-    if (i>=line.length())
-        return;
-    QString s=line.mid(i);
+    QString s=tokens;
     QSet<QString> usedMacros;
     if (!s.startsWith('<') && !s.startsWith('\"'))
         s = expandMacros(s, usedMacros);
@@ -447,37 +339,19 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     openInclude(fileName);
 }
 
-void CppPreprocessor::handlePreprocessor(const QString &value)
+void CppPreprocessor::handlePreprocessor(const QString& command, const QString& tokens)
 {
-    switch(value[0].unicode()) {
-    case 'd':
-        if (value.startsWith("define"))
-            handleDefine(value);
-        break;
-    case 'e':
-        if (value.startsWith("else") || value.startsWith("elif")
-            || value.startsWith("endif"))
-            handleBranch(value);
-        break;
-    case 'i':
-        if (value.startsWith("if"))
-            handleBranch(value);
-        else if (value.startsWith("include"))
-            handleInclude(value, value.startsWith("include_next"));
-        break;
-    case 'u':
-        if (value.startsWith("undef"))
-            handleUndefine(value);
-        break;
-
-    }
+    std::function<void(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
+    if (handler)
+        handler(tokens);
 }
 
-void CppPreprocessor::handleUndefine(const QString &line)
+void CppPreprocessor::handleUndefine(const QString& tokens)
 {
+    if (getCurrentBranch() != BranchResult::isTrue)
+        return;
     // Remove undef
-    constexpr int UNDEF_LEN = 5;
-    QString name = line.mid(UNDEF_LEN).trimmed();
+    QString name = tokens.trimmed();
 
 //    //may be defined many times
 //    while (true) {
@@ -502,6 +376,101 @@ void CppPreprocessor::handleUndefine(const QString &line)
                 undefineMap->insert(name, define);
         }
     }
+}
+
+void CppPreprocessor::handleIf(const QString &tokens)
+{
+    if (getCurrentBranch()!=BranchResult::isTrue) {// we are already inside an if that is NOT being taken
+        setCurrentBranch(BranchResult::parentIsFalse);// so don't take this one either
+    } else {
+        bool testResult = evaluateIf(tokens);
+        setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
+    }
+}
+
+void CppPreprocessor::handleIfdef(const QString &tokens)
+{
+        if (getCurrentBranch()!=BranchResult::isTrue) {
+            setCurrentBranch(BranchResult::parentIsFalse);
+        } else {
+            QString name = tokens.trimmed();
+            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+        }
+}
+
+void CppPreprocessor::handleIfndef(const QString &tokens)
+{
+    if (getCurrentBranch()!=BranchResult::isTrue) {
+        setCurrentBranch(BranchResult::parentIsFalse);
+    } else {
+        QString name = tokens.trimmed();
+        setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+    }
+}
+
+void CppPreprocessor::handleElif(const QString &tokens)
+{
+    BranchResult oldResult = getCurrentBranch(); // take either if or else
+    removeCurrentBranch();
+    BranchResult elseResult = calcElseBranchResult(oldResult);
+    if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
+        bool testResult = evaluateIf(tokens);
+        setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
+    } else {
+        setCurrentBranch(elseResult);
+    }
+}
+
+void CppPreprocessor::handleElifdef(const QString &tokens)
+{
+    if (supportCPP23()) {
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        BranchResult elseResult = calcElseBranchResult(oldResult);
+        if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
+            QString name = tokens.trimmed();
+            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+        } else {
+            setCurrentBranch(elseResult);
+        }
+    }
+}
+
+void CppPreprocessor::handleElifndef(const QString &tokens)
+{
+    if (supportCPP23()) {
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
+        removeCurrentBranch();
+        BranchResult elseResult = calcElseBranchResult(oldResult);
+        if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
+            QString name = tokens.trimmed();
+            setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+        } else {
+            setCurrentBranch(elseResult);
+        }
+    }
+}
+
+void CppPreprocessor::handleElse(const QString &tokens)
+{
+    BranchResult oldResult = getCurrentBranch(); // take either if or else
+    removeCurrentBranch();
+    setCurrentBranch(calcElseBranchResult(oldResult));
+}
+
+void CppPreprocessor::handleEndif(const QString &tokens)
+{
+    removeCurrentBranch();
+}
+
+void CppPreprocessor::handleInclude(const QString &tokens)
+{
+    handleInclude(tokens,false);
+}
+
+void CppPreprocessor::handleIncludeNext(const QString &tokens)
+{
+    handleInclude(tokens,true);
 }
 
 QString CppPreprocessor::expandMacros(const QString &text, QSet<QString> usedMacros) const
@@ -1229,9 +1198,29 @@ void CppPreprocessor::preprocessBuffer()
         do {
             s = getNextPreprocessor();
             if (s.startsWith('#')) {
-                s = s.mid(1).trimmed(); // remove #
-                if (!s.isEmpty()) {
-                    handlePreprocessor(s);
+                QString command;
+                command.reserve(s.length());
+                QString tokens;
+                tokens.reserve(s.length());
+                auto it=s.constBegin();
+                ++it; // skip  '#'
+                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
+                    ++it; // skip spaces;
+                while(it!=s.constEnd()) {
+                    if (*it>='a' && *it<='z')
+                        command.append(*it);
+                    else
+                        break;
+                    ++it;
+                }
+                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
+                    ++it; // skip spaces;
+                while(it!=s.constEnd()) {
+                    tokens.append(*it);
+                    ++it; // skip spaces;
+                }
+                if (!command.isEmpty()) {
+                    handlePreprocessor(command, tokens);
                 }
             }
             // Step over
