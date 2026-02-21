@@ -35,6 +35,8 @@ CppPreprocessor::CppPreprocessor()
     mPreprocessorHandlers.insert("undef",[this](const QString& tokens){ handleUndefine(tokens);});
     mPreprocessorHandlers.insert("include",[this](const QString& tokens){ handleInclude(tokens);});
     mPreprocessorHandlers.insert("include_next",[this](const QString& tokens){ handleIncludeNext(tokens);});
+    mParseLocal = true;
+    mParseSystem = true;
 }
 
 void CppPreprocessor::clear()
@@ -376,6 +378,8 @@ void CppPreprocessor::handleUndefine(const QString& tokens)
                 undefineMap->insert(name, define);
         }
     }
+    mResult[mPreProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
+
 }
 
 void CppPreprocessor::handleIf(const QString &tokens)
@@ -479,17 +483,85 @@ QString CppPreprocessor::expandMacros(const QString &text, QSet<QString> usedMac
     QString newLine;
     int lenLine = text.length();
     int i=0;
+    ContentType currentType = ContentType::Other;
+    QString delimiter;
     while (i< lenLine) {
         QChar ch=text[i];
         if (isWordChar(ch)) {
             word += ch;
         } else {
-            if (!word.isEmpty()) {
+            if (!word.isEmpty() && currentType == ContentType::Other) {
                 expandMacro(text,newLine,word,i,usedMacros);
+            } else {
+                newLine += word;
             }
             word = "";
             if (i< lenLine) {
                 newLine += text[i];
+            }
+            switch (ch.unicode()) {
+            case '"':
+                switch (currentType) {
+                case ContentType::String:
+                    currentType=ContentType::Other;
+                    break;
+                case ContentType::RawString:
+                    if (QStringView(text.constData(),i).endsWith(')'+delimiter))
+                        currentType = ContentType::Other;
+                    break;
+                case ContentType::Other:
+                    currentType=ContentType::String;
+                    break;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case '\'':
+                switch (currentType) {
+                case ContentType::Character:
+                    currentType=ContentType::Other;
+                    break;
+                case ContentType::Other:
+                    currentType=ContentType::Character;
+                    break;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case 'R':
+                if (currentType == ContentType::Other && i+1<lenLine && text[i+1]=='"') {
+                    i++;
+                    newLine += text[i];
+                    currentType=ContentType::RawStringPrefix;
+                    delimiter = "";
+                }
+                break;
+            case '(':
+                switch(currentType) {
+                case ContentType::RawStringPrefix:
+                    currentType = ContentType::RawString;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case '\\':
+                switch (currentType) {
+                case ContentType::String:
+                case ContentType::Character:
+                    i++;
+                    newLine += text[i];
+                    break;
+                default:
+                    break;
+                }
+                break;
             }
         }
         i++;

@@ -1,5 +1,5 @@
 // Make function factory and use it
-#define FUNCTION(name, a) int fun_##name() { return a; }
+#define FUNCTION(name,a) int fun_##name() { return a; }
 
 FUNCTION(abcd, 12)
 FUNCTION(fff, 2)

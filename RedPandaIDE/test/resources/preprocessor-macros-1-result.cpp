@@ -1,5 +1,5 @@
 
-#define FUNCTION(name,a) int fun_ ##name() { return a; }
+#define FUNCTION(name,a) int fun_##name() { return a; }
 
 int fun_abcd() { return 12; }
 int fun_fff() { return 2; }
@@ -20,8 +20,8 @@ int main()
 	std::cout << "qqq: " << fun_qqq() << '\n';
 	
 	std::cout << 34 << '\n';
-	std::cout << "output: " "million" << '\n';
+	std::cout << "output: ""million" << '\n'; 
 	
-	std::cout << "Hello " "World" << '\n';
-	std::cout << "Hello " "WORD World" << '\n';
+	std::cout << "Hello ""World" << '\n';
+	std::cout << "Hello ""WORD World" << '\n';
 }
