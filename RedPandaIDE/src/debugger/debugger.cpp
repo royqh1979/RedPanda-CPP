@@ -17,7 +17,7 @@
 #include "debugger.h"
 #include "gdbmidebugger.h"
 #include "../utils.h"
-#include "../utils/os.h"
+#include "../utils/pe.h"
 #include "../utils/parsearg.h"
 #include "../utils/file.h"
 #include "../mainwindow.h"
@@ -1264,7 +1264,7 @@ void DebugTarget::run()
 
 #ifdef Q_OS_WIN
     process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
-        if (!programIsWin32GuiApp(mInferior)) {
+        if (!PortableExecutable(mInferior).isWin32GuiApp()) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
         }

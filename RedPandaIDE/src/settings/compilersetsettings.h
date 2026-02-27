@@ -227,11 +227,11 @@ private:
     bool mGccSupportNLS;
     bool mGccSupportNLSInitialized;
 #ifdef Q_OS_WINDOWS
-    // GCC ACP detection cache
-    mutable bool mGccIsUtf8;
-    mutable bool mGccIsUtf8Initialized;
-    mutable bool mGDBIsUtf8;
-    mutable bool mGDBIsUtf8Initialized;
+    // Toolchain ACP detection cache
+    mutable bool mCompilerIsUtf8;
+    mutable bool mCompilerIsUtf8Initialized;
+    mutable bool mDebuggerIsUtf8;
+    mutable bool mDebuggerIsUtf8Initialized;
     bool mGccSupportConvertingCharset;
     bool mGccSupportConvertingCharsetInitialized;
 #endif

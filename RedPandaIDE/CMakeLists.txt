@@ -50,6 +50,7 @@ target_qt_plain_cpp(RedPandaIDE
     src/utils/parsearg
     src/utils/parser
     src/utils/parsemacros
+    src/utils/pe
     src/utils/terminal
     src/utils/ui
     )
@@ -367,6 +368,7 @@ if(WIN32)
 
     target_link_libraries(RedPandaIDE PRIVATE
         advapi32
+        dbghelp
         psapi
         shlwapi
         user32)

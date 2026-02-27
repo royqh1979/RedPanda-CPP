@@ -28,7 +28,7 @@
 #include "executablerunner.h"
 #include "ojproblemcasesrunner.h"
 #include "../utils.h"
-#include "../utils/os.h"
+#include "../utils/pe.h"
 #include "../utils/parsearg.h"
 #include "../utils/terminal.h"
 #include "../systemconsts.h"
@@ -268,7 +268,7 @@ void CompilerManager::run(
     }
     bool useCustomTerminal = pSettings->environment().useCustomTerminal();
     ExecutableRunner * execRunner;
-    if (!programIsWin32GuiApp(filename)) {
+    if (!PortableExecutable(filename).isWin32GuiApp()) {
         QString consolePauserPath = getFilePath(pSettings->dirs().appLibexecDir(), CONSOLE_PAUSER);
         QStringList execArgs = {consolePauserPath};
         if (redirectInput) {

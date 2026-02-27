@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "os.h"
+#include "pe.h"
 #include <qt_utils/utils.h>
 #include <QApplication>
 #include <QDomDocument>
@@ -101,54 +102,6 @@ ExternalResource::~ExternalResource() {
     Q_CLEANUP_RESOURCE(redpanda_qt_utils_qmake_qmake_qm_files);
 }
 
-#ifdef Q_OS_WINDOWS
-bool applicationHasUtf8Manifest(const wchar_t *path)
-{
-    auto module = resourcePointer(LoadLibraryExW(path, nullptr, LOAD_LIBRARY_AS_DATAFILE), &FreeLibrary);
-    if (!module)
-        return false;
-    HRSRC resInfo = FindResourceW(
-        module.get(),
-        MAKEINTRESOURCEW(1) /* CREATEPROCESS_MANIFEST_RESOURCE_ID */,
-        MAKEINTRESOURCEW(24) /* RT_MANIFEST */);
-    if (!resInfo)
-        return false;
-    auto res = resourcePointer(LoadResource(module.get(), resInfo), &FreeResource);
-    if (!res)
-        return false;
-    char *data = (char *)LockResource(res.get());
-    DWORD size = SizeofResource(module.get(), resInfo);
-    QByteArray manifest(data, size);
-    QDomDocument doc;
-    if (!doc.setContent(manifest))
-        return false;
-    QDomNodeList acpNodes = doc.elementsByTagName("activeCodePage");
-    if (acpNodes.isEmpty())
-        return false;
-    QDomElement acpNode = acpNodes.item(0).toElement();
-    // case sensitive
-    // ref. https://devblogs.microsoft.com/oldnewthing/20220531-00/?p=106697
-    return acpNode.text() == QStringLiteral("UTF-8");
-}
-
-bool osSupportsUtf8Manifest()
-{
-    // since Windows 10 1903 (accurate build number unknown)
-    // ref. https://learn.microsoft.com/en-us/windows/apps/design/globalizing/use-utf8-code-page
-    return QOperatingSystemVersion::current().microVersion() >= 18362;
-}
-
-bool applicationIsUtf8(const QString &path)
-{
-    static bool systemIsUtf8 = GetACP() == CP_UTF8;
-    if (systemIsUtf8)
-        return true;
-    if (!fileExists(path))
-        return false;
-    return osSupportsUtf8Manifest() && applicationHasUtf8Manifest((wchar_t *)path.constData());
-}
-#endif
-
 QString appArch()
 {
     return QSysInfo::buildCpuArchitecture();
@@ -176,51 +129,5 @@ QString osArch()
         return QSysInfo::currentCpuArchitecture();
 #else
     return QSysInfo::currentCpuArchitecture();
-#endif
-}
-
-bool programIsWin32GuiApp(const QString & filename)
-{
-#ifdef Q_OS_WIN
-    bool result = false;
-    HANDLE handle = CreateFileW(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-    if (handle != INVALID_HANDLE_VALUE) {
-        result = [handle] {
-            IMAGE_DOS_HEADER dos_header;
-            DWORD signature;
-            DWORD bytesread;
-            IMAGE_FILE_HEADER pe_header;
-            IMAGE_OPTIONAL_HEADER opt_header;
-
-            ReadFile(handle, &dos_header, sizeof(dos_header), &bytesread, NULL);
-            if (bytesread != sizeof(dos_header))
-                return false;
-            if (dos_header.e_magic != IMAGE_DOS_SIGNATURE)
-                return false;
-
-            SetFilePointer(handle, dos_header.e_lfanew, NULL, 0);
-            ReadFile(handle, &signature, sizeof(signature), &bytesread, NULL);
-            if (bytesread != sizeof(signature))
-                return false;
-            if (signature != IMAGE_NT_SIGNATURE)
-                return false;
-
-            ReadFile(handle, &pe_header, sizeof(pe_header), &bytesread, NULL);
-            if (bytesread != sizeof(pe_header))
-                return false;
-
-            ReadFile(handle, &opt_header, sizeof(opt_header), &bytesread, NULL);
-            if (bytesread != sizeof(opt_header))
-                return false;
-            if (opt_header.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC && opt_header.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
-                return false;
-
-            return opt_header.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI;
-        } ();
-    }
-    CloseHandle(handle);
-    return result;
-#else
-    return false;
 #endif
 }

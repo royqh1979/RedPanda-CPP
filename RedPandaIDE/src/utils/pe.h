@@ -14,29 +14,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef UTILS_OS_H
-#define UTILS_OS_H
+
+#ifndef UTILS_PE_H
+#define UTILS_PE_H
+
+#include <QtGlobal>
+
+#ifdef Q_OS_WIN
+
 #include <QString>
-#ifdef Q_OS_WIN
-#include <windows.h>
-#endif
 
-#ifdef Q_OS_WIN
-bool isGreenEdition();
-#else
-constexpr bool isGreenEdition() { return false; }
-#endif
+struct PortableExecutable
+{
+    QString path;
 
-#ifdef Q_OS_WIN
-bool readRegistry(HKEY key, const QString& subKey, const QString& name, QString& value);
-#endif
+    PortableExecutable(const QString &path);
+    ~PortableExecutable() = default;
 
-struct ExternalResource {
-    ExternalResource();
-    ~ExternalResource();
+    bool isWin32GuiApp();
+    bool isUnicodeAware();
+    bool hasUtf8Manifest();
+    bool isUtf8();
+
+    static bool osSupportsUtf8Manifest();
 };
 
-QString appArch();
-QString osArch();
+#else // Q_OS_WIN
 
-#endif // UTILS_OS_H
+struct PortableExecutable
+{
+    template <typename... Ts>
+    constexpr PortableExecutable(Ts&&...) {}
+
+    constexpr bool isWin32GuiApp() { return false; }
+};
+
+#endif // Q_OS_WIN
+
+#endif // UTILS_PE_H

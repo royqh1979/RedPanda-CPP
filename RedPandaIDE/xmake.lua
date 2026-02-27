@@ -106,6 +106,7 @@ target("RedPandaIDE")
         "src/utils/parsearg.cpp",
         "src/utils/parser.cpp",
         "src/utils/parsemacros.cpp",
+        "src/utils/pe.cpp",
         "src/utils/terminal.cpp",
         "src/utils/ui.cpp")
 
@@ -291,7 +292,7 @@ target("RedPandaIDE")
 
     add_links("redpanda_qt_utils", "qsynedit")
     if is_os("windows") then
-        add_links("psapi", "shlwapi")
+        add_links("dbghelp", "psapi", "shlwapi")
     end
 
 target("test-makefile-escape")

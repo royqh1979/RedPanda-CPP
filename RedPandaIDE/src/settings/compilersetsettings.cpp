@@ -21,6 +21,7 @@
 #include "../utils/escape.h"
 #include "../utils/os.h"
 #include "../utils/parsearg.h"
+#include "../utils/pe.h"
 #include <QDir>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -92,8 +93,8 @@ CompilerSet::CompilerSet():
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
-    , mGccIsUtf8Initialized{false}
-    , mGDBIsUtf8Initialized{false}
+    , mCompilerIsUtf8Initialized{false}
+    , mDebuggerIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized{false}
 #endif
 {
@@ -114,8 +115,8 @@ CompilerSet::CompilerSet(const QString& compilerFolder, const QString& c_prog):
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
-    , mGccIsUtf8Initialized(false)
-    , mGDBIsUtf8Initialized{false}
+    , mCompilerIsUtf8Initialized(false)
+    , mDebuggerIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -189,10 +190,10 @@ CompilerSet::CompilerSet(const CompilerSet &set):
     mGccSupportNLS{set.mGccSupportNLS},
     mGccSupportNLSInitialized{set.mGccSupportNLSInitialized}
 #ifdef Q_OS_WINDOWS
-    , mGccIsUtf8(set.mGccIsUtf8)
-    , mGccIsUtf8Initialized(set.mGccIsUtf8Initialized)
-    , mGDBIsUtf8(set.mGDBIsUtf8)
-    , mGDBIsUtf8Initialized(set.mGDBIsUtf8Initialized)
+    , mCompilerIsUtf8(set.mCompilerIsUtf8)
+    , mCompilerIsUtf8Initialized(set.mCompilerIsUtf8Initialized)
+    , mDebuggerIsUtf8(set.mDebuggerIsUtf8)
+    , mDebuggerIsUtf8Initialized(set.mDebuggerIsUtf8Initialized)
     , mGccSupportConvertingCharset(set.mGccSupportConvertingCharset)
     , mGccSupportConvertingCharsetInitialized(set.mGccSupportConvertingCharsetInitialized)
 #endif
@@ -241,8 +242,8 @@ CompilerSet::CompilerSet(const QJsonObject &set) :
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
-    , mGccIsUtf8Initialized(false)
-    , mGDBIsUtf8Initialized(false)
+    , mCompilerIsUtf8Initialized(false)
+    , mDebuggerIsUtf8Initialized(false)
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -511,7 +512,7 @@ void CompilerSet::setCCompiler(const QString &name)
 {
     if (mCCompiler!=name) {
 #ifdef Q_OS_WIN
-        mGccIsUtf8Initialized = false;
+        mCompilerIsUtf8Initialized = false;
 #endif
         mCCompiler = name;
         if (mCompilerType == CompilerType::Unknown) {
@@ -554,7 +555,7 @@ void CompilerSet::setDebugger(const QString &name)
 {
     if (mDebugger!=name) {
 #ifdef Q_OS_WIN
-        mGDBIsUtf8Initialized = false;
+        mDebuggerIsUtf8Initialized = false;
 #endif
         mDebugger = name;
     }
@@ -1383,34 +1384,20 @@ bool CompilerSet::isOutputExecutable(CompilationStage stage)
 #ifdef Q_OS_WINDOWS
 bool CompilerSet::isDebuggerUsingUTF8() const
 {
-    switch(mCompilerType) {
-    case CompilerType::Clang:
-        return true;
-    case CompilerType::GCC:
-        if (!mGDBIsUtf8Initialized) {
-            mGDBIsUtf8 = applicationIsUtf8(mDebugger);
-            mGDBIsUtf8Initialized = true;
-        }
-        return mGDBIsUtf8;
-    default:
-        return false;
+    if (!mDebuggerIsUtf8Initialized) {
+        mDebuggerIsUtf8 = PortableExecutable(mDebugger).isUtf8();
+        mDebuggerIsUtf8Initialized = true;
     }
+    return mDebuggerIsUtf8;
 }
 
 bool CompilerSet::isCompilerUsingUTF8() const
 {
-    switch(mCompilerType) {
-    case CompilerType::Clang:
-        return true;
-    case CompilerType::GCC:
-        if (!mGccIsUtf8Initialized) {
-            mGccIsUtf8 = applicationIsUtf8(mCCompiler);
-            mGccIsUtf8Initialized = true;
-        }
-        return mGccIsUtf8;
-    default:
-        return false;
+    if (!mCompilerIsUtf8Initialized) {
+        mCompilerIsUtf8 = PortableExecutable(mCCompiler).isUtf8();
+        mCompilerIsUtf8Initialized = true;
     }
+    return mCompilerIsUtf8;
 }
 #endif
 
