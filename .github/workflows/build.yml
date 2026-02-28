@@ -110,49 +110,72 @@ jobs:
           name: Windows NT 5.x - profile=${{ matrix.profile }}
           path: dist/*
 
-  windows_msvc_x64:
-    name: Windows MSVC x64
-    if: false
-    runs-on: windows-2022
+  windows_msvc:
+    name: Windows MSVC
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64, x86]
+        qt_version: ['6.8.3', '5.15.2']
+        include:
+          - arch: x64
+            qt_host: windows
+            runner: windows-2022
+            vs_arch: amd64
+          - arch: x64
+            qt_version: '6.8.3'
+            qt_arch: win64_msvc2022_64
+            qt_dir: msvc2022_64
+          - arch: x64
+            qt_version: '5.15.2'
+            qt_arch: win64_msvc2019_64
+            qt_dir: msvc2019_64
+          - arch: arm64
+            qt_arch: win64_msvc2022_arm64
+            qt_dir: msvc2022_arm64
+            qt_host: windows_arm64
+            runner: windows-11-arm
+            vs_arch: arm64
+          - arch: x86
+            qt_arch: win32_msvc2019
+            qt_dir: msvc2019
+            qt_host: windows
+            runner: windows-2022
+            vs_arch: x86
+        exclude:
+          - arch: arm64
+            qt_version: '5.15.2'
+          - arch: x86
+            qt_version: '6.8.3'
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install MSVC 2019
-        run: |
-          choco install visualstudio2019enterprise --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended" -y
-
-      - name: Setup
-        uses: jurplel/install-qt-action@v3
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          version: '5.15.2'
-          host: windows
+          version: ${{ matrix.qt_version }}
+          host: ${{ matrix.qt_host }}
           target: desktop
-          arch: win64_msvc2019_64
-          archives: qtbase qtsvg qttools
-          tools: tools_qtcreator,qt.tools.qtcreator
+          arch: ${{ matrix.qt_arch }}
+          archives: qtbase qtsvg qttools qttranslations
 
       - name: Build
         run: |
-          $JOM = "${Env:RUNNER_WORKSPACE}/Qt/Tools/QtCreator/bin/jom/jom.exe"
-          $VS_INSTALL_PATH = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
-          Import-Module "$VS_INSTALL_PATH\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-          Enter-VsDevShell -VsInstallPath "$VS_INSTALL_PATH" -SkipAutomaticLocation -DevCmdArguments -arch=amd64
-          mkdir build && pushd build
-          qmake PREFIX=${Env:GITHUB_WORKSPACE}/pkg ${Env:GITHUB_WORKSPACE}/Red_Panda_CPP.pro
-          & $JOM "-j${Env:NUMBER_OF_PROCESSORS}"
-          & $JOM install
-          windeployqt ${Env:GITHUB_WORKSPACE}/pkg/RedPandaIDE.exe
-          rm ${Env:GITHUB_WORKSPACE}/pkg/vc_redist.x64.exe
-          popd
+          $VsInstallPath = "C:/Program Files/Microsoft Visual Studio/2022/Enterprise"
+          Import-Module "$VsInstallPath/Common7/Tools/Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -Arch ${{ matrix.vs_arch }} -VsInstallPath $VsInstallPath -SkipAutomaticLocation
+
+          ./packages/msvc/build.ps1 -QtDir "$env:RUNNER_WORKSPACE/Qt/${{ matrix.qt_version }}/${{ matrix.qt_dir }}"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Windows MSVC x64
-          path: pkg/
+          name: Windows MSVC ${{ matrix.arch }} (Qt ${{ matrix.qt_version }})
+          path: dist/
 
   debian:
     name: Debian

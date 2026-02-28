@@ -14,6 +14,8 @@
 | 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
 | ------------------ | --- | --- | ----- |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+| Qt.io + MSVC | ❌ | ✔️ | ✔️ |
+| VCPKG + MSVC | ✔️ | ✔️ | ✔️ |
 
 <!--
 | MSYS2 + 基于 GNU 的 MinGW | ❌ | ✔️ | ❌ |
@@ -81,6 +83,36 @@
 
 此脚本除了接受 `build-mingw.sh` 的参数外，还接受以下参数：
 - `-p|--profile <profile>`：（必需）MinGW Lite 和 Qt 库的编译配置。可用的配置有 `64-ucrt`、`32-ucrt`、`64-msvcrt`、`32-msvcrt`。
+
+## MSVC 工具链
+
+前置条件：
+
+0. Windows 10 x64 或更高版本，或 Windows 11 ARM64。
+1. 安装 Visual Studio 2022 或 2026（至少要有 “build tools” 和 “Windows SDK”）。
+2. 通过 Qt.io 安装器、aqtinstall 或 vcpkg 安装 Qt 6.8+ 或 5.15。
+   - 必需组件：base、svg、tools、translations。
+3. PowerShell (Core，不是 Windows PowerShell)。
+
+构建：
+
+1. [启动 Visual Studio 开发环境](https://learn.microsoft.com/zh-cn/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio)：
+2. 对于 vcpkg，设置工具链文件（必需）和目标三元组（如果非默认）：
+   ```ps1
+   $env:CMAKE_TOOLCHAIN_FILE = "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+   $env:VCPKG_TARGET_TRIPLET = "x64-windows"
+   ```
+3. 运行构建脚本：
+   ```ps1
+   ./packages/msvc/build.ps1 -QtDir C:/Qt/6.8.3/msvc2022_64
+
+   # vcpkg (-QtDir 可选，用于 windeployqt)
+   ./packages/msvc/build.ps1 -QtDir "$env:VCPKG_ROOT/installed/$env:VCPKG_TARGET_TRIPLET/tools/Qt6"
+   ```
+
+参数：
+- `-c|-Clean`：清理目录后再构建。
+- `-QtDir <dir>`：Qt 库目录。
 
 # Linux
 

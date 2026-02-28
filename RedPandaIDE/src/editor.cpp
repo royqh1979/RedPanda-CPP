@@ -639,7 +639,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     if (sLine=="*/") {
                         CharPos p = caretXY();
                         p.ch = lineText().length();
-                        setSelBeginEnd(p, CharPos{lineText().length(), p.line});
+                        setSelBeginEnd(p, CharPos{(int)lineText().length(), p.line});
                         setSelText("");
                     }
                     handled = true;

@@ -220,6 +220,7 @@ if (WIN32)
             WIN32_LEAN_AND_MEAN)
     if (MSVC)
         list(APPEND GLOBAL_COMPILE_DEFINITIONS NOMINMAX)
+        add_compile_options(/utf-8)
     endif()
 endif()
 

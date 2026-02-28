@@ -15,6 +15,9 @@ Prerequisites:
 | Библиотека+Инструмент \ Цель | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+| Qt.io + MSVC | ❌ | ✔️ | ✔️ |
+| VCPKG + MSVC | ✔️ | ✔️ | ✔️ |
+
 
 <!--
 | MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
@@ -84,6 +87,36 @@ Red Panda C++ должна работать с любым 64-битным наб
 
 Эти скрипты принимают такие же аргументы, как `build-mingw.sh`, дополнительно к этому:
 - `-p|--profile <profile>`: (ТРЕБУЕТСЯ) профиль MinGW Lite с библиотекой Qt. Доступные профили `64-ucrt`, `64-msvcrt`, `32-ucrt`, `32-msvcrt`.
+
+## MSVC Toolchain
+
+Prerequisites:
+
+0. Windows 10 x64 or later, or Windows 11 ARM64.
+1. Install Visual Studio 2022 or 2026 (at least “build tools” and “Windows SDK”).
+2. Install Qt 6.8+ or 5.15 via Qt.io installer, aqtinstall, or vcpkg.
+   - Required components: base, svg, tools, translations.
+3. PowerShell (Core, not “Windows PowerShell”).
+
+To build:
+
+1. [Start Visual Studio develop environment](https://learn.microsoft.com/ru-ru/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio).
+2. For vcpkg, set toolchain file (required) and target triplet (if you want non-default one):
+   ```ps1
+   $env:CMAKE_TOOLCHAIN_FILE = "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+   $env:VCPKG_TARGET_TRIPLET = "x64-windows"
+   ```
+3. Run build script:
+   ```ps1
+   ./packages/msvc/build.ps1 -QtDir C:/Qt/6.8.3/msvc2022_64
+
+   # vcpkg (-QtDir is optional; it enables windeployqt)
+   ./packages/msvc/build.ps1 -QtDir "$env:VCPKG_ROOT/installed/$env:VCPKG_TARGET_TRIPLET/tools/Qt6"
+   ```
+
+Arguments:
+- `-c|-Clean`: clean directories before building.
+- `-QtDir <dir>`: Qt library directory.
 
 # Linux
 
