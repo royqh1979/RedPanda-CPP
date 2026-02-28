@@ -154,7 +154,9 @@ bool PortableExecutable::isUnicodeAware()
                         ImageRvaToVa(ntHeader, base, nameOffset, &lastRvaSection);
                     if (!importByName)
                         continue;
-                    if (strcmp(wargvFunction, importByName->Name) == 0) {
+                    // In old versions of Windows SDK or MinGW, IMAGE_IMPORT_BY_NAME::Name was declared BYTE[1].
+                    const char *name = (const char *)importByName->Name;
+                    if (strcmp(wargvFunction, name) == 0) {
                         result = true;
                         break;
                     }
@@ -170,7 +172,9 @@ bool PortableExecutable::isUnicodeAware()
                         ImageRvaToVa(ntHeader, base, nameOffset, &lastRvaSection);
                     if (!importByName)
                         continue;
-                    if (strcmp(wargvFunction, importByName->Name) == 0) {
+                    // In old versions of Windows SDK or MinGW, IMAGE_IMPORT_BY_NAME::Name was declared BYTE[1].
+                    const char *name = (const char *)importByName->Name;
+                    if (strcmp(wargvFunction, name) == 0) {
                         result = true;
                         break;
                     }
