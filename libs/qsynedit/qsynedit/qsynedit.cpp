@@ -5974,6 +5974,12 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
         doBreakLine();
         endEditing();
         break;
+    case EditCommand::BlockIndent:
+        doBlockIndent();
+        break;
+    case EditCommand::BlockUnindent:
+        doBlockUnindent();
+        break;
     case EditCommand::Tab:
         doTabKey();
         break;
