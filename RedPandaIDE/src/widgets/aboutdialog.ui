@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>About</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/icons/images/devcpp.ico</normaloff>:/icons/images/devcpp.ico
+   </iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="lblTitle">
