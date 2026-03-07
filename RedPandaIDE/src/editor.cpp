@@ -1356,35 +1356,36 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
         return;
     } else {
         if (mCodeCompletionEnabled
-                && mCodeCompletionSettings->showCompletionWhileInput() ) {
+                && mCodeCompletionSettings->showCompletionWhileInput()) {
             int idCharPressed= previousIdChars(caretXY());
             idCharPressed += s.length();
             if (idCharPressed>=mCodeCompletionSettings->minCharRequired()) {
-                QSynedit::TokenType wordType;
-                CharPos ws{caretX()-idCharPressed,caretY()};
-                QString lastWord = getPreviousWordAtPositionForSuggestion(ws, wordType);
-                if (mParser && (wordType == QSynedit::TokenType::Keyword
-                                || wordType == QSynedit::TokenType::Identifier)) {
-                    if (CppTypeKeywords.contains(lastWord)) {
-                        return;
+                if (mParser) {
+                    QSynedit::TokenType wordType;
+                    CharPos ws{caretX()-idCharPressed,caretY()};
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws, wordType);
+                    if (wordType == QSynedit::TokenType::Keyword
+                                    || wordType == QSynedit::TokenType::Identifier) {
+                        if (CppTypeKeywords.contains(lastWord))
+                            return;
+                        PStatement statement = mParser->findStatementOf(
+                                    mFilename,
+                                    lastWord,
+                                    caretY());
+                        StatementKind kind = getKindOfStatement(statement);
+                        if (kind == StatementKind::Class
+                                || kind == StatementKind::EnumClassType
+                                || kind == StatementKind::EnumType
+                                || kind == StatementKind::Typedef) {
+                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+      //                      if devEditor.UseTabnine then
+      //                        ShowTabnineCompletion;
+                            return;
+                        }
                     }
-                    PStatement statement = mParser->findStatementOf(
-                                mFilename,
-                                lastWord,
-                                caretY());
-                    StatementKind kind = getKindOfStatement(statement);
-                    if (kind == StatementKind::Class
-                            || kind == StatementKind::EnumClassType
-                            || kind == StatementKind::EnumType
-                            || kind == StatementKind::Typedef) {
-                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-  //                      if devEditor.UseTabnine then
-  //                        ShowTabnineCompletion;
-                        return;
-                    }
+                    showCompletion("",false,CodeCompletionType::Normal);
+                    return;
                 }
-                showCompletion("",false,CodeCompletionType::Normal);
-                return;
             }
         }
     }
