@@ -1461,12 +1461,12 @@ void Editor::copyAsHTML()
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setUseBackground(mEditorSettings->copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PSyntaxer hl = syntaxer();
+    QSynedit::PSyntaxer pSyntaxter = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = SyntaxerManager::copy(syntaxer());
-        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
+        pSyntaxter = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(pSyntaxter,mEditorSettings->copyHTMLColorScheme());
     }
-    exporter.setSyntaxer(hl);
+    exporter.setSyntaxer(pSyntaxter);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -3061,12 +3061,12 @@ void Editor::print()
     exporter.setUseBackground(mEditorSettings->copyHTMLUseBackground());
 
     exporter.setFont(font());
-    QSynedit::PSyntaxer hl = syntaxer();
+    QSynedit::PSyntaxer pSyntaxer = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = SyntaxerManager::copy(syntaxer());
-        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
+        pSyntaxer = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
     }
-    exporter.setSyntaxer(hl);
+    exporter.setSyntaxer(pSyntaxer);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -3097,12 +3097,12 @@ void Editor::exportAsRTF(const QString &rtfFilename)
     exporter.setTitle(extractFileName(rtfFilename));
     exporter.setUseBackground(mEditorSettings->copyRTFUseBackground());
     exporter.setFont(font());
-    QSynedit::PSyntaxer hl = syntaxer();
+    QSynedit::PSyntaxer pSyntaxer = syntaxer();
     if (!mEditorSettings->copyRTFUseEditorColor()) {
-        hl = SyntaxerManager::copy(syntaxer());
-        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyRTFColorScheme());
+        pSyntaxer = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyRTFColorScheme());
     }
-    exporter.setSyntaxer(hl);
+    exporter.setSyntaxer(pSyntaxer);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -3123,12 +3123,12 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.setTitle(extractFileName(htmlFilename));
     exporter.setUseBackground(mEditorSettings->copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PSyntaxer hl = syntaxer();
+    QSynedit::PSyntaxer pSyntaxer = syntaxer();
     if (!mEditorSettings->copyHTMLUseEditorColor()) {
-        hl = SyntaxerManager::copy(syntaxer());
-        mColorManager->applySchemeToSyntaxer(hl,mEditorSettings->copyHTMLColorScheme());
+        pSyntaxer = SyntaxerManager::copy(syntaxer());
+        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
     }
-    exporter.setSyntaxer(hl);
+    exporter.setSyntaxer(pSyntaxer);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -4923,23 +4923,25 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const CharPos &p, QSynedi
     if (!validInDoc(p)) {
         return "";
     }
+    //we use cpp syntaxer here
+
+    Q_ASSERT(syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP);
     bool inFunc = testInFunc(p);
 
     int line = p.line;
     int ch = p.ch;
-    QSynedit::CppSyntaxer syntaxer;
+    QSynedit::PSyntaxer pSyntaxer = SyntaxerManager::copy(syntaxer());
     if (line>=lineCount() || line<0)
         return "";
     QStringList tokenList;
     QList<QSynedit::TokenType> tokenTypeList;
-    QString sLine = lineText(line);
-    startParseLine(&syntaxer,line);
-    while (!syntaxer.eol()) {
-        QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
+    startParseLine(pSyntaxer.get(),line);
+    while (!pSyntaxer->eol()) {
+        QSynedit::PTokenAttribute attr = pSyntaxer->getTokenAttribute();
         QSynedit::TokenType tokenType = attr->tokenType();
-        int start = syntaxer.getTokenPos();
-        int end = start + syntaxer.getToken().length();
-        QString token = syntaxer.getToken();
+        int start = pSyntaxer->getTokenPos();
+        int end = start + pSyntaxer->getToken().length();
+        QString token = pSyntaxer->getToken();
         if (start>=ch ) {
             break;
         }
@@ -4955,7 +4957,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const CharPos &p, QSynedi
                 tokenTypeList.pop_back();
             }
         }
-        syntaxer.next();
+        pSyntaxer->next();
     }
     if (tokenList.isEmpty())
         return "";
