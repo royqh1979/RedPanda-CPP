@@ -2737,9 +2737,9 @@ void QSynEdit::doInputStr(const QString& s)
                 if ((lastCh!=0 && isSpaceChar(lastCh)) || isIdentChar(lastCh)) {
                     addGroupUndoBreak();
                 }
-                int oldCaretX=mCaretX;
-                int oldCaretY=mCaretY;
                 internalInputStr(inputStr);
+                int oldCaretX=mCaretX - inputStr.length();
+                int oldCaretY=mCaretY;
                 // auto indent
                 if (mActiveSelectionMode==SelectionMode::Normal
                         && shouldRecalcIndent(oldCaretY)

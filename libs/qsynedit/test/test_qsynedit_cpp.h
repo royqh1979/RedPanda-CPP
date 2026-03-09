@@ -50,6 +50,7 @@ private slots:
 
     void test_input_chars_in_empty_file();
     void test_input_chars_in_empty_file_overwrite_mode();
+    void test_input_char_when_select_all();
     void test_input_chars_at_file_begin_end();
     void test_input_chars_at_file_begin_end_overwrite_mode();
     void test_input_chars_in_file();

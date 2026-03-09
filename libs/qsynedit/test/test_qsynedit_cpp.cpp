@@ -1430,6 +1430,35 @@ void TestQSyneditCpp::test_input_chars_in_empty_file_overwrite_mode()
     QVERIFY(!mEdit->modified());
 }
 
+void TestQSyneditCpp::test_input_char_when_select_all()
+{
+    QStringList text1({
+                          "#include <iostream>",
+                          "int main() {",
+                          " return 0;",
+                          "}"
+                      });
+    QStringList text2({
+                          "#",
+                      });
+
+    mEdit->setContent(text1);
+    mEdit->setCaretXY(mEdit->fileEnd());
+    mEdit->selectAll();
+    clearSignalDatas();
+    QTest::keyPress(mEdit.get(), '#');
+    QCOMPARE(mEdit->content(),text2);
+    //undo
+    clearSignalDatas();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    //redo
+    clearSignalDatas();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+
+}
+
 void TestQSyneditCpp::test_input_chars_at_file_begin_end()
 {
     QStringList text1({
