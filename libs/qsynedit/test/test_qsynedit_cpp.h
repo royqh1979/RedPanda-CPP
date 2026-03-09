@@ -12,6 +12,7 @@ private slots:
     void cleanup();
     void loadDemoFile();
 
+    void test_next_char();
     void test_get_token_data();
     void test_get_token();
     void test_token_begin_data();

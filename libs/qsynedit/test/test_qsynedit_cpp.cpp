@@ -41,6 +41,11 @@ void TestQSyneditCpp::loadDemoFile()
     clearSignalDatas();
 }
 
+void TestQSyneditCpp::test_next_char()
+{
+
+}
+
 void TestQSyneditCpp::test_get_token_data()
 {
     QTest::addColumn<QString>("word");

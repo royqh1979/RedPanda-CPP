@@ -3539,11 +3539,14 @@ void Editor::completionInsert(bool appendFunc)
                 ||
                 (statement->kind == StatementKind::Preprocessor
                   && !statement->args.isEmpty())) {
-            QChar nextCh = charAt(nextNonSpaceChar(pEnd));
+            CharPos pos = nextNonSpaceChar(pEnd);
+            QChar nextCh;
+            if (pos.line == pEnd.line)
+                nextCh = charAt(nextNonSpaceChar(pEnd));
             if (nextCh=='(') {
                 funcAddOn = "";
-            } else if (isIdentChar(nextCh) || nextCh == '"'
-                       || nextCh == '\'') {
+            } else if (statement->args != "()" &&(isIdentChar(nextCh) || nextCh == '"'
+                       || nextCh == '\'')) {
                 funcAddOn = '(';
             } else {
                 funcAddOn = "()";

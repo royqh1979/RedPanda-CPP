@@ -1131,7 +1131,7 @@ bool QSynEdit::inSelection(const CharPos &pos) const
 CharPos QSynEdit::findNextChar(const CharPos &pos, CharType type) const
 {
     Q_ASSERT(validInDoc(pos));
-    int ch = pos.ch+1;
+    int ch = pos.ch;
     int line = pos.line;
     if (mDocument->count()<=0)
         return CharPos{};
