@@ -29,7 +29,10 @@ CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(pare
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
 {
-    Q_ASSERT(mKeypressedCallback != nullptr);
+    //Q_ASSERT(mKeypressedCallback != nullptr);
+    if (mKeypressedCallback==nullptr) {
+        QListView::keyPressEvent(event);
+    }
     if (event->key() == Qt::Key_Up
             || event->key() == Qt::Key_Down
             || event->key() == Qt::Key_PageDown
