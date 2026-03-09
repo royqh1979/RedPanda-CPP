@@ -952,7 +952,7 @@ void QSynEditPainter::paintLines()
     PTokenAttribute attr;
     EditingAreaList  areaList;
     PCodeBlock foldRange;
-    PTokenAttribute preeditAttr;
+//    PTokenAttribute preeditAttr;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
@@ -1114,18 +1114,18 @@ void QSynEditPainter::paintLines()
                                   attr);
             }
             //input method
-            if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                int startPos = mEdit->mSyntaxer->getTokenPos();
-                int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
-                if (!(endPos < mEdit->mCaretX
-                        || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
-                    if (!preeditAttr) {
-                        preeditAttr = attr;
-                    } else {
-                        attr = preeditAttr;
-                    }
-                }
-            }
+//            if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
+//                int startPos = mEdit->mSyntaxer->getTokenPos();
+//                int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
+//                if (!(endPos < mEdit->mCaretX
+//                        || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
+//                    if (!preeditAttr) {
+//                        preeditAttr = attr;
+//                    } else {
+//                        attr = preeditAttr;
+//                    }
+//                }
+//            }
             bool showGlyph=false;
             if (attr && attr->tokenType() == TokenType::Space) {
                 int pos = mEdit->mSyntaxer->getTokenPos();
@@ -1226,11 +1226,11 @@ void QSynEditPainter::paintLines()
             glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length());
             area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
             area->type = EditingAreaType::eatUnderLine;
-            if (preeditAttr) {
-                area->color = preeditAttr->foreground();
-            } else {
+//            if (preeditAttr) {
+//                area->color = preeditAttr->foreground();
+//            } else {
                 area->color = mForeground;
-            }
+//            }
             areaList.append(area);
 
             mEdit->mGlyphPostionCacheForInputMethod.str = sLine;
