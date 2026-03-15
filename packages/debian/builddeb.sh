@@ -18,6 +18,10 @@ VERSION=$(git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g') 
 
 cat <<EOF >$TMP_FOLDER/debian/changelog
 redpanda-cpp ($VERSION) unstable; urgency=medium
+
+  * Automatic build.
+
+ -- Build Script <builder@redpandacpp>  $(date -R)
 EOF
 
 git archive HEAD | tar -x -C $TMP_FOLDER
