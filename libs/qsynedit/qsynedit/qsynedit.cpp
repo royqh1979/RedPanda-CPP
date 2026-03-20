@@ -5490,6 +5490,8 @@ void QSynEdit::properInsertLine(int line, const QString &sLineText, bool parseTo
         reparseLines(line,line+1, false);
     emit linesInserted(line, 1);
     updateVScrollbar();
+    //we must invalidate whole editor to properly render contents
+    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
@@ -5502,6 +5504,9 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
         onLinesDeleted(line,count);
     emit linesDeleted(line,count);
     updateVScrollbar();
+
+    //we must invalidate whole editor to properly render contents
+    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
@@ -5516,6 +5521,8 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
         reparseLines(line,line+count, false);
     emit linesInserted(line, count);
     updateVScrollbar();
+    //we must invalidate whole editor to properly render contents
+    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
