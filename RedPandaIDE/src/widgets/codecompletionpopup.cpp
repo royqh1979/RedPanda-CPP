@@ -177,6 +177,7 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
         else
             mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
         mListView->setCurrentIndex(mModel->index(0,0));
+        show();
         // if only one suggestion, and is exactly the symbol to search, hide the frame (the search is over)
         // if only one suggestion and auto hide , don't show the frame
         if(mCompletionStatementList.count() == 1)

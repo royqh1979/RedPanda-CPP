@@ -17,6 +17,7 @@ Red Panda C++ Version 3.5
   - fix: Block comments are not correctly replaced with space char.
   - change: Remove "parse system headers" and "parse local headers" options.
   - fix: Can't get clang's version.
+  - change: Show completion popup only if it's not empty.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

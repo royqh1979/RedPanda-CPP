@@ -104,6 +104,7 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
         else
             mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
         mListView->setCurrentIndex(mModel->index(0,0));
+        show();
         if (mCompletionList.count() == 1) {
             // if only one suggestion and auto hide , don't show the frame
             if (autoHideOnSingleResult)

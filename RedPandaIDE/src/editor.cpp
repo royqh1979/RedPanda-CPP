@@ -3305,7 +3305,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     );
     }
     if (mFunctionTooltip) mFunctionTooltip->hide();
-    mCompletionPopup->show();
+    //mCompletionPopup->show();
 
     if (word.isEmpty()) {
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
@@ -3396,7 +3396,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
         return;
 
     if (mFunctionTooltip) mFunctionTooltip->hide();
-    mHeaderCompletionPopup->show();
+    //mHeaderCompletionPopup->show();
     mHeaderCompletionPopup->setSearchLocal(word.startsWith('"'));
     word.remove(0,1);
 
