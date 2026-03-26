@@ -166,7 +166,7 @@ private:
     void handleIncludeNext(const QString& tokens);
 
     void handleInclude(const QString& line, bool fromNext);
-    void handlePreprocessor(const QString& command, const QString& tokens);
+    bool handlePreprocessor(const QString& command, const QString& tokens);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
 
@@ -311,7 +311,7 @@ private:
     //{ List of current compiler set's include path}
     QSet<QString> mIncludePaths;
 
-    QMap<QString, std::function<void(const QString&)>> mPreprocessorHandlers;
+    QMap<QString, std::function<bool(const QString&)>> mPreprocessorHandlers;
 
     bool mParseSystem;
     bool mParseLocal;
