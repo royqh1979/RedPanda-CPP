@@ -6100,8 +6100,12 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
         Editor* e = mEditorManager->getOpenedEditor(issue->filename);
         if (e!=nullptr && (issue->line>=0)) {
             int line = issue->line;
-            if (line > e->lineCount())
+            if (line >= e->lineCount()) {
+#ifdef QT_DEBUG
+                qDebug()<<issue->line<<issue->description;
+#endif
                 return;
+            }
             int col = std::min(issue->column,e->lineText(line).length());
             if (col < 0)
                 col = e->lineText(line).length();

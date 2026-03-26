@@ -97,9 +97,9 @@ void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType
     PToken token = std::make_shared<Token>();
     token->text = sText;
     token->line = iLine;
-#ifdef Q_DEBUG
-    token->matchIndex = 1000000000;
-#endif
+//#ifdef QT_DEBUG
+//    token->matchIndex = 1000000000;
+//#endif
     switch(tokenType) {
     case TokenType::LeftBrace:
         token->matchIndex=-1;
