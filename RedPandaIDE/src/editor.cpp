@@ -3837,7 +3837,7 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
             || statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor) {
           result = getHintForFunction(statement,mFilename,p.line);
-    } else if (statement->line>0) {
+    } else if (statement->line>=0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
                 + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
