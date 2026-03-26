@@ -1299,10 +1299,13 @@ bool Editor::event(QEvent *event)
     } else if (event->type() == QEvent::HoverLeave) {
         cancelHint();
         return true;
-    } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease ) {
-        if (!mCurrentWord.isEmpty()) {
-            onTooltipTimer();
-        }
+    } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease
+               || event->type() == QEvent::MouseMove) {
+        mTooltipTimer.stop();
+        cancelHint();
+//        if (!mCurrentWord.isEmpty()) {
+//            onTooltipTimer();
+//        }
     }
     return QSynEdit::event(event);
 }
