@@ -56,7 +56,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     mCurrent = mStart;
     mLineCount = mStart;
     QString s = "";
-    mCurrentLine = 1;
+    mCurrentLine = 0;
 
     TokenType tokenType = TokenType::None;
     while (true) {
@@ -198,7 +198,10 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 int delimPos = result.lastIndexOf(':');
                 if (delimPos >= 0) {
                     bool ok;
-                    mCurrentLine = QStringView(result.constBegin() + delimPos + 1, result.constEnd()).toInt(&ok);
+                    int line = QStringView(result.constBegin() + delimPos + 1, result.constEnd()).toInt(&ok);
+                    if (ok) {
+                        mCurrentLine = line; //line number at end of #include is for the next line.
+                    }
                 }
             }
             done = (result != "");

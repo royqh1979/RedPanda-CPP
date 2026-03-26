@@ -795,7 +795,6 @@ void CppPreprocessor::openInclude(QString fileName)
     mIncludeStack.append(parsedFile);
 
     // Process it
-    mIndex = parsedFile->index;
     mFileName = parsedFile->fileName;
     combineLinesEndingWithBackslash(parsedFile->buffer);
     replaceCommentsBySpaceChar(parsedFile->buffer);
@@ -806,11 +805,15 @@ void CppPreprocessor::openInclude(QString fileName)
 //    }
 
     // Update result file
-    QString includeLine = "#include " + fileName + ":0";
-    if (mIncludeStack.count()>1) { // include from within a file
-      mResult[mPreProcIndex] = includeLine;
+    if (mIncludeStack.count()>1) {
+        // include from within a file
+        mIndex = -1; //mIndex would increase by 1 after openInclude() invoked in preprocess()
+        QString includeLine = "#include " + fileName + ":0";
+        mResult[mPreProcIndex] = includeLine;
     } else {
-      mResult.append(includeLine);
+        mIndex = 0;
+        QString includeLine = "#include " + fileName + ":-1";
+        mResult.append(includeLine);
     }
 }
 
