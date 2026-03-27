@@ -206,14 +206,16 @@ void Document::setSyntaxState(int line, const PSyntaxState& state)
 QString Document::getLine(int line) const
 {
     QMutexLocker locker(&mMutex);
-    Q_ASSERT(line >=0 && line < mLines.count());
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->lineText();
 }
 
 size_t Document::getLineSeq(int line) const
 {
     QMutexLocker locker(&mMutex);
-    Q_ASSERT(line >=0 && line < mLines.count());
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->lineSeq();
 }
 
