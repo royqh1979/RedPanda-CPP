@@ -359,6 +359,7 @@ bool CppPreprocessor::handlePreprocessor(const QString& command, const QString& 
     std::function<bool(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
     if (handler)
         return handler(tokens);
+    return false;
 }
 
 void CppPreprocessor::handleUndefine(const QString& tokens)
