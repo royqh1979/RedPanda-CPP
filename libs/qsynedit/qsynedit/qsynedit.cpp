@@ -5668,17 +5668,17 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
     sLeftSide = line.left(pos.ch);
     sRightSide = line.mid(pos.ch);
     int currentLine=pos.line;
+    // step1: insert the first line of Value into current line
+    if (!mUndoing) {
+        QString s = text[0];
+        if (sLeftSide.trimmed().isEmpty() && shouldRecalcIndent(currentLine)) {
+            s=s.trimmed();
+            sLeftSide = genSpaces(calcIndentSpaces(currentLine,s,true));
+        }
+        str = sLeftSide + s;
+    } else
+        str = sLeftSide + text[0];
     if (text.length()>1) {
-        // step1: insert the first line of Value into current line
-        if (!mUndoing) {
-            QString s = text[0];
-            if (sLeftSide.isEmpty() && shouldRecalcIndent(currentLine)) {
-                s=s.trimmed();
-                sLeftSide = genSpaces(calcIndentSpaces(currentLine,s,true));
-            }
-            str = sLeftSide + s;
-        } else
-            str = sLeftSide + text[0];
         if (sLeftSide.trimmed().isEmpty()) {
             properInsertLines(currentLine, text.length()-1, false);
         } else {
@@ -5707,7 +5707,6 @@ void QSynEdit::doInsertTextByNormalMode(const CharPos& pos, const QStringList& t
             properSetLine(currentLine, str, i==text.length()-1);
         }
     } else {
-        str = sLeftSide + text[0] + sRightSide;
         properSetLine(currentLine, str, true);
     }
 
