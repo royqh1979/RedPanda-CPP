@@ -24,18 +24,18 @@
 
 CppPreprocessor::CppPreprocessor()
 {
-    mPreprocessorHandlers.insert("if",[this](const QString& tokens){ handleIf(tokens); return false;});
-    mPreprocessorHandlers.insert("ifdef",[this](const QString& tokens){ handleIfdef(tokens); return false;});
-    mPreprocessorHandlers.insert("ifndef",[this](const QString& tokens){ handleIfndef(tokens); return false;});
-    mPreprocessorHandlers.insert("elif",[this](const QString& tokens){ handleElif(tokens); return false;});
-    mPreprocessorHandlers.insert("elifdef",[this](const QString& tokens){ handleElifdef(tokens); return false;});
-    mPreprocessorHandlers.insert("elifndef",[this](const QString& tokens){ handleElifndef(tokens); return false;});
-    mPreprocessorHandlers.insert("else",[this](const QString& tokens){ handleElse(tokens); return false;});
-    mPreprocessorHandlers.insert("endif",[this](const QString& tokens){ handleEndif(tokens); return false;});
-    mPreprocessorHandlers.insert("define",[this](const QString& tokens){ handleDefine(tokens); return false;});
-    mPreprocessorHandlers.insert("undef",[this](const QString& tokens){ handleUndefine(tokens); return false;});
-    mPreprocessorHandlers.insert("include",[this](const QString& tokens){ handleInclude(tokens); return true;});
-    mPreprocessorHandlers.insert("include_next",[this](const QString& tokens){ handleIncludeNext(tokens); return true;});
+    mPreprocessorHandlers.insert("if",[this](const QString& tokens){ handleIf(tokens);});
+    mPreprocessorHandlers.insert("ifdef",[this](const QString& tokens){ handleIfdef(tokens);});
+    mPreprocessorHandlers.insert("ifndef",[this](const QString& tokens){ handleIfndef(tokens);});
+    mPreprocessorHandlers.insert("elif",[this](const QString& tokens){ handleElif(tokens);});
+    mPreprocessorHandlers.insert("elifdef",[this](const QString& tokens){ handleElifdef(tokens);});
+    mPreprocessorHandlers.insert("elifndef",[this](const QString& tokens){ handleElifndef(tokens);});
+    mPreprocessorHandlers.insert("else",[this](const QString& tokens){ handleElse(tokens);});
+    mPreprocessorHandlers.insert("endif",[this](const QString& tokens){ handleEndif(tokens);});
+    mPreprocessorHandlers.insert("define",[this](const QString& tokens){ handleDefine(tokens);});
+    mPreprocessorHandlers.insert("undef",[this](const QString& tokens){ handleUndefine(tokens);});
+    mPreprocessorHandlers.insert("include",[this](const QString& tokens){ handleInclude(tokens);});
+    mPreprocessorHandlers.insert("include_next",[this](const QString& tokens){ handleIncludeNext(tokens);});
     mParseLocal = true;
     mParseSystem = true;
 }
@@ -354,12 +354,11 @@ void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
     openInclude(fileName);
 }
 
-bool CppPreprocessor::handlePreprocessor(const QString& command, const QString& tokens)
+void CppPreprocessor::handlePreprocessor(const QString& command, const QString& tokens)
 {
-    std::function<bool(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
+    std::function<void(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
     if (handler)
-        return handler(tokens);
-    return false;
+        handler(tokens);
 }
 
 void CppPreprocessor::handleUndefine(const QString& tokens)
@@ -811,6 +810,7 @@ void CppPreprocessor::openInclude(QString fileName)
         // include from within a file
         QString includeLine = "#include " + fileName + ":0";
         mResult[mPreProcIndex] = includeLine;
+        mIndex = -1; //mIndex would +1 in processBuffer();
     } else {
         QString includeLine = "#include " + fileName + ":-1";
         mResult.append(includeLine);
@@ -1224,9 +1224,7 @@ void CppPreprocessor::preprocessBuffer()
                     ++it; // skip spaces;
                 }
                 if (!command.isEmpty()) {
-                    bool dontIncreaseLineIndex = handlePreprocessor(command, tokens);
-                    if (dontIncreaseLineIndex)
-                        continue;
+                    handlePreprocessor(command, tokens);
                 }
             }
             // Step over
