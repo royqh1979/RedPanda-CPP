@@ -131,7 +131,7 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             sharedMemory.detach();
         }
         return true;
-    }
+        }
     }
     return false;
 }
@@ -163,10 +163,8 @@ bool sendFilesToInstance() {
 
 BlockWheelEventFiler::BlockWheelEventFiler(QObject* parent):QObject(parent) {}
 
-BlockWheelEventFiler::~BlockWheelEventFiler()
-{
+BlockWheelEventFiler::~BlockWheelEventFiler() {}
 
-} ;
 bool BlockWheelEventFiler::eventFilter(QObject *watched, QEvent *event)
 {
     //Prevent QComboBox wheel event
