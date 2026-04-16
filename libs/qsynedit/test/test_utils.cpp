@@ -62,3 +62,22 @@ QStringList filterTokens(const QList<TokenInfoList> &infoList, const QSynedit::P
     }
     return result;
 }
+
+QString defaultMonoFont()
+{
+#if defined(Q_OS_WIN)
+    QFont font("Consolas");
+    if (font.exactMatch())
+        return "Consolas";
+    else
+        return "Lucida Console";
+#elif defined(Q_OS_MACOS)
+    return "Menlo";
+#else // XDG desktop
+    QFont font("Noto Sans Mono");
+    if (font.exactMatch())
+        return "Noto Sans Mono";
+    else
+        return "DejaVu Sans Mono";
+#endif
+}

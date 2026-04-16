@@ -1,0 +1,22 @@
+class RedpandaCpp < Formula
+  desc "Fast, lightweight, open source C/C++ IDE"
+  homepage "https://github.com/royqh1979/RedPanda-CPP"
+  url "__URL__"
+  version "__VERSION__"
+
+  depends_on "cmake" => :build
+  depends_on "qtbase"
+  depends_on "qtsvg"
+  depends_on "qttools"
+  depends_on "gcc"
+  depends_on "gdb"
+  depends_on "llvm" => :optional
+
+  def install
+    system "cmake", "-S", ".", "-B", "build",
+                    "-DFILESYSTEM_LAYOUT=hierarchy",
+                    *std_cmake_args
+    system "cmake", "--build", "build"
+    system "cmake", "--install", "build"
+  end
+end

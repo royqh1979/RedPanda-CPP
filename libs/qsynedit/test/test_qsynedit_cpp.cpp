@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 
 #include "test_qsynedit_cpp.h"
+#include "test_utils.h"
 #include "qsynedit/qsynedit.h"
 #include "qsynedit/document.h"
 #include "qsynedit/syntaxer/cpp.h"
@@ -24,6 +25,11 @@ void TestQSyneditCpp::initTestCase()
     mEdit->setOptions(options);
     mEdit->setSyntaxer(std::make_shared<CppSyntaxer>());
     mEdit->setFormatter(std::make_shared<CppFormatter>());
+
+    QFont defaultFont;
+    defaultFont.setFamily(defaultMonoFont());
+    defaultFont.setPointSize(14);
+    mEdit->setFont(defaultFont);
 
     connectEditSignals();
 }
