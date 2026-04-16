@@ -1,94 +1,86 @@
-# Основые замечания по вопросу разработки
+# Сборка Red Panda C++
+
+There are several options to build Red Panda C++: package manager recipes, standalone application scripts, or manual build commands.
+
+## Package Manager Recipes
+
+> Note: Qt 6.8 or later required. Rolling package repository recommended.
+
+Red Panda C++ built as a package integrates with the package manager ecosystem. It utilizes the toolchain and libraries from the package manager.
+
+Red Panda C++ provides many examples of package manager recipes, including Homebrew, Linux system package managers, and MSYS2.
+
+The steps are similar for each package manager:
+1. Setup build environment;
+2. Prepare recipe and source;
+3. Build package;
+4. Install package.
+
+Detailed instructions for **step 1** can be found in the package manager documentation: [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [Debian family](https://wiki.debian.org/BuildingTutorial), [MSYS2](https://www.msys2.org/dev/new-package/), [RPM](https://rpm-packaging-guide.github.io/#prerequisites).
+
+**Step 2 and 3** can be done with the following scripts:
+- Alpine Linux: `./packages/alpine/buildapk.sh`
+- Arch Linux: `./packages/archlinux/buildpkg.sh`
+- Debian family: `./packages/debian/builddeb.sh`
+- Fedora: `./packages/fedora/buildrpm.sh`
+- Homebrew: `./packages/brew/buildbottle.sh`
+- MSYS2: `./packages/msys/buildpkg.sh`
+- openSUSE: `./packages/opensuse/buildrpm.sh`
+
+> Note: These scripts check out HEAD of the repo, so any changes should be committed before building.
+
+Alternatively, build in container for Linux system package manager (rootless Podman preferred; Docker may break file permissions):
+
+```sh
+podman run --rm -v $PWD:/mnt -w /mnt <image> ./packages/<distro>/01-in-docker.sh
+
+# Arch Linux for example
+podman run --rm -v $PWD:/mnt -w /mnt docker.io/library/archlinux:latest ./packages/archlinux/01-in-docker.sh
+```
+
+Then the package for **step 4** will be placed at `dist/`. Use the package manager to install it.
+
+## Standalone Application Scripts
+
+Red Panda C++ built as a standalone application is easy to deploy.
+
+| OS | Toolchain | Qt | Package format | Architectures |
+| -- | --------- | -- | -------------- | ------------- |
+| Windows XP+ | [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | [5.15 with thunks](https://github.com/redpanda-cpp/qtbase-xp) | installer, portable | x86_64, i686 |
+| Windows 7+ | MSVC | 5.15, Qt.io | portable | x64, x86 |
+| Windows 10 1809+ | MSVC | 6.8+, Qt.io | portable | x64, ARM64 |
+| Windows 10 1607+ | MSVC | current 6.x, vcpkg | portable | x64, ARM64, x86 |
+| Linux since 2010 | [cross, static, musl libc](https://github.com/redpanda-cpp/appimage-builder) | 6.10 | AppImage, Debian, tarball | x86_64, x86_64.v3, aarch64, riscv64, loong64, i686 |
+| recent macOS | Xcode | 6.11+, Qt.io | bundle | universal |
+
+> Warning: Don’t build Red Panda C++ with MinGW-w64 shared Qt. When running as portable app, the default working directory is Red Panda C++’s directory. User programs’s dependencies, which should be loaded from toolchain’s directory, will be overridden by Red Panda C++’s dlls.
+
+### Windows XP
 
 Prerequisites:
 
-- Qt 6.8+ или 5.15.
-  - Building with Qt 5.15 is possible, but the `update_translations` target is missing.
-- C++ development environment that support CMake and/or xmake. Рекомендуемые:
-  - Visual Studio Code -- лучшая производительность, better AI integration.
-  - Qt Creator -- встроенный дизайнер пользовательского интерфейса (UI designer), интеграция отладчика с Qt.
-    - `lupdate`: Add an external tool in “Edit > Preferences > Environment > External Tools” – Executable: `cmake`; Arguments: `--build . --target update_translations`; Working directory: Choose global variable `ActiveProject:BuildConfig:Path`.
+0. Windows 10 x64 or later.
+1. Install MSYS2.
 
-# Windows
-
-
-| Библиотека+Инструмент \ Цель | x86 | x64 | ARM64 |
-| ---------------------------- | --- | --- | ----- |
-| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
-| Qt.io + MSVC | ❌ | ✔️ | ✔️ |
-| VCPKG + MSVC | ✔️ | ✔️ | ✔️ |
-
-
-<!--
-| MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
-| MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
-
-Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win-ru.md).
-
-## MSYS2 Библиотека Qt с набором инструментов MinGW (Рекомендуется)
-
-Red Panda C++ должна работать с любым 64-битным набором инструментов MinGW от MSYS2, включая GCC и Clangs в средах на основе GNU (MINGW64 и UCRT64), и Clangs в средах на основе LLVM (CLANG64 и CLANGARM64; см. также [документацию MSYS2] (https://www.msys2.org/docs/environments/)), в то время как следующие наборы инструментов часто тестируются:
-- MINGW64 GCC,
-- UCRT64 GCC (рекомендуется для x64)
-- CLANGARM64 Clang (единственный и рекомендуемый набор инструментов для ARM64).
-
-Подготовительный этап:
-
-0. Требуется Windows 10 x64 или более поздний, или Windows 11 ARM64.
-1. Установить MSYS2.
-2. В выбранном окружении, установить набор инструментов, Библиотеку Qt 5 и требуемые приложения:
-   ```bash
-   pacman -S \
-     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,7zip,cmake} \
-     mingw-w64-i686-nsis \
-     git curl
-   ```
-
-Для сборки в запущенном окружении MSYS2 выполните:
+To build, launch MSYS2 environment, run:
 ```bash
-./packages/msys/build-mingw.sh
+./packages/mingw/build-xp.sh -p 64-ucrt
 ```
-для сборки программы установи Red Panda C++ и портируемого пакета с помощью набора инструментов MinGW GCC или без компилятора; 
 
-или выполните:
-```bash
-./packages/msys/build-llvm.sh
-```
-для сборки программы установки Red Panda C++ с набором инструментов LLVM MinGW.
+Available profiles: 64-ucrt, 32-ucrt, 64-msvcrt (deprecated), 32-msvcrt (deprecated).
 
-Основные аргументы коммандной строки:
-- `-h`, `--help`: показать справочную информацию.
-- `-c`, `--clean`: очистить каталог сборки.
-- `-nd`, `--no-deps`: не проверять зависимости.
-- `-t <dir>`, `--target-dir <dir>`: установить целевой каталог для пакетов. По умолчанию: `dist/`.
-
-Дополнительные аргументя для `build-mingw.sh`:
-- `--mingw32`: и `assets/mingw32.7z` для сборки пакета.
-- `--mingw64`: и `assets/mingw64.7z` для сборки пакета.
-- `--mingw`: псевдоним для  `--mingw64` (x64-приложение).
-- `--gcc-linux-x86-64`: добавить `assets/gcc-linux-x86-64.7z` и `assets/alpine-minirootfs-x86_64.tar` в пакет.
-- `--gcc-linux-aarch64`: добавить `assets/gcc-linux-aarch64.7z` и `assets/alpine-minirootfs-aarch64.tar` в пакет.
+Arguments:
+- `-h`, `--help`: show help message.
+- `-c`, `--clean`: clean build directory.
+- `--mingw32`: add `assets/mingw32.7z` to the package.
+- `--mingw64`: add `assets/mingw64.7z` to the package.
+- `--mingw`: alias for `--mingw32` (x86 app) or `--mingw64` (x64 app).
+- `-t <dir>`, `--target-dir <dir>`: set target directory for the packages. Default: `dist/`.
 - `--ucrt`: include UCRT installer (VC_redist) in the package.
--->
 
-## Windows NT 5.x с библиотекой Qt с набором инструментов MinGW Lite
+> Note: Windows Server 2003 x64 Edition is deprecated (the installer does not install UCRT for Windows Server 2003 x64 Edition; manual installation should work).
 
-Скрипты `build-xp.sh` подобны `build-mingw.sh`, но набор инструментов обеспечивается библиотекой Qt.
-
-Подготовительные действия для сборки в естественной среде:
-
-0. Требуется Windows 10 x64 или более поздний.
-1. Установить MSYS2.
-
-Для сборки в естественной среде в запущенном окружении MSYS2 выполните:
-```bash
-./packages/mingw/build-xp.sh -p 32-msvcrt
-```
-
-Эти скрипты принимают такие же аргументы, как `build-mingw.sh`, дополнительно к этому:
-- `-p|--profile <profile>`: (ТРЕБУЕТСЯ) профиль MinGW Lite с библиотекой Qt. Доступные профили `64-ucrt`, `64-msvcrt`, `32-ucrt`, `32-msvcrt`.
-
-## MSVC Toolchain
+### MSVC Toolchain
 
 Prerequisites:
 
@@ -100,7 +92,7 @@ Prerequisites:
 
 To build:
 
-1. [Start Visual Studio develop environment](https://learn.microsoft.com/ru-ru/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio).
+1. [Start Visual Studio develop environment](https://learn.microsoft.com/en-us/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio).
 2. For vcpkg, set toolchain file (required) and target triplet (if you want non-default one):
    ```ps1
    $env:CMAKE_TOOLCHAIN_FILE = "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
@@ -118,82 +110,207 @@ Arguments:
 - `-c|-Clean`: clean directories before building.
 - `-QtDir <dir>`: Qt library directory.
 
-# Linux
-
-Смотри также [другие инструкции сборки для настольных систем freedesktop.org-conforming (XDG)](./docs/detailed-build-xdg-ru.md).
-
-## Package Manager for Rolling Distributions
-
-Currently available for Alpine Linux (edge), Arch Linux, Debian (unstable), Fedora, openSUSE Tumbleweed, and Ubuntu (devel).
-
-1. Установите окружение сборки (документация для [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [Debians](https://wiki.debian.org/BuildingTutorial), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
-   - Для Debian family:
-     ```sh
-     sudo apt install --no-install-recommends build-essential debhelper devscripts equivs
-     ```
-2. Запустите скрипт сборки:
-   - Alpine Linux: `./packages/alpine/buildapk.sh`
-   - Arch Linux: `./packages/archlinux/buildpkg.sh`
-   - Debian family: `./packages/debian/builddeb.sh`
-   - Fedora: `./packages/fedora/buildrpm.sh`
-   - openSUSE: `./packages/opensuse/buildrpm.sh`
-3. Установите пакет:
-   - Alpine Linux: `~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
-   - Arch Linux: `/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
-   - Debian family: `/tmp/redpanda-cpp_*.deb`
-   - Fedora, openSUSE: `~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
-4. Запустите Red Panda C++:
-   ```bash
-   RedPandaIDE
-   ```
-
-Обратите внимание, что некоторые из этих сценариев проверяют ветку HEAD рекозитория, поэтому любые изменения должны быть зафиксированы (commit) перед созданием.
-
-Альтернативно, можно собрать в контейнере (предпочтительно без корня Podman; Docker может нарушить права доступа к файлу):
-
-
-```sh
-podman run --rm -v $PWD:/mnt -w /mnt <image> ./packages/<distro>/01-in-docker.sh
-
-# Arch Linux for example
-podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archlinux/01-in-docker.sh
-```
-
-Пакет будет помещен в `dist/`.
-
-## Static Binary for Almost All Linux Desktop Distributions
-
-Package format: AppImage, Debian (`.deb`), tarball (`.tar.gz`).
+### Linux Static
 
 ```bash
-podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260127.0 ./packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_64:20260127.0 ./packages/linux/01-in-docker.sh
 ```
 
-Пакет будет помещен в `dist/`.
+The packages will be placed in `dist/`.
 
-The scripts to create the build environment are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Доступные архитектуры: `x86_64`, `x86_64.v3`, `aarch64`, `riscv64`, `loong64`, `i686`.
+### macOS
 
-<!--
-# macOS
-
-## Qt.io библиотека Qt
-
-Подготовительные действия:
-
-0. Недавно выпущенная macOS, удовлятворяющая требованиям [Qt 5](https://doc.qt.io/qt-5/macos.html) или [Qt 6](https://doc.qt.io/qt-6/macos.html).
-1. Установите инструменты командной строки для Xcode:
+Prerequisites:
+0. Recent macOS that satisfies requirements of [Qt 5](https://doc.qt.io/qt-5/macos.html) or [Qt 6](https://doc.qt.io/qt-6/macos.html).
+1. Install Xcode Command Line Tools:
    ```zsh
    xcode-select --install
    ```
-2. Установите Qt с помощью онлайн-установщика из [Qt.io](https://www.qt.io/download-qt-installer-oss).
-   - Выберите библиотеку (в группе _Qt_, подгруппа _Qt 5.15.2_ или _Qt 6.8.0_, проверьте, что для _macOS_).
+2. Install Qt 6.11+ via Qt.io installer, or aqtinstall.
 
-Для сборки, запустите один из скриптов:
-
+To build:
 ```zsh
-./packages/macos/build.sh -a x86_64 --qt-version 5.15.2
-./packages/macos/build.sh -a x86_64 --qt-version 6.8.0
-./packages/macos/build.sh -a arm64 --qt-version 6.8.0
-./packages/macos/build.sh -a universal --qt-version 6.8.0
+./packages/macos/build.sh --qt-dir ~/Qt/6.11.0/macos
 ```
--->
+
+Arguments:
+- `-c`, `--clean`: clean directories before building.
+- `--qt-dir <dir>`: Qt library directory.
+
+## Manual Build Commands
+
+Building Red Panda C++ manually is a good idea for learning, developing, and debugging purposes.
+
+Prerequisites:
+- Qt 6.8+ or 5.15.
+- CMake or Xmake.
+
+> Note: To enable `lupdate` function in Qt Creator, add an external tool in “Edit > Preferences > Environment > External Tools”:
+> - Executable: `cmake`;
+> - Arguments: `--build . --target update_translations`;
+> - Working directory: choose global variable `ActiveProject:BuildConfig:Path`.
+
+### Build with CMake
+
+1. Настройка:
+   ```bash
+   cmake -S . -B build \
+     -DCMAKE_BUILD_TYPE=Release \
+     -DCMAKE_INSTALL_PREFIX=/usr/local
+   ```
+2. Сборка:
+   ```bash
+   cmake --build build -- --parallel
+   ```
+3. Установка:
+   ```bash
+   sudo cmake --install build --strip
+   ```
+
+Переменные CMake:
+- `CMAKE_INSTALL_PREFIX`: where to install.
+  - На саму среду Red Panda C++ `CMAKE_INSTALL_PREFIX` не влияет, поскольку она использует относительные пути.
+  - На файл `.desktop` влияет `CMAKE_INSTALL_PREFIX`.
+- `CMAKE_INSTALL_LIBEXECDIR`: каталог для вспомогательных исполнимых файлов, УКАЗЫВАЕТСЯ ОТНОСИТЕЛЬНО `CMAKE_INSTALL_PREFIX`.
+  - Applies to: hierarchy filesystem layout.
+  - Arch Linux and MSYS2 use `lib`.
+- `FILESYSTEM_LAYOUT`: `hierarchy`, `flat`, or `bundle`.
+  - `hierarchy` applies to: all.
+    ```
+    prefix/
+    ├─ bin/
+    │  └─ RedPandaIDE
+    ├─ libexec/
+    │  └─ RedPandaCPP/
+    │     ├─ astyle
+    │     └─ consolepauser
+    └─ share/
+       └─ RedPandaCPP/
+          └─ templates/
+    ```
+  - `flat` applies to: Windows.
+    ```
+    prefix/
+    ├─ RedPandaIDE.exe
+    ├─ astyle.exe
+    ├─ consolepauser.exe
+    └─ templates/
+    ```
+  - `bundle` applies to: macOS.
+    ```
+    prefix/
+    └─ RedPandaIDE.app
+       └─ Contents/
+          ├─ Frameworks/
+          ├─ MacOS/
+          │  ├─ RedPandaIDE
+          │  ├─ astyle
+          │  └─ consolepauser
+          └─ Resources/
+             └─ templates/
+    ```
+  - Windows default: `flat`.
+  - macOS default: `bundle`.
+  - Other platforms force `hierarchy`.
+- `FORCE_QT5`: force to use Qt 5.
+  - Useful when Qt 5 and Qt 6 are installed to same prefix.
+- `LUA_ADDON`: enable Lua add-ons.
+- `OVERRIDE_MALLOC`: link specific memory allocation library.
+  - e.g. `-DOVERRIDE_MALLOC=mimalloc`.
+- `PORTABLE_CONFIG`: `oui`, `non`, or `registry`.
+  - Applies to: Windows.
+  - `oui`: yes, write config files to Red Panda C++’s directory.
+  - `non`: no, write config files to user config directory.
+  - `registry`: yes if current instance matches uninstall registry key; no otherwise.
+  - Windows default: `registry`.
+  - Other platforms force `non`.
+- `SDCC`: enable SDCC compiler support.
+- `WINDOWS_PREFER_OPENCONSOLE`: prefer UTF-8 compatible `OpenConsole.exe`.
+  - Applies to: Windows.
+  - `OpenConsole.exe` is a part of Windows Terminal. UTF-8 input support was added in version 1.18.
+  - `OpenConsole.exe` requires ConPTY, which was introduced in Windows 10 1809.
+
+### Build with Xmake
+
+1. Настройка:
+   ```bash
+   xmake f -p linux -a x86_64 -m release --qt=/usr
+   ```
+2. Сборка:
+   ```bash
+   xmake
+   ```
+3. Установка:
+   ```bash
+   sudo xmake install --root -o /usr/local
+   ```
+
+Xmake options:
+- `filesystem-layout`: `flat` or `hierarchy`.
+  - Applies to: Windows.
+  - Windows default: `flat`.
+  - Other platforms force `hierarchy`.
+- `glibc-hwcaps`: enable dummy `RedPandaIDE` which links to actual `libRedPandaIDE.so`.
+  - Applies to: Linux glibc.
+  - Glibc will automatically load best version from glibc-hwcaps subdirectories, e.g. `/usr/lib/glibc-hwcaps/x86-64-v3/libRedPandaIDE.so`.
+  - There’s no magic in the build script. You need to build multiple times with different `-march` flags and install them to proper directories.
+- `libexecdir`: RELATIVE directory for auxiliary executables.
+  - Applies to: hierarchy filesystem layout.
+  - Arch Linux and MSYS2 use `lib`.
+- `lua-addon`: enable Lua add-ons.
+- `portable-config`: `oui`, `non`, or `registry`.
+  - Applies to: Windows.
+  - `oui`: yes, write config files to Red Panda C++’s directory.
+  - `non`: no, write config files to user config directory.
+  - `registry`: yes if current instance matches uninstall registry key; no otherwise.
+  - Windows default: `registry`.
+  - Other platforms force `non`.
+- `prefix`: where Red Panda C++ starts.
+  - Applies to: XDG.
+  - Unlike CMake variable `CMAKE_INSTALL_PREFIX`, this option is unrelated to installation directory. It only affects XDG `.desktop` file.
+- `sdcc`: enable SDCC compiler support.
+
+## Platform-specific Notes
+
+### Windows on ARM
+
+- Red Panda C++ может быть собран для ARM64 ABI только на Windows 11 ARM64.
+  - Запуск на Windows 10 ARM64 больше не поддерживается. Установщики предполагают, что эмуляция x64 всегда доступна. (Родной пакет “Red Panda C++ с инструментарием LLVM MinGW” может работать.)
+  - ARM64EC (“совместимый с эмуляцией”) хост не поддерживается, т.е. Red Panda C++ не можер быть собрана с инструментарием ARM64EC.
+  - Цель ARM64EC (теоретический) поддерживается, т.е. Red Panda C++ будет создавать двоичные файлы для ARM64EC, если инструментарий сборки поддерживал ARM64EC.
+- В связи с [ARM32 deprecation in Windows 11 Insider Preview Build 25905](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/), поддержка ARM32 никогда не будет добавлена.
+
+### Linux Foreign Architectures
+
+There are 2 ways to build Red Panda C++ for foreign architectures:
+- Cross build: using cross toolchain.
+  - As fast as native build;
+  - Building cross Qt is not so easy;
+  - QEMU user space emulation is still required if you want to run test cases.
+- Emulated native build: используя родные инструменты сборки для целевых архитектур с эмуляцией пользовательского пространства QEMU.
+  - As easy as native build;
+  - Very slow (~10x build time).
+
+#### Cross Build
+
+Follow [CMake’s general cross compiling instructions](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html). Also set `CMAKE_CROSSCOMPILING_EMULATOR` if you want to run test cases.
+
+The [AppImage build environment](https://github.com/redpanda-cpp/appimage-builder) is an example for bootstrapping musl-based, static cross toolchain and Qt.
+
+#### Эмуляция родной сборки
+
+Примечание: Всегда запускайте эмулируемую родную сборку **в chroot’ed environment, контейнерах или jails**. Смешивание архитектур может привести к сбою в работе вашей системы.
+
+Для машин с Linux или BSD установите статически связанный эмулятор пользовательского пространства QEMU (имя пакета, скорее всего, "qemu-user-static") и убедитесь, что включена поддержка binfmt.
+
+
+Для Windows-систем, в Docker и Podman должна быть включена эмуляция пользовательского пространства QEMU. В противном случае:
+* Для Docker:
+  ```ps1
+  docker run --rm --privileged multiarch/qemu-user-static:register
+  ```
+* Для Podman, чья виртуальная машина основана на Fedora WSL, просто включите поддержку binfmt:
+  ```ps1
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
+  ```
