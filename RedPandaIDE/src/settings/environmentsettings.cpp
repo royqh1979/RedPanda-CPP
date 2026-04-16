@@ -71,8 +71,8 @@ void EnvironmentSettings::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
-    // replace libexec dir for forward compatibility
     mTerminalPath = replacePrefix(mTerminalPath, "%*APP_LIBEXEC_DIR*%", mDirSettings->appLibexecDir());
+    // replace app dir for backward compatibility
     mTerminalPath = replacePrefix(mTerminalPath, "%*APP_DIR*%", mDirSettings->appDir());
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
@@ -87,7 +87,6 @@ void EnvironmentSettings::doLoad()
         QString path = env.value("PATH");
         QStringList pathList = path.split(PATH_SEPARATOR);
         pathList = QStringList{
-            mDirSettings->appDir(),
             mDirSettings->appLibexecDir(),
         } + pathList;
 
@@ -99,7 +98,10 @@ void EnvironmentSettings::doLoad()
                 break;
             }
         }
-        mAStylePath = replacePrefix(mAStylePath, mDirSettings->appDir() , "%*APP_DIR*%");
+    } else {
+        mAStylePath = replacePrefix(mAStylePath, "%*APP_LIBEXEC_DIR*%", mDirSettings->appLibexecDir());
+        // replace app dir for backward compatibility
+        mAStylePath = replacePrefix(mAStylePath, "%*APP_DIR*%", mDirSettings->appDir());
     }
 
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
@@ -171,18 +173,12 @@ QString EnvironmentSettings::AStylePath() const
     QString path = mAStylePath;
     if (path.isEmpty())
         path = getFilePath(mDirSettings->appLibexecDir(),ASTYLE_PROGRAM);
-    else {
-        // replace libexec dir for forward compatibility
-        path = replacePrefix(path, "%*APP_LIBEXEC_DIR*%", mDirSettings->appLibexecDir());
-        path = replacePrefix(path, "%*APP_DIR*%", mDirSettings->appDir());
-    }
     return path;
 }
 
 void EnvironmentSettings::setAStylePath(const QString &aStylePath)
 {
     mAStylePath = aStylePath;
-    mAStylePath = replacePrefix(mAStylePath, mDirSettings->appDir() , "%*APP_DIR*%");
 }
 
 QString EnvironmentSettings::terminalArgumentsPattern() const
@@ -263,6 +259,7 @@ void EnvironmentSettings::checkAndSetTerminal()
     QList<TerminalItem> terminalList = loadTerminalList();
     for (const TerminalItem& termItem:terminalList) {
         QString term=termItem.terminal;
+        term = replacePrefix(term, "%*APP_LIBEXEC_DIR*%", mDirSettings->appLibexecDir());
         term = replacePrefix(term, "%*APP_DIR*%", mDirSettings->appDir());
         QFileInfo info{term};
         QString absoluteTerminalPath;
@@ -331,6 +328,7 @@ QList<EnvironmentSettings::TerminalItem> EnvironmentSettings::loadTerminalList()
             QString termExecutable = QFileInfo(path).fileName();
             QString pattern = terminal["argsPattern"].toString();
             EnvironmentSettings::TerminalItem terminalItem;
+            path = replacePrefix(path, "%*APP_LIBEXEC_DIR*%", mDirSettings->appDir());
             path = replacePrefix(path, "%*APP_DIR*%", mDirSettings->appDir());
             terminalItem.terminal = path;
             terminalItem.param = pattern;
@@ -372,6 +370,9 @@ bool EnvironmentSettings::isTerminalValid()
 
 void EnvironmentSettings::doSave()
 {
+    QString terminalPath = replacePrefix(mTerminalPath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%/");
+    QString astylePath = replacePrefix(mAStylePath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%/");
+
     //Appearance
     saveValue("theme", mTheme);
     saveValue("interface_font", mInterfaceFont);
@@ -385,21 +386,13 @@ void EnvironmentSettings::doSave()
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
-    QString terminalPath = mTerminalPath;
-    if (isGreenEdition())
-    {
-        // APP_DIR trick for windows portable app
-        // For non-portable app (other platform or Windows installer), multiple instances
-        // share the same configuration and thus the trick may break terminal path
-        terminalPath = replacePrefix(terminalPath, mDirSettings->appDir(), "%*APP_DIR*%");
-    }
 
     saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
 #ifdef Q_OS_WINDOWS
     saveValue("use_custom_terminal",mUseCustomTerminal);
 #endif
-    saveValue("astyle_path",mAStylePath);
+    saveValue("astyle_path",astylePath);
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
     saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);

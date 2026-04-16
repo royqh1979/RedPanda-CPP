@@ -16,12 +16,18 @@ if(UNIX)
     target_sources(consolepauser PRIVATE main.unix.cpp)
 endif()
 
-if(XDG)
+if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
     install(
         TARGETS consolepauser
         DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/${APP_NAME})
-else()
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
     install(
         TARGETS consolepauser
         DESTINATION .)
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "bundle")
+    install(
+        TARGETS consolepauser
+        DESTINATION RedPandaIDE.app/Contents/MacOS)
+else()
+    message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
 endif()
