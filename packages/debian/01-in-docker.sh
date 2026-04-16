@@ -2,8 +2,6 @@
 
 set -xeuo pipefail
 
-DISTRO_ID=$(grep ^ID= /etc/os-release | cut -d= -f2- | tr -d '"')
-
 # install deps
 default_repositories=(
   deb.debian.org
@@ -31,9 +29,3 @@ apt update
 apt install -y --no-install-recommends build-essential debhelper devscripts equivs git
 
 ./packages/debian/builddeb.sh
-
-file=$(ls /tmp/redpanda-cpp_*.deb)
-basename=$(basename $file)
-
-mkdir -p dist
-cp $file dist/${basename/.deb/.$DISTRO_ID.deb}
