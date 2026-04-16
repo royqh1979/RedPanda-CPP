@@ -18,7 +18,7 @@ jobs:
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: '2.8.6'
+          xmake-version: '3.0.7'
 
       - name: Setup Qt
         uses: ConorMacBride/install-package@v1
@@ -60,7 +60,7 @@ jobs:
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
-          xmake-version: '2.8.6'
+          xmake-version: '3.0.7'
 
       - name: Setup Qt
         uses: jurplel/install-qt-action@v3
@@ -77,8 +77,6 @@ jobs:
           xmake f -p windows -a x64 --qt="${env:QT_ROOT_DIR}" --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }}
           xmake b
           xmake i -o $install_dir
-          mv $install_dir/bin/* $install_dir/
-          rmdir $install_dir/bin
           rm $install_dir/vc_redist.x64.exe
 
       - name: Upload
