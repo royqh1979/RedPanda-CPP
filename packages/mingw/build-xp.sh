@@ -2,8 +2,7 @@
 
 set -euxo pipefail
 
-SCRIPT_DIR=$( dirname ${BASH_SOURCE[0]} )
-source "${SCRIPT_DIR}/config.sh"
+source packages/_common/config.sh
 
 function fn_print_help() {
   cat <<EOF
@@ -164,7 +163,7 @@ export PATH="${QT_DIR}/bin:${PATH}"
 ## prepare assets
 
 fn_print_progress "Prepare astyle source..."
-"${SCRIPT_DIR}/../_common/prepare-astyle.sh" --git-dir "${ASSETS_DIR}/astyle" --work-dir "${ASTYLE_BUILD_DIR}"
+packages/_common/prepare-astyle.sh --git-dir "${ASSETS_DIR}/astyle" --work-dir "${ASTYLE_BUILD_DIR}"
 
 if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW32_ARCHIVE}" ]]; then
   curl -L "https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/${REDPANDA_MINGW_RELEASE}/${MINGW32_ARCHIVE}" -o "${ASSETS_DIR}/${MINGW32_ARCHIVE}"

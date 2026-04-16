@@ -1,0 +1,75 @@
+_realname=redpanda-cpp
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=__VERSION__
+pkgrel=1
+pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE'
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url='https://github.com/royqh1979/RedPanda-CPP'
+license=('GPL3')
+
+depends=(
+    "${MINGW_PACKAGE_PREFIX}-qt6-base"
+    "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+    "${MINGW_PACKAGE_PREFIX}-astyle"
+)
+makedepends=(
+    "${MINGW_PACKAGE_PREFIX}-qt6-tools"
+    "${MINGW_PACKAGE_PREFIX}-cmake"
+    "${MINGW_PACKAGE_PREFIX}-ninja"
+    "${MINGW_PACKAGE_PREFIX}-cc"
+)
+optdepends=( )
+
+case "$MSYSTEM" in
+    CLANG*)
+        depends+=(
+            "${MINGW_PACKAGE_PREFIX}-clang"
+            "${MINGW_PACKAGE_PREFIX}-lldb"
+            "${MINGW_PACKAGE_PREFIX}-lldb-mi"
+        )
+        ;;
+    *)
+        depends+=(
+            "${MINGW_PACKAGE_PREFIX}-gcc"
+            "${MINGW_PACKAGE_PREFIX}-gdb"
+        )
+        optdepends+=(
+            "${MINGW_PACKAGE_PREFIX}-clang"
+            "${MINGW_PACKAGE_PREFIX}-lldb"
+            "${MINGW_PACKAGE_PREFIX}-lldb-mi"
+        )
+        ;;
+esac
+
+source=('RedPanda-CPP.tar.gz')
+sha256sums=('SKIP')
+
+build() {
+    declare -a extra_config
+    if check_option "debug" "n"; then
+        extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+    else
+        extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+    fi
+
+    MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+        cmake -S RedPanda-CPP -B "build-${MSYSTEM}" \
+            -G Ninja \
+            -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+            -DCMAKE_INSTALL_LIBEXECDIR=lib \
+            "${extra_config[@]}" \
+            -DFILESYSTEM_LAYOUT=hierarchy \
+            -DPORTABLE_CONFIG=non
+
+    cmake --build "build-${MSYSTEM}"
+}
+
+check() {
+    cmake --build "build-${MSYSTEM}" --target test
+}
+
+package() {
+    DESTDIR="${pkgdir}" cmake --install "build-${MSYSTEM}"
+}
