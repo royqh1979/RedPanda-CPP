@@ -55,8 +55,17 @@ target("RedPandaIDE")
 
     -- defines
 
-    add_options("app-name", "prefix", "libexecdir", "glibc-hwcaps")
-    add_options("lua-addon", "sdcc", "vcs")
+    add_options(
+        "app-name",
+        "filesystem-layout",
+        "libexecdir",
+        "portable-config",
+        "prefix")
+    add_options(
+        "glibc-hwcaps",
+        "lua-addon",
+        "sdcc",
+        "vcs")
 
     add_defines("ARCH_X86_64=1")
     add_defines("ARCH_X86=1")
@@ -295,9 +304,15 @@ target("RedPandaIDE")
         add_links("dbghelp", "psapi", "shlwapi")
     end
 
+    -- install
+
+    set_install_bin()
+
 target("test-makefile-escape")
     set_kind("binary")
     add_rules("qt.console")
+
+    set_default(false)
 
     add_tests("default")
 

@@ -18,6 +18,4 @@ target("consolepauser")
         add_syslinks("rt")
     end
 
-    if is_xdg() then
-        on_install(install_libexec)
-    end
+    set_install_libexec()

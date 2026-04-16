@@ -1793,14 +1793,14 @@ void CompilerSets::findSets()
     QStringList pathList = path.split(PATH_SEPARATOR);
 #ifdef Q_OS_WIN
     pathList = QStringList{
-        mDirSettings->appDir() + "/clang64/bin",
-        mDirSettings->appDir() + "/mingw64/bin",
-        mDirSettings->appDir() + "/mingw32/bin",
+        mDirSettings->appLibexecDir() + "/clang64/bin",
+        mDirSettings->appLibexecDir() + "/mingw64/bin",
+        mDirSettings->appLibexecDir() + "/mingw32/bin",
 
         // cross toolchain targeting Linux
         // directory names follow dynamic linker (ld-linux-x86-64.so -> gcc-linux-x86-64)
-        mDirSettings->appDir() + "/gcc-linux-x86-64/bin",
-        mDirSettings->appDir() + "/gcc-linux-aarch64/bin",
+        mDirSettings->appLibexecDir() + "/gcc-linux-x86-64/bin",
+        mDirSettings->appLibexecDir() + "/gcc-linux-aarch64/bin",
     } + pathList;
 #endif
     QString folder, canonicalFolder;
@@ -2000,41 +2000,31 @@ PCompilerSet CompilerSets::getSet(int index)
 }
 
 void CompilerSets::savePath(const QString& name, const QString& path) {
-    if (!isGreenEdition()) {
-        mPersistor->saveValue(name, path);
-        return;
-    }
-
     QString s;
-    QString prefix1 = excludeTrailingPathDelimiter(mDirSettings->appDir()) + "/";
-    QString prefix2 = excludeTrailingPathDelimiter(mDirSettings->appDir()) + QDir::separator();
+    QString prefix1 = excludeTrailingPathDelimiter(mDirSettings->appLibexecDir()) + "/";
+    QString prefix2 = excludeTrailingPathDelimiter(mDirSettings->appLibexecDir()) + QDir::separator();
     if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
-        s = "%AppPath%/"+ path.mid(prefix1.length());
+        s = "%*APP_LIBEXEC_DIR*%/" + path.mid(prefix1.length());
     } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
-        s = "%AppPath%/"+ path.mid(prefix2.length());
+        s = "%*APP_LIBEXEC_DIR*%/" + path.mid(prefix2.length());
     } else {
-        s= path;
+        s = path;
     }
     mPersistor->saveValue(name,s);
 }
 
 void CompilerSets::savePathList(const QString& name, const QStringList& pathList) {
-    if (!isGreenEdition()) {
-        mPersistor->saveValue(name, pathList);
-        return;
-    }
-
     QStringList sl;
     for (const QString& path: pathList) {
         QString s;
-        QString prefix1 = excludeTrailingPathDelimiter(mDirSettings->appDir()) + "/";
-        QString prefix2 = excludeTrailingPathDelimiter(mDirSettings->appDir()) + QDir::separator();
+        QString prefix1 = excludeTrailingPathDelimiter(mDirSettings->appLibexecDir()) + "/";
+        QString prefix2 = excludeTrailingPathDelimiter(mDirSettings->appLibexecDir()) + QDir::separator();
         if (path.startsWith(prefix1, PATH_SENSITIVITY)) {
-            s = "%AppPath%/"+ path.mid(prefix1.length());
+            s = "%*APP_LIBEXEC_DIR*%/" + path.mid(prefix1.length());
         } else if (path.startsWith(prefix2, PATH_SENSITIVITY)) {
-            s = "%AppPath%/" + path.mid(prefix2.length());
+            s = "%*APP_LIBEXEC_DIR*%/" + path.mid(prefix2.length());
         } else {
-            s= path;
+            s = path;
         }
         sl.append(s);
     }

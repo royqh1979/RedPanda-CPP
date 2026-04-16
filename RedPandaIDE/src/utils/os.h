@@ -23,8 +23,9 @@
 
 #ifdef Q_OS_WIN
 bool isGreenEdition();
+bool usePortableConfigPath();
 #else
-constexpr bool isGreenEdition() { return false; }
+constexpr bool usePortableConfigPath() { return PORTABLE_CONFIG == PORTABLE_CONFIG_oui; }
 #endif
 
 #ifdef Q_OS_WIN

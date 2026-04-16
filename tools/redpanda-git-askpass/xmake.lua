@@ -4,6 +4,4 @@ target("redpanda-git-askpass")
     add_files("main.cpp")
     add_ui_classes("dialog")
 
-    if is_xdg() then
-        on_install(install_libexec)
-    end
+    set_install_libexec()

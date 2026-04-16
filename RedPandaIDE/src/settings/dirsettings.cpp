@@ -31,34 +31,48 @@ DirSettings::DirSettings(SettingsPersistor *persistor):
 
 QString DirSettings::appDir()
 {
+#if defined(Q_OS_MACOS) && (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_hierarchy)
+    // Qt on macOS does not resolve symlink,
+    // while brew installs the package to celler and creates symlink.
+    static QString cachedAppDir;
+    if (cachedAppDir.isEmpty()) {
+        const QString appFile = QCoreApplication::applicationFilePath();
+        const QString realAppFile = QFileInfo(appFile).canonicalFilePath();
+        cachedAppDir = QFileInfo(realAppFile).path();
+    }
+    return cachedAppDir;
+#else
     return QApplication::instance()->applicationDirPath();
+#endif
 }
 
 QString DirSettings::appResourceDir()
 {
-#ifdef Q_OS_WIN
-    return appDir();
-#elif defined(Q_OS_MACOS)
-//    return QApplication::instance()->applicationDirPath();
-    return "";
-#else // XDG desktop
-    // in AppImage or tarball PREFIX is not true, resolve from relative path
-    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
-    return absoluteResourceDir;
-#endif
+    if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_hierarchy) {
+        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../share/" APP_NAME)};
+        return absoluteResourceDir;
+    } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_flat) {
+        return appDir();
+    } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_bundle) {
+        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../Resources/")};
+        return absoluteResourceDir;
+    } else {
+        __builtin_unreachable();
+    }
 }
 
 
 QString DirSettings::appLibexecDir()
 {
-#ifdef Q_OS_WIN
-    return appDir();
-#elif defined(Q_OS_MACOS)
-    return QApplication::instance()->applicationDirPath();
-#else // XDG desktop
-    const static QString libExecDir(QDir(appDir()).absoluteFilePath("../" LIBEXECDIR "/" APP_NAME));
-    return libExecDir;
-#endif
+    if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_hierarchy) {
+        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../" LIBEXECDIR "/" APP_NAME)};
+        return absoluteResourceDir;
+    } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_flat ||
+                         FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_bundle) {
+        return appDir();
+    } else {
+        __builtin_unreachable();
+    }
 }
 
 QString DirSettings::projectDir() const
@@ -119,7 +133,7 @@ void DirSettings::doSave()
 void DirSettings::doLoad()
 {
     QString defaultProjectDir;
-    if (isGreenEdition()) {
+    if (usePortableConfigPath()) {
         defaultProjectDir = getFilePath(appDir(), "projects");
     } else {
         QStringList docLocations = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);

@@ -8,3 +8,5 @@ target("redpanda-win-git-askpass")
         "resource.rc")
 
     add_links("user32")
+
+    set_install_libexec()
