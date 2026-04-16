@@ -22,3 +22,6 @@ git archive --prefix="RedPanda-CPP/" -o "$SOURCEDIR/RedPanda-CPP.tar.gz" HEAD
 
 $SUDO dnf builddep -y $SPECDIR/redpanda-cpp.spec
 rpmbuild --nodebuginfo -bb $SPECDIR/redpanda-cpp.spec
+
+mkdir -p dist
+cp ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-*.rpm dist/

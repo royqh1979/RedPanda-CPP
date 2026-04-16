@@ -12,6 +12,11 @@ sed "s/__VERSION__/$VERSION/g" packages/alpine/APKBUILD.in >"$TMP_FOLDER/APKBUIL
 
 git archive --prefix="RedPanda-CPP/" -o "$TMP_FOLDER/RedPanda-CPP.tar.gz" HEAD
 
-cd "$TMP_FOLDER"
-abuild -F checksum
-abuild -Fr
+(
+  cd "$TMP_FOLDER"
+  abuild -F checksum
+  abuild -Fr
+)
+
+mkdir -p dist
+cp ~/packages/unsupported/$(uname -m)/redpanda-cpp-*.apk dist/

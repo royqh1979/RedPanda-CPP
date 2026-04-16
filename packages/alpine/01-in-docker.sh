@@ -12,6 +12,3 @@ abuild-keygen -an
 cp ~/.abuild/*.pub /etc/apk/keys/
 
 ./packages/alpine/buildapk.sh
-
-mkdir -p dist
-cp ~/packages/unsupported/$(uname -m)/redpanda-cpp-*.apk dist/

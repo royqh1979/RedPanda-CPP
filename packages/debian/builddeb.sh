@@ -2,6 +2,8 @@
 
 set -xeuo pipefail
 
+DISTRO_ID=$(grep ^ID= /etc/os-release | cut -d= -f2- | tr -d '"')
+
 TMP_FOLDER=/tmp/redpanda-cpp
 [[ -d $TMP_FOLDER ]] && rm -rf $TMP_FOLDER
 mkdir -p $TMP_FOLDER/debian
@@ -27,6 +29,14 @@ EOF
 git archive HEAD | tar -x -C $TMP_FOLDER
 cp -r packages/debian $TMP_FOLDER
 
-cd $TMP_FOLDER
-$SUDO mk-build-deps -i -t "apt -y --no-install-recommends" debian/control
-dpkg-buildpackage -us -uc
+(
+  cd $TMP_FOLDER
+  $SUDO mk-build-deps -i -t "apt -y --no-install-recommends" debian/control
+  dpkg-buildpackage -us -uc
+)
+
+file=$(ls "$TMP_FOLDER"/../redpanda-cpp_*.deb)
+basename=$(basename $file)
+
+mkdir -p dist
+cp $file dist/${basename/.deb/.$DISTRO_ID.deb}

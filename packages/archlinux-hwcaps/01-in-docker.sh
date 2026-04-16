@@ -9,12 +9,8 @@ fi
 
 pacman -Syu --noconfirm --needed base-devel git
 
-useradd -m builduser
-echo 'builduser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builduser
+sed -i '/exit $E_ROOT/d' /usr/bin/makepkg
 echo "MAKEFLAGS=-j$(($(nproc)+1))" >>/etc/makepkg.conf.d/jobs.conf
 
-su builduser -c "git config --global --add safe.directory $PWD"
-su builduser -c ./packages/archlinux-hwcaps/buildpkg.sh
-
-mkdir -p dist
-cp /tmp/redpanda-cpp-hwcaps/redpanda-cpp-hwcaps-*.pkg.tar.zst dist/
+export XMAKE_ROOT=y
+./packages/archlinux-hwcaps/buildpkg.sh
