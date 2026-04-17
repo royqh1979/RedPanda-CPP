@@ -1,16 +1,14 @@
-name: Build
+name: Build for package managers
 
 on:
   push:
     paths-ignore:
-      - ".github/**"
       - ".gitignore"
       - ".gitattributes"
       - "**.md"
       - "LICENSE"
   pull_request:
     paths-ignore:
-      - ".github/**"
       - ".gitignore"
       - ".gitattributes"
       - "**.md"
@@ -26,195 +24,15 @@ env:
                         --workdir /mnt
                         $IMAGE"
 
+# order by: alphabet
 jobs:
-  windows:
-    name: Windows MSYS2
-    if: false
-    strategy:
-      fail-fast: false
-      matrix:
-        msystem: [MINGW64, UCRT64, CLANG64]
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.msystem }}
-          update: true
-          pacboy: |
-            cc:p
-            make:p
-            qt5-static:p
-            cmake:p
-            7zip:p
-          install: |
-            mingw-w64-i686-nsis
-            git
-
-      - name: Download MinGW toolchain
-        run: |
-          mkdir -p assets
-          curl -L https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/11.4.0-r0/mingw32-11.4.0-r0.7z -o assets/mingw32.7z
-          curl -L https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/11.4.0-r0/mingw64-11.4.0-r0.7z -o assets/mingw64.7z
-
-      - name: Build
-        run: |
-          ./packages/msys/build-mingw.sh --ucrt
-          ./packages/msys/build-mingw.sh --mingw --ucrt
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows MSYS2 - msystem=${{ matrix.msystem }}
-          path: dist/
-
-  windows_legacy:
-    name: Windows NT 5.x
-    strategy:
-      fail-fast: false
-      matrix:
-        profile:
-          - 64-ucrt
-          - 32-ucrt
-    runs-on: windows-2022
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-
-      - name: Build
-        run: |
-          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }}
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows NT 5.x - profile=${{ matrix.profile }}
-          path: dist/*
-
-  windows_msvc:
-    name: Windows MSVC
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64, arm64, x86]
-        qt_version: ['6.8.3', '5.15.2']
-        include:
-          - arch: x64
-            qt_host: windows
-            runner: windows-2022
-            vs_arch: amd64
-          - arch: x64
-            qt_version: '6.8.3'
-            qt_arch: win64_msvc2022_64
-            qt_dir: msvc2022_64
-          - arch: x64
-            qt_version: '5.15.2'
-            qt_arch: win64_msvc2019_64
-            qt_dir: msvc2019_64
-          - arch: arm64
-            qt_arch: win64_msvc2022_arm64
-            qt_dir: msvc2022_arm64
-            qt_host: windows_arm64
-            runner: windows-11-arm
-            vs_arch: arm64
-          - arch: x86
-            qt_arch: win32_msvc2019
-            qt_dir: msvc2019
-            qt_host: windows
-            runner: windows-2022
-            vs_arch: x86
-        exclude:
-          - arch: arm64
-            qt_version: '5.15.2'
-          - arch: x86
-            qt_version: '6.8.3'
-    runs-on: ${{ matrix.runner }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ matrix.qt_version }}
-          host: ${{ matrix.qt_host }}
-          target: desktop
-          arch: ${{ matrix.qt_arch }}
-          archives: qtbase qtsvg qttools qttranslations
-
-      - name: Build
-        run: |
-          $VsInstallPath = "C:/Program Files/Microsoft Visual Studio/2022/Enterprise"
-          Import-Module "$VsInstallPath/Common7/Tools/Microsoft.VisualStudio.DevShell.dll"
-          Enter-VsDevShell -Arch ${{ matrix.vs_arch }} -VsInstallPath $VsInstallPath -SkipAutomaticLocation
-
-          ./packages/msvc/build.ps1 -QtDir "$env:RUNNER_WORKSPACE/Qt/${{ matrix.qt_version }}/${{ matrix.qt_dir }}"
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows MSVC ${{ matrix.arch }} (Qt ${{ matrix.qt_version }})
-          path: dist/
-
-  debian:
-    name: Debian
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [amd64, i386]
-        include:
-          - { arch: amd64, platform: linux/amd64 }
-          - { arch: i386, platform: linux/386 }
-    env:
-      IMAGE: docker.io/${{ matrix.arch }}/debian:testing
-      PLATFORM: ${{ matrix.platform }}
-
+  alpine:
+    name: Alpine Linux
     runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build
-        run: |
-          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Debian testing ${{ matrix.arch }}
-          path: dist/*.deb
-
-  ubuntu:
-    name: Ubuntu
     env:
-      IMAGE: docker.io/amd64/ubuntu:devel
+      IMAGE: docker.io/amd64/alpine:edge
       PLATFORM: linux/amd64
 
-    runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -222,13 +40,13 @@ jobs:
 
       - name: Build
         run: |
-          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/alpine/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Ubuntu devel amd64
-          path: dist/*.deb
+          name: Alpine Linux
+          path: dist/*.apk
 
   archlinux:
     name: Arch Linux
@@ -274,6 +92,79 @@ jobs:
           name: Arch Linux (glibc hwcaps)
           path: dist/*.pkg.tar.zst
 
+  brew:
+    name: Homebrew
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [Linux, "macOS 26", "macOS 15", "macOS 14"]
+        arch: [x86_64, arm64]
+        include:
+          - { os: Linux, arch: x86_64, runner: ubuntu-24.04 }
+          - { os: Linux, arch: arm64, runner: ubuntu-24.04-arm }
+          - { os: "macOS 26", arch: x86_64, runner: macos-26-intel }
+          - { os: "macOS 26", arch: arm64, runner: macos-26 }
+          - { os: "macOS 15", arch: x86_64, runner: macos-15-intel }
+          - { os: "macOS 15", arch: arm64, runner: macos-15 }
+          - { os: "macOS 14", arch: arm64, runner: macos-14 }
+        exclude:
+          - { os: "macOS 14", arch: x86_64 }  # no standard runner
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Homebrew
+        if: ${{ matrix.os == 'Linux' }}
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      - name: Build
+        run: |
+          if [[ "${{ matrix.os }}" == Linux ]] ; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          brew tap --force homebrew/core
+          ./packages/brew/buildbottle.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Homebrew ${{ matrix.os }} ${{ matrix.arch }}
+          path: dist/*.bottle.tar.gz
+
+  debian:
+    name: Debian
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, i386]
+        include:
+          - { arch: amd64, platform: linux/amd64 }
+          - { arch: i386, platform: linux/386 }
+    env:
+      IMAGE: docker.io/${{ matrix.arch }}/debian:testing
+      PLATFORM: ${{ matrix.platform }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: |
+          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Debian testing ${{ matrix.arch }}
+          path: dist/*.deb
+
   fedora:
     name: Fedora
     runs-on: ubuntu-latest
@@ -300,6 +191,44 @@ jobs:
           name: Fedora ${{ matrix.version }} x86_64
           path: dist/*.rpm
 
+  msys2:
+    name: MSYS2
+    strategy:
+      fail-fast: false
+      matrix:
+        msystem: [MINGW64, UCRT64, CLANG64, CLANGARM64]
+        include:
+          - { msystem: MINGW64, runner: windows-2022 }
+          - { msystem: UCRT64, runner: windows-2022 }
+          - { msystem: CLANG64, runner: windows-2022 }
+          - { msystem: CLANGARM64, runner: windows-11-arm }
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: base-devel git
+
+      - name: Build
+        run: |
+          ./packages/msys/buildpkg.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: MSYS2 ${{ matrix.msystem }}
+          path: dist/
+
   opensuse:
     name: openSUSE
     runs-on: ubuntu-latest
@@ -322,44 +251,13 @@ jobs:
           name: openSUSE Tumbleweed x86_64
           path: dist/*.rpm
 
-  alpine:
-    name: Alpine Linux
-    runs-on: ubuntu-latest
+  ubuntu:
+    name: Ubuntu
     env:
-      IMAGE: docker.io/amd64/alpine:edge
+      IMAGE: docker.io/amd64/ubuntu:devel
       PLATFORM: linux/amd64
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build
-        run: |
-          ${{ env.CONTAINER_COMMAND }} ./packages/alpine/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Alpine Linux
-          path: dist/*.apk
-
-  linux_static:
-    name: Linux static
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - x86_64
-          - x86_64.v3
-          - aarch64
-          - riscv64
-          - loong64
-          - i686
-    env:
-      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20260127.0
-      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -368,46 +266,10 @@ jobs:
 
       - name: Build
         run: |
-          ${{ env.CONTAINER_COMMAND }} ./packages/linux/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Linux static ${{ matrix.arch }}
-          path: dist/*
-
-  macos:
-    name: macOS
-    if: false
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86_64, arm64, universal]
-    runs-on: macos-14
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.8.1'
-          host: mac
-          target: desktop
-          arch: clang_64
-          archives: qtbase qtsvg qttools qttranslations
-
-      - name: Build
-        run: |
-          ./packages/macos/build.sh \
-            --arch ${{ matrix.arch }} \
-            --qt-install-dir $RUNNER_WORKSPACE/Qt \
-            --qt-version 6.8.1
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: macOS ${{ matrix.arch }}
-          path: dist/*.tar.xz
+          name: Ubuntu devel amd64
+          path: dist/*.deb
