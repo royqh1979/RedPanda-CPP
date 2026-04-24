@@ -1,0 +1,169 @@
+name: Build standalone apps
+
+on:
+  push:
+    paths-ignore:
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+env:
+  CONTAINER_COMMAND: "podman run
+                        --platform $PLATFORM
+                        --rm
+                        --security-opt seccomp=unconfined
+                        --volume $PWD:/mnt
+                        --workdir /mnt
+                        $IMAGE"
+
+# order by: alphabet
+jobs:
+  linux_static:
+    name: Linux static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, x86_64.v3, aarch64, riscv64, loong64, i686]
+    env:
+      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20260127.0
+      PLATFORM: linux/amd64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: |
+          ${{ env.CONTAINER_COMMAND }} ./packages/linux/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux static ${{ matrix.arch }}
+          path: dist/*
+
+  macos:
+    name: macOS
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.0'
+          host: mac
+          target: desktop
+          arch: clang_64
+          # lrelease depends on QtQml framework (qtdeclarative package)
+          archives: qtbase qtdeclarative qtsvg qttools qttranslations
+
+      - name: Build
+        run: |
+          ./packages/macos/build.sh --qt-dir $RUNNER_WORKSPACE/Qt/6.11.0/macos
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS
+          path: dist/*.tar.xz
+
+  windows_legacy:
+    name: Windows NT 5.x
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [64-ucrt, 32-ucrt]
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: true
+
+      - name: Build
+        run: |
+          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }}
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows NT 5.x - profile=${{ matrix.profile }}
+          path: dist/*
+
+  windows_msvc:
+    name: Windows MSVC
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64, x86]
+        qt_version: ['6.8.3', '5.15.2']
+        include:
+          - { arch: x64,
+              qt_host: windows, runner: windows-2022, vs_arch: amd64 }
+          - { arch: x64, qt_version: '6.8.3',
+              qt_arch: win64_msvc2022_64, qt_dir: msvc2022_64 }
+          - { arch: x64, qt_version: '5.15.2',
+              qt_arch: win64_msvc2019_64, qt_dir: msvc2019_64 }
+          - { arch: arm64,
+              qt_host: windows_arm64, runner: windows-11-arm, vs_arch: arm64 }
+          - { arch: arm64, qt_version: '6.8.3',
+              qt_arch: win64_msvc2022_arm64, qt_dir: msvc2022_arm64 }
+          - { arch: x86,
+              qt_host: windows, runner: windows-2022, vs_arch: x86 }
+          - { arch: x86, qt_version: '5.15.2',
+              qt_arch: win32_msvc2019, qt_dir: msvc2019 }
+        exclude:
+          - { arch: arm64, qt_version: '5.15.2' }
+          - { arch: x86, qt_version: '6.8.3' }
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ matrix.qt_version }}
+          host: ${{ matrix.qt_host }}
+          target: desktop
+          arch: ${{ matrix.qt_arch }}
+          archives: qtbase qtsvg qttools qttranslations
+
+      - name: Build
+        run: |
+          $VsInstallPath = "C:/Program Files/Microsoft Visual Studio/2022/Enterprise"
+          Import-Module "$VsInstallPath/Common7/Tools/Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -Arch ${{ matrix.vs_arch }} -VsInstallPath $VsInstallPath -SkipAutomaticLocation
+
+          ./packages/msvc/build.ps1 -QtDir "$env:RUNNER_WORKSPACE/Qt/${{ matrix.qt_version }}/${{ matrix.qt_dir }}"
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows MSVC ${{ matrix.arch }} (Qt ${{ matrix.qt_version }})
+          path: dist/
