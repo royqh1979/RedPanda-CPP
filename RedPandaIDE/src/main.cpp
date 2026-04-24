@@ -180,7 +180,7 @@ bool BlockWheelEventFiler::eventFilter(QObject *watched, QEvent *event)
 QString getSettingFilename(const QString& filepath, bool& firstRun) {
     QString filename;
     if (filepath.isEmpty()) {
-        if (isGreenEdition()) {
+        if (usePortableConfigPath()) {
             filename = includeTrailingPathDelimiter(QApplication::applicationDirPath()) +
                     "config/"  + APP_SETTSINGS_FILENAME;
         } else {
@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
     QTranslator trans,transQt,transUtils;
     bool firstRun;
     QString settingFilename = getSettingFilename(QString(), firstRun);
-    if (!isGreenEdition()) {
+    if (!usePortableConfigPath()) {
         QStringList documentLocations = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
         QDir::setCurrent(documentLocations.first());
     }

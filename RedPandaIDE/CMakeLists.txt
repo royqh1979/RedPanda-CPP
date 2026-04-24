@@ -1,7 +1,7 @@
 
 # RedPandaIDE #
 
-add_executable(RedPandaIDE WIN32 MACOSX_BUNDLE)
+add_executable(RedPandaIDE WIN32)
 
 target_qt_plain_cpp(RedPandaIDE
     src/autolinkmanager
@@ -378,6 +378,18 @@ if(MACOS)
     target_link_libraries(RedPandaIDE PRIVATE Qt::GuiPrivate)
 endif()
 
+if(${FILESYSTEM_LAYOUT} STREQUAL "bundle")
+    set_target_properties(RedPandaIDE PROPERTIES
+        MACOSX_BUNDLE ON)
+    set(MACOSX_BUNDLE_ICON_FILE RedPandaIDE.icns)
+    set_source_files_properties(
+        ${CMAKE_SOURCE_DIR}/platform/macos/RedPandaIDE.icns
+        PROPERTIES
+            MACOSX_PACKAGE_LOCATION Resources)
+    target_sources(RedPandaIDE PRIVATE
+        ${CMAKE_SOURCE_DIR}/platform/macos/RedPandaIDE.icns)
+endif()
+
 if(LINUX AND QT_FEATURE_static)
     qt_import_plugins(RedPandaIDE
         INCLUDE
@@ -386,16 +398,38 @@ if(LINUX AND QT_FEATURE_static)
             Qt::QIbusPlatformInputContextPlugin)
 endif()
 
-if(XDG)
+if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
     install(
         TARGETS RedPandaIDE
         DESTINATION ${CMAKE_INSTALL_BINDIR})
-else()
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
     install(
         TARGETS RedPandaIDE
-        BUNDLE DESTINATION .
-        RUNTIME DESTINATION .)
+        DESTINATION .)
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "bundle")
+    install(
+        TARGETS RedPandaIDE
+        BUNDLE DESTINATION .)
+else()
+    message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
 endif()
+
+#########
+# Paths #
+#########
+
+set (MAIN_PROGRAM_PATH_DEFS
+    FILESYSTEM_LAYOUT=FILESYSTEM_LAYOUT_${FILESYSTEM_LAYOUT}
+    FILESYSTEM_LAYOUT_hierarchy=1
+    FILESYSTEM_LAYOUT_flat=2
+    FILESYSTEM_LAYOUT_bundle=2
+    PORTABLE_CONFIG=PORTABLE_CONFIG_${PORTABLE_CONFIG}
+    PORTABLE_CONFIG_oui=1
+    PORTABLE_CONFIG_non=2
+    PORTABLE_CONFIG_registry=3)
+
+target_compile_definitions(RedPandaIDE PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
+target_compile_definitions(test-editor PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 
 ###################
 # Feature options #

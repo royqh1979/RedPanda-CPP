@@ -17,15 +17,34 @@ set(CMAKE_AUTOUIC ON)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(MACOS 1)
+endif()
+
 option(FORCE_QT5 "Force Qt 5 when building with system Qt" OFF)
 option(LUA_ADDON "Enable Lua add-ons" OFF)
 option(SDCC "Enable SDCC compiler support" ON)
 option(VCS "Enable Git integration" OFF)
 option(WINDOWS_PREFER_OPENCONSOLE "Prefer OpenConsole.exe as terminal emulator" OFF)
 
-set(LIBEXECDIR libexec CACHE STRING "Directory for auxiliary executables, RELATIVE TO prefix.")
+if (WIN32)
+    set(FILESYSTEM_LAYOUT_DEFAULT flat)
+    set(PORTABLE_CONFIG_DEFAULT registry)
+elseif (MACOS)
+    set(FILESYSTEM_LAYOUT_DEFAULT bundle)
+    set(PORTABLE_CONFIG_DEFAULT non)
+else()
+    set(FILESYSTEM_LAYOUT_DEFAULT hierarchy)
+    set(PORTABLE_CONFIG_DEFAULT non)
+endif()
+
 set(APP_NAME RedPandaCPP CACHE STRING "Subdirectory name to $prefix/share and $prefix/libexec.")
+set(FILESYSTEM_LAYOUT ${FILESYSTEM_LAYOUT_DEFAULT} CACHE STRING "Use 'hierarchy', 'flat', or 'bundle' filesystem layout.")
+set(LIBEXECDIR libexec CACHE STRING "Directory for auxiliary executables, RELATIVE TO prefix.")
 set(OVERRIDE_MALLOC "" CACHE STRING "Override malloc implementation, e.g. mimalloc")
+set(PORTABLE_CONFIG ${PORTABLE_CONFIG_DEFAULT} CACHE STRING
+    # avoid "yes" "no", they may be treated as boolean values
+    "Use portable configuration directory. 'oui' (for yes), 'non' (for no), or 'registry'.")
 
 set(QT_COMPONENTS
     Core
@@ -37,6 +56,10 @@ set(QT_COMPONENTS
     Test
     Widgets
     Xml)
+
+if (MACOS)
+    list(APPEND QT_COMPONENTS GuiPrivate)
+endif()
 
 if (FORCE_QT5)
     set(QT_VERSION_MAJOR 5)
@@ -255,25 +278,44 @@ if (XDG)
         DESTINATION share/${APP_NAME}
         FILES_MATCHING PATTERN "*")
 elseif(WIN32)
-    install(
-        DIRECTORY platform/windows/templates/
-        DESTINATION templates
-        FILES_MATCHING PATTERN "*")
-    install(
-        DIRECTORY platform/windows/templates-win64/
-        DESTINATION templates
-        FILES_MATCHING PATTERN "*")
+    if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
+        install(
+            DIRECTORY platform/windows/templates/
+            DESTINATION share/${APP_NAME}/templates
+            FILES_MATCHING PATTERN "*")
+        install(
+            DIRECTORY platform/windows/templates-win64/
+            DESTINATION share/${APP_NAME}/templates
+            FILES_MATCHING PATTERN "*")
+    elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
+        install(
+            DIRECTORY platform/windows/templates/
+            DESTINATION templates
+            FILES_MATCHING PATTERN "*")
+        install(
+            DIRECTORY platform/windows/templates-win64/
+            DESTINATION templates
+            FILES_MATCHING PATTERN "*")
+    else()
+        message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
+    endif()
 endif()
 
 # docs
-if (XDG)
+if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
     install(
         FILES README.md NEWS.md LICENSE
         DESTINATION share/doc/${APP_NAME})
-else()
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
     install(
         FILES README.md NEWS.md LICENSE
         DESTINATION .)
+elseif(${FILESYSTEM_LAYOUT} STREQUAL "bundle")
+    install(
+        FILES README.md NEWS.md LICENSE
+        DESTINATION RedPandaIDE.app/Contents/Resources/doc)
+else()
+    message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
 endif()
 
 # icon
@@ -302,14 +344,26 @@ endif()
 
 # qt.conf
 if(WIN32)
-    install(
-        FILES platform/windows/qt.conf
-        DESTINATION .)
+    if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
+        # skip, bindir is shared
+    elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
+        install(
+            FILES platform/windows/qt.conf
+            DESTINATION .)
+    else()
+        message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
+    endif()
 endif()
 
 # devcpp.ico
 if(WIN32)
-    install(
-        FILES RedPandaIDE/images/devcpp.ico
-        DESTINATION .)
+    if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
+        # TODO: where to put it?
+    elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
+        install(
+            FILES RedPandaIDE/images/devcpp.ico
+            DESTINATION .)
+    else()
+        message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")
+    endif()
 endif()

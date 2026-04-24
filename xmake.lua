@@ -12,10 +12,50 @@ if is_os("windows") then
     add_defines("_WIN32_WINNT=0x0501")
 end
 
+-- paths
+
 option("app-name")
     set_default("RedPandaCPP")
     set_showmenu(true)
     add_defines("APP_NAME=\"$(app-name)\"")
+
+option("filesystem-layout")
+    if is_os("windows") then
+        set_default("flat")
+        set_values("hierarchy", "flat")
+    else
+        set_default("hierarchy")
+        set_values("hierarchy")
+    end
+    set_showmenu(true)
+
+    add_defines(
+        "FILESYSTEM_LAYOUT=FILESYSTEM_LAYOUT_$(filesystem-layout)",
+        "FILESYSTEM_LAYOUT_hierarchy=1",
+        "FILESYSTEM_LAYOUT_flat=2",
+        "FILESYSTEM_LAYOUT_bundle=3")
+
+option("libexecdir")
+    set_default("libexec")
+    set_showmenu(true)
+    add_defines('LIBEXECDIR="$(libexecdir)"')
+
+option("portable-config")
+    if is_os("windows") then
+        set_default("registry")
+        -- avoid "yes" "no", they may be treated as boolean values
+        set_values("oui", "non", "registry")
+    else
+        set_default("non")
+        set_values("non")
+    end
+    set_showmenu(true)
+
+    add_defines(
+        "PORTABLE_CONFIG=PORTABLE_CONFIG_$(portable-config)",
+        "PORTABLE_CONFIG_oui=1",
+        "PORTABLE_CONFIG_non=2",
+        "PORTABLE_CONFIG_registry=3")
 
 option("prefix")
     if is_xdg() then
@@ -26,15 +66,7 @@ option("prefix")
         set_default("")
     end
 
-option("libexecdir")
-    if is_xdg() then
-        set_default("libexec")
-        set_showmenu(true)
-    else
-        set_default("")
-        set_showmenu(false)
-    end
-    add_defines('LIBEXECDIR="$(libexecdir)"')
+-- feature flags
 
 option("glibc-hwcaps")
     if is_os("linux") then
@@ -44,8 +76,6 @@ option("glibc-hwcaps")
     end
     set_default(false)
     add_defines('ENABLE_GLIBC_HWCAPS')
-
--- feature flags
 
 option("lua-addon")
     set_default(true)
@@ -182,10 +212,26 @@ function add_ui_classes(...)
     end
 end
 
-function install_libexec(target)
-    local installdir = target:installdir() .. "/$(libexecdir)/$(app-name)"
-    print("installing", target:name(), "to", installdir, "..")
-    os.cp(target:targetfile(), installdir .. "/" .. target:filename())
+function set_install_bin()
+    local fs_layout = get_config("filesystem-layout")
+    if fs_layout == "hierarchy" then
+        set_prefixdir("/", {bindir = "bin"})
+    elseif fs_layout == "flat" then
+        set_prefixdir("/", {bindir = "/"})
+    elseif fs_layout ~= nil then
+        trap_unreachable()
+    end
+end
+
+function set_install_libexec()
+    local fs_layout = get_config("filesystem-layout")
+    if fs_layout == "hierarchy" then
+        set_prefixdir("/", {bindir = "$(libexecdir)/$(app-name)"})
+    elseif fs_layout == "flat" then
+        set_prefixdir("/", {bindir = "/"})
+    elseif fs_layout ~= nil then
+        trap_unreachable()
+    end
 end
 
 includes("RedPandaIDE")
@@ -211,16 +257,25 @@ target("resources")
     if is_xdg() then
         add_installfiles("platform/linux/templates/(**.*)", {prefixdir = "share/$(app-name)/templates"})
     elseif is_os("windows") then
-        add_installfiles("platform/windows/templates/(**.*)", {prefixdir = "bin/templates"})
-        add_installfiles("platform/windows/templates-win64/(**.*)", {prefixdir = "bin/templates"})
+        if get_config("filesystem-layout") == "hierarchy" then
+            add_installfiles("platform/windows/templates/(**.*)", {prefixdir = "share/$(app-name)/templates"})
+            add_installfiles("platform/windows/templates-win64/(**.*)", {prefixdir = "share/$(app-name)/templates"})
+        elseif get_config("filesystem-layout") == "flat" then
+            add_installfiles("platform/windows/templates/(**.*)", {prefixdir = "templates"})
+            add_installfiles("platform/windows/templates-win64/(**.*)", {prefixdir = "templates"})
+        elseif get_config("filesystem-layout") ~= nil then
+            trap_unreachable()
+        end
     end
 
     -- docs
 
-    if is_xdg() then
+    if get_config("filesystem-layout") == "hierarchy" then
         add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "share/doc/$(app-name)"})
-    else
-        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "bin"})
+    elseif get_config("filesystem-layout") == "flat" then
+        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = ""})
+    elseif get_config("filesystem-layout") ~= nil then
+        trap_unreachable()
     end
 
     -- icon
@@ -249,5 +304,11 @@ target("resources")
     -- qt.conf
 
     if is_os("windows") then
-        add_installfiles("platform/windows/qt.conf", {prefixdir = "bin"})
+        if get_config("filesystem-layout") == "hierarchy" then
+            -- skip, bindir is shared
+        elseif get_config("filesystem-layout") == "flat" then
+            add_installfiles("platform/windows/qt.conf", {prefixdir = ""})
+        elseif get_config("filesystem-layout") ~= nil then
+            trap_unreachable()
+        end
     end

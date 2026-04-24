@@ -1,11 +1,11 @@
 [
     {
         "group": "Bundled",
-        "comment": "Use `%*APP_DIR*%` in path for application directory.",
+        "comment": "Use `%*APP_DIR*%` in path for application directory; `%*APP_LIBEXEC_DIR*%` for application libexec directory.",
         "terminals": [
             {
                 "name": "UTF-8 compatible Console Host",
-                "path": "OpenConsole.exe",
+                "path": "%*APP_LIBEXEC_DIR*%/OpenConsole.exe",
                 "argsPattern": "$term -- $argv"
             }
         ]

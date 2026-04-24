@@ -16,6 +16,7 @@
  */
 #include "os.h"
 #include "pe.h"
+#include "../utils.h"
 #include <qt_utils/utils.h>
 #include <QApplication>
 #include <QDomDocument>
@@ -59,6 +60,19 @@ bool isGreenEdition()
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
+}
+
+bool usePortableConfigPath()
+{
+    if constexpr (PORTABLE_CONFIG == PORTABLE_CONFIG_oui) {
+        return true;
+    } else if constexpr (PORTABLE_CONFIG == PORTABLE_CONFIG_non) {
+        return false;
+    } else if constexpr (PORTABLE_CONFIG == PORTABLE_CONFIG_registry) {
+        return isGreenEdition();
+    } else {
+        __builtin_unreachable();
+    }
 }
 #endif
 
