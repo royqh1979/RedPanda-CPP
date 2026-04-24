@@ -1,7 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$( dirname ${BASH_SOURCE[0]} )
-source "${SCRIPT_DIR}/config.sh"
+source packages/_common/config.sh
 
 function fn_print_help() {
   echo " Usage:
