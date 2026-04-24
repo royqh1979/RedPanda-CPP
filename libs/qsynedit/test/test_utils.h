@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSet>
 #include <QHash>
+#include <QFont>
 #include <memory>
 #include <unordered_set>
 #include "qsynedit/syntaxer/syntaxer.h"
@@ -29,4 +30,7 @@ QStringList filterTokens(const QList<TokenInfoList> &infoList,
                             const std::unordered_set<QSynedit::PTokenAttribute> &targetAttributes);
 QStringList filterTokens(const QList<TokenInfoList> &infoList,
                             const QSynedit::PTokenAttribute &targetAttribute);
+
+QString defaultMonoFont();
+
 #endif // TEST_UTILS_H

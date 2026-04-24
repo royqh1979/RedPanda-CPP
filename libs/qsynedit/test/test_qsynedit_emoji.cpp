@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 
 #include "test_qsynedit_emoji.h"
+#include "test_utils.h"
 #include "qsynedit/qsynedit.h"
 #include "qsynedit/document.h"
 #include "qsynedit/syntaxer/textfile.h"
@@ -21,6 +22,11 @@ void TestQSyneditEmoji::initTestCase()
             | QSynedit::EditorOption::SelectWordByDblClick;
     mEdit->setOptions(options);
     mEdit->setSyntaxer(std::make_shared<TextSyntaxer>());
+
+    QFont defaultFont;
+    defaultFont.setFamily(defaultMonoFont());
+    defaultFont.setPointSize(14);
+    mEdit->setFont(defaultFont);
 
     connectEditSignals();
 }
