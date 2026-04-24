@@ -18,5 +18,10 @@ sed "s/__VERSION__/$VERSION/g" packages/archlinux-hwcaps/PKGBUILD.in >"$TMP_FOLD
 git archive --prefix="RedPanda-CPP/" -o "$TMP_FOLDER/RedPanda-CPP.tar.gz" HEAD
 cp packages/archlinux-hwcaps/compiler_hint.lua "$TMP_FOLDER/"
 
-cd "$TMP_FOLDER"
-makepkg -s --noconfirm
+(
+  cd "$TMP_FOLDER"
+  makepkg -s --noconfirm
+)
+
+mkdir -p dist
+cp "$TMP_FOLDER"/redpanda-cpp-hwcaps-*.pkg.tar.zst dist/
