@@ -5084,7 +5084,15 @@ void Editor::reformat(bool doReparse)
     }
     if (newContent.isEmpty())
         return;
+    QSet<int> breakpointsBackup = mBreakpointLines;
+    QSet<int> bookmarksBackup = mBookmarkLines;
     replaceContent(newContent, doReparse);
+    foreach(int line, breakpointsBackup) {
+        toggleBreakpoint(line);
+    }
+    foreach(int line, bookmarksBackup) {
+        toggleBookmark(line);
+    }
 }
 
 void Editor::replaceContent(const QString &newContent, bool doReparse)
