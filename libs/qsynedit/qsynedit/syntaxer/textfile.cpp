@@ -160,4 +160,9 @@ bool TextSyntaxer::needsLineState()
     return false;
 }
 
+PSyntaxer TextSyntaxer::createInstance()
+{
+    return std::make_shared<TextSyntaxer>();
+}
+
 }

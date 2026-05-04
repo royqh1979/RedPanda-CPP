@@ -1450,4 +1450,9 @@ bool GLSLSyntaxer::needsLineState()
 {
     return true;
 }
+
+PSyntaxer GLSLSyntaxer::createInstance()
+{
+    return std::make_shared<GLSLSyntaxer>();
+}
 }

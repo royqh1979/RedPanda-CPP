@@ -993,6 +993,11 @@ bool LuaSyntaxer::needsLineState()
     return false;
 }
 
+PSyntaxer LuaSyntaxer::createInstance()
+{
+    return std::make_shared<LuaSyntaxer>();
+}
+
 const QSet<QString> &LuaSyntaxer::customTypeKeywords() const
 {
     return mCustomTypeKeywords;

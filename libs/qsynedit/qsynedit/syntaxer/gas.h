@@ -56,6 +56,7 @@ public:
     bool prefixRegisterNames() const;
     SyntaxMode syntaxMode() const;
     void setSyntaxMode(SyntaxMode newSyntaxMode);
+    virtual PSyntaxer createInstance() override;
 };
 
 }

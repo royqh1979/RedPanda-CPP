@@ -175,6 +175,8 @@ public:
     virtual bool supportFolding() = 0;
     virtual bool needsLineState() = 0;
 
+    virtual std::shared_ptr<Syntaxer> createInstance() = 0;
+
 
 protected:
     PTokenAttribute mCommentAttribute;

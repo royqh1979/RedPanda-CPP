@@ -128,6 +128,7 @@ public:
     const PTokenAttribute &preprocessDirectiveAttribute() const;
     const PTokenAttribute &hexAttribute() const;
     const PTokenAttribute &octAttribute() const;
+    virtual PSyntaxer createInstance() override;
 };
 
 }

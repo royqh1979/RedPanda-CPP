@@ -27,8 +27,6 @@
 #include "qsynedit/syntaxer/textfile.h"
 #include "qsynedit/formatter/cppformatter.h"
 
-#include "colorscheme.h"
-
 SyntaxerManager::SyntaxerManager()
 {
 

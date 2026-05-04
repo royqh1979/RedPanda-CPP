@@ -703,4 +703,9 @@ bool MakefileSyntaxer::needsLineState()
     return true;
 }
 
+PSyntaxer MakefileSyntaxer::createInstance()
+{
+    return std::make_shared<MakefileSyntaxer>();
+}
+
 }

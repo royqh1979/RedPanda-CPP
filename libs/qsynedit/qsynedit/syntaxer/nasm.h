@@ -41,7 +41,7 @@ public:
     QString languageName() override;
     ProgrammingLanguage language() override;
     QSet<QString> keywords() override;
-
+    virtual PSyntaxer createInstance() override;
 };
 
 }

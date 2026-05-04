@@ -269,6 +269,7 @@ public:
     bool handleLastBackSlash() const;
     void setHandleLastBackSlash(bool newHandleLastBackSlash);
     bool isSpaceChar(const QChar& ch) const override { return ch == ' ' || ch == '\t'; }
+    virtual PSyntaxer createInstance() override;
 };
 
 }

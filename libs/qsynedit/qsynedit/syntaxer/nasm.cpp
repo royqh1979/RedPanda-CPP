@@ -94,4 +94,9 @@ QSet<QString> NASMSyntaxer::keywords()
     return mKeywordCache;
 }
 
+PSyntaxer NASMSyntaxer::createInstance()
+{
+    return std::make_shared<NASMSyntaxer>();
+}
+
 }

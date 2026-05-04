@@ -184,6 +184,7 @@ public:
     QString blockCommentEndSymbol() override;
     bool supportFolding() override;
     bool needsLineState() override;
+    virtual PSyntaxer createInstance() override;
 };
 
 }
