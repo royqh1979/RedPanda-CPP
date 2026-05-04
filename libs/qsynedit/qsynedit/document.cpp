@@ -157,6 +157,9 @@ PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line < mLines.size());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return std::make_shared<SyntaxState>();
     return mLines[line]->syntaxState();
 }
 
@@ -806,7 +809,9 @@ QString Document::glyphAt(int line, int charPos) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
-
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
     return mLines[line]->glyph(glyphIdx);
@@ -816,7 +821,9 @@ int Document::charToGlyphStartChar(int line, int charPos) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
-
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
     return mLines[line]->glyphStartChar(glyphIdx);
@@ -901,6 +908,9 @@ int Document::glyphCount(int line) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphsCount();
 }
 
@@ -908,6 +918,9 @@ int Document::glyphStartChar(int line, int glyphIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartChar(glyphIdx);
 }
 
@@ -915,6 +928,9 @@ int Document::glyphEndChar(int line, int glyphIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartChar(glyphIdx)+mLines[line]->glyphLength(glyphIdx);
 }
 
@@ -922,6 +938,9 @@ int Document::glyphLength(int line, int glyphIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphLength(glyphIdx);
 }
 
@@ -929,6 +948,9 @@ int Document::glyphStartPostion(int line, int glyphIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartPosition(glyphIdx);
 }
 
@@ -936,6 +958,9 @@ int Document::glyphWidth(int line, int glyphIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphWidth(glyphIdx);
 }
 
@@ -943,6 +968,9 @@ int Document::charToGlyphIndex(int line, int charIdx) const
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(line>=0 && line<count());
+    // Crash Prevention
+    if (line<0 || line>=count())
+        return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     return charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charIdx);
 }
