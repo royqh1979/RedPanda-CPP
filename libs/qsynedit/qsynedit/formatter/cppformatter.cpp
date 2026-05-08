@@ -222,7 +222,7 @@ namespace QSynedit {
                 if (pSyntaxer->getToken() == "(") {
                     posList.push_back(pSyntaxer->getTokenPos());
                 } else if (pSyntaxer->getToken() == ")") {
-                    posList.pop_back();
+                    if(!posList.empty())posList.pop_back();
                 }
             }
             pSyntaxer->next();
