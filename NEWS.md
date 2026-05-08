@@ -19,6 +19,7 @@ Red Panda C++ Version 3.5
   - fix: Can't get clang's version.
   - change: Show completion popup only if it's not empty.
   - change: Reformat code don't clear breakpoints and bookmarks.
+  - enhancement: Correctly expand multi-line function-like macros.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

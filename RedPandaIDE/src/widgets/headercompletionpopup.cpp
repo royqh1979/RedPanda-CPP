@@ -315,6 +315,7 @@ void HeaderCompletionPopup::setParser(const PCppParser &newParser)
 
 void HeaderCompletionPopup::hideEvent(QHideEvent *)
 {
+    mListView->setKeypressedCallback(nullptr);
     mCompletionList.clear();
     mModel->setMatched(0);
     mFullCompletionList.clear();

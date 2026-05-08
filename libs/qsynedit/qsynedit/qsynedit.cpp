@@ -6859,14 +6859,14 @@ void QSynEdit::internalSetSelEnd(const CharPos &value)
             mSelectionEnd = value;
             invalidateLines(
                         std::min(mSelectionBegin.line, std::min(mSelectionEnd.line, oldBlockEnd.line)),
-                        std::max(mSelectionBegin.line, std::max(mSelectionEnd.line, oldBlockEnd.line)));
+                        std::max(mSelectionBegin.line, std::max(mSelectionEnd.line, oldBlockEnd.line))+1);
         } else {
             CharPos oldBlockEnd = mSelectionEnd;
             mSelectionEnd = value;
             if (mActiveSelectionMode != SelectionMode::Column || mSelectionBegin.ch != mSelectionEnd.ch) {
                 invalidateLines(
                             std::min(mSelectionEnd.line, oldBlockEnd.line),
-                            std::max(mSelectionEnd.line, oldBlockEnd.line));
+                            std::max(mSelectionEnd.line, oldBlockEnd.line)+1);
             }
         }
         setStatusChanged(StatusChange::Selection);

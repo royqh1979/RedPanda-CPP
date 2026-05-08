@@ -257,6 +257,9 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
+#if QT_VERSION_MAJOR >= 6
+    app.setAttribute(Qt::AA_DontUseNativeDialogs);
+#endif
 #if QT_VERSION_MAJOR < 6
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif

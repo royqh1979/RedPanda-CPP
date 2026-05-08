@@ -95,8 +95,6 @@ public:
     }
 
     QString expandMacros(QString text) const;
-    QString expandMacros(QString text, const QSet<QString> macrosToBeIgnored) const;
-    QString expandMacro(const QString &text, const QString &word, int &i, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed) const;
 
     const QStringList& result() const{
         return mResult;
@@ -147,10 +145,14 @@ private:
 
     bool supportCPP23() const;
 
-    QString expandFunctionLikeMacro(PDefine define,const QString &args, const QSet<QString> &macrosToBeIgnored) const;
+    QString expandFunctionLikeMacro(PDefine define,const QString &args, const QSet<QString> &macrosToBeIgnored);
     void preprocessBuffer();
     void skipToPreprocessor();
     QString getNextPreprocessor();
+
+    QString expandMacros(QString text, bool handleBuffer);
+    QString expandMacros(QString text, bool handleBuffer, const QSet<QString> macrosToBeIgnored);
+    QString expandMacro(QString &text, const QString &word, int &i, bool handleBuffer, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed);
 
     void handleDefine(const QString& tokens);
     void handleUndefine(const QString& tokens);
