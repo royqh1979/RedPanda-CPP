@@ -1791,18 +1791,25 @@ void CompilerSets::findSets()
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
-#ifdef Q_OS_WIN
-    pathList = QStringList{
-        mDirSettings->appLibexecDir() + "/clang64/bin",
-        mDirSettings->appLibexecDir() + "/mingw64/bin",
-        mDirSettings->appLibexecDir() + "/mingw32/bin",
 
-        // cross toolchain targeting Linux
-        // directory names follow dynamic linker (ld-linux-x86-64.so -> gcc-linux-x86-64)
-        mDirSettings->appLibexecDir() + "/gcc-linux-x86-64/bin",
-        mDirSettings->appLibexecDir() + "/gcc-linux-aarch64/bin",
-    } + pathList;
-#endif
+    // bundled toolchain
+    QDir libexecDir(mDirSettings->appLibexecDir());
+    static const QStringList compilerDirPatterns = {
+        "clang*", // MSYS2: clang64
+        "gcc*",
+        "llvm*",
+        "mingw*",
+        "ucrt*", // MSYS2: ucrt64
+        "w64devkit*",
+    };
+    QStringList libexecBins;
+    for (const QString &entry : libexecDir.entryList(compilerDirPatterns, QDir::Dirs)) {
+        QString binPath = libexecDir.absoluteFilePath(entry + "/bin");
+        if (QDir(binPath).exists())
+            libexecBins.append(binPath);
+    }
+    pathList = libexecBins + pathList;
+
     QString folder, canonicalFolder;
     for (int i=pathList.count()-1;i>=0;i--) {
         folder = QDir(pathList[i]).absolutePath();
