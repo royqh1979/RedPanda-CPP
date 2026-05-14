@@ -19,7 +19,7 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 #include "../systemconsts.h"
-
+#include "../utils/parser.h"
 #include <QAction>
 #include <QMessageBox>
 #include <QDebug>
@@ -75,11 +75,24 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
     ui->editDemo->setEditorSettings(&pSettings->editor());
+    ui->editDemo->setCodeCompletionSettings(&pSettings->codeCompletion());
     ui->editDemo->setColorManager(mColorManager);
     ui->editDemo->setIconsManager(iconsManager);
     ui->editDemo->applySettings();
     ui->editDemo->setUseCodeFolding(true);
-    ui->editDemo->setContent(
+    ui->editDemo->setFilename("editdemo.cpp");
+    ui->editDemo->setFileType(FileType::CppSource);
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setSharedByFiles(false);
+    parser->setLanguage(ui->editDemo->calcParserLanguage());
+    parser->setOnGetFileStream([this](const QString& filename, QStringList& buffer){
+        buffer=ui->editDemo->content();
+           return true;
+    });
+    resetCppParser(parser);
+    parser->setEnabled(true);
+    ui->editDemo->setCppParser(parser);
+    ui->editDemo->replaceContent(
             "#include <iostream>\n"
             "#include <conio.h>\n"
             "\n"
@@ -100,14 +113,15 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
             "    getch();\n"
             "}\n"
                 );
+    ui->editDemo->setExtraKeystrokes();
     ui->editDemo->setReadOnly(true);
     ui->editDemo->toggleBreakpoint(10);
     ui->editDemo->toggleBookmark(8);
     ui->editDemo->addSyntaxIssues(12, 8, 13, CompileIssueType::Error, "[Error] 'Total' was not declared in this scope; did you mean 'total'?");
     ui->editDemo->addSyntaxIssues(7, 8, 15, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
-    ui->editDemo->setActiveBreakpoint(10);
+    ui->editDemo->setActiveBreakpoint(9);
     ui->editDemo->setCaretXY(QSynedit::CharPos{0,0});
-    ui->editDemo->setFileType(FileType::CppSource);
+
     //ui->editDemo->reparseDocument();
     //ui->editDemo->invalidate();
     onItemSelectionChanged();
