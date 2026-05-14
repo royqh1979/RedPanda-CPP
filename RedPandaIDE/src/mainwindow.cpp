@@ -5005,10 +5005,8 @@ void MainWindow::onClassBrowserGotoDeclaration()
     if (!statement) {
         return;
     }
-    QString filename;
-    int line;
-    filename = statement->fileName;
-    line = statement->line;
+    QString filename = statement->fileName;
+    int line = statement->line;
     Editor* e=openFile(filename);
     if (e) {
         mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
@@ -5027,10 +5025,8 @@ void MainWindow::onClassBrowserGotoDefinition()
     if (!statement) {
         return;
     }
-    QString filename;
-    int line;
-    filename = statement->definitionFileName;
-    line = statement->definitionLine;
+    QString filename = statement->definitionFileName;
+    int line = statement->definitionLine;
     Editor* e=openFile(filename);
     if (e) {
         mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
@@ -7593,12 +7589,12 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     if (currentEditor) {
         if (statement->fileName == currentEditor->filename()
                 && statement->definitionFileName!=currentEditor->filename()) {
-            filename = statement->definitionFileName;
-            line = statement->definitionLine;
-        } else if (statement->fileName != currentEditor->filename()
-                && statement->definitionFileName==currentEditor->filename()) {
             filename = statement->fileName;
             line = statement->line;
+        } else if (statement->fileName != currentEditor->filename()
+                && statement->definitionFileName==currentEditor->filename()) {
+            filename = statement->definitionFileName;
+            line = statement->definitionLine;
         } else if (currentEditor->caretY()==statement->line) {
             filename = statement->definitionFileName;
             line = statement->definitionLine;
@@ -7612,7 +7608,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
     Editor* e = openFile(filename);
     if (e) {
-        mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,line-1});
+        mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,line});
     }
 }
 
