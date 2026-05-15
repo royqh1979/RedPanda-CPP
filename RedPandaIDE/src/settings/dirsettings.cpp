@@ -49,13 +49,17 @@ QString DirSettings::appDir()
 QString DirSettings::appResourceDir()
 {
     if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_hierarchy) {
-        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../share/" APP_NAME)};
-        return absoluteResourceDir;
+        const static QDir binDir = appDir(); // e.g. '/usr/bin'
+        const static QString absShareDir = binDir.absoluteFilePath("../share/" APP_NAME); // e.g. '/usr/bin/../share/RedPandaCPP'
+        const static QString cleanShareDir = QDir::cleanPath(absShareDir); // e.g. '/usr/share/RedPandaCPP'
+        return cleanShareDir;
     } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_flat) {
         return appDir();
     } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_bundle) {
-        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../Resources/")};
-        return absoluteResourceDir;
+        const static QDir binDir = appDir(); // e.g. '/Applications/RedPandaCPP.app/Contents/MacOS'
+        const static QString absResourceDir = binDir.absoluteFilePath("../Resources"); // e.g. '/Applications/RedPandaCPP.app/Contents/MacOS/../Resources'
+        const static QString cleanResourceDir = QDir::cleanPath(absResourceDir); // e.g. '/Applications/RedPandaCPP.app/Contents/Resources'
+        return cleanResourceDir;
     } else {
         __builtin_unreachable();
     }
@@ -65,8 +69,10 @@ QString DirSettings::appResourceDir()
 QString DirSettings::appLibexecDir()
 {
     if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_hierarchy) {
-        const static QString absoluteResourceDir{QDir{appDir()}.absoluteFilePath("../" LIBEXECDIR "/" APP_NAME)};
-        return absoluteResourceDir;
+        const static QDir binDir = appDir(); // e.g. '/usr/bin'
+        const static QString absLibexecDir = binDir.absoluteFilePath("../" LIBEXECDIR "/" APP_NAME); // e.g. '/usr/bin/../libexec/RedPandaCPP'
+        const static QString cleanLibexecDir = QDir::cleanPath(absLibexecDir); // e.g. '/usr/libexec/RedPandaCPP'
+        return cleanLibexecDir;
     } else if constexpr (FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_flat ||
                          FILESYSTEM_LAYOUT == FILESYSTEM_LAYOUT_bundle) {
         return appDir();
