@@ -4878,7 +4878,7 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const CharPos &p, CharPos 
                 line--;
                 if (line>=0) {
                     s=editor->lineText(line);
-                    i=s.length();
+                    i=s.length()-1;
                     continue;
                 } else
                     break;

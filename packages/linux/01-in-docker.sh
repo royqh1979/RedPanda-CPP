@@ -29,6 +29,20 @@ fi
 
 TARBALL_FILE=redpanda-cpp-bin-$VERSION-$ARCH.tar.gz
 
+function create-appimage() {
+  local appdir=$1
+  local appimage=$2
+
+  # AppImage is appimage-runtime + squashfs
+  (
+    cd /pkg
+    mksquashfs $appdir $appimage -offset $RUNTIME_SIZE -comp zstd -Xcompression-level 19 -root-owned -noappend -b 1M -mkfs-time 0
+    dd if=$APPIMAGE_RUNTIME of=$appimage conv=notrunc
+    chmod +x $appimage
+    cp $appimage "$SRC_DIR/dist"
+  )
+}
+
 # build astyle
 (
   mkdir -p "$SRC_DIR/assets" /build/astyle
@@ -126,10 +140,24 @@ TARBALL_FILE=redpanda-cpp-bin-$VERSION-$ARCH.tar.gz
   install -m755 "$SRC_DIR/packages/linux/appimage-wrapper.sh" /pkg/appimage/AppRun
   install -m644 "$SRC_DIR/platform/linux/redpandaide.png" /pkg/appimage/.DirIcon
 
-  # AppImage is appimage-runtime + squashfs
-  cd /pkg
-  mksquashfs /pkg/appimage $APPIMAGE_FILE -offset $RUNTIME_SIZE -comp zstd -root-owned -noappend -b 1M -mkfs-time 0
-  dd if=$APPIMAGE_RUNTIME of=$APPIMAGE_FILE conv=notrunc
-  chmod +x $APPIMAGE_FILE
-  cp $APPIMAGE_FILE "$SRC_DIR/dist"
+  create-appimage /pkg/appimage $APPIMAGE_FILE
+)
+
+# package with compiler (tarball and AppImage)
+(
+  for gcc_tar in $SRC_DIR/assets/gcc-$ARCH*.tar; do
+    [[ -f "$gcc_tar" ]] || continue
+    base=$(basename "$gcc_tar")
+    base=${base%.tar}
+    suffix=${base#gcc-$ARCH}
+    tag=gcc$suffix
+
+    cp -r /pkg/tarball /pkg/tarball+$tag
+    tar -C /pkg/tarball+$tag/usr/libexec/RedPandaCPP -xf "$gcc_tar"
+    tar -C /pkg/tarball+$tag -czf $SRC_DIR/dist/redpanda-cpp-bin-$VERSION-$ARCH+$tag.tar.gz .
+
+    cp -r /pkg/appimage /pkg/appimage+$tag
+    tar -C /pkg/appimage+$tag/usr/libexec/RedPandaCPP -xf "$gcc_tar"
+    create-appimage /pkg/appimage+$tag RedPandaIDE-$VERSION-$ARCH+$tag.AppImage
+  done
 )
