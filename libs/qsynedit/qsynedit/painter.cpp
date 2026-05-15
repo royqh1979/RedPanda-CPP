@@ -272,10 +272,10 @@ void QSynEditPainter::computeSelectionInfo()
     } else
         bAnySelection = false;
     if (mEdit->mInputPreeditString.length()>0) {
-        if (vStart.line == mEdit->mCaretY && vStart.ch >=mEdit->mCaretX) {
+        if (vStart.line == mEdit->mCaretY && vStart.ch >= mEdit->mCaretX) {
             vStart.ch+=mEdit->mInputPreeditString.length();
         }
-        if (vEnd.line == mEdit->mCaretY && vEnd.ch >mEdit->mCaretX) {
+        if (vEnd.line == mEdit->mCaretY && vEnd.ch > mEdit->mCaretX) {
             vEnd.ch+=mEdit->mInputPreeditString.length();
         }
     }
@@ -286,21 +286,25 @@ void QSynEditPainter::computeSelectionInfo()
         bAnySelection = (vEnd.line >= mFirstLine) && (vStart.line <= mLastLine);
         if (bAnySelection) {
             // Transform the selection from text space into screen space
-            mSelStart = mEdit->bufferToDisplayPos(vStart);
-            mSelEnd = mEdit->bufferToDisplayPos(vEnd);
-            if (mEdit->mInputPreeditString.length()
+            mSelStart.row = mEdit->lineToRow(vStart.line);
+            mSelEnd.row = mEdit->lineToRow(vEnd.line);
+            if (mEdit->mInputPreeditString.length() > 0
                     && vStart.line == mEdit->mCaretY) {
                 QString sLine = mEdit->lineText().left(mEdit->mCaretX)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretX);
-                mSelStart.x = mEdit->charToGlyphLeft(mEdit->mCaretY, sLine,vStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(vStart.line, sLine,vStart.ch);
+            } else {
+                mSelStart.x = mEdit->charToGlyphLeft(vStart.line,vStart.ch);
             }
-            if (mEdit->mInputPreeditString.length()
+            if (mEdit->mInputPreeditString.length() > 0
                     && vEnd.line == mEdit->mCaretY) {
                 QString sLine = mEdit->lineText().left(mEdit->mCaretX)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretX);
-                mSelEnd.x = mEdit->charToGlyphLeft(mEdit->mCaretY, sLine,vEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, sLine,vEnd.ch);
+            } else {
+                mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, vEnd.ch);
             }
             // In the column selection mode sort the begin and end of the selection,
             // this makes the painting code simpler.
