@@ -30,6 +30,7 @@
 #include "src/addon/luaruntime.h"
 
 static QStringList CompilerCompatibleIndex; // index for old settings compatibility
+static QByteArray getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments);
 
 static void prepareCompatibleIndex()
 {
@@ -1314,7 +1315,7 @@ void CompilerSet::setIniOptions(const QByteArray &value)
    }
 }
 
-QByteArray CompilerSet::getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments) const
+static QByteArray getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments)
 {
     QProcessEnvironment env;
     env.insert("LANGUAGE","");
@@ -1618,7 +1619,7 @@ static void setReleaseOptions(PCompilerSet pSet) {
     pSet->setStaticLink(true);
 }
 
-static void setDebugOptions(PCompilerSet pSet, bool enableAsan = false) {
+static void setDebugOptions(PCompilerSet pSet, const QString &sanitizerType = QString()) {
     //pSet->setCompileOption(CC_CMD_OPT_OPTIMIZE,"g");
     pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
@@ -1630,17 +1631,36 @@ static void setDebugOptions(PCompilerSet pSet, bool enableAsan = false) {
     pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_IMPLICIT_INT, COMPILER_OPTION_ON);
 
-    if (enableAsan) {
-#ifdef __aarch64__
-        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "hwaddress");
-#else
-        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "address");
-#endif
+    if (!sanitizerType.isEmpty()) {
+        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, sanitizerType);
     }
     //Some windows gcc don't correctly support this
     //pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
 
+}
+
+bool elfToolchainHasDynamicLibc(const QString &folder, const QString &c_prog)
+{
+    // TODO: should we detect encoding (cross toolchain for Linux on Windows)?
+    QString sharedLibc = QString::fromUtf8(getCompilerOutput(folder, c_prog, {"-print-file-name=libc.so"}));
+    QString staticLibc = QString::fromUtf8(getCompilerOutput(folder, c_prog, {"-print-file-name=libc.a"}));
+
+    if (!QFileInfo(sharedLibc).isAbsolute())
+        // no shared libc. (output is bare 'libc.so')
+        return false;
+
+    if (!QFileInfo(staticLibc).isAbsolute())
+        // no static libc, so the toolchain use shared libc.
+        return true;
+
+    // system toolchain:
+    //   /usr/lib/libc.so, /usr/lib/libc.a -> yes
+    // custom compiler + system libc:
+    //   /usr/lib/libc.so, /usr/lib/libc.a -> yes
+    // static toolchain:
+    //   /usr/lib/libc.so, $prefix/lib/libc.a -> no
+    return QFileInfo(sharedLibc).absolutePath() == QFileInfo(staticLibc).absolutePath();
 }
 
 bool CompilerSets::addSets(const QString &folder, const QString& c_prog) {
@@ -1652,6 +1672,7 @@ bool CompilerSets::addSets(const QString &folder, const QString& c_prog) {
     PCompilerSet baseSet = addSet(folder,c_prog);
     if (!baseSet || baseSet->name().isEmpty())
         return false;
+    QString sanitizerType;
 #if ENABLE_SDCC
     if (c_prog == SDCC_PROGRAM) {
         baseSet->setCompileOption(SDCC_OPT_NOSTARTUP,COMPILER_OPTION_ON);
@@ -1688,26 +1709,43 @@ bool CompilerSets::addSets(const QString &folder, const QString& c_prog) {
         debugSet->setName(baseName + " " + platformName + " Debug");
         setDebugOptions(debugSet);
 
-        // Enable ASan compiler set if it is supported and gdb works with ASan.
-#ifdef Q_OS_LINUX
-        PCompilerSet debugAsanSet = addSet(baseSet);
-        debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
-        setDebugOptions(debugAsanSet, true);
-#endif
+        // AddressSanitizer: currently we only enable it for Linux
+        if (baseSet->dumpMachine().contains("-linux-")) {
+            // ASan does not work with static toolchain:
+            //   -static -fsanitize=address: refuse to compile;
+            //   -static-pie -fsanitize=address: compile and link ok; crash at runtime.
+            //     (dlopen fails due to mismatching version between libc and dynamic linker)
+            if (elfToolchainHasDynamicLibc(folder, c_prog)) {
+                if (baseSet->target().startsWith("aarch64") || baseSet->target().startsWith("arm64")) {
+                    sanitizerType = "hwaddress";
+                } else {
+                    sanitizerType = "address";
+                }
+            }
+        }
+        if (!sanitizerType.isEmpty()) {
+            PCompilerSet debugAsanSet = addSet(baseSet);
+            debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
+            setDebugOptions(debugAsanSet, sanitizerType);
+        }
 
         baseSet->setName(baseName + " " + platformName + " Release");
         setReleaseOptions(baseSet);
     }
 
-#ifdef Q_OS_LINUX
-# if defined(__x86_64__) || defined(__aarch64__) || __SIZEOF_POINTER__ == 4
-    mDefaultIndex = (int)mList.size() - 1; // x86-64, AArch64 Linux or 32-bit Unix, default to "debug with ASan"
-# else
-    mDefaultIndex = (int)mList.size() - 2; // other Unix, where ASan can be very slow, default to "debug"
-# endif
-#else
-    mDefaultIndex = (int)mList.size() - 1;
-#endif
+    if (!sanitizerType.isEmpty()) {
+        if (baseSet->target().startsWith("x86_64") ||
+            baseSet->target().startsWith("aarch64") || baseSet->target().startsWith("arm64") ||
+            !isTarget64Bit(baseSet->target())) {
+            // x86-64, AArch64 Linux or 32-bit Unix, default to "debug with ASan"
+            mDefaultIndex = (int)mList.size() - 1;
+        } else {
+            // other Unix, where ASan can be very slow, default to "debug"
+            mDefaultIndex = (int)mList.size() - 2;
+        }
+    } else {
+        mDefaultIndex = (int)mList.size() - 1;
+    }
 
     return true;
 

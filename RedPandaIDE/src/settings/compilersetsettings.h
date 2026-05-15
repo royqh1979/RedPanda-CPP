@@ -175,8 +175,6 @@ private:
     void setUserInput();
 
 
-    QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
-                                 const QStringList& arguments) const;
 private:
     bool mFullLoaded;
     // Executables, most are hardcoded
