@@ -620,7 +620,7 @@ private:
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
     void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
-    void doInsertTextByNormalMode(const CharPos& pos, const QStringList& text);
+    void doInsertTextByNormalMode(CharPos pos, const QStringList& text);
     void doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
     void doExpandSelection(const CharPos& pos);

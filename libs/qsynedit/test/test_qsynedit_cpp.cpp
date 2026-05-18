@@ -7833,8 +7833,8 @@ void TestQSyneditCpp::test_input_char_while_select_all()
                                       StatusChange::ModifyChanged | StatusChange::Selection
                                       | StatusChange::CaretX | StatusChange::CaretY
                                   }));
-    QCOMPARE(mReparseStarts, QList<int>({0,0,0,1,2,3}));
-    QCOMPARE(mReparseCounts, QList<int>({1,3,1,1,1,1}));
+    QCOMPARE(mReparseStarts, QList<int>({0,0,0,0,1,2,3}));
+    QCOMPARE(mReparseCounts, QList<int>({1,1,3,1,1,1,1}));
 
     //redo
     clearSignalDatas();
@@ -7873,8 +7873,8 @@ void TestQSyneditCpp::test_input_char_while_select_all()
                                       StatusChange::ModifyChanged | StatusChange::Selection
                                       | StatusChange::CaretX | StatusChange::CaretY
                                   }));
-    QCOMPARE(mReparseStarts, QList<int>({0,0,0,1,2,3}));
-    QCOMPARE(mReparseCounts, QList<int>({1,3,1,1,1,1}));
+    QCOMPARE(mReparseStarts, QList<int>({0,0,0,0,1,2,3}));
+    QCOMPARE(mReparseCounts, QList<int>({1,1,3,1,1,1,1}));
 }
 
 void TestQSyneditCpp::test_toggle_comment_in_empty_file()
@@ -10783,6 +10783,35 @@ void TestQSyneditCpp::test_copy_paste_ending_with_backslash()
 
     mEdit->undo();
     QCOMPARE(mEdit->content(), QStringList(""));
+}
+
+void TestQSyneditCpp::test_copy_paste_and_indent()
+{
+    QStringList text({
+        "int main() {",
+        "\tif (x>0)",
+        "\t\tx=10;",
+        "}",
+    });
+    QStringList text1({
+        "int main() {",
+        "\tif (x>0)",
+        "\t{}x=10;",
+        "}",
+    });
+    mEdit->setContent(text);
+    mEdit->setCaretXY({2,2});
+    mEdit->setSelText("{}");
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
 }
 
 }

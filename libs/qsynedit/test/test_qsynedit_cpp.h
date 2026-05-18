@@ -129,6 +129,7 @@ private slots:
 
     void test_copy_paste_rawstring();
     void test_copy_paste_ending_with_backslash();
+    void test_copy_paste_and_indent();
 };
 
 }
