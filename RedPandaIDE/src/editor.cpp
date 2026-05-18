@@ -2562,10 +2562,10 @@ bool Editor::handleSymbolCompletion(QChar key)
 bool Editor::handleParentheseCompletion()
 {
     Q_ASSERT(!selAvail());
-    int oldCaretX = caretX();
     beginEditing();
     setSelText("()");
-    setCaretX(oldCaretX+1);
+    int oldCaretX = caretX();
+    setCaretX(oldCaretX-1);
     endEditing();
     return true;
 }
@@ -2593,10 +2593,10 @@ bool Editor::handleParentheseSkip(QuoteStatus status)
 bool Editor::handleBracketCompletion()
 {
     Q_ASSERT(!selAvail());
-    int oldCaretX = caretX();
     beginEditing();
     setSelText("[]");
-    setCaretX(oldCaretX+1);
+    int oldCaretX = caretX();
+    setCaretX(oldCaretX-1);
     endEditing();
     return true;
 }
@@ -2627,10 +2627,10 @@ bool Editor::handleMultilineCommentCompletion(QuoteStatus status)
     if (status!=QuoteStatus::NotQuote)
         return false;
     if ((caretX()-1>=0) && ( charAt(CharPos{caretX()-1,caretY()}) == '/')) {
-        int oldCaretX = caretX();
         beginEditing();
         setSelText("**/");
-        setCaretX(oldCaretX+1);
+        int oldCaretX = caretX();
+        setCaretX(oldCaretX-2);
         endEditing();
         return true;
     }
@@ -2673,13 +2673,15 @@ bool Editor::handleBraceCompletion(QuoteStatus status)
 
     beginEditing();
     if (!selAvail()) {
-        int oldCaretX = caretX();
+        QString s;
         if (addSemicolon)
-            setSelText("{};");
+            s = "{};";
         else
-            setSelText("{}");
-        setCaretX(oldCaretX+1);
-    }  else {
+            s = "{}";
+        setSelText(s);
+        int oldCaretX = caretX();
+        setCaretX(oldCaretX-s.length()+1);
+    } else {
         QString text = selText();
         CharPos oldSelBegin = selBegin();
         CharPos oldSelEnd = selEnd();
@@ -2761,11 +2763,11 @@ bool Editor::handleSingleQuoteCompletion(QuoteStatus status)
         setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
         return true;
     } else if (status == QuoteStatus::NotQuote) {
-        int oldCaretX = caretX();
         // insert ''
         beginEditing();
         setSelText("\'\'"); //use setSelText to break group undo
-        setCaretX(oldCaretX+1);
+        int oldCaretX = caretX();
+        setCaretX(oldCaretX-1);
         endEditing();
         return true;
     }
@@ -2784,11 +2786,11 @@ bool Editor::handleDoubleQuoteCompletion(QuoteStatus status)
         setCaretXY( CharPos{caretX() + 1, caretY()}); // skip over
         return true;
     } else if (status == QuoteStatus::NotQuote) {
-        int oldCaretX = caretX();
         // insert ""
         beginEditing();
         setSelText("\"\""); //use setSelText to break group undo
-        setCaretX(oldCaretX+1);
+        int oldCaretX = caretX();
+        setCaretX(oldCaretX-1);
         endEditing();
         return true;
     }
@@ -2801,10 +2803,10 @@ bool Editor::handleGlobalIncludeCompletion(QuoteStatus status)
         return false;
     if (selAvail())
         return false;
-    int oldCaretX = caretX();
     beginEditing();
     setSelText("<>");
-    setCaretX(oldCaretX+1);
+    int oldCaretX = caretX();
+    setCaretX(oldCaretX-1);
     endEditing();
     return true;
 }
