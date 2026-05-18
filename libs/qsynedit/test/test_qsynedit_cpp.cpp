@@ -10785,7 +10785,7 @@ void TestQSyneditCpp::test_copy_paste_ending_with_backslash()
     QCOMPARE(mEdit->content(), QStringList(""));
 }
 
-void TestQSyneditCpp::test_copy_paste_and_indent()
+void TestQSyneditCpp::test_setseltext_and_indent()
 {
     QStringList text({
         "int main() {",
@@ -10802,6 +10802,37 @@ void TestQSyneditCpp::test_copy_paste_and_indent()
     mEdit->setContent(text);
     mEdit->setCaretXY({2,2});
     mEdit->setSelText("{}");
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+}
+
+void TestQSyneditCpp::test_setseltext_and_indent2()
+{
+    QStringList text({
+        "int main() {",
+        "\tif (x>0)",
+        "\t\tx=10;",
+        "}",
+    });
+    QStringList text1({
+        "int main() {",
+        "\tif (x>0)",
+        "\t{",
+        "\t\ttest",
+        "\t}x=10;",
+        "}",
+    });
+    mEdit->setContent(text);
+    mEdit->setCaretXY({2,2});
+    mEdit->setSelText("{\ntest\n}");
     QCOMPARE(mEdit->content(), text1);
 
     mEdit->undo();
