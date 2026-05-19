@@ -51,6 +51,7 @@ private slots:
     void test_input_braces_in_comment();
     void test_input_braces_in_escaping_sequence();
     void test_input_braces_on_selection();
+    void test_input_braces_with_indent();
 
     void test_input_asterisk_for_ansi_c_comments();
     void test_input_asterisk_in_comments();

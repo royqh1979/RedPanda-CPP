@@ -1893,6 +1893,59 @@ void TestEditorSymbolCompletion::test_input_braces_on_selection()
     QVERIFY(!mEditor->modified());
 }
 
+void TestEditorSymbolCompletion::test_input_braces_with_indent()
+{
+    QStringList text{
+        "int main() {",
+        "\tif (x>0) ",
+        "\t\tx=100;",
+        "}"
+    };
+    QStringList text1{
+        "int main() {",
+        "\tif (x>0) ",
+        "\t{}x=100;",
+        "}"
+    };
+    QStringList text2{
+        "int main() {",
+        "\tif (x>0) ",
+        "\t{ab}x=100;",
+        "}"
+    };
+    mEditor->setContent(text);
+    mEditor->setCaretXY({2,2});
+    QTest::keyPress(mEditor.get(), '{');
+    QCOMPARE(mEditor->content(), text1);
+    QTest::keyPress(mEditor.get(),'a');
+    QTest::keyPress(mEditor.get(),'b');
+    QCOMPARE(mEditor->content(), text2);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+
+    //redo
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), text2);
+    QVERIFY(!mEditor->canRedo());
+    QVERIFY(mEditor->modified());
+
+    //undo again
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text1);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), text);
+    QVERIFY(!mEditor->canUndo());
+    QVERIFY(!mEditor->modified());
+}
+
 void TestEditorSymbolCompletion::test_input_asterisk_for_ansi_c_comments()
 {
     QStringList text{
