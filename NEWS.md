@@ -134,7 +134,7 @@ Red Panda C++ Version 3.2
   - fix: Drag&Drop folder to IDE should be prohibited.
   - fix: After dragging IDE to another screen that don't have the same DPI with the previous one, icon size are not correct.
   - enhancement: Add copy compiler set tools button in the options dialog / compiler set panel.
-  - fix: Functions in seperate editing files all displayed in the function prototype list.
+  - fix: Functions in separate editing files all displayed in the function prototype list.
   - enhancement: When debugging and the current stop position is not in source files, auto focus to the stack trace panel.
   - enhancement: Adjust margin of the Search/Replace Dialog.
   - enhancement: When Search/Replace invoked, auto focus the find inputbox. 
@@ -386,7 +386,7 @@ Red Panda C++ Version 2.26
   - Fix: Can't goto definition/declaration into files that not saved.
   - Fix: Expression that starts with full scoped variables might be treated as var definition.
   - Enhancement: Don't auto-indent in raw string.
-  - Fix: Function list is not correctly retrived for full-scoped functions.
+  - Fix: Function list is not correctly retrieved for full-scoped functions.
   - Enhancement: Improved Raw string support
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
   - Enhancement: Optimization for drawing scrollbars.
@@ -818,7 +818,7 @@ Red Panda C++ Version 2.8
   - enhancement: Print syntax colored content.
   - enhancement: Correctly handle tab in the exported RTF.
   - change: Disable undo limit by default.
-  - fix: "Goto declaration" / "Goto definition" / "Find occurences" not correctly disabled for non-c/c++ files.
+  - fix: "Goto declaration" / "Goto definition" / "Find occurrences" not correctly disabled for non-c/c++ files.
   - fix: Can't save new file using filename with custom suffix.
   - fix: alt+shift+left/right can't select
   - fix: Input any content will exit column mode.
@@ -1157,7 +1157,7 @@ Red Panda C++ Version 1.1.2
   - enhancement: use different color to differenciate folder and headers in completion popup window
   - enhancement: auto add "/" to folder when completing #include headers
   - enhancement: add the option "Set Encoding for the Executable" to project's compiler options
-  - fix: can't correctly compile when link params are seperated by line breaks
+  - fix: can't correctly compile when link params are separated by line breaks
   - fix: select all shouldn't set file's modified flag
   - enhancement: add (return)type info for functions/varaibles/typedefs in the class browser panel
   - enhancement: autolink add "force utf8" property (mainly for raylib)
@@ -2009,10 +2009,10 @@ Version 0.6.0
  - add: about dialog
  - implement: correctly recognize clang (msys2 build)
  - enhancement: don't add encoding options when using clang to compile (clang only support utf-8)
- - enhancement: find occurence in project
+ - enhancement: find occurrence in project
  - implement: rename symbol in file
  - enhancement: replace in files
- - enhancement: rename symbol in project (using search symbol occurence and replace in files)
+ - enhancement: rename symbol in project (using search symbol occurrence and replace in files)
  - fix: search in files
  - implement: register file associations
  - implement: when startup , open file provided by command line options
