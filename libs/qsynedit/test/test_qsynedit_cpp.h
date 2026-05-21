@@ -131,6 +131,7 @@ private slots:
     void test_copy_paste_ending_with_backslash();
     void test_setseltext_and_indent();
     void test_setseltext_and_indent2();
+    void test_setseltext_and_indent3_line_comment();
 };
 
 }
