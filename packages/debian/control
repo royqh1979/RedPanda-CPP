@@ -12,7 +12,7 @@ Homepage: https://github.com/royqh1979/RedPanda-CPP
 Package: redpanda-cpp
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
-         gcc, g++, make, gdb, gdbserver, astyle
+         gcc | c-compiler, g++ | c++-compiler, make, gdb | lldb, gdbserver | lldb, astyle
 Recommends: qterminal | konsole | gnome-terminal | terminator | lxterminal | mate-terminal | terminology | xfce4-terminal | alacritty | cool-retro-term | kitty | sakura | termit | tilix
 Description: A lightweight but powerful C/C++ IDE
  Red Panda C++ (Old name Red Panda Dev-C++ 7) is a full featured C/C++ IDE.
