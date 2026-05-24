@@ -10845,5 +10845,36 @@ void TestQSyneditCpp::test_setseltext_and_indent2()
     QCOMPARE(mEdit->content(), text);
 }
 
+void TestQSyneditCpp::test_setseltext_and_indent3_line_comment()
+{
+    QStringList text({
+        "int main() {",
+        "\tint xxx;",
+        "\t",
+        "\tint yyy;",
+        "}",
+    });
+    QStringList text1({
+        "int main() {",
+        "\tint xxx;",
+        "\t// test",
+        "\tint yyy;",
+        "}",
+    });
+    mEdit->setContent(text);
+    mEdit->setCaretXY({1,2});
+    mEdit->setSelText("// test");
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), text1);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+}
+
 }
 
