@@ -4766,7 +4766,11 @@ void MainWindow::onFilesViewCreateFile()
         fileName = QString("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
-    file.open(QFile::NewOnly);
+    // fix: add permission check
+    if (!file.open(QFile::NewOnly)) {
+        QMessageBox::warning(this, tr("Create File"), tr("Failed to create file %1").arg(file.fileName()));
+        return;
+    }
     file.close();
     QModelIndex newIndex = mFileSystemModel->index(dir.filePath(fileName));
     connect(mFileSystemModel,&QFileSystemModel::directoryLoaded,
