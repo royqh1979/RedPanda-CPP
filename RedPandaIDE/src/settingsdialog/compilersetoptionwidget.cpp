@@ -106,7 +106,7 @@ static void loadCompilerSetSettings(PCompilerSet pSet, Ui::CompilerSetOptionWidg
     //rest tabs in the options widget
 
     ui->optionTabs->resetUI(pSet,pSet->compileOptions());
-
+	    bool isTCC = (pSet->compilerType() == CompilerType::TCC);
     	// TCC doesn't have a separate C++ compiler, disable the field
 	    ui->txtCppCompiler->setVisible(!isTCC);
 	    ui->label_3->setVisible(!isTCC);
