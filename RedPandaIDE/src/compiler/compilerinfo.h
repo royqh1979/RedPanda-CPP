@@ -7,6 +7,7 @@
 #define COMPILER_CLANG "Clang"
 #define COMPILER_GCC "GCC"
 #define COMPILER_GCC_UTF8 "GCC_UTF8"
+#define COMPILER_TCC "TCC"
 #ifdef ENABLE_SDCC
 #define COMPILER_SDCC "SDCC"
 #endif
@@ -81,6 +82,7 @@
 enum class CompilerType {
     GCC,
     Clang,
+    TCC,
 #ifdef ENABLE_SDCC
     SDCC,
 #endif
@@ -194,6 +196,15 @@ class GCCCompilerInfo: public CompilerInfo{
 public:
     GCCCompilerInfo();
     bool supportStaticLink() override;
+};
+
+class TCCCompilerInfo: public CompilerInfo {
+public:
+  TCCCompilerInfo();
+  bool supportStaticLink() override;
+  bool supportSyntaxCheck() override;
+protected:
+  void prepareCompilerOptions() override;
 };
 
 #ifdef ENABLE_SDCC

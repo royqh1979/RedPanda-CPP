@@ -250,6 +250,9 @@ CompilerInfoManager::CompilerInfoManager()
     compilerInfo = std::make_shared<GCCCompilerInfo>();
     compilerInfo->init();
     mInfos.insert(CompilerType::GCC, compilerInfo);
+    compilerInfo = std::make_shared<TCCCompilerInfo>();
+    compilerInfo->init();
+    mInfos.insert(CompilerType::TCC, compilerInfo);
 
 #ifdef ENABLE_SDCC
     compilerInfo = std::make_shared<SDCCCompilerInfo>();
@@ -335,6 +338,53 @@ GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 bool GCCCompilerInfo::supportStaticLink()
 {
     return true;
+}
+
+
+
+TCCCompilerInfo::TCCCompilerInfo(): CompilerInfo(COMPILER_TCC) {}
+
+bool TCCCompilerInfo::supportStaticLink() { return false; }
+
+bool TCCCompilerInfo::supportSyntaxCheck() { return false; }
+
+void TCCCompilerInfo::prepareCompilerOptions() {
+  QList<QPair<QString, QString>> sl;
+  QString groupName;
+
+  groupName = QObject::tr("Code Generation");
+
+  // Optimization
+  sl.clear();
+  sl.append(QPair<QString, QString>("None (-O0)", "0"));
+  sl.append(QPair<QString, QString>("Optimize (-O1)", "1"));
+  addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"),
+            groupName, true, true, false, "-O", CompilerOptionType::Choice, sl);
+
+  // C Language Standards
+  sl.clear();
+  sl.append(QPair<QString, QString>("ISO C99", "c99"));
+  sl.append(QPair<QString, QString>("ISO C11", "c11"));
+  addOption(C_CMD_OPT_STD, QObject::tr("C Language standard (-std)"), groupName,
+            true, false, false, "-std=", CompilerOptionType::Choice, sl);
+
+  // Debug info
+  addOption(CC_CMD_OPT_DEBUG_INFO,
+            QObject::tr("Generate debugging information (-g)"), groupName, true,
+            true, false, "-g");
+
+  // Warnings
+  groupName = QObject::tr("Warnings");
+  addOption(CC_CMD_OPT_INHIBIT_ALL_WARNING,
+            QObject::tr("Inhibit all warning messages (-w)"), groupName, true,
+            true, false, "-w");
+  addOption(CC_CMD_OPT_WARNING_ALL, QObject::tr("Show most warnings (-Wall)"),
+            groupName, true, true, false, "-Wall");
+
+  // Linker
+  groupName = QObject::tr("Linker");
+  addOption(LINK_CMD_OPT_STRIP_EXE, QObject::tr("Strip executable (-s)"),
+            groupName, false, false, true, "-s");
 }
 
 #ifdef ENABLE_SDCC

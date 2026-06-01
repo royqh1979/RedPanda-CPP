@@ -9756,6 +9756,10 @@ p, li { white-space: pre-wrap; }
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
+    	    <message>
+	        <source>Generate debugging information (-g)</source>
+	        <translation>生成调试信息(-g)</translation>
+	</message>
     <message>
         <location filename="../settings.cpp" line="+3483"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>

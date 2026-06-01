@@ -58,6 +58,7 @@ public:
 
     // int mainVersion() const;
     QString findProgramInBinDirs(const QString name) const;
+    static QString findProgramOnPath(const QString& name);
 
     bool canCompileC() const;
     bool canCompileCPP() const;
@@ -166,6 +167,9 @@ private:
     void setGCCProperties(const QString& binDir, const QString& c_prog);
     void setDirectories(const QString& binDir);
     void setGCCDirectories(const QString& binDir);
+    void setTCCProperties(const QString& binDir, const QString& c_prog);
+    void setTCCDirectories(const QString& binDir);
+    
 #ifdef ENABLE_SDCC
     void setSDCCProperties(const QString& binDir, const QString& c_prog);
     void setSDCCDirectories(const QString& binDir);

@@ -9757,6 +9757,10 @@ p, li { white-space: pre-wrap; }
             <translation>產生偵錯資訊 (-g3)</translation>
         </message>
         <message>
+	            <source>Generate debugging information (-g)</source>
+	            <translation>產生偵錯資訊 (-g)</translation>
+	    </message>
+        <message>
             <location filename="../settings.cpp" line="+3483" />
             <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
             <translation>您同意小熊貓C++在PATH路徑中尋找gcc編譯器嗎?</translation>

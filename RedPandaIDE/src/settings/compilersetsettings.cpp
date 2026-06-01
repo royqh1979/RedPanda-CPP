@@ -26,6 +26,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QMessageBox>
+#include <QProcessEnvironment>
 #include "src/addon/luaexecutor.h"
 #include "src/addon/luaruntime.h"
 
@@ -270,6 +271,8 @@ CompilerSet::CompilerSet(const QJsonObject &set) :
         mCompilerType = CompilerType::GCC;
     } else if (compilerType == "Clang") {
         mCompilerType = CompilerType::Clang;
+         } else if (compilerType == "TCC") {
+             mCompilerType = CompilerType::TCC;
     }
 #if ENABLE_SDCC
     else if (compilerType == "SDCC") {
@@ -520,6 +523,8 @@ void CompilerSet::setCCompiler(const QString &name)
             QString temp=extractFileName(mCCompiler);
             if (temp == CLANG_PROGRAM) {
                 setCompilerType(CompilerType::Clang);
+                } else if (temp == TCC_PROGRAM) {
+                     setCompilerType(CompilerType::TCC);
             } else if (temp == GCC_PROGRAM) {
                 setCompilerType(CompilerType::GCC);
             }
@@ -742,6 +747,10 @@ static void addExistingDirectory(QStringList& dirs, const QByteArray& directory)
 
 void CompilerSet::setProperties(const QString& binDir, const QString& c_prog)
 {
+    if (c_prog == TCC_PROGRAM) {
+         setTCCProperties(binDir, c_prog);
+         return;
+           }
 #ifdef ENABLE_SDCC
     if (c_prog == SDCC_PROGRAM) {
         setSDCCProperties(binDir,c_prog);
@@ -851,6 +860,37 @@ void CompilerSet::setGCCProperties(const QString& binDir, const QString& c_prog)
     //                                 {"lib" , "gcc" , mDumpMachine, mVersion} ));
     // }
 }
+
+	void CompilerSet::setTCCProperties(const QString& binDir, const QString& c_prog)
+	{
+	    // TCC version detection
+	    QByteArray versionOutput = getCompilerOutput(binDir, c_prog, {"-v"});
+	    if (versionOutput.isEmpty() || !versionOutput.contains("tcc"))
+	        return;
+	
+	    // TCC version string is like "tcc version 0.9.27 (x86_64 Windows)"
+	    mCompilerType = CompilerType::TCC;
+	    mDumpMachine = "tcc";
+	    mTarget = "tcc";
+	
+	    // Extract version
+	    QRegularExpression versionRe("tcc version\\s+([\\d.]+)");
+	    QRegularExpressionMatch match = versionRe.match(QString::fromUtf8(versionOutput));
+	    if (match.hasMatch()) {
+	        mVersion = match.captured(1);
+	    }
+	    if (mName.isEmpty()) {
+	        mName = "TCC " + mVersion;
+	    }
+	
+	    // Set bin directory
+	    addExistingDirectory(mBinDirs, binDir);
+	}
+	
+	void CompilerSet::setTCCDirectories(const QString& /*binDir*/)
+	{
+	    // TCC auto-detects its standard include/library paths internally.
+	}
 
 #ifdef ENABLE_SDCC
 void CompilerSet::setSDCCProperties(const QString& binDir, const QString& c_prog)
@@ -1050,6 +1090,17 @@ void CompilerSet::setExecutables()
             mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
         if (mCppCompiler.isEmpty())
             mCppCompiler = findProgramInBinDirs(GPP_PROGRAM);
+    } else if (mCompilerType == CompilerType::TCC) {
+	        mCCompiler =  findProgramInBinDirs(TCC_PROGRAM);
+	        // TCC does not have a separate C++ compiler
+	        mCppCompiler = findProgramInBinDirs(TCC_PROGRAM);
+	        // TCC doesn't bundle gdb/make; search PATH for mingw64 tools
+	        mDebugger = findProgramInBinDirs(GDB_PROGRAM);
+	        if (mDebugger.isEmpty())
+	            mDebugger = findProgramOnPath(GDB_PROGRAM);
+	        mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
+	        if (mDebugServer.isEmpty())
+	            mDebugServer = findProgramOnPath(GDB_SERVER_PROGRAM);
 #ifdef ENABLE_SDCC
     } else if (mCompilerType == CompilerType::SDCC) {
         mCCompiler =  findProgramInBinDirs(SDCC_PROGRAM);
@@ -1063,13 +1114,21 @@ void CompilerSet::setExecutables()
         mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
+     if (mMake.isEmpty())
+     mMake = findProgramOnPath(MAKE_PROGRAM);
 #ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
+    if (mResourceCompiler.isEmpty())
+        mResourceCompiler = findProgramOnPath(WINDRES_PROGRAM);
 #endif
 }
 
 void CompilerSet::setDirectories(const QString& binDir)
 {
+if (mCompilerType == CompilerType::TCC) {
+    setTCCDirectories(binDir);
+     return;
+     }
 #ifdef ENABLE_SDCC
     if (mCompilerType == CompilerType::SDCC) {
         setSDCCDirectories(binDir);
@@ -1254,6 +1313,8 @@ bool CompilerSet::canCompileC() const
 
 bool CompilerSet::canCompileCPP() const
 {
+    if (mCompilerType==CompilerType::TCC)
+    return false;
 #ifdef ENABLE_SDCC
     if (mCompilerType==CompilerType::SDCC)
         return false;
@@ -1279,8 +1340,11 @@ void CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
     mUseCustomLinkParams = false;
+    if (mCompilerType==CompilerType::TCC) {
+        mAutoAddCharsetParams = false;
+         mStaticLink = false;
 #ifdef ENABLE_SDCC
-    if (mCompilerType==CompilerType::SDCC) {
+    } else if (mCompilerType==CompilerType::SDCC) {
         mAutoAddCharsetParams = false;
         mStaticLink = false;
     } else {
@@ -1303,6 +1367,20 @@ QString CompilerSet::findProgramInBinDirs(const QString name) const
     }
     return QString();
 }
+
+	QString CompilerSet::findProgramOnPath(const QString& name)
+	{
+	    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	    QString path = env.value("PATH");
+	    QStringList pathList = path.split(PATH_SEPARATOR);
+	    for (const QString& dir : pathList) {
+	        QFileInfo f(getAbsoluteFilePath(dir, name));
+	        if (f.exists() && f.isExecutable()) {
+	            return f.absoluteFilePath();
+	        }
+	    }
+	    return QString();
+	}
 
 void CompilerSet::setIniOptions(const QByteArray &value)
 {
@@ -1407,6 +1485,8 @@ bool CompilerSet::isCompilerUsingUTF8() const
 
 bool CompilerSet::supportConvertingCharset()
 {
+     if (mCompilerType == CompilerType::TCC)
+     return false;
 #ifdef Q_OS_WIN
     if (mCompilerType != CompilerType::GCC)
         return false;
@@ -1434,6 +1514,8 @@ bool CompilerSet::supportConvertingCharset()
 
 bool CompilerSet::supportNLS()
 {
+    if (mCompilerType == CompilerType::TCC)
+    return false;
     if (mCompilerType != CompilerType::GCC)
         return false;
     if (!mGccSupportNLSInitialized) {
@@ -1663,6 +1745,16 @@ bool elfToolchainHasDynamicLibc(const QString &folder, const QString &c_prog)
     return QFileInfo(sharedLibc).absolutePath() == QFileInfo(staticLibc).absolutePath();
 }
 
+	static void setTCCReleaseOptions(PCompilerSet pSet) {
+	    pSet->setCompileOption(CC_CMD_OPT_OPTIMIZE, "1");
+	    pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE, COMPILER_OPTION_ON);
+	}
+	
+	static void setTCCDebugOptions(PCompilerSet pSet) {
+	    pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
+	    pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
+	}
+
 bool CompilerSets::addSets(const QString &folder, const QString& c_prog) {
     for (const PCompilerSet& set:mList) {
         if (set->binDirs().contains(folder) && extractFileName(set->CCompiler())==c_prog)
@@ -1673,6 +1765,20 @@ bool CompilerSets::addSets(const QString &folder, const QString& c_prog) {
     if (!baseSet || baseSet->name().isEmpty())
         return false;
     QString sanitizerType;
+
+    	    if (c_prog == TCC_PROGRAM) {
+	        // TCC: simple Release and Debug profiles
+	        PCompilerSet debugSet = addSet(baseSet);
+	        debugSet->setName(baseSet->name() + " Debug");
+	        setTCCDebugOptions(debugSet);
+	
+	        baseSet->setName(baseSet->name() + " Release");
+	        setTCCReleaseOptions(baseSet);
+	
+	        mDefaultIndex = (int)mList.size() - 1;
+	        return true;
+	    }
+
 #if ENABLE_SDCC
     if (c_prog == SDCC_PROGRAM) {
         baseSet->setCompileOption(SDCC_OPT_NOSTARTUP,COMPILER_OPTION_ON);
@@ -1764,6 +1870,12 @@ bool CompilerSets::addSets(const QString &folder)
         addSets(folder,CLANG_PROGRAM);
         found=true;
     }
+
+    	    if (fileExists(folder, TCC_PROGRAM)) {
+	        addSets(folder,TCC_PROGRAM);
+	        found=true;
+	    }
+        
 #ifdef ENABLE_SDCC
     //qDebug()<<folder;
     if (fileExists(folder, SDCC_PROGRAM)) {
@@ -2185,6 +2297,8 @@ PCompilerSet CompilerSets::loadSet(int index)
         pSet->setCompilerType(CompilerType::GCC);
     } else if (temp==COMPILER_GCC_UTF8) {
         pSet->setCompilerType(CompilerType::GCC);
+        } else if (temp==COMPILER_TCC) {
+             pSet->setCompilerType(CompilerType::TCC);
 #ifdef ENABLE_SDCC
     } else if (temp==COMPILER_SDCC) {
         pSet->setCompilerType(CompilerType::SDCC);
