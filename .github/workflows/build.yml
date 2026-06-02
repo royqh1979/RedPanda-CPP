@@ -123,6 +123,10 @@ jobs:
           sudo apt-get install -y bubblewrap
           which bwrap
           bwrap --version
+          # Enable unprivileged user namespaces for bubblewrap sandbox
+           sudo sysctl -w kernel.unprivileged_userns_clone=1 || true
+           sudo sysctl -w user.max_user_namespaces=28633 || true
+           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
           
       - name: Setup Homebrew
         if: ${{ matrix.os == 'Linux' }}
@@ -133,6 +137,9 @@ jobs:
         run: |
           if [[ "${{ matrix.os }}" == Linux ]] ; then
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            # Fallback: disable sandbox if user namespaces unavailable
+            export HOMEBREW_NO_SANDBOX_LINUX=1
+            
           fi
           brew tap --force homebrew/core
           ./packages/brew/buildbottle.sh
