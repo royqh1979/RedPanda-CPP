@@ -1340,17 +1340,15 @@ void CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
     mUseCustomLinkParams = false;
-    if (mCompilerType==CompilerType::TCC) {
-        mAutoAddCharsetParams = false;
-         mStaticLink = false;
 #ifdef ENABLE_SDCC
-    } else if (mCompilerType==CompilerType::SDCC) {
+    if (mCompilerType==CompilerType::TCC
+        || mCompilerType==CompilerType::SDCC) {
+#else
+    if (mCompilerType==CompilerType::TCC) {
+#endif
         mAutoAddCharsetParams = false;
         mStaticLink = false;
     } else {
-#else
-    {
-#endif
         mAutoAddCharsetParams = true;
         mStaticLink = true;
     }
