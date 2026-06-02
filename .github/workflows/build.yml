@@ -116,6 +116,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install bubblewrap (Linux)
+        if: ${{ matrix.os == 'Linux' }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y bubblewrap
+          which bwrap
+          bwrap --version
+          
       - name: Setup Homebrew
         if: ${{ matrix.os == 'Linux' }}
         run: |
