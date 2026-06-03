@@ -85,7 +85,7 @@ void SearchDialog::doSearch(bool backward)
         return;
     updateComboHistory(mSearchKeys, ui->cbFind->currentText());
     bool regex, searchInSelection;
-    QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
+    QSynedit::SearchOptions searchOptions = prepareOptions(backward, regex, searchInSelection);
 
     Editor *editor = pMainWindow->editorManager()->getEditor();
     if (editor) {
