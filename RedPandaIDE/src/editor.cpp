@@ -1738,9 +1738,19 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             } else {
                 mCurrentHighlightedWord = "";
             }
-        } else if (selAvail() && selBegin() == getTokenBegin(caretXY())
-                   && selEnd() == getTokenEnd(caretXY())){
-            mCurrentHighlightedWord = selText();
+        } else if (selAvail() && selBegin().line == selEnd().line) {
+            QString token;
+            QSynedit::PTokenAttribute attri;
+            int start;
+            QSynedit::PSyntaxState state;
+            if (getTokenAttriAtRowCol(selBegin(), token,start, attri,state)
+                    && selBegin().ch == start
+                    && selEnd().ch == start+token.length()
+                    ) {
+                mCurrentHighlightedWord = token;
+            } else {
+                mCurrentHighlightedWord = "";
+            }
         } else {
             mCurrentHighlightedWord = "";
         }
