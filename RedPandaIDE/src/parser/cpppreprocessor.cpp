@@ -1241,7 +1241,7 @@ void CppPreprocessor::preprocessBuffer()
                 while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
                     ++it; // skip spaces;
                 while(it!=s.constEnd()) {
-                    if (*it>='a' && *it<='z')
+                    if (*it>='a' && *it<='z' || *it=='_')
                         command.append(*it);
                     else
                         break;
