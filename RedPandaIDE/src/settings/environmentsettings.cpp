@@ -370,8 +370,8 @@ bool EnvironmentSettings::isTerminalValid()
 
 void EnvironmentSettings::doSave()
 {
-    QString terminalPath = replacePrefix(mTerminalPath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%/");
-    QString astylePath = replacePrefix(mAStylePath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%/");
+    QString terminalPath = replacePrefix(mTerminalPath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%");
+    QString astylePath = replacePrefix(mAStylePath, mDirSettings->appLibexecDir(), "%*APP_LIBEXEC_DIR*%");
 
     //Appearance
     saveValue("theme", mTheme);
