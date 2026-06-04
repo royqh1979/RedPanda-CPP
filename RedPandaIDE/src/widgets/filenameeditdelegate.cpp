@@ -2,6 +2,8 @@
 
 #include "filenameeditdelegate.h"
 #include <QLineEdit>
+#include <QMessageBox>
+#include <QRegularExpression>
 #include <qapplication.h>
 
 // Custom edit box control. This is necessary because the default behavior of a QLineEdit when it gains focus is to select all its text, and if a selection is set before gaining focus, it will be overridden by the select-all action upon focusing.
@@ -78,6 +80,42 @@ void FilenameEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
 {
     FilenameLineEdit *lineEdit = (FilenameLineEdit *)editor;
     if (!lineEdit) { return; }
+
+    QString fileName = lineEdit->text().trimmed();
+
+    // Check for trailing/leading spaces (original text before trim)
+    QString originalText = lineEdit->text();
+    if (originalText != originalText.trimmed()) {
+        QMessageBox::warning(editor->window(),
+                             tr("Invalid Name"),
+                             tr("File or folder name cannot have leading or trailing spaces."));
+        return;
+    }
+
+    // Check for empty name
+    if (fileName.isEmpty()) {
+        QMessageBox::warning(editor->window(),
+                             tr("Invalid Name"),
+                             tr("File or folder name cannot be empty."));
+        return;
+    }
+
+    // Check for trailing dots
+    if (originalText.endsWith('.')) {
+        QMessageBox::warning(editor->window(),
+                             tr("Invalid Name"),
+                             tr("File or folder name cannot end with a dot."));
+        return;
+    }
+
+    // Check for invalid Windows filename characters
+    static const QRegularExpression invalidChars(QStringLiteral("[\\\\/:*?\"<>|]"));
+    if (fileName.contains(invalidChars)) {
+        QMessageBox::warning(editor->window(),
+                             tr("Invalid Name"),
+                             tr("File or folder name cannot contain any of the following characters:\n\\ / : * ? \" < > |"));
+        return;
+    }
 
     model->setData(index, lineEdit->text());
 }
