@@ -81,11 +81,11 @@ void FilenameEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
     FilenameLineEdit *lineEdit = (FilenameLineEdit *)editor;
     if (!lineEdit) { return; }
 
-    QString fileName = lineEdit->text().trimmed();
+    const QString originalText = lineEdit->text();
+    const QString trimmedText = originalText.trimmed();
 
-    // Check for trailing/leading spaces (original text before trim)
-    QString originalText = lineEdit->text();
-    if (originalText != originalText.trimmed()) {
+    // Check for trailing/leading spaces — universally problematic
+    if (originalText != trimmedText) {
         QMessageBox::warning(editor->window(),
                              tr("Invalid Name"),
                              tr("File or folder name cannot have leading or trailing spaces."));
@@ -93,14 +93,15 @@ void FilenameEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
     }
 
     // Check for empty name
-    if (fileName.isEmpty()) {
+    if (trimmedText.isEmpty()) {
         QMessageBox::warning(editor->window(),
                              tr("Invalid Name"),
                              tr("File or folder name cannot be empty."));
         return;
     }
 
-    // Check for trailing dots
+#ifdef Q_OS_WIN
+    // Windows-specific: trailing dots cannot be handled by Explorer
     if (originalText.endsWith('.')) {
         QMessageBox::warning(editor->window(),
                              tr("Invalid Name"),
@@ -108,14 +109,23 @@ void FilenameEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
         return;
     }
 
-    // Check for invalid Windows filename characters
+    // Windows-specific: invalid filename characters
     static const QRegularExpression invalidChars(QStringLiteral("[\\\\/:*?\"<>|]"));
-    if (fileName.contains(invalidChars)) {
+    if (trimmedText.contains(invalidChars)) {
         QMessageBox::warning(editor->window(),
                              tr("Invalid Name"),
                              tr("File or folder name cannot contain any of the following characters:\n\\ / : * ? \" < > |"));
         return;
     }
+#else
+    // Unix/macOS: only '/' is forbidden in filenames
+    if (trimmedText.contains('/')) {
+        QMessageBox::warning(editor->window(),
+                             tr("Invalid Name"),
+                             tr("File or folder name cannot contain '/'."));
+        return;
+    }
+#endif
 
     model->setData(index, lineEdit->text());
 }
