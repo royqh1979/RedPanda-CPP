@@ -628,7 +628,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             mTabStopBegin = -1;
             invalidateLine(caretY());
             clearUserCodeInTabStops();
-        } else {
+        } else if (!selAvail()){ // Completion for docstring
             QString sLine;
             if (caretX()>=0)
                 sLine = lineText().mid(0,caretX()).trimmed();
@@ -662,7 +662,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             insertString.append(" * ");
                             insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
                         }
-                        insertString.append(" */");
+                        insertString.append("");
                     } else {
                         insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
                         insertString.append(" */");
