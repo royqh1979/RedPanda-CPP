@@ -4190,18 +4190,6 @@ void CppParser::handleUsing(int maxIndex)
         if (!mNamespaces.contains(fullName)) {
             fullName = usingName;
         }
-        // For short namespace names (no "::"), try to resolve through
-        // existing using directives. E.g. "using namespace chrono;" after
-        // "using namespace std;" should resolve chrono → std::chrono.
-        if (!mNamespaces.contains(fullName) && !usingName.contains("::")) {
-            foreach (const QString& ns, scopeStatement->usingList) {
-                PStatement foundNs = findStatementInNamespace(usingName, ns);
-                if (foundNs && foundNs->kind == StatementKind::Namespace) {
-                    fullName = foundNs->fullName;
-                    break;
-                }
-            }
-        }
         if (mNamespaces.contains(fullName)) {
             scopeStatement->usingList.insert(fullName);
         }
@@ -4211,16 +4199,6 @@ void CppParser::handleUsing(int maxIndex)
             return;
         if (mNamespaces.contains(usingName)) {
             fileInfo->addUsing(usingName);
-        } else if (!usingName.contains("::")) {
-            // Resolve short name through file-level usings
-            const QSet<QString>& fileUsings = fileInfo->usings();
-            foreach (const QString& ns, fileUsings) {
-                PStatement foundNs = findStatementInNamespace(usingName, ns);
-                if (foundNs && foundNs->kind == StatementKind::Namespace) {
-                    fileInfo->addUsing(foundNs->fullName);
-                    break;
-                }
-            }
         }
     }
     //skip ;
