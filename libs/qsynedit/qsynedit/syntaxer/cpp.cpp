@@ -1748,12 +1748,11 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mLine = newLine;
     if (mHandleLastBackSlash) {
         int i=newLine.length()-1;
-        while (i>=0 && isSpaceChar(newLine[i])) {
-            i--;
-        }
+        // Per C++ standard, '\' must be immediately followed by newline
+        // for line splicing. Do NOT skip trailing spaces.
         if (i>=0 && newLine[i]=='\\') {
             mMergeWithNextLine = true;
-            mSpacesAfterLastBackSlash = newLine.mid(i+1);
+            mSpacesAfterLastBackSlash = "";
             mLine = newLine.left(i);
         }
     }
