@@ -990,16 +990,20 @@ void CppSyntaxer::procRawString()
         QString rawStringInitialDCharSeq;
         mRange.initialDCharSeq = "";
         mTokenId = TokenId::RawStringStart;
+
+        // Read d-char-sequence. '(' marks the end of the d-char sequence
+        // and the beginning of the raw string content. It is not itself a
+        // valid d-char, so we must check for it before calling isValidDChar.
         while (mRun<mLineSize) {
-            if (!isValidDChar(mLine[mRun])) {
-                mRun = mLineSize;
-                return;
-            }
             if (mLine[mRun].unicode()=='(') {
                 mRange.state = RangeState::rsRawStringNotEscaping;
                 mRange.initialDCharSeq = rawStringInitialDCharSeq;
                 mTokenId = TokenId::RawStringStart;
                 mRun++;
+                return;
+            }
+            if (!isValidDChar(mLine[mRun])) {
+                mRun = mLineSize;
                 return;
             }
             rawStringInitialDCharSeq += mLine[mRun];
@@ -1460,12 +1464,16 @@ void CppSyntaxer::popStatementIndents()
 
 bool CppSyntaxer::isValidDChar(const QChar &ch)
 {
-    //valid d-seq-char, see https://cppreference.com/w/cpp/language/string_literal.html
-    return (ch.unicode()==0x9)
-            || (ch.unicode()>=0xB && ch.unicode()<=0xC)
-            || (ch.unicode()>=0x20 && ch.unicode() <=0x21)
-            || (ch.unicode()>=0x23 && ch.unicode() <=0x5B)
-            || (ch.unicode()>=0x5D && ch.unicode() <=0x7E);
+    // d-char: any member of the basic source character set except:
+    // space (0x20), '(' (0x28), ')' (0x29), '\\' (0x5C),
+    // horizontal tab (0x09), vertical tab (0x0B), form feed (0x0C), newline (0x0A)
+    // see https://en.cppreference.com/w/cpp/language/string_literal
+    return (ch.unicode()==0x9)   // horizontal tab
+            || (ch.unicode()>=0xB && ch.unicode()<=0xC)   // VT, FF
+            || (ch.unicode()==0x21)   // !
+            || (ch.unicode()>=0x23 && ch.unicode() <=0x27)   // # $ % & '
+            || (ch.unicode()>=0x2A && ch.unicode() <=0x5B)   // * + , - . / 0-9 : ; < = > ? @ A-Z [
+            || (ch.unicode()>=0x5D && ch.unicode() <=0x7E);  // ] ^ _ ` a-z { | } ~
 }
 
 bool CppSyntaxer::handleLastBackSlash() const
