@@ -4950,11 +4950,11 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const CharPos &p, QSynedi
 
     int line = p.line;
     int ch = p.ch;
-    QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
     if (line>=lineCount() || line<0)
         return "";
     QStringList tokenList;
     QList<QSynedit::TokenType> tokenTypeList;
+    QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
     startParseLine(pSyntaxer.get(),line);
     while (!pSyntaxer->eol()) {
         QSynedit::PTokenAttribute attr = pSyntaxer->getTokenAttribute();
@@ -4970,7 +4970,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const CharPos &p, QSynedi
             tokenList.append(token);
             tokenTypeList.append(tokenType);
         }
-        if (end+1>=ch) {
+        if (end>=ch) {
             if (tokenType == QSynedit::TokenType::Identifier
                     || tokenType == QSynedit::TokenType::Keyword) {
                 tokenList.pop_back();
