@@ -2931,11 +2931,9 @@ void QSynEdit::endMergeCaretAndSelectionStatusChange()
 
 PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash) const
 {
-    bool oldHandleLastBackSlash = true;
     PSyntaxer syntaxer = mSyntaxer->createInstance();
     if (syntaxer->language() == ProgrammingLanguage::CPP) {
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer);
-        oldHandleLastBackSlash = cppSyntaxer->handleLastBackSlash();
         cppSyntaxer->setHandleLastBackSlash(handleLastBackSlash);
     }
     startParseLine(syntaxer.get(), line, newLineText);
