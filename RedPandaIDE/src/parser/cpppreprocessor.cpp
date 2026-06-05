@@ -991,8 +991,8 @@ void CppPreprocessor::combineLinesEndingWithBackslash(QStringList &text)
     while (i>0) {
         const QString& prevLineText = text[i-1];
         int lastI=prevLineText.length()-1;
-        // Per C++ standard, backslash must be immediately followed by newline
-        // for line splicing. Trailing spaces after '\' invalidate the continuation.
+        while (lastI>=0 && isSpaceChar(prevLineText[lastI]))
+            lastI--;
         if (lastI>=0 && prevLineText[lastI]=='\\') {
             text[i-1] = prevLineText.left(lastI)+text[i];
             text[i]="";
