@@ -4199,6 +4199,14 @@ void CppParser::handleUsing(int maxIndex)
             return;
         if (mNamespaces.contains(usingName)) {
             fileInfo->addUsing(usingName);
+        } else {
+            foreach(const QString parent, fileInfo->usings()) {
+                QString fullName=parent+"::"+usingName;
+                if (mNamespaces.contains(fullName)) {
+                    fileInfo->addUsing(fullName);
+                    break;
+                }
+            }
         }
     }
     //skip ;
