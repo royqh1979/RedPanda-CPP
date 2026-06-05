@@ -260,6 +260,7 @@ private:
     }
 
     void internalClear();
+    void initSyntheticSTLTypes();
 
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
