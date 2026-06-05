@@ -635,39 +635,38 @@ void Editor::keyPressEvent(QKeyEvent *event)
             QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY(), sLine);
             if (syntaxer()->isCommentNotFinished(state)) {
                 if (sLine=="/**") { //javadoc style docstring
+                    handled = true;
+                    QStringList insertStrings;
+                    insertStrings.append("");
                     sLine = lineText().mid(caretX()).trimmed();
                     if (sLine=="*/") {
-                        CharPos p = caretXY();
-                        p.ch = lineText().length();
-                        setSelBeginEnd(p, CharPos{(int)lineText().length(), p.line});
-                        setSelText("");
-                    }
-                    handled = true;
-                    QStringList insertString;
-                    insertString.append("");
-                    PStatement function;
-                    if (mParser)
-                        function = mParser->findFunctionAt(mFilename,caretY()+1);
-                    if (function) {
-                        bool isVoid = (function->type  == "void");
-                        QStringList params = mParser->getFunctionParameterNames(function);
-                        insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
-                        if (!params.isEmpty())
-                            insertString.append(" * ");
-                        foreach (const QString& param, params) {
-                            insertString.append(QString(" * @param %1 %2")
-                                                .arg(param, USER_CODE_IN_INSERT_POS));
+                        PStatement function;
+                        if (mParser)
+                            function = mParser->findFunctionAt(mFilename,caretY()+1);
+                        if (function) {
+                            bool isVoid = (function->type  == "void");
+                            QStringList params = mParser->getFunctionParameterNames(function);
+                            insertStrings.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
+                            if (!params.isEmpty())
+                                insertStrings.append(" * ");
+                            foreach (const QString& param, params) {
+                                insertStrings.append(QString(" * @param %1 %2")
+                                                    .arg(param, USER_CODE_IN_INSERT_POS));
+                            }
+                            if (!isVoid) {
+                                insertStrings.append(" * ");
+                                insertStrings.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
+                            }
+                        } else {
+                            insertStrings.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
                         }
-                        if (!isVoid) {
-                            insertString.append(" * ");
-                            insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
-                        }
-                        insertString.append("");
+                        insertStrings.append("");
+                        insertStrings.append("");
                     } else {
-                        insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
-                        insertString.append(" */");
+                        insertStrings.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
+                        insertStrings.append("");
                     }
-                    insertCodeSnippet(linesToText(insertString));
+                    insertCodeSnippet(linesToText(insertStrings));
                 } else {
                     sLine=trimLeft(lineText());
                     if (sLine.startsWith("* ")) {
