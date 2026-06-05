@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "main.h"
+#include "autoupdater.h"
 #include "utils/os.h"
 
 #ifdef Q_OS_WIN
@@ -257,6 +258,7 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
+    setAutoUpdaterCurrentVersion(REDPANDA_CPP_VERSION);
 #if QT_VERSION_MAJOR >= 6
     app.setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif

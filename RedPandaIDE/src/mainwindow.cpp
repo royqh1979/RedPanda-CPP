@@ -32,6 +32,7 @@
 #include <QMimeData>
 #include <QScreen>
 #include <QStyleFactory>
+#include <QTimer>
 #include <QTcpSocket>
 #include <QTemporaryFile>
 #include <QTextBlock>
@@ -90,6 +91,7 @@
 #include "vcs/gitremotedialog.h"
 #include "vcs/gituserconfigdialog.h"
 #endif
+#include "autoupdater.h"
 #include "widgets/infomessagebox.h"
 #include "widgets/newtemplatedialog.h"
 #include "visithistorymanager.h"
@@ -537,6 +539,24 @@ MainWindow::MainWindow(QWidget *parent)
     updateShortcuts();
     updateEditorSettings();
     //updateEditorBookmarks();
+
+    // Delayed auto-update check (runs 3 seconds after startup)
+    AutoUpdater *updater = new AutoUpdater(this);
+    QTimer::singleShot(3000, this, [this, updater]() {
+        updater->checkForUpdates(true, [this](const QString &version, const QString &url) {
+            if (version.isEmpty()) return;
+            QMessageBox msgBox(this);
+            msgBox.setIcon(QMessageBox::Information);
+            msgBox.setWindowTitle(tr("Update Available"));
+            msgBox.setText(tr("A new version of Red Panda C++ is available: %1").arg(version));
+            msgBox.setInformativeText(tr("Would you like to go to the download page?"));
+            QPushButton *downloadBtn = msgBox.addButton(tr("Download"), QMessageBox::AcceptRole);
+            msgBox.addButton(tr("Later"), QMessageBox::RejectRole);
+            msgBox.exec();
+            if (msgBox.clickedButton() == downloadBtn)
+                QDesktopServices::openUrl(QUrl(url));
+        });
+    });
 }
 
 MainWindow::~MainWindow()
@@ -4250,6 +4270,10 @@ void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 
 void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 {
+    // Remember the clicked index so that create/rename actions use the
+    // correct target directory instead of falling back to root.
+    mFilesViewClickedIndex = ui->treeFiles->indexAt(pos);
+
     QMenu menu(this);
 #ifdef ENABLE_VCS
     GitManager vcsManager;
@@ -4703,19 +4727,21 @@ void MainWindow::onFilesViewCreateFolderFolderLoaded(const QString& path)
 
 void MainWindow::onFilesViewCreateFolder()
 {
-    QModelIndex index = ui->treeFiles->currentIndex();
+    // Prefer the index from the last context menu click, falling back
+    // to currentIndex() for keyboard-activated operations.
+    QModelIndex index = mFilesViewClickedIndex.isValid()
+        ? QModelIndex(mFilesViewClickedIndex)
+        : ui->treeFiles->currentIndex();
     QModelIndex parentIndex;
     QDir dir;
     if (index.isValid()
-            && ui->treeFiles->selectionModel()->isSelected(index)) {
-        if (mFileSystemModel->isDir(index)) {
-            dir = QDir(mFileSystemModel->fileInfo(index).absoluteFilePath());
-            parentIndex = index;
-        } else {
-            dir = mFileSystemModel->fileInfo(index).absoluteDir();
-            parentIndex = mFileSystemModel->index(dir.absolutePath());
-        }
-        //ui->treeFiles->expand(index);
+            && mFileSystemModel->fileInfo(index).isDir()) {
+        dir = QDir(mFileSystemModel->fileInfo(index).absoluteFilePath());
+        parentIndex = index;
+        ui->treeFiles->selectionModel()->select(index, QItemSelectionModel::Select);
+    } else if (index.isValid()) {
+        dir = mFileSystemModel->fileInfo(index).absoluteDir();
+        parentIndex = mFileSystemModel->index(dir.absolutePath());
     } else {
         dir = mFileSystemModel->rootDirectory();
         parentIndex=mFileSystemModel->index(dir.absolutePath());
@@ -4743,14 +4769,18 @@ void MainWindow::onFilesViewCreateFolder()
 
 void MainWindow::onFilesViewCreateFile()
 {
-    QModelIndex index = ui->treeFiles->currentIndex();
+    // Prefer the index from the last context menu click, falling back
+    // to currentIndex() for keyboard-activated operations.
+    QModelIndex index = mFilesViewClickedIndex.isValid()
+        ? QModelIndex(mFilesViewClickedIndex)
+        : ui->treeFiles->currentIndex();
     QDir dir;
     if (index.isValid()
-            && ui->treeFiles->selectionModel()->isSelected(index)) {
-        if (mFileSystemModel->isDir(index))
-            dir = QDir(mFileSystemModel->fileInfo(index).absoluteFilePath());
-        else
-            dir = mFileSystemModel->fileInfo(index).absoluteDir();
+            && mFileSystemModel->fileInfo(index).isDir()) {
+        dir = QDir(mFileSystemModel->fileInfo(index).absoluteFilePath());
+        ui->treeFiles->selectionModel()->select(index, QItemSelectionModel::Select);
+    } else if (index.isValid()) {
+        dir = mFileSystemModel->fileInfo(index).absoluteDir();
     } else {
         dir = mFileSystemModel->rootDirectory();
     }
