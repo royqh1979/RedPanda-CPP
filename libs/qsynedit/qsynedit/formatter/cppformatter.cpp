@@ -215,7 +215,7 @@ namespace QSynedit {
         QString lineText = editor->lineText(line);
         int leading = editor->leftSpaces(lineText);
         PSyntaxer pSyntaxer = editor->syntaxer()->createInstance();
-        editor->startParseLine(pSyntaxer.get(), line);
+        editor->startParseLine(pSyntaxer.get(), line, lineText.trimmed());
         QList<int> posList;
         while (!pSyntaxer->eol()) {
             if (pSyntaxer->getTokenAttribute() == pSyntaxer->symbolAttribute()) {
