@@ -116,9 +116,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: ConorMacBride/install-package@v1
+        if: ${{ matrix.os == 'Linux' }}
+        with:
+          apt: bubblewrap
+
       - name: Setup Homebrew
         if: ${{ matrix.os == 'Linux' }}
         run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Build
