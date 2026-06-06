@@ -68,6 +68,11 @@ void setComboTextAndHistory(QComboBox *cb, const QString& newText, QStringList &
 void updateComboHistory(QStringList &historyList, const QString &newKey);
 
 QStringList getExecutableSearchPaths();
+bool programExists(const QString &program);
+
+QString findBundledOrSystemTool(const QString &subDir, const QString &name);
+
+QString localizeMakefilePath(const QString &path);
 
 QStringList platformCommandForTerminalArgsPreview();
 

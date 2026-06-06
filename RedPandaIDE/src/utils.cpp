@@ -198,6 +198,48 @@ QStringList getExecutableSearchPaths()
 #endif
 }
 
+bool programExists(const QString &program)
+{
+    if (program.isEmpty()) {
+        return false;
+    }
+    if (program.contains('/') || program.contains(QDir::separator())) {
+        return QFileInfo(program).isExecutable();
+    }
+    QStringList searchPaths = getExecutableSearchPaths();
+    for (const QString &path : searchPaths) {
+        QString filePath = path + QDir::separator() + program;
+        if (QFileInfo(filePath).isExecutable()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+QString findBundledOrSystemTool(const QString &subDir, const QString &program)
+{
+    QString bundledPath = getFilePath(
+        getFilePath(pSettings->dirs().appLibexecDir(), subDir),
+        program
+    );
+    if (programExists(bundledPath))
+        return bundledPath;
+
+    // return as-is (search in PATH)
+    return program;
+}
+
+QString localizeMakefilePath(const QString &path)
+{
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        QString result = path;
+        result.replace("/",QDir::separator());
+        return result;
+    } else {
+        return path;
+    }
+}
+
 QStringList platformCommandForTerminalArgsPreview()
 {
 #ifdef Q_OS_WINDOWS

@@ -58,6 +58,26 @@ function create-appimage() {
   make DESTDIR=/pkg/astyle install/strip
 )
 
+# build GNU make
+(
+  if ls $SRC_DIR/assets/gcc-$ARCH*.tar ; then
+    if [[ ! -f $SRC_DIR/assets/make-4.4.1.tar.gz ]] ; then
+      curl -L https://ftpmirror.gnu.org/make/make-4.4.1.tar.gz -o $SRC_DIR/assets/make-4.4.1.tar.gz
+    fi
+    mkdir -p /build/make
+    cd /build/make
+    tar -xf $SRC_DIR/assets/make-4.4.1.tar.gz --strip-components=1
+    # TODO: directly set TARGET_TRIPLET in build environment
+    ./configure \
+      --prefix= \
+      --host=${CMAKE_PREFIX_PATH#/usr/local/} \
+      CFLAGS="-std=gnu17" \
+      LDFLAGS="-static-pie"
+    make -j$(nproc)
+    make DESTDIR=/pkg/make install-strip
+  fi
+)
+
 # build
 (
   mkdir -p /build/redpanda
@@ -153,10 +173,12 @@ function create-appimage() {
     tag=gcc$suffix
 
     cp -r /pkg/tarball /pkg/tarball+$tag
+    cp -r /pkg/make /pkg/tarball+$tag/usr/libexec/RedPandaCPP
     tar -C /pkg/tarball+$tag/usr/libexec/RedPandaCPP -xf "$gcc_tar"
     tar -C /pkg/tarball+$tag -czf $SRC_DIR/dist/redpanda-cpp-bin-$VERSION-$ARCH+$tag.tar.gz .
 
     cp -r /pkg/appimage /pkg/appimage+$tag
+    cp -r /pkg/make /pkg/appimage+$tag/usr/libexec/RedPandaCPP
     tar -C /pkg/appimage+$tag/usr/libexec/RedPandaCPP -xf "$gcc_tar"
     create-appimage /pkg/appimage+$tag RedPandaIDE-$VERSION-$ARCH+$tag.AppImage
   done

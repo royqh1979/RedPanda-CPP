@@ -724,17 +724,18 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
     bool compilerErrorUTF8=compilerSet()->isCompilerUsingUTF8();
     bool outputUTF8=compilerSet()->isCompilerUsingUTF8();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
 #ifdef Q_OS_WIN
     QStringList binDirs=compilerSet()->binDirs();
-    if (!cmdDir.isEmpty())
-        binDirs.insert(0, cmdDir);
-    QString windir = env.value("windir");
-    binDirs.append(windir+"\\system32");
-    binDirs.append(windir);
-    env.insert("PATH",binDirs.join(PATH_SEPARATOR));
-#else
+    if (!binDirs.isEmpty()) {
+        if (path.isEmpty()) {
+            path = binDirs.join(PATH_SEPARATOR);
+        } else {
+            path = binDirs.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
+        }
+    }
+#endif
     if (!cmdDir.isEmpty()) {
-        QString path = env.value("PATH");
         if (path.isEmpty()) {
             path = cmdDir;
         } else {
@@ -742,7 +743,11 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         }
         env.insert("PATH",path);
     }
-#endif
+
+    // mingw32-make.exe will choose sh if it is found in path. use SHELL to override it.
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        env.insert("SHELL", "cmd.exe");
+    }
     if (compilerSet() && compilerSet()->supportNLS() && compilerSet()->forceEnglishOutput()) {
         env.insert("LANGUAGE", "");
         env.insert("LC_ALL", "C"); // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap07.html#tag_07_02

@@ -109,7 +109,13 @@ static void loadCompilerSetSettings(PCompilerSet pSet, Ui::CompilerSetOptionWidg
 
     ui->txtCCompiler->setText(pSet->CCompiler());
     ui->txtCppCompiler->setText(pSet->cppCompiler());
-    ui->txtMake->setText(pSet->make());
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        ui->txtMake->setText(pSet->make());
+    } else {
+        ui->txtMake->setVisible(false);
+        ui->label_4->setVisible(false);   // "make" label
+        ui->btnChooseMake->setVisible(false);
+    }
     ui->txtDebugger->setText(pSet->debugger());
     ui->txtGDBServer->setText(pSet->debugServer());
     ui->txtResourceCompiler->setText(pSet->resourceCompiler());
@@ -255,7 +261,9 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
 
     pSet->setCCompiler(ui->txtCCompiler->text().trimmed());
     pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());
-    pSet->setMake(ui->txtMake->text().trimmed());
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        pSet->setMake(ui->txtMake->text().trimmed());
+    }
     pSet->setDebugger(ui->txtDebugger->text().trimmed());
     pSet->setDebugServer(ui->txtGDBServer->text().trimmed());
     pSet->setResourceCompiler(ui->txtResourceCompiler->text().trimmed());
