@@ -157,9 +157,6 @@ void SearchDialog::doReplace(bool replaceAll)
 {
     updateComboHistory(mSearchKeys,ui->cbFind->currentText());
     updateComboHistory(mReplaceKeys,ui->cbReplace->currentText());
-    if (ui->rbEntireScope->isChecked()) {
-        ui->rbFromCaret->setChecked(true);
-    }
     bool regex, searchInSelection;
     QSynedit::SearchOptions searchOptions = prepareOptions(false, regex, searchInSelection);
     searchOptions.setFlag(QSynedit::SearchOption::ssoIncludeCurrentSelection);
@@ -182,6 +179,9 @@ void SearchDialog::doReplace(bool replaceAll)
             searchEngine = mRegexSearchEngine;
         } else {
             searchEngine = mBasicSearchEngine;
+        }
+        if (ui->rbEntireScope->isChecked()) {
+            ui->rbFromCaret->setChecked(false);
         }
         editor->searchReplace(
                     ui->cbFind->currentText(),
