@@ -10876,5 +10876,117 @@ void TestQSyneditCpp::test_setseltext_and_indent3_line_comment()
     QCOMPARE(mEdit->content(), text);
 }
 
+void TestQSyneditCpp::test_auto_indent_for_parenthesis()
+{
+    QStringList text({
+        "(",
+        " (",
+        "  (",
+        "   (",
+        "\t(",
+        "\t (",
+    });
+    QStringList text1({
+        "(",
+    });
+    QStringList text2({
+        "(",
+        " (",
+    });
+    QStringList text3({
+        "(",
+        " (",
+        "  (",
+    });
+    QStringList text4({
+        "(",
+        " (",
+        "  (",
+        "   (",
+    });
+    QStringList text5({
+        "(",
+        " (",
+        "  (",
+        "   (",
+        "\t(",
+    });
+    clearContent();
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text1);
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text2);
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text3);
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text4);
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text5);
+    QTest::keyPress(mEdit.get(),Qt::Key_Enter);
+    QTest::keyPress(mEdit.get(),'(');
+    QCOMPARE(mEdit->content(),text);
+
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text5);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text4);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text3);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QVERIFY(mEdit->empty());
+    QVERIFY(!mEdit->canUndo());
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->redo();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text2);
+    mEdit->redo();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text3);
+    mEdit->redo();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text4);
+    mEdit->redo();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text5);
+    mEdit->redo();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(),text);
+    QVERIFY(!mEdit->canRedo());
+
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text5);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text4);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text3);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text2);
+    mEdit->undo();
+    mEdit->undo();
+    QCOMPARE(mEdit->content(),text1);
+    mEdit->undo();
+    QVERIFY(mEdit->empty());
+    QVERIFY(!mEdit->canUndo());
+}
+
 }
 

@@ -6,6 +6,7 @@
 #include "src/editor.h"
 #include "test_editor_base.h"
 #include <qsynedit/syntaxer/cpp.h>
+#include <qsynedit/formatter/cppformatter.h>
 
 TestEditorBase::TestEditorBase(QObject *parent):
     QObject{parent}
@@ -25,5 +26,6 @@ void TestEditorBase::init_editor()
     mEditor->setEditorSettings(mEditorSettings.get());
     mEditor->setColorManager(mColorManager.get());
     mEditor->setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    mEditor->setFormatter(std::make_shared<QSynedit::CppFormatter>());
     mEditor->applySettings();
 }

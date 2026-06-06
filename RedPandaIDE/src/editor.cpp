@@ -693,7 +693,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         }
-        mFunctionTooltip->hide();
+        if (mFunctionTooltip)
+            mFunctionTooltip->hide();
         return;
     case Qt::Key_Tab:
         handled = true;

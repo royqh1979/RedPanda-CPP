@@ -19,7 +19,8 @@
 
 QString parseMacros(const QString &s, GetMacroVarsFunc getMacroVarsFunc)
 {
-    Q_ASSERT(getMacroVarsFunc!=nullptr);
+    if(getMacroVarsFunc==nullptr)
+        return s;
     return parseMacros(s, getMacroVarsFunc());
 }
 

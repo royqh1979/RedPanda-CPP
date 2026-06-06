@@ -2336,3 +2336,65 @@ void TestEditorSymbolCompletion::test_input_periods_in_string()
     QVERIFY(!mEditor->canUndo());
     QVERIFY(!mEditor->modified());
 }
+
+void TestEditorSymbolCompletion::test_input_docstring()
+{
+    QStringList text1{
+        "/***/",
+    };
+    QStringList text2{
+        "/**",
+        " * ",
+        " */",
+    };
+    QStringList text3{
+        "/**",
+        " * ",
+        " * ",
+        " */",
+    };
+    mEditor->clear();
+    QTest::keyPress(mEditor.get(),'/');
+    QTest::keyPress(mEditor.get(),'*');
+    QTest::keyPress(mEditor.get(),'*');
+    QCOMPARE(mEditor->content(),text1);
+    QTest::keyPress(mEditor.get(),Qt::Key_Enter);
+    QCOMPARE(mEditor->content(),text2);
+    QTest::keyPress(mEditor.get(),Qt::Key_Escape);
+    QTest::keyPress(mEditor.get(),Qt::Key_Enter);
+    QCOMPARE(mEditor->content(),text3);
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(),text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(),text1);
+    mEditor->undo();
+    mEditor->undo();
+    mEditor->undo();
+    QVERIFY(mEditor->empty());
+    QVERIFY(!mEditor->canUndo());
+
+    //redo
+    mEditor->redo();
+    mEditor->redo();
+    mEditor->redo();
+    QCOMPARE(mEditor->content(),text1);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(),text2);
+    mEditor->redo();
+    QCOMPARE(mEditor->content(),text3);
+    QVERIFY(!mEditor->canRedo());
+
+    //undo
+    mEditor->undo();
+    QCOMPARE(mEditor->content(),text2);
+    mEditor->undo();
+    QCOMPARE(mEditor->content(),text1);
+    mEditor->undo();
+    mEditor->undo();
+    mEditor->undo();
+    QVERIFY(mEditor->empty());
+    QVERIFY(!mEditor->canUndo());
+
+}
