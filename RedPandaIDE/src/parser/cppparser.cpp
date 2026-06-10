@@ -75,6 +75,7 @@ CppParser::CppParser() : QObject{nullptr},
 
     internalClear();
 
+
     //mNamespaces;
     //mBlockBeginSkips;
     //mBlockEndSkips;
@@ -6302,6 +6303,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
     int i = paramStart ; // assume it starts with ( and ends with )
     // Keep going and stop on top of the variable name
     QStringList words;
+    int templateDepth = 0;
     while (i < argEnd) {
         if (mTokenizer[i]->text=='('
                 && mTokenizer[i]->matchIndex+1<argEnd
@@ -6341,9 +6343,36 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                 words.append(mTokenizer[i]->text);
             i++;
         } else if (mTokenizer[i]->text==',') {
-           addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
-           i++;
-           words.clear();
+            if (templateDepth > 0) {
+                // comma inside template brackets — part of the type
+                words.append(mTokenizer[i]->text);
+                i++;
+            } else {
+                addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
+                i++;
+                words.clear();
+            }
+        } else if (mTokenizer[i]->text=='<') {
+            // template bracket open
+            templateDepth++;
+            words.append(mTokenizer[i]->text);
+            i++;
+        } else if (mTokenizer[i]->text==">>") {
+            // C++11 nested template closing, e.g. vector<vector<int>>
+            if (templateDepth >= 2) {
+                templateDepth -= 2;
+            } else if (templateDepth >= 1) {
+                // ambiguous: could be right-shift inside a template arg
+                templateDepth--;
+            }
+            words.append(mTokenizer[i]->text);
+            i++;
+        } else if (mTokenizer[i]->text=='>') {
+            if (templateDepth > 0) {
+                templateDepth--;
+                words.append(mTokenizer[i]->text);
+            } // else: unmatched '>' (comparison operator), skip silently
+            i++;
         } else if (isIdentifierChar(mTokenizer[i]->text[0])) {
             // identifier
             int lastIdx=words.count()-1;
@@ -6826,17 +6855,47 @@ int CppParser::skipAssignment(int index, int maxIndex)
 {
     int startIndex=index;
     bool stop=false;
+    int templateDepth = 0;
     while (index<maxIndex && !stop) {
         switch(mTokenizer[index]->text[0].unicode()) {
         case ';':
-        case ',':
         case '}':
-        case ')':
             stop=true;
+            break;
+        case ')':
+            if (templateDepth == 0) {
+                stop=true;
+            } else {
+                index++;
+            }
+            break;
+        case ',':
+            if (templateDepth == 0) {
+                stop=true;
+            } else {
+                index++;
+            }
             break;
         case '{':
         case '(':
             index = mTokenizer[index]->matchIndex+1;
+            break;
+        case '<':
+            templateDepth++;
+            index++;
+            break;
+        case '>':
+            if (mTokenizer[index]->text == ">>") {
+                if (templateDepth >= 2)
+                    templateDepth -= 2;
+                else if (templateDepth >= 1)
+                    templateDepth--;
+                index++;
+            } else {
+                if (templateDepth > 0)
+                    templateDepth--;
+                index++;
+            }
             break;
         default:
             index++;
@@ -6927,6 +6986,81 @@ bool CppParser::sharedByFiles() const
 void CppParser::setSharedByFiles(bool newSharedByFiles)
 {
     mSharedByFiles = newSharedByFiles;
+}
+
+void CppParser::initSyntheticSTLTypes()
+{
+    // Create synthetic std::pair class with first/second members.
+    // This allows completion of .first and .second on pair types
+    // without parsing the actual <utility> system header.
+
+    // Create std namespace if it doesn't exist yet
+    PStatement stdNs = doFindStatement("std");
+    if (!stdNs) {
+        stdNs = addStatement(
+            PStatement(),  // global scope
+            QString(),     // no file
+            QString(),     // no type
+            "std",         // name
+            QString(),     // args
+            QString(),     // noNameArgs
+            QString(),     // value
+            0,             // line
+            StatementKind::Namespace,
+            StatementScope::Global,
+            StatementAccessibility::None,
+            StatementProperty::HasDefinition);
+    }
+
+    // Check if pair already exists as a member of std
+    PStatement pairClass = findMemberOfStatement("pair", stdNs);
+    if (pairClass)
+        return;
+
+    // Create synthetic pair class template
+    pairClass = addStatement(
+        stdNs,
+        QString(),
+        QString(),
+        "pair",
+        "<T1,T2>",
+        "<typename T1, typename T2>",
+        QString(),
+        0,
+        StatementKind::Class,
+        StatementScope::Global,
+        StatementAccessibility::Public,
+        StatementProperty::HasDefinition);
+
+    // Add first member (type = T1)
+    addStatement(
+        pairClass,
+        QString(),
+        "T1",
+        "first",
+        QString(),
+        QString(),
+        QString(),
+        0,
+        StatementKind::Variable,
+        StatementScope::Local,
+        StatementAccessibility::Public,
+        StatementProperty::HasDefinition);
+
+    // Add second member (type = T2)
+    addStatement(
+        pairClass,
+        QString(),
+        "T2",
+        "second",
+        QString(),
+        QString(),
+        QString(),
+        0,
+        StatementKind::Variable,
+        StatementScope::Local,
+        StatementAccessibility::Public,
+        StatementProperty::HasDefinition);
 }
 
 void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject, const QString &contextFilename, bool onlyIfNotParsed, bool updateView)

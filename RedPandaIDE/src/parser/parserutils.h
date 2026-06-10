@@ -378,6 +378,7 @@ extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
 extern QSet<QString> STLMaps;
+extern QSet<QString> STLPairs;
 extern QSet<QString> STLElementMethods;
 extern QSet<QString> STLIterators;
 extern QSet<QString> MemberOperators;
