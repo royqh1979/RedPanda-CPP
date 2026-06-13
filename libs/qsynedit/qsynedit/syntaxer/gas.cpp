@@ -106,8 +106,9 @@ bool GASSyntaxer::isCommentStartChar(QChar ch)
 
 void GASSyntaxer::procNull()
 {
-    if ( (mLineNumber == mThisLineHasSyntaxDirective)
-            && !mThisLineHasSyntaxDirective) {
+    // if ( (mLineNumber == mThisLineHasSyntaxDirective)
+    //         && !mThisLineHasSyntaxDirective) {
+    if (mLineNumber == 0 && !mThisLineHasSyntaxDirective) {
         mSyntaxMode = SyntaxMode::ATT;
         setPrefixRegisterNames(true);
         mDirectiveSyntaxLine = -1;
