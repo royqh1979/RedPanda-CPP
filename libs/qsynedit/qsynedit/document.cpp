@@ -582,7 +582,7 @@ void Document::setTabSize(int newTabSize)
 
 void Document::setForceMonospace(bool newForceMonospace)
 {
-    int oldValue = forceMonospace();
+    bool oldValue = forceMonospace();    // (fix): forceMonospace() returns bool, not int
     mGlyphCalculator.setForceMonospace(newForceMonospace);
     if (oldValue != newForceMonospace)
         invalidateAllLineWidth();
