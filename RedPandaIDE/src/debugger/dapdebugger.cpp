@@ -4,6 +4,7 @@
 #include "../systemconsts.h"
 
 #include <QFileInfo>
+#include <atomic>
 
 DAPDebuggerClient::DAPDebuggerClient(Debugger *debugger, QObject *parent):
     DebuggerClient{debugger, parent}
@@ -14,7 +15,7 @@ DAPDebuggerClient::DAPDebuggerClient(Debugger *debugger, QObject *parent):
 void DAPDebuggerClient::run()
 {
     mStop = false;
-    bool errorOccured = false;
+    auto errorOccured = std::make_shared<std::atomic_bool>(false);
     mInferiorRunning = false;
     mProcessExited = false;
     QString cmd = debuggerPath();
@@ -47,8 +48,8 @@ void DAPDebuggerClient::run()
     mProcess->setWorkingDirectory(workingDir);
 
     connect(mProcess.get(), &QProcess::errorOccurred,
-                    [&](){
-                        errorOccured= true;
+                    [errorOccured](){
+                        errorOccured->store(true);
                     });
     QByteArray buffer;
     QByteArray readed;
@@ -66,7 +67,7 @@ void DAPDebuggerClient::run()
             mProcess->kill();
             break;
         }
-        if (errorOccured)
+        if (errorOccured->load())
             break;
         readed = mProcess->readAll();
         buffer += readed;
@@ -82,7 +83,7 @@ void DAPDebuggerClient::run()
         //     msleep(1);
         // }
     }
-    if (errorOccured) {
+    if (errorOccured->load()) {
         emit processFailed(mProcess->error());
     }
 }
