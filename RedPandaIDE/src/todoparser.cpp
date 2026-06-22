@@ -22,8 +22,12 @@
 
 #include <QRegularExpression>
 
+Q_GLOBAL_STATIC_WITH_ARGS(
+    QRegularExpression,
+    todoReg,
+    (QStringLiteral("\\b(todo|fixme)\\b"), QRegularExpression::CaseInsensitiveOption)
+)
 
-static QRegularExpression todoReg("\\b(todo|fixme)\\b", QRegularExpression::CaseInsensitiveOption);
 TodoParser::TodoParser(QObject *parent) : QObject(parent),
     mMutex()
 {
