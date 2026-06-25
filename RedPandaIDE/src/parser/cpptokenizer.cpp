@@ -79,7 +79,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         addToken(")",mCurrentLine,TokenType::RightParenthesis);
     }
 }
-
+#ifdef QT_DEBUG
 void CppTokenizer::dumpTokens(const QString &fileName)
 {
     QFile file(fileName);
@@ -91,6 +91,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
         }
     }
 }
+#endif
 
 void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType)
 {

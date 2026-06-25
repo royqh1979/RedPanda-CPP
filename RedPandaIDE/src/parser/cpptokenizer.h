@@ -50,7 +50,9 @@ public:
 
     void clear();
     void tokenize(const QStringList& buffer);
+#ifdef QT_DEBUG
     void dumpTokens(const QString& fileName);
+#endif
     const PToken& operator[](int i) const { return mTokenList[i]; }
     int tokenCount() const { return mTokenList.count(); }
     static bool isIdentChar(const QChar& ch) { return ch=='_' || ch.isLetter(); }
