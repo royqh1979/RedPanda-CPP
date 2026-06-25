@@ -645,6 +645,7 @@ QString CppPreprocessor::expandMacro(QString &text, const QString &word, int &i,
         return define->value;
     } else if (define && (define->args!="")) {
         int oldI = i;
+        int oldIndex = mIndex;
         //skip spaces;
         if (handleBuffer) {
             while (true) {
@@ -703,6 +704,7 @@ QString CppPreprocessor::expandMacro(QString &text, const QString &word, int &i,
                 return formattedValue;
             }
         }
+        mIndex = oldIndex;
         i=oldI;
     }
     return word;

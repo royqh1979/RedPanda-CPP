@@ -220,11 +220,9 @@ void initParser()
     // it's part of type info
     CppKeywords.insert("const",KeywordType::None);
     CppKeywords.insert("extern",KeywordType::Extern);
+    CppKeywords.insert("static",KeywordType::None);
 
     CppKeywords.insert("operator",KeywordType::Operator);
-
-    // handled elsewhere
-    CppKeywords.insert("static",KeywordType::None);
 
     //struct/class/union
     CppKeywords.insert("class",KeywordType::Struct);

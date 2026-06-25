@@ -28,7 +28,7 @@
 
 //Enable debug log
 #ifdef QT_DEBUG
-//#define PARSER_DEBUG_LOG
+#define PARSER_DEBUG_LOG
 #endif
 
 #ifdef PARSER_DEBUG_LOG
@@ -2275,8 +2275,12 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                              mergeArgs(mIndex+1,mTokenizer[mIndex]->matchIndex-1),
                              indexAfterParentheis,false,false,true, maxIndex);
             } else {
+                // function pointer
                 handleVar(currentText,false,false, maxIndex);
             }
+        } else if (mTokenizer[indexAfterParentheis]->text.startsWith('[')) {
+            //array of pointers
+            handleVar(currentText,false,false, maxIndex);
         } else {
             if (currentText=="operator") {
                 // operator overloading
@@ -2377,8 +2381,20 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                     continue;
                 }
 #endif
-                if (mIndex+2<maxIndex && mTokenizer[mIndex+2]->text == '*') {
-                    //foo(*blabla), it's a function pointer var
+                if (mIndex+2<maxIndex &&
+                        (mTokenizer[mIndex+2]->text == '*'
+                         ||mTokenizer[mIndex+2]->text == '&') ) {
+                    //foo(*blabla), it's a function pointe
+                    if (!sName.isEmpty()) {
+                        if (sName.endsWith("::")) {
+                            sName+=mTokenizer[mIndex]->text;
+                        } else {
+                            sType += " "+sName;
+                            sName = mTokenizer[mIndex]->text;
+                        }
+                    } else
+                        sName = mTokenizer[mIndex]->text;
+                    mIndex++;
                     handleVar(sType+" "+sName,isExtern,isStatic, maxIndex);
                     return;
                 }
@@ -4215,6 +4231,7 @@ void CppParser::handleUsing(int maxIndex)
 
 void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic, int maxIndex)
 {
+//    qDebug()<<typePrefix<<mTokenizer[mIndex]->text;
     QString lastType;
     if (typePrefix=="extern") {
         isExtern=true;
@@ -4409,6 +4426,41 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 addedVar.reset();
                 tempType="";
                 mIndex=indexOfNextPeriodOrSemicolon(argEnd+1, maxIndex);
+                break;
+            }
+            if (mTokenizer[mIndex]->matchIndex+1<maxIndex
+                    && mTokenizer[mTokenizer[mIndex]->matchIndex+1]->text.startsWith('[')) {
+                        //array of pointers
+                int idx = mIndex+1;
+                // *, &
+                QString ops;
+                while (!isIdentifier(mTokenizer[idx]->text)) {
+                    ops += mTokenizer[idx]->text;
+                    idx++;
+                }
+                if (!ops.isEmpty())
+                    tempType += "("+ops+")";
+                QString cmd = mTokenizer[idx]->text + mTokenizer[mTokenizer[mIndex]->matchIndex+1]->text;
+                QString suffix,args;
+                parseCommandTypeAndArgs(cmd,suffix,args);
+                if (!cmd.isEmpty() && !isKeyword(cmd)) {
+                    addedVar = addChildStatement(
+                                getCurrentScope(),
+                                mCurrentFile,
+                                (lastType+' '+tempType+suffix).trimmed(),
+                                cmd,
+                                args,
+                                "",
+                                "",
+                                mTokenizer[mIndex]->line,
+                                StatementKind::Variable,
+                                getScope(),
+                                mCurrentMemberAccessibility,
+                                (isExtern?StatementProperty::None:StatementProperty::HasDefinition)
+                                | (isStatic?StatementProperty::Static:StatementProperty::None));
+                    tempType="";
+                }
+                mIndex=indexOfNextPeriodOrSemicolon(mIndex+2, maxIndex);
                 break;
             }
             [[fallthrough]];

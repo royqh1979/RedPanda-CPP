@@ -20,6 +20,7 @@ private slots:
     void test_macro_replace_5();
     void test_macro_replace_6();
     void test_macro_replace_7();
+    void test_macro_replace_8();
 private:
     static QStringList filterIncludes(const QStringList& text);
 };

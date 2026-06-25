@@ -75,6 +75,14 @@ void StatementModel::dumpAll(const QString &logFile)
     QFile file(logFile);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream out(&file);
+        std::sort(mAllStatements.begin(),mAllStatements.end(),
+                  [](const PStatement &a, const PStatement &b) {
+                          if (a->fileName < b->fileName)
+                              return true;
+                          if (a->fileName==b->fileName)
+                              return a->line < b->line;
+                          return false;
+                      });
         for (PStatement statement:mAllStatements) {
             out<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
              .arg(statement->command).arg(int(statement->kind))
