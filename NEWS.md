@@ -22,9 +22,9 @@ Red Panda C++ Version 3.5
   - enhancement: Correctly expand multi-line function-like macros.
   - fix: Can't parse embedding "using namespace".
   - fix: Auto indention for embeding parenthesis not correct.
-  - Enhancement: Correctly parse array of pointers.
-  - Enhancement: New option "Uninitialized variable visited." in Compiler Set -> Compile/Link options -> Error.
-
+  - enhancement: Correctly parse array of pointers.
+  - enhancement: New option "Uninitialized variable visited." in Compiler Set -> Compile/Link options -> Error.
+  - enhancement: Notify user if file creation failed. (by C14147@github.com)
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
   - fix: Syntax color doesn't work in the code snippet option page.
