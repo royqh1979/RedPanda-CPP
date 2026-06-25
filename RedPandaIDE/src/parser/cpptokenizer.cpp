@@ -242,12 +242,14 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 if (*(mCurrent + 1) == ':') {
                     countLines();
                     mCurrent+=2;
-                    result = "::";
-                    skipToNextToken();
-                    // Append next token to this one
-//                    if (isIdentChar(*mCurrent))
-//                        result+=getWord(true);
+                    result = getWord();
                     done = true;
+                    if (result.isEmpty()) {
+                        result = "::";
+                    } else {
+                        result = "::"+result;
+                        *pTokenType = TokenType::Identifier;
+                    }
                 } else {
                     countLines();
                     result = *mCurrent;
@@ -452,93 +454,66 @@ QString CppTokenizer::getPreprocessor()
 
 QString CppTokenizer::getWord()
 {
-    bool bFoundTemplate = false;
     // Skip spaces
     skipToNextToken();
-
-    // Get next word...
-    const QChar* offset = mCurrent;
-
-    mCurrent++;
-    // Copy the word ahead of us
-    while (isIdentChar(*mCurrent) || isDigitChar(*mCurrent))
-        mCurrent++;
-
-    QString currentWord;
-    if (offset != mCurrent) {
-        currentWord = QString(offset,mCurrent-offset);
-    }
-//    // Append the operator characters and argument list to the operator word
-//    if ((currentWord == "operator") ||
-//            (currentWord == "&operator") ||
-//            (currentWord == "operator*") ||
-//            (currentWord == "operator&")) {
-//        // Spaces between 'operator' and the operator itself are allowed
-//        while (isSpaceChar(*mCurrent))
-//            mCurrent++;
-//        // Find end of operator
-//        while (isOperatorChar(*mCurrent))
-//            mCurrent++;
-//        currentWord = QString(offset,mCurrent-offset);
-//    } else if (currentWord == "template") {
-    if (currentWord == "template") {
-        bFoundTemplate = true;
-    }
-
-
     QString result;
-    // We found a word...
-    if (!currentWord.isEmpty() ) {
-        result = currentWord;
-        // Skip whitespace
-        skipToNextToken();
-        if (currentWord!="operator") {
-            // Skip template contents, but keep template variable types
-            if (*mCurrent == '<') {
-                const QChar* offset = mCurrent;
+    // Get next word...
+    while (true) {
+        const QChar* offset = mCurrent;
+        // Copy the word ahead of us
+        while (isIdentChar(*mCurrent) || isDigitChar(*mCurrent)) {
+            mCurrent++;
+        }
 
-                if (bFoundTemplate) {
-                    skipTemplateArgs();
-                } else if (skipAngleBracketPair()){
-                    result += QString(offset, mCurrent-offset);
-                    skipToNextToken();
-                }
-            } else if (*mCurrent == '[') {
-                if (*(mCurrent+1)!='[') {
-                    // Append array stuff
-                    while(true) {
-                        const QChar* offset = mCurrent;
-                        skipPair('[', ']');
-                        result += QString(offset,mCurrent-offset);
-                        simplifyArgs(result);
+        QString currentWord;
+        if (offset != mCurrent) {
+            currentWord = QString(offset,mCurrent-offset);
+        }
+        result += currentWord;
+        bool isKeyword = isCppKeyword(currentWord);
+        if (currentWord.isEmpty()) {
+            break;
+        } else {
+            if (currentWord!="operator") {
+                // Skip template contents, but keep template variable types
+                if (*mCurrent == '<') {
+                    const QChar* offset = mCurrent;
+                    bool bFoundTemplate = isKeyword && (result == "template");
+                    if (bFoundTemplate) {
+                        skipTemplateArgs();
+                    } else if (skipAngleBracketPair()){
+                        result += QString(offset, mCurrent-offset);
                         skipToNextToken();
-                        if (*mCurrent!='[') //maybe multi-dimension array
-                            break;
-                    }
+                    } else
+                        break;
+                } else if (*mCurrent == '[') {
+                    if (*(mCurrent+1)!='[') {
+                        // Append array stuff
+                        while(true) {
+                            const QChar* offset = mCurrent;
+                            skipPair('[', ']');
+                            result += QString(offset,mCurrent-offset);
+                            simplifyArgs(result);
+                            skipToNextToken();
+                            if (*mCurrent!='[') //maybe multi-dimension array
+                                break;
+                        }
+                    } else
+                        break;
                 }
             }
-
-        // Keep parent/child operators
-//        if (*mCurrent == '.') {
-//            result+=*mCurrent;
-//            mCurrent++;
-//        } else if ((*mCurrent == '-') && (*(mCurrent + 1) == '>')) {
-//            result+=QString(mCurrent,2);
-//            mCurrent+=2;
-//        } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':') ) {
-//            if (result != "using") {
-//                result+=QString(mCurrent,2);
-//                mCurrent+=2;
-//                skipToNextToken();
-//                if (isIdentChar(*mCurrent)) {
-//                    // Append next token to this one
-//                    QString s = getWord(bSkipParenthesis);
-//                    result += s;
-//                }
-//            }
-//        }
         }
+        if (isKeyword)
+            break;
+        //skip spaces
+        skipToNextToken();
+        if (*mCurrent==':' && *(mCurrent+1)==':') {
+            result += "::";
+            mCurrent+=2;
+        } else
+            break;
     }
+
     return result;
 }
 

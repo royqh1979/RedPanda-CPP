@@ -157,7 +157,10 @@ public:
     QList<QString> namespaces();
 
     static bool isIdentifier(const QString& token){
-        return (!token.isEmpty() && isIdentifierChar(token.front()));
+        return (!token.isEmpty() &&
+                ( (token.startsWith("::") && token.length()>2)
+                    || isIdentifierChar(token.front())
+                  ));
         // return (!token.isEmpty() && isIdentChar(token.front())
         //         && !token.contains("\""));
     }
