@@ -9961,7 +9961,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">禁止兼容MSVC头文件中使用的非标准语法(-fno-ms-extentions)</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+20"/>
+        <source>No return statement in non-void function (return-type)</source>
+        <translation>非void函数中没有return语句(return-type)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>PE Stack Size</source>
         <translation>PE 栈空间大小</translation>
     </message>
@@ -10075,12 +10080,11 @@ p, li { white-space: pre-wrap; }
         <translation>错误</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Function without return type (return-type)</source>
-        <translation>无返回值类型的函数(return-type)</translation>
+        <translation type="vanished">无返回值类型的函数(return-type)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Declaration does not specify a type (implicit-int)</source>
         <translation>没有指定声明的类型(implicit-int)</translation>
     </message>

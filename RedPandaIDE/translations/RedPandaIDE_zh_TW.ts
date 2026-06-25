@@ -9961,7 +9961,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">禁止兼容MSVC標頭檔中使用的非標準語法 (-fno-ms-extentions)</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+20"/>
+        <source>No return statement in non-void function (return-type)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>PE Stack Size</source>
         <translation>PE 棧空間大小</translation>
     </message>
@@ -10075,12 +10080,11 @@ p, li { white-space: pre-wrap; }
         <translation>錯誤</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Function without return type (return-type)</source>
-        <translation>無傳回值類型的函式 (return-type)</translation>
+        <translation type="vanished">無傳回值類型的函式 (return-type)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Declaration does not specify a type (implicit-int)</source>
         <translation>沒有指定宣告的類型 (implicit-int)</translation>
     </message>

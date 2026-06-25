@@ -8704,9 +8704,13 @@
         <translation>Ошибки</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="223"/>
         <source>Function without return type (return-type)</source>
-        <translation>Функция без типа возвращаемого значения (return-type)</translation>
+        <translation type="vanished">Функция без типа возвращаемого значения (return-type)</translation>
+    </message>
+    <message>
+        <location filename="../src/compiler/compilerinfo.cpp" line="223"/>
+        <source>No return statement in non-void function (return-type)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/compiler/compilerinfo.cpp" line="224"/>
