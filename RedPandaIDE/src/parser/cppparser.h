@@ -156,10 +156,10 @@ public:
 
     QList<QString> namespaces();
 
-    static bool isIdentifier(const QString& token){
+    static bool isIdentifier(const QString& token) {
         return (!token.isEmpty() &&
                 ( (token.startsWith("::") && token.length()>2)
-                    || isIdentifierChar(token.front())
+                    || isIdentifierStartChar(token.front())
                   ));
         // return (!token.isEmpty() && isIdentChar(token.front())
         //         && !token.contains("\""));
@@ -453,11 +453,8 @@ private:
         switch(term[0].unicode()) {
         case '*':
             return true;
-        case '\"':
-        case '\'':
-            return false;
         default:
-            return isIdentifierChar(term[0]);
+            return isIdentifier(term);
         }
     }
 
@@ -595,15 +592,20 @@ private:
     bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 
 
-    static constexpr  bool isIdentifierOrPointerOrReferenceStart(const QChar& ch){
-        return ch.isLetter()
-                || ch == '_'
-                || ch == '*'
-                || ch == '&';
+    static bool isIdentifierOrPointerOrReference(const QString& s){
+        return isIdentifier(s)
+                || s[0] == '*'
+                || s[0] == '&';
     }    
+
+    static constexpr  bool isIdentifierStartChar(const QChar& ch){
+        return ch.isLetter()
+                || ch == '_';
+    }
 
     static constexpr  bool isIdentifierChar(const QChar& ch){
         return ch.isLetter()
+                || (ch>='0' && ch<='9')
                 || ch == '_';
     }
 
