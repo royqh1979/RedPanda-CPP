@@ -37,6 +37,7 @@ QSet<QString> CKeywords;
 QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLMaps;
+QSet<QString> STLPairs;
 QSet<QString> STLElementMethods;
 QSet<QString> STLIterators;
 QSet<QString> MemberOperators;
@@ -337,6 +338,9 @@ void initParser()
     STLPointers.insert("std::weak_ptr");
     //STLPointers.insert("__gnu_cxx::__normal_iterator");
 //    STLPointers.insert("std::reverse_iterator");
+
+    //STL pair
+    STLPairs.insert("std::pair");
 //    STLPointers.insert("std::iterator");
 //    STLPointers.insert("std::const_iterator");
 //    STLPointers.insert("std::const_reverse_iterator");
