@@ -25,7 +25,7 @@
 Q_GLOBAL_STATIC_WITH_ARGS(
     QRegularExpression,
     todoReg,
-    (QStringLiteral("\\b(todo|fixme)\\b"), QRegularExpression::CaseInsensitiveOption)
+    (QString("\\b(todo|fixme)\\b"), QRegularExpression::CaseInsensitiveOption)
 )
 
 TodoParser::TodoParser(QObject *parent) : QObject(parent),
@@ -151,7 +151,7 @@ void TodoThread::doParseFile(const QString &filename)
             attr = syntaxer->getTokenAttribute();
             if (attr && attr->tokenType() == QSynedit::TokenType::Comment) {
                 QString token = syntaxer->getToken();
-                int pos = token.indexOf(todoReg);
+                int pos = token.indexOf(*todoReg);
                 if (pos>=0) {
                     emit todoFound(
                                 filename,
