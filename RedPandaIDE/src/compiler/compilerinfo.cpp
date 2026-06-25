@@ -222,6 +222,7 @@ void CompilerInfo::prepareCompilerOptions()
     groupName = QObject::tr("Errors");
     addOption(CC_CMD_OPT_ERROR_RETURN_TYPE, QObject::tr("Function without return type (return-type)"), groupName, true, true, false, "-Werror=return-type");
     addOption(CC_CMD_OPT_ERROR_IMPLICIT_INT,QObject::tr("Declaration does not specify a type (implicit-int)"), groupName, true, false, false, "-Werror=implicit-int");
+    addOption(CC_CMD_OPT_ERROR_UNINITIALIZED, QObject::tr("Uninitialized variable visited (uninitialized)"), groupName, true, true, false, "-Werror=uninitialized");
     addOption(CC_CMD_OPT_ERROR_VLA,QObject::tr("Variable lenght array (vla)"), groupName, true, true, false, "-Werror=vla");
 
     // Output

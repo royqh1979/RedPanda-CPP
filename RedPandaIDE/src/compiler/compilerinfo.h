@@ -35,6 +35,7 @@
 #define CC_CMD_OPT_ENABLE_GCC_IMPORT_STD "cc_opt_enable_gcc_import_std"
 
 #define CC_CMD_OPT_ERROR_RETURN_TYPE "cc_opt_error_return_type"
+#define CC_CMD_OPT_ERROR_UNINITIALIZED "cc_opt_error_uninitialized"
 #define CC_CMD_OPT_ERROR_VLA "cc_opt_error_vla"
 #define CC_CMD_OPT_ERROR_IMPLICIT_INT "cc_opt_error_implicit_int"
 
