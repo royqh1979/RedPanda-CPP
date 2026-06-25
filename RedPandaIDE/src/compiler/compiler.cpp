@@ -769,16 +769,21 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         };
     }
     process.connect(&process, &QProcess::errorOccurred,
+                    &process,
                     [&](){
                         errorOccurred= true;
                     });
-    process.connect(&process, &QProcess::readyReadStandardError,[&process,this,compilerErrorUTF8](){
+    process.connect(&process, &QProcess::readyReadStandardError,
+                    &process,
+                    [&process,this,compilerErrorUTF8](){
         if (compilerErrorUTF8)
             this->error(QString::fromUtf8(process.readAllStandardError()));
         else
             this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
-    process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this,outputUTF8,&outputFile,&output](){
+    process.connect(&process, &QProcess::readyReadStandardOutput,
+                    &process,
+                    [&process,this,outputUTF8,&outputFile,&output](){
         if (!outputFile.isEmpty()) {
             output.write(process.readAllStandardOutput());
         } else {
@@ -788,7 +793,10 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
                 this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
         }
     });
-    process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[this](){
+    process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                    &process,
+                    [this](){
+
         this->error(COMPILE_PROCESS_END);
     });
     process.start();
