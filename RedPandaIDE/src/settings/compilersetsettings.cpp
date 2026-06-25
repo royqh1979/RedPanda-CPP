@@ -1617,7 +1617,7 @@ static void setReleaseOptions(PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_ERROR_RETURN_TYPE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_IMPLICIT_INT, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_UNINITIALIZED, COMPILER_OPTION_ON);
-    //pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
 }
 
@@ -1632,7 +1632,7 @@ static void setDebugOptions(PCompilerSet pSet, const QString &sanitizerType = QS
     pSet->setCompileOption(CC_CMD_OPT_ERROR_RETURN_TYPE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_IMPLICIT_INT, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_UNINITIALIZED, COMPILER_OPTION_ON);
-    //pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
 
     if (!sanitizerType.isEmpty()) {
         pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, sanitizerType);
