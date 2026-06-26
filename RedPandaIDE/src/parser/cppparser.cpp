@@ -3677,6 +3677,10 @@ bool CppParser::handleStatement(int maxIndex)
                     //see https://en.cppreference.com/w/cpp/language/class_template#Class_template_instantiation
                     skipNextSemicolon(mIndex, maxIndex);
                     goto _exit;
+                } else if (mTokenizer[mIndex+1]->text.startsWith("\"")) {
+                    // extern "C++" / extern "C"
+                    mIndex += 2;
+                    goto _exit;
                 }
             }
             keywordType = KeywordType::None;
