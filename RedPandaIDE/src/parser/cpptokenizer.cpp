@@ -408,8 +408,18 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                     result = "\"\"";
                     mCurrent+=2;
                     done = true;
-                } else
+                } else {
+                    countLines();
+                    result = "\"\"";
+                    done = true;
                     advance();
+                }
+                break;
+            case '\'':
+                countLines();
+                result = "\'\'";
+                done = true;
+                advance();
                 break;
             default:
                 advance();

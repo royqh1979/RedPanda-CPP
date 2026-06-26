@@ -121,4 +121,173 @@ void TestCppParser::test_parse_vars()
     QCOMPARE(statement->type,"static const int &");
     QCOMPARE(statement->args,"");
 
+    statement = mParser->findStatement("b1");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b1");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"unsigned int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b2");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b2");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"const unsigned int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b3");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b3");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const unsigned int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b4");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b4");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"extern const unsigned int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b5");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b5");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static unsigned int");
+    QCOMPARE(statement->args,"[4]");
+
+    statement = mParser->findStatement("b6");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b6");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static unsigned int *");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b7");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b7");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static unsigned int *const");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b8");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b8");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static unsigned int **");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s1");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s1");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"std::string");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s2");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s2");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"const std::string");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s3");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s3");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const std::string");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s4");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s4");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const std::string");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s5");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s5");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const std::string");
+    QCOMPARE(statement->args,"[4]");
+
+    statement = mParser->findStatement("s6");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s6");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const std::string *");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("s7");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"s7");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const std::string &");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("f1");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"f1");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const struct FILE *");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("f2");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"f2");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"static const struct FILE");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("ff1");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"ff1");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(statement->properties & StatementProperty::FunctionPointer);
+    QCOMPARE(statement->type,"int");
+    QCOMPARE(statement->args,"( )");
+
+    statement = mParser->findStatement("ff2");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"ff2");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(statement->properties & StatementProperty::FunctionPointer);
+    QCOMPARE(statement->type,"static const int");
+    QCOMPARE(statement->args,"( )");
+
+    statement = mParser->findStatement("ff3");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"ff3");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(statement->properties & StatementProperty::FunctionPointer);
+    QCOMPARE(statement->type,"static const std::string");
+    QCOMPARE(statement->args,"( )");
+
+    //TODO:: ff4 ff5
+
+    statement = mParser->findStatement("ff6");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"ff6");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(statement->properties & StatementProperty::FunctionPointer);
+    QCOMPARE(statement->type,"int *");
+    QCOMPARE(statement->args,"( )");
+
+    statement = mParser->findStatement("aa1");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"aa1");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(!(statement->properties & StatementProperty::FunctionPointer));
+    QCOMPARE(statement->type,"int (*)");
+    QCOMPARE(statement->args,"[5]");
+
+    statement = mParser->findStatement("aa2");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"aa2");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QVERIFY(!(statement->properties & StatementProperty::FunctionPointer));
+    QCOMPARE(statement->type,"static const std::string (*)");
+    QCOMPARE(statement->args,"[5]");
+
 }

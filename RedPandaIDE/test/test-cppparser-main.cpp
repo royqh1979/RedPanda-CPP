@@ -2,18 +2,24 @@
 #include <QGuiApplication>
 #include "test_cppparser.h"
 #include "test_cpppreprocessor.h"
+#include "test_cpptokenizer.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
     QTest::setMainSourcePath(__FILE__, QT_TESTCASE_BUILDDIR); // Optional: for source path resolution
 
     QApplication app(argc,argv);
+    initParser();
     {
-        TestCppParser tc;
+        TestCppPreprocessor tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
     {
-        TestCppPreprocessor tc;
+        TestCppTokenizer tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestCppParser tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

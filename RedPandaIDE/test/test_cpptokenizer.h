@@ -9,6 +9,9 @@ class TestCppTokenizer: public QObject
 public:
     TestCppTokenizer(QObject *parent=nullptr);
 private slots:
+    void test_parse_string1();
+    void test_parse_string2();
+    void test_parse_char();
     void test_parse_scope_resolution_operators1();
     void test_parse_scope_resolution_operators2();
 protected:
