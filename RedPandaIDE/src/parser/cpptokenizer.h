@@ -76,6 +76,19 @@ private:
 //    bool isForInit();
     bool isNumber() { return isDigitChar(*mCurrent); }
     bool isPreprocessor() { return *mCurrent=='#'; }
+    bool isRawString() {
+        return (*mCurrent == 'R' && *(mCurrent+1) == '\"')
+                || (*mCurrent == 'L' && *(mCurrent+1) == 'R' && *(mCurrent+2) == '\"')
+                || (*mCurrent == 'u' && *(mCurrent+1) == 'R' && *(mCurrent+2) == '\"')
+                || (*mCurrent == 'U' && *(mCurrent+1) == 'R' && *(mCurrent+2) == '\"')
+                || (*mCurrent == 'u' && *(mCurrent+1) == '8' && *(mCurrent+2) == 'R' && *(mCurrent+3) == '\"');
+    }
+    bool isU8StringOrChar() {
+        return (*mCurrent == 'u'
+                && *(mCurrent+1) == '8'
+                && (*(mCurrent+2) == '\"' || *(mCurrent+2) == '\'')
+                );
+    }
     bool isWord() { return isIdentChar(*mCurrent) && (*(mCurrent+1) != '"') && (*(mCurrent+1) != '\''); }
     void simplify(QString& output);
     void simplifyArgs(QString& output);
@@ -86,7 +99,6 @@ private:
     bool skipAngleBracketPair();
     void skipRawString();
     void skipSingleQuote();
-    void skipSplitLine();
     void skipTemplateArgs();
     void skipToEOL();
     void skipToNextToken();

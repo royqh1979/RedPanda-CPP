@@ -66,11 +66,181 @@ void TestCppTokenizer::test_parse_string2()
     QCOMPARE(mTokenizer[7]->text,";");
 }
 
+void TestCppTokenizer::test_parse_ustring1()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=u\"test\";"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_ustring2()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=U\"test\";"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_wide_string()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=L\"test\";"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_u8_string()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=u8\"test\";"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+
+void TestCppTokenizer::test_parse_raw_string1()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=R\"test\";",
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_raw_string2()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=LR\"test\";",
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_raw_string3()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=uR\"test\";",
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_raw_string4()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=UR\"test\";",
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_raw_string5()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "s=u8R\"test\";",
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"s");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\"\"");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
 void TestCppTokenizer::test_parse_char()
 {
     mTokenizer.clear();
     mTokenizer.tokenize(QStringList{
                             "ch='c';"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"ch");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\'\'");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_wide_char()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "ch=L'c';"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"ch");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\'\'");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_unicode_char1()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "ch=u'c';"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"ch");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\'\'");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_unicode_char2()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "ch=U'c';"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),4);
+    QCOMPARE(mTokenizer[0]->text,"ch");
+    QCOMPARE(mTokenizer[1]->text,"=");
+    QCOMPARE(mTokenizer[2]->text,"\'\'");
+    QCOMPARE(mTokenizer[3]->text,";");
+}
+
+void TestCppTokenizer::test_parse_u8_char()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "ch=u8'c';"
                          });
     QCOMPARE(mTokenizer.tokenCount(),4);
     QCOMPARE(mTokenizer[0]->text,"ch");

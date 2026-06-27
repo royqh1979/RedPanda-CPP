@@ -214,6 +214,20 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
 //            countLines();
 //            result = getArguments();
 //            done = (result != "");
+        } else if (isRawString()) {
+            countLines();
+            result = "\"\"";
+            done = true;
+            skipRawString();
+        } else if (isU8StringOrChar()) {
+            countLines();
+            done = true;
+            mCurrent+=2; // skip 'u8';
+            if (*mCurrent == '\"')
+                result = "\"\"";
+            else
+                result = "\'\'";
+            advance();
         } else if (isWord()) {
             countLines();
             result = getWord();
@@ -414,6 +428,13 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                     done = true;
                     advance();
                 }
+                break;
+            case 'R':
+                Q_ASSERT(*(mCurrent + 1) == '\"');
+                countLines();
+                result = "\"\"";
+                done = true;
+                advance();
                 break;
             case '\'':
                 countLines();
@@ -631,7 +652,7 @@ void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd)
         } else if (*mCurrent == cEnd) {
             mCurrent++; // skip over end
             break;
-        } else if ((*mCurrent == 'R') && (*(mCurrent+1) == '"')) {
+        } else if (isRawString()) {
             if (cStart != '\'' && cStart!='\"')
                 skipRawString(); // don't do it inside AnsiString!
             else
@@ -723,7 +744,8 @@ bool CppTokenizer::skipAngleBracketPair()
 
 void CppTokenizer::skipRawString()
 {
-    mCurrent++; //skip R
+    while (*mCurrent!='\"')
+        mCurrent++; //skip R / LR / uR / UR / u8R
     bool noEscape = false;
     bool findDCharSeq = true;
     QString dCharSeq;
@@ -778,13 +800,6 @@ void CppTokenizer::skipSingleQuote()
     if (*mCurrent!=0) {
         mCurrent++;
     }
-}
-
-void CppTokenizer::skipSplitLine()
-{
-    mCurrent++; // skip '\'
-    while ( isLineChar(*mCurrent)) // skip newline
-        mCurrent++;
 }
 
 void CppTokenizer::skipTemplateArgs()
@@ -849,18 +864,6 @@ void CppTokenizer::advance()
         break;
     case '\'':
         skipSingleQuote();
-        break;
-    case '\\':
-        if (isLineChar(*(mCurrent + 1)))
-            skipSplitLine();
-        else
-            mCurrent++;
-        break;
-    case 'R':
-        if (*(mCurrent+1) == '"')
-            skipRawString();
-        else
-            mCurrent++;
         break;
     default:
         mCurrent++;
