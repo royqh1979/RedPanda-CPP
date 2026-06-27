@@ -26,6 +26,7 @@ static const std::string s4("test");
 static const std::string s5[4];
 static const std::string *s6;
 static const std::string &s7;
+static const ::std::string &s8;
 
 static const struct FILE *f1,f2;
 
