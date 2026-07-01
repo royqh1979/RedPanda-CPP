@@ -27,6 +27,7 @@ private slots:
     void test_parse_u8_char();
     void test_parse_scope_resolution_operators1();
     void test_parse_scope_resolution_operators2();
+    void test_parse_scope_resolution_operators3();
 protected:
     CppTokenizer mTokenizer;
 };

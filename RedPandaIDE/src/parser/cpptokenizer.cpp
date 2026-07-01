@@ -544,6 +544,8 @@ QString CppTokenizer::getWord()
             mCurrent+=2;
         } else
             break;
+        //skip spaces
+        skipToNextToken();
     }
 
     return result;

@@ -49,6 +49,20 @@ void TestCppTokenizer::test_parse_scope_resolution_operators2()
 
 }
 
+void TestCppTokenizer::test_parse_scope_resolution_operators3()
+{
+    mTokenizer.clear();
+    mTokenizer.tokenize(QStringList{
+                            "template<typename _CharT, typename _Traits, typename _Alloc>"
+                            "basic_string<_CharT, _Traits, _Alloc>::"
+                            "basic_string"
+                         });
+    QCOMPARE(mTokenizer.tokenCount(),2);
+    QCOMPARE(mTokenizer[0]->text,"template");
+    QCOMPARE(mTokenizer[1]->text,"basic_string<_CharT, _Traits, _Alloc>::basic_string");
+
+}
+
 void TestCppTokenizer::test_parse_string2()
 {
     mTokenizer.clear();
