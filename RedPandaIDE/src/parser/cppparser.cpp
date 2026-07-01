@@ -1499,6 +1499,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
 //        qDebug()<<command<<fileName<<line<<kind<<parent->fullName;
 //    }
+
     if (kind == StatementKind::Constructor
             || kind == StatementKind::Function
             || kind == StatementKind::OverloadedOperator
@@ -4424,10 +4425,26 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                     QString suffix;
                     QString args;
                     cmd=mTokenizer[mIndex]->text;
+                    QString scopelessName;
+                    QString parentClassName;
+                    PStatement scopeStatement = getCurrentScope();
+                    if (splitLastMember(cmd,scopelessName,parentClassName)) {
+                        if (!parentClassName.isEmpty()) {
+                            // Provide Bar instead of Foo::Bar
+                            scopeStatement = getIncompleteClass(parentClassName,getCurrentScope());
+
+                            //parent not found
+                            if (scopeStatement)
+                                cmd = scopelessName;
+                            else
+                                cmd = ""; //TODO: handle this
+                        }
+                    }
+
                     parseCommandTypeAndArgs(cmd,suffix,args);
                     if (!cmd.isEmpty() && !isKeyword(cmd)) {
                         addedVar = addChildStatement(
-                                    getCurrentScope(),
+                                    scopeStatement,
                                     mCurrentFile,
                                     (lastType+' '+tempType+suffix).trimmed(),
                                     cmd,
