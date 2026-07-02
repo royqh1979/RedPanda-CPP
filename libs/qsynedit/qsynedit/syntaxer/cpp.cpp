@@ -612,6 +612,7 @@ void CppSyntaxer::procIdentifier()
                 }
                 pushIndents(IndentType::Statement, mLineSeq, word);
             } else if (word == "if" && mLastKeyword == "else") {
+                Q_ASSERT(!mRange.indents.isEmpty());
                 mRange.indents.last().keyword = "if";
             } else  {
                 pushIndents(IndentType::Statement, mLineSeq, word);
@@ -1796,6 +1797,7 @@ bool CppSyntaxer::isKeyword(const QString &word)
 void CppSyntaxer::setState(const PSyntaxState& rangeState)
 {
     std::shared_ptr<CppSyntaxState> cppState = std::dynamic_pointer_cast<CppSyntaxState>(rangeState);
+    Q_ASSERT(cppState != nullptr);
     mRange = *cppState;
     // current line's left / right parenthesis count should be reset before parsing each line
 }
@@ -1870,6 +1872,7 @@ bool CppSyntaxer::CppSyntaxState::equals(const std::shared_ptr<SyntaxState> &s2)
 {
     if (SyntaxState::equals(s2)) {
         std::shared_ptr<CppSyntaxState> cppS2 = std::dynamic_pointer_cast<CppSyntaxState>(s2);
+        Q_ASSERT(cppS2 != nullptr);
         return initialDCharSeq == cppS2->initialDCharSeq
                 && inAttribute == cppS2->inAttribute
                 && ancestorsForIf == cppS2->ancestorsForIf
