@@ -1002,6 +1002,7 @@ void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding,
     reparseDocument();
     emit linesDeleted(0, oldCount);
     emit linesInserted(0, mDocument->count());
+    updateVScrollbar();
     endEditing();
 }
 
