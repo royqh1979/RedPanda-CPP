@@ -51,7 +51,7 @@ void Exporter::clear()
 
 void Exporter::exportAll(const std::shared_ptr<const Document>& doc)
 {
-    exportRange(doc, CharPos{1, 1}, CharPos{INT_MAX, INT_MAX});
+    exportRange(doc, CharPos{0, 0}, CharPos{INT_MAX, INT_MAX});
 }
 
 void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos start, CharPos stop)

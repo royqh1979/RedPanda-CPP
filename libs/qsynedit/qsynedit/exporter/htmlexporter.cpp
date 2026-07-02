@@ -45,10 +45,8 @@ void HTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &uniqueAttriName)
+QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &styleName)
 {
-    QString styleName = makeValidName(uniqueAttriName);
-
     QString result = "." + styleName + " { ";
     if (mUseBackground && attri->background().isValid())
         result += "background-color: " + colorToHTML(attri->background()) + "; ";
@@ -66,13 +64,6 @@ QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &uniqueAtt
     return result;
 }
 
-bool HTMLExporter::attriToCSSCallback(PSyntaxer , PTokenAttribute attri, const QString& uniqueAttriName, QList<void *> params)
-{
-    QString& styles = *static_cast<QString *>(params[0]);
-    styles.append(attriToCSS(attri,uniqueAttriName) + lineBreak());
-    return true;
-}
-
 QString HTMLExporter::colorToHTML(const QColor &color) const
 {
     return color.name();
@@ -80,14 +71,13 @@ QString HTMLExporter::colorToHTML(const QColor &color) const
 
 QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attri)
 {
-    QString result;
-    enumTokenAttributes(syntaxer,false,
-                          std::bind(
-                              &HTMLExporter::styleNameCallback,this,
-                              std::placeholders::_1, std::placeholders::_2,
-                              std::placeholders::_3, std::placeholders::_4),
-                          {&attri,&result});
-    return result;
+    QString name  = syntaxer->languageName() + '-' + attri->name();
+    QString cssName = mCssNames.value(name);
+    if (cssName.isEmpty()) {
+        cssName = makeValidName(name);
+        mCssNames.insert(name,cssName);
+    }
+    return cssName;
 }
 
 QString HTMLExporter::makeValidName(const QString &name)
@@ -101,19 +91,6 @@ QString HTMLExporter::makeValidName(const QString &name)
             result += ch;
     }
     return result;
-}
-
-bool HTMLExporter::styleNameCallback(PSyntaxer /*syntaxer*/, PTokenAttribute attri, const QString& uniqueAttriName, QList<void *> params)
-{
-    PTokenAttribute& attriToFind = *static_cast<PTokenAttribute*>(params[0]);
-    QString& styleName = *static_cast<QString *>(params[1]);
-
-    if (attri == attriToFind) {
-        styleName.clear();
-        styleName.append(makeValidName(uniqueAttriName));
-        return false;
-    }
-    return true;
 }
 
 void HTMLExporter::formatAttributeDone(bool , bool , FontStyles )
@@ -163,10 +140,10 @@ QString HTMLExporter::getHeader()
 {
     using namespace std::placeholders;
     QString styles;
-    enumTokenAttributes(mSyntaxer, true,
-                          std::bind(&HTMLExporter::attriToCSSCallback,
-                                    this, _1, _2, _3, _4),
-                          {&styles});
+    foreach (const PTokenAttribute &pAttr, mSyntaxer->attributes()){
+        QString uniqueAttriName = getStyleName(mSyntaxer, pAttr);
+        styles.append(attriToCSS(pAttr,uniqueAttriName) + lineBreak());
+    }
 
     QString HTMLAsTextHeader =
             "<html>" + lineBreak() +

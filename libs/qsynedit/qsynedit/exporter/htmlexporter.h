@@ -35,15 +35,10 @@ protected:
 private:
     PTokenAttribute mLastAttri;
     QString attriToCSS(PTokenAttribute attri, const QString& uniqueAttriName);
-    bool attriToCSSCallback(PSyntaxer syntaxer, PTokenAttribute attri,
-                            const QString& uniqueAttriName,  QList<void *> params);
     QString colorToHTML(const QColor &color) const;
     QString getStyleName(PSyntaxer syntaxer,
                          PTokenAttribute attri);
     QString makeValidName(const QString &name);
-    bool styleNameCallback(PSyntaxer syntaxer, PTokenAttribute  attri,
-                           const QString& uniqueAttriName,  QList<void *> params);
-
     // Exporter interface
 protected:
     void formatAttributeDone(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles) override;
@@ -58,6 +53,8 @@ protected:
 protected:
     QString getStartLineNumberString(int startLine, int endLine) override;
     QString getEndLineNumberString(int startLine, int endLine) override;
+private:
+    QHash<QString,QString> mCssNames;
 };
 }
 #endif // HTMLEXPORTER_H
