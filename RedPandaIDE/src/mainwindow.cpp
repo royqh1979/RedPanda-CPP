@@ -5359,6 +5359,20 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
         menu.addAction(ui->actionSwitchHeaderSource);
         menu.addSeparator();
     }
+    // Header context: allow setting/clearing context for header files
+    if (editor && isC_CPPHeaderFile(editor->fileType())) {
+        QAction *setContextAction = menu.addAction(
+            tr("Set Header Context..."));
+        connect(setContextAction, &QAction::triggered,
+                this, [this, editor]() { onSetHeaderContext(editor); });
+        if (!editor->contextFile().isEmpty()) {
+            QAction *clearContextAction = menu.addAction(
+                tr("Clear Header Context (%1)").arg(extractFileName(editor->contextFile())));
+            connect(clearContextAction, &QAction::triggered,
+                    this, [this, editor]() { onClearHeaderContext(editor); });
+        }
+        menu.addSeparator();
+    }
     menu.addAction(ui->actionClose);
     menu.addAction(ui->actionClose_All);
     menu.addAction(ui->actionClose_Others);
@@ -5376,6 +5390,85 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
         ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     }
     menu.exec(tabBar->mapToGlobal(pos));
+}
+
+void MainWindow::onSetHeaderContext(Editor *editor)
+{
+    if (!editor)
+        return;
+    // Collect open C/C++ source files as candidate context files
+    QStringList items;
+    QList<Editor *> candidates;
+    for (int i = 0; i < mEditorManager->pageCount(); i++) {
+        Editor *e = mEditorManager->getEditor(i);
+        if (!e || e == editor)
+            continue;
+        FileType ft = e->fileType();
+        if (isC_CPPSourceFile(ft)) {
+            candidates.append(e);
+            QString displayName = e->filename();
+            if (!e->inProject() && !e->isNew())
+                displayName = displayName;
+            if (e->modified())
+                displayName += tr(" [modified]");
+            items.append(displayName);
+        }
+    }
+    if (items.isEmpty()) {
+        QMessageBox::information(this, tr("Header Context"),
+            tr("No open C/C++ source files available to use as context.\n"
+               "Open a .c or .cpp file first."));
+        return;
+    }
+    bool ok = false;
+    QString choice = QInputDialog::getItem(this, tr("Set Header Context"),
+        tr("Select a source file to provide context for %1:").arg(extractFileName(editor->filename())),
+        items, 0, false, &ok);
+    if (!ok || choice.isEmpty())
+        return;
+    int idx = items.indexOf(choice);
+    if (idx >= 0 && idx < candidates.size()) {
+        Editor *contextEditor = candidates[idx];
+        editor->setContextFile(contextEditor->filename());
+        // Update tab text to show context
+        updateEditorTabTitle(editor);
+    }
+}
+
+void MainWindow::onClearHeaderContext(Editor *editor)
+{
+    if (!editor)
+        return;
+    editor->setContextFile(QString());
+    updateEditorTabTitle(editor);
+}
+
+void MainWindow::updateEditorTabTitle(Editor *editor)
+{
+    if (!editor)
+        return;
+    // Find which tab widget contains this editor
+    QTabWidget *tab = nullptr;
+    int idx = -1;
+    for (int i = 0; i < ui->EditorTabsLeft->count(); i++) {
+        if (ui->EditorTabsLeft->widget(i) == editor) { tab = ui->EditorTabsLeft; idx = i; break; }
+    }
+    if (!tab) {
+        for (int i = 0; i < ui->EditorTabsRight->count(); i++) {
+            if (ui->EditorTabsRight->widget(i) == editor) { tab = ui->EditorTabsRight; idx = i; break; }
+        }
+    }
+    if (!tab || idx < 0) return;
+
+    QString title = editor->caption();
+    if (isC_CPPHeaderFile(editor->fileType()) && !editor->contextFile().isEmpty()) {
+        title += QString(" [%1]").arg(extractFileName(editor->contextFile()));
+        tab->setTabToolTip(idx,
+            tr("Header context: %1").arg(editor->contextFile()));
+    } else {
+        tab->setTabToolTip(idx, editor->filename());
+    }
+    tab->setTabText(idx, title);
 }
 
 void MainWindow::disableDebugActions()
