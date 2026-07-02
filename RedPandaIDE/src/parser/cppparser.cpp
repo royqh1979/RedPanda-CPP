@@ -55,6 +55,7 @@ CppParser::CppParser() : QObject{nullptr},
     updateSerialId();
     mUniqId = 0;
     mParsing = false;
+    mStopParse = false;
     //mStatementList ; // owns the objects
     //mFilesToScan;
     //mIncludePaths;
@@ -1058,6 +1059,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         if (mLockCount>0)
             return false;
         mParsing = true;
+        mStopParse = false; // clear any previous stop request
         updateSerialId();
         if (updateView)
             emit onBusy();
@@ -1087,6 +1089,11 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
             foreach (const QString& file,files) {
                 mFilesScannedCount++;
                 emit progress(file,mFilesToScanCount,mFilesScannedCount);
+                {
+                    QMutexLocker locker(&mMutex);
+                    if (mStopParse)
+                        return false;
+                }
                 if (!mPreprocessor.fileScanned(file)) {
                     internalParse(file);
                 }
@@ -1099,8 +1106,16 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
 
             mFilesScannedCount++;
             emit progress(fileName,mFilesToScanCount,mFilesScannedCount);
+            {
+                QMutexLocker locker(&mMutex);
+                if (mStopParse)
+                    return false;
+            }
             internalParse(contextFilename);
             if (!mPreprocessor.fileScanned(fileName)) {
+                QMutexLocker locker(&mMutex);
+                if (mStopParse)
+                    return false;
                 internalParse(fileName);
             }
         }
@@ -1118,6 +1133,7 @@ void CppParser::parseFileList(bool updateView)
             return;
         updateSerialId();
         mParsing = true;
+        mStopParse = false; // clear previous stop request
         if (updateView)
             emit onBusy();
         emit parseStarted();
@@ -1139,6 +1155,11 @@ void CppParser::parseFileList(bool updateView)
         foreach (const QString& file, files) {
             mFilesScannedCount++;
             emit progress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+            {
+                QMutexLocker locker(&mMutex);
+                if (mStopParse)
+                    break;
+            }
             if (!mPreprocessor.fileScanned(file)) {
                 internalParse(file);
             }
@@ -1237,6 +1258,12 @@ void CppParser::unFreeze()
 {
     QMutexLocker locker(&mMutex);
     mLockCount--;
+}
+
+void CppParser::stopParsing()
+{
+    QMutexLocker locker(&mMutex);
+    mStopParse = true;
 }
 
 bool CppParser::fileScanned(const QString &fileName) const
@@ -3573,6 +3600,8 @@ void CppParser::handleAccessibilitySpecifiers(KeywordType keywordType, int maxIn
 
 bool CppParser::handleStatement(int maxIndex)
 {
+    if (mStopParse)
+        return false;
 //    int idx=getCurrentBlockEndSkip();
 //    int idx2=getCurrentBlockBeginSkip();
     int idx3=getCurrentInlineNamespaceEndSkip(maxIndex);
@@ -4598,6 +4627,11 @@ void CppParser::internalParse(const QString &fileName)
 
     //timer.restart();
     // Tokenize the preprocessed buffer file
+    {
+        QMutexLocker locker(&mMutex);
+        if (mStopParse)
+            return;
+    }
     mTokenizer.tokenize(preprocessResult);
     //reduce memory usage
     preprocessResult.clear();
@@ -4614,6 +4648,8 @@ void CppParser::internalParse(const QString &fileName)
     // Process the token list
     int endIndex = mTokenizer.tokenCount();
     while(true) {
+        if (mStopParse)
+            break;
         if (!handleStatement(endIndex))
             break;
     }
