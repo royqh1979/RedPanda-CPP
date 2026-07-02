@@ -8,16 +8,16 @@ main:
 	# Microsoft X86_64 Calling convention:
 	# - The first four integer or pointer parameters are passed in the rcx, rdx, r8, and r9 registers.
 	# - The first four floating-point parameters are passed in the first four SSE registers, xmm0-xmm3.
-	# - The caller reserves space on the stack for arguments passed in registers(32 bytes). Debuggers can use it to store debug infos.
+	# - The caller reserves space on the stack for arguments passed in registers(32 bytes). Debuggers can use it to store debug infos.	And the CALL instruction pushes an 8-byte return address onto the stack. The stack pointer (RSP) must be 16-byte aligned before the CALL instruction is executed, so we must substract 40 bytes (32+8) before CALL printf.
 	# - Any additional arguments are passed on the stack.
 	# - An integer or pointer return value is returned in the rax register, while a floating-point return value is returned in xmm0.
 	# see https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/x64-architecture
 	
-	sub 	$32, %rsp           # reserve stack space for the call
+	sub 	$40, %rsp           # reserve stack space for the call
 	leaq	fmt(%rip), %rcx		# first parameter 
 	leaq	msg(%rip), %rdx		# second parameter
 	call 	printf
-	add 	$32, %rsp           # restore stack space
+	add 	$40, %rsp           # restore stack space
 
 	xor 	%eax,%eax	        # set 0 as exit code 
 	ret
