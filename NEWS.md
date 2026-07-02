@@ -25,6 +25,7 @@ Red Panda C++ Version 3.5
   - enhancement: Correctly parse array of pointers.
   - enhancement: New option "Uninitialized variable visited." in Compiler Set -> Compile/Link options -> Error.
   - enhancement: Notify user if file creation failed. (by C14147@github.com)
+  - fix: Parser crash in debug mode, when char literal is not correctly closed.
 
 >>>>>>> 9f096f2814ab480e3738b03f51830b106dbb0613
 Red Panda C++ Version 3.4

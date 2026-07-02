@@ -28,6 +28,8 @@ private slots:
     void test_parse_scope_resolution_operators1();
     void test_parse_scope_resolution_operators2();
     void test_parse_scope_resolution_operators3();
+    void test_parse_unend_char_literal();
+    void test_parse_unend_string_literal();
 protected:
     CppTokenizer mTokenizer;
 };

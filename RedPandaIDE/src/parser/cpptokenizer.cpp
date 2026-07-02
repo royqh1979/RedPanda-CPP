@@ -426,7 +426,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                     countLines();
                     result = "\"\"";
                     done = true;
-                    advance();
+                    skipDoubleQuotes();
                 }
                 break;
             case 'R':
@@ -440,7 +440,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 countLines();
                 result = "\'\'";
                 done = true;
-                advance();
+                skipSingleQuote();
                 break;
             default:
                 advance();
@@ -628,13 +628,13 @@ void CppTokenizer::simplifyArgs(QString &output)
 void CppTokenizer::skipDoubleQuotes()
 {
     mCurrent++;
-    while (!(*mCurrent=='"' || *mCurrent == 0)) {
+    while (!(*mCurrent=='"' || *mCurrent == 0 || *mCurrent == '\r' || *mCurrent == '\n')) {
         if (*mCurrent == '\\')
             mCurrent+=2; // skip escaped char
         else
             mCurrent++;
     }
-    if (*mCurrent!=0) {
+    if (*mCurrent=='"') {
         mCurrent++;
     }
 }
@@ -793,13 +793,13 @@ void CppTokenizer::skipRawString()
 void CppTokenizer::skipSingleQuote()
 {
     mCurrent++;
-    while (!(*mCurrent=='\'' || *mCurrent == 0)) {
+    while (!(*mCurrent=='\'' || *mCurrent == 0 || *mCurrent == '\r' || *mCurrent == '\n')) {
         if (*mCurrent == '\\')
             mCurrent+=2; // skip escaped char
         else
             mCurrent++;
     }
-    if (*mCurrent!=0) {
+    if (*mCurrent=='\'') {
         mCurrent++;
     }
 }
