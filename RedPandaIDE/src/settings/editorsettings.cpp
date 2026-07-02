@@ -193,6 +193,16 @@ void EditorSettings::setEnableAutolink(bool newEnableAutolink)
     mEnableAutolink = newEnableAutolink;
 }
 
+bool EditorSettings::enableProblemSetAutoSave() const
+{
+    return mEnableProblemSetAutoSave;
+}
+
+void EditorSettings::setEnableProblemSetAutoSave(bool newEnable)
+{
+    mEnableProblemSetAutoSave = newEnable;
+}
+
 const QColor &EditorSettings::rightEdgeLineColor() const
 {
     return mRightEdgeLineColor;
@@ -998,6 +1008,7 @@ void EditorSettings::doSave()
     saveValue("auto_save_interal",mAutoSaveInterval);
     saveValue("auto_save_target",mAutoSaveTarget);
     saveValue("auto_save_strategy",mAutoSaveStrategy);
+    saveValue("enable_problem_set_auto_save",mEnableProblemSetAutoSave);
 
     //auto link
     saveValue("enable_autolink",mEnableAutolink);
@@ -1155,6 +1166,7 @@ void EditorSettings::doLoad()
     mAutoSaveInterval = intValue("auto_save_interal",10);
     mAutoSaveTarget = static_cast<enum AutoSaveTarget>(
                 intValue("auto_save_target",AutoSaveTarget::astCurrentFile));
+    mEnableProblemSetAutoSave = boolValue("enable_problem_set_auto_save",false);
     mAutoSaveStrategy = static_cast<enum AutoSaveStrategy>(
                 intValue("auto_save_strategy",AutoSaveStrategy::assOverwrite));
 
