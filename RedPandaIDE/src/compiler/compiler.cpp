@@ -477,9 +477,6 @@ QStringList Compiler::getCCompileArguments(bool checkSyntax)
         }
     }
 
-    if (result.contains("-g3")) {
-        result << "-D_DEBUG";
-    }
     return result;
 }
 
@@ -529,9 +526,6 @@ QStringList Compiler::getCppCompileArguments(bool checkSyntax)
         }
     }
 
-    if (result.contains("-g3")) {
-        result << "-D_DEBUG";
-    }
     return result;
 }
 

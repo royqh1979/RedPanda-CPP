@@ -1619,6 +1619,8 @@ static void setReleaseOptions(PCompilerSet pSet) {
 //  pSet->setCompileOption(CC_CMD_OPT_ERROR_UNINITIALIZED, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
+    pSet->setCustomCompileParams("-DNDEBUG");
+    pSet->setUseCustomCompileParams(true);
 }
 
 static void setDebugOptions(PCompilerSet pSet, const QString &sanitizerType = QString()) {
@@ -1640,7 +1642,8 @@ static void setDebugOptions(PCompilerSet pSet, const QString &sanitizerType = QS
     //Some windows gcc don't correctly support this
     //pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
-
+    pSet->setCustomCompileParams("-D_DEBUG");
+    pSet->setUseCustomCompileParams(true);
 }
 
 bool elfToolchainHasDynamicLibc(const QString &folder, const QString &c_prog)
