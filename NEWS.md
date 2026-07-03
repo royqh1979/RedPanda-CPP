@@ -31,7 +31,6 @@ Red Panda C++ Version 3.5
   - fix: Printed text doesn't have color.
   - enhancement: Release Compiler set add "-DNDEBUG" parameter when compiling by default.
 
->>>>>>> 9f096f2814ab480e3738b03f51830b106dbb0613
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
   - fix: Syntax color doesn't work in the code snippet option page.
