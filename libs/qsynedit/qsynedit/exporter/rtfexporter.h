@@ -28,7 +28,6 @@ public:
     RTFExporter(const RTFExporter&)=delete;
     RTFExporter& operator=(const RTFExporter&)=delete;
 private:
-    bool mAttributesChanged;
     QList<QColor> mListColors;
     QString colorToRTF(const QColor& AColor) const;
     int getColorIndex(const QColor& AColor);
