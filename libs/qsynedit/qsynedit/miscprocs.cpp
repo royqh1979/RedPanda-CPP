@@ -42,45 +42,6 @@ int getEOL(const QString &Line, int start)
     return Line.size();
 }
 
-static bool internalEnumTokenAttributes(PSyntaxer syntaxer,
-                                   bool skipDuplicates,
-                                   TokenAttributeProc tokenAttriProc,
-                                   std::initializer_list<void *>& params,
-                                   SyntaxerList& syntaxerList) {
-    bool Result = true;
-    if (syntaxerList.indexOf(syntaxer)>0) {
-        if (skipDuplicates)
-            return Result;
-    } else {
-        syntaxerList.append(syntaxer);
-    }
-    if (syntaxer) {
-        foreach (const PTokenAttribute &pAttr, syntaxer->attributes()){
-            QString UniqueAttriName = syntaxer->languageName()
-                    +  QString("%1").arg(syntaxerList.indexOf(syntaxer)) + '.'
-                    + pAttr->name();
-            Result = tokenAttriProc(syntaxer, pAttr,
-                                          UniqueAttriName, params);
-            if (!Result)
-                break;
-        }
-    }
-    return Result;
-}
-
-bool enumTokenAttributes(PSyntaxer syntaxer, bool skipDuplicates,
-                           TokenAttributeProc tokenAttriProc,
-                           std::initializer_list<void *> params)
-{
-    if (!syntaxer || !tokenAttriProc) {
-        return false;
-    }
-
-    SyntaxerList syntaxerList;
-    return internalEnumTokenAttributes(syntaxer, skipDuplicates,
-        tokenAttriProc, params, syntaxerList);
-}
-
 FontStyles getFontStyles(const QFont &font)
 {
     FontStyles styles;

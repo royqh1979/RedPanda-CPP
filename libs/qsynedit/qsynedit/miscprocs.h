@@ -48,13 +48,6 @@ using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
     PTokenAttribute attri, const QString& uniqueAttriName,
     QList<void *> params)>;
 
-// Enums all child syntaxers and their attributes of a TSynMultiSyn through a
-// callback function.
-// This function also handles nested TSynMultiSyns including their MarkerAttri.
-bool enumTokenAttributes(PSyntaxer syntaxer,
-                           bool skipDuplicates, TokenAttributeProc tokenAttriProc,
-                           std::initializer_list<void *> Params);
-
 FontStyles getFontStyles(const QFont& font);
 
 void ensureNotAfter(CharPos& cord1, CharPos& cord2);
