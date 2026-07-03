@@ -1866,7 +1866,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+365"/>
+        <location filename="../src/editor.cpp" line="+366"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1951,7 +1951,23 @@ p, li { white-space: pre-wrap; }
         <translation>打印文档</translation>
     </message>
     <message>
-        <location line="+768"/>
+        <location line="+47"/>
+        <location line="+1"/>
+        <source>Printing...</source>
+        <translation>正在打印...</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Printing Page %1 / %2</source>
+        <translation>正在打印%1/%2页</translation>
+    </message>
+    <message>
+        <location line="+741"/>
         <location line="+26"/>
         <location line="+43"/>
         <source>Ctrl+click for more info</source>
@@ -1967,7 +1983,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location line="-4619"/>
+        <location line="-4649"/>
         <source>Confirm Reload File</source>
         <translation>确认重新读取文件</translation>
     </message>
@@ -2006,7 +2022,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+5025"/>
+        <location filename="../src/editor.cpp" line="+5055"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>

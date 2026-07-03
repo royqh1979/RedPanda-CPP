@@ -1513,7 +1513,7 @@
         <translation type="vanished">sem nome</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+365"/>
+        <location filename="../src/editor.cpp" line="+366"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -1549,7 +1549,7 @@
         <translation>Imprimir documento</translation>
     </message>
     <message>
-        <location line="+768"/>
+        <location line="+798"/>
         <location line="+26"/>
         <location line="+43"/>
         <source>Ctrl+click for more info</source>
@@ -1582,7 +1582,7 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5016"/>
+        <location line="-5046"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
@@ -1613,7 +1613,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3149"/>
+        <location line="+1165"/>
+        <location line="+1"/>
+        <source>Printing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Printing Page %1 / %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2004"/>
         <source>Reformat Error</source>
         <translation type="unfinished"></translation>
     </message>

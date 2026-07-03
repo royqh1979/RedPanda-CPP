@@ -50,6 +50,7 @@
 #include "syntaxermanager.h"
 #include "iconsmanager.h"
 #include <QDebug>
+#include <QProgressDialog>
 #include <qt_utils/charsetinfo.h>
 #include "utils/escape.h"
 #include "utils/ui.h"
@@ -60,6 +61,7 @@
 #include "settings/editorsettings.h"
 #include "settings/codecompletionsettings.h"
 #include "colorscheme.h"
+#include <QAbstractTextDocumentLayout>
 
 using QSynedit::CharPos;
 
@@ -3078,7 +3080,7 @@ void Editor::print()
 
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-    mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
+    mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
     exporter.setSyntaxer(pSyntaxer);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
@@ -3099,7 +3101,40 @@ void Editor::print()
 
     doc.setDefaultFont(font());
     doc.setHtml(html);
-    doc.print(&printer);
+    QPainter painter(&printer);
+    if (!painter.isActive()) return;
+
+    // 手动分页绘制，而不是调用 doc.print()
+    // 先计算总页数
+    QSize pageSize = printer.pageLayout().paintRectPixels(printer.resolution()).size();
+    doc.setPageSize(pageSize);
+    int pageCount = doc.pageCount();
+
+    QProgressDialog progress(tr("Printing..."), tr("Cancel"), 0, pageCount, this);
+    progress.setWindowTitle(tr("Printing..."));
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(500);
+    progress.setValue(0);
+    progress.show();
+
+    for (int i = 0; i < pageCount; ++i) {
+        if (i > 0) printer.newPage();
+        progress.setValue(i + 1);
+        progress.setLabelText(tr("Printing Page %1 / %2")
+                              .arg(i + 1).arg(pageCount));
+        QCoreApplication::processEvents();
+
+        if (progress.wasCanceled()) {
+            break;
+        }
+        painter.save();
+        painter.translate(0, -i * doc.pageSize().height());
+        QRectF clipRect(0, i * doc.pageSize().height(),
+                        doc.pageSize().width(), doc.pageSize().height());
+        doc.drawContents(&painter, clipRect);
+        painter.restore();
+    }
+    painter.end();
 }
 
 void Editor::exportAsRTF(const QString &rtfFilename)
