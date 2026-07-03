@@ -28,8 +28,8 @@ Red Panda C++ Version 3.5
   - fix: Parser crash in debug mode, when char literal is not correctly closed.
   - enhancement: Greatly optimized "Copy as HTML" / "Export to HTML" processes.
   - fix: Font style not correct in exported RTF.
-  - fix: Print using "Microsoft print to PDF" can't generate colored pdf.
-  - enhancement: Add "NDEBUG" macro definition in release compiler set.
+  - fix: Printed text doesn't have color.
+  - enhancement: Release Compiler set add "-DNDEBUG" parameter when compiling by default.
 
 >>>>>>> 9f096f2814ab480e3738b03f51830b106dbb0613
 Red Panda C++ Version 3.4
