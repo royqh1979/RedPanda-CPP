@@ -27,6 +27,7 @@ Red Panda C++ Version 3.5
   - enhancement: Notify user if file creation failed. (by C14147@github.com)
   - fix: Parser crash in debug mode, when char literal is not correctly closed.
   - enhancement: Greatly optimized "Copy as HTML" / "Export to HTML" processes.
+  - fix: Font style not correct in exported RTF.
 
 >>>>>>> 9f096f2814ab480e3738b03f51830b106dbb0613
 Red Panda C++ Version 3.4

@@ -61,59 +61,58 @@ QString RTFExporter::getFontTable()
 void RTFExporter::formatAttributeDone(bool , bool , FontStyles fontStyles)
 {
     // nothing to do about the color, but reset the font style
-//    if (fontStyles.testFlag(FontStyle::fsBold)) {
-//        mAttributesChanged = true;
-//        addData("\\b0");
-//    }
-//    if (fontStyles.testFlag(FontStyle::fsItalic)) {
-//        mAttributesChanged = true;
-//        addData("\\i0");
-//    }
-//    if (fontStyles.testFlag(FontStyle::fsUnderline)) {
-//        mAttributesChanged = true;
-//        addData("\\ul0");
-//    }
-//    if (fontStyles.testFlag(FontStyle::fsStrikeOut)) {
-//        mAttributesChanged = true;
-//        addData("\\strike0");
-//    }
+    if (fontStyles.testFlag(FontStyle::fsBold)) {
+        mAttributesChanged = true;
+        addData("\\b0");
+    }
+    if (fontStyles.testFlag(FontStyle::fsItalic)) {
+        mAttributesChanged = true;
+        addData("\\i0");
+    }
+    if (fontStyles.testFlag(FontStyle::fsUnderline)) {
+        mAttributesChanged = true;
+        addData("\\ul0");
+    }
+    if (fontStyles.testFlag(FontStyle::fsStrikeOut)) {
+        mAttributesChanged = true;
+        addData("\\strike0");
+    }
 }
 
 void RTFExporter::formatAttributeInit(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles)
 {
-    bool attributesChanged = false;
+    mAttributesChanged = false;
     // background color
     if (backgroundChanged) {
         addData(QString("\\chshdng0\\chcbpat%1\\cb%2\\highlight%3 ")
               .arg(getColorIndex(mLastBG))
               .arg(getColorIndex(mLastBG))
               .arg(getColorIndex(mLastBG)));
-        attributesChanged = true;
+        mAttributesChanged = true;
     }
     // text color
     if (foregroundChanged) {
         addData(QString("\\cf%1").arg(getColorIndex(mLastFG)));
-        attributesChanged = true;
+        mAttributesChanged = true;
     }
     // font styles
-    // nothing to do about the color, but reset the font style
     if (fontStyles.testFlag(FontStyle::fsBold)) {
-        attributesChanged = true;
-        addData("\\b0");
+        mAttributesChanged = true;
+        addData("\\b");
     }
     if (fontStyles.testFlag(FontStyle::fsItalic)) {
-        attributesChanged = true;
-        addData("\\i0");
+        mAttributesChanged = true;
+        addData("\\i");
     }
     if (fontStyles.testFlag(FontStyle::fsUnderline)) {
-        attributesChanged = true;
-        addData("\\ul0");
+        mAttributesChanged = true;
+        addData("\\ul");
     }
     if (fontStyles.testFlag(FontStyle::fsStrikeOut)) {
-        attributesChanged = true;
-        addData("\\strike0");
+        mAttributesChanged = true;
+        addData("\\strike");
     }
-    if (attributesChanged) {
+    if (mAttributesChanged) {
         addData(" ");
     }
 }

@@ -43,6 +43,9 @@ protected:
     QString getFooter() override;
     QString getFormatName() override;
     QString getHeader() override;
+
+private:
+    bool mAttributesChanged;
 };
 
 }
