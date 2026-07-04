@@ -522,37 +522,37 @@
         <translation>[Замечание] </translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="767"/>
+        <location filename="../src/compiler/compiler.cpp" line="761"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>Невозможно открыть файл &quot;%1&quot; для записи!</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="819"/>
+        <location filename="../src/compiler/compiler.cpp" line="813"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Ошибка запуска процесса компиляции для &apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="823"/>
+        <location filename="../src/compiler/compiler.cpp" line="817"/>
         <source>The compiler process crashed after starting successfully.</source>
         <translation>Процесс компиляции обрушился после успешного запуска.</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="826"/>
+        <location filename="../src/compiler/compiler.cpp" line="820"/>
         <source>The last waitFor...() function timed out.</source>
         <translation>Время ожидания последнего вызова функции waitFor...() истекло.</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="829"/>
+        <location filename="../src/compiler/compiler.cpp" line="823"/>
         <source>An error occurred when attempting to write to the compiler process.</source>
         <translation>Произошла ошибка при попытке записи в процесс компиляции.</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="832"/>
+        <location filename="../src/compiler/compiler.cpp" line="826"/>
         <source>An error occurred when attempting to read from the compiler process.</source>
         <translation>Произошла ошибка при попытке чтения из процесса компиляции.</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compiler.cpp" line="835"/>
+        <location filename="../src/compiler/compiler.cpp" line="829"/>
         <source>An unknown error occurred.</source>
         <translation>Произошла неизвестная ошибка.</translation>
     </message>
@@ -1366,81 +1366,81 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../src/editor.cpp" line="486"/>
+        <location filename="../src/editor.cpp" line="487"/>
         <source>Error Load File</source>
         <translation>Ошибка загрузки файла</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="366"/>
+        <location filename="../src/editor.cpp" line="367"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="298"/>
-        <location filename="../src/editor.cpp" line="415"/>
+        <location filename="../src/editor.cpp" line="299"/>
+        <location filename="../src/editor.cpp" line="416"/>
         <source>Save Error</source>
         <translation type="unfinished">Ошибка сохранения</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="331"/>
+        <location filename="../src/editor.cpp" line="332"/>
         <source>Save As</source>
         <translation>Сохранить как</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="367"/>
+        <location filename="../src/editor.cpp" line="368"/>
         <source>File %1 already opened!</source>
         <translation>Файл %1 уже открыт!</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="476"/>
+        <location filename="../src/editor.cpp" line="477"/>
         <source>Confirm Reload File</source>
         <translation>Подтверждение перезагрузки файла</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="477"/>
+        <location filename="../src/editor.cpp" line="478"/>
         <source>The editing file will be reloaded. &lt;br /&gt;All unsaved modifications will be lost. &lt;br /&gt;Are you sure to continue?</source>
         <translation>Редактируемый файл будет перезагружен. &lt;br /&gt; Все несохраненные изменения будут потеряны. &lt;br /&gt; Вы хотите продолжить?</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="1944"/>
+        <location filename="../src/editor.cpp" line="1955"/>
         <source>hex: %1</source>
         <translation>hex: %1</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="1946"/>
+        <location filename="../src/editor.cpp" line="1957"/>
         <source>dec: %1</source>
         <translation>dec: %1</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3064"/>
+        <location filename="../src/editor.cpp" line="3075"/>
         <source>Print Document</source>
         <translation>Печать документа</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3111"/>
-        <location filename="../src/editor.cpp" line="3112"/>
+        <location filename="../src/editor.cpp" line="3128"/>
+        <location filename="../src/editor.cpp" line="3129"/>
         <source>Printing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3111"/>
+        <location filename="../src/editor.cpp" line="3128"/>
         <source>Cancel</source>
         <translation type="unfinished">Отмена</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3121"/>
+        <location filename="../src/editor.cpp" line="3138"/>
         <source>Printing Page %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3862"/>
-        <location filename="../src/editor.cpp" line="3888"/>
-        <location filename="../src/editor.cpp" line="3931"/>
+        <location filename="../src/editor.cpp" line="3895"/>
+        <location filename="../src/editor.cpp" line="3921"/>
+        <location filename="../src/editor.cpp" line="3964"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+щелчок для подробностей</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="5125"/>
+        <location filename="../src/editor.cpp" line="5158"/>
         <source>Reformat Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1474,7 +1474,7 @@
         <translation type="vanished">Введите условие для точки останова:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="5532"/>
+        <location filename="../src/editor.cpp" line="5565"/>
         <source>Readonly</source>
         <translation>Только чтение</translation>
     </message>
@@ -1577,35 +1577,44 @@
         <translation>Копирование и экспорт в HTML</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="70"/>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="151"/>
         <source>Use background color</source>
-        <translation>Использовать фоновый цвет</translation>
+        <translation type="vanished">Использовать фоновый цвет</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="77"/>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="158"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="84"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="178"/>
         <source>Use editor&apos;s color scheme</source>
         <translation>Использовать цветовую схему редактора</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="84"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="70"/>
         <source>Copy with line number</source>
         <translation>Копирование с номерами строк</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="91"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="77"/>
         <source>Recalc line number</source>
         <translation>Пересчёт номеров строк</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="113"/>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="180"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="106"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="210"/>
+        <source>Background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="129"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="200"/>
         <source>Color scheme</source>
         <translation>Цветовая схема</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="142"/>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="146"/>
+        <source>Foreground</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settingsdialog/editorclipboardwidget.ui" line="169"/>
         <source>Export As RTF</source>
         <translation>Экспорт в RTF</translation>
     </message>
@@ -5793,6 +5802,8 @@
         <location filename="../src/mainwindow.cpp" line="5818"/>
         <location filename="../src/mainwindow.cpp" line="6549"/>
         <location filename="../src/mainwindow.cpp" line="6561"/>
+        <location filename="../src/mainwindow.cpp" line="8785"/>
+        <location filename="../src/mainwindow.cpp" line="8807"/>
         <location filename="../src/mainwindow.cpp" line="10150"/>
         <source>Error</source>
         <translation>Ошибка</translation>
@@ -8936,44 +8947,44 @@
         <translation>Программа сборки &quot;%1&quot; утрачена!</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1813"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1816"/>
         <source>Error executing platform compiler hint add-on</source>
         <translatorcomment>Сомнительный перевод, надо переделать</translatorcomment>
         <translation>Ошибка при запуске дополнения с подсказкой компилятора платформы</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1959"/>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1965"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1962"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1968"/>
         <source>Compiler set not configuared.</source>
         <translation>Набор компиляторов не настроен.</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1961"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1964"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в следующих местах: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1967"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1970"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в PATH?</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1969"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1972"/>
         <source>Confirm</source>
         <translation>Подтверждение</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1978"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1981"/>
         <source>No Compiler Set</source>
         <translation>Нет набора компиляторов</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1979"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1982"/>
         <source>Can&apos;t find a C/C++ compiler.</source>
         <translation>Не могу найти компилятор Си/Си++.</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1981"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1984"/>
         <source>You must have a compiler to compile and execute C/C++ files.</source>
         <translation>Вы должны иметь компилятор, чтобы компилировать файлы Си/Си++.</translation>
     </message>

@@ -580,7 +580,7 @@
         <translation>[Nota] </translation>
     </message>
     <message>
-        <location line="+606"/>
+        <location line="+600"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Falha ao iniciar a compilação para &apos;%1&apos;.</translation>
     </message>
@@ -615,7 +615,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-691"/>
+        <location line="-685"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1513,7 +1513,7 @@
         <translation type="vanished">sem nome</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+366"/>
+        <location filename="../src/editor.cpp" line="+367"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -1544,12 +1544,12 @@
         <translation type="vanished">O texto a ser removido excede o limite de caracteres!</translation>
     </message>
     <message>
-        <location line="+2697"/>
+        <location line="+2707"/>
         <source>Print Document</source>
         <translation>Imprimir documento</translation>
     </message>
     <message>
-        <location line="+798"/>
+        <location line="+820"/>
         <location line="+26"/>
         <location line="+43"/>
         <source>Ctrl+click for more info</source>
@@ -1582,7 +1582,7 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5046"/>
+        <location line="-5078"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
@@ -1603,7 +1603,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1467"/>
+        <location line="+1477"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1613,7 +1613,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1165"/>
+        <location line="+1171"/>
         <location line="+1"/>
         <source>Printing...</source>
         <translation type="unfinished"></translation>
@@ -1629,7 +1629,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2004"/>
+        <location line="+2020"/>
         <source>Reformat Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1748,19 +1748,17 @@
         <translation>Copiar &amp;&amp; Exportar como HTML</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location line="+81"/>
         <source>Use background color</source>
-        <translation>Usar cor de fundo</translation>
+        <translation type="vanished">Usar cor de fundo</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <location line="+81"/>
+        <location line="+23"/>
+        <location line="+94"/>
         <source>Use editor&apos;s color scheme</source>
         <translation>Usar esquema de cores do editor</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-108"/>
         <source>Copy with line number</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1770,13 +1768,24 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
-        <location line="+67"/>
+        <location line="+29"/>
+        <location line="+104"/>
+        <source>Background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-81"/>
+        <location line="+71"/>
         <source>Color scheme</source>
         <translation>Esquema de cores</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-54"/>
+        <source>Foreground</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Export As RTF</source>
         <translation>Exportar como RTF</translation>
     </message>
@@ -5780,7 +5789,9 @@
         <location line="+170"/>
         <location line="+731"/>
         <location line="+12"/>
-        <location line="+3589"/>
+        <location line="+2224"/>
+        <location line="+22"/>
+        <location line="+1343"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -9318,7 +9329,7 @@
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="+1969"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="+1972"/>
         <source>Confirm</source>
         <translation>Confirmar</translation>
     </message>
@@ -9335,7 +9346,7 @@
         <translation type="vanished">Compilador não configurado.</translation>
     </message>
     <message>
-        <location line="-441"/>
+        <location line="-444"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9355,7 +9366,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+424"/>
+        <location line="+427"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Gostaria que o Red Panda C++ procurasse por compiladores nos seguintes locais: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>

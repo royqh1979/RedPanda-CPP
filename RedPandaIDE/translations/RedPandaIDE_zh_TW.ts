@@ -717,7 +717,7 @@ p, li { white-space: pre-wrap; }
         <translation>警告:</translation>
     </message>
     <message>
-        <location line="+578"/>
+        <location line="+572"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>無法寫入檔案“%1”。</translation>
     </message>
@@ -1866,7 +1866,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">失敗</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+366"/>
+        <location filename="../src/editor.cpp" line="+367"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -1936,7 +1936,7 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished">儲存失敗</translation>
     </message>
     <message>
-        <location line="+1529"/>
+        <location line="+1539"/>
         <source>hex: %1</source>
         <translation>16進制: %1</translation>
     </message>
@@ -1951,7 +1951,7 @@ p, li { white-space: pre-wrap; }
         <translation>打印文檔</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+53"/>
         <location line="+1"/>
         <source>Printing...</source>
         <translation type="unfinished"></translation>
@@ -1967,7 +1967,7 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+741"/>
+        <location line="+757"/>
         <location line="+26"/>
         <location line="+43"/>
         <source>Ctrl+click for more info</source>
@@ -1983,7 +1983,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">未找到符號&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location line="-4649"/>
+        <location line="-4681"/>
         <source>Confirm Reload File</source>
         <translation>確認重新讀取檔案</translation>
     </message>
@@ -2022,7 +2022,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">輸入當前斷點的生效條件:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+5055"/>
+        <location filename="../src/editor.cpp" line="+5087"/>
         <source>Readonly</source>
         <translation>唯讀</translation>
     </message>
@@ -2141,20 +2141,18 @@ p, li { white-space: pre-wrap; }
         <translation>複製/匯出為HTML</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location line="+81"/>
         <source>Use background color</source>
-        <translation>使用背景色</translation>
+        <translation type="vanished">使用背景色</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <location line="+81"/>
+        <location line="+23"/>
+        <location line="+94"/>
         <source>Use editor&apos;s color scheme</source>
         <oldsource>Use editor&apos;s color schema</oldsource>
         <translation>使用編輯器的配色方案</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-108"/>
         <source>Copy with line number</source>
         <translation>複製行號</translation>
     </message>
@@ -2164,14 +2162,25 @@ p, li { white-space: pre-wrap; }
         <translation>重新計算行號</translation>
     </message>
     <message>
-        <location line="+22"/>
-        <location line="+67"/>
+        <location line="+29"/>
+        <location line="+104"/>
+        <source>Background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-81"/>
+        <location line="+71"/>
         <source>Color scheme</source>
         <oldsource>Color schema</oldsource>
         <translation>配色方案</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-54"/>
+        <source>Foreground</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Export As RTF</source>
         <translation>匯出為RTF</translation>
     </message>
@@ -8057,7 +8066,9 @@ p, li { white-space: pre-wrap; }
         <location line="+170"/>
         <location line="+731"/>
         <location line="+12"/>
-        <location line="+3589"/>
+        <location line="+2224"/>
+        <location line="+22"/>
+        <location line="+1343"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -9885,7 +9896,7 @@ p, li { white-space: pre-wrap; }
         <translation>產生偵錯資訊 (-g3)</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="+1967"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="+1970"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊貓C++在PATH路徑中尋找gcc編譯器嗎?</translation>
     </message>
@@ -10189,7 +10200,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">如果仍然保留這些設定，可能會導致編譯錯誤。&lt;br /&gt;&lt;br /&gt;請選擇“是”，除非您清楚的知道選擇“否”的後果，</translation>
     </message>
     <message>
-        <location line="-441"/>
+        <location line="-444"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>缺少C編譯器程式%1</translation>
     </message>
@@ -10209,7 +10220,7 @@ p, li { white-space: pre-wrap; }
         <translation>缺少Make程式%1</translation>
     </message>
     <message>
-        <location line="+422"/>
+        <location line="+425"/>
         <location line="+6"/>
         <source>Compiler set not configuared.</source>
         <translation>未設定編譯器設定.</translation>

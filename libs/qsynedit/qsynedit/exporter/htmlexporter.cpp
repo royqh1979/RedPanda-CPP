@@ -214,8 +214,7 @@ QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)
             .arg(maxLineNumbeWidth)
             .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family(),
-                 colorToHTML(mLineNumberColor),
-                 colorToHTML(mLineNumberBackgroundColor))
+                 colorToHTML(mLineNumberColor))
             +lineBreak();
     for (int i=startLine;i<=endLine;i++)
         result+=QString("<span>%1</span><br/>").arg(i)+lineBreak();
