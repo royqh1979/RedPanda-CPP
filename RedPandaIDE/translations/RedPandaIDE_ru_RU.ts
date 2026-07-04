@@ -2336,7 +2336,7 @@
         <translation>Форма</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="334"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="337"/>
         <source>Use custom icon set</source>
         <translation>Использовать пользовательский набор значков</translation>
     </message>
@@ -2346,7 +2346,7 @@
         <translation>*Необходим перезапуск</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="309"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="312"/>
         <source>Language:</source>
         <translation>Язык:</translation>
     </message>
@@ -2361,7 +2361,7 @@
         <translation>Набор значков:</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="302"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="305"/>
         <source>Font:</source>
         <translation>Шрифт:</translation>
     </message>
@@ -2382,32 +2382,37 @@
     </message>
     <message>
         <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="152"/>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="155"/>
         <source>Reload</source>
         <translation>Перезагрузка</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="163"/>
         <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="166"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="169"/>
         <source>Remove custom theme</source>
         <translation>Удалить пользовательскую тему</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="177"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="180"/>
         <source>Open custom themes folder</source>
         <translation>Открыть пользовательский каталог с темами</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="180"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="183"/>
         <source>Open Folder</source>
         <translation>Открыть каталог</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="207"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="210"/>
         <source>Icon Zoom:</source>
         <translation>Масштаб значков:</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="370"/>
+        <location filename="../src/settingsdialog/environmentappearancewidget.ui" line="373"/>
         <source>Change combobox&apos;s current selection by turning mouse wheel on it</source>
         <translation>Изменение текущего выбора поля со списком путем поворота колесика мыши на нем</translation>
     </message>
@@ -8611,7 +8616,7 @@
     </message>
     <message>
         <location filename="../src/compiler/compilerinfo.cpp" line="92"/>
-        <location filename="../src/compiler/compilerinfo.cpp" line="367"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="369"/>
         <source>Code Generation</source>
         <translation>Генерация кода</translation>
     </message>
@@ -8621,112 +8626,112 @@
         <translation>Уровень оптимизации (-Ox)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="119"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="121"/>
         <source>C++ Language standard (-std)</source>
         <translation>Стандарт языка Си++ (-std)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="134"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="136"/>
         <source>C Language standard (-std)</source>
         <translation>Стандарт языка Си (-std)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="184"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="186"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>Разрешить использование специфических инструкций (-mx)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="188"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="190"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation>32-битные указатели, 32-битные инструкции (-m32)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="189"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="191"/>
         <source>32-bit pointer, 64-bit instruction (-mx32)</source>
         <translation>32-битные указатели, 64-битные инструкции (-mx32)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="190"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="192"/>
         <source>64-bit pointer, 64-bit instruction (-m64)</source>
         <translation>64-битные указатели, 64-битные инструкции (-m64)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="191"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="193"/>
         <source>x86 multilib (-mx)</source>
         <translation>x86 multilib (-mx)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="193"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="195"/>
         <source>Generate debugging information (-g3)</source>
         <translation>Встраивать отладочную информацию (-g3)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="194"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="196"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>Добавить информацию профилирования для анализа (-pg)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="195"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="197"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>Проверять код только на синтаксические ошибки (-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="196"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="198"/>
         <source>Enable experimental support for GCC standard library modules (-fmodules)</source>
         <translation>Включить экспериментальную поддержку модулей стандартной библиотеки GCC (-fmodules)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="199"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="201"/>
         <source>Warnings</source>
         <translation>Предупреждения</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="200"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="202"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>Отключить все предупреждающие сообщения (-w)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="201"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="203"/>
         <source>Show most warnings (-Wall)</source>
         <translation>Показывать большинство предупреждений (-Wall)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="202"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="204"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>Показывать больше предупреждений (-Wextra)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="203"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="205"/>
         <source>Check ISO C/C++ conformance (-pedantic)</source>
         <translation>Проверка соответствия ISO Си/Си++ (-pedantic)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="204"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="206"/>
         <source>Don&apos;t accept MSVC non-standard syntax (-fno-ms-extentions)</source>
         <translation>Не разрешать нестандартный синтаксис MSVC (-fno-ms-extentions)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="205"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="207"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>Превратить все предупреждения в ошибки (-Werror)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="206"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="208"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>Прервать компиляцию при первой ошибке (-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="212"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="214"/>
         <source>Check for stack smashing attacks (-fstack-protector)</source>
         <translation>Проверять наличие атак, разрушающих стек (-fstack-protector)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="219"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="221"/>
         <source>Enable Sanitizer (-fsanitize=)</source>
         <translation>Включить Санитайзер (-fsanitize=)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="222"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="224"/>
         <source>Errors</source>
         <translation>Ошибки</translation>
     </message>
@@ -8735,137 +8740,137 @@
         <translation type="vanished">Функция без типа возвращаемого значения (return-type)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="223"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="225"/>
         <source>No return statement in non-void function (return-type)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="224"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="226"/>
         <source>Declaration does not specify a type (implicit-int)</source>
         <translation>В объявлении не указан тип (implicit-int)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="225"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="227"/>
         <source>Uninitialized variable visited (uninitialized)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="226"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="228"/>
         <source>Variable lenght array (vla)</source>
         <translation>Массив переменной длины (vla)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="235"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="237"/>
         <source>Linker</source>
         <translation>Связывание</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="236"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="238"/>
         <source>PE Stack Size</source>
         <translation>Размер стека PE</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="238"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="240"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>Использовать каналы (pipes) вместо временных файлов во время компиляции (-pipe)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="240"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="242"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>Не использовать стандартные системные библиотеки (-nostdlib)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="241"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="243"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>Не создавать консольное окно (-mwindows)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="242"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="244"/>
         <source>Strip executable (-s)</source>
         <translation>Удаление несущественной информации (strip) из исполнимых файлов (-s)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="386"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="388"/>
         <source>Processor (-m)</source>
         <translation>Процессор (-m)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="400"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="402"/>
         <source>Language standard (--std)</source>
         <translation>Стандарт Языка (--std)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="408"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="410"/>
         <source>Memory model (--model)</source>
         <translation>Модель памяти (--model)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="410"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="412"/>
         <source>Use external stack</source>
         <translation>Использовать внешний стек</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="411"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="413"/>
         <source>Use movc instead of movx to read from external ram</source>
         <translation>Использовать movc вместо movx для чтения из внешней памяти</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="412"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="414"/>
         <source>Replaces lcall/ljmp with acall/ajmp</source>
         <translation>Заменять lcall/ljmp на acall/ajmp</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="413"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="415"/>
         <source>Don&apos;t memcpy initialized xram from code</source>
         <translation>Не позволять memcpy инициализировать xram из кода</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="414"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="416"/>
         <source>Don&apos;t generate startup code</source>
         <translation>Не создавать код запуска</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="416"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="418"/>
         <source>MCU Specification</source>
         <translation>Спецификация MCU</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="418"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="420"/>
         <source>Internal ram size</source>
         <translation>Размер внутренней памяти</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="419"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="421"/>
         <source>External ram start location</source>
         <translation>Начало размещения внешней памяти</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="420"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="422"/>
         <source>External ram size</source>
         <translation>Размер внешней памяти</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="421"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="423"/>
         <source>Stack pointer initial value</source>
         <translation>Начальный адрес указателя стека</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="422"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="424"/>
         <source>External stack start location</source>
         <translation>Начало размещения внешнего стека</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="423"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="425"/>
         <source>Direct data start location</source>
         <translation>Начало размещения первичных данных (direct data)</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="424"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="426"/>
         <source>Code segment location</source>
         <translation>Размещение сегмента кода</translation>
     </message>
     <message>
-        <location filename="../src/compiler/compilerinfo.cpp" line="425"/>
+        <location filename="../src/compiler/compilerinfo.cpp" line="427"/>
         <source>Code segment size</source>
         <translation>Размер сегмента кода</translation>
     </message>

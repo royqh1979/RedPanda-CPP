@@ -141,18 +141,21 @@
          <string>Customize</string>
         </property>
         <property name="icon">
-         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+         <iconset resource="R:/Temp/QtCreator-qWNRsV/qtc-cmake-NskALsbS/RedPandaIDE/.qrc/iconsets.qrc">
           <normaloff>:/resources/iconsets/bluesky/actions/00Misc-11Rename.svg</normaloff>:/resources/iconsets/bluesky/actions/00Misc-11Rename.svg</iconset>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QToolButton" name="btnReload">
+        <property name="toolTip">
+         <string>Refresh</string>
+        </property>
         <property name="text">
          <string>Reload</string>
         </property>
         <property name="icon">
-         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+         <iconset resource="R:/Temp/QtCreator-qWNRsV/qtc-cmake-NskALsbS/RedPandaIDE/.qrc/iconsets.qrc">
           <normaloff>:/resources/iconsets/bluesky/actions/00Misc-16Reset.svg</normaloff>:/resources/iconsets/bluesky/actions/00Misc-16Reset.svg</iconset>
         </property>
        </widget>
@@ -166,7 +169,7 @@
          <string>Remove custom theme</string>
         </property>
         <property name="icon">
-         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+         <iconset resource="R:/Temp/QtCreator-qWNRsV/qtc-cmake-NskALsbS/RedPandaIDE/.qrc/iconsets.qrc">
           <normaloff>:/resources/iconsets/bluesky/actions/01File-07CloseAll.svg</normaloff>:/resources/iconsets/bluesky/actions/01File-07CloseAll.svg</iconset>
         </property>
        </widget>
@@ -180,7 +183,7 @@
          <string>Open Folder</string>
         </property>
         <property name="icon">
-         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+         <iconset resource="R:/Temp/QtCreator-qWNRsV/qtc-cmake-NskALsbS/RedPandaIDE/.qrc/iconsets.qrc">
           <normaloff>:/resources/iconsets/bluesky/actions/06View-03Files.svg</normaloff>:/resources/iconsets/bluesky/actions/06View-03Files.svg</iconset>
         </property>
        </widget>
@@ -384,7 +387,7 @@
   <tabstop>cbLanguage</tabstop>
  </tabstops>
  <resources>
-  <include location="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc"/>
+  <include location="R:/Temp/QtCreator-qWNRsV/qtc-cmake-NskALsbS/RedPandaIDE/.qrc/iconsets.qrc"/>
  </resources>
  <connections/>
 </ui>

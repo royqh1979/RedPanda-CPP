@@ -2995,7 +2995,7 @@ p, li { white-space: pre-wrap; }
         <translation>图标集：</translation>
     </message>
     <message>
-        <location line="+266"/>
+        <location line="+269"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
@@ -3010,7 +3010,7 @@ p, li { white-space: pre-wrap; }
         <translation>字体:</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-167"/>
         <source>Create a customized copy</source>
         <translation>自定义</translation>
     </message>
@@ -3021,6 +3021,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+11"/>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Reload</source>
         <translation>刷新</translation>
     </message>
@@ -3071,7 +3076,7 @@ p, li { white-space: pre-wrap; }
         <translation>语言:</translation>
     </message>
     <message>
-        <location line="-271"/>
+        <location line="-274"/>
         <source>*Needs restart</source>
         <translation>*需要重启之后生效</translation>
     </message>
@@ -9851,7 +9856,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../src/compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+275"/>
+        <location line="+277"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -9869,7 +9874,7 @@ p, li { white-space: pre-wrap; }
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location line="-83"/>
+        <location line="-85"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
@@ -9878,7 +9883,7 @@ p, li { white-space: pre-wrap; }
         <translation type="obsolete">无返回值类型的函数(return-type)</translation>
     </message>
     <message>
-        <location line="+285"/>
+        <location line="+287"/>
         <source>Processor (-m)</source>
         <translation>处理器类型(-m)</translation>
     </message>

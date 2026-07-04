@@ -2543,17 +2543,17 @@
         <translation>Configuração</translation>
     </message>
     <message>
-        <location line="+288"/>
+        <location line="+291"/>
         <source>Font:</source>
         <translation>Fonte:</translation>
     </message>
     <message>
-        <location line="-161"/>
+        <location line="-164"/>
         <source>Customize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+39"/>
         <source>Open custom themes folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2573,7 +2573,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
+        <location line="-131"/>
         <source>*Needs restart</source>
         <translation>*Necessário reiniciar</translation>
     </message>
@@ -2589,6 +2589,11 @@
     </message>
     <message>
         <location line="+14"/>
+        <source>Refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Reload</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2603,7 +2608,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-257"/>
+        <location line="-260"/>
         <source>Font Size:</source>
         <translation>Tamanho da fonte:</translation>
     </message>
@@ -2617,7 +2622,7 @@
         <translation>Conjunto de ícones:</translation>
     </message>
     <message>
-        <location line="+266"/>
+        <location line="+269"/>
         <source>Use custom icon set</source>
         <translation>Usar conjunto de ícones personalizado</translation>
     </message>
@@ -9212,7 +9217,7 @@
     </message>
     <message>
         <location filename="../src/compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+275"/>
+        <location line="+277"/>
         <source>Code Generation</source>
         <translation>Geração de código</translation>
     </message>
@@ -9230,7 +9235,7 @@
         <translation>Habilitar uso de instruções específicar (-mx)</translation>
     </message>
     <message>
-        <location line="-83"/>
+        <location line="-85"/>
         <source>Optimization level (-Ox)</source>
         <translation>Nível de otimização (-Ox)</translation>
     </message>
@@ -9239,7 +9244,7 @@
         <translation type="vanished">Linguagem padrão (-std)</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>Warnings</source>
         <translation>Avisos</translation>
     </message>
