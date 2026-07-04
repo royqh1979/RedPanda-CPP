@@ -38,7 +38,7 @@ private:
     QString colorToHTML(const QColor &color) const;
     QString getStyleName(PSyntaxer syntaxer,
                          PTokenAttribute attri);
-    QString makeValidName(const QString &name);
+//    QString makeValidName(const QString &name);
     // Exporter interface
 protected:
     void formatAttributeDone(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles) override;

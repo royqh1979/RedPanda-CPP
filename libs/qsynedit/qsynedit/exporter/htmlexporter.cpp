@@ -74,24 +74,25 @@ QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attri)
     QString name  = syntaxer->languageName() + '-' + attri->name();
     QString cssName = mCssNames.value(name);
     if (cssName.isEmpty()) {
-        cssName = makeValidName(name);
+        //cssName = makeValidName(name);
+        cssName = QString("c%1").arg(mCssNames.count());
         mCssNames.insert(name,cssName);
     }
     return cssName;
 }
 
-QString HTMLExporter::makeValidName(const QString &name)
-{
-    QString result;
-    for (QChar ch:name) {
-        ch = ch.toLower();
-        if (ch == '.' || ch =='_')
-            result += '-';
-        else if ((ch >='a' && ch <= 'z') || (ch>='0' && ch<='9') || (ch == '-'))
-            result += ch;
-    }
-    return result;
-}
+//QString HTMLExporter::makeValidName(const QString &name)
+//{
+//    QString result;
+//    for (QChar ch:name) {
+//        ch = ch.toLower();
+//        if (ch == '.' || ch =='_')
+//            result += '-';
+//        else if ((ch >='a' && ch <= 'z') || (ch>='0' && ch<='9') || (ch == '-'))
+//            result += ch;
+//    }
+//    return result;
+//}
 
 void HTMLExporter::formatAttributeDone(bool , bool , FontStyles )
 {
