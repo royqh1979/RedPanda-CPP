@@ -165,7 +165,8 @@ void Exporter::setSyntaxer(PSyntaxer value)
     if (mSyntaxer != value) {
         mSyntaxer = value;
         clear();
-        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground)
+        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground
+                && mSyntaxer->whitespaceAttribute()->background().isValid())
             mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }
@@ -195,7 +196,8 @@ void Exporter::setUseBackground(bool Value)
     if (mUseBackground != Value) {
         mUseBackground = Value;
         clear();
-        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground)
+        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground
+                && mSyntaxer->whitespaceAttribute()->background().isValid())
             mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }

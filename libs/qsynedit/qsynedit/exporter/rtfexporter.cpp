@@ -163,7 +163,7 @@ QString RTFExporter::getHeader()
     result = result + "{\\title " + mTitle + "}}" + lineBreak();
 //    if (mUseBackground)
 //        Result = Result + { TODO } #13#10;
-    result = result + QString("\\deflang1033\\pard\\plain\\shading10000\\cbpat%1\\f0\\fs%2")
+    result = result + QString("\\deflang1033\\pard\\plain\\shading10000\\cfpat%1\\cbpat%1\\f0\\fs%2")
             .arg(getColorIndex(mBackgroundColor))
             .arg((int)(2 * pixelToPoint(mFont.pixelSize())))
             + lineBreak();

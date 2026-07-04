@@ -8782,7 +8782,7 @@ void MainWindow::on_actionExport_As_RTF_triggered()
         editor->exportAsRTF(rtfFile);
     } catch (FileError e) {
         QMessageBox::critical(editor,
-                              "Error",
+                              tr("Error"),
                               e.reason());
     }
 }
@@ -8804,7 +8804,7 @@ void MainWindow::on_actionExport_As_HTML_triggered()
         editor->exportAsHTML(htmlFile);
     } catch (FileError e) {
         QMessageBox::critical(editor,
-                              "Error",
+                              tr("Error"),
                               e.reason());
     }
 }
