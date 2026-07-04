@@ -115,17 +115,11 @@ public:
     int gutterRightOffset() const;
     void setGutterRightOffset(int gutterRightOffset);
 
-    bool copyRTFUseBackground() const;
-    void setCopyRTFUseBackground(bool copyRTFUseBackground);
-
     bool copyRTFUseEditorColor() const;
     void setCopyRTFUseEditorColor(bool copyRTFUseEditorColor);
 
     QString copyRTFColorScheme() const;
     void setCopyRTFColorScheme(const QString &copyRTFColorScheme);
-
-    bool copyHTMLUseBackground() const;
-    void setCopyHTMLUseBackground(bool copyHTMLUseBackground);
 
     bool copyHTMLUseEditorColor() const;
     void setCopyHTMLUseEditorColor(bool copyHTMLUseEditorColor);
@@ -307,6 +301,15 @@ public:
     bool rainbowIndents() const;
     void setRainbowIndents(bool newFillIndentsUsingRainbowColor);
 
+    const QColor &copyRTFBackgroundColor() const;
+    void setCopyRTFBackgroundColor(const QColor &newCopyRTFBackgroundColor);
+
+    const QColor &copyHTMLBackgroundColor() const;
+    void setCopyHTMLBackgroundColor(const QColor &newCopyHTMLBackgroundColor);
+
+    const QColor &copyHTMLForegroundColor() const;
+    void setCopyHTMLForegroundColor(const QColor &newCopyHTMLForegroundColor);
+
 private:
     //General
     // indents
@@ -373,14 +376,15 @@ private:
 
     //copy
     int mCopyWithFormatAs;
-    bool mCopyRTFUseBackground;
     bool mCopyRTFUseEditorColor;
     QString mCopyRTFColorScheme;
-    bool mCopyHTMLUseBackground;
     bool mCopyHTMLUseEditorColor;
     bool mCopyHTMLWithLineNumber;
     bool mCopyHTMLRecalcLineNumber;
     QString mCopyHTMLColorScheme;
+    QColor mCopyRTFBackgroundColor;
+    QColor mCopyHTMLBackgroundColor;
+    QColor mCopyHTMLForegroundColor;
 
     //Color
     QString mColorScheme;

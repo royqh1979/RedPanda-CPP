@@ -428,6 +428,36 @@ void EditorSettings::setRainbowIndents(bool newFillIndentsUsingRainbowColor)
     mRainbowIndents = newFillIndentsUsingRainbowColor;
 }
 
+const QColor &EditorSettings::copyRTFBackgroundColor() const
+{
+    return mCopyRTFBackgroundColor;
+}
+
+void EditorSettings::setCopyRTFBackgroundColor(const QColor &newCopyRTFBackgroundColor)
+{
+    mCopyRTFBackgroundColor = newCopyRTFBackgroundColor;
+}
+
+const QColor &EditorSettings::copyHTMLBackgroundColor() const
+{
+    return mCopyHTMLBackgroundColor;
+}
+
+void EditorSettings::setCopyHTMLBackgroundColor(const QColor &newCopyHTMLBackgroundColor)
+{
+    mCopyHTMLBackgroundColor = newCopyHTMLBackgroundColor;
+}
+
+const QColor &EditorSettings::copyHTMLForegroundColor() const
+{
+    return mCopyHTMLForegroundColor;
+}
+
+void EditorSettings::setCopyHTMLForegroundColor(const QColor &newCopyHTMLForegroundColor)
+{
+    mCopyHTMLForegroundColor = newCopyHTMLForegroundColor;
+}
+
 bool EditorSettings::rainbowIndentGuides() const
 {
     return mRainbowIndentGuides;
@@ -708,16 +738,6 @@ void EditorSettings::setCopyHTMLUseEditorColor(bool copyHTMLUseEditorColor)
     mCopyHTMLUseEditorColor = copyHTMLUseEditorColor;
 }
 
-bool EditorSettings::copyHTMLUseBackground() const
-{
-    return mCopyHTMLUseBackground;
-}
-
-void EditorSettings::setCopyHTMLUseBackground(bool copyHTMLUseBackground)
-{
-    mCopyHTMLUseBackground = copyHTMLUseBackground;
-}
-
 QString EditorSettings::copyRTFColorScheme() const
 {
     return mCopyRTFColorScheme;
@@ -736,16 +756,6 @@ bool EditorSettings::copyRTFUseEditorColor() const
 void EditorSettings::setCopyRTFUseEditorColor(bool copyRTFUseEditorColor)
 {
     mCopyRTFUseEditorColor = copyRTFUseEditorColor;
-}
-
-bool EditorSettings::copyRTFUseBackground() const
-{
-    return mCopyRTFUseBackground;
-}
-
-void EditorSettings::setCopyRTFUseBackground(bool copyRTFUseBackground)
-{
-    mCopyRTFUseBackground = copyRTFUseBackground;
 }
 
 int EditorSettings::gutterLeftOffset() const
@@ -961,15 +971,16 @@ void EditorSettings::doSave()
 
     //copy
     saveValue("copy_with_format_as",mCopyWithFormatAs);
-    saveValue("copy_rtf_use_background",mCopyRTFUseBackground);
     saveValue("copy_rtf_use_editor_color_scheme",mCopyRTFUseEditorColor);
     saveValue("copy_rtf_color_scheme",mCopyRTFColorScheme);
-    saveValue("copy_html_use_background",mCopyHTMLUseBackground);
+    saveValue("copy_rtf_background_color",mCopyRTFBackgroundColor.name());
     saveValue("copy_html_use_editor_color_scheme",mCopyHTMLUseEditorColor);
     saveValue("copy_html_with_line_number",mCopyHTMLWithLineNumber);
     saveValue("copy_html_recalc_line_number",mCopyHTMLRecalcLineNumber);
 
     saveValue("copy_html_color_scheme", mCopyHTMLColorScheme);
+    saveValue("copy_html_background_color",mCopyHTMLBackgroundColor.name());
+    saveValue("copy_html_foreground_color",mCopyHTMLForegroundColor.name());
 
     //color scheme
     saveValue("color_scheme", mColorScheme);
@@ -1113,21 +1124,17 @@ void EditorSettings::doLoad()
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
-#ifdef Q_OS_WIN
     mCopyWithFormatAs = intValue("copy_with_format_as",1); //html
-#else
-    mCopyWithFormatAs = intValue("copy_with_format_as",0); //none
-#endif
-    mCopyRTFUseBackground = boolValue("copy_rtf_use_background",false);
     mCopyRTFUseEditorColor = boolValue("copy_rtf_use_editor_color_scheme",false);
     mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","Intellij Classic");
-    mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
+    mCopyRTFBackgroundColor = QColor(stringValue("copy_rtf_background_color","white"));
     mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",false);
     mCopyHTMLWithLineNumber = boolValue("copy_html_with_line_number", false);
     mCopyHTMLRecalcLineNumber = boolValue("copy_html_recalc_line_number", true);
 
     mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","Intellij Classic");
-
+    mCopyHTMLForegroundColor = QColor(stringValue("copy_html_foreground_color","black"));
+    mCopyHTMLBackgroundColor = QColor(stringValue("copy_html_background_color","white"));
     //color
     mColorScheme = stringValue("color_scheme", "VS Code");
     mRainbowParenthesis = boolValue("rainbow_parenthesis", true);

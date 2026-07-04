@@ -65,20 +65,6 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QCheckBox" name="chkCopyHTMLUseBackground">
-        <property name="text">
-         <string>Use background color</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="chkCopyHTMLUseEditorColor">
-        <property name="text">
-         <string>Use editor's color scheme</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QCheckBox" name="chkCopyHTMLWithLineNumber">
         <property name="text">
          <string>Copy with line number</string>
@@ -93,8 +79,15 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkCopyHTMLUseEditorColor">
+        <property name="text">
+         <string>Use editor's color scheme</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QWidget" name="widget_3" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QGridLayout" name="gridLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -107,17 +100,17 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <widget class="QLabel" name="label_5">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>Color scheme</string>
+            <string>Background</string>
            </property>
           </widget>
          </item>
-         <item>
+         <item row="2" column="1">
           <widget class="QComboBox" name="cbHTMLColorScheme"/>
          </item>
-         <item>
+         <item row="2" column="2">
           <spacer name="horizontalSpacer_3">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -129,6 +122,40 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Color scheme</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="ColorEdit" name="cbHTMLBackground">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Foreground</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="ColorEdit" name="cbHTMLForeground">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -144,24 +171,17 @@
      <property name="checkable">
       <bool>false</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QCheckBox" name="chkCopyRTFUseBackground">
-        <property name="text">
-         <string>Use background color</string>
-        </property>
-       </widget>
-      </item>
-      <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
        <widget class="QCheckBox" name="chkCopyRTFUseEditorColor">
         <property name="text">
          <string>Use editor's color scheme</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="0">
        <widget class="QWidget" name="widget_2" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QGridLayout" name="gridLayout_3">
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -174,17 +194,34 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
+         <item row="2" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
             <string>Color scheme</string>
            </property>
           </widget>
          </item>
-         <item>
+         <item row="2" column="1">
           <widget class="QComboBox" name="cbRTFColorScheme"/>
          </item>
-         <item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Background</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="ColorEdit" name="cbRTFBackground">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -218,12 +255,17 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColorEdit</class>
+   <extends>QFrame</extends>
+   <header location="global">src/widgets/coloredit.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>cbCopyWithFormatAs</tabstop>
-  <tabstop>chkCopyHTMLUseBackground</tabstop>
-  <tabstop>chkCopyHTMLUseEditorColor</tabstop>
   <tabstop>cbHTMLColorScheme</tabstop>
-  <tabstop>chkCopyRTFUseBackground</tabstop>
   <tabstop>chkCopyRTFUseEditorColor</tabstop>
   <tabstop>cbRTFColorScheme</tabstop>
  </tabstops>

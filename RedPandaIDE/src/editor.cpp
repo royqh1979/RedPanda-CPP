@@ -1464,7 +1464,11 @@ void Editor::copyAsHTML()
     QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
-    exporter.setBackgroundColor(backgroundColor());
+    if (mEditorSettings->copyHTMLUseEditorColor())
+        exporter.setBackgroundColor(backgroundColor());
+    else
+        exporter.setBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+
     exporter.setUseBackground(true);
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
@@ -1488,8 +1492,13 @@ void Editor::copyAsHTML()
         exporter.setExportLineNumber(true);
         exporter.setRecalcLineNumber(mEditorSettings->copyHTMLRecalcLineNumber());
         exporter.setLineNumberStartFromZero(mEditorSettings->gutterLineNumbersStartZero());
-        exporter.setLineNumberColor(gutter().textColor());
-        exporter.setLineNumberBackgroundColor(gutter().color());
+        if (mEditorSettings->copyHTMLUseEditorColor()) {
+            exporter.setLineNumberColor(gutter().textColor());
+            exporter.setLineNumberBackgroundColor(gutter().color());
+        } else {
+            exporter.setLineNumberColor(mEditorSettings->copyHTMLForegroundColor());
+            exporter.setLineNumberBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+        }
     }
     exporter.exportRange(document(),selBegin(),selEnd());
 
@@ -3077,7 +3086,11 @@ void Editor::print()
     QSynedit::QtSupportedHtmlExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
-    exporter.setBackgroundColor(backgroundColor());
+    if (mEditorSettings->copyHTMLUseEditorColor())
+        exporter.setBackgroundColor(backgroundColor());
+    else
+        exporter.setBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+
     exporter.setUseBackground(true);
 
     exporter.setFont(font());
@@ -3145,7 +3158,10 @@ void Editor::exportAsRTF(const QString &rtfFilename)
 
     QSynedit::RTFExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(rtfFilename));
-    exporter.setBackgroundColor(backgroundColor());
+    if (mEditorSettings->copyRTFUseEditorColor())
+        exporter.setBackgroundColor(backgroundColor());
+    else
+        exporter.setBackgroundColor(mEditorSettings->copyRTFBackgroundColor());
     exporter.setUseBackground(true);
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
@@ -3173,7 +3189,11 @@ void Editor::exportAsHTML(const QString &htmlFilename)
 
     QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(htmlFilename));
-    exporter.setBackgroundColor(backgroundColor());
+    if (mEditorSettings->copyHTMLUseEditorColor())
+        exporter.setBackgroundColor(backgroundColor());
+    else
+        exporter.setBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+
     exporter.setUseBackground(true);
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
@@ -3195,8 +3215,13 @@ void Editor::exportAsHTML(const QString &htmlFilename)
         exporter.setExportLineNumber(true);
         exporter.setRecalcLineNumber(false);
         exporter.setLineNumberStartFromZero(mEditorSettings->gutterLineNumbersStartZero());
-        exporter.setLineNumberColor(gutter().textColor());
-        exporter.setLineNumberBackgroundColor(gutter().color());
+        if (mEditorSettings->copyHTMLUseEditorColor()) {
+            exporter.setLineNumberColor(gutter().textColor());
+            exporter.setLineNumberBackgroundColor(gutter().color());
+        } else {
+            exporter.setLineNumberColor(mEditorSettings->copyHTMLForegroundColor());
+            exporter.setLineNumberBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+        }
     }
     exporter.exportAll(document());
     exporter.saveToFile(htmlFilename);
