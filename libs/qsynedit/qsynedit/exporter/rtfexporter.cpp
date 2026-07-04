@@ -42,10 +42,11 @@ QString RTFExporter::colorToRTF(const QColor &color) const
 
 int RTFExporter::getColorIndex(const QColor &color)
 {
-    int index = mListColors.indexOf(color);
+    int index = mColorIdx.value(color.value(),-1);
     if (index<0) {
+        index = mListColors.count();
         mListColors.append(color);
-        index = mListColors.length()-1;
+        mColorIdx.insert(color.value(),index);
     }
     return index;
 }
@@ -162,12 +163,15 @@ QString RTFExporter::getHeader()
     result = result + "{\\title " + mTitle + "}}" + lineBreak();
 //    if (mUseBackground)
 //        Result = Result + { TODO } #13#10;
-    result = result + QString("\\deflang1033\\pard\\plain\\f0\\fs%1 ").arg((int)(2 * pixelToPoint(mFont.pixelSize())));
-    if (mUseBackground)
-        result = result + QString("\\chshdng0\\chcbpat%1\\cb%2\\highlight%3 ")
-                .arg(getColorIndex(mLastBG))
-                .arg(getColorIndex(mBackgroundColor))
-                .arg(getColorIndex(mBackgroundColor));
+    result = result + QString("\\deflang1033\\pard\\plain\\shading10000\\cbpat%1\\f0\\fs%2")
+            .arg(getColorIndex(mBackgroundColor))
+            .arg((int)(2 * pixelToPoint(mFont.pixelSize())))
+            + lineBreak();
+//    if (mUseBackground)
+//        result = result + QString("\\chshdng0\\chcbpat%1\\cb%2\\highlight%3 ")
+//                .arg(getColorIndex(mLastBG))
+//                .arg(getColorIndex(mBackgroundColor))
+//                .arg(getColorIndex(mBackgroundColor));
     return result;
 }
 }

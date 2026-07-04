@@ -3074,31 +3074,31 @@ void Editor::print()
         return;
     }
 
-//    QSynedit::QtSupportedHtmlExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::QtSupportedHtmlExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
-//    exporter.setTitle(QFileInfo(mFilename).fileName());
-//    exporter.setBackgroundColor(backgroundColor());
-//    exporter.setUseBackground(true);
+    exporter.setTitle(QFileInfo(mFilename).fileName());
+    exporter.setBackgroundColor(backgroundColor());
+    exporter.setUseBackground(true);
 
-//    exporter.setFont(font());
-//    QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-//    mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
-//    exporter.setSyntaxer(pSyntaxer);
-//    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-//                                        this,
-//                                        std::placeholders::_1,
-//                                        std::placeholders::_2,
-//                                        std::placeholders::_3,
-//                                        std::placeholders::_4,
-//                                        std::placeholders::_5
-//                                        ));
+    exporter.setFont(font());
+    QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
+    mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
+    exporter.setSyntaxer(pSyntaxer);
+    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3,
+                                        std::placeholders::_4,
+                                        std::placeholders::_5
+                                        ));
 
-//    if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
-//        exporter.exportRange(document(),selBegin(),selEnd());
-//    else
-//        exporter.exportAll(document());
+    if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
+        exporter.exportRange(document(),selBegin(),selEnd());
+    else
+        exporter.exportAll(document());
 
-//    QString html = exporter.text();
+    QString html = exporter.text();
     QTextDocument doc;
 
     doc.setDefaultFont(font());

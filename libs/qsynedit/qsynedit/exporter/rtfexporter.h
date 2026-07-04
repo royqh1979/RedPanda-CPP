@@ -29,6 +29,7 @@ public:
     RTFExporter& operator=(const RTFExporter&)=delete;
 private:
     QList<QColor> mListColors;
+    QMap<int,int> mColorIdx;
     QString colorToRTF(const QColor& AColor) const;
     int getColorIndex(const QColor& AColor);
     QString getFontTable();
