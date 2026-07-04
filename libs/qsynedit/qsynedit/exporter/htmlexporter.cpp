@@ -209,7 +209,8 @@ QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)
 {
     int maxLineNumbeWidth = (QString("%1").arg(endLine ).length()+1) * pixelToPoint(mFont.pixelSize());
     QString result =
-            QString("<table style='width:100%; border:1px; cellspacing:1px;'><tr><td style=\"width: %1pt; font: %2pt '%3'; color: %4; background-color: %5; text-align: right; padding-right: 0.5em; \">")
+            QString("<table style='width:100%; border:1px; cellspacing:1px;background-color: %1; '><tr><td style=\"width: %2pt; font: %3pt '%4'; color: %5; text-align: right; padding-right: 0.5em; \">")
+            .arg(colorToHTML(mBackgroundColor))
             .arg(maxLineNumbeWidth)
             .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family(),
