@@ -1461,54 +1461,54 @@ void Editor::copyAsHTML()
     if (!selAvail()) {
         doSelectLine();
     }
-    QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
-
-    exporter.setTitle(QFileInfo(mFilename).fileName());
-    if (mEditorSettings->copyHTMLUseEditorColor())
-        exporter.setBackgroundColor(backgroundColor());
-    else
-        exporter.setBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
-
-    exporter.setUseBackground(true);
-    exporter.setFont(font());
-    QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-    if (mEditorSettings->copyHTMLUseEditorColor()) {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
-    } else {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
-    }
-    exporter.setSyntaxer(pSyntaxer);
-    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-                                        this,
-                                        std::placeholders::_1,
-                                        std::placeholders::_2,
-                                        std::placeholders::_3,
-                                        std::placeholders::_4,
-                                        std::placeholders::_5
-                                        ));
-    exporter.setCreateHTMLFragment(true);
-
-    if (mEditorSettings->copyHTMLWithLineNumber()) {
-        exporter.setExportLineNumber(true);
-        exporter.setRecalcLineNumber(mEditorSettings->copyHTMLRecalcLineNumber());
-        exporter.setLineNumberStartFromZero(mEditorSettings->gutterLineNumbersStartZero());
-        if (mEditorSettings->copyHTMLUseEditorColor()) {
-            exporter.setLineNumberColor(gutter().textColor());
-            exporter.setLineNumberBackgroundColor(gutter().color());
-        } else {
-            exporter.setLineNumberColor(mEditorSettings->copyHTMLForegroundColor());
-            exporter.setLineNumberBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
-        }
-    }
-    exporter.exportRange(document(),selBegin(),selEnd());
-
     //clipboard takes the owner ship
     QMimeData * mimeData = new QMimeData;
+    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Textfile) {
+        QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
-    //sethtml will convert buffer to QString , which will cause encoding trouble
-    mimeData->setData(exporter.clipboardFormat(),exporter.buffer());
+        exporter.setTitle(QFileInfo(mFilename).fileName());
+        if (mEditorSettings->copyHTMLUseEditorColor())
+            exporter.setBackgroundColor(backgroundColor());
+        else
+            exporter.setBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+
+        exporter.setUseBackground(true);
+        exporter.setFont(font());
+        QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
+        if (mEditorSettings->copyHTMLUseEditorColor()) {
+            mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
+        } else {
+            mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
+        }
+        exporter.setSyntaxer(pSyntaxer);
+        exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                            this,
+                                            std::placeholders::_1,
+                                            std::placeholders::_2,
+                                            std::placeholders::_3,
+                                            std::placeholders::_4,
+                                            std::placeholders::_5
+                                            ));
+        exporter.setCreateHTMLFragment(true);
+
+        if (mEditorSettings->copyHTMLWithLineNumber()) {
+            exporter.setExportLineNumber(true);
+            exporter.setRecalcLineNumber(mEditorSettings->copyHTMLRecalcLineNumber());
+            exporter.setLineNumberStartFromZero(mEditorSettings->gutterLineNumbersStartZero());
+            if (mEditorSettings->copyHTMLUseEditorColor()) {
+                exporter.setLineNumberColor(gutter().textColor());
+                exporter.setLineNumberBackgroundColor(gutter().color());
+            } else {
+                exporter.setLineNumberColor(mEditorSettings->copyHTMLForegroundColor());
+                exporter.setLineNumberBackgroundColor(mEditorSettings->copyHTMLBackgroundColor());
+            }
+        }
+        exporter.exportRange(document(),selBegin(),selEnd());
+        //sethtml will convert buffer to QString , which will cause encoding trouble
+        mimeData->setData(exporter.clipboardFormat(),exporter.buffer());
+    }
+
     mimeData->setText(selText());
-
     QGuiApplication::clipboard()->clear();
     QGuiApplication::clipboard()->setMimeData(mimeData);
 }
