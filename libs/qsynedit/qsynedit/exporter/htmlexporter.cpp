@@ -190,9 +190,11 @@ QString HTMLExporter::getHeader()
     if (mCreateHTMLFragment) {
         result += "<!--StartFragment-->";
     }
-    result += QString("<div style=\"font: %1pt %2;\">")
+    result += QString("<div style=\"font: %1pt %2;color: %3; background-color: %4; \">")
             .arg(pixelToPoint(mFont.pixelSize()))
-            .arg(mFont.family());
+            .arg(mFont.family(),
+                  colorToHTML(mForegroundColor),
+                  colorToHTML(mBackgroundColor));
 
     return result;
 }
