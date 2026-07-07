@@ -30,6 +30,7 @@ Red Panda C++ Version 3.5
   - fix: Font style not correct in exported RTF.
   - fix: Printed text doesn't have color.
   - enhancement: Release Compiler set add "-DNDEBUG" parameter when compiling by default.
+  - enhancement: Show progress when finding in files / finding compiler sets / find occurences in project.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

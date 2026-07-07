@@ -997,92 +997,89 @@
         <translation>Подтверждение</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="316"/>
         <source>Searching for compilers...</source>
-        <translation>Поиск компиляторов...</translation>
+        <translation type="vanished">Поиск компиляторов...</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="317"/>
         <source>Abort</source>
-        <translation>Прервать</translation>
+        <translation type="vanished">Прервать</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="324"/>
         <source>Searching...</source>
-        <translation>Поиск...</translation>
+        <translation type="vanished">Поиск...</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="331"/>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="359"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="320"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="348"/>
         <source>Failed</source>
         <translation>Провал</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="331"/>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="359"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="320"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="348"/>
         <source>Can&apos;t find any compiler.</source>
         <translation>Не удалось найти компилятор.</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="337"/>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="368"/>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="385"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="326"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="357"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="374"/>
         <source>Compiler Set Name</source>
         <translation>Имя набора компиляторов</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="337"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="326"/>
         <source>Name</source>
         <translation>Имя</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="350"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="339"/>
         <source>Compiler Folder</source>
         <translation>Каталог компилятора</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="368"/>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="385"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="357"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="374"/>
         <source>New name</source>
         <translation>Новое имя</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="369"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="358"/>
         <source>%1 Copy</source>
         <translation>%1 Копия</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="462"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="451"/>
         <source>Locate C Compiler</source>
         <translation>Обнаружение компилятора Си</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="474"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="463"/>
         <source>Locate C++ Compiler</source>
         <translation>Обнаружение компилятора Си++</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="486"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="475"/>
         <source>Locate Make</source>
         <translation>Обнаружение Make</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="498"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="487"/>
         <source>Locate GDB</source>
         <translation>Обнаружение GDB</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="510"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="499"/>
         <source>Locate GDB Server</source>
         <translation>Обнаружение GDB-сервера</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="522"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="511"/>
         <source>Locate windres</source>
         <translation>Обнаружение windres</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="532"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="521"/>
         <source>Compiler</source>
         <translation>Компилятор</translation>
     </message>
@@ -1090,31 +1087,31 @@
 <context>
     <name>CppRefacter</name>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="133"/>
-        <location filename="../src/cpprefacter.cpp" line="146"/>
-        <location filename="../src/cpprefacter.cpp" line="426"/>
-        <location filename="../src/cpprefacter.cpp" line="468"/>
+        <location filename="../src/cpprefacter.cpp" line="134"/>
+        <location filename="../src/cpprefacter.cpp" line="147"/>
+        <location filename="../src/cpprefacter.cpp" line="429"/>
+        <location filename="../src/cpprefacter.cpp" line="471"/>
         <source>Rename Symbol Error</source>
         <translation>Ошибка переименования символа</translation>
     </message>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="134"/>
+        <location filename="../src/cpprefacter.cpp" line="135"/>
         <source>Can&apos;t rename symbols not defined in this file.</source>
         <translation>Нельзя переименовать символы, не определенные в этом файле.</translation>
     </message>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="147"/>
+        <location filename="../src/cpprefacter.cpp" line="148"/>
         <source>New symbol already exists!</source>
         <translation>Новый символ уже существует!</translation>
     </message>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="273"/>
-        <location filename="../src/cpprefacter.cpp" line="284"/>
+        <location filename="../src/cpprefacter.cpp" line="274"/>
+        <location filename="../src/cpprefacter.cpp" line="287"/>
         <source>Searching...</source>
         <translation>Поиск...</translation>
     </message>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="274"/>
+        <location filename="../src/cpprefacter.cpp" line="275"/>
         <source>Abort</source>
         <translation>Прекратить</translation>
     </message>
@@ -8932,64 +8929,84 @@
         <translation>Ошибка записи файла &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1528"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1530"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1531"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1533"/>
         <source>C++ Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си++ &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1534"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1536"/>
         <source>Debugger &quot;%1&quot; is missing!</source>
         <translation>Отладчик &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1537"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1539"/>
         <source>Make program &quot;%1&quot; is missing!</source>
         <translation>Программа сборки &quot;%1&quot; утрачена!</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1816"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1818"/>
         <source>Error executing platform compiler hint add-on</source>
         <translatorcomment>Сомнительный перевод, надо переделать</translatorcomment>
         <translation>Ошибка при запуске дополнения с подсказкой компилятора платформы</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1962"/>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1968"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1859"/>
+        <source>Searching for compilers...</source>
+        <translation type="unfinished">Поиск компиляторов...</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1860"/>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1867"/>
+        <source>Searching...</source>
+        <translation type="unfinished">Поиск...</translation>
+    </message>
+    <message>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1889"/>
+        <source>Searching %1/%2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1985"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1991"/>
         <source>Compiler set not configuared.</source>
         <translation>Набор компиляторов не настроен.</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1964"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1987"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в следующих местах: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1970"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1993"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в PATH?</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1972"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="1995"/>
         <source>Confirm</source>
         <translation>Подтверждение</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1981"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="2004"/>
         <source>No Compiler Set</source>
         <translation>Нет набора компиляторов</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1982"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="2005"/>
         <source>Can&apos;t find a C/C++ compiler.</source>
         <translation>Не могу найти компилятор Си/Си++.</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="1984"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="2007"/>
         <source>You must have a compiler to compile and execute C/C++ files.</source>
         <translation>Вы должны иметь компилятор, чтобы компилировать файлы Си/Си++.</translation>
     </message>
@@ -9014,12 +9031,12 @@
         <translation>Подключаемые файлы Си++</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="399"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="388"/>
         <source>Remove</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="400"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="389"/>
         <source>Do you really want to remove &quot;%1&quot;?</source>
         <translation>Вы действительно хотите удалить &quot;%1&quot;?</translation>
     </message>
@@ -9815,20 +9832,20 @@
     </message>
     <message>
         <location filename="../src/widgets/searchinfiledialog.cpp" line="176"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="211"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="285"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="296"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="212"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="286"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="298"/>
         <source>Searching...</source>
         <translation>Поиск...</translation>
     </message>
     <message>
         <location filename="../src/widgets/searchinfiledialog.cpp" line="177"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="286"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="287"/>
         <source>Abort</source>
         <translation>Прервать</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="454"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="456"/>
         <source>Choose Folder</source>
         <translation>Выбор каталога</translation>
     </message>

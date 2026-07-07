@@ -1380,22 +1380,19 @@ p, li { white-space: pre-wrap; }
         <translation>小熊猫C++ 将会清除以前搜索到的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Searching for compilers...</source>
-        <translation>正在搜索编译器……</translation>
+        <translation type="vanished">正在搜索编译器……</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Abort</source>
-        <translation>中止</translation>
+        <translation type="vanished">中止</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Searching...</source>
-        <translation>正在查找...</translation>
+        <translation type="vanished">正在查找...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
         <location line="+28"/>
         <source>Failed</source>
         <translation>失败</translation>
@@ -1501,15 +1498,15 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CppRefacter</name>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="+133"/>
+        <location filename="../src/cpprefacter.cpp" line="+134"/>
         <location line="+13"/>
-        <location line="+280"/>
+        <location line="+282"/>
         <location line="+42"/>
         <source>Rename Symbol Error</source>
         <translation>重命名符号失败</translation>
     </message>
     <message>
-        <location line="-334"/>
+        <location line="-336"/>
         <source>Can&apos;t rename symbols not defined in this file.</source>
         <translation>无法重命名不在本文件中定义的符号</translation>
     </message>
@@ -1520,12 +1517,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+126"/>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Searching...</source>
         <translation>正在查找...</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Abort</source>
         <translation>中止</translation>
     </message>
@@ -9901,7 +9898,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="+1970"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="+1993"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -10205,7 +10202,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location line="-444"/>
+        <location line="-465"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>缺少C编译器程序%1</translation>
     </message>
@@ -10225,7 +10222,27 @@ p, li { white-space: pre-wrap; }
         <translation>缺少Make程序%1</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+320"/>
+        <source>Searching for compilers...</source>
+        <translation>正在搜索编译器……</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Abort</source>
+        <translation>中止</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Searching...</source>
+        <translation>正在查找...</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Searching %1/%2</source>
+        <translation>正在搜索%1/%2</translation>
+    </message>
+    <message>
+        <location line="+96"/>
         <location line="+6"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
@@ -10251,7 +10268,7 @@ p, li { white-space: pre-wrap; }
         <translation>您必须有一个编译器来编译、执行C/C++源文件。</translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="-483"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="-472"/>
         <source>Binaries</source>
         <translation>二进制文件</translation>
     </message>
@@ -10271,7 +10288,7 @@ p, li { white-space: pre-wrap; }
         <translation>C++包含文件</translation>
     </message>
     <message>
-        <location line="+354"/>
+        <location line="+343"/>
         <source>Remove</source>
         <translation>删除</translation>
     </message>
@@ -10674,7 +10691,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="-168"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="-189"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation>执行平台编译器提示附加组件错误</translation>
     </message>
@@ -11631,20 +11648,20 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../src/widgets/searchinfiledialog.cpp" line="+176"/>
-        <location line="+35"/>
+        <location line="+36"/>
         <location line="+74"/>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Searching...</source>
         <translation>正在查找...</translation>
     </message>
     <message>
-        <location line="-119"/>
-        <location line="+109"/>
+        <location line="-121"/>
+        <location line="+110"/>
         <source>Abort</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location line="+168"/>
+        <location line="+169"/>
         <source>Choose Folder</source>
         <translation>选择文件夹</translation>
     </message>

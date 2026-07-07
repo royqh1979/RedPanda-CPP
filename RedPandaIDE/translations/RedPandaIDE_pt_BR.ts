@@ -1057,7 +1057,7 @@
         <translation>Confirmar</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+8"/>
         <location line="+28"/>
         <source>Failed</source>
         <translation>Falha</translation>
@@ -1168,21 +1168,6 @@
         <translation type="obsolete">MB</translation>
     </message>
     <message>
-        <location line="-206"/>
-        <source>Searching for compilers...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Abort</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Searching...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settingsdialog/compilersetoptionwidget.ui" line="-10"/>
         <source>Binary suffix</source>
         <translation type="unfinished"></translation>
@@ -1201,15 +1186,15 @@
 <context>
     <name>CppRefacter</name>
     <message>
-        <location filename="../src/cpprefacter.cpp" line="+133"/>
+        <location filename="../src/cpprefacter.cpp" line="+134"/>
         <location line="+13"/>
-        <location line="+280"/>
+        <location line="+282"/>
         <location line="+42"/>
         <source>Rename Symbol Error</source>
         <translation>Erro ao renomear símbolo</translation>
     </message>
     <message>
-        <location line="-334"/>
+        <location line="-336"/>
         <source>Can&apos;t rename symbols not defined in this file.</source>
         <translation>Impossível renomear símbolos não definidos nesse arquivo.</translation>
     </message>
@@ -1220,12 +1205,12 @@
     </message>
     <message>
         <location line="+126"/>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Searching...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-12"/>
         <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9334,7 +9319,7 @@
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="+1972"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="+1995"/>
         <source>Confirm</source>
         <translation>Confirmar</translation>
     </message>
@@ -9351,7 +9336,7 @@
         <translation type="vanished">Compilador não configurado.</translation>
     </message>
     <message>
-        <location line="-444"/>
+        <location line="-465"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9371,7 +9356,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+427"/>
+        <location line="+320"/>
+        <source>Searching for compilers...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Searching %1/%2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+98"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Gostaria que o Red Panda C++ procurasse por compiladores nos seguintes locais: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
@@ -9396,7 +9401,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="-285"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="-472"/>
         <source>Binaries</source>
         <translation>Executáveis</translation>
     </message>
@@ -9548,7 +9553,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="+354"/>
+        <location filename="../src/settingsdialog/compilersetoptionwidget.cpp" line="+343"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9738,7 +9743,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/compilersetsettings.cpp" line="-152"/>
+        <location filename="../src/settings/compilersetsettings.cpp" line="-173"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10609,15 +10614,15 @@
     </message>
     <message>
         <location filename="../src/widgets/searchinfiledialog.cpp" line="+176"/>
-        <location line="+35"/>
+        <location line="+36"/>
         <location line="+74"/>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Searching...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-119"/>
-        <location line="+109"/>
+        <location line="-121"/>
+        <location line="+110"/>
         <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10652,7 +10657,7 @@
         <translation type="unfinished">Pasta</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="+168"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="+169"/>
         <source>Choose Folder</source>
         <translation type="unfinished">Escolher pasta</translation>
     </message>
