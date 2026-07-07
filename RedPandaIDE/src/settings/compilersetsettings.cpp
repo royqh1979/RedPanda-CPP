@@ -1884,10 +1884,10 @@ void CompilerSets::findSets(bool showProgress)
         //   /opt/gcc-13 -> /opt/gcc-13.2.0
         addSets(folder);
         if (showProgress) {
-            progressDlg.setValue(i+1);
-            progressDlg.setLabelText(QObject::tr("Searching %1/%2").arg(i+1).arg(pathList.count()));
+            int idx = pathList.count()-i;
+            progressDlg.setValue(idx);
+            progressDlg.setLabelText(QObject::tr("Searching %1/%2").arg(idx).arg(pathList.count()));
             QCoreApplication::processEvents();
-
             if (progressDlg.wasCanceled())
                 break;
         }
