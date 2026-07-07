@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
         //load settings
         pSettings = settings.get();
         if (firstRun) {
-            pSettings->compilerSets().findSets();
+            pSettings->compilerSets().findSets(true);
             pSettings->compilerSets().saveSets();
         }
         pSettings->load();

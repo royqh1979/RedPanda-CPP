@@ -26,6 +26,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QCoreApplication>
 #include "src/addon/luaexecutor.h"
 #include "src/addon/luaruntime.h"
 
@@ -1795,7 +1797,7 @@ CompilerSetList CompilerSets::clearSets()
     return persisted;
 }
 
-void CompilerSets::findSets()
+void CompilerSets::findSets(bool showProgress)
 {
     CompilerSetList persisted = clearSets();
     // canonical paths that has been searched.
@@ -1853,7 +1855,19 @@ void CompilerSets::findSets()
             libexecBins.append(binPath);
     }
     pathList = libexecBins + pathList;
-
+    QProgressDialog progressDlg{
+                QObject::tr("Searching for compilers..."),
+                QObject::tr("Abort"),
+                0,
+                1,
+                };
+    if (showProgress) {
+        progressDlg.setMinimumDuration(500);
+        progressDlg.setWindowModality(Qt::WindowModal);
+        progressDlg.setLabelText(QObject::tr("Searching..."));
+        progressDlg.setMaximum(pathList.count());
+        progressDlg.show();
+    }
     QString folder, canonicalFolder;
     for (int i=pathList.count()-1;i>=0;i--) {
         folder = QDir(pathList[i]).absolutePath();
@@ -1869,8 +1883,17 @@ void CompilerSets::findSets()
         // after upgrade:
         //   /opt/gcc-13 -> /opt/gcc-13.2.0
         addSets(folder);
-    }
+        if (showProgress) {
+            progressDlg.setValue(i+1);
+            progressDlg.setLabelText(QObject::tr("Searching %1/%2").arg(i+1).arg(pathList.count()));
+            QCoreApplication::processEvents();
 
+            if (progressDlg.wasCanceled())
+                break;
+        }
+    }
+    if (showProgress)
+        progressDlg.hide();
 #ifdef ENABLE_LUA_ADDON
     if (
         // note that array index starts from 1 in Lua
@@ -1974,7 +1997,7 @@ void CompilerSets::loadSets()
                                  QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
             return;
         }
-        findSets();
+        findSets(true);
         if (size()==0) {
             QMessageBox::warning(
                 nullptr,

@@ -237,7 +237,6 @@ private:
 
 typedef std::shared_ptr<CompilerSet> PCompilerSet;
 typedef std::vector<PCompilerSet> CompilerSetList;
-
 class CompilerSets {
 public:
     explicit CompilerSets(SettingsPersistor* settings, DirSettings *dirSettings);
@@ -246,7 +245,7 @@ public:
     bool addSets(const QString& folder);
     bool addSets(const QString& folder, const QString& c_prog);
     CompilerSetList clearSets();
-    void findSets();
+    void findSets(bool showProgress);
     void saveSets();
     void loadSets();
     void saveDefaultIndex();

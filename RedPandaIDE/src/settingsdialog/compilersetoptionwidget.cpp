@@ -312,20 +312,9 @@ void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
     if (QMessageBox::warning(this,tr("Confirm"),msg,
                                  QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok )
         return;
-    QProgressDialog progressDlg(
-                tr("Searching for compilers..."),
-                tr("Abort"),
-                0,
-                1,
-                pMainWindow);
 
-    progressDlg.setWindowModality(Qt::WindowModal);
-    progressDlg.setMaximum(2);
-    progressDlg.setLabelText(tr("Searching..."));
-    pSettings->compilerSets().findSets();
-    progressDlg.setValue(1);
+    pSettings->compilerSets().findSets(true);
     doLoad();
-    progressDlg.setValue(2);
     setSettingsChanged();
     if (pSettings->compilerSets().size()==0) {
         QMessageBox::warning(this,tr("Failed"),tr("Can't find any compiler."));

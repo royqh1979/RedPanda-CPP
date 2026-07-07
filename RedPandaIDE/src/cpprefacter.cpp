@@ -277,6 +277,7 @@ void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::sha
                 mMainWindow->project()->unitList().count(),
                 mMainWindow);
     progressDlg.setWindowModality(Qt::WindowModal);
+    progressDlg.setMinimumDuration(500);
     progressDlg.show();
     int i=0;
     foreach (const PProjectUnit& unit, project->unitList()) {
