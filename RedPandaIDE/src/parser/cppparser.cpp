@@ -4038,6 +4038,8 @@ void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
         }
     }
     mIndex = indexOfNextPeriodOrSemicolon(mIndex+1, maxIndex);
+    if (mIndex<maxIndex && mTokenizer[mIndex]->text == '}')
+        mIndex++ ;
 }
 
 void CppParser::handleUsing(int maxIndex)
