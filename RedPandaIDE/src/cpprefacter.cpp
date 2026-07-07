@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <QCoreApplication>
 #include <QFile>
 #include <QMessageBox>
 #include <QProgressDialog>
@@ -276,13 +277,14 @@ void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::sha
                 mMainWindow->project()->unitList().count(),
                 mMainWindow);
     progressDlg.setWindowModality(Qt::WindowModal);
+    progressDlg.show();
     int i=0;
     foreach (const PProjectUnit& unit, project->unitList()) {
         i++;
         if (isCFile(unit->fileName()) || isHFile(unit->fileName())) {
             progressDlg.setValue(i);
             progressDlg.setLabelText(tr("Searching...")+"<br/>"+unit->fileName());
-
+            QCoreApplication::processEvents();
             if (progressDlg.wasCanceled())
                 break;
             PSearchResultTreeItem item = findOccurenceInFile(

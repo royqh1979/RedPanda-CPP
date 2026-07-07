@@ -180,6 +180,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     pMainWindow);
 
         progressDlg.setWindowModality(Qt::WindowModal);
+        progressDlg.show();
         QStack<QDir> dirs;
         QSet<QString> searched;
         QList<QFileInfo> files;
@@ -209,7 +210,7 @@ void SearchInFileDialog::doSearch(bool replace)
             i++;
             progressDlg.setValue(i);
             progressDlg.setLabelText(tr("Searching...")+"<br/>"+curFilename);
-
+            QCoreApplication::processEvents();
             if (progressDlg.wasCanceled())
                 break;
             Editor * e = pMainWindow->editorManager()->getOpenedEditor(curFilename);
@@ -289,12 +290,13 @@ void SearchInFileDialog::doSearch(bool replace)
                     pMainWindow);
 
         progressDlg.setWindowModality(Qt::WindowModal);
+        progressDlg.show();
         int i=0;
         foreach (PProjectUnit unit, pMainWindow->project()->unitList()) {
             i++;
             progressDlg.setValue(i);
             progressDlg.setLabelText(tr("Searching...")+"<br/>"+unit->fileName());
-
+            QCoreApplication::processEvents();
             if (progressDlg.wasCanceled())
                 break;
             Editor * e = pMainWindow->project()->unitEditor(unit);

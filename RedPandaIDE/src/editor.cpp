@@ -3114,8 +3114,8 @@ void Editor::print()
     QString html = exporter.text();
     QTextDocument doc;
 
-    doc.setDefaultFont(font());
     doc.setHtml(html);
+    doc.setDefaultFont(font());
     QPainter painter(&printer);
     if (!painter.isActive()) return;
 
