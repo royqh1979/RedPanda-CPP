@@ -10613,17 +10613,30 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="+176"/>
-        <location line="+36"/>
-        <location line="+74"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="+289"/>
         <location line="+12"/>
         <source>Searching...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-121"/>
-        <location line="+110"/>
+        <location line="-124"/>
+        <location line="+113"/>
         <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-114"/>
+        <source>Calculating files for searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Calculating files for searching (%1)...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Searching %1/%2...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10657,7 +10670,7 @@
         <translation type="unfinished">Pasta</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="+169"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="+244"/>
         <source>Choose Folder</source>
         <translation type="unfinished">Escolher pasta</translation>
     </message>

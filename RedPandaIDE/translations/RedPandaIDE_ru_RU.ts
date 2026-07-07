@@ -9831,21 +9831,34 @@
         <translation>&amp;Отмена</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="176"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="212"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="286"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="298"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="289"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="301"/>
         <source>Searching...</source>
         <translation>Поиск...</translation>
     </message>
     <message>
         <location filename="../src/widgets/searchinfiledialog.cpp" line="177"/>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="287"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="290"/>
         <source>Abort</source>
         <translation>Прервать</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="456"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="176"/>
+        <source>Calculating files for searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="206"/>
+        <source>Calculating files for searching (%1)...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="215"/>
+        <source>Searching %1/%2...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="459"/>
         <source>Choose Folder</source>
         <translation>Выбор каталога</translation>
     </message>

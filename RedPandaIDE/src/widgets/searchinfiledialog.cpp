@@ -173,7 +173,7 @@ void SearchInFileDialog::doSearch(bool replace)
         QDir rootDir(ui->txtFolder->text());
         // loop through editors, add results to message control
         QProgressDialog progressDlg(
-                    tr("Searching..."),
+                    tr("Calculating files for searching..."),
                     tr("Abort"),
                     0,
                     1,
@@ -181,6 +181,7 @@ void SearchInFileDialog::doSearch(bool replace)
 
         progressDlg.setWindowModality(Qt::WindowModal);
         progressDlg.show();
+        QCoreApplication::processEvents();
         QStack<QDir> dirs;
         QSet<QString> searched;
         QList<QFileInfo> files;
@@ -202,6 +203,8 @@ void SearchInFileDialog::doSearch(bool replace)
             foreach(const QFileInfo& entry, dir.entryInfoList(ui->txtFilters->text().split(";"), filterOptions)) {
                 files.append(entry);
             }
+            progressDlg.setLabelText(tr("Calculating files for searching (%1)...").arg(files.count()));
+            QCoreApplication::processEvents();
         }
         progressDlg.setMaximum(files.count());
         int i=0;
@@ -209,7 +212,7 @@ void SearchInFileDialog::doSearch(bool replace)
             QString curFilename =  info.absoluteFilePath();
             i++;
             progressDlg.setValue(i);
-            progressDlg.setLabelText(tr("Searching...")+"<br/>"+curFilename);
+            progressDlg.setLabelText(tr("Searching %1/%2...").arg(i).arg(files.count())+"<br/>"+curFilename);
             QCoreApplication::processEvents();
             if (progressDlg.wasCanceled())
                 break;

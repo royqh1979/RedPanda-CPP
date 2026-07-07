@@ -11647,21 +11647,34 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">繼續取代</translation>
     </message>
     <message>
-        <location filename="../src/widgets/searchinfiledialog.cpp" line="+176"/>
-        <location line="+36"/>
-        <location line="+74"/>
+        <location filename="../src/widgets/searchinfiledialog.cpp" line="+289"/>
         <location line="+12"/>
         <source>Searching...</source>
         <translation>正在尋找.</translation>
     </message>
     <message>
-        <location line="-121"/>
-        <location line="+110"/>
+        <location line="-124"/>
+        <location line="+113"/>
         <source>Abort</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location line="+169"/>
+        <location line="-114"/>
+        <source>Calculating files for searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Calculating files for searching (%1)...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Searching %1/%2...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+244"/>
         <source>Choose Folder</source>
         <translation>選擇資料夾</translation>
     </message>
