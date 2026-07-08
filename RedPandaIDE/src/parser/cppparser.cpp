@@ -2417,9 +2417,9 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                 return;
             } else if (
                        mTokenizer[mIndex + 1]->text == ','
-                       ||mTokenizer[mIndex + 1]->text == ';'
-                       ||mTokenizer[mIndex + 1]->text == ':'
-                       ||mTokenizer[mIndex + 1]->text == '{'
+                       || mTokenizer[mIndex + 1]->text == ';'
+                       || mTokenizer[mIndex + 1]->text == ':'
+                       || mTokenizer[mIndex + 1]->text == '{'
                        || mTokenizer[mIndex + 1]->text == '=') {
                 if (mTokenizer[mIndex]->text.startsWith("[")
                         && AutoTypes.contains(sType)) {
@@ -3991,50 +3991,56 @@ void CppParser::handleStructs(bool isTypedef, int maxIndex)
 
 void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
 {
-    if (mIndex+1 < maxIndex
-            && ((mTokenizer[mIndex+1]->text == ":")
-                || (mTokenizer[mIndex+1]->text == "="))) {
-        QString typeName;
-        QString templateParams;
-        int endIndex = indexOfNextSemicolon(mIndex+2, maxIndex);
-        QString expressionText;
-        for (int i=mIndex+2;i<endIndex;i++) {
-            expressionText+=mTokenizer[i]->text+" ";
+    QString typeName;
+    QString templateParams;
+    int endIndex = indexOfNextSemicolon(mIndex+2, maxIndex);
+    QString expressionText;
+    for (int i=mIndex+2;i<endIndex;i++) {
+        expressionText+=mTokenizer[i]->text+" ";
+    }
+    QStringList phraseExpression = splitExpression(expressionText);
+    int pos = 0;
+    bool varsAdded = false;
+    PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
+                            phraseExpression,
+                            pos,
+                            getCurrentScope(),
+                            PEvalStatement(),
+                            true,false);
+    if(aliasStatement && aliasStatement->effectiveTypeStatement) {
+        if ( mTokenizer[mIndex+1]->text == ":" ) {
+            if (STLMaps.contains(aliasStatement->effectiveTypeStatement->fullName)) {
+                typeName = "std::pair";
+                templateParams = aliasStatement->templateParams;
+            }
         }
-        QStringList phraseExpression = splitExpression(expressionText);
-        int pos = 0;
-        PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
-                                phraseExpression,
-                                pos,
-                                getCurrentScope(),
-                                PEvalStatement(),
-                                true,false);
-        if(aliasStatement && aliasStatement->effectiveTypeStatement) {
-            if ( mTokenizer[mIndex+1]->text == ":" ) {
-                if (STLMaps.contains(aliasStatement->effectiveTypeStatement->fullName)) {
-                    typeName = "std::pair";
-                    templateParams = aliasStatement->templateParams;
-                }
+        if (typeName == "std::pair" && !templateParams.isEmpty()) {
+            QString firstType = doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
+                                                                              getCurrentScope());
+            QString secondType = doFindTemplateParamOf(mCurrentFile,aliasStatement->templateParams,1,
+                                                                              getCurrentScope());
+            QString s = mTokenizer[mIndex]->text;
+            s = s.mid(1,s.length()-2);
+            QStringList lst = s.split(",");
+            if (lst.length()==2) {
+                QString firstVar = lst[0].trimmed();
+                QString secondVar = lst[1].trimmed();
+                bool isConst = sType.startsWith("const");
+                QString suffix;
+                if (sType.endsWith("&&")) suffix = "&&";
+                else if (sType.endsWith("&")) suffix = "&";
+                doAddVar(firstVar, firstType, isConst, suffix);
+                doAddVar(secondVar, secondType, isConst, suffix);
+                varsAdded = true;
             }
-            if (typeName == "std::pair" && !templateParams.isEmpty()) {
-                QString firstType = doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
-                                                                                  getCurrentScope());
-                QString secondType = doFindTemplateParamOf(mCurrentFile,aliasStatement->templateParams,1,
-                                                                                  getCurrentScope());
-                QString s = mTokenizer[mIndex]->text;
-                s = s.mid(1,s.length()-2);
-                QStringList lst = s.split(",");
-                if (lst.length()==2) {
-                    QString firstVar = lst[0].trimmed();
-                    QString secondVar = lst[1].trimmed();
-                    bool isConst = sType.startsWith("const");
-                    QString suffix;
-                    if (sType.endsWith("&&")) suffix = "&&";
-                    else if (sType.endsWith("&")) suffix = "&";
-                    doAddVar(firstVar, firstType, isConst, suffix);
-                    doAddVar(secondVar, secondType, isConst, suffix);
-                }
-            }
+        }
+    }
+    if (!varsAdded) {
+        QString s = mTokenizer[mIndex]->text;
+        s = s.mid(1,s.length()-2);
+        QStringList lst = s.split(",");
+        for (const QString &var: lst) {
+            doAddVar(var, sType, false, "");
         }
     }
     mIndex = indexOfNextPeriodOrSemicolon(mIndex+1, maxIndex);
