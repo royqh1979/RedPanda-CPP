@@ -32,6 +32,9 @@ void StatementModel::add(const PStatement& statement)
     PStatement parent = statement->parentScope.lock();
     if (parent) {
         addMember(parent->children,statement);
+        if (statement->kind == StatementKind::Variable
+                && statement->accessibility == StatementAccessibility::Public)
+            parent->publicProperties.append(statement);
     } else {
         addMember(mGlobalStatements,statement);
     }

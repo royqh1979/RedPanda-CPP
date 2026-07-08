@@ -202,6 +202,7 @@ struct Statement {
     QString fileName; // declaration
     QString definitionFileName; // definition
     StatementMap children;
+    QList<PStatement> publicProperties;
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces

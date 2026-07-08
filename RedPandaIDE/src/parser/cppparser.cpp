@@ -2283,6 +2283,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
         }
     } else if (mTokenizer[mIndex]->text == "*"
                || mTokenizer[mIndex]->text == "&"
+               || mTokenizer[mIndex]->text.startsWith("[") // structured binding
                || isIdentifier(mTokenizer[mIndex]->text)
                    ) {
         // it should be function/var
@@ -2423,7 +2424,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                        || mTokenizer[mIndex + 1]->text == '=') {
                 if (mTokenizer[mIndex]->text.startsWith("[")
                         && AutoTypes.contains(sType)) {
-                    handleStructredBinding(sType,maxIndex);
+                    handleStructuredBinding(sType,maxIndex);
                     return;
                 }
                 handleVar(sType+" "+sName,isExtern,isStatic, maxIndex);
@@ -3989,7 +3990,7 @@ void CppParser::handleStructs(bool isTypedef, int maxIndex)
     }
 }
 
-void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
+void CppParser::handleStructuredBinding(const QString &sType, int maxIndex)
 {
     QString typeName;
     QString templateParams;
@@ -4033,13 +4034,28 @@ void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
                 doAddVar(secondVar, secondType, isConst, suffix);
                 varsAdded = true;
             }
+        } else if (aliasStatement->effectiveTypeStatement->kind == StatementKind::Class) {
+            QString s = mTokenizer[mIndex]->text;
+            s = s.mid(1,s.length()-2);
+            QStringList lst = s.split(",");
+            if (lst.count()==aliasStatement->effectiveTypeStatement->publicProperties.count()) {
+                for (int i = 0;i<lst.count();i++) {
+                    QString var = lst[i];
+                    if (var.startsWith("..."))
+                        var = var.mid(3);
+                    doAddVar(var, aliasStatement->effectiveTypeStatement->publicProperties[i]->type, false, "");
+                }
+                varsAdded = true;
+            }
         }
     }
     if (!varsAdded) {
         QString s = mTokenizer[mIndex]->text;
         s = s.mid(1,s.length()-2);
         QStringList lst = s.split(",");
-        for (const QString &var: lst) {
+        for (QString var: lst) {
+            if (var.startsWith("..."))
+                var = var.mid(3);
             doAddVar(var, sType, false, "");
         }
     }
@@ -4254,15 +4270,17 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 if(aliasStatement) {
                     if (aliasStatement->typeStatement) {
                         addedVar->type = aliasStatement->typeStatement->fullName;
-                        if (!aliasStatement->templateParams.isEmpty()) {
-                            if (!addedVar->type.endsWith(">")) {
-                                addedVar->type += aliasStatement->templateParams;
-                            } else {
-                                QString type = addedVar->type;
-                                int pos = type.indexOf('<');
-                                if (pos>=0) {
-                                    type = type.left(pos);
-                                    addedVar->type = type + aliasStatement->templateParams;
+                        if (aliasStatement->typeStatement->kind != StatementKind::Typedef) {
+                            if (!aliasStatement->templateParams.isEmpty()) {
+                                if (!addedVar->type.endsWith(">")) {
+                                    addedVar->type += aliasStatement->templateParams;
+                                } else {
+                                    QString type = addedVar->type;
+                                    int pos = type.indexOf('<');
+                                    if (pos>=0) {
+                                        type = type.left(pos);
+                                        addedVar->type = type + aliasStatement->templateParams;
+                                    }
                                 }
                             }
                         }

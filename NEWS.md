@@ -32,6 +32,9 @@ Red Panda C++ Version 3.5
   - enhancement: Release Compiler set add "-DNDEBUG" parameter when compiling by default.
   - enhancement: Show progress when finding in files / finding compiler sets / find occurences in project.
   - fix: Can't correctly parse "std::views" in <ranges>
+  - fix: Induced type of auto var is not correct.
+  - enhancement: Parsing structured binding of struct instance.
+  - fix: Can't parse non-const structured binding.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
