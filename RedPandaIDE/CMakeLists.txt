@@ -524,8 +524,11 @@ if(QT_FEATURE_static)
     endforeach()
 
     if(qtbase_translation_files)
+        message(STATUS "Found Qt base translation files: ${qtbase_translation_files}")
         target_embed_qtbase_translations(RedPandaIDE
             QM_FILES ${qtbase_translation_files})
+    else()
+        message(WARNING "Qt base translation files not found")
     endif()
 endif()
 

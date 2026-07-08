@@ -77,6 +77,14 @@ if (${QT_VERSION_MAJOR} LESS 6)
     # a phony target that depends on all lupdate targets (Qt 5)
     # the actual lupdate targets will be added in target_embed_translations function
     add_custom_target(update_translations)
+
+    # Qt 5 doesn't define QT5_INSTALL_PREFIX, QT_FEATURE_static for CMake
+    get_target_property(Qt5Core_loc Qt5::Core LOCATION_RELEASE)  # C:/Qt/5.15.15+redpanda0/64-ucrt/lib/libQt5Core.a
+    get_filename_component(QT5_INSTALL_PREFIX "${Qt5Core_loc}/../.." ABSOLUTE)  # C:/Qt/5.15.15+redpanda0/64-ucrt
+    get_target_property(Qt5Core_type Qt5::Core TYPE)
+    if(Qt5Core_type STREQUAL "STATIC_LIBRARY")
+        set(QT_FEATURE_static ON)
+    endif()
 endif()
 
 # read version from "version.json"
