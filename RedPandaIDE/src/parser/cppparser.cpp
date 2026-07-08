@@ -4038,8 +4038,6 @@ void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
         }
     }
     mIndex = indexOfNextPeriodOrSemicolon(mIndex+1, maxIndex);
-    if (mIndex<maxIndex && mTokenizer[mIndex]->text == '}')
-        mIndex++ ;
 }
 
 void CppParser::handleUsing(int maxIndex)
@@ -6587,6 +6585,7 @@ int CppParser::indexOfNextSemicolon(int index, int maxIndex)
         case ';':
             return index;
         case '(':
+        case '{':
             index = mTokenizer[index]->matchIndex+1;
             break;
         default:
@@ -6606,6 +6605,7 @@ int CppParser::indexOfNextPeriodOrSemicolon(int index, int maxIndex)
         case ')':
             return index;
         case '(':
+        case '{':
             index = mTokenizer[index]->matchIndex+1;
             break;
         default:
@@ -6644,6 +6644,7 @@ int CppParser::indexOfNextColon(int index, int maxIndex)
                 index++;
             break;
         case '(':
+        case '{':
             index = mTokenizer[index]->matchIndex+1;
             break;
         default:
@@ -6688,6 +6689,7 @@ int CppParser::indexOfNextRightParenthesis(int index, int maxIndex)
         case ')':
             return index;
         case '(':
+        case '{':
             index = mTokenizer[index]->matchIndex+1;
             break;
         default:
@@ -6706,8 +6708,6 @@ void CppParser::skipNextSemicolon(int index, int endIndex)
             mIndex++;
             return;
         case '{':
-            mIndex = mTokenizer[mIndex]->matchIndex+1;
-            break;
         case '(':
             mIndex = mTokenizer[mIndex]->matchIndex+1;
             break;
