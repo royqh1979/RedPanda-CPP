@@ -14,6 +14,8 @@ private slots:
     void init_parser();
     void test_parse_var();
     void test_parse_vars();
+    void test_struct();
+    void test_structured_bindings();
 protected:
     std::shared_ptr<CppParser> mParser;
 };

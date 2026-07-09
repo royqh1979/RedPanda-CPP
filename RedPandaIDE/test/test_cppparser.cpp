@@ -291,3 +291,95 @@ void TestCppParser::test_parse_vars()
     QCOMPARE(statement->args,"[5]");
 
 }
+
+void TestCppParser::test_struct()
+{
+    mParser->setOnGetFileStream(nullptr);
+    QFileInfo file("resources/struct.cpp");
+    QVERIFY(file.exists());
+    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
+    PStatement statement;
+    statement = mParser->findStatement("TTT");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->command, "TTT");
+    QCOMPARE(statement->kind, StatementKind::Class);
+    QCOMPARE(statement->publicProperties.count(), 3);
+    PStatement child;
+    child = statement->publicProperties[0];
+    QCOMPARE(child->command,"xxx");
+    QCOMPARE(child->kind,StatementKind::Variable);
+    QCOMPARE(child->fullName,"TTT::xxx");
+    QCOMPARE(child->type, "int");
+    QCOMPARE(child->accessibility, StatementAccessibility::Public);
+    child = statement->publicProperties[1];
+    QCOMPARE(child->command,"yyy");
+    QCOMPARE(child->kind,StatementKind::Variable);
+    QCOMPARE(child->fullName,"TTT::yyy");
+    QCOMPARE(child->type, "short");
+    QCOMPARE(child->accessibility, StatementAccessibility::Public);
+    child = statement->publicProperties[2];
+    QCOMPARE(child->command,"zzz");
+    QCOMPARE(child->kind,StatementKind::Variable);
+    QCOMPARE(child->fullName,"TTT::zzz");
+    QCOMPARE(child->type, "double");
+    QCOMPARE(child->accessibility, StatementAccessibility::Public);
+
+    QCOMPARE(statement->children.count(),4);
+    child = statement->children.value("ppp");
+    QCOMPARE(child->command,"ppp");
+    QCOMPARE(child->kind,StatementKind::Variable);
+    QCOMPARE(child->fullName,"TTT::ppp");
+    QCOMPARE(child->type, "int");
+    QCOMPARE(child->accessibility, StatementAccessibility::Private);
+
+}
+
+void TestCppParser::test_structured_bindings()
+{
+    mParser->setOnGetFileStream(nullptr);
+    QFileInfo file("resources/structured-bindings.cpp");
+    QVERIFY(file.exists());
+    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
+    PStatement statement;
+    statement = mParser->findStatement("a");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"a");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("b");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"b");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"short");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("c");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"c");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"double");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("d");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"d");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"int");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("e");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"e");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"short");
+    QCOMPARE(statement->args,"");
+
+    statement = mParser->findStatement("g");
+    QVERIFY(statement!=nullptr);
+    QCOMPARE(statement->fullName,"g");
+    QCOMPARE(statement->kind,StatementKind::Variable);
+    QCOMPARE(statement->type,"double");
+    QCOMPARE(statement->args,"");
+}
