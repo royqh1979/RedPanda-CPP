@@ -105,7 +105,7 @@ jobs:
 
       - name: Build
         run: |
-          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }}
+          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }} --ucrt
 
       - name: Upload
         uses: actions/upload-artifact@v4

@@ -16,6 +16,7 @@ Options:
   --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
   --mingw32                Build mingw32 integrated compiler.
   --mingw64                Build mingw64 integrated compiler.
+  --ucrt                   Include UCRT installer (VC_redist) in the package.
   -t, --target-dir <dir>   Set target directory for the packages.
 EOF
 }
@@ -59,6 +60,7 @@ compilers=()
 COMPILER_MINGW32=0
 COMPILER_MINGW64=0
 TARGET_DIR="$(pwd)/dist"
+UCRT=0
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
@@ -97,6 +99,10 @@ while [[ $# -gt 0 ]]; do
       TARGET_DIR="$2"
       shift 2
       ;;
+    --ucrt)
+      UCRT=1
+      shift
+      ;;
     *)
       echo "Unknown argument: $1"
       exit 1
@@ -125,6 +131,10 @@ MINGW32_PACKAGE_SUFFIX="mingw32"
 MINGW64_ARCHIVE="mingw64-${REDPANDA_MINGW_RELEASE}.7z"
 MINGW64_COMPILER_NAME="MinGW-w64 x86_64 GCC"
 MINGW64_PACKAGE_SUFFIX="mingw64"
+
+# Visual C++ Redistributable for Visual Studio 2019, version 16.7 (14.27)
+# This is the last version that supports Windows XP.
+UCRT_URL="https://download.visualstudio.microsoft.com/download/pr/c168313d-1754-40d4-8928-18632c2e2a71/D305BAA965C9CD1B44EBCD53635EE9ECC6D85B54210E2764C8836F4E9DEFA345/VC_redist.x86.exe"
 
 if [[ ${#compilers[@]} -eq 0 ]]; then
   PACKAGE_BASENAME="${PACKAGE_BASENAME}-none"
@@ -170,6 +180,9 @@ if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW32_ARCHIVE}" ]]; t
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW64_ARCHIVE}" ]]; then
   curl -L "https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/${REDPANDA_MINGW_RELEASE}/${MINGW64_ARCHIVE}" -o "${ASSETS_DIR}/${MINGW64_ARCHIVE}"
+fi
+if [[ ${UCRT} -eq 1 && ! -f "${ASSETS_DIR}/VC_redist.x86.exe" ]]; then
+  curl -L "${UCRT_URL}" -o "${ASSETS_DIR}/VC_redist.x86.exe"
 fi
 
 ## build
@@ -254,6 +267,10 @@ fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   [[ -d "mingw64" ]] || "${_7Z}" x "$ASSETS_DIR/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+fi
+if [[ ${UCRT} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_UCRT)
+  cp "${ASSETS_DIR}/VC_redist.x86.exe" "${PACKAGE_DIR}/VC_redist.x86.exe"
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
