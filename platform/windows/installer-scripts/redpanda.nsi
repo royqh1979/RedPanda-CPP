@@ -133,15 +133,6 @@ Section "$(SectionMainName)" SectionMain
     File "compiler_hint.lua"
   !endif
 
-  # UCRT installers are for target platform. host switches does not apply.
-  # to avoid too many switches, we just install it.
-  !ifdef HAVE_UCRT
-    File "VC_redist.x86.exe"
-    ${IfNot} ${AtLeastWin10}
-      ExecWait '"$INSTDIR\VC_redist.x86.exe" /quiet /norestart'
-    ${EndIf}
-  !endif
-
   ; Write required paths
   SetOutPath $INSTDIR\templates
   File /nonfatal /r "templates\*"
@@ -193,6 +184,22 @@ SectionEnd
     File "alpine-minirootfs.tar"
     File /nonfatal /r "gcc-linux-aarch64"
   SectionEnd
+!endif
+
+!ifdef HAVE_UCRT
+  SectionGroup /e "$(SectionUcrtGroupName)" SectionUcrt
+    Section "$(SectionUcrtExtractName)" SectionUcrtExtract
+      SectionIn 1 3
+      SetOutPath $INSTDIR
+      File "VC_redist.x86.exe"
+    SectionEnd
+
+    Section "$(SectionUcrtInstallName)" SectionUcrtInstall
+      SectionIn 1 3
+      SetOutPath $INSTDIR
+      ExecWait '"$INSTDIR\VC_redist.x86.exe" /quiet /norestart'
+    SectionEnd
+  SectionGroupEnd
 !endif
 
 ####################################################################
@@ -335,6 +342,10 @@ SectionEnd
 !ifdef HAVE_LLVM
   !insertmacro MUI_DESCRIPTION_TEXT ${SectionLlvm}        "$(MessageSectionLlvm)"
 !endif
+!ifdef HAVE_UCRT
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionUcrtExtract} "$(MessageSectionUcrtExtract)"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionUcrtInstall} "$(MessageSectionUcrtInstall)"
+!endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionCompress}    "$(MessageSectionCompress)"
@@ -359,6 +370,9 @@ FunctionEnd
 Function .onSelChange
   !insertmacro SectionAction_CheckMingw64
   !insertmacro SectionAction_CheckCompress
+  !ifdef HAVE_UCRT
+    !insertmacro SectionAction_CheckUcrt
+  !endif
 FunctionEnd
 
 Function myGuiInit
@@ -381,6 +395,9 @@ Function myGuiInit
 
   !insertmacro SectionAction_CheckMingw64
   !insertmacro SectionAction_CheckCompress
+  !ifdef HAVE_UCRT
+    !insertmacro SectionAction_CheckUcrt
+  !endif
 FunctionEnd
 
 Function un.onInit

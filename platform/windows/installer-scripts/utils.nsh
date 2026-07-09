@@ -70,16 +70,12 @@ Var /GLOBAL sectionDepTemp
 !macroend
 
 !macro DisableSection section
-  SectionGetFlags ${section} $sectionDepFlag
+  !insertmacro UnselectSection ${section}
+  !insertmacro SetSectionFlag ${section} ${SF_RO}
+!macroend
 
-  ; unset SF_SELECTED
-  IntOp $sectionDepTemp ${SF_SELECTED} ~
-  IntOp $sectionDepFlag $sectionDepFlag & $sectionDepTemp
-
-  ; set SF_RO
-  IntOp $sectionDepFlag $sectionDepFlag | ${SF_RO}
-
-  SectionSetFlags ${section} $sectionDepFlag
+!macro EnableSection section
+  !insertmacro ClearSectionFlag ${section} ${SF_RO}
 !macroend
 
 !macro SectionAction_CheckMingw64
@@ -95,4 +91,29 @@ Var /GLOBAL sectionDepTemp
   ${IfNot} ${AtLeastBuild} 10240
     !insertmacro DisableSection ${SectionCompress}
   ${EndIf}
+!macroend
+
+!macro SectionAction_CheckUcrt
+  !ifdef HAVE_UCRT
+    !insertmacro SectionFlagIsSet ${SectionUcrtExtract} ${SF_SELECTED} extract_ucrt_check_version no_extract_ucrt_disable_install
+
+  extract_ucrt_check_version:
+    ${If} ${AtLeastBuild} 10240
+      ; Windows 10: cannot install UCRT (system component)
+      !insertmacro DisableSection ${SectionUcrtInstall}
+    !if "${ARCH}" == "x64"
+      ${ElseIfNot} ${AtLeastBuild} 6000
+        ; Windows Server 2003 x64 Edition: x86 vcredist does not install x64 UCRT
+        !insertmacro DisableSection ${SectionUcrtInstall}
+    !endif
+    ${Else}
+      !insertmacro EnableSection ${SectionUcrtInstall}
+    ${EndIf}
+    goto done_ucrt_check
+
+  no_extract_ucrt_disable_install:
+    !insertmacro DisableSection ${SectionUcrtInstall}
+
+  done_ucrt_check:
+  !endif
 !macroend
