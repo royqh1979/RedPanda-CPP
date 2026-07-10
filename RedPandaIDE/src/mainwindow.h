@@ -443,6 +443,8 @@ private slots:
     void onTableIssuesCopyAll();
     void onTableIssuesCopy();
 
+    void onSearchResultsModelCurrentIndexChanged();
+
     void on_actionNew_triggered();
 
     void on_EditorTabsLeft_tabCloseRequested(int index);
@@ -941,8 +943,6 @@ private:
     TodoModel *mTodoModel;
     SearchResultModel *mSearchResultModel;
     BookmarkModel *mBookmarkModel;
-    SearchResultListModel *mSearchResultListModel;
-    SearchResultTreeModel *mSearchResultTreeModel;
     SearchResultTreeViewDelegate *mSearchViewDelegate;
     ClassBrowserModel *mClassBrowserModel;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;

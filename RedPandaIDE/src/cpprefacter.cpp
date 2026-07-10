@@ -64,7 +64,6 @@ bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
             doFindOccurenceInEditor(statement,editor,editor->parser());
         }
     }
-    mMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
 }
 
@@ -91,7 +90,6 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &statementFullnam
             doFindOccurenceInEditor(statement,editor,editor->parser());
         }
     }
-    mMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
 }
 
@@ -259,7 +257,7 @@ void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *
                 statement,
                 parser);
     if (item && !(item->results.isEmpty())) {
-        results->results.append(item);
+        mMainWindow->searchResultModel()->addResultToSearchResults(results,item);
     }
 }
 
@@ -294,7 +292,7 @@ void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::sha
                         statement,
                         parser);
             if (item && !(item->results.isEmpty())) {
-                results->results.append(item);
+                mMainWindow->searchResultModel()->addResultToSearchResults(results,item);
             }
         }
     }

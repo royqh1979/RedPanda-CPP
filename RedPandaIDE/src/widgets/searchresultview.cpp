@@ -25,32 +25,36 @@ PSearchResults SearchResultModel::addSearchResults(
         bool useRegex,
         SearchFileScope scope, const QString& folder, const QString& filters, bool searchSubfolders)
 {
+    mTreeModel->beginResetModel();
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
         PSearchResults results = mSearchResults[i];
-        if (results->keyword == keyword && results->scope == scope
-                && results->searchType == SearchType::Search) {
+        if (results->keyword() == keyword && results->scope() == scope
+                && results->searchType() == SearchType::Search) {
             index=i;
             break;
         }
     }
     if (index>=0) {
+        beginRemoveRows(QModelIndex(),index,index);
         mSearchResults.removeAt(index);
+        endRemoveRows();
     }
     if (mSearchResults.size()>=MAX_SEARCH_RESULTS) {
+        int idx = mSearchResults.size()-1;
+        beginRemoveRows(QModelIndex(), idx,idx);
         mSearchResults.pop_back();
+        endRemoveRows();
     }
-    PSearchResults results = std::make_shared<SearchResults>();
-    results->keyword = keyword;
-    results->options = options;
-    results->useRegex = useRegex;
-    results->scope = scope;
-    results->searchType = SearchType::Search;
-    results->folder=folder;
-    results->filters=filters;
-    results->searchSubfolders=searchSubfolders;
+    PSearchResults results = std::make_shared<SearchResults>(
+                keyword,options,useRegex,scope,
+                SearchType::Search,folder,filters,searchSubfolders);
+    beginInsertRows(QModelIndex(),0,0);
     mSearchResults.push_front(results);
+    endInsertRows();
     mCurrentIndex = 0;
+    mTreeModel->endResetModel();
+    emit currentIndexChanged();
     return results;
 }
 
@@ -59,31 +63,38 @@ PSearchResults SearchResultModel::addSearchResults(
         const QString& symbolFullname,
         SearchFileScope scope)
 {
+    mTreeModel->beginResetModel();
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
         PSearchResults results = mSearchResults[i];
-        if (results->searchType == SearchType::FindOccurences
-                && results->scope == scope
-                && results->statementFullname == symbolFullname
+        if (results->searchType() == SearchType::FindOccurences
+                && results->scope() == scope
+                && results->symbolFullname() == symbolFullname
                 ) {
             index=i;
             break;
         }
     }
     if (index>=0) {
+        beginRemoveRows(QModelIndex(),index,index);
         mSearchResults.removeAt(index);
+        endRemoveRows();
     }
     if (mSearchResults.size()>=MAX_SEARCH_RESULTS) {
+        int idx = mSearchResults.size()-1;
+        beginRemoveRows(QModelIndex(), idx,idx);
         mSearchResults.pop_back();
+        endRemoveRows();
     }
-    PSearchResults results = std::make_shared<SearchResults>();
-    results->keyword = keyword;
-    results->statementFullname = symbolFullname;
-    results->filename = "";
-    results->searchType = SearchType::FindOccurences;
-    results->scope = scope;
+    PSearchResults results = std::make_shared<SearchResults>(
+                keyword, symbolFullname,
+                "", SearchType::FindOccurences,scope);
+    beginInsertRows(QModelIndex(),0,0);
     mSearchResults.push_front(results);
+    endInsertRows();
     mCurrentIndex = 0;
+    mTreeModel->endResetModel();
+    emit currentIndexChanged();
     return results;
 }
 
@@ -95,16 +106,11 @@ PSearchResults SearchResultModel::results(int index)
     return mSearchResults[index];
 }
 
-void SearchResultModel::notifySearchResultsUpdated()
-{
-    emit modelChanged();
-}
-
 SearchResultModel::SearchResultModel(QObject* parent):
-    QObject(parent),
+    QAbstractListModel(parent),
     mCurrentIndex(-1)
 {
-
+    mTreeModel = new SearchResultTreeModel(this,this);
 }
 
 int SearchResultModel::currentIndex() const
@@ -122,26 +128,49 @@ PSearchResults SearchResultModel::currentResults()
     return results(mCurrentIndex);
 }
 
+void SearchResultModel::addResultToSearchResults(PSearchResults results, PSearchResultTreeItem item)
+{
+    bool notifyModel = results == currentResults();
+    if (notifyModel) {
+        int idx = results->results().count();
+        mTreeModel->beginInsertRows(QModelIndex(),idx,idx);
+    }
+    results->mResults.append(item);
+    if (notifyModel)
+        mTreeModel->endInsertRows();
+}
+
 void SearchResultModel::setCurrentIndex(int index)
 {
     if (index!=mCurrentIndex &&
             index>=0 && index<mSearchResults.size()) {
+        mTreeModel->beginResetModel();
         mCurrentIndex = index;
-        emit currentChanged(mCurrentIndex);
+        mTreeModel->endResetModel();
+        emit currentIndexChanged();
     }
 }
 
 void SearchResultModel::clear()
 {
     mCurrentIndex = -1;
+    mTreeModel->beginResetModel();
+    beginResetModel();
     mSearchResults.clear();
-    emit modelChanged();
+    endResetModel();
+    mTreeModel->endResetModel();
 }
 
 void SearchResultModel::removeSearchResults(int index)
 {
+    bool shouldResetTree = (index == currentIndex());
+    if (shouldResetTree)
+        mTreeModel->beginResetModel();
+    beginRemoveRows(QModelIndex(),index,index);
     mSearchResults.removeAt(index);
-    emit modelChanged();
+    endRemoveRows();
+    if (shouldResetTree)
+        mTreeModel->endResetModel();
 }
 
 SearchResultTreeModel::SearchResultTreeModel(SearchResultModel *model, QObject *parent):
@@ -149,10 +178,6 @@ SearchResultTreeModel::SearchResultTreeModel(SearchResultModel *model, QObject *
     mSearchResultModel(model),
     mSelectable(false)
 {
-    connect(mSearchResultModel,&SearchResultModel::currentChanged,
-            this,&SearchResultTreeModel::onResultModelChanged);
-    connect(mSearchResultModel,&SearchResultModel::modelChanged,
-            this,&SearchResultTreeModel::onResultModelChanged);
 }
 
 QModelIndex SearchResultTreeModel::index(int row, int column, const QModelIndex &parent) const
@@ -167,7 +192,7 @@ QModelIndex SearchResultTreeModel::index(int row, int column, const QModelIndex 
     PSearchResultTreeItem childItem;
     if (!parent.isValid()) {
         parentItem = nullptr;
-        childItem = results->results[row];
+        childItem = results->result(row);
     } else {
         parentItem = static_cast<SearchResultTreeItem *>(parent.internalPointer());
         childItem = parentItem->results[row];
@@ -205,7 +230,7 @@ int SearchResultTreeModel::rowCount(const QModelIndex &parent) const
         PSearchResults searchResults = mSearchResultModel->currentResults();
         if (!searchResults)
             return 0;
-        return searchResults->results.count();
+        return searchResults->results().count();
     }
     SearchResultTreeItem* item = static_cast<SearchResultTreeItem *>(parent.internalPointer());    if (!item)
         return 0;
@@ -294,12 +319,6 @@ bool SearchResultTreeModel::getItemFileAndLineChar(const QModelIndex &index, QSt
     return false;
 }
 
-void SearchResultTreeModel::onResultModelChanged()
-{
-    beginResetModel();
-    endResetModel();
-}
-
 Qt::ItemFlags SearchResultTreeModel::flags(const QModelIndex &) const
 {
     Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
@@ -351,7 +370,7 @@ void SearchResultTreeModel::setSelectable(bool newSelectable)
         //select all items by default
         PSearchResults results = mSearchResultModel->currentResults();
         if (results) {
-            foreach (const PSearchResultTreeItem& file, results->results) {
+            foreach (const PSearchResultTreeItem& file, results->results()) {
                 file->selected = false;
                 foreach (const PSearchResultTreeItem& item, file->results) {
                     item->selected = true;
@@ -362,55 +381,46 @@ void SearchResultTreeModel::setSelectable(bool newSelectable)
     endResetModel();
 }
 
-SearchResultListModel::SearchResultListModel(SearchResultModel *model, QObject *parent):
-    QAbstractListModel(parent),
-    mSearchResultModel(model)
+int SearchResultModel::rowCount(const QModelIndex &) const
 {
-    connect(mSearchResultModel, &SearchResultModel::modelChanged,
-            this, &SearchResultListModel::onResultModelChanged);
+    return resultsCount();
 }
 
-int SearchResultListModel::rowCount(const QModelIndex &) const
-{
-    return mSearchResultModel->resultsCount();
-}
-
-QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
+QVariant SearchResultModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
     if (role == Qt::DisplayRole) {
-        PSearchResults results = mSearchResultModel->results(index.row());
-        if (!results)
+        PSearchResults searchResults = mSearchResults[index.row()];
+        if (!searchResults)
             return QVariant();
-        if (results->searchType == SearchType::Search) {
-            switch (results->scope) {
+        if (searchResults->searchType() == SearchType::Search) {
+            switch (searchResults->scope()) {
             case SearchFileScope::currentFile:
-                return tr("Current File:") + QString(" \"%1\"").arg(results->keyword);
+                return tr("Current File:") + QString(" \"%1\"").arg(searchResults->keyword());
             case SearchFileScope::wholeProject:
-                return tr("Files In Project:") + QString(" \"%1\"").arg(results->keyword);
+                return tr("Files In Project:") + QString(" \"%1\"").arg(searchResults->keyword());
             case SearchFileScope::openedFiles:
-                return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
+                return tr("Open Files:") + QString(" \"%1\"").arg(searchResults->keyword());
             case SearchFileScope::Folder:
-                return tr("\"%1\" in Folder \"%2\"").arg(results->keyword,results->folder);
+                return tr("\"%1\" in Folder \"%2\"").arg(searchResults->keyword(),searchResults->folder());
             }
-        } else if (results->searchType == SearchType::FindOccurences) {
-            if (results->scope == SearchFileScope::currentFile) {
+        } else if (searchResults->searchType() == SearchType::FindOccurences) {
+            if (searchResults->scope() == SearchFileScope::currentFile) {
                 return tr("Find Usages in Current File: '%1'")
-                    .arg(results->keyword);
+                    .arg(searchResults->keyword());
             } else {
                 return tr("Find Usages in Project: '%1'")
-                    .arg(results->keyword);
+                    .arg(searchResults->keyword());
             }
         }
     }
     return QVariant();
 }
 
-void SearchResultListModel::onResultModelChanged()
+SearchResultTreeModel *SearchResultModel::treeModel() const
 {
-    beginResetModel();
-    endResetModel();
+    return mTreeModel;
 }
 
 /**
@@ -496,3 +506,135 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
 
 
 }
+
+SearchResults::SearchResults(const QString &keyword, QSynedit::SearchOptions options, bool useRegex, SearchFileScope scope, SearchType type, const QString &folder, const QString &filters, bool searchSubFolders)
+{
+    mKeyword = keyword;
+    mOptions = options;
+    mUseRegex = useRegex;
+    mScope = scope;
+    mSearchType = SearchType::Search;
+    mFolder=folder;
+    mFilters=filters;
+    mSearchSubfolders=searchSubFolders;
+}
+
+SearchResults::SearchResults(const QString &keyword, const QString &symbolFullname, const QString &filename, SearchType searchType, SearchFileScope scope)
+{
+    mKeyword = keyword;
+    mSymbolFullname = symbolFullname;
+    mFilename = "";
+    mSearchType = SearchType::FindOccurences;
+    mScope = scope;
+}
+
+const QSynedit::SearchOptions &SearchResults::options() const
+{
+    return mOptions;
+}
+
+void SearchResults::setOptions(const QSynedit::SearchOptions &newOptions)
+{
+    mOptions = newOptions;
+}
+
+bool SearchResults::useRegex() const
+{
+    return mUseRegex;
+}
+
+void SearchResults::setUseRegex(bool newUseRegex)
+{
+    mUseRegex = newUseRegex;
+}
+
+const QString &SearchResults::keyword() const
+{
+    return mKeyword;
+}
+
+void SearchResults::setKeyword(const QString &newKeyword)
+{
+    mKeyword = newKeyword;
+}
+
+SearchFileScope SearchResults::scope() const
+{
+    return mScope;
+}
+
+void SearchResults::setScope(SearchFileScope newScope)
+{
+    mScope = newScope;
+}
+
+SearchType SearchResults::searchType() const
+{
+    return mSearchType;
+}
+
+void SearchResults::setSearchType(SearchType newSearchType)
+{
+    mSearchType = newSearchType;
+}
+
+const QString &SearchResults::filename() const
+{
+    return mFilename;
+}
+
+void SearchResults::setFilename(const QString &newFilename)
+{
+    mFilename = newFilename;
+}
+
+const QString &SearchResults::folder() const
+{
+    return mFolder;
+}
+
+void SearchResults::setFolder(const QString &newFolder)
+{
+    mFolder = newFolder;
+}
+
+const QString &SearchResults::filters() const
+{
+    return mFilters;
+}
+
+void SearchResults::setFilters(const QString &newFilters)
+{
+    mFilters = newFilters;
+}
+
+bool SearchResults::searchSubfolders() const
+{
+    return mSearchSubfolders;
+}
+
+void SearchResults::setSearchSubfolders(bool newSearchSubfolders)
+{
+    mSearchSubfolders = newSearchSubfolders;
+}
+
+const QList<PSearchResultTreeItem> &SearchResults::results() const
+{
+    return mResults;
+}
+
+PSearchResultTreeItem SearchResults::result(int idx) const
+{
+    return mResults[idx];
+}
+
+const QString &SearchResults::symbolFullname() const
+{
+    return mSymbolFullname;
+}
+
+void SearchResults::setSymbolFullname(const QString &newSymbolFullname)
+{
+    mSymbolFullname = newSymbolFullname;
+}
+

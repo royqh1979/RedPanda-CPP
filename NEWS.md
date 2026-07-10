@@ -34,7 +34,8 @@ Red Panda C++ Version 3.5
   - fix: Can't correctly parse "std::views" in <ranges>
   - fix: Induced type of auto var is not correct.
   - enhancement: Parsing structured binding of struct instance.
-  - fix: Can't parse non-const structured binding.
+  - fix: Can't parse non-const structured binding.\
+  - enhancement: Filtering project files to be searched by name in "search in files" dialog.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

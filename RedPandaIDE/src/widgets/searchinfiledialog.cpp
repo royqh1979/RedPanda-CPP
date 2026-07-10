@@ -164,11 +164,10 @@ void SearchInFileDialog::doSearch(bool replace)
                 //findCount+=t;
                 if (t>0) {
                     fileHitted++;
-                    results->results.append(parentItem);
+                    pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
                 }
             }
         }
-        pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     } else if (ui->rbFolder->isChecked()) {
         PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                     keyword,
@@ -239,7 +238,7 @@ void SearchInFileDialog::doSearch(bool replace)
                 //findCount+=t;
                 if (t>0) {
                     fileHitted++;
-                    results->results.append(parentItem);
+                    pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
                 }
             } else if (fileExists(curFilename)) {
                 QSynedit::QSynEdit editor;
@@ -260,11 +259,10 @@ void SearchInFileDialog::doSearch(bool replace)
                 //findCount+=t;
                 if (t>0) {
                     fileHitted++;
-                    results->results.append(parentItem);
+                    pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
                 }
             }
         }
-        pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     } else if (ui->rbCurrentFile->isChecked()) {
         PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                     keyword,
@@ -283,10 +281,9 @@ void SearchInFileDialog::doSearch(bool replace)
             //findCount+=t;
             if (t>0) {
                 fileHitted++;
-                results->results.append(parentItem);
+                pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
             }
         }
-        pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     } else if (ui->rbProject->isChecked()) {
         if (!pMainWindow->project())
             return;
@@ -296,6 +293,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     useRegex,
                     SearchFileScope::wholeProject
                     );
+        results->setFilters(ui->txtFilters->text());
         QByteArray projectEncoding = pMainWindow->project()->options().encoding;
         QProgressDialog progressDlg(
                     tr("Searching..."),
@@ -331,7 +329,7 @@ void SearchInFileDialog::doSearch(bool replace)
                 //findCount+=t;
                 if (t>0) {
                     fileHitted++;
-                    results->results.append(parentItem);
+                    pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
                 }
             } else if (fileExists(curFilename)) {
                 QSynedit::QSynEdit editor;
@@ -355,11 +353,10 @@ void SearchInFileDialog::doSearch(bool replace)
                 //findCount+=t;
                 if (t>0) {
                     fileHitted++;
-                    results->results.append(parentItem);
+                    pMainWindow->searchResultModel()->addResultToSearchResults(results,parentItem);
                 }
             }
         }
-        pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     }
     pMainWindow->showSearchPanel(replace);
 
