@@ -89,6 +89,7 @@ void SearchInFileDialog::findInFiles(const QString &keyword,
         break;
     case SearchFileScope::wholeProject:
         ui->rbProject->setChecked(true);
+        ui->txtFilters->setText(filters);
         break;
     case SearchFileScope::Folder:
         ui->txtFolder->setText(folder);
