@@ -59,6 +59,7 @@ target("RedPandaIDE")
         "app-name",
         "filesystem-layout",
         "libexecdir",
+        "make-interface",
         "portable-config",
         "prefix")
     add_options(
@@ -313,6 +314,8 @@ target("test-makefile-escape")
     add_rules("qt.console")
 
     set_default(false)
+
+    add_options("make-interface")
 
     add_tests("default")
 

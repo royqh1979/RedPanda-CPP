@@ -250,6 +250,10 @@ CompilerSet::CompilerSet(const QJsonObject &set) :
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
+    if constexpr (MAKE_INTERFACE != MAKE_INTERFACE_mingw32) {
+        mMake = findBundledOrSystemTool("make/bin", MAKE_PROGRAM);
+    }
+
     foreach (const QJsonValue &dir, set["binDirs"].toArray())
         mBinDirs.append(dir.toString());
     foreach (const QJsonValue &dir, set["cIncludeDirs"].toArray())
@@ -1065,7 +1069,11 @@ void CompilerSet::setExecutables()
         mDebugger = findProgramInBinDirs(GDB_PROGRAM);
         mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     }
-    mMake = findProgramInBinDirs(MAKE_PROGRAM);
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        mMake = findProgramInBinDirs(MAKE_PROGRAM);
+    } else {
+        mMake = findBundledOrSystemTool("make/bin", MAKE_PROGRAM);
+    }
 #ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
 #endif
@@ -1266,7 +1274,7 @@ bool CompilerSet::canCompileCPP() const
 
 bool CompilerSet::canMake() const
 {
-    return fileExists(mMake);
+    return programExists(mMake);
 }
 
 bool CompilerSet::canDebug() const
@@ -1535,7 +1543,7 @@ QStringList CompilerSet::findErrors()
     if (!mDebugger.isEmpty() && !fileExists(mDebugger)) {
         errors.append(QObject::tr("Debugger \"%1\" is missing!").arg(mDebugger));
     }
-    if (!mMake.isEmpty() && !fileExists(mMake)) {
+    if (!mMake.isEmpty() && !programExists(mMake)) {
         errors.append(QObject::tr("Make program \"%1\" is missing!").arg(mMake));
     }
     return errors;
@@ -2114,7 +2122,9 @@ void CompilerSets::saveSet(int index)
     savePath("cppcompiler", pSet->cppCompiler());
     savePath("debugger", pSet->debugger());
     savePath("debug_server", pSet->debugServer());
-    savePath("make", pSet->make());
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        savePath("make", pSet->make());
+    }
     savePath("windres", pSet->resourceCompiler());
 
     mPersistor->remove("Options");
@@ -2199,7 +2209,11 @@ PCompilerSet CompilerSets::loadSet(int index)
     pSet->setCppCompiler(loadPath("cppcompiler"));
     pSet->setDebugger(loadPath("debugger"));
     pSet->setDebugServer(loadPath("debug_server"));
-    pSet->setMake(loadPath("make"));
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        pSet->setMake(loadPath("make"));
+    } else {
+        pSet->setMake(findBundledOrSystemTool("make/bin", MAKE_PROGRAM));
+    }
     pSet->setResourceCompiler(loadPath("windres"));
 
     pSet->setDumpMachine(mPersistor->value("DumpMachine").toString());

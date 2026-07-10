@@ -210,7 +210,6 @@ QString escapeCommandForPlatformShell(const QString &prog, const QStringList &ar
 
 EscapeArgumentRule makefileRecipeEscapeArgumentRule()
 {
-#ifdef Q_OS_WIN
     /* Lord knows why.
 
       standard CreateProcess or CMD escaping:
@@ -234,10 +233,11 @@ EscapeArgumentRule makefileRecipeEscapeArgumentRule()
 
       force-quoted CreateProcess escaping seems work on most cases.
     */
-    return EscapeArgumentRule::WindowsCreateProcessForceQuote;
-#else
-    return EscapeArgumentRule::BourneAgainShellPretty;
-#endif
+    if constexpr (MAKE_INTERFACE == MAKE_INTERFACE_mingw32) {
+        return EscapeArgumentRule::WindowsCreateProcessForceQuote;
+    } else {
+        return EscapeArgumentRule::BourneAgainShellPretty;
+    }
 }
 
 QString escapeArgumentForMakefileVariableValue(const QString &arg, bool isFirstArg)

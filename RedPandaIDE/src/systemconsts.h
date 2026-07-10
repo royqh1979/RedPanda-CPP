@@ -27,11 +27,8 @@
 #define GDB_PROGRAM     "gdb.exe"
 #define GDB_SERVER_PROGRAM     "gdbserver.exe"
 #define GDB32_PROGRAM   "gdb32.exe"
-#define MAKE_PROGRAM    "mingw32-make.exe"
 #define NASM_PROGRAM    "nasm.exe"
 #define WINDRES_PROGRAM "windres.exe"
-#define CLEAN_PROGRAM   "del /q /f"
-#define CD_PROGRAM   "cd /d"
 #define CPP_PROGRAM     "cpp.exe"
 #define GIT_PROGRAM     "git.exe"
 #define CLANG_PROGRAM   "clang.exe"
@@ -42,6 +39,15 @@
 #define PACKIHX_PROGRAM   "packihx.exe"
 #define MAKEBIN_PROGRAM   "makebin.exe"
 #define ASTYLE_PROGRAM     "astyle.exe"
+# if MAKE_INTERFACE == MAKE_INTERFACE_mingw32
+#  define MAKE_PROGRAM    "mingw32-make.exe"
+#  define CLEAN_PROGRAM   "del /q /f"
+#  define CD_PROGRAM      "cd /d"
+# else
+#  define MAKE_PROGRAM    "make.exe"
+#  define CLEAN_PROGRAM   "rm -rf"
+#  define CD_PROGRAM      "cd"
+# endif
 #else // Unix
 #define CONSOLE_PAUSER  "consolepauser"
 #define GCC_PROGRAM     "gcc"
@@ -100,16 +106,22 @@
 #   define PATH_SENSITIVITY Qt::CaseInsensitive
 #   define PATH_SEPARATOR   ";"
 #   define LINE_BREAKER     "\r\n"
-#   define NULL_FILE       "NUL"
 #   define DEFAULT_EXECUTABLE_SUFFIX   "exe"
 #   define DEFAULT_PREPROCESSING_SUFFIX "p"
 #   define DEFAULT_COMPILATION_SUFFIX "s"
 #   define DEFAULT_ASSEMBLING_SUFFIX "o"
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "dll"
-#   define MAKEFILE_NAME    "makefile.win"
 #   define XMAKEFILE_NAME    "xmake.lua"
-#   define ALL_FILE_WILDCARD "*.*"
+# if MAKE_INTERFACE == MAKE_INTERFACE_mingw32
+#  define NULL_FILE         "NUL"
+#  define MAKEFILE_NAME     "makefile.win"
+#  define ALL_FILE_WILDCARD "*.*"
+# else
+#  define NULL_FILE         "/dev/null"
+#  define MAKEFILE_NAME     "makefile"
+#  define ALL_FILE_WILDCARD "*"
+# endif
 #else // Unix
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"

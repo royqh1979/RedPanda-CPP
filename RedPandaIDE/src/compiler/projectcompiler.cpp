@@ -195,13 +195,13 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
                 objects << relativeObjFile;
-                cleanObjects << localizePath(relativeObjFile);
+                cleanObjects << localizeMakefilePath(relativeObjFile);
                 if (unit->link()) {
                     LinkObjects << relativeObjFile;
                 }
             } else {
                 objects << changeFileExt(relativeName, OBJ_EXT);
-                cleanObjects << localizePath(changeFileExt(relativeName, OBJ_EXT));
+                cleanObjects << localizeMakefilePath(changeFileExt(relativeName, OBJ_EXT));
                 if (unit->link())
                     LinkObjects << changeFileExt(relativeName, OBJ_EXT);
             }
@@ -220,10 +220,10 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 
             QString relativeResFile = extractRelativePath(mProject->directory(), fullResFile);
             objResFile = relativeResFile;
-            cleanRes = localizePath(changeFileExt(relativeResFile, RES_EXT));
+            cleanRes = localizeMakefilePath(changeFileExt(relativeResFile, RES_EXT));
         } else {
             objResFile = changeFileExt(mProject->options().privateResource, RES_EXT);
-            cleanRes = localizePath(changeFileExt(mProject->options().privateResource, RES_EXT));
+            cleanRes = localizeMakefilePath(changeFileExt(mProject->options().privateResource, RES_EXT));
         }
     }
 #endif
@@ -274,7 +274,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 #endif
 
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
-    QString cleanExe = localizePath(executable);
+    QString cleanExe = localizeMakefilePath(executable);
     QString pchHeader = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader);
     QString pch = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader + "." GCH_EXT);
 
@@ -347,8 +347,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
         else
             libOutputFile = extractRelativePath(mProject->makeFileName(), libOutputFile);
 
-        QString defFile = localizePath(changeFileExt(libOutputFile, DEF_EXT));
-        QString staticFile = localizePath(changeFileExt(libOutputFile, LIB_EXT));
+        QString defFile = localizeMakefilePath(changeFileExt(libOutputFile, DEF_EXT));
+        QString staticFile = localizeMakefilePath(changeFileExt(libOutputFile, LIB_EXT));
         writeln(file,"DEF      = " + escapeFilenamesForMakefilePrerequisite(moduleDefines));
         writeln(file,"STATIC   = " + escapeFilenameForMakefilePrerequisite(staticFile));
 
@@ -617,7 +617,7 @@ bool ProjectCompiler::prepareForCompile()
 
     mCompiler = compilerSet()->make();
 
-    if (!fileExists(mCompiler)) {
+    if (!programExists(mCompiler)) {
         throw CompileError(
                     tr("Make program '%1' doesn't exists!").arg(mCompiler)
                     +"<br />"

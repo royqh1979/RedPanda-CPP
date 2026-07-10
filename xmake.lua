@@ -40,6 +40,21 @@ option("libexecdir")
     set_showmenu(true)
     add_defines('LIBEXECDIR="$(libexecdir)"')
 
+option("make-interface")
+    if is_os("windows") then
+        set_default("mingw32")
+        set_values("mingw32", "unix")
+    else
+        set_default("unix")
+        set_values("unix")
+    end
+    set_showmenu(true)
+
+    add_defines(
+        "MAKE_INTERFACE=MAKE_INTERFACE_$(make-interface)",
+        "MAKE_INTERFACE_unix=1",
+        "MAKE_INTERFACE_mingw32=2")
+
 option("portable-config")
     if is_os("windows") then
         set_default("registry")

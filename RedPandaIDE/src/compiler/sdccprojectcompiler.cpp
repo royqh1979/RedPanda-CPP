@@ -126,13 +126,13 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, SDCC_REL_SUFFIX));
                 Objects << relativeObjFile;
-                cleanObjects << localizePath(relativeObjFile);
+                cleanObjects << localizeMakefilePath(relativeObjFile);
                 if (unit->link()) {
                     LinkObjects << relativeObjFile;
                 }
             } else {
                 Objects << changeFileExt(RelativeName, SDCC_REL_SUFFIX);
-                cleanObjects << localizePath(changeFileExt(RelativeName, SDCC_REL_SUFFIX));
+                cleanObjects << localizeMakefilePath(changeFileExt(RelativeName, SDCC_REL_SUFFIX));
                 if (unit->link())
                     LinkObjects << changeFileExt(RelativeName, SDCC_REL_SUFFIX);
             }
@@ -146,9 +146,9 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
     QStringList cIncludeArguments = getCIncludeArguments() + getProjectIncludeArguments();
 
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
-    QString cleanExe = localizePath(executable);
+    QString cleanExe = localizeMakefilePath(executable);
     QString ihx = extractRelativePath(mProject->makeFileName(), changeFileExt(mProject->outputFilename(), SDCC_IHX_SUFFIX));
-    QString cleanIhx = localizePath(ihx);
+    QString cleanIhx = localizeMakefilePath(ihx);
 
     writeln(file, "CC       = " + escapeArgumentForMakefileVariableValue(cc, true));
     writeln(file, "PACKIHX  = " PACKIHX_PROGRAM);
@@ -270,7 +270,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     QString fullObjDir = includeTrailingPathDelimiter(mProject->options().folderForObjFiles);
                     QString relativeObjDir = extractRelativePath(mProject->directory(),fullObjDir);
                     QString objfile=extractRelativePath(generateAbsolutePath(mProject->directory(),relativeObjDir),unit->fileName());
-                    writeln(file, "\t$(CD) "+ localizePath(relativeObjDir)+" && $(CC) $(CFLAGS) -c " + localizePath(objfile));
+                    writeln(file, "\t$(CD) "+ localizeMakefilePath(relativeObjDir)+" && $(CC) $(CFLAGS) -c " + localizeMakefilePath(objfile));
                 }
 
                 }
@@ -307,7 +307,7 @@ bool SDCCProjectCompiler::prepareForCompile()
 
     mCompiler = compilerSet()->make();
 
-    if (!fileExists(mCompiler)) {
+    if (!programExists(mCompiler)) {
         throw CompileError(
                     tr("Make program '%1' doesn't exists!").arg(mCompiler)
                     +"<br />"
