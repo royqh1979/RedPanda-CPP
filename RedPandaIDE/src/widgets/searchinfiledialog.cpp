@@ -23,6 +23,7 @@
 #include <QCompleter>
 #include <QStack>
 #include <QFileDialog>
+#include <QButtonGroup>
 #include <qsynedit/document.h>
 #include <qsynedit/searcher/basicsearcher.h>
 #include <qsynedit/searcher/regexsearcher.h>
@@ -42,7 +43,15 @@ SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     mBasicSearchEngine= std::make_shared<QSynedit::BasicSearcher>();
     mRegexSearchEngine= std::make_shared<QSynedit::RegexSearcher>();
     ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
-    on_rbFolder_toggled(false);
+    connect(ui->rbCurrentFile, &QRadioButton::toggled,
+            this, &SearchInFileDialog::onSearchTypeChanged);
+    connect(ui->rbProject, &QRadioButton::toggled,
+            this, &SearchInFileDialog::onSearchTypeChanged);
+    connect(ui->rbOpenFiles, &QRadioButton::toggled,
+            this, &SearchInFileDialog::onSearchTypeChanged);
+    connect(ui->rbFolder, &QRadioButton::toggled,
+            this, &SearchInFileDialog::onSearchTypeChanged);
+    onSearchTypeChanged(true);
 }
 
 SearchInFileDialog::~SearchInFileDialog()
@@ -127,6 +136,9 @@ void SearchInFileDialog::doSearch(bool replace)
         searchOptions.setFlag(QSynedit::ssoWholeWord);
     }
     close();
+
+    if (ui->txtFilters->text().trimmed().isEmpty())
+        ui->txtFilters->setText("*.*");
 
     // int findCount=0;
     int fileSearched = 0;
@@ -302,6 +314,11 @@ void SearchInFileDialog::doSearch(bool replace)
             QCoreApplication::processEvents();
             if (progressDlg.wasCanceled())
                 break;
+            QFileInfo info{unit->fileName()};
+            if (!QDir::match(ui->txtFilters->text(), info.fileName())) {
+                qDebug()<<info.fileName();
+                continue;
+            }
             Editor * e = pMainWindow->project()->unitEditor(unit);
             QString curFilename =  unit->fileName();
             if (e) {
@@ -439,15 +456,18 @@ void SearchInFileDialog::on_btnReplace_clicked()
 }
 
 
-void SearchInFileDialog::on_rbFolder_toggled(bool checked)
+void SearchInFileDialog::onSearchTypeChanged(bool checked)
 {
+    if (!checked)
+        return;
 //    ui->lblFilters->setVisible(checked);
-    ui->txtFilters->setEnabled(checked);
+    ui->txtFilters->setEnabled(ui->rbFolder->isChecked()
+                               || ui->rbProject->isChecked());
 //    ui->lblFolder->setVisible(checked);
-    ui->txtFolder->setEnabled(checked);
-    ui->btnChangeFolder->setEnabled(checked);
-    ui->cbSearchSubFolders->setEnabled(checked);
-    if (checked) {
+    ui->txtFolder->setEnabled(ui->rbFolder->isChecked());
+    ui->btnChangeFolder->setEnabled(ui->rbFolder->isChecked());
+    ui->cbSearchSubFolders->setEnabled(ui->rbFolder->isChecked());
+    if (ui->rbFolder->isChecked()) {
         if (!directoryExists(ui->txtFolder->text()))
             ui->txtFolder->setText(pSettings->environment().currentFolder());
     }
@@ -461,4 +481,3 @@ void SearchInFileDialog::on_btnChangeFolder_clicked()
     if (directoryExists(folder))
         ui->txtFolder->setText(folder);
 }
-

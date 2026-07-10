@@ -28,6 +28,7 @@ class SearchInFileDialog;
 struct SearchResultTreeItem;
 class QTabBar;
 class Editor;
+class QButtonGroup ;
 class SearchInFileDialog : public QDialog
 {
     Q_OBJECT
@@ -49,7 +50,7 @@ private slots:
    void on_btnExecute_clicked();
    void on_btnReplace_clicked();
 
-   void on_rbFolder_toggled(bool checked);
+   void onSearchTypeChanged(bool checked);
 
    void on_btnChangeFolder_clicked();
 
