@@ -58,11 +58,13 @@ function fn_prepare_dirs() {
 }
 
 function fn_build() {
+  arch_info=$(uname -m)
+  echo "Building for $arch_info architecture..."
   cmake -S . -B "$_BUILD_DIR" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_PREFIX_PATH="$_QT_DIR" \
     -DCMAKE_INSTALL_PREFIX="$_PKG_DIR" \
-    -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+    -DCMAKE_OSX_ARCHITECTURES="$arch_info"
 
   cmake --build "$_BUILD_DIR" --parallel $(sysctl -n hw.logicalcpu)
 }
@@ -72,6 +74,7 @@ function fn_package() {
 
   macdeployqt "$_PKG_DIR/RedPandaIDE.app"
   tar -C "$_PKG_DIR" -cJf dist/RedPandaIDE-$APP_VERSION.tar.xz RedPandaIDE.app
+  codesign --force --deep --sign "-" "$_PKG_DIR/RedPandaIDE.app"
 }
 
 fn_check_qt_install

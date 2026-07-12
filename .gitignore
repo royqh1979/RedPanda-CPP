@@ -27,3 +27,6 @@ dist
 # Visual Studio Code
 .vscode
 .cache
+
+# macOS Things
+.DS_Store
