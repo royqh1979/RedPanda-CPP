@@ -36,6 +36,7 @@ Red Panda C++ Version 3.5
   - enhancement: Parsing structured binding of struct instance.
   - fix: Can't parse non-const structured binding.\
   - enhancement: Filtering project files to be searched by name in "search in files" dialog.
+  - enhancement: Detect if mingw32-make.exe is utf8 manifestoed, and auto generate utf8 encoded makefile for it.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
