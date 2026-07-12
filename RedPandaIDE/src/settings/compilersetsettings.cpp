@@ -98,6 +98,7 @@ CompilerSet::CompilerSet():
 #ifdef Q_OS_WINDOWS
     , mCompilerIsUtf8Initialized{false}
     , mDebuggerIsUtf8Initialized{false}
+    , mMakerIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized{false}
 #endif
 {
@@ -120,6 +121,7 @@ CompilerSet::CompilerSet(const QString& compilerFolder, const QString& c_prog):
 #ifdef Q_OS_WINDOWS
     , mCompilerIsUtf8Initialized(false)
     , mDebuggerIsUtf8Initialized{false}
+    , mMakerIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -197,6 +199,8 @@ CompilerSet::CompilerSet(const CompilerSet &set):
     , mCompilerIsUtf8Initialized(set.mCompilerIsUtf8Initialized)
     , mDebuggerIsUtf8(set.mDebuggerIsUtf8)
     , mDebuggerIsUtf8Initialized(set.mDebuggerIsUtf8Initialized)
+    , mMakerIsUtf8(set.mMakerIsUtf8)
+    , mMakerIsUtf8Initialized(set.mMakerIsUtf8Initialized)
     , mGccSupportConvertingCharset(set.mGccSupportConvertingCharset)
     , mGccSupportConvertingCharsetInitialized(set.mGccSupportConvertingCharsetInitialized)
 #endif
@@ -247,6 +251,7 @@ CompilerSet::CompilerSet(const QJsonObject &set) :
 #ifdef Q_OS_WINDOWS
     , mCompilerIsUtf8Initialized(false)
     , mDebuggerIsUtf8Initialized(false)
+  , mMakerIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -551,7 +556,12 @@ const QString &CompilerSet::make() const
 
 void CompilerSet::setMake(const QString &name)
 {
-    mMake = name;
+    if (mMake != name) {
+#ifdef Q_OS_WIN
+        mMakerIsUtf8Initialized = false;
+#endif
+        mMake = name;
+    }
 }
 
 const QString &CompilerSet::debugger() const
@@ -1413,6 +1423,14 @@ bool CompilerSet::isCompilerUsingUTF8() const
         mCompilerIsUtf8Initialized = true;
     }
     return mCompilerIsUtf8;
+}
+
+bool CompilerSet::isMakerUsingUTF8() const{
+    if (!mMakerIsUtf8Initialized) {
+        mMakerIsUtf8 = PortableExecutable(mMake).isUtf8();
+        mMakerIsUtf8Initialized = true;
+    }
+    return mMakerIsUtf8;
 }
 #endif
 

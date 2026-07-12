@@ -148,9 +148,11 @@ public:
 #ifdef Q_OS_WINDOWS
     bool isDebuggerUsingUTF8() const;
     bool isCompilerUsingUTF8() const;
+    bool isMakerUsingUTF8() const;
 #else
     constexpr bool isDebuggerUsingUTF8() const { return true; }
     constexpr bool isCompilerUsingUTF8() const { return true; }
+    constexpr bool isMakerUsingUTF8() const  { return true; };
 #endif
 
     bool supportConvertingCharset();
@@ -230,6 +232,9 @@ private:
     mutable bool mCompilerIsUtf8Initialized;
     mutable bool mDebuggerIsUtf8;
     mutable bool mDebuggerIsUtf8Initialized;
+    mutable bool mMakerIsUtf8;
+    mutable bool mMakerIsUtf8Initialized;
+
     bool mGccSupportConvertingCharset;
     bool mGccSupportConvertingCharsetInitialized;
 #endif

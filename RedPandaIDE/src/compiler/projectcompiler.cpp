@@ -581,8 +581,12 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
 void ProjectCompiler::writeln(QFile &file, const QString &s)
 {
-    if (!s.isEmpty())
-        file.write(s.toLocal8Bit());
+    if (!s.isEmpty()) {
+        if (compilerSet() && compilerSet()->isMakerUsingUTF8())
+            file.write(s.toUtf8());
+        else
+            file.write(s.toLocal8Bit());
+    }
     file.write("\n");
 }
 
