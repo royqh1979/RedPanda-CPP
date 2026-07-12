@@ -95,7 +95,7 @@ void FileAssociationModel::updateAssociationStates()
                     "DevCpp."+item->suffix,
 //                    item->name,
                     "Open",
-                    pSettings->dirs().executable()+" \"%1\""
+                    pSettings->dirs().executable()
                     );
         item->defaultSelected = item->selected;
     }
@@ -153,7 +153,7 @@ void FileAssociationModel::saveAssociations()
 
 }
 
-bool FileAssociationModel::checkAssociation(const QString &extension, const QString &filetype, const QString &verb, const QString &serverApp)
+bool FileAssociationModel::checkAssociation(const QString &extension, const QString &filetype, const QString &verb, const QString& serverApp)
 {
     HKEY key;
     LONG result;
@@ -175,8 +175,13 @@ bool FileAssociationModel::checkAssociation(const QString &extension, const QStr
     if (!readRegistry(HKEY_CLASSES_ROOT, extension, "", value2))
         return false;
 
-    return (value2 == filetype)
-            && (value1.compare(serverApp,PATH_SENSITIVITY)==0);
+    if (value2!=filetype)
+        return false;
+    if (value1.compare(serverApp+" \"%1\"")==0)
+        return true;
+    if (value1.compare(QString("\"%1\"").arg(serverApp)+" \"%1\"")==0)
+        return true;
+    return false;
 }
 
 bool writeRegistry(HKEY parentKey, const QString& subKey, const QString& value) {
