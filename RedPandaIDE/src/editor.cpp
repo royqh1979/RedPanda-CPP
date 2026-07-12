@@ -272,7 +272,7 @@ void Editor::convertToEncoding(const QByteArray &encoding)
 
 bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
-        return saveAs();
+        return saveAs("", doReparse);
     }    
     try {
         if (mEditorSettings->autoFormatWhenSaved()) {
@@ -311,7 +311,7 @@ bool Editor::save(bool force, bool doReparse) {
     return true;
 }
 
-bool Editor::saveAs(const QString &name){
+bool Editor::saveAs(const QString &name, bool doCheckSyntax){
     QString newName = name;
     QString oldName = mFilename;
     if (name.isEmpty()) {
@@ -386,8 +386,11 @@ bool Editor::saveAs(const QString &name){
         mSyntaxIssues.clear();
     }
     reparse();
-    if (mEditorSettings->syntaxCheckWhenSave())
-        checkSyntaxInBack();
+    if (doCheckSyntax) {
+        if (mEditorSettings->syntaxCheckWhenSave())
+            checkSyntaxInBack();
+    }
+    reparseTodo();
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
     }

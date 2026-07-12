@@ -165,8 +165,8 @@ public:
 
     void loadFile(QString filename = "", bool parse = true);
     void saveFile(QString filename);
-    bool save(bool force=false, bool reparse=true);
-    bool saveAs(const QString& name="");
+    bool save(bool force=false, bool doRreparse=true);
+    bool saveAs(const QString& name="", bool doCheckSyntax = true);
     void rename(const QString& newName);
     void setFilename(const QString& newName);
     QString caption();
