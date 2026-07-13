@@ -5242,27 +5242,34 @@ void QSynEdit::doGotoBlockStart(bool isSelection)
 {
     //todo: handle block other than {}
     CharPos blockStart;
-    if (getContainingBlockStart(caretXY(), blockStart)) {
+    CharPos currentPos = caretXY();
+    if (currentPos.ch>0) {
+        CharPos prevPos{currentPos.ch-1,currentPos.line};
+        if (charAt(prevPos)=='{')
+            currentPos = prevPos;
+    }
+    if (getContainingBlockStart(currentPos, blockStart)) {
         blockStart.ch++;
         if (!isSelection)
             setCaretXY(blockStart);
         else
             setCaretAndSelection(blockStart, blockStart, caretXY());
-    } else
-        doGotoEditorStart(isSelection);
+    }
 }
 
 void QSynEdit::doGotoBlockEnd(bool isSelection)
 {
     //todo: handle block other than {}
     CharPos blockEnd;
-    if (getContainingBlockEnd(caretXY(), blockEnd)) {
+    CharPos currentPos = caretXY();
+    if (charAt(currentPos)=='}')
+        currentPos.ch++;
+    if (getContainingBlockEnd(currentPos, blockEnd)) {
         if (!isSelection)
             setCaretXY(blockEnd);
         else
             setCaretAndSelection(blockEnd, blockEnd, caretXY());
-    } else
-        doGotoEditorEnd(isSelection);
+    }
 }
 
 void QSynEdit::doGotoEditorStart(bool isSelection)
