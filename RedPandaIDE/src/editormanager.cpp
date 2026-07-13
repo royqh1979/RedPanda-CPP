@@ -295,12 +295,6 @@ void EditorManager::onEditorShown(Editor *e)
     if (e->parser() && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()) {
         if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && pSettings->codeCompletion().shareParser()
-                && !e->inProject()) {
-                if (e->needReparse())
-                    resetCppParser(e->parser());
-            }
             e->reparseIfNeeded();
         }
     }

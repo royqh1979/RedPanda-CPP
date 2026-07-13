@@ -53,9 +53,6 @@ public:
     bool showCodeIns() const;
     void setShowCodeIns(bool newShowCodeIns);
 
-    bool clearWhenEditorHidden();
-    void setClearWhenEditorHidden(bool newClearWhenEditorHidden);
-
     int minCharRequired() const;
     void setMinCharRequired(int newMinCharRequired);
 
@@ -82,7 +79,6 @@ private:
     int mMinCharRequired;
     bool mHideSymbolsStartsWithTwoUnderLine;
     bool mHideSymbolsStartsWithUnderLine;
-    bool mClearWhenEditorHidden;
     bool mShareParser;
 
     // _Base interface

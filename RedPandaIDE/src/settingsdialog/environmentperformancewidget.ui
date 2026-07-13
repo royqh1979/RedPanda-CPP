@@ -27,13 +27,6 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QCheckBox" name="chkClearWhenEditorHidden">
-        <property name="text">
-         <string>Auto clear parsed symbols when editor hidden</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>

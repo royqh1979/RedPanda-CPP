@@ -32,16 +32,6 @@ void CodeCompletionSettings::setShowCodeIns(bool newShowCodeIns)
     mShowCodeIns = newShowCodeIns;
 }
 
-bool CodeCompletionSettings::clearWhenEditorHidden()
-{
-    return mClearWhenEditorHidden;
-}
-
-void CodeCompletionSettings::setClearWhenEditorHidden(bool newClearWhenEditorHidden)
-{
-    mClearWhenEditorHidden = newClearWhenEditorHidden;
-}
-
 int CodeCompletionSettings::minCharRequired() const
 {
     return mMinCharRequired;
@@ -184,7 +174,6 @@ void CodeCompletionSettings::doSave()
     saveValue("ignore_case",mIgnoreCase);
     saveValue("append_func",mAppendFunc);
     saveValue("show_code_ins",mShowCodeIns);
-    saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
     saveValue("min_char_required",mMinCharRequired);
     saveValue("hide_symbols_start_with_two_underline", mHideSymbolsStartsWithTwoUnderLine);
     saveValue("hide_symbols_start_with_underline", mHideSymbolsStartsWithUnderLine);
@@ -211,5 +200,4 @@ void CodeCompletionSettings::doLoad()
 
     bool shouldShare= true;
     mShareParser = boolValue("share_parser",shouldShare);
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden", false);
 }
