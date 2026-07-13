@@ -446,7 +446,7 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                         TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
                         if ( tokenType != TokenType::String
                              && tokenType != TokenType::Character
-                             && tokenType != TokenType::String ) {
+                             && tokenType != TokenType::Comment ) {
                             if (syntaxer->getToken() == bracketOpen
                                     || syntaxer->getToken() == bracketClose) {
                                bracketsFound.append(syntaxer->getToken()[0]);
@@ -481,7 +481,7 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                         }
                         if ( tokenType != TokenType::String
                              && tokenType != TokenType::Character
-                             && tokenType != TokenType::String ) {
+                             && tokenType != TokenType::Comment ) {
                             if (syntaxer->getToken() == bracketOpen)
                                 ++bracketsLevel;
                             else if (syntaxer->getToken() == bracketClose) {
@@ -1304,6 +1304,103 @@ CharPos QSynEdit::lineEnd(int line) const
 {
     Q_ASSERT(line>=0 && line<mDocument->count());
     return CharPos{(int)mDocument->getLine(line).length(), line};
+}
+
+bool QSynEdit::getContainingBlockStart(const CharPos &pos, CharPos &blockStart) const
+{
+    if (!useCodeFolding())
+        return false;
+
+    if (!validInDoc(pos))
+        return false;
+
+    if (mSyntaxer->language()!=ProgrammingLanguage::CPP)
+        return false;
+
+    PSyntaxer syntaxer = mSyntaxer->createInstance();
+
+    // find begin brace
+    blockStart = fileBegin();
+    int bracketsLevel = 1;
+    for (int line = pos.line;line >= 0;line--) {
+        startParseLine(syntaxer.get(), line);
+        QList<QChar> bracketsFound;
+        QList<int> bracketsPos;
+        while(!syntaxer->eol()) {
+            if (line == pos.line && syntaxer->getTokenPos() >= pos.ch) {
+                break;
+            }
+            TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+            if ( tokenType != TokenType::String
+                 && tokenType != TokenType::Character
+                 && tokenType != TokenType::Comment) {
+                if (syntaxer->getToken() == '{' || syntaxer->getToken() == '}') {
+                   bracketsFound.append(syntaxer->getToken()[0]);
+                   bracketsPos.append(syntaxer->getTokenPos());
+                }
+            }
+            syntaxer->next();
+        }
+        for (int i=bracketsFound.length()-1;i>=0;i--) {
+            if (bracketsFound[i] == '}')
+                bracketsLevel++;
+            else if (bracketsFound[i] == '{') {
+                bracketsLevel--;
+                if (bracketsLevel == 0) {
+                    blockStart = CharPos{bracketsPos[i], line};
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool QSynEdit::getContainingBlockEnd(const CharPos &pos, CharPos &blockEnd) const
+{
+    if (!useCodeFolding())
+        return false;
+
+    if (!validInDoc(pos))
+        return false;
+
+    if (mSyntaxer->language()!=ProgrammingLanguage::CPP)
+        return false;
+
+    PSyntaxer syntaxer = mSyntaxer->createInstance();
+    // find end brace;
+    blockEnd = fileEnd();
+    int bracketsLevel = 1;
+    if (pos.line == 0) {
+        syntaxer->resetState();
+    } else {
+        syntaxer->setState(mDocument->getSyntaxState(pos.line-1));
+    }
+    for (int line=pos.line;line<mDocument->count();line++) {
+        syntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
+        while(!syntaxer->eol()) {
+            TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+            if (line == pos.line && syntaxer->getTokenPos() <= pos.ch) {
+                goto MOVE_NEXT_2;
+            }
+            if ( tokenType != TokenType::String
+                 && tokenType != TokenType::Character
+                 && tokenType != TokenType::Comment ) {
+                if (syntaxer->getToken() == '{')
+                    ++bracketsLevel;
+                else if (syntaxer->getToken() == '}') {
+                    --bracketsLevel;
+                    if (bracketsLevel == 0) {
+                        blockEnd = CharPos{syntaxer->getTokenPos(), line};
+                        return true;
+                    }
+                }
+            }
+MOVE_NEXT_2:
+            syntaxer->next();
+        }
+    }
+    return false;
 }
 
 CharPos QSynEdit::fileEnd() const
@@ -5144,44 +5241,34 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 void QSynEdit::doGotoBlockStart(bool isSelection)
 {
     //todo: handle block other than {}
-    if (document()->braceLevel(mCaretY)==0) {
-        doGotoEditorStart(isSelection);
-    } else if (document()->blockStarted(mCaretY)==0){
-        int line=mCaretY-1;
-        while (line>=0) {
-            if (document()->blockStarted(line)>document()->blockEnded(line)) {
-                CharPos newPos{0,line+1};
-                if (!isSelection)
-                    setCaretXY(newPos);
-                else
-                    setCaretAndSelection(newPos, newPos, caretXY());
-                setTopPos((lineToRow(line)-1)*mTextHeight);
-                return;
-            }
-            line--;
-        }
+    CharPos blockStart;
+    CharPos currentPos = caretXY();
+    if (currentPos.ch>0) {
+        CharPos prevPos{currentPos.ch-1,currentPos.line};
+        if (charAt(prevPos)=='{')
+            currentPos = prevPos;
+    }
+    if (getContainingBlockStart(currentPos, blockStart)) {
+        blockStart.ch++;
+        if (!isSelection)
+            setCaretXY(blockStart);
+        else
+            setCaretAndSelection(blockStart, blockStart, caretXY());
     }
 }
 
 void QSynEdit::doGotoBlockEnd(bool isSelection)
 {
     //todo: handle block other than {}
-    if (document()->blockLevel(mCaretY)==0) {
-        doGotoEditorEnd(isSelection);
-    } else if (document()->blockEnded(mCaretY)==0){
-        int line=mCaretY;
-        while (line<lineCount()) {
-            if (document()->blockEnded(line)>document()->blockStarted(line)) {
-                CharPos newPos{0,line-1};
-                if (!isSelection)
-                    setCaretXY(newPos);
-                else
-                    setCaretAndSelection(newPos, newPos, caretXY());
-                setTopPos((lineToRow(line) - mLinesInWindow)*mTextHeight);
-                return;
-            }
-            line++;
-        }
+    CharPos blockEnd;
+    CharPos currentPos = caretXY();
+    if (charAt(currentPos)=='}')
+        currentPos.ch++;
+    if (getContainingBlockEnd(currentPos, blockEnd)) {
+        if (!isSelection)
+            setCaretXY(blockEnd);
+        else
+            setCaretAndSelection(blockEnd, blockEnd, caretXY());
     }
 }
 
@@ -6090,16 +6177,16 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
         doToggleBlockComment();
         break;
     case EditCommand::ScrollLeft:
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mCharWidth);
         break;
     case EditCommand::ScrollRight:
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mCharWidth);
         break;
     case EditCommand::ScrollUp:
-        verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-mTextHeight);
         break;
     case EditCommand::ScrollDown:
-        verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()+mTextHeight);
         break;
     case EditCommand::MatchBracket:
         {

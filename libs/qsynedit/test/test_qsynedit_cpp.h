@@ -40,6 +40,9 @@ private slots:
     void test_match_brackets_data();
     void test_match_brackets();
 
+    void test_get_block_start_end_data();
+    void test_get_block_start_end();
+
     void test_select_data();
     void test_select();
 

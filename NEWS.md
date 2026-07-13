@@ -37,6 +37,9 @@ Red Panda C++ Version 3.5
   - fix: Can't parse non-const structured binding.\
   - enhancement: Filtering project files to be searched by name in "search in files" dialog.
   - enhancement: Detect if mingw32-make.exe is utf8 manifestoed, and auto generate utf8 encoded makefile for it.
+  - fix: Goto block start / end doesn't work correctly.
+  - fix: Matching braces doesn't correctly work if there are '{'/'}' in comments.
+  - fix: Scroll by CTRL+arrow work too slow.
   - change: Remove option "Clear symbol table when editor is hidden".
 
 Red Panda C++ Version 3.4
