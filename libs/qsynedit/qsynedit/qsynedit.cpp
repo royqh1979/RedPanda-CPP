@@ -5243,6 +5243,7 @@ void QSynEdit::doGotoBlockStart(bool isSelection)
     //todo: handle block other than {}
     CharPos blockStart;
     if (getContainingBlockStart(caretXY(), blockStart)) {
+        blockStart.ch++;
         if (!isSelection)
             setCaretXY(blockStart);
         else
