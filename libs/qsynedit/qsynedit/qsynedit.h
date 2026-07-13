@@ -236,6 +236,9 @@ public:
     CharPos lineBegin(int line) const;
     CharPos lineEnd(int line) const;
 
+    bool getContainingBlockStart(const CharPos &pos, CharPos &blockStart) const;
+    bool getContainingBlockEnd(const CharPos &pos, CharPos &blockEnd) const;
+
     //Caret
     void showCaret();
     void hideCaret();

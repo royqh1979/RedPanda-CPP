@@ -694,6 +694,36 @@ void TestQSyneditCpp::test_match_brackets()
     QCOMPARE(pos, expect);
 }
 
+void TestQSyneditCpp::test_get_block_start_end_data()
+{
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+    loadDemoFile();
+    {
+        CharPos blockStart,blockEnd;
+        QVERIFY(mEdit->getContainingBlockStart({12,18},blockStart));
+        QVERIFY(mEdit->getContainingBlockEnd({12,18},blockEnd));
+
+        QTest::addRow("Block Start 1")<<blockStart<<CharPos{42,17};
+        QTest::addRow("Block End 1")<<blockEnd<<CharPos{8,35};
+    }
+    {
+        CharPos blockStart,blockEnd;
+        QVERIFY(mEdit->getContainingBlockStart({14,34},blockStart));
+        QVERIFY(mEdit->getContainingBlockEnd({14,34},blockEnd));
+
+        QTest::addRow("Block Start 2")<<blockStart<<CharPos{42,17};
+        QTest::addRow("Block End 2")<<blockEnd<<CharPos{8,35};
+    }
+}
+
+void TestQSyneditCpp::test_get_block_start_end()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
 void TestQSyneditCpp::test_select_data()
 {
     QTest::addColumn<CharPos>("selBegin");
