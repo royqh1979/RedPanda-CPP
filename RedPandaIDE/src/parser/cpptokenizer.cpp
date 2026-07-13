@@ -486,8 +486,6 @@ QString CppTokenizer::getPreprocessor()
 
 QString CppTokenizer::getWord()
 {
-    // Skip spaces
-    skipToNextToken();
     QString result;
     // Get next word...
     while (true) {
@@ -506,9 +504,9 @@ QString CppTokenizer::getWord()
         if (currentWord.isEmpty()) {
             break;
         } else {
+            //skip spaces
+            skipToNextToken();
             if (currentWord!="operator") {
-                //skip spaces
-                skipToNextToken();
                 // Skip template contents, but keep template variable types
                 if (*mCurrent == '<') {
                     const QChar* offset = mCurrent;
