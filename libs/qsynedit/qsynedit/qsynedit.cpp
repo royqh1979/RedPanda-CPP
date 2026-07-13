@@ -6170,16 +6170,16 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
         doToggleBlockComment();
         break;
     case EditCommand::ScrollLeft:
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mCharWidth);
         break;
     case EditCommand::ScrollRight:
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mCharWidth);
         break;
     case EditCommand::ScrollUp:
-        verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-mTextHeight);
         break;
     case EditCommand::ScrollDown:
-        verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
+        verticalScrollBar()->setValue(verticalScrollBar()->value()+mTextHeight);
         break;
     case EditCommand::MatchBracket:
         {
