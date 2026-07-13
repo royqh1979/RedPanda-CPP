@@ -507,6 +507,8 @@ QString CppTokenizer::getWord()
             break;
         } else {
             if (currentWord!="operator") {
+                //skip spaces
+                skipToNextToken();
                 // Skip template contents, but keep template variable types
                 if (*mCurrent == '<') {
                     const QChar* offset = mCurrent;
@@ -823,6 +825,7 @@ void CppTokenizer::skipTemplateArgs()
             break;
         case '>':
             lastBracketPos = mCurrent;
+            shouldExit = true;
             break;
         }
         if (shouldExit)
