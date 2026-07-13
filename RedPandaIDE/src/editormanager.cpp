@@ -552,6 +552,9 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
             editor->setInProject(false,false);
         }
     } else {
+        if (editor->parser() && editor->parser().use_count()>1) {
+            editor->parser()->invalidateFile(editor->filename());
+        }
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
