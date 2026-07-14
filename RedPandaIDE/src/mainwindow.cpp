@@ -1879,6 +1879,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
 
         if (activate) {
             mEditorManager->activeEditor(editor,true);
+            editor->reparseIfNeeded();
         } else {
             updateEditorActions();
         }

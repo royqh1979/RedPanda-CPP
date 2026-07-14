@@ -28,7 +28,7 @@
 
 //Enable debug log
 #ifdef QT_DEBUG
-#define PARSER_DEBUG_LOG
+//#define PARSER_DEBUG_LOG
 #endif
 
 #ifdef PARSER_DEBUG_LOG
@@ -3513,7 +3513,7 @@ void CppParser::handlePreprocessor()
             // Mention progress to user if we enter a NEW file
             bool ok;
             int line = QStringView(s.constBegin() + delimPos + 1, s.constEnd()).toInt(&ok);
-            if (line == 1) {
+            if (line == -1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
                 emit progress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
@@ -4616,9 +4616,11 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef PARSER_DEBUG_LOG
+    if (!mStopForReset) {
         stringsToFile(mPreprocessor.result(),DebugLogFolder+QString("/preprocess-%1.txt").arg(extractFileName(fileName)));
         mPreprocessor.dumpDefinesTo(DebugLogFolder+"/defines.txt");
         mPreprocessor.dumpIncludesListTo(DebugLogFolder+"/includes.txt");
+    }
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
@@ -4635,7 +4637,8 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef PARSER_DEBUG_LOG
-     mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-%1.txt").arg(extractFileName(fileName)));
+    if (!mStopForReset)
+        mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4648,13 +4651,16 @@ void CppParser::internalParse(const QString &fileName)
             break;
     }
 #ifdef PARSER_DEBUG_LOG
-     mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-after-%1.txt").arg(extractFileName(fileName)));
+    if (!mStopForReset)
+        mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-after-%1.txt").arg(extractFileName(fileName)));
 #endif
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef PARSER_DEBUG_LOG
-     mStatementList.dumpAll(QString(DebugLogFolder+"/all-stats-%1.txt").arg(extractFileName(fileName)));
-     mStatementList.dump(QString(DebugLogFolder+"/stats-%1.txt").arg(extractFileName(fileName)));
+    if (!mStopForReset) {
+         mStatementList.dumpAll(QString(DebugLogFolder+"/all-stats-%1.txt").arg(extractFileName(fileName)));
+         mStatementList.dump(QString(DebugLogFolder+"/stats-%1.txt").arg(extractFileName(fileName)));
+    }
 #endif
     //reduce memory usage
     internalClear();

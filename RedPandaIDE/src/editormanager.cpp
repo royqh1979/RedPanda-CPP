@@ -98,7 +98,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
         e->reparseTodo();
     }
     e->setCppParser();
-    e->reparse();
+    //e->reparse();
 
     if (!newFile) {
         e->resetBookmarks(pMainWindow->bookmarkModel());
