@@ -586,9 +586,7 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
             editor->setInProject(false,false);
         }
     } else {
-        if (editor->parser() && editor->parser().use_count()>1) {
-            editor->parser()->invalidateFile(editor->filename());
-        }
+        editor->setCppParser(nullptr);
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
@@ -622,8 +620,10 @@ bool EditorManager::swapEditor(Editor *editor)
     });
     //remember old index
     QTabWidget* fromPageControl = findPageControlForEditor(editor);
-    if (pSettings->codeCompletion().shareParser())
+    if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
+        // setCppParser would invalidate file
         editor->setCppParser(nullptr);
+    }
     if (fromPageControl == mLeftPageWidget) {
         mLeftPageWidget->removeTab(mLeftPageWidget->indexOf(editor));
         mRightPageWidget->addTab(editor, editor->caption());
@@ -631,7 +631,7 @@ bool EditorManager::swapEditor(Editor *editor)
         mRightPageWidget->removeTab(mRightPageWidget->indexOf(editor));
         mLeftPageWidget->addTab(editor, editor->caption());
     }
-    if (pSettings->codeCompletion().shareParser()) {
+    if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
         editor->setCppParser();
         editor->reparseIfNeeded();
     }
