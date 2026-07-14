@@ -2230,7 +2230,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
             mIndex=indexAfterParentheis;
         } else if (mTokenizer[indexAfterParentheis]->text=='(') {
             // operator overloading like (operator int)
-            if (mTokenizer[mIndex+1]->text=="operator") {
+            if (mTokenizer[mIndex+1]->text=="operator"
+                    || mTokenizer[mIndex+1]->text.endsWith("::operator")) {
                 mIndex=indexAfterParentheis;
                 handleMethod(StatementKind::Function,"",
                              mergeArgs(mIndex+1,mTokenizer[mIndex]->matchIndex-1),
@@ -2243,7 +2244,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
             //array of pointers
             handleVar(currentText,false,false, maxIndex);
         } else {
-            if (currentText=="operator") {
+            if (currentText=="operator"
+                    || currentText.endsWith("::operator")) {
                 // operator overloading
                 handleOperatorOverloading(
                             "",
@@ -2309,7 +2311,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
 
         // Gather data for the string parts
         while (mIndex+1 < maxIndex) {
-            if (mTokenizer[mIndex]->text=="operator") {
+            if (mTokenizer[mIndex]->text=="operator"
+                    || mTokenizer[mIndex]->text.endsWith("::operator")) {
                 handleOperatorOverloading(sType,
                                       //sName,
                                       mIndex,
@@ -3621,7 +3624,8 @@ bool CppParser::handleStatement(int maxIndex)
 //        handleLambda();
     } else if (mTokenizer[mIndex]->text=='(') {
         if (mIndex+1<maxIndex &&
-                mTokenizer[mIndex+1]->text=="operator") {
+                (mTokenizer[mIndex+1]->text=="operator"
+                 || mTokenizer[mIndex+1]->text.endsWith("::operator"))) {
             // things like (operator int)
             mIndex++; //just skip '('
         } else

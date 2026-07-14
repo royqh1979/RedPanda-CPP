@@ -435,8 +435,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ChooseThemeDialog</name>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="+14"/>
-        <location line="+102"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="+140"/>
         <source>Choose Theme</source>
         <translation>选择主题</translation>
     </message>
@@ -446,7 +445,12 @@ p, li { white-space: pre-wrap; }
         <translation>内存用量：</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-89"/>
+        <source>Settings</source>
+        <translation>参数设置</translation>
+    </message>
+    <message>
+        <location line="+96"/>
         <source>Each file use its own parser</source>
         <translation>每个文件使用独立的分析器</translation>
     </message>
@@ -471,7 +475,7 @@ p, li { white-space: pre-wrap; }
         <translation>跟随系统样式和颜色</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-153"/>
         <source>Default Language:</source>
         <translation>默认语言：</translation>
     </message>
@@ -486,7 +490,7 @@ p, li { white-space: pre-wrap; }
         <translation>C++</translation>
     </message>
     <message>
-        <location line="+175"/>
+        <location line="+187"/>
         <source>Ok</source>
         <translation>确定</translation>
     </message>

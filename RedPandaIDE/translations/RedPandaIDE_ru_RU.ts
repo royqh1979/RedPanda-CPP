@@ -272,58 +272,62 @@
 <context>
     <name>ChooseThemeDialog</name>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="14"/>
-        <location filename="../src/widgets/choosethemedialog.ui" line="116"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="140"/>
         <source>Choose Theme</source>
         <translation>Выбор темы</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="79"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="103"/>
         <source>Memory Usage:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="86"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="14"/>
+        <source>Settings</source>
+        <translation type="unfinished">Настройки</translation>
+    </message>
+    <message>
+        <location filename="../src/widgets/choosethemedialog.ui" line="110"/>
         <source>Each file use its own parser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="93"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="117"/>
         <source>All files share one parser</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="154"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="178"/>
         <source>Dark Theme</source>
         <translation>Темная тема</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="161"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="185"/>
         <source>Light Theme</source>
         <translation>Светлая тема</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="168"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="192"/>
         <source>System Theme</source>
         <translation>Системная тема</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="27"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="39"/>
         <source>Default Language:</source>
         <translation>Язык по умолчанию:</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="34"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="46"/>
         <source>C</source>
         <translation>C</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="44"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="56"/>
         <source>C++</source>
         <translation>C++</translation>
     </message>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="219"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="243"/>
         <source>Ok</source>
         <translation>Ладно</translation>
     </message>

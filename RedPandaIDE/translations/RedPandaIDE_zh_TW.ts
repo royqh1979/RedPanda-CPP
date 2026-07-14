@@ -435,8 +435,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ChooseThemeDialog</name>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="+14"/>
-        <location line="+102"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="+140"/>
         <source>Choose Theme</source>
         <translation>選擇主題</translation>
     </message>
@@ -446,7 +445,12 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-89"/>
+        <source>Settings</source>
+        <translation type="unfinished">編譯/連結選項</translation>
+    </message>
+    <message>
+        <location line="+96"/>
         <source>Each file use its own parser</source>
         <translation type="unfinished"></translation>
     </message>
@@ -471,7 +475,7 @@ p, li { white-space: pre-wrap; }
         <translation>跟隨系統樣式和顏色</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-153"/>
         <source>Default Language:</source>
         <translation>預設語言:</translation>
     </message>
@@ -486,7 +490,7 @@ p, li { white-space: pre-wrap; }
         <translation>C++</translation>
     </message>
     <message>
-        <location line="+175"/>
+        <location line="+187"/>
         <source>Ok</source>
         <translation>確定</translation>
     </message>

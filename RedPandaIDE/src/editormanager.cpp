@@ -63,7 +63,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setCodeCompletionSettings(&pSettings->codeCompletion());
     e->setColorManager(pMainWindow->colorManager());
     e->setIconsManager(pMainWindow->iconsManager());
-    e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
+//    e->setGetSharedParserFunc(std::bind(&EditorManager::sharedParser,this,std::placeholders::_1));
     e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(
                                     &EditorManager::getContentFromOpenedEditor,this,
@@ -443,11 +443,11 @@ QTabWidget *EditorManager::rightPageWidget() const
     return mRightPageWidget;
 }
 
-PCppParser EditorManager::sharedParser(ParserLanguage language)
+PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppParser>> & sharedParsers, ParserLanguage language)
 {
     PCppParser parser;
-    if (mSharedParsers.contains(language)) {
-        parser=mSharedParsers[language].lock();
+    if (sharedParsers.contains(language)) {
+        parser=sharedParsers[language].lock();
     }
     if (!parser) {
         parser = std::make_shared<CppParser>();
@@ -459,10 +459,36 @@ PCppParser EditorManager::sharedParser(ParserLanguage language)
                         std::placeholders::_1, std::placeholders::_2));
         resetCppParser(parser);
         parser->setEnabled(true);
-        mSharedParsers.insert(language,parser);
+        sharedParsers.insert(language,parser);
     }
     return parser;
 }
+
+void EditorManager::resetSharedParsers(QHash<ParserLanguage, std::weak_ptr<CppParser> > &sharedParsers)
+{
+    foreach(std::weak_ptr<CppParser> parser, sharedParsers) {
+        resetCppParser(parser.lock());
+    }
+}
+
+
+PCppParser EditorManager::sharedParser(ParserLanguage language, const QTabWidget *widget)
+{
+    if (widget == mLeftPageWidget)
+        return sharedParser(mSharedParsersForLeft, language);
+    else if (widget == mRightPageWidget)
+        return sharedParser(mSharedParsersForRight, language);
+    else
+        return sharedParser(mSharedParsers, language);
+}
+
+void EditorManager::resetSharedParsers()
+{
+    resetSharedParsers(mSharedParsers);
+    resetSharedParsers(mSharedParsersForLeft);
+    resetSharedParsers(mSharedParsersForRight);
+}
+
 
 PCppParser EditorManager::createParserForEditor(Editor *editor)
 {
@@ -480,7 +506,7 @@ PCppParser EditorManager::createParserForEditor(Editor *editor)
                 return e->parser();
         }
         if (pSettings->codeCompletion().shareParser()) {
-            return sharedParser(editor->calcParserLanguage());
+            return sharedParser(editor->calcParserLanguage(), findPageControlForEditor(editor));
         } else if (editor->syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             PCppParser parser = std::make_shared<CppParser>();
             parser->setSharedByFiles(false);
@@ -596,12 +622,18 @@ bool EditorManager::swapEditor(Editor *editor)
     });
     //remember old index
     QTabWidget* fromPageControl = findPageControlForEditor(editor);
+    if (pSettings->codeCompletion().shareParser())
+        editor->setCppParser(nullptr);
     if (fromPageControl == mLeftPageWidget) {
         mLeftPageWidget->removeTab(mLeftPageWidget->indexOf(editor));
         mRightPageWidget->addTab(editor, editor->caption());
     } else {
         mRightPageWidget->removeTab(mRightPageWidget->indexOf(editor));
         mLeftPageWidget->addTab(editor, editor->caption());
+    }
+    if (pSettings->codeCompletion().shareParser()) {
+        editor->setCppParser();
+        editor->reparseIfNeeded();
     }
     updateLayout();
     activeEditor(editor, true);

@@ -41,6 +41,7 @@ Red Panda C++ Version 3.5
   - fix: Matching braces doesn't correctly work if there are '{'/'}' in comments.
   - fix: Scroll by CTRL+arrow work too slow.
   - change: Remove option "Clear symbol table when editor is hidden".
+  - change: Redesin first time startup dialog.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

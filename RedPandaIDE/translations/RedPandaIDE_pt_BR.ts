@@ -367,8 +367,7 @@
 <context>
     <name>ChooseThemeDialog</name>
     <message>
-        <location filename="../src/widgets/choosethemedialog.ui" line="+14"/>
-        <location line="+102"/>
+        <location filename="../src/widgets/choosethemedialog.ui" line="+140"/>
         <source>Choose Theme</source>
         <translation>Escolher tema</translation>
     </message>
@@ -378,7 +377,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-89"/>
+        <source>Settings</source>
+        <translation type="unfinished">Configurações</translation>
+    </message>
+    <message>
+        <location line="+96"/>
         <source>Each file use its own parser</source>
         <translation type="unfinished"></translation>
     </message>
@@ -403,7 +407,7 @@
         <translation>Ok</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-204"/>
         <source>Default Language:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -418,7 +422,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+136"/>
         <source>System Theme</source>
         <translation>Estilo e Cor do Sistema</translation>
     </message>

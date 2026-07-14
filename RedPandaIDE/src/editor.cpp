@@ -119,7 +119,6 @@ Editor::Editor(QWidget *parent):
 
     mCodeSnippetsManager = nullptr;
 
-    mGetSharedParserFunc = nullptr;
     mGetOpennedEditorFunc  = nullptr;
     mGetFileStreamFunc = nullptr;
     mCanShowEvalTipFunc = nullptr;
@@ -4586,16 +4585,6 @@ const GetOpennedEditorFunc &Editor::getOpennedEditorFunc() const
 void Editor::setGetOpennedFunc(const GetOpennedEditorFunc &newOpennedEditorProviderCallBack)
 {
     mGetOpennedEditorFunc = newOpennedEditorProviderCallBack;
-}
-
-const GetSharedParserrFunc &Editor::getSharedParserFunc() const
-{
-    return mGetSharedParserFunc;
-}
-
-void Editor::setGetSharedParserFunc(const GetSharedParserrFunc &newSharedParserProviderCallBack)
-{
-    mGetSharedParserFunc = newSharedParserProviderCallBack;
 }
 
 CodeCompletionPopup *Editor::completionPopup() const

@@ -506,7 +506,6 @@ private:
 
     CodeSnippetsManager *mCodeSnippetsManager;
 
-    GetSharedParserrFunc mGetSharedParserFunc;
     GetOpennedEditorFunc mGetOpennedEditorFunc;
     GetFileStreamFunc mGetFileStreamFunc;
     CanShowEvalTipFunc mCanShowEvalTipFunc;

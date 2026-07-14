@@ -3664,14 +3664,18 @@ void MainWindow::loadLastOpens()
         mEditorManager->updateEditorBookmarks();
         mEditorManager->updateEditorBreakpoints();
     }
-
+    Editor *e = mEditorManager->getEditor(-1, mEditorManager->leftPageWidget());
+    if (e)
+        e->reparseIfNeeded();
+    e = mEditorManager->getEditor(-1, mEditorManager->rightPageWidget());
+    if (e)
+        e->reparseIfNeeded();
     if (!focusedEditor) {
         focusedEditor = mEditorManager->getEditor();
     }
     if (focusedEditor) {
         updateEditorActions();
         updateForEncodingInfo(mEditorManager->getEditor());
-        focusedEditor->reparseIfNeeded();
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
         mEditorManager->activeEditor(focusedEditor,true);
@@ -7939,16 +7943,7 @@ void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
 void MainWindow::reparseNonProjectEditors()
 {
     if (pSettings->codeCompletion().shareParser()) {
-        {
-            PCppParser parser{mEditorManager->sharedParser(ParserLanguage::C)};
-            if (parser)
-                resetCppParser(parser);
-        }
-        {
-            PCppParser parser{mEditorManager->sharedParser(ParserLanguage::CPlusPlus)};
-            if (parser)
-                resetCppParser(parser);
-        }
+        mEditorManager->resetSharedParsers();
     } else {
         for (int i=0;i<mEditorManager->pageCount();i++) {
             Editor* e=(*mEditorManager)[i];

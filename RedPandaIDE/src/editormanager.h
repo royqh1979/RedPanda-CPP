@@ -102,7 +102,8 @@ public:
 
     QTabWidget *rightPageWidget() const;
 
-    PCppParser sharedParser(ParserLanguage language);
+    PCppParser sharedParser(ParserLanguage language, const QTabWidget *widget);
+    void resetSharedParsers();
 
     PCppParser createParserForEditor(Editor *editor);
 
@@ -112,6 +113,9 @@ signals:
     void editorClosed();
     void editorOpenned();
 private:
+    PCppParser sharedParser(QHash<ParserLanguage,std::weak_ptr<CppParser>> & sharedParsers, ParserLanguage language);
+    void resetSharedParsers(QHash<ParserLanguage,std::weak_ptr<CppParser>> & sharedParsers);
+
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
@@ -144,6 +148,8 @@ private:
     QWidget *mPanel;
     int mUpdateCount;
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
+    QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForRight;
+    QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForLeft;
     mutable QRecursiveMutex mMutex;
 };
 
