@@ -295,7 +295,15 @@ void EditorManager::onEditorShown(Editor *e)
     if (e->parser() && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()) {
         if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            e->reparseIfNeeded();
+            if (pSettings->codeCompletion().clearWhenEditorHidden()
+                && pSettings->codeCompletion().shareParser()
+                && !e->inProject()) {
+                if (e->needReparse()) {
+                    resetCppParser(e->parser());
+                    e->reparse();
+                }
+            } else
+                e->reparseIfNeeded();
         }
     }
     pMainWindow->debugger()->setIsForProject(e->inProject());
@@ -787,12 +795,18 @@ bool EditorManager::closeAll(bool force) {
 //        this->endUpdate();
 //    });
     while (mLeftPageWidget->count()>0) {
-        if (!closeEditor(getEditor(0,mLeftPageWidget),false,force)) {
+        Editor* e = getEditor(0,mLeftPageWidget);
+        if (e->parser())
+            resetCppParser(e->parser());
+        if (!closeEditor(e,false,force)) {
             return false;
         }
     }
     while (mRightPageWidget->count()>0) {
-        if (!closeEditor(getEditor(0,mRightPageWidget),false,force)) {
+        Editor* e = getEditor(0,mRightPageWidget);
+        if (e->parser())
+            resetCppParser(e->parser());
+        if (!closeEditor(e,false,force)) {
             return false;
         }
     }

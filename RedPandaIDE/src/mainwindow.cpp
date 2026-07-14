@@ -3670,7 +3670,7 @@ void MainWindow::loadLastOpens()
     if (focusedEditor) {
         updateEditorActions();
         updateForEncodingInfo(mEditorManager->getEditor());
-        focusedEditor->reparse();
+        focusedEditor->reparseIfNeeded();
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
         mEditorManager->activeEditor(focusedEditor,true);

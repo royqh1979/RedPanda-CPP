@@ -72,7 +72,7 @@ CppParser::CppParser() : QObject{nullptr},
     mCppKeywords = CppKeywords;
     mCppTypeKeywords = CppTypeKeywords;
     mEnabled = true;
-
+    mStopForReset = false;
     internalClear();
 
     //mNamespaces;
@@ -1197,6 +1197,10 @@ void CppParser::resetParser()
             if (!mParsing && mLockCount ==0) {
                 mParsing = true;
                 break;
+            } else {
+                mPreprocessor.stopForParserReset();
+                mTokenizer.stopForParserReset();
+                mStopForReset = true;
             }
         }
         QThread::msleep(50);
@@ -1206,6 +1210,7 @@ void CppParser::resetParser()
     {
         auto action = finally([this]{
             mParsing = false;
+            mStopForReset = false;
         });
         emit  onBusy();
         mUniqId = 0;
@@ -3583,7 +3588,8 @@ bool CppParser::handleStatement(int maxIndex)
     Q_ASSERT(mIndex>=mLastIndex);
     mLastIndex=mIndex;
 #endif
-
+    if (mStopForReset)
+        return false;
     if (mIndex >= idx3) {
         //skip (previous handled) inline name space end
         mInlineNamespaceEndSkips.pop_back();

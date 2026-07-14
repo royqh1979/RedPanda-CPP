@@ -183,6 +183,7 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
 
 void CppPreprocessor::preprocess(const QString &fileName)
 {
+    mStopForParserReset = false;
     clearTempResults();
     mFileName = fileName;
     openInclude(fileName);
@@ -763,6 +764,8 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
 
 void CppPreprocessor::openInclude(QString fileName)
 {
+    if (mStopForParserReset)
+        return;
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
         fileName = fileInfo->fileName();
@@ -1232,6 +1235,10 @@ void CppPreprocessor::preprocessBuffer()
     while (mIncludeStack.count() > 0) {
         QString s;
         do {
+            if (mStopForParserReset) {
+                mBuffer.clear();
+                return;
+            }
             s = getNextPreprocessor();
             if (s.startsWith('#')) {
                 QString command;

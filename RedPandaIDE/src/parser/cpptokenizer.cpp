@@ -23,10 +23,12 @@
 CppTokenizer::CppTokenizer():
 mLastTokenType{TokenType::None}
 {
+    mStopForParserReset = false;
 }
 
 void CppTokenizer::clear()
 {
+    mStopForParserReset = false;
     mTokenList.clear();
     mBuffer.clear();
     mBufferStr.clear();
@@ -60,6 +62,10 @@ void CppTokenizer::tokenize(const QStringList &buffer)
 
     TokenType tokenType = TokenType::None;
     while (true) {
+        if (mStopForParserReset) {
+            mTokenList.clear();
+            return;
+        }
         mLastTokenType = tokenType;
         mLastToken = s;
         s = getNextToken(&tokenType);

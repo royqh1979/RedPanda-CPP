@@ -60,7 +60,7 @@ public:
 
     int indexOfFirstLambda() const { return mLambdas.front(); }
     void removeFirstLambda() { mLambdas.pop_front(); }
-
+    void stopForParserReset() { mStopForParserReset = true; }
 private:
     void addToken(const QString& sText, int iLine, TokenType tokenType);
     void advance();
@@ -173,6 +173,7 @@ private:
     QVector<int> mUnmatchedBraces; // stack of indices for unmatched '{'
     QVector<int> mUnmatchedBrackets; // stack of indices for unmatched '['
     QVector<int> mUnmatchedParenthesis;// stack of indices for unmatched '('
+    bool mStopForParserReset;
 };
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;

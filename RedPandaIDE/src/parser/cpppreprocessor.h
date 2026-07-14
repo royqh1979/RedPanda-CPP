@@ -75,6 +75,7 @@ public:
         mParseLocal=parseLocal;
     }
     void preprocess(const QString& fileName);
+    void stopForParserReset() {mStopForParserReset = true;}
 
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
@@ -318,6 +319,8 @@ private:
     bool mParseSystem;
     bool mParseLocal;
     bool mSupportCPP23;
+
+    bool mStopForParserReset;
 
     GetFileStreamFunc mOnGetFileStream;
 };
