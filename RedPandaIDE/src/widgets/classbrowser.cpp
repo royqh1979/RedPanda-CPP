@@ -217,6 +217,10 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
                    &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
+        disconnect(mParser.get(),
+                   &CppParser::parseStarted,
+                   this,
+                   &ClassBrowserModel::clear);
     }
     mParser = newCppParser;
     if (mParser) {
@@ -224,6 +228,10 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
                    &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
+        connect(mParser.get(),
+                   &CppParser::parseStarted,
+                   this,
+                   &ClassBrowserModel::clear);
     } else {
         clear();
     }

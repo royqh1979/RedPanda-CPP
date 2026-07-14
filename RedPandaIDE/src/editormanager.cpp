@@ -598,12 +598,12 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
         editor = getEditor();
         if (editor) {
             activeEditor(editor,true);
-            pMainWindow->updateClassBrowserForEditor(editor);
         }
     }
-    editor = getEditor();
-    if (!editor) {
-        pMainWindow->updateClassBrowserForEditor(nullptr);
+    if (!force) {
+        editor = getEditor();
+        if (!editor)
+            pMainWindow->updateClassBrowserForEditor(nullptr);
     }
     emit editorClosed();
     endUpdate();
