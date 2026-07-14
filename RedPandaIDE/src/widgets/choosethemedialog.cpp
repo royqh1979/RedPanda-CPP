@@ -51,6 +51,7 @@ ChooseThemeDialog::ChooseThemeDialog(QWidget *parent) :
 #endif
     ui->rbDark->setChecked(true);
     ui->rbCpp->setChecked(true);
+    ui->rbShareParser->setChecked(true);
 }
 
 ChooseThemeDialog::~ChooseThemeDialog()
@@ -74,6 +75,11 @@ ChooseThemeDialog::Theme ChooseThemeDialog::theme()
 ChooseThemeDialog::Language ChooseThemeDialog::language()
 {
     return ui->rbCpp->isChecked()?Language::CPlusPlus:Language::C;
+}
+
+bool ChooseThemeDialog::shareParser()
+{
+    return ui->rbShareParser->isChecked();
 }
 
 void ChooseThemeDialog::on_btnOk_clicked()

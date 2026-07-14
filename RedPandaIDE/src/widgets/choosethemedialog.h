@@ -43,6 +43,7 @@ public:
     ~ChooseThemeDialog();
     Theme theme();
     Language language();
+    bool shareParser();
 
 private slots:
     void on_btnOk_clicked();
