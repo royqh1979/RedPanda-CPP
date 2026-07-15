@@ -244,6 +244,8 @@ void SearchInFileDialog::doSearch(bool replace)
             } else if (fileExists(curFilename)) {
                 QSynedit::QSynEdit editor;
                 QByteArray realEncoding;
+                if (searchOptions.testFlag(QSynedit::ssoWholeWord))
+                    editor.setSyntaxer(SyntaxerManager::getSyntaxer(getFileType(curFilename)));
                 try{
                     editor.loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
                 } catch (QSynedit::BinaryFileError e) {
@@ -338,6 +340,8 @@ void SearchInFileDialog::doSearch(bool replace)
                 if (encoding==ENCODING_PROJECT)
                     encoding = projectEncoding;
                 QByteArray realEncoding;
+                if (searchOptions.testFlag(QSynedit::ssoWholeWord))
+                    editor.setSyntaxer(SyntaxerManager::getSyntaxer(getFileType(curFilename)));
                 try {
                     editor.loadFromFile(curFilename,encoding, realEncoding);
                 } catch (QSynedit::BinaryFileError e) {
