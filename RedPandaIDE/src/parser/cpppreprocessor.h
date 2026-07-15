@@ -167,6 +167,7 @@ private:
     void handleEndif(const QString& tokens);
     void handleInclude(const QString&tokens);
     void handleIncludeNext(const QString& tokens);
+    void handlePragma(const QString& tokens);
 
     void handleInclude(const QString& line, bool fromNext);
     void handlePreprocessor(const QString& command, const QString& tokens);
@@ -296,7 +297,9 @@ private:
     DefineMap mDefines; // working set, editable
     QSet<QString> mProcessed; // dictionary to save filename already processed
 
-
+    bool mFileJustOpenned;
+    QString mFileIncludeOnceToken;
+    QSet<QString> mFilesShouldRepeatInclude;
     //Result across processings.
     //used by parser even preprocess finished
     QHash<QString, PParsedFileInfo> mFileInfos;
