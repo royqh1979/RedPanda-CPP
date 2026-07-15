@@ -94,7 +94,7 @@ void SearchInFileDialog::findInFiles(const QString &keyword,
     case SearchFileScope::Folder:
         ui->txtFolder->setText(folder);
         ui->txtFilters->setText(filters);
-        ui->cbSearchSubFolders->setChecked(searchSubfolders);
+        ui->chkSearchSubFolders->setChecked(searchSubfolders);
         ui->rbFolder->setChecked(true);
         break;
     }
@@ -177,7 +177,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     SearchFileScope::Folder,
                     ui->txtFolder->text(),
                     ui->txtFilters->text(),
-                    ui->cbSearchSubFolders
+                    ui->chkSearchSubFolders->isChecked()
                     );
         if (ui->txtFilters->text().trimmed().isEmpty()) {
             ui->txtFilters->setText("*.*");
@@ -204,18 +204,18 @@ void SearchInFileDialog::doSearch(bool replace)
         while (!dirs.isEmpty()) {
             QDir dir=dirs.back();
             dirs.pop_back();
-            foreach(const QFileInfo& entry, dir.entryInfoList(QDir::NoSymLinks | QDir::Dirs)) {
-                if (entry.fileName()==".." || entry.fileName()==".")
-                    continue;
-                if (!searched.contains(entry.absoluteFilePath())) {
-                    dirs.push_back(QDir(entry.absoluteFilePath()));
-                    searched.insert(entry.absoluteFilePath());
+            if (ui->chkSearchSubFolders->isChecked()) {
+                foreach(const QFileInfo& entry, dir.entryInfoList(QDir::NoSymLinks | QDir::Dirs)) {
+                    if (entry.fileName()==".." || entry.fileName()==".")
+                        continue;
+                    if (!searched.contains(entry.absoluteFilePath())) {
+                        dirs.push_back(QDir(entry.absoluteFilePath()));
+                        searched.insert(entry.absoluteFilePath());
+                    }
                 }
             }
-            if (ui->chkSearchSubFolders) {
-                foreach(const QFileInfo& entry, dir.entryInfoList(ui->txtFilters->text().split(";"), filterOptions)) {
-                    files.append(entry);
-                }
+            foreach(const QFileInfo& entry, dir.entryInfoList(ui->txtFilters->text().split(";"), filterOptions)) {
+                files.append(entry);
             }
             progressDlg.setLabelText(tr("Calculating files for searching (%1)...").arg(files.count()));
             QCoreApplication::processEvents();
@@ -470,7 +470,7 @@ void SearchInFileDialog::onSearchTypeChanged(bool checked)
 //    ui->lblFolder->setVisible(checked);
     ui->txtFolder->setEnabled(ui->rbFolder->isChecked());
     ui->btnChangeFolder->setEnabled(ui->rbFolder->isChecked());
-    ui->cbSearchSubFolders->setEnabled(ui->rbFolder->isChecked());
+    ui->chkSearchSubFolders->setEnabled(ui->rbFolder->isChecked());
     if (ui->rbFolder->isChecked()) {
         if (!directoryExists(ui->txtFolder->text()))
             ui->txtFolder->setText(pSettings->environment().currentFolder());
