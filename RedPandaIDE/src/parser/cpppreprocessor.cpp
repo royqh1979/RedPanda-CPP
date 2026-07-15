@@ -312,7 +312,7 @@ void CppPreprocessor::handleDefine(const QString &tokens)
         if (name == mFileIncludeOnceToken) {
             mFileIncludeOnceToken = "";
             mFilesShouldRepeatInclude.remove(mIncludeStack.back()->fileName);
-            qDebug()<<"- "<<mIncludeStack.back()->fileName;
+            //qDebug()<<"- "<<mIncludeStack.back()->fileName;
         }
         // Add to the list
         addDefineByParts(name, args, value, false);
@@ -873,7 +873,7 @@ void CppPreprocessor::openInclude(QString fileName)
     }
     mFileJustOpenned = true;
     mFileIncludeOnceToken = "";
-    qDebug()<<"+ "<<fileName;
+    //qDebug()<<"+ "<<fileName;
     mFilesShouldRepeatInclude.insert(fileName);
 }
 
