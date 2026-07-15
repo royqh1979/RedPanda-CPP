@@ -124,6 +124,11 @@ public:
     bool isSystemHeaderFile(const QString& fileName) const;
     void parseHardDefines();
     bool parsing() const;
+    /**
+     * Request the parser to stop as soon as possible.
+     * Parser threads will check the internal flag and abort early when observed.
+     */
+    void stopParsing();
     void resetParser();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     bool fileScanned(const QString& fileName) const;

@@ -8385,13 +8385,32 @@ void MainWindow::invalidateProjectProxyModel()
     mProjectProxyModel->invalidate();
 }
 
+static void stopParserForEditor(Editor *editor)
+{
+    if (editor && editor->parser()) {
+        editor->parser()->stopParsing();
+    }
+}
+
 void MainWindow::on_EditorTabsLeft_currentChanged(int)
 {
+    for (int i = 0; i < mEditorManager->pageCount(); ++i) {
+        stopParserForEditor((*mEditorManager)[i]);
+    }
+    if (mProject && mProject->cppParser()) {
+        mProject->cppParser()->stopParsing();
+    }
 }
 
 
 void MainWindow::on_EditorTabsRight_currentChanged(int)
 {
+    for (int i = 0; i < mEditorManager->pageCount(); ++i) {
+        stopParserForEditor((*mEditorManager)[i]);
+    }
+    if (mProject && mProject->cppParser()) {
+        mProject->cppParser()->stopParsing();
+    }
 }
 
 void MainWindow::on_tableTODO_doubleClicked(const QModelIndex &index)
