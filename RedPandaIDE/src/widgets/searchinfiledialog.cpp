@@ -212,8 +212,10 @@ void SearchInFileDialog::doSearch(bool replace)
                     searched.insert(entry.absoluteFilePath());
                 }
             }
-            foreach(const QFileInfo& entry, dir.entryInfoList(ui->txtFilters->text().split(";"), filterOptions)) {
-                files.append(entry);
+            if (ui->chkSearchSubFolders) {
+                foreach(const QFileInfo& entry, dir.entryInfoList(ui->txtFilters->text().split(";"), filterOptions)) {
+                    files.append(entry);
+                }
             }
             progressDlg.setLabelText(tr("Calculating files for searching (%1)...").arg(files.count()));
             QCoreApplication::processEvents();

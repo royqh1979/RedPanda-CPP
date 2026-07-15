@@ -42,6 +42,7 @@ Red Panda C++ Version 3.5
   - fix: Scroll by CTRL+arrow work too slow.
   - change: Remove option "Clear symbol table when editor is hidden".
   - change: Redesin first time startup dialog.
+  - fix: Option "Search subfolders" doesn't work in the search-in-files dialog.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

@@ -120,7 +120,7 @@
           </widget>
          </item>
          <item row="3" column="0" colspan="3">
-          <widget class="QCheckBox" name="cbSearchSubFolders">
+          <widget class="QCheckBox" name="chkSearchSubFolders">
            <property name="text">
             <string>Search in subfolders</string>
            </property>
@@ -353,7 +353,7 @@
   <tabstop>txtFilters</tabstop>
   <tabstop>txtFolder</tabstop>
   <tabstop>btnChangeFolder</tabstop>
-  <tabstop>cbSearchSubFolders</tabstop>
+  <tabstop>chkSearchSubFolders</tabstop>
   <tabstop>chkCaseSensetive</tabstop>
   <tabstop>chkWholeWord</tabstop>
   <tabstop>chkRegExp</tabstop>
