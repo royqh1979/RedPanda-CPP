@@ -218,6 +218,7 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
 
 EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
+    ui->editDemo->parser()->setOnGetFileStream(nullptr);
     delete ui;
     //mDefinesModel.clear();
 }
