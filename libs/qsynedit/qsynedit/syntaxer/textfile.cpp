@@ -39,7 +39,7 @@ void TextSyntaxer::procSpace()
 void TextSyntaxer::procText()
 {
     mTokenID = TokenId::Text;
-    while (mLine[mRun]!=0 && !mLine[mRun].isSpace())
+    while (mLine[mRun]!=0 && !mLine[mRun].isSpace() &&!isWordBreakChar(mLine[mRun]))
         mRun++;
 }
 
@@ -47,6 +47,12 @@ void TextSyntaxer::procNull()
 {
     mTokenID = TokenId::Null;
     mState = RangeState::Unknown;
+}
+
+void TextSyntaxer::procSymbol()
+{
+    mTokenID = TokenId::Symbol;
+    mRun++;
 }
 
 bool TextSyntaxer::eol() const
@@ -95,6 +101,8 @@ void TextSyntaxer::next()
         procNull();
     } else if (isSpaceChar(mLine[mRun])) {
         procSpace();
+    } else if (isWordBreakChar(mLine[mRun])) {
+        procSymbol();
     } else {
         procText();
     }

@@ -28,7 +28,8 @@ class TextSyntaxer : public Syntaxer
     enum class TokenId {
         Null,
         Space,
-        Text
+        Text,
+        Symbol,
     };
 
     enum RangeState {
@@ -59,6 +60,7 @@ private:
     void procSpace();
     void procText();
     void procNull();
+    void procSymbol();
 
 public:
     bool eol() const override;

@@ -5443,7 +5443,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 i = 0;
             // Operate on all results in this line.
             QSet<int> tokenBorders;
-            if (nInLine>0) {
+            if (nInLine>0 && sOptions.testFlag(ssoWholeWord)) {
                 tokenBorders = getTokenBorders(posCurrent.line);
             }
             while (nInLine > 0) {
