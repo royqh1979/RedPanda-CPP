@@ -2,6 +2,8 @@
 
 set -xeuo pipefail
 
+export REPODEST=/tmp
+
 TMP_FOLDER=/tmp/unsupported/redpanda-cpp
 [[ -d $TMP_FOLDER ]] && rm -rf $TMP_FOLDER
 mkdir -p "$TMP_FOLDER"
@@ -19,4 +21,4 @@ git archive --prefix="RedPanda-CPP/" -o "$TMP_FOLDER/RedPanda-CPP.tar.gz" HEAD
 )
 
 mkdir -p dist
-cp ~/packages/unsupported/$(uname -m)/redpanda-cpp-*.apk dist/
+cp $REPODEST/unsupported/$(uname -m)/redpanda-cpp-*.apk dist/
