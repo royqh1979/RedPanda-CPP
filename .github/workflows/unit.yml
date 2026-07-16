@@ -25,7 +25,10 @@ jobs:
       - name: Test
         run: |
           cd build
-          QT_QPA_PLATFORM=offscreen make test -j$(nproc)
+          env \
+            CTEST_OUTPUT_ON_FAILURE=1 \
+            QT_QPA_PLATFORM=offscreen \
+              make test -j$(nproc)
 
   xmake_test:
     name: Xmake test targets

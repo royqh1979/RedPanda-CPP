@@ -69,7 +69,10 @@ build() {
 }
 
 check() {
-    cmake --build "build-${MSYSTEM}" --target test
+    # TODO: `CTEST_OUTPUT_ON_FAILURE` does not work in CI
+    env \
+        CTEST_OUTPUT_ON_FAILURE=1 \
+            cmake --build "build-${MSYSTEM}" --target test
 }
 
 package() {
