@@ -95,7 +95,10 @@ function create-appimage() {
 # test
 (
   cd /build/redpanda
-  QT_QPA_PLATFORM=offscreen make test
+  env \
+    CTEST_OUTPUT_ON_FAILURE=1 \
+    QT_QPA_PLATFORM=offscreen \
+      make test -j$(nproc)
 )
 
 # package tarball
