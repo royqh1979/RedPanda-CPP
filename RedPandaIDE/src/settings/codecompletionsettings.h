@@ -68,6 +68,9 @@ public:
     bool shareParser() const;
     void setShareParser(bool newShareParser);
 
+    bool includedHeaderFileOnlyParseOnce() const;
+    void setIncludedHeaderFileOnlyParseOnce(bool newIncludedHeaderFileOnlyParseOnce);
+
 private:
     int mWidthInColumns;
     int mHeightInLines;
@@ -84,7 +87,7 @@ private:
     bool mHideSymbolsStartsWithUnderLine;
     bool mClearWhenEditorHidden;
     bool mShareParser;
-
+    bool mIncludedHeaderFileOnlyParseOnce;
     // _Base interface
 protected:
     void doSave() override;

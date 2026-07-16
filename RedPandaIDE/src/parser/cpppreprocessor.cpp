@@ -39,6 +39,7 @@ CppPreprocessor::CppPreprocessor()
     mPreprocessorHandlers.insert("pragma",[this](const QString& tokens){ handlePragma(tokens);});
     mParseLocal = true;
     mParseSystem = true;
+    mFileOnlyIncludeOnce = true;
 }
 
 void CppPreprocessor::clear()
@@ -76,7 +77,7 @@ void CppPreprocessor::clearTempResults()
     mCurrentFileInfo=nullptr;
     mFileJustOpenned = false;
     mFileIncludeOnceToken = "";
-    mFilesShouldRepeatInclude.clear();
+    mFilesCouldRepeatInclude.clear();
     mIncludeStack.clear(); // stack of files we've stepped into. last one is current file, first one is source file
     mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
     //mDefines.clear(); // working set, editable
@@ -311,7 +312,7 @@ void CppPreprocessor::handleDefine(const QString &tokens)
         getDefineParts(tokens, name, args, value);
         if (name == mFileIncludeOnceToken) {
             mFileIncludeOnceToken = "";
-            mFilesShouldRepeatInclude.remove(mIncludeStack.back()->fileName);
+            mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
             //qDebug()<<"- "<<mIncludeStack.back()->fileName;
         }
         // Add to the list
@@ -514,7 +515,7 @@ void CppPreprocessor::handleIncludeNext(const QString &tokens)
 void CppPreprocessor::handlePragma(const QString &tokens)
 {
     if (tokens.trimmed()=="once")
-        mFilesShouldRepeatInclude.insert(mIncludeStack.back()->fileName);
+        mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
 }
 
 QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSet<QString> macrosToBeIgnored)
@@ -797,6 +798,10 @@ void CppPreprocessor::openInclude(QString fileName)
     if (mIncludeStack.size()>0) {
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludeStack) {
+            if (parsedFile->fileName == fileName) {
+                //prevent recursive including;
+                return;
+            }
             if (parsedFile->fileInfo->including(fileName)) {
                 alreadyIncluded = true;
             }
@@ -807,13 +812,23 @@ void CppPreprocessor::openInclude(QString fileName)
         }
         PParsedFile innerMostFile = mIncludeStack.back();
         innerMostFile->fileInfo->addDirectInclude(fileName);
-        if (alreadyIncluded && !mFilesShouldRepeatInclude.contains(fileName))
+        if (alreadyIncluded && !mFilesCouldRepeatInclude.contains(fileName))
             return;
         // Backup old position if we're entering a new file
         innerMostFile->index = mIndex;
         innerMostFile->branches = mBranchResults.count();
     }
 
+
+    // Don't parse stuff that no need to parse again
+    if (mScannedFiles.contains(fileName) && !mFilesCouldRepeatInclude.contains(fileName)) {
+        //add defines of already parsed including headers;
+        addDefinesInFile(fileName);
+        return;
+    }
+    if (mFilesCouldRepeatInclude.contains(fileName)) {
+        qDebug()<<"++ "<<fileName;
+    }
     // Create and add new buffer/position
     PParsedFile parsedFile = std::make_shared<ParsedFile>();
     parsedFile->index = 0;
@@ -827,25 +842,17 @@ void CppPreprocessor::openInclude(QString fileName)
     mCurrentFileInfo = fileInfo;
     mFileInfos.insert(fileName,mCurrentFileInfo);
     parsedFile->fileInfo = mCurrentFileInfo;
+    //if not Assigned(Stream) then
+    mScannedFiles.insert(fileName);
 
-    // Don't parse stuff that no need to parse again
-    if (mScannedFiles.contains(fileName) && !mFilesShouldRepeatInclude.contains(fileName)) {
-        //add defines of already parsed including headers;
-        addDefinesInFile(fileName);
-    } else {
-        // Parse ONCE
-        //if not Assigned(Stream) then
-        mScannedFiles.insert(fileName);
-
-        // Only load up the file if we are allowed to parse it
-        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
-        if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
-            QStringList bufferedText;
-            if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
-                parsedFile->buffer  = bufferedText;
-            } else {
-                parsedFile->buffer = readFileToLines(fileName);
-            }
+    // Only load up the file if we are allowed to parse it
+    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
+    if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
+        QStringList bufferedText;
+        if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
+            parsedFile->buffer  = bufferedText;
+        } else {
+            parsedFile->buffer = readFileToLines(fileName);
         }
     }
     mIncludeStack.append(parsedFile);
@@ -874,7 +881,8 @@ void CppPreprocessor::openInclude(QString fileName)
     mFileJustOpenned = true;
     mFileIncludeOnceToken = "";
     //qDebug()<<"+ "<<fileName;
-    mFilesShouldRepeatInclude.insert(fileName);
+    if (!mFileOnlyIncludeOnce)
+        mFilesCouldRepeatInclude.insert(fileName);
 }
 
 
@@ -1296,7 +1304,10 @@ void CppPreprocessor::preprocessBuffer()
         } while (!s.isEmpty());
         closeInclude();
     }
-//    qDebug()<<(mScannedFiles-mFilesShouldOnlyIncludeOnce);
+//    qDebug()<<"Files could repeat include:";
+//    foreach( const QString& fileName, mFilesCouldRepeatInclude) {
+//        qDebug()<<fileName;
+//    }
 }
 
 void CppPreprocessor::skipToPreprocessor()
@@ -2004,6 +2015,16 @@ int CppPreprocessor::evaluateExpression(QString line)
     if (skipSpaces(line,pos))
         return -1;
     return result;
+}
+
+bool CppPreprocessor::fileOnlyIncludeOnce() const
+{
+    return mFileOnlyIncludeOnce;
+}
+
+void CppPreprocessor::setFileOnlyIncludeOnce(bool newFileOnlyIncludeOnce)
+{
+    mFileOnlyIncludeOnce = newFileOnlyIncludeOnce;
 }
 
 

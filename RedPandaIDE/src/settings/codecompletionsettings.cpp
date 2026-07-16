@@ -72,6 +72,16 @@ void CodeCompletionSettings::setShareParser(bool newShareParser)
     mShareParser = newShareParser;
 }
 
+bool CodeCompletionSettings::includedHeaderFileOnlyParseOnce() const
+{
+    return mIncludedHeaderFileOnlyParseOnce;
+}
+
+void CodeCompletionSettings::setIncludedHeaderFileOnlyParseOnce(bool newIncludedHeaderFileOnlyParseOnce)
+{
+    mIncludedHeaderFileOnlyParseOnce = newIncludedHeaderFileOnlyParseOnce;
+}
+
 bool CodeCompletionSettings::hideSymbolsStartsWithUnderLine() const
 {
     return mHideSymbolsStartsWithUnderLine;
@@ -189,6 +199,7 @@ void CodeCompletionSettings::doSave()
     saveValue("hide_symbols_start_with_two_underline", mHideSymbolsStartsWithTwoUnderLine);
     saveValue("hide_symbols_start_with_underline", mHideSymbolsStartsWithUnderLine);
     saveValue("share_parser",mShareParser);
+    saveValue("included_header_file_only_parse_once",mIncludedHeaderFileOnlyParseOnce);
 }
 
 
@@ -208,6 +219,7 @@ void CodeCompletionSettings::doLoad()
     mMinCharRequired = intValue("min_char_required",1);
     mHideSymbolsStartsWithTwoUnderLine = boolValue("hide_symbols_start_with_two_underline", true);
     mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", true);
+    mIncludedHeaderFileOnlyParseOnce = boolValue("included_header_file_only_parse_once", false);
 
     bool shouldShare= true;
     mShareParser = boolValue("share_parser",shouldShare);

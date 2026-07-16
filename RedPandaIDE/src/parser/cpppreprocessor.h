@@ -135,6 +135,9 @@ public:
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
     static void combineLinesEndingWithBackslash(QStringList& text);
     static void replaceCommentsBySpaceChar(QStringList& text);
+    bool fileOnlyIncludeOnce() const;
+    void setFileOnlyIncludeOnce(bool newFileOnlyIncludeOnce);
+
 private:
 
     enum class BranchResult {
@@ -299,7 +302,7 @@ private:
 
     bool mFileJustOpenned;
     QString mFileIncludeOnceToken;
-    QSet<QString> mFilesShouldRepeatInclude;
+    QSet<QString> mFilesCouldRepeatInclude;
     //Result across processings.
     //used by parser even preprocess finished
     QHash<QString, PParsedFileInfo> mFileInfos;
@@ -324,6 +327,7 @@ private:
     bool mSupportCPP23;
 
     bool mStopForParserReset;
+    bool mFileOnlyIncludeOnce;
 
     GetFileStreamFunc mOnGetFileStream;
 };

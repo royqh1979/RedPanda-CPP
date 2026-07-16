@@ -38,6 +38,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="chkFileOnlyParseOnce">
+     <property name="text">
+      <string>Included files only parse once</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

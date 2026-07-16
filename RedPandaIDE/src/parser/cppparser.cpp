@@ -28,7 +28,7 @@
 
 //Enable debug log
 #ifdef QT_DEBUG
-#define PARSER_DEBUG_LOG
+//#define PARSER_DEBUG_LOG
 #endif
 
 #ifdef PARSER_DEBUG_LOG
@@ -55,6 +55,7 @@ CppParser::CppParser() : QObject{nullptr},
     updateSerialId();
     mUniqId = 0;
     mParsing = false;
+    mPreprocessor.setFileOnlyIncludeOnce(false);
     //mStatementList ; // owns the objects
     //mFilesToScan;
     //mIncludePaths;
@@ -100,6 +101,11 @@ CppParser::~CppParser()
 //    }
     resetParser();
     //qDebug()<<"-------- parser deleted ------------";
+}
+
+void CppParser::setFileOnlyIncludeOnce(bool includeOnce)
+{
+    mPreprocessor.setFileOnlyIncludeOnce(includeOnce);
 }
 
 void CppParser::addHardDefineByLine(const QString &line)

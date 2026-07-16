@@ -17,6 +17,7 @@
 #include "parser.h"
 #include "../parser/cppparser.h"
 #include "../settings/compilersetsettings.h"
+#include "../settings/codecompletionsettings.h"
 #include "../settings.h"
 #include "../mainwindow.h"
 
@@ -27,6 +28,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     // Configure parser
     parser->resetParser();
     parser->setEnabled(true);
+    parser->setFileOnlyIncludeOnce(pSettings->codeCompletion().includedHeaderFileOnlyParseOnce());
 
     // Set options depending on the current compiler set
     if (compilerSetIndex<0) {

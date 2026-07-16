@@ -36,12 +36,14 @@ void EnvironmentPerformanceWidget::doLoad()
     ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
     ui->chkEditorsShareParser->setChecked(pSettings->codeCompletion().shareParser());
     on_chkEditorsShareParser_stateChanged(false);
+    ui->chkFileOnlyParseOnce->setChecked(pSettings->codeCompletion().includedHeaderFileOnlyParseOnce());
 }
 
 void EnvironmentPerformanceWidget::doSave()
 {
     pSettings->codeCompletion().setClearWhenEditorHidden(ui->chkClearWhenEditorHidden->isChecked());
     pSettings->codeCompletion().setShareParser(ui->chkEditorsShareParser->isChecked());
+    pSettings->codeCompletion().setIncludedHeaderFileOnlyParseOnce(ui->chkFileOnlyParseOnce->isChecked());
 
     pSettings->codeCompletion().save();
     pSettings->editor().save();
