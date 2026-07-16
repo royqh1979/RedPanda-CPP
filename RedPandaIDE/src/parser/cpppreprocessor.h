@@ -303,6 +303,7 @@ private:
     bool mFileJustOpenned;
     QString mFileIncludeOnceToken;
     QSet<QString> mFilesCouldRepeatInclude;
+    QHash<QString, QStringList> mFileCache;
     //Result across processings.
     //used by parser even preprocess finished
     QHash<QString, PParsedFileInfo> mFileInfos;

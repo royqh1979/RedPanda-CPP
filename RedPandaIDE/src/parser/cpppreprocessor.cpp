@@ -78,6 +78,7 @@ void CppPreprocessor::clearTempResults()
     mFileJustOpenned = false;
     mFileIncludeOnceToken = "";
     mFilesCouldRepeatInclude.clear();
+    mFileCache.clear();
     mIncludeStack.clear(); // stack of files we've stepped into. last one is current file, first one is source file
     mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
     //mDefines.clear(); // working set, editable
@@ -845,14 +846,20 @@ void CppPreprocessor::openInclude(QString fileName)
     //if not Assigned(Stream) then
     mScannedFiles.insert(fileName);
 
-    // Only load up the file if we are allowed to parse it
-    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
-    if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
-        QStringList bufferedText;
-        if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
-            parsedFile->buffer  = bufferedText;
-        } else {
-            parsedFile->buffer = readFileToLines(fileName);
+    if (mFileCache.contains(fileName))
+        parsedFile->buffer = mFileCache.value(fileName);
+    else {
+        // Only load up the file if we are allowed to parse it
+        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
+        if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
+            QStringList bufferedText;
+            if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
+                parsedFile->buffer  = bufferedText;
+            } else {
+                parsedFile->buffer = readFileToLines(fileName);
+            }
+            combineLinesEndingWithBackslash(parsedFile->buffer);
+            replaceCommentsBySpaceChar(parsedFile->buffer);
         }
     }
     mIncludeStack.append(parsedFile);
@@ -860,8 +867,6 @@ void CppPreprocessor::openInclude(QString fileName)
     // Process it
     mIndex = parsedFile->index;
     mFileName = parsedFile->fileName;
-    combineLinesEndingWithBackslash(parsedFile->buffer);
-    replaceCommentsBySpaceChar(parsedFile->buffer);
     mBuffer = parsedFile->buffer;
 
 //    for (int i=0;i<mBuffer.count();i++) {
@@ -890,6 +895,9 @@ void CppPreprocessor::closeInclude()
 {
     if (mIncludeStack.isEmpty())
         return;
+    PParsedFile lastFile = mIncludeStack.back();
+    if (mFilesCouldRepeatInclude.contains(lastFile->fileName))
+        mFileCache.insert(lastFile->fileName, lastFile->buffer);
     mIncludeStack.pop_back();
 
     if (mIncludeStack.isEmpty())
