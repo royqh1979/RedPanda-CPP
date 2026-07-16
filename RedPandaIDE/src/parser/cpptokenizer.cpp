@@ -512,7 +512,7 @@ QString CppTokenizer::getWord()
         } else {
             //skip spaces
             skipToNextToken();
-            if (currentWord!="operator") {
+            if (currentWord!="operator" && currentWord != "auto") {
                 // Skip template contents, but keep template variable types
                 if (*mCurrent == '<') {
                     const QChar* offset = mCurrent;
