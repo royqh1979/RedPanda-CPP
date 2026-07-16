@@ -826,9 +826,9 @@ void CppPreprocessor::openInclude(QString fileName)
         addDefinesInFile(fileName);
         return;
     }
-    if (mFilesCouldRepeatInclude.contains(fileName)) {
-        qDebug()<<"++ "<<fileName;
-    }
+//    if (mFilesCouldRepeatInclude.contains(fileName)) {
+//        qDebug()<<"++ "<<fileName;
+//    }
     // Create and add new buffer/position
     PParsedFile parsedFile = std::make_shared<ParsedFile>();
     parsedFile->index = 0;
