@@ -1857,7 +1857,7 @@ bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
         if (!skipSpaces(expr,pos))
             break;
         if (expr[pos]=='&'
-                && (pos == expr.length()
+                && (pos+1 == expr.length()
                 || expr[pos+1]!='&')) {
             pos++;
             int rightResult;
@@ -1907,7 +1907,7 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
         if (!skipSpaces(expr,pos))
             break;
         if (expr[pos] == '|'
-                && (pos == expr.length()
+                && (pos+1 == expr.length()
                 || expr[pos+1]!='|')) {
             pos++;
             int rightResult;
