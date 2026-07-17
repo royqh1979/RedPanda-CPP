@@ -253,7 +253,7 @@ private:
     /*
      * 'A'..'Z', 'a'..'z', '_'
      */
-    static  bool isMacroIdentChar(const QChar& ch) { return ch.isLetter() || ch == '_'; }
+    static  bool isMacroIdentStartChar(const QChar& ch) { return ch.isLetter() || ch == '_'; }
 
     /*
      * '0'..'9'

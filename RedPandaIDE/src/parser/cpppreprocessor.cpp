@@ -1369,13 +1369,13 @@ QString CppPreprocessor::expandDefines(QString line)
     int searchPos = 0;
     while (searchPos < line.length()) {
         // We have found an identifier. It is not a number suffix. Try to expand it
-        if (isMacroIdentChar(line[searchPos]) && (
+        if (isMacroIdentStartChar(line[searchPos]) && (
                     (searchPos == 0) || !isDigit(line[searchPos - 1]))) {
             int head = searchPos;
             int tail = searchPos;
 
             // Get identifier name (numbers are allowed, but not at the start
-            while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[head])))
+            while ((tail < line.length()) && isWordChar(line[tail]))
                 tail++;
 //            qDebug()<<"1 "<<head<<tail<<line;
             QString name = line.mid(head,tail-head);
@@ -1400,11 +1400,11 @@ QString CppPreprocessor::expandDefines(QString line)
                 } else {
                     //none braced argument (next word)
                     defineStart = tail;
-                    if ((tail>=line.length()) || !isMacroIdentChar(line[defineStart])) {
+                    if ((tail>=line.length()) || !isWordChar(line[defineStart])) {
                         line = ""; // broken line
                         break;
                     }
-                    while ((tail < line.length()) && (isMacroIdentChar(line[tail]) || isDigit(line[tail])))
+                    while ((tail < line.length()) && isWordChar(line[tail]))
                         tail++;
                 }
 //                qDebug()<<"2 "<<defineStart<<tail<<line;
@@ -1590,23 +1590,23 @@ bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
     }
     bool ok;
 
-    if (s.endsWith("LL",Qt::CaseInsensitive)) {
-        s.remove(s.length()-2,2);
-        result = s.toLongLong(&ok);
-    } else if (s.endsWith("L",Qt::CaseInsensitive)) {
-        s.remove(s.length()-1,1);
-        result = s.toLong(&ok);
-    } else if (s.endsWith("ULL",Qt::CaseInsensitive)) {
-        s.remove(s.length()-3,3);
-        result = s.toULongLong(&ok);
+    if (s.endsWith("ULL",Qt::CaseInsensitive)) {
+        s.resize(s.length()-3);
+        result = s.toULongLong(&ok, 0);
     } else if (s.endsWith("UL",Qt::CaseInsensitive)) {
-        s.remove(s.length()-2,2);
-        result = s.toULong(&ok);
+        s.resize(s.length()-2);
+        result = s.toULong(&ok, 0);
+    } else if (s.endsWith("LL",Qt::CaseInsensitive)) {
+        s.resize(s.length()-2);
+        result = s.toLongLong(&ok, 0);
+    } else if (s.endsWith("L",Qt::CaseInsensitive)) {
+        s.resize(s.length()-1);
+        result = s.toLong(&ok, 0);
     } else if (s.endsWith("U",Qt::CaseInsensitive)) {
-        s.remove(s.length()-1,1);
-        result = s.toUInt(&ok);
+        s.resize(s.length()-1,1);
+        result = s.toUInt(&ok, 0);
     } else {
-        result = s.toInt(&ok);
+        result = s.toInt(&ok, 0);
     }
     return ok;
 }
