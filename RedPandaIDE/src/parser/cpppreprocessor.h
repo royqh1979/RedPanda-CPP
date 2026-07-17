@@ -50,7 +50,6 @@ class CppPreprocessor
 {
     enum class ContentType {
         AnsiCComment,
-        AnsiCCommentInDefine,
         CppComment,
         String,
         Character,

@@ -1127,14 +1127,11 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 {
     ContentType currentType = ContentType::Other;
     QString delimiter;
-    int blockCommentBegin = -1;
     for (int lineIdx = 0; lineIdx < text.length(); lineIdx++) {
         const QString& line = text[lineIdx];
         int pos = 0;
         int lineLen=line.length();
         int currentLineIdx = lineIdx;
-        bool isDefineLine = (currentType == ContentType::AnsiCCommentInDefine)
-                || ((currentType == ContentType::Other) && line.startsWith("#"));
         QString s;
         s.reserve(line.length());
         // String & Char Literal can't to next line
@@ -1143,21 +1140,12 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                 || currentType ==  ContentType::EscapeSequence)
             currentType = ContentType::Other;
         // Really treat Ansi C Style Comment as a space (and merge lines) only when it's used to define macros.
-        if (currentType == ContentType::AnsiCCommentInDefine) {
-            Q_ASSERT(blockCommentBegin>=0);
-            Q_ASSERT(lineIdx>=blockCommentBegin);
-            currentLineIdx = blockCommentBegin;
-            s = text[blockCommentBegin];
-        }
         while (pos<lineLen) {
             QChar ch =line[pos];
-            if (currentType == ContentType::AnsiCComment || currentType == ContentType::AnsiCCommentInDefine) {
+            if (currentType == ContentType::AnsiCComment) {
                 if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                     pos+=2;
                     currentType = ContentType::Other;
-                    Q_ASSERT(blockCommentBegin>=0);
-                    Q_ASSERT(lineIdx>=blockCommentBegin);
-                    blockCommentBegin = -1;
                 } else {
                     pos+=1;
                 }
@@ -1233,8 +1221,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                         /* ansi c comment */
                         s+=' '; // replace comments with a space
                         pos++;
-                        currentType = (isDefineLine)?ContentType::AnsiCCommentInDefine:ContentType::AnsiCComment;
-                        blockCommentBegin = currentLineIdx;
+                        currentType = ContentType::AnsiCComment;
                         break;
                     }
                 }
