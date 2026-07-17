@@ -1361,87 +1361,98 @@ bool CppPreprocessor::isNumberChar(const QChar &ch)
 bool CppPreprocessor::evaluateIf(const QString &line)
 {
     QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
+    //qDebug()<<newLine<<line;
     return  evaluateExpression(newLine);
 }
 
 QString CppPreprocessor::expandDefines(QString line)
 {
+    QString newLine;
     int searchPos = 0;
+    int lineLen = line.length();
+    QSet<QString> usedMacros;
     while (searchPos < line.length()) {
+        QChar ch = line[searchPos];
         // We have found an identifier. It is not a number suffix. Try to expand it
         if (isMacroIdentStartChar(line[searchPos]) && (
                     (searchPos == 0) || !isDigit(line[searchPos - 1]))) {
             int head = searchPos;
-            int tail = searchPos;
 
             // Get identifier name (numbers are allowed, but not at the start
-            while ((tail < line.length()) && isWordChar(line[tail]))
-                tail++;
-//            qDebug()<<"1 "<<head<<tail<<line;
-            QString name = line.mid(head,tail-head);
-            int nameStart = head;
-            int nameEnd = tail;
-
-            if (name == "defined") {
+            while ((searchPos < line.length()) && isWordChar(line[searchPos]))
+                searchPos++;
+            QStringView name(line.constData()+head, searchPos-head);
+            if (name == QLatin1String("defined")) {
                 //expand define
-                //tail = searchPos + name.length();
-                while ((tail < line.length()) && isSpaceChar(line[tail]))
-                    tail++; // skip spaces
-                int defineStart;
-
+                // skip spaces
+                while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
+                    searchPos++;
                 // Skip over its arguments
-                if ((tail < line.length()) && (line[tail]=='(')) {
+                if ((searchPos < lineLen) && (line[searchPos]=='(')) {
+                    searchPos++; // skip '(';
                     //braced argument (next word)
-                    defineStart = tail+1;
-                    if (!skipParenthesis(line, tail)) {
-                        line = ""; // broken line
-                        break;
-                    }
+                    // skip spaces
+                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
+                        searchPos++;
+                    if (searchPos>=lineLen)
+                        return "";
+                    int defineStart = searchPos;
+                    while ((searchPos < lineLen) && isWordChar(line[searchPos]))
+                        searchPos++;
+                    name = QStringView(line.constData()+defineStart, searchPos-defineStart);
+                    // skip spaces
+                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
+                        searchPos++;
+                    if (searchPos>=lineLen || line[searchPos]!=')')
+                        return "";
+                    searchPos++; // skip ')'
                 } else {
                     //none braced argument (next word)
-                    defineStart = tail;
-                    if ((tail>=line.length()) || !isWordChar(line[defineStart])) {
-                        line = ""; // broken line
-                        break;
-                    }
-                    while ((tail < line.length()) && isWordChar(line[tail]))
-                        tail++;
+                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
+                        searchPos++;
+                    if (searchPos>=lineLen)
+                        return "";
+                    int defineStart = searchPos;
+                    while ((searchPos < lineLen) && isWordChar(line[searchPos]))
+                        searchPos++;
+                    name = QStringView(line.constData()+defineStart, searchPos-defineStart);
                 }
-//                qDebug()<<"2 "<<defineStart<<tail<<line;
-                name = line.mid(defineStart, tail - defineStart);
-                PDefine define = getDefine(name);
+
+                PDefine define = getDefine(name.toString());
                 QString insertValue;
                 if (!define) {
                     insertValue = "0";
                 } else {
                     insertValue = "1";
                 }
-                // Insert found value at place
-                line.remove(searchPos, tail-searchPos+1);
-                line.insert(searchPos,insertValue);
-            } else if ((name == "and") || (name == "or")) {
-                searchPos = tail; // Skip logical operators
+                newLine += insertValue;
+            } else if (name == QLatin1String("and")) {
+                newLine += "&&";
+            } else if (name == QLatin1String("or")) {
+                newLine += "||";
             }  else {
                  // We have found a regular define. Replace it by its value
                 // Does it exist in the database?
-                PDefine define = getDefine(name);
+                PDefine define = getDefine(name.toString());
                 QString insertValue;
                 if (!define) {
                     insertValue = "0";
                 } else {
-                    while ((tail < line.length()) && isSpaceChar(line[tail]))
-                        tail++;// skip spaces
+                    // skip spaces
+                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
+                        searchPos++;
                     // It is a function. Expand arguments
-                    if ((tail < line.length()) && (line[tail] == '(')) {
-                        head=tail;
-                        if (skipParenthesis(line, tail)) {
-                            if (name == "__has_builtin") {
+                    if ((searchPos < lineLen) && (line[searchPos] == '(')) {
+                        int argHead=searchPos+1;
+                        if (skipParenthesis(line, searchPos)) {
+                            if (name == QLatin1String("__has_builtin")) {
                                 insertValue = "0";
                             } else {
-                                QString args = line.mid(head+1,tail-head-1);
-                                insertValue = expandFunctionLikeMacro(define,args, QSet<QString>());
+                                QString args = line.mid(argHead,searchPos-argHead);
+                                insertValue = expandFunctionLikeMacro(define,args, usedMacros);
+                                usedMacros.insert(define->name);
                             }
-                            nameEnd = tail+1;
+                            searchPos++; //skip ')'
                         } else {
                             line = "";// broken line
                             break;
@@ -1454,15 +1465,34 @@ QString CppPreprocessor::expandDefines(QString line)
                             insertValue = "0";
                     }
                 }
-                // Insert found value at place
-                line.remove(nameStart, nameEnd - nameStart);
-                line.insert(searchPos,insertValue);
+                bool isNumber=false;
+                if (insertValue.length()==0)
+                    isNumber=true;
+                else if (isDigit(insertValue[0])){
+                    isNumber=true;
+                    for(int i=1;i<insertValue.length();i++)
+                        if (!isNumberChar(insertValue[i])) {
+                            isNumber = false;
+                            break;
+                        }
+                }
+                if (isNumber) {
+                    newLine += insertValue;
+                } else {
+                    // Insert found value at place
+                    //qDebug()<<"reparsed!"<<insertValue<<name;
+                    line.replace(head, searchPos-head, insertValue);
+                    searchPos = head;
+                    continue;
+                }
+
             }
         } else {
             searchPos ++ ;
+            newLine += ch;
         }
     }
-    return line;
+    return newLine;
 }
 
 bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
