@@ -161,7 +161,7 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
    ```
 2. 构建：
    ```bash
-   cmake --build build -- --parallel
+   cmake --build build --parallel
    ```
 3. 安装：
    ```bash
