@@ -322,27 +322,27 @@ QStringList readFileToLines(const QString &fileName)
     QStringList result;
     if (file.open(QFile::ReadOnly)) {
         bool ok;
-        result = tryLoadFileByEncoding("UTF-8",file,&ok);
+        result = tryLoadFileByEncoding(ENCODING_UTF8,file,&ok);
         if (ok) {
             return result;
         }
 
-        QByteArray realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
-        result = tryLoadFileByEncoding(realEncoding,file,&ok);
-        if (ok) {
-            return result;
+        QByteArray defaultEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        if (defaultEncoding!=ENCODING_UTF8) {
+            result = tryLoadFileByEncoding(defaultEncoding,file,&ok);
+            if (ok) {
+                return result;
+            }
         }
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
-            QSet<QString> encodingSet;
             for (int i=0;i<charsets.size();i++) {
-                encodingSet.insert(charsets[i]->name);
-            }
-            encodingSet.remove(realEncoding);
-            foreach (const QString& encodingName,encodingSet) {
+                QByteArray encodingName = charsets[i]->name;
                 if (encodingName == ENCODING_UTF8)
                     continue;
-                result = tryLoadFileByEncoding("UTF-8",file,&ok);
+                if (encodingName == defaultEncoding)
+                    continue;
+                result = tryLoadFileByEncoding(encodingName,file,&ok);
                 if (ok) {
                     return result;
                 }
