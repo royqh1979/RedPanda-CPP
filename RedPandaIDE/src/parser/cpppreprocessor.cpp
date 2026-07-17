@@ -574,7 +574,8 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
                     foreach(const QString& name, macrosUsed) {
                         tempIngoreMacros.insert(wordStart+newWord.length(), name);
                     }
-                    text = text.left(wordStart)+newWord+text.mid(i);
+                    text.replace(wordStart, i-wordStart, newWord);
+                    //text = text.left(wordStart)+newWord+text.mid(i);
                     i = wordStart;
                     lenLine = text.length();
                     word = "";
