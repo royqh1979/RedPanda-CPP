@@ -75,6 +75,7 @@ target("RedPandaIDE")
 
     add_files(
         "src/autolinkmanager.cpp",
+        "src/autoupdater.cpp",
         "src/colorscheme.cpp",
         "src/customfileiconprovider.cpp",
         "src/projectoptions.cpp",

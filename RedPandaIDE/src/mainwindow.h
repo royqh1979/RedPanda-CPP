@@ -958,6 +958,7 @@ private:
     QString mClassBrowserCurrentStatement;
     QString mFilesViewNewCreatedFolder;
     QString mFilesViewNewCreatedFile;
+    QPersistentModelIndex mFilesViewClickedIndex;
 
     bool mCheckSyntaxInBack;
     bool mShouldRemoveAllSettings;
