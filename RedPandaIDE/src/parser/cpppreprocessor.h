@@ -136,6 +136,8 @@ public:
     static void replaceCommentsBySpaceChar(QStringList& text);
     bool fileOnlyIncludeOnce() const;
     void setFileOnlyIncludeOnce(bool newFileOnlyIncludeOnce);
+    bool evaluateIf(const QString& line) const;
+    QString expandMacrosInConditioningExpression(QString line) const;
 
 private:
 
@@ -267,8 +269,6 @@ private:
 
     QString lineBreak() { return "\n"; }
 
-    bool evaluateIf(const QString& line) const;
-    QString expandMacrosInConditioningExpression(QString line) const;
     bool skipParenthesis(const QString&line, int& index, int step = 1) const;
     bool skipSpaces(const QString &expr, int& pos) const;
     bool evalNumber(const QString &expr, int& result, int& pos) const;
@@ -284,9 +284,10 @@ private:
     bool evalBitOrExpr(const QString &expr, int& result, int& pos) const;
     bool evalLogicAndExpr(const QString &expr, int& result, int& pos) const;
     bool evalLogicOrExpr(const QString &expr, int& result, int& pos) const;
+    bool evalConnditionalExpr(const QString &expr, int& result, int& pos) const;
     bool evalExpr(const QString &expr, int& result, int& pos) const;
 
-    int evaluateExpression(QString line) const;
+    bool evaluateExpression(QString line) const;
 private:
     //temporary data when preprocessing single file
     int mIndex; // points to current file buffer.
