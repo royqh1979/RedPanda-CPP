@@ -119,7 +119,7 @@ void TestCppPreprocessor::test_macro_replace_8()
     QCOMPARE(text1,text2);
 }
 
-void TestCppPreprocessor::test_expand_constant_expression_1()
+void TestCppPreprocessor::test_replace_macros_in_constant_expression_1()
 {
     CppPreprocessor preprocessor;
     preprocessor.addHardDefineByLine("#define __cplusplus 201703L");
@@ -130,7 +130,7 @@ void TestCppPreprocessor::test_expand_constant_expression_1()
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("__cplusplus"),
              "201703L");
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("__cplusplus > 201703L"),
-             "201703L> 201703L");
+             "201703L > 201703L");
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined(__cplusplus)"),
              "1");
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined __cplusplus"),
@@ -144,6 +144,19 @@ void TestCppPreprocessor::test_expand_constant_expression_1()
              "0");
 
 
+}
+
+void TestCppPreprocessor::test_replace_macros_in_constant_expression_2()
+{
+    CppPreprocessor preprocessor;
+    preprocessor.addHardDefineByLine("#define EMPTY");
+    preprocessor.addHardDefineByLine("#define SCAN(x)     x");
+    preprocessor.addHardDefineByLine("#define EXAMPLE_()  EXAMPLE");
+    preprocessor.addHardDefineByLine("#define EXAMPLE(n)  EXAMPLE_ EMPTY()(n-1) (n)");
+    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("EXAMPLE(5)"),
+             "EXAMPLE_ ()(5-1) (5)");
+//    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("SCAN(EXAMPLE(5))"),
+//             "EXAMPLE_ ()(5-1-1) (5-1) (5)");
 }
 
 void TestCppPreprocessor::test_evaluate_constant_expression_1()

@@ -1451,9 +1451,9 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                  // We have found a regular define. Replace it by its value
                 // Does it exist in the database?
                 PDefine define = getDefine(name.toString());
-                QString insertValue;
                 if (!define) {
-                    newLine += "0";
+                    newLine += name;
+                    continue;
                 } else {
                     QSet<QString> macrosToBeIgnored;
                     auto it = usedMacros.begin();
@@ -1468,57 +1468,71 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                         newLine += name;
                         continue;
                     }
+                    QString insertValue;
+                    bool needSpace = (searchPos<lineLen) && isSpaceChar(line[searchPos]);
                     skipSpaces(line, searchPos);
                     // It is a function. Expand arguments
                     if ((searchPos < lineLen) && (line[searchPos] == '(')) {
-                        searchPos++; // skip '('
-                        int argHead=searchPos;
-                        if (skipParenthesis(line, searchPos)) {
-                            QString args = line.mid(argHead,searchPos-argHead);
-                            if (!macrosToBeIgnored.contains(define->name)) {
-                                insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored);
-                            }
-                            searchPos++; //skip ')'
-                        } else {
-                            line = "";// broken line
-                            break;
-                        }
-                        // Replace regular define
-                    } else {
-                        if (!define->value.isEmpty())
+                        if (define->args.isEmpty()) {
                             insertValue = define->value;
+                        } else {
+                            searchPos++; // skip '('
+                            int argHead=searchPos;
+                            if (skipParenthesis(line, searchPos)) {
+                                QString args = line.mid(argHead,searchPos-argHead);
+                                insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored);
+                                searchPos++; //skip ')'
+                            } else {
+                                line = "";// ill-formed
+                                break;
+                            }
+                        }
+                    } else {
+                        if (!define->args.isEmpty()) {
+                            // macro has (), should not replace
+                            newLine += name;
+                            if (needSpace)
+                                newLine += " ";
+                            continue;
+                        } else {
+                            // Replace regular define
+                            insertValue = define->value;
+                        }
+                    }
+                    bool isNumber=false;
+                    if (insertValue.length()==0)
+                        isNumber=true;
+                    else if (isDigit(insertValue[0])){
+                        isNumber=true;
+                        for(int i=1;i<insertValue.length();i++)
+                            if (!isNumberChar(insertValue[i])) {
+                                isNumber = false;
+                                break;
+                            }
+                    }
+                    if (needSpace)
+                        insertValue+=" ";
+                    if (isNumber) {
+                        newLine += insertValue;
+                    } else {
+                        // Insert found value at place
+                        //qDebug()<<"reparsed!"<<insertValue<<name;
+                        line = insertValue + line.mid(searchPos);
+                        lineLen = line.length();
+                        QMultiHash tempMacros=usedMacros;
+                        usedMacros.clear();
+                        auto it = tempMacros.begin();
+                        while (it!=tempMacros.end()) {
+                            if (it.key()>searchPos) {
+                                usedMacros.insert(it.key()-searchPos,it.value());
+                            }
+                            ++it;
+                        }
+                        searchPos = 0;
+                        usedMacros.insert(insertValue.length(), define->name);
                     }
                 }
-                bool isNumber=false;
-                if (insertValue.length()==0)
-                    isNumber=true;
-                else if (isDigit(insertValue[0])){
-                    isNumber=true;
-                    for(int i=1;i<insertValue.length();i++)
-                        if (!isNumberChar(insertValue[i])) {
-                            isNumber = false;
-                            break;
-                        }
-                }
-                if (isNumber) {
-                    newLine += insertValue;
-                } else {
-                    // Insert found value at place
-                    //qDebug()<<"reparsed!"<<insertValue<<name;
-                    line = insertValue + line.mid(searchPos);
-                    lineLen = line.length();
-                    QMultiHash tempMacros=usedMacros;
-                    usedMacros.clear();
-                    auto it = tempMacros.begin();
-                    while (it!=tempMacros.end()) {
-                        if (it.key()<=searchPos) {
-                            usedMacros.insert(it.key()-searchPos,it.value());
-                        }
-                        ++it;
-                    }
-                    searchPos = 0;
-                    usedMacros.insert(insertValue.length(), define->name);
-                }
+
             }
         } else {
             searchPos ++ ;
@@ -1645,6 +1659,8 @@ bool CppPreprocessor::skipSpaces(const QString &expr, int &pos) const
 bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
+        return false;
+    if (!isDigit(expr[pos]))
         return false;
     QString s;
     while (pos<expr.length() && isNumberChar(expr[pos])) {
