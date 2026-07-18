@@ -534,8 +534,6 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
     while (i<lenLine) {
         QChar ch;
         if (!lastWordNotProcessed) {
-            for(int t=prevI;t<i;t++)
-                tempIngoreMacros.remove(t);
             prevI = i;
             ch=text[i];
         } else {
@@ -557,18 +555,23 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
             if (!word.isEmpty()) {
                 QSet<QString> macrosUsed;
                 QSet<QString> ignores=macrosToBeIgnored;
-                foreach(const QString& name, tempIngoreMacros)
-                    ignores.insert(name);
+                auto it = tempIngoreMacros.begin();
+                while(it!=tempIngoreMacros.end()) {
+                    if (it.key()>=i)
+                        ignores.insert(it.value());
+                    ++it;
+                }
                 QString newWord = expandMacro(text,word,i, handleBuffer,ignores,macrosUsed);
                 if (!macrosUsed.isEmpty()) {
                     //adjust ignore macro list
                     QMultiHash<int,QString> tempMacros2 = tempIngoreMacros;
                     tempIngoreMacros.clear();
                     int diff = newWord.length()-word.length();
-                    foreach(int idx, tempMacros2.uniqueKeys()) {
-                        QList<QString> names = tempMacros2.values(idx);
-                        foreach(const QString& name, names)
-                            tempIngoreMacros.insert(idx+diff,name);
+                    auto it = tempMacros2.begin();
+                    while(it!=tempMacros2.end()) {
+                        if (it.key()>=i)
+                            tempIngoreMacros.insert(it.key()+diff, it.value());
+                        ++it;
                     }
                     //rescan (see ISO/IEC 9899:1999 6.10.3.4 Rescanning and futher replacement)
                     foreach(const QString& name, macrosUsed) {
