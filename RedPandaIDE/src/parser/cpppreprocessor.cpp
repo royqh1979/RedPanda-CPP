@@ -519,7 +519,7 @@ void CppPreprocessor::handlePragma(const QString &tokens)
         mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
 }
 
-QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSet<QString> macrosToBeIgnored)
+QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSet<QString>& macrosToBeIgnored)
 {
     QString newLine;
     ContentType currentType = ContentType::Other;
@@ -657,6 +657,12 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
         i++;
     }
     return newLine;
+}
+
+QString CppPreprocessor::expandMacros(QString text, const QSet<QString>& macrosToBeIgnored) const
+{
+    QSet<QString> dummySet;
+    return const_cast<CppPreprocessor*>(this)->expandMacros(text, false, macrosToBeIgnored);
 }
 
 QString CppPreprocessor::expandMacro(QString &text, const QString &word, int &i, bool handleBuffer, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed){
@@ -1346,58 +1352,51 @@ bool CppPreprocessor::isNumberChar(const QChar &ch)
     }
 }
 
-bool CppPreprocessor::evaluateIf(const QString &line)
+bool CppPreprocessor::evaluateIf(const QString &line) const
 {
-    QString newLine = expandDefines(line); // replace FOO by numerical value of FOO
-    //qDebug()<<newLine<<line;
-    return  evaluateExpression(newLine);
+    QString newLine = expandMacrosInConditioningExpression(line); // replace FOO by numerical value of FOO
+    bool result = evaluateExpression(newLine);
+    //qDebug()<<newLine<<line<<result;
+    return  result;
 }
 
-QString CppPreprocessor::expandDefines(QString line)
+QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) const
 {
     QString newLine;
     int searchPos = 0;
     int lineLen = line.length();
-    QSet<QString> usedMacros;
+    QMultiHash<int, QString> usedMacros;
     while (searchPos < line.length()) {
         QChar ch = line[searchPos];
         // We have found an identifier. It is not a number suffix. Try to expand it
         if (isMacroIdentStartChar(line[searchPos]) && (
                     (searchPos == 0) || !isDigit(line[searchPos - 1]))) {
             int head = searchPos;
-
             // Get identifier name (numbers are allowed, but not at the start
             while ((searchPos < line.length()) && isWordChar(line[searchPos]))
                 searchPos++;
             QStringView name(line.constData()+head, searchPos-head);
             if (name == QLatin1String("defined")) {
                 //expand define
-                // skip spaces
-                while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
-                    searchPos++;
+                skipSpaces(line, searchPos);
                 // Skip over its arguments
                 if ((searchPos < lineLen) && (line[searchPos]=='(')) {
                     searchPos++; // skip '(';
                     //braced argument (next word)
-                    // skip spaces
-                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
-                        searchPos++;
-                    if (searchPos>=lineLen)
+                    skipSpaces(line, searchPos);
+                    if (searchPos>=lineLen) //ill-formed
                         return "";
                     int defineStart = searchPos;
                     while ((searchPos < lineLen) && isWordChar(line[searchPos]))
                         searchPos++;
                     name = QStringView(line.constData()+defineStart, searchPos-defineStart);
-                    // skip spaces
-                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
-                        searchPos++;
-                    if (searchPos>=lineLen || line[searchPos]!=')')
+                    skipSpaces(line, searchPos);
+                    if (searchPos>=lineLen || line[searchPos]!=')')  //ill-formed
                         return "";
                     searchPos++; // skip ')'
                 } else {
                     //none braced argument (next word)
-                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
-                        searchPos++;
+                    skipSpaces(line, searchPos);
                     if (searchPos>=lineLen)
                         return "";
                     int defineStart = searchPos;
@@ -1414,6 +1413,30 @@ QString CppPreprocessor::expandDefines(QString line)
                     insertValue = "1";
                 }
                 newLine += insertValue;
+            } else if (name == QLatin1String("__has_include")) {
+                //expand define
+                skipSpaces(line, searchPos);
+                // Skip over its arguments
+                if ((searchPos < lineLen) && (line[searchPos]=='(')) {
+                    int argHead=searchPos+1;
+                    if (!skipParenthesis(line, searchPos)) // ill-formed;
+                        return "";
+                    QString args = line.mid(argHead,searchPos-argHead).trimmed();
+                    searchPos++; // skip ')';
+                    Q_ASSERT(!mIncludeStack.isEmpty());
+                    if (!args.startsWith('<') && !args.startsWith('\"'))
+                        args = expandMacros(args);
+
+                    QString fileName = getHeaderFilename(
+                            mCurrentFileInfo->fileName(),
+                            args,
+                            mIncludePathList,
+                            mProjectIncludePathList);
+                    newLine += (mIncludeStack.front()->fileInfo->including(fileName))?"1":"0";
+                } else {
+                    // ill-formed
+                    return "";
+                }
             } else if (name == QLatin1String("and")) {
                 newLine += "&&";
             } else if (name == QLatin1String("or")) {
@@ -1424,21 +1447,29 @@ QString CppPreprocessor::expandDefines(QString line)
                 PDefine define = getDefine(name.toString());
                 QString insertValue;
                 if (!define) {
-                    insertValue = "0";
+                    newLine += "0";
                 } else {
-                    // skip spaces
-                    while ((searchPos < lineLen) && isSpaceChar(line[searchPos]))
-                        searchPos++;
+                    QSet<QString> macrosToBeIgnored;
+                    auto it = usedMacros.begin();
+                    while (it!=usedMacros.end()) {
+                        if (it.key()>=searchPos) {
+                            macrosToBeIgnored.insert(it.value());
+                        }
+                        ++it;
+                    }
+
+                    if (macrosToBeIgnored.contains(define->name)) {
+                        newLine += name;
+                        continue;
+                    }
+                    skipSpaces(line, searchPos);
                     // It is a function. Expand arguments
                     if ((searchPos < lineLen) && (line[searchPos] == '(')) {
                         int argHead=searchPos+1;
                         if (skipParenthesis(line, searchPos)) {
-                            if (name == QLatin1String("__has_builtin")) {
-                                insertValue = "0";
-                            } else {
-                                QString args = line.mid(argHead,searchPos-argHead);
-                                insertValue = expandFunctionLikeMacro(define,args, usedMacros);
-                                usedMacros.insert(define->name);
+                            QString args = line.mid(argHead,searchPos-argHead);
+                            if (!macrosToBeIgnored.contains(define->name)) {
+                                insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored);
                             }
                             searchPos++; //skip ')'
                         } else {
@@ -1449,8 +1480,6 @@ QString CppPreprocessor::expandDefines(QString line)
                     } else {
                         if (!define->value.isEmpty())
                             insertValue = define->value;
-                        else
-                            insertValue = "0";
                     }
                 }
                 bool isNumber=false;
@@ -1469,11 +1498,19 @@ QString CppPreprocessor::expandDefines(QString line)
                 } else {
                     // Insert found value at place
                     //qDebug()<<"reparsed!"<<insertValue<<name;
-                    line.replace(head, searchPos-head, insertValue);
-                    searchPos = head;
-                    continue;
+                    line = insertValue + line.mid(searchPos);
+                    QMultiHash tempMacros=usedMacros;
+                    usedMacros.clear();
+                    auto it = tempMacros.begin();
+                    while (it!=tempMacros.end()) {
+                        if (it.key()<=searchPos) {
+                            usedMacros.insert(it.key()-searchPos,it.value());
+                        }
+                        ++it;
+                    }
+                    searchPos = 0;
+                    usedMacros.insert(insertValue.length(), define->name);
                 }
-
             }
         } else {
             searchPos ++ ;
@@ -1483,7 +1520,7 @@ QString CppPreprocessor::expandDefines(QString line)
     return newLine;
 }
 
-bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
+bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step) const
 {
     int level = 0;
     while ((index >= 0) && (index < line.length())) { // Find the corresponding opening brace
@@ -1499,7 +1536,7 @@ bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
     return false;
 }
 
-QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &args, const QSet<QString> &macrosToBeIgnored)
+QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &args, const QSet<QString> &macrosToBeIgnored) const
 {
     // Replace function by this string
     QString result = define->formatValue;
@@ -1571,12 +1608,12 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
                 if (define->varArgIndex != -1
                      && i >= define->varArgIndex ) {
                     if (!define->argNotExpand[define->varArgIndex])
-                        argValue = expandMacros(argValue,false,macrosToBeIgnored);
+                        argValue = expandMacros(argValue,macrosToBeIgnored);
                     varArgs.append(argValue.trimmed());
                 } else if (i<define->argUsed.length()
                             && define->argUsed[i]) {                    
                     if (!define->argNotExpand[i])
-                        argValue = expandMacros(argValue,false,macrosToBeIgnored);
+                        argValue = expandMacros(argValue,macrosToBeIgnored);
                     result=result.arg(argValue.trimmed());
                 }
             }
@@ -1590,14 +1627,14 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
     return result;
 }
 
-bool CppPreprocessor::skipSpaces(const QString &expr, int &pos)
+bool CppPreprocessor::skipSpaces(const QString &expr, int &pos) const
 {
     while (pos<expr.length() && isSpaceChar(expr[pos]))
         pos++;
     return pos<expr.length();
 }
 
-bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1629,7 +1666,7 @@ bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos)
     return ok;
 }
 
-bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1655,7 +1692,7 @@ bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos)
      | '!' term
      | '~' term
  */
-bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1690,7 +1727,7 @@ bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos)
      | mul_expr '/' unary_expr
      | mul_expr '%' unary_expr
  */
-bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalUnaryExpr(expr,result,pos))
         return false;
@@ -1731,7 +1768,7 @@ bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos)
      | add_expr '+' mul_expr
      | add_expr '-' mul_expr
  */
-bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalMulExpr(expr,result,pos))
         return false;
@@ -1761,7 +1798,7 @@ bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos)
      | shift_expr "<<" add_expr
      | shift_expr ">>" add_expr
  */
-bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalAddExpr(expr,result,pos))
         return false;
@@ -1793,7 +1830,7 @@ bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos)
      | relation_expr "<=" shift_expr
      | relation_expr "<" shift_expr
  */
-bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalShiftExpr(expr,result,pos))
         return false;
@@ -1837,7 +1874,7 @@ bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &po
      | equal_expr "==" relation_expr
      | equal_expr "!=" relation_expr
  */
-bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalRelationExpr(expr,result,pos))
         return false;
@@ -1867,7 +1904,7 @@ bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos)
  * bit_and_expr = equal_expr
      | bit_and_expr "&" equal_expr
  */
-bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalEqualExpr(expr,result,pos))
         return false;
@@ -1893,7 +1930,7 @@ bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
  * bit_xor_expr = bit_and_expr
      | bit_xor_expr "^" bit_and_expr
  */
-bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalBitAndExpr(expr,result,pos))
         return false;
@@ -1917,7 +1954,7 @@ bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
  * bit_or_expr = bit_xor_expr
      | bit_or_expr "|" bit_xor_expr
  */
-bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalBitXorExpr(expr,result,pos))
         return false;
@@ -1943,7 +1980,7 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos)
  * logic_and_expr = bit_or_expr
     | logic_and_expr "&&" bit_or_expr
  */
-bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalBitOrExpr(expr,result,pos))
         return false;
@@ -1952,6 +1989,8 @@ bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &po
             break;
         if (pos+1<expr.length() && expr[pos]=='&' && expr[pos+1] =='&') {
             pos+=2;
+            if (!result)  // short-circuiting
+                return true;
             int rightResult;
             if (!evalBitOrExpr(expr,rightResult,pos))
                 return false;
@@ -1967,7 +2006,7 @@ bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &po
  * logic_or_expr = logic_and_expr
     | logic_or_expr "||" logic_and_expr
  */
-bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos) const
 {
     if (!evalLogicAndExpr(expr,result,pos))
         return false;
@@ -1976,6 +2015,8 @@ bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos
             break;
         if (pos+1<expr.length() && expr[pos]=='|' && expr[pos+1] =='|') {
             pos+=2;
+            if (result) // short-circuiting
+                return true;
             int rightResult;
             if (!evalLogicAndExpr(expr,rightResult,pos))
                 return false;
@@ -1987,7 +2028,7 @@ bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos
     return true;
 }
 
-bool CppPreprocessor::evalExpr(const QString &expr, int &result, int &pos)
+bool CppPreprocessor::evalExpr(const QString &expr, int &result, int &pos) const
 {
     return evalLogicOrExpr(expr,result,pos);
 }
@@ -2030,7 +2071,7 @@ logic_or_expr = logic_and_expr
     | logic_or_expr "||" logic_and_expr
     */
 
-int CppPreprocessor::evaluateExpression(QString line)
+int CppPreprocessor::evaluateExpression(QString line) const
 {
     int pos = 0;
     int result;
