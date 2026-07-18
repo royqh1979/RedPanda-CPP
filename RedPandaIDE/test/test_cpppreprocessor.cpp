@@ -155,8 +155,8 @@ void TestCppPreprocessor::test_replace_macros_in_constant_expression_2()
     preprocessor.addHardDefineByLine("#define EXAMPLE(n)  EXAMPLE_ EMPTY()(n-1) (n)");
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("EXAMPLE(5)"),
              "EXAMPLE_ ()(5-1) (5)");
-//    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("SCAN(EXAMPLE(5))"),
-//             "EXAMPLE_ ()(5-1-1) (5-1) (5)");
+    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("SCAN(EXAMPLE(5))"),
+             "EXAMPLE_ ()(5-1-1) (5-1)  (5)");
 }
 
 void TestCppPreprocessor::test_evaluate_constant_expression_1()

@@ -1524,7 +1524,7 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                         auto it = tempMacros.begin();
                         while (it!=tempMacros.end()) {
                             if (it.key()>searchPos) {
-                                usedMacros.insert(it.key()-searchPos,it.value());
+                                usedMacros.insert(it.key()-searchPos+insertValue.length(),it.value());
                             }
                             ++it;
                         }
