@@ -683,7 +683,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         //code
         ui->actionReformat_Code->setEnabled(false);
-
+        ui->actionReparse_Code->setEnabled(false);
         ui->actionClose->setEnabled(false);
         ui->actionClose_All->setEnabled(false);
         ui->actionClose_Others->setEnabled(false);
@@ -770,6 +770,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         //code
         ui->actionReformat_Code->setEnabled(isCFile(e->filename()) || isHFile(e->filename()));
+        ui->actionReparse_Code->setEnabled(e->inProject() || isCFile(e->filename()) || isHFile(e->filename()));
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
@@ -10807,5 +10808,23 @@ OJProblemModel *MainWindow::getOJProblemModel() const
 OJProblemSetModel *MainWindow::getOJProblemSetModel() const
 {
     return mOJProblemSetModel;
+}
+
+
+void MainWindow::on_actionReparse_Code_triggered()
+{
+    Editor * e = mEditorManager->getEditor();
+    if (!e) {
+        if (mProject && mProject->cppParser()) {
+            scanActiveProject(true);
+        }
+    } else {
+        if (mProject && e->inProject())
+            scanActiveProject(true);
+        else if (e->parser()){
+            resetCppParser(e->parser());
+            e->reparse();
+        }
+    }
 }
 

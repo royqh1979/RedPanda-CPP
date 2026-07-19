@@ -4461,12 +4461,12 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="+14"/>
-        <location filename="../src/mainwindow.cpp" line="+1469"/>
+        <location filename="../src/mainwindow.cpp" line="+1470"/>
         <source>Red Panda C++</source>
         <translation>Red Panda C++</translation>
     </message>
     <message>
-        <location line="+512"/>
+        <location line="+513"/>
         <location line="+2257"/>
         <source>Files</source>
         <translation>Arquivos</translation>
@@ -4553,12 +4553,12 @@
         <location line="+1258"/>
         <location line="+3"/>
         <location line="+502"/>
-        <location filename="../src/mainwindow.cpp" line="-8041"/>
+        <location filename="../src/mainwindow.cpp" line="-8042"/>
         <location line="+1"/>
         <location line="+1"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+7534"/>
+        <location line="+7535"/>
         <source>Debug</source>
         <translation>Depurar</translation>
     </message>
@@ -4599,8 +4599,8 @@
         <translation>Expressão de endereço:</translation>
     </message>
     <message>
-        <location line="-1041"/>
-        <location line="+1080"/>
+        <location line="-1042"/>
+        <location line="+1081"/>
         <location line="+1508"/>
         <location filename="../src/mainwindow.cpp" line="+5960"/>
         <source>Search</source>
@@ -4723,7 +4723,7 @@
         <translation type="vanished">...</translation>
     </message>
     <message>
-        <location line="-1808"/>
+        <location line="-1809"/>
         <location filename="../src/mainwindow.cpp" line="+4725"/>
         <location line="+1"/>
         <location line="+1"/>
@@ -4748,7 +4748,7 @@
     </message>
     <message>
         <location line="+69"/>
-        <location line="+163"/>
+        <location line="+164"/>
         <location filename="../src/mainwindow.cpp" line="+4354"/>
         <location line="+1"/>
         <location line="+1"/>
@@ -5301,7 +5301,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="+5"/>
+        <source>Reparse Code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-60"/>
         <source>Text File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5390,12 +5395,12 @@
         <translation>Abrir terminal aqui</translation>
     </message>
     <message>
-        <location line="-2393"/>
+        <location line="-2394"/>
         <source>File Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+597"/>
+        <location line="+598"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5789,13 +5794,13 @@
         <translation>Ctrl+Shift+Down</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="-8710"/>
+        <location filename="../src/mainwindow.cpp" line="-8711"/>
         <location line="+65"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+71"/>
-        <location line="+1478"/>
+        <location line="+1479"/>
         <location line="+1853"/>
         <location line="+117"/>
         <location line="+1797"/>
@@ -5809,7 +5814,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-9895"/>
+        <location line="-9896"/>
         <source>New</source>
         <translation>Novo</translation>
     </message>
@@ -5835,7 +5840,7 @@
     </message>
     <message>
         <location line="+81"/>
-        <location line="+8619"/>
+        <location line="+8620"/>
         <source>Problem Set %1</source>
         <translation>Conjunto de problemas %1</translation>
     </message>
@@ -7375,7 +7380,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="-5289"/>
+        <location filename="../src/mainwindow.cpp" line="-5290"/>
         <source>Exact</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7390,7 +7395,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7218"/>
+        <location line="+7219"/>
         <source>Folder Not Empty</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7415,7 +7420,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="-3093"/>
+        <location filename="../src/mainwindow.ui" line="-3094"/>
         <source>Move Caret</source>
         <translation type="unfinished"></translation>
     </message>

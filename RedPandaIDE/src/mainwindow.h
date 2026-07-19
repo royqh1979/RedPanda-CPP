@@ -892,6 +892,8 @@ private slots:
 
     void on_actionNASM_triggered();
 
+    void on_actionReparse_Code_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;
