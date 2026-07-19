@@ -158,7 +158,7 @@ private:
     QString expandMacros(QString text, bool handleBuffer);
     QString expandMacros(QString text, bool handleBuffer, const QSet<QString>& macrosToBeIgnored);
     QString expandMacros(QString text, const QSet<QString>& macrosToBeIgnored) const;
-    QString expandMacro(QString &text, const QString &word, int &i, bool handleBuffer, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed);
+    QString expandMacro(QString &text, const PDefine &define, int &i, bool handleBuffer, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed);
 
     void handleDefine(const QString& tokens);
     void handleUndefine(const QString& tokens);
