@@ -1663,7 +1663,7 @@ bool CppPreprocessor::skipSpaces(const QString &expr, int &pos) const
     return pos<expr.length();
 }
 
-bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalNumber(const QString &expr, NumberType &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1697,7 +1697,7 @@ bool CppPreprocessor::evalNumber(const QString &expr, int &result, int &pos) con
     return ok;
 }
 
-bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalTerm(const QString &expr, NumberType &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1723,7 +1723,7 @@ bool CppPreprocessor::evalTerm(const QString &expr, int &result, int &pos) const
      | '!' term
      | '~' term
  */
-bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalUnaryExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!skipSpaces(expr,pos))
         return false;
@@ -1758,14 +1758,14 @@ bool CppPreprocessor::evalUnaryExpr(const QString &expr, int &result, int &pos) 
      | mul_expr '/' unary_expr
      | mul_expr '%' unary_expr
  */
-bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalMulExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalUnaryExpr(expr,result,pos))
         return false;
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        int rightResult;
+        NumberType rightResult;
         if (expr[pos]=='*') {
             pos++;
             if (!evalUnaryExpr(expr,rightResult,pos))
@@ -1799,14 +1799,14 @@ bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos) co
      | add_expr '+' mul_expr
      | add_expr '-' mul_expr
  */
-bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalAddExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalMulExpr(expr,result,pos))
         return false;
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        int rightResult;
+        NumberType rightResult;
         if (expr[pos]=='+') {
             pos++;
             if (!evalMulExpr(expr,rightResult,pos))
@@ -1829,14 +1829,14 @@ bool CppPreprocessor::evalAddExpr(const QString &expr, int &result, int &pos) co
      | shift_expr "<<" add_expr
      | shift_expr ">>" add_expr
  */
-bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalShiftExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalAddExpr(expr,result,pos))
         return false;
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        int rightResult;
+        NumberType rightResult;
         if (pos+1<expr.length() && expr[pos] == '<' && expr[pos+1]=='<') {
             pos += 2;
             if (!evalAddExpr(expr,rightResult,pos))
@@ -1861,14 +1861,14 @@ bool CppPreprocessor::evalShiftExpr(const QString &expr, int &result, int &pos) 
      | relation_expr "<=" shift_expr
      | relation_expr "<" shift_expr
  */
-bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalRelationExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalShiftExpr(expr,result,pos))
         return false;
     while (true) {
         if (!skipSpaces(expr,pos))
             break;
-        int rightResult;
+        NumberType rightResult;
         if (expr[pos]=='<') {
             if (pos+1<expr.length() && expr[pos+1]=='=') {
                 pos+=2;
@@ -1905,7 +1905,7 @@ bool CppPreprocessor::evalRelationExpr(const QString &expr, int &result, int &po
      | equal_expr "==" relation_expr
      | equal_expr "!=" relation_expr
  */
-bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalEqualExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalRelationExpr(expr,result,pos))
         return false;
@@ -1914,13 +1914,13 @@ bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos) 
             break;
         if (pos+1<expr.length() && expr[pos]=='!' && expr[pos+1]=='=') {
             pos+=2;
-            int rightResult;
+            NumberType rightResult;
             if (!evalRelationExpr(expr,rightResult,pos))
                 return false;
             result = (result != rightResult);
         } else if (pos+1<expr.length() && expr[pos]=='=' && expr[pos+1]=='=') {
             pos+=2;
-            int rightResult;
+            NumberType rightResult;
             if (!evalRelationExpr(expr,rightResult,pos))
                 return false;
             result = (result == rightResult);
@@ -1935,7 +1935,7 @@ bool CppPreprocessor::evalEqualExpr(const QString &expr, int &result, int &pos) 
  * bit_and_expr = equal_expr
      | bit_and_expr "&" equal_expr
  */
-bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalBitAndExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalEqualExpr(expr,result,pos))
         return false;
@@ -1946,7 +1946,7 @@ bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
                 && (pos+1 == expr.length()
                 || expr[pos+1]!='&')) {
             pos++;
-            int rightResult;
+            NumberType rightResult;
             if (!evalEqualExpr(expr,rightResult,pos))
                 return false;
             result = result & rightResult;
@@ -1961,7 +1961,7 @@ bool CppPreprocessor::evalBitAndExpr(const QString &expr, int &result, int &pos)
  * bit_xor_expr = bit_and_expr
      | bit_xor_expr "^" bit_and_expr
  */
-bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalBitXorExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalBitAndExpr(expr,result,pos))
         return false;
@@ -1970,7 +1970,7 @@ bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
             break;
         if (expr[pos]=='^') {
             pos++;
-            int rightResult;
+            NumberType rightResult;
             if (!evalBitAndExpr(expr,rightResult,pos))
                 return false;
             result = result ^ rightResult;
@@ -1985,7 +1985,7 @@ bool CppPreprocessor::evalBitXorExpr(const QString &expr, int &result, int &pos)
  * bit_or_expr = bit_xor_expr
      | bit_or_expr "|" bit_xor_expr
  */
-bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalBitOrExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalBitXorExpr(expr,result,pos))
         return false;
@@ -1996,7 +1996,7 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos) 
                 && (pos+1 == expr.length()
                 || expr[pos+1]!='|')) {
             pos++;
-            int rightResult;
+            NumberType rightResult;
             if (!evalBitXorExpr(expr,rightResult,pos))
                 return false;
             result = result | rightResult;
@@ -2011,7 +2011,7 @@ bool CppPreprocessor::evalBitOrExpr(const QString &expr, int &result, int &pos) 
  * logic_and_expr = bit_or_expr
     | logic_and_expr "&&" bit_or_expr
  */
-bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalLogicAndExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalBitOrExpr(expr,result,pos))
         return false;
@@ -2024,7 +2024,7 @@ bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &po
                 return true;
             }
             pos+=2;
-            int rightResult;
+            NumberType rightResult;
             if (!evalBitOrExpr(expr,rightResult,pos))
                 return false;
             result = result && rightResult;
@@ -2039,7 +2039,7 @@ bool CppPreprocessor::evalLogicAndExpr(const QString &expr, int &result, int &po
  * logic_or_expr = logic_and_expr
     | logic_or_expr "||" logic_and_expr
  */
-bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalLogicOrExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalLogicAndExpr(expr,result,pos))
         return false;
@@ -2052,7 +2052,7 @@ bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos
                 return true;
             }
             pos+=2;
-            int rightResult;
+            NumberType rightResult;
             if (!evalLogicAndExpr(expr,rightResult,pos))
                 return false;
             result = result || rightResult;
@@ -2063,7 +2063,7 @@ bool CppPreprocessor::evalLogicOrExpr(const QString &expr, int &result, int &pos
     return true;
 }
 
-bool CppPreprocessor::evalConnditionalExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalConnditionalExpr(const QString &expr, NumberType &result, int &pos) const
 {
     if (!evalLogicOrExpr(expr,result,pos))
         return false;
@@ -2072,7 +2072,7 @@ bool CppPreprocessor::evalConnditionalExpr(const QString &expr, int &result, int
     if (expr[pos] == '?') {
         pos++; // skip '?'
         int condition = result;
-        int result1,result2;
+        NumberType result1,result2;
         if (!evalExpr(expr,result1,pos))
             return false;
         if (!skipSpaces(expr,pos))
@@ -2087,7 +2087,7 @@ bool CppPreprocessor::evalConnditionalExpr(const QString &expr, int &result, int
     return true;
 }
 
-bool CppPreprocessor::evalExpr(const QString &expr, int &result, int &pos) const
+bool CppPreprocessor::evalExpr(const QString &expr, NumberType &result, int &pos) const
 {
     return evalConnditionalExpr(expr,result,pos);
 }
@@ -2136,7 +2136,7 @@ conditional_expr= logic_or_expr
 bool CppPreprocessor::evaluateExpression(QString line) const
 {
     int pos = 0;
-    int result;
+    NumberType result;
     bool ok = evalExpr(line,result,pos);
     if (!ok)
         return false;

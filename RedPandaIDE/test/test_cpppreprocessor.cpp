@@ -204,7 +204,7 @@ void TestCppPreprocessor::test_evaluate_constant_expression_1()
 void TestCppPreprocessor::test_evaluate_constant_expression_2()
 {
     CppPreprocessor preprocessor;
-    preprocessor.addHardDefineByLine("#define __cplusplus 201703L");
+    preprocessor.addHardDefineByLine("#define __cplusplus 202002L");
     preprocessor.addHardDefineByLine("#define __has_builtin(x) 0");
     preprocessor.addHardDefineByLine("#define __GNUC__ 15");
     preprocessor.addHardDefineByLine("#define __GNUC_MINOR__ 3");
@@ -214,9 +214,83 @@ void TestCppPreprocessor::test_evaluate_constant_expression_2()
     QCOMPARE(preprocessor.evaluateIf("__MINGW_GNUC_PREREQ(15,3)"), true);
     QCOMPARE(preprocessor.evaluateIf("__MINGW_GNUC_PREREQ(15,4)"), false);
     QCOMPARE(preprocessor.evaluateIf("__MINGW_GNUC_PREREQ(16,0)"), false);
-
 }
 
+void TestCppPreprocessor::test_compare_cpp_version()
+{
+    CppPreprocessor preprocessor;
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 199711L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 201103L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 201402L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 201703L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 202002L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 202302L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
+
+    preprocessor.clear();
+    preprocessor.addHardDefineByLine("#define __cplusplus 202400L");
+    QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201402L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201703L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 202002L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), true);
+    QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), true);
+
+}
 
 QStringList TestCppPreprocessor::filterIncludes(const QStringList &text)
 {

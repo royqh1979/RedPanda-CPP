@@ -58,6 +58,7 @@ class CppPreprocessor
         RawString,
         Other
     };
+    typedef qlonglong NumberType;
 public:
 
     explicit CppPreprocessor();
@@ -271,21 +272,21 @@ private:
 
     bool skipParenthesis(const QString&line, int& index, int step = 1) const;
     bool skipSpaces(const QString &expr, int& pos) const;
-    bool evalNumber(const QString &expr, int& result, int& pos) const;
-    bool evalTerm(const QString &expr, int& result, int& pos) const;
-    bool evalUnaryExpr(const QString &expr, int& result, int& pos) const;
-    bool evalMulExpr(const QString &expr, int& result, int& pos) const;
-    bool evalAddExpr(const QString &expr, int& result, int& pos) const;
-    bool evalShiftExpr(const QString &expr, int& result, int& pos) const;
-    bool evalRelationExpr(const QString &expr, int& result, int& pos) const;
-    bool evalEqualExpr(const QString &expr, int& result, int& pos) const;
-    bool evalBitAndExpr(const QString &expr, int& result, int& pos) const;
-    bool evalBitXorExpr(const QString &expr, int& result, int& pos) const;
-    bool evalBitOrExpr(const QString &expr, int& result, int& pos) const;
-    bool evalLogicAndExpr(const QString &expr, int& result, int& pos) const;
-    bool evalLogicOrExpr(const QString &expr, int& result, int& pos) const;
-    bool evalConnditionalExpr(const QString &expr, int& result, int& pos) const;
-    bool evalExpr(const QString &expr, int& result, int& pos) const;
+    bool evalNumber(const QString &expr, NumberType& result, int& pos) const;
+    bool evalTerm(const QString &expr, NumberType& result, int& pos) const;
+    bool evalUnaryExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalMulExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalAddExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalShiftExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalRelationExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalEqualExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalBitAndExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalBitXorExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalBitOrExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalLogicAndExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalLogicOrExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalConnditionalExpr(const QString &expr, NumberType& result, int& pos) const;
+    bool evalExpr(const QString &expr, NumberType& result, int& pos) const;
 
     bool evaluateExpression(QString line) const;
 private:
