@@ -55,7 +55,7 @@ public:
                            const QString& folder, const QString& filters,
                            bool searchSubFolders);
     explicit SearchResults(const QString& keyword,
-                           const QString& symbolFullname,
+                           const QString& symbolScopeFullname,
                            const QString& filename,
                            SearchType searchType,
                            SearchFileScope scope);
@@ -80,14 +80,15 @@ public:
     void setSearchSubfolders(bool newSearchSubfolders);
     const QList<PSearchResultTreeItem> &results() const;
     PSearchResultTreeItem result(int idx) const;
-    const QString &symbolFullname() const;
-    void setSymbolFullname(const QString &newSymbolFullname);
+
+    const QString &symbolScopeFullName() const;
+    void setSymbolScopeFullName(const QString &newSymbolScopeFullName);
 
 private:
     QSynedit::SearchOptions mOptions;
     bool mUseRegex;
     QString mKeyword;
-    QString mSymbolFullname;
+    QString mSymbolScopeFullName;
     SearchFileScope mScope;
     SearchType mSearchType;
     QString mFilename;
@@ -146,7 +147,7 @@ public:
                                     SearchFileScope scope, const QString& folder=QString(), const QString& filters=QString(), bool searchSubfolders=true);
     PSearchResults addSearchResults(
             const QString& keyword,
-            const QString& symbolFullname,
+            const QString& symbolScopeFullName,
             SearchFileScope scope);
     PSearchResults results(int index);
     int currentIndex() const;

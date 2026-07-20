@@ -6950,7 +6950,7 @@ void MainWindow::on_btnSearchAgain_clicked()
 
         if (!editor)
             return;
-        refactor.findOccurence(editor, results->symbolFullname(), results->scope());
+        refactor.findOccurence(editor, results->keyword(), results->symbolScopeFullName(), results->scope());
     }
     ui->searchView->expandAll();
 }

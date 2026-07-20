@@ -60,7 +60,7 @@ PSearchResults SearchResultModel::addSearchResults(
 
 PSearchResults SearchResultModel::addSearchResults(
         const QString& keyword,
-        const QString& symbolFullname,
+        const QString& symbolScopeFullName,
         SearchFileScope scope)
 {
     mTreeModel->beginResetModel();
@@ -69,7 +69,7 @@ PSearchResults SearchResultModel::addSearchResults(
         PSearchResults results = mSearchResults[i];
         if (results->searchType() == SearchType::FindOccurences
                 && results->scope() == scope
-                && results->symbolFullname() == symbolFullname
+                && results->symbolScopeFullName() == symbolScopeFullName
                 ) {
             index=i;
             break;
@@ -87,7 +87,7 @@ PSearchResults SearchResultModel::addSearchResults(
         endRemoveRows();
     }
     PSearchResults results = std::make_shared<SearchResults>(
-                keyword, symbolFullname,
+                keyword, symbolScopeFullName,
                 "", SearchType::FindOccurences,scope);
     beginInsertRows(QModelIndex(),0,0);
     mSearchResults.push_front(results);
@@ -519,10 +519,12 @@ SearchResults::SearchResults(const QString &keyword, QSynedit::SearchOptions opt
     mSearchSubfolders=searchSubFolders;
 }
 
-SearchResults::SearchResults(const QString &keyword, const QString &symbolFullname, const QString &filename, SearchType searchType, SearchFileScope scope)
+SearchResults::SearchResults(const QString &keyword,
+                             const QString& symbolScopeFullname,
+                             const QString &filename, SearchType searchType, SearchFileScope scope)
 {
     mKeyword = keyword;
-    mSymbolFullname = symbolFullname;
+    mSymbolScopeFullName = symbolScopeFullname;
     mFilename = "";
     mSearchType = SearchType::FindOccurences;
     mScope = scope;
@@ -628,13 +630,13 @@ PSearchResultTreeItem SearchResults::result(int idx) const
     return mResults[idx];
 }
 
-const QString &SearchResults::symbolFullname() const
+const QString &SearchResults::symbolScopeFullName() const
 {
-    return mSymbolFullname;
+    return mSymbolScopeFullName;
 }
 
-void SearchResults::setSymbolFullname(const QString &newSymbolFullname)
+void SearchResults::setSymbolScopeFullName(const QString &newSymbolScopeFullName)
 {
-    mSymbolFullname = newSymbolFullname;
+    mSymbolScopeFullName = newSymbolScopeFullName;
 }
 

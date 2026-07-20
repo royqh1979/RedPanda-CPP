@@ -67,7 +67,7 @@ bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
     return true;
 }
 
-bool CppRefacter::findOccurence(Editor * editor, const QString &statementFullname, SearchFileScope scope)
+bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const QString& statementScopeFullName, SearchFileScope scope)
 {
     if (!editor->parser())
         return false;
@@ -76,10 +76,13 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &statementFullnam
     auto action = finally([&editor]{
         editor->parser()->unFreeze();
     });
-    PStatement statement = editor->parser()->findStatement(statementFullname);
-    if (!statement)
-        return false;
-
+    PStatement statement;
+    if (!keyword.isEmpty()) {
+        PStatement scopeStatement = editor->parser()->findStatement(statementScopeFullName);
+        statement = scopeStatement->children.value(keyword);
+    } else {
+        statement = editor->parser()->findStatement(keyword);
+    }
     if (statement->scope == StatementScope::Local) {
         doFindOccurenceInEditor(statement,editor,editor->parser());
     } else {
@@ -243,9 +246,9 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
     editor->setCaretXY(editor->ensureCharPosValid(editor->caretXY()));
     editor->endEditing();
 }
-
-void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser)
-{
+void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser){
+    PStatement parentScope  = statement->parentScope.lock();
+    QString scopeFullName = parentScope?parentScope->fullName:"";
     PSearchResults results = mMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
                 statement->fullName,
@@ -263,9 +266,11 @@ void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *
 
 void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser &parser)
 {
+    PStatement parentScope  = statement->parentScope.lock();
+    QString scopeFullName = parentScope?parentScope->fullName:"";
     PSearchResults results = mMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
-                statement->fullName,
+                scopeFullName,
                 SearchFileScope::wholeProject
                 );
     QProgressDialog progressDlg(
