@@ -67,7 +67,7 @@ bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
     return true;
 }
 
-bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const QString& statementScopeFullName, SearchFileScope scope)
+bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const QString& scopeFullName, SearchFileScope scope)
 {
     if (!editor->parser())
         return false;
@@ -77,8 +77,10 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const Q
         editor->parser()->unFreeze();
     });
     PStatement statement;
-    if (!keyword.isEmpty()) {
-        PStatement scopeStatement = editor->parser()->findStatement(statementScopeFullName);
+    if (!scopeFullName.isEmpty()) {
+        PStatement scopeStatement = editor->parser()->findStatement(scopeFullName);
+        if (!scopeStatement)
+            return false;
         statement = scopeStatement->children.value(keyword);
     } else {
         statement = editor->parser()->findStatement(keyword);
