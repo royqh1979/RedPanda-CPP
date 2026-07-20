@@ -160,7 +160,7 @@ Prerequisites:
    ```
 2. Build:
    ```bash
-   cmake --build build -- --parallel
+   cmake --build build --parallel
    ```
 3. Install:
    ```bash
