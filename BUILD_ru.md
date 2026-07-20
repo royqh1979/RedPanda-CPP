@@ -160,7 +160,7 @@ Prerequisites:
    ```
 2. Сборка:
    ```bash
-   cmake --build build -- --parallel
+   cmake --build build --parallel
    ```
 3. Установка:
    ```bash
