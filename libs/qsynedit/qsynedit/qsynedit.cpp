@@ -6226,6 +6226,13 @@ void QSynEdit::updateMouseCursor(){
     if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
         setCursor(Qt::ArrowCursor);
     } else if (p.x() > mGutterWidth) {
+        CharPos pos;
+        if (pointToCharLine(p,pos)) {
+            if (inSelection(pos)) {
+                setCursor(Qt::ArrowCursor);
+                return;
+            }
+        }
         setCursor(Qt::IBeamCursor);
     } else {
         setCursor(Qt::PointingHandCursor);

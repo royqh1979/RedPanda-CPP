@@ -45,6 +45,7 @@ Red Panda C++ Version 3.5
   - fix: Option "Search subfolders" doesn't work in the search-in-files dialog.
   - enhancement: Option to control if auto skipping included files already parsed.
   - enhancement: "Reparse Code" in "Code" menu.
+  - change: Switch mouse cursor to arrow if it is over selection.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
