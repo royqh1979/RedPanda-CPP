@@ -50,6 +50,7 @@
 #include "ui_mainwindow.h"
 #include "editormanager.h"
 #include "editor.h"
+#include "widgets/terminal/terminalwidget.h"
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"
@@ -528,6 +529,11 @@ MainWindow::MainWindow(QWidget *parent)
     //applySettings();
     applyUISettings();
     initDocks();
+
+    // Terminal panel
+    mTerminalWidget = new TerminalWidget(this);
+    ui->tabMessages->addTab(mTerminalWidget, tr("Terminal"));
+
     updateProjectView();
     updateEditorActions();
     updateCaretActions();

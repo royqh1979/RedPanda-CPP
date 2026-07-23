@@ -76,6 +76,7 @@ class ColorSchemeItem;
 class VisitHistoryManager;
 class ColorManager;
 class IconsManager;
+class TerminalWidget;
 
 #define DPI_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
 
@@ -969,6 +970,8 @@ private:
     QMap<QWidget*, PTabWidgetInfo> mTabMessagesData;
 
     QTimer mAutoSaveTimer;
+
+    TerminalWidget *mTerminalWidget = nullptr;
 
     CaretList mCaretList;
 
