@@ -1689,7 +1689,7 @@ bool CppPreprocessor::evalNumber(const QString &expr, NumberType &result, int &p
         s.resize(s.length()-1);
         result = s.toLong(&ok, 0);
     } else if (s.endsWith("U",Qt::CaseInsensitive)) {
-        s.resize(s.length()-1,1);
+        s.resize(s.length()-1);
         result = s.toUInt(&ok, 0);
     } else {
         result = s.toInt(&ok, 0);
