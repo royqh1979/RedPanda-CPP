@@ -1887,6 +1887,7 @@ void CompilerSets::findSets(bool showProgress)
                 0,
                 1,
                 };
+    progressDlg.setWindowIcon(QIcon(":/icons/images/devcpp.ico"));
     if (showProgress) {
         progressDlg.setMinimumDuration(500);
         progressDlg.setWindowModality(Qt::WindowModal);
