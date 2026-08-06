@@ -28,6 +28,7 @@
 #include <QDialog>
 #include <QSpinBox>
 #include <QPushButton>
+#include <QActionGroup>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -60,7 +61,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     mImageWidget = new ImageWidget(ui->centralwidget);
     QHBoxLayout *layout = new QHBoxLayout(ui->centralwidget);
+#if QT_VERSION_MAJOR < 6
     layout->setMargin(0);
+#endif
     layout->addWidget(mImageWidget);
     connect(mImageWidget, &ImageWidget::requestPrevImage,
             this, &MainWindow::onRequestPrevImage);

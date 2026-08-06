@@ -18,7 +18,6 @@ void ImageMetaInfoModel::setImagePath(const QString& imagePath)
 {
     if (imagePath!=mImagePath) {
         beginResetModel();
-        clear();
         mImagePath = imagePath;
         int parseResult{TinyEXIF::ErrorCode::PARSE_ABSENT_DATA};
         TinyEXIF::EXIFInfo imageEXIF;
