@@ -233,6 +233,11 @@ void DirModel::reloadDirThumbnail()
     mDirThumbnail = thumb.scaled(mThumbnailSize,mThumbnailSize);
 }
 
+int DirModel::subDirCount() const
+{
+    return mSubDirCount;
+}
+
 int DirModel::thumbnailSize() const
 {
     return mThumbnailSize;

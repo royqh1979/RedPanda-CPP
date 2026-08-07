@@ -32,7 +32,8 @@
 
 #define SETTING_DIRS "Dirs"
 #define SETTING_UI "UI"
-#define SETTING_VIEW "VIEW"
+#define SETTING_VIEW "View"
+#define SETTING_HISTORY "History"
 
 class Settings;
 
@@ -151,6 +152,22 @@ public:
         int mSlideShowDelayTime;
     };
 
+    class History: public _Base {
+    public:
+        explicit History(Settings *settings);
+
+        QStringList recentDirs() const;
+        void setRecentDirs(const QStringList &newRecentDirs);
+        void addRecentDir(const QString &dir);
+        void clearRecentDirs();
+
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    private:
+        QStringList mRecentDirs;
+    };
+
 public:
     explicit Settings(const QString& filename);
     explicit Settings(Settings&& settings) = delete;
@@ -173,6 +190,7 @@ public:
     Dirs& dirs();
     UI& ui();
     View& view();
+    History& history();
     QString filename() const;
 
 private:
@@ -181,6 +199,7 @@ private:
     Dirs mDirs;
     class UI mUI;
     View mView;
+    History mHistory;
 };
 
 extern Settings* pSettings;

@@ -30,12 +30,21 @@
     <addaction name="actionOpen"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
+    <addaction name="menuHistory"/>
+    <addaction name="separator"/>
     <addaction name="actionCopy_To"/>
     <addaction name="separator"/>
     <addaction name="actionPrint_Preview"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuHistory">
+    <property name="title">
+     <string>History</string>
+    </property>
+    <addaction name="actionClearHistory"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -224,6 +233,11 @@
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionClearHistory">
+   <property name="text">
+    <string>Clear History</string>
    </property>
   </action>
   <action name="actionNext">

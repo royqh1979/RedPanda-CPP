@@ -70,6 +70,7 @@ public:
     Qt::DropActions supportedDragActions() const override;
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
+    int subDirCount() const;
 };
 
 class ThumbnailLoader: public QThread {

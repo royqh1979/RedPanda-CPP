@@ -41,7 +41,8 @@ Settings::Settings(const QString &filename):
     mSettings(filename,QSettings::IniFormat),
     mDirs(this),
     mUI(this),
-    mView(this)
+    mView(this),
+    mHistory(this)
 {
     //load();
 }
@@ -94,6 +95,7 @@ void Settings::load()
     mDirs.load();
     mUI.load();
     mView.load();
+    mHistory.load();
 }
 
 void Settings::save()
@@ -101,6 +103,7 @@ void Settings::save()
     mDirs.save();
     mUI.save();
     mView.save();
+    mHistory.save();
 }
 
 QSettings::Status Settings::sync()
@@ -122,6 +125,11 @@ Settings::UI &Settings::ui()
 Settings::View &Settings::view()
 {
     return mView;
+}
+
+Settings::History &Settings::history()
+{
+    return mHistory;
 }
 
 Settings::Dirs::Dirs(Settings *settings):
@@ -442,4 +450,44 @@ int Settings::UI::contentsPanelWidth() const
 void Settings::UI::setContentsPanelWidth(int newContentsPanelWidth)
 {
     mContentsPanelWidth = newContentsPanelWidth;
+}
+
+Settings::History::History(Settings *settings):
+    _Base(settings, SETTING_HISTORY)
+{
+}
+
+QStringList Settings::History::recentDirs() const
+{
+    return mRecentDirs;
+}
+
+void Settings::History::setRecentDirs(const QStringList &newRecentDirs)
+{
+    mRecentDirs = newRecentDirs;
+}
+
+void Settings::History::addRecentDir(const QString &dir)
+{
+    QString normalizedDir = QDir(dir).absolutePath();
+    mRecentDirs.removeAll(normalizedDir);
+    mRecentDirs.prepend(normalizedDir);
+    while (mRecentDirs.size() > 10) {
+        mRecentDirs.removeLast();
+    }
+}
+
+void Settings::History::clearRecentDirs()
+{
+    mRecentDirs.clear();
+}
+
+void Settings::History::doSave()
+{
+    saveValue("RecentDirs", mRecentDirs);
+}
+
+void Settings::History::doLoad()
+{
+    mRecentDirs = stringListValue("RecentDirs", QStringList());
 }

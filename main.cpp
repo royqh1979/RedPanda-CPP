@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
     QStringList appLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
     QDir dataDir{appLocations.first()};
     auto settings = std::make_shared<Settings>(dataDir.filePath("config.ini"));
+    qDebug()<<dataDir;
     pSettings = settings.get();
     settings->load();
     MainWindow w;

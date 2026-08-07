@@ -29,6 +29,7 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QActionGroup>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -135,6 +136,11 @@ MainWindow::MainWindow(QWidget *parent)
     updateStatusBar();
     applySettings();
 
+    connect(ui->menuHistory, &QMenu::aboutToShow,
+            this, &MainWindow::onHistoryMenuAboutToShow);
+    connect(ui->actionClearHistory, &QAction::triggered,
+            this, &MainWindow::onClearHistoryTriggered);
+
     addActions(menuBar()->actions());
 }
 
@@ -148,7 +154,55 @@ void MainWindow::open(const QString &path)
     mSlideShowTimer->stop();
     ui->statusbar->showMessage(tr("Openning \"%1\"").arg(path));
     mDirModel->open(path);
+    if (mDirModel->imageCount() - mDirModel->subDirCount() >0)
+        addToHistory(mDirModel->path());
     ui->statusbar->clearMessage();
+}
+
+void MainWindow::addToHistory(const QString &path)
+{
+    if (path.isEmpty())
+        return;
+    QFileInfo info(path);
+    QString dirPath = info.isDir() ? info.absoluteFilePath() : info.absolutePath();
+    pSettings->history().addRecentDir(dirPath);
+}
+
+void MainWindow::onHistoryMenuAboutToShow()
+{
+    for (QAction *action : mHistoryActions) {
+        ui->menuHistory->removeAction(action);
+        delete action;
+    }
+    mHistoryActions.clear();
+
+    QStringList recentDirs = pSettings->history().recentDirs();
+    if (recentDirs.isEmpty()) {
+        QAction *placeholder = new QAction(tr("(No recent folders)"), ui->menuHistory);
+        placeholder->setEnabled(false);
+        ui->menuHistory->insertAction(ui->actionClearHistory, placeholder);
+        mHistoryActions.append(placeholder);
+        return;
+    }
+
+    for (const QString &dir : recentDirs) {
+        QAction *action = new QAction(dir, ui->menuHistory);
+        connect(action, &QAction::triggered, this, [this, dir]() {
+            open(dir);
+        });
+        ui->menuHistory->insertAction(ui->actionClearHistory, action);
+        mHistoryActions.append(action);
+    }
+}
+
+void MainWindow::onClearHistoryTriggered()
+{
+    pSettings->history().clearRecentDirs();
+    for (QAction *action : mHistoryActions) {
+        ui->menuHistory->removeAction(action);
+        delete action;
+    }
+    mHistoryActions.clear();
 }
 
 void MainWindow::tryOpenSubDirInDirView(const QModelIndex &index)

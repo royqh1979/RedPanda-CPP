@@ -95,8 +95,12 @@ private slots:
 
     void on_actionDelete_triggered();
 
+    void onHistoryMenuAboutToShow();
+    void onClearHistoryTriggered();
+
 private:
     void updateStatusBar();
+    void addToHistory(const QString &path);
     void applySettings();
     void updateActions();
 private:
@@ -112,6 +116,7 @@ private:
     bool mInFullScreen;
     bool mMaximizedBeforeFullScreen;
     QTimer *mSlideShowTimer;
+    QList<QAction*> mHistoryActions;
 
     // QWidget interface
 protected:
