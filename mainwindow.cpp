@@ -64,6 +64,8 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *layout = new QHBoxLayout(ui->centralwidget);
 #if QT_VERSION_MAJOR < 6
     layout->setMargin(0);
+#else
+    layout->setContentsMargins(0,0,0,0);
 #endif
     layout->addWidget(mImageWidget);
     connect(mImageWidget, &ImageWidget::requestPrevImage,
@@ -776,6 +778,17 @@ void MainWindow::on_actionDelete_triggered()
                 QMessageBox::critical(this,tr("Deletion failed"),tr("Failed to delete file '%1'!").arg(mImageWidget->imagePath()));
             }
         }
+    }
+}
+
+
+void MainWindow::on_actionCopy_URL_triggered()
+{
+    if (!mImageWidget->imagePath().isEmpty()) {
+        QMimeData * mimeData = new QMimeData;
+        mimeData->setText(mImageWidget->imagePath());
+        QGuiApplication::clipboard()->clear();
+        QGuiApplication::clipboard()->setMimeData(mimeData);
     }
 }
 

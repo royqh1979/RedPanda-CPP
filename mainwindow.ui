@@ -20,13 +20,20 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuHistory">
+     <property name="title">
+      <string>History</string>
+     </property>
+     <addaction name="actionClearHistory"/>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
@@ -38,13 +45,6 @@
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
-   </widget>
-   <widget class="QMenu" name="menuHistory">
-    <property name="title">
-     <string>History</string>
-    </property>
-    <addaction name="actionClearHistory"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -93,6 +93,7 @@
      <string>Edit</string>
     </property>
     <addaction name="actionCopy"/>
+    <addaction name="actionCopy_URL"/>
     <addaction name="actionDelete"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -114,10 +115,10 @@
     <bool>false</bool>
    </property>
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetClosable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::RightDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::RightDockWidgetArea</set>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -144,10 +145,10 @@
   </widget>
   <widget class="QDockWidget" name="dockDir">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetClosable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::LeftDockWidgetArea</set>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -169,16 +170,16 @@
      <item>
       <widget class="ResizeawareListView" name="dirView">
        <property name="resizeMode">
-        <enum>QListView::Adjust</enum>
+        <enum>QListView::ResizeMode::Adjust</enum>
        </property>
        <property name="layoutMode">
-        <enum>QListView::Batched</enum>
+        <enum>QListView::LayoutMode::Batched</enum>
        </property>
        <property name="spacing">
         <number>7</number>
        </property>
        <property name="viewMode">
-        <enum>QListView::IconMode</enum>
+        <enum>QListView::ViewMode::IconMode</enum>
        </property>
       </widget>
      </item>
@@ -529,6 +530,14 @@
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+  </action>
+  <action name="actionCopy_URL">
+   <property name="text">
+    <string>Copy URL</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

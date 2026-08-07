@@ -98,6 +98,8 @@ private slots:
     void onHistoryMenuAboutToShow();
     void onClearHistoryTriggered();
 
+    void on_actionCopy_URL_triggered();
+
 private:
     void updateStatusBar();
     void addToHistory(const QString &path);
