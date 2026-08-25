@@ -16,6 +16,7 @@
  */
 #include "main.h"
 #include "utils/os.h"
+#include <QIcon>
 
 #ifdef Q_OS_WIN
 static_assert(WM_APP_OPEN_FILE < 0xc000);
@@ -263,6 +264,7 @@ int main(int argc, char *argv[])
 #if QT_VERSION_MAJOR < 6
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
+    app.setWindowIcon(QIcon(":/icons/images/devcpp.ico"));
     QDir startupDir = QDir::current();
     ExternalResource resource;
 
