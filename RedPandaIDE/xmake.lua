@@ -75,6 +75,8 @@ target("RedPandaIDE")
 
     add_files(
         "src/autolinkmanager.cpp",
+        "src/widgets/terminal/terminalwidget.cpp",
+        "src/widgets/terminal/terminalprocess.cpp",
         "src/colorscheme.cpp",
         "src/customfileiconprovider.cpp",
         "src/projectoptions.cpp",
@@ -122,6 +124,8 @@ target("RedPandaIDE")
 
     add_moc_classes(
         "src/caretlist",
+        "src/widgets/terminal/terminalwidget",
+        "src/widgets/terminal/terminalprocess",
         "src/codesnippetsmanager",
         "src/cpprefacter",
         "src/editor",
