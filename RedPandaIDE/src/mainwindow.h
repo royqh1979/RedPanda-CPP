@@ -264,6 +264,9 @@ public slots:
     void onEditorRightTabContextMenu(const QPoint& pos);
     void onEditorLeftTabContextMenu(const QPoint& pos);
     void onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint& pos);
+    void onSetHeaderContext(Editor *editor);
+    void onClearHeaderContext(Editor *editor);
+    void updateEditorTabTitle(Editor *editor);
     void disableDebugActions();
     void enableDebugActions();
     void stopDebugForNoSymbolTable();
