@@ -196,6 +196,9 @@ public:
     bool enableAutolink() const;
     void setEnableAutolink(bool newEnableAutolink);
 
+    bool enableProblemSetAutoSave() const;
+    void setEnableProblemSetAutoSave(bool newEnable);
+
     bool showRightEdgeLine() const;
     void setShowRightEdgeLine(bool newShowRightMarginLine);
 
@@ -416,6 +419,7 @@ private:
 
     //auto link
     bool mEnableAutolink;
+    bool mEnableProblemSetAutoSave;
 
     //Misc
     QByteArray mDefaultEncoding;

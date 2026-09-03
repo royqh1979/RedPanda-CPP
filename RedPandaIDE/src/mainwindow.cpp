@@ -4014,6 +4014,18 @@ void MainWindow::onAutoSaveTimeout()
         }
         updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
     }
+
+    // Auto-save problem set
+    if (pSettings->editor().enableProblemSetAutoSave()
+        && mOJProblemSetModel
+        && mOJProblemSetModel->problemSet()
+        && mOJProblemSetModel->problemSet()->isModified()) {
+        QString filename = mOJProblemSetModel->exportFilename();
+        if (!filename.isEmpty()) {
+            mOJProblemSetModel->saveToFile(filename, true);
+            updateStatusbarMessage(tr("Problem set auto-saved"));
+        }
+    }
 }
 
 void MainWindow::onWatchViewContextMenu(const QPoint &pos)
