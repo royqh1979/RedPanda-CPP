@@ -181,14 +181,22 @@ QTabWidget* EditorManager::getFocusedPageControl() const {
     case LayoutShowType::lstRight:
         return mRightPageWidget;
     case LayoutShowType::lstBoth: {
-        Editor* rightEditor = dynamic_cast<Editor*>(mRightPageWidget->currentWidget());
-        if (!rightEditor)
+        if (!mRightPageWidget || !mLeftPageWidget)
+            return mLeftPageWidget ? mLeftPageWidget : mRightPageWidget;
+
+        QWidget *rw = mRightPageWidget->currentWidget();
+        Editor* rightEditor = rw ? dynamic_cast<Editor*>(rw) : nullptr;
+        if (!rightEditor) {
             return mLeftPageWidget;
+        }
         if (rightEditor->hasFocus())
             return mRightPageWidget;
-        Editor *leftEditor = dynamic_cast<Editor*>(mLeftPageWidget->currentWidget());
-        if (!leftEditor)
+
+        QWidget *lw = mLeftPageWidget->currentWidget();
+        Editor *leftEditor = lw ? dynamic_cast<Editor*>(lw) : nullptr;
+        if (!leftEditor) {
             return mRightPageWidget;
+        }
         if (leftEditor->hasFocus())
             return mLeftPageWidget;
         if (rightEditor->lastFocusOutTime() > leftEditor->lastFocusOutTime())
