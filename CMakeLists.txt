@@ -75,6 +75,8 @@ else()
     else()
         find_package(Qt5 5.15 REQUIRED COMPONENTS ${QT_COMPONENTS})
     endif()
+    message(STATUS "Qt5_DIR = ${Qt5_DIR}")
+	message(STATUS "Qt version = ${Qt5_VERSION}")
 endif()
 
 if (${QT_VERSION_MAJOR} LESS 6)

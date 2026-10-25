@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
+echo "TEST ${TARGET_DIR}"
 if [ ! -d "${TARGET_DIR}" ]; then
 	echo " Error: Target directory not set"
 	fn_print_help
@@ -134,6 +134,7 @@ COMPILER_MINGW64=0
 CMAKE="/mingw64/bin/cmake"
 CMAKE_MAKE_PROGRAM="${MAKE}"
 CMAKE_CXX_COMPILER="${MINGW_DIR}/bin/g++.exe"
+NINJA="/mingw64/bin/ninja"
 
 function fn_print_progress() {
   echo -e "\e[1;32;44m$1\e[0m"
@@ -143,7 +144,7 @@ function fn_print_progress() {
 
 if [[ ${CHECK_DEPS} -eq 1 ]]; then
   deps=(
-    mingw-w64-x86_64-{cmake,7zip,gcc}
+    mingw-w64-x86_64-{cmake,7zip,gcc,ninja}
     # always use x86 NSIS to display error message of mismatched architecture
     mingw-w64-i686-nsis
     git
@@ -228,11 +229,18 @@ PATH="${MINGW_DIR}/bin:${OLD_PATH}"
 fn_print_progress "Building..."
 pushd .
 cd "${BUILD_DIR}"
-qmake_flags=()
-[[ ${NSIS_ARCH} == x64 ]] && qmake_flags+=("X86_64=ON")
-"$QMAKE" PREFIX="${PACKAGE_DIR}" ${qmake_flags[@]} -o Makefile "${SOURCE_DIR}/Red_Panda_Cpp.pro" -r
-${MAKE} -j$(nproc)
-${MAKE} install
+cmake_flags=()
+[[ ${NSIS_ARCH} == x64 ]] && cmake_flags+=("-DX86_64=ON")
+echo "${QT_DIR}"
+"${CMAKE}" -S "${SOURCE_DIR}" -B . \
+  -G Ninja -DCMAKE_MAKE_PROGRAM="${NINJA}" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_EXE_LINKER_FLAGS="-static" \
+  -DCMAKE_PREFIX_PATH="${QT_DIR}" \
+  -DQT5=ON \
+  ${cmake_flags[@]}
+"${CMAKE}" --build . --parallel
+"${CMAKE}" --install . --prefix "${PACKAGE_DIR}" --strip
 popd
 
 ## prepare packaging resources
