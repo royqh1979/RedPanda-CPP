@@ -122,7 +122,7 @@ using CompilerOptionMap=QMap<QString,PCompilerOption>;
 class CompilerInfo
 {
 public:
-    CompilerInfo(const QString& name);
+    CompilerInfo(CompilerType type, const QString& name);
     CompilerInfo(const CompilerInfo&)=delete;
     CompilerInfo& operator=(const CompilerInfo&)=delete;
 
@@ -134,6 +134,8 @@ public:
 
     virtual bool supportStaticLink()=0;
     virtual bool supportSyntaxCheck();
+    CompilerType type() const;
+
 protected:
     PCompilerOption addOption(const QString& key,
                    const QString& name,
@@ -162,6 +164,7 @@ protected:
     CompilerOptionMap mCompilerOptions;
     QList<PCompilerOption> mCompilerOptionList;
     QString mName;
+    CompilerType mType;
 };
 
 using PCompilerInfo = std::shared_ptr<CompilerInfo>;
@@ -179,7 +182,8 @@ public:
     static bool supportStaticLink(CompilerType compilerType);
     static bool supportSyntaxCheck(CompilerType compilerType);
     static PCompilerInfoManager getInstance();
-    static void addInfo(CompilerType compilerType, PCompilerInfo info);
+private:
+    void addInfo(CompilerType compilerType, PCompilerInfo info);
 private:
     static PCompilerInfoManager instance;
     QMap<CompilerType,PCompilerInfo> mInfos;

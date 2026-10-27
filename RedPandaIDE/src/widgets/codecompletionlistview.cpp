@@ -46,6 +46,8 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
         QListView::keyPressEvent(event);
         return;
     }
+    if (!isVisible())
+        return;
     Q_ASSERT(mKeypressedCallback != nullptr);
     if (mKeypressedCallback!=nullptr && !mKeypressedCallback(event)) {
         QListView::keyPressEvent(event);

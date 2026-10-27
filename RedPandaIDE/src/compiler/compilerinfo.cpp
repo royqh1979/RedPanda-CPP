@@ -2,7 +2,8 @@
 #include <QObject>
 #include <QDebug>
 
-CompilerInfo::CompilerInfo(const QString &name):
+CompilerInfo::CompilerInfo(CompilerType type, const QString &name):
+    mType(type),
     mName(name)
 {
 }
@@ -203,7 +204,9 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_WARNING_ALL,QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, "-Wall");
     addOption(CC_CMD_OPT_WARNING_EXTRA,QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, "-Wextra");
     addOption(CC_CMD_OPT_CHECK_ISO_CONFORMANCE, QObject::tr("Check ISO C/C++ conformance (-pedantic)"), groupName, true, true, false, "-pedantic");
-    addOption(CC_CMD_OPT_NO_MS_EXTENSIONS, QObject::tr("Don't accept MSVC non-standard syntax (-fno-ms-extentions)"), groupName, true, true, false, "-fno-ms-extensions");
+    if (type()==CompilerType::GCC) {
+        addOption(CC_CMD_OPT_NO_MS_EXTENSIONS, QObject::tr("Don't accept MSVC non-standard syntax (-fno-ms-extentions)"), groupName, true, true, false, "-fno-ms-extensions");
+    }
     addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
     addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
     sl.clear();
@@ -244,20 +247,25 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(LINK_CMD_OPT_STRIP_EXE, QObject::tr("Strip executable (-s)"), groupName, false, false, true, "-s");
 }
 
+CompilerType CompilerInfo::type() const
+{
+    return mType;
+}
+
 CompilerInfoManager::CompilerInfoManager()
 {
     PCompilerInfo compilerInfo = std::make_shared<ClangCompilerInfo>();
     compilerInfo->init();
-    mInfos.insert(CompilerType::Clang, compilerInfo);
+    addInfo(CompilerType::Clang, compilerInfo);
 
     compilerInfo = std::make_shared<GCCCompilerInfo>();
     compilerInfo->init();
-    mInfos.insert(CompilerType::GCC, compilerInfo);
+    addInfo(CompilerType::GCC, compilerInfo);
 
 #ifdef ENABLE_SDCC
     compilerInfo = std::make_shared<SDCCCompilerInfo>();
     compilerInfo->init();
-    mInfos.insert(CompilerType::SDCC, compilerInfo);
+    addInfo(CompilerType::SDCC, compilerInfo);
 #endif
 }
 
@@ -319,10 +327,10 @@ PCompilerInfoManager CompilerInfoManager::getInstance()
 
 void CompilerInfoManager::addInfo(CompilerType compilerType, PCompilerInfo info)
 {
-    getInstance()->mInfos.insert(compilerType,info);
+    mInfos.insert(compilerType,info);
 }
 
-ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(COMPILER_CLANG)
+ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(CompilerType::Clang, COMPILER_CLANG)
 {
 }
 
@@ -331,7 +339,7 @@ bool ClangCompilerInfo::supportStaticLink()
     return true;
 }
 
-GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
+GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(CompilerType::GCC, COMPILER_GCC)
 {
 }
 
@@ -341,7 +349,7 @@ bool GCCCompilerInfo::supportStaticLink()
 }
 
 #ifdef ENABLE_SDCC
-SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(COMPILER_SDCC)
+SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(CompilerType::SDCC, COMPILER_SDCC)
 {
 
 }
