@@ -517,6 +517,9 @@ void GDBMIDebuggerClient::handleCreateVar(const GDBMIResultParser::ParseObject &
     if (!mCurrentCmd)
         return;
     QString expression = mCurrentCmd->params;
+    if(expression.length()>2 && expression.startsWith('\"')
+            && expression.endsWith("\""))
+        expression = expression.mid(1,expression.length()-2);
     QString name = multiVars["name"].value();
     int numChild = multiVars["numchild"].intValue(0);
     QString value = multiVars["value"].value();
