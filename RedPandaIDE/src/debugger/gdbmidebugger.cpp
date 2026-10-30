@@ -211,9 +211,9 @@ void GDBMIDebuggerClient::runNextCmd()
     if (pCmd->command == "-var-create") {
         //hack for variable creation,to easy remember var expression
         if (clientType()==DebuggerType::LLDB_MI)
-            params = " - * "+params;
+            params = " - * \""+params+"\"";
         else
-            params = " - @ "+params;
+            params = " - @ \""+params+"\"";
     } else if (pCmd->command == "-var-list-children") {
         //hack for list variable children,to easy remember var expression
         params = " --all-values \"" + params+'\"';
@@ -1145,7 +1145,7 @@ void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
 
 void GDBMIDebuggerClient::addWatch(const QString &expression)
 {
-    postCommand("-var-create", QString("\"%1\"").arg(expression));
+    postCommand("-var-create", expression);
 }
 
 void GDBMIDebuggerClient::removeWatch(PWatchVar watchVar)
