@@ -6462,11 +6462,15 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
                 internalSetSelEnd(caretXY());
-            } else if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
-                if (event->modifiers() == Qt::AltModifier && !mReadOnly)
-                    setActiveSelectionMode(SelectionMode::Column);
-                else
+            } else {
+                if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
+                    if (event->modifiers() == Qt::AltModifier && !mReadOnly)
+                        setActiveSelectionMode(SelectionMode::Column);
+                    else
+                        setActiveSelectionMode(SelectionMode::Normal);
+                } else {
                     setActiveSelectionMode(SelectionMode::Normal);
+                }
                 //Selection mode must be set before calling SetBlockBegin
                 internalSetSelBegin(caretXY());
             }
