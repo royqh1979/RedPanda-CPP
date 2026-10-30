@@ -51,6 +51,7 @@ Red Panda C++ Version 3.5
   - fix: Overrided parent methods is still shown in class browser. ( github #755 )
   - fix: Class inheritance is not correctly handled. ( github #755 )
   - fix: Can't select content in CPU Dialog.
+  - fix: Can't Copy content in CPU Dialog.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.

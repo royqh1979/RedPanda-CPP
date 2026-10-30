@@ -48,6 +48,7 @@ CPUDialog::CPUDialog(ColorManager *colorManager, QWidget *parent) :
     ui->txtCode->setGutterWidth(0);
     ui->txtCode->setUseCodeFolding(false);
     ui->txtCode->setRightEdge(0);
+    ui->txtCode->setExtraKeystrokes(); // Ctrl+C, Ctrl+A
     QSynedit::EditorOptions options=ui->txtCode->getOptions();
     options.setFlag(QSynedit::EditorOption::ScrollPastEof,false);
     options.setFlag(QSynedit::EditorOption::ScrollPastEol,false);
