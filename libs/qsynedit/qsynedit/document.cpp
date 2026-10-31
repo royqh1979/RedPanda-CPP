@@ -1062,7 +1062,7 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos) con
         glyphPositionList = mLines[line]->glyphStartPositionList();
         width = mLines[line]->width();
     } else {
-        glyphPositionList = mGlyphCalculator.calcGlyphPositionList(mLines[line]->lineText(), width);
+        glyphPositionList = mGlyphCalculator.calcGlyphPositionList(newStr, width);
     }
     int glyphIdx = xposToGlyphIndex(width, glyphPositionList, xpos);
     return mLines[line]->glyphStartChar(glyphIdx);

@@ -261,7 +261,6 @@ public:
     void collapseAll();
     void unCollpaseAll();
     void uncollapseAroundLine(int line);
-    void uncollapseAroundLines(int startLine, int count);
     bool collapse(int fromLine, int toLine);
     bool uncollapase(int fromLine, int toLine);
 #ifdef QSYNEDIT_TEST

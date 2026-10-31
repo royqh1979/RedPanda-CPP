@@ -202,18 +202,6 @@ void QSynEdit::uncollapseAroundLine(int line)
     }
 }
 
-void QSynEdit::uncollapseAroundLines(int startLine, int count)
-{
-    int endLine = startLine+count-1;
-    foreach(const PCodeBlock &pFold, mCodeBlocks) {
-        if (pFold->fromLine <= startLine
-                && startLine <= pFold->toLine
-                && pFold->toLine <= endLine
-                && endLine <= pFold->toLine)
-            uncollapse(pFold);
-    }
-}
-
 PCodeBlock QSynEdit::foldHidesLine(int line)
 {
     return foldAroundLineEx(line, true, false, true);
@@ -7124,7 +7112,7 @@ void QSynEdit::setLeftPos(int value)
             horizontalScrollBar()->setValue(value);
         else {
             if (mDocument->maxLineWidth()>0) {
-                mLeftPos = std::max(mLeftPos, 0);
+                mLeftPos = std::max(value, 0);
                 mLeftPos = std::min(mLeftPos, maxScrollWidth());
             }
             invalidate();
