@@ -134,7 +134,7 @@
 
 > 历史背景：该拆分是公认的大改动，因此一直未动；本文档先固化职责清单与耦合点，作为动手前的事实基线。
 
-### 2.4 实证案例：字体度量平台差异导致测试失败（2026-04 记录）
+### 2.4 实证案例：字体度量平台差异导致测试失败（2026-11 记录）
 
 **现象**：`TestQSyneditEmoji::test_move_caret_y("Up in the middle of emoji")`（`test_qsynedit_emoji.cpp:235`）在 Windows 上以 `QT_QPA_PLATFORM=offscreen` 运行时失败——光标从 emoji 字形中间（`{3,1}`）按 ↑，期望吸附到字形边界 `{2,0}`，实际落在 `{4,0}`。同一二进制在 `QT_QPA_PLATFORM=windows` 下全部通过；CI（Linux headless offscreen）也通过。
 
@@ -159,7 +159,7 @@
 |---|---|---|---|
 | 缓冲区字符位置 | `CharPos{ch, line}`（`types.h:75`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
 | 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp:515`） |
-| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | 均 **0 基**（x 像素、row 显示行） | 2026-04 起统一为全 0 基（原 row 为 1 基，见 3.6） |
+| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | 均 **0 基**（x 像素、row 显示行） | 2026-11 起统一为全 0 基（原 row 为 1 基，见 3.6） |
 | 滚动偏移 | `leftPos()`/`topPos()` | 像素 | `setTopPos` 按 `maxScrollHeight()` 钳制并驱动滚动条（`qsynedit.cpp:7141`） |
 | Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp:148` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp:115`）——换算分散在两侧，自洽但易误解 |
 | 解析器行号 | `Statement->line` 等 | **0 基** | tokenizer `mCurrentLine` 从 0 起（`cpptokenizer.cpp:61`），与 `CharPos.line` 一致，跨模块传递无需换算 |
@@ -172,7 +172,7 @@
 - `Document::charToGlyphIndex` 声明参数名 `charIdx`（`document.h:573`），同族接口多用 `charPos`，命名不统一；
 - `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
 
-> 已解决（2026-04）：`getLineIndent`/`leftSpaces` 等 QString 类型的 `line` 参数/变量已统一改名为 `lineText`（含 `getEOL` 的 `Line` 参数，共 14 处），消除了"行号/行文本"的命名歧义。
+> 已解决（2026-11）：`getLineIndent`/`leftSpaces` 等 QString 类型的 `line` 参数/变量已统一改名为 `lineText`（含 `getEOL` 的 `Line` 参数，共 14 处），消除了"行号/行文本"的命名歧义。
 
 ### 3.3 CharPos 的多义使用（有意复用，非误用）
 
@@ -185,7 +185,7 @@
 
 undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误用；但 C 类项的正确性另需块级快照兜底（见 1.5）。改进方向是拆分类型（如独立 `ScrollPos`）或加注释，而非改行为。
 
-### 3.4 审计发现的问题及处理结果（2026-04 已修复）
+### 3.4 审计发现的问题及处理结果（2026-11 已修复）
 
 坐标审计发现三项问题，已全部验证并修复（修复后 `test-qsynedit` 全部通过）：
 
@@ -198,7 +198,7 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 - 修正 3.2 中的错误/过时注释；
 - 中期：引入强类型坐标（`CharIndex`/`BufferLine`/`DisplayRow`/像素类型）；gutter 行号换算收敛到单侧。
 
-### 3.6 变更记录：DisplayCoord 全 0 基化（2026-04，3.6 版本）
+### 3.6 变更记录：DisplayCoord 全 0 基化（2026-11，3.6 版本）
 
 **背景**：3.4 及之前 `CharPos` 为 ch 0 基 / line 1 基，易出错；3.5 已将 `CharPos` 统一为全 0 基。本次将 `DisplayCoord`（仅 QSynedit 内部使用）的 `row` 从 1 基统一为 0 基，`x`（像素）维持 0 基不变。
 
