@@ -159,20 +159,18 @@
 |---|---|---|---|
 | 缓冲区字符位置 | `CharPos{ch, line}`（`types.h:75`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
 | 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp:515`） |
-| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | x **0 基像素**、row **1 基** | 同一结构内基数不一致（见 3.2） |
+| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | 均 **0 基**（x 像素、row 显示行） | 2026-04 起统一为全 0 基（原 row 为 1 基，见 3.6） |
 | 滚动偏移 | `leftPos()`/`topPos()` | 像素 | `setTopPos` 按 `maxScrollHeight()` 钳制并驱动滚动条（`qsynedit.cpp:7141`） |
 | Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp:148` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp:115`）——换算分散在两侧，自洽但易误解 |
 | 解析器行号 | `Statement->line` 等 | **0 基** | tokenizer `mCurrentLine` 从 0 起（`cpptokenizer.cpp:61`），与 `CharPos.line` 一致，跨模块传递无需换算 |
 
-转换路径：`bufferToDisplayPos`/`displayToBufferPos`（折叠映射 + char↔像素换算，`qsynedit.cpp:673,691`）、`lineToRow`/`rowToLine`（±1 与折叠映射，`qsynedit.cpp:798,812`）、`yposToRow`（像素→1 基行，`qsynedit.h`）。
+转换路径：`bufferToDisplayPos`/`displayToBufferPos`（折叠映射 + char↔像素换算）、`lineToRow`/`rowToLine`（0 基，无折叠时 `line==row`，折叠时经 `foldRowToLine`/`foldLineToRow` 映射）、`yposToRow`（像素→0 基显示行）。
 
 ### 3.2 已知不一致（确认的问题）
 
 - `document.h:545` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp:983`）——注释错误；
 - `QSynEdit::getLineIndent(const QString& line)` 与 `leftSpaces(const QString& line)`（`qsynedit.h:192-193`）的参数名 `line` 实为**行文本**而非行号，命名误导；
 - `Document::charToGlyphIndex` 声明参数名 `charIdx`（`document.h:573`），同族接口多用 `charPos`，命名不统一；
-- `displayToBufferPos` 的边界为 `result.line <= mDocument->count()`（`qsynedit.cpp:699`），与下游 `xposToGlyphStartChar` 的断言 `line < count` 不一致——当前因上游 `rowToLine` 钳制到 `count-1` 而无害，但约定不一致；
-- `DisplayCoord` 同结构内 x（0 基像素）/ row（1 基）基数混用，是误用温床；
 - `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
 
 ### 3.3 CharPos 的多义使用（有意复用，非误用）
@@ -196,8 +194,23 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 ### 3.5 改进方向
 
-- 修正 3.2 中的错误/过时注释；统一边界写法（`<=` → `<`）；
-- 中期：引入强类型坐标（`CharIndex`/`BufferLine`/`DisplayRow`/像素类型），`DisplayCoord` 拆分或统一基数；gutter 行号换算收敛到单侧。
+- 修正 3.2 中的错误/过时注释；
+- 中期：引入强类型坐标（`CharIndex`/`BufferLine`/`DisplayRow`/像素类型）；gutter 行号换算收敛到单侧。
+
+### 3.6 变更记录：DisplayCoord 全 0 基化（2026-04，3.6 版本）
+
+**背景**：3.4 及之前 `CharPos` 为 ch 0 基 / line 1 基，易出错；3.5 已将 `CharPos` 统一为全 0 基。本次将 `DisplayCoord`（仅 QSynedit 内部使用）的 `row` 从 1 基统一为 0 基，`x`（像素）维持 0 基不变。
+
+**改动要点**：
+
+- 5 个转换函数改 0 基语义：`yposToRow`（去 `+1`）、`rowToLine`/`lineToRow`（无折叠时 `line==row`）、`foldRowToLine`/`foldLineToRow`（平移调整）；
+- 行→像素换算全部改为 `row * mTextHeight`（`displayCoordToPixels`、`invalidateLine(s)`、`invalidateGutterLines`、`processGutterClick`、`ensureCaretVisible`、painter 的 5 处）；
+- 行范围钳制统一为 `[0, displayLineCount()-1]`（`moveCaretVert`、`computeScroll`、paintEvent 的 nL1/nL2）；
+- **`displayLineCount()` 保持"行数"语义**：0 基化后原实现 `lineToRow(count-1)` 会变成"末行索引"，已显式 `+1` 保持值不变——这是本次重构最易踩的陷阱；
+- `moveCaretVert` 的"已到首行仍按选择键上移则跳到文件头"特殊分支，判定由 `row==1` 改为 `row==0`（漏改会导致跳到文件尾，行为测试当场抓获）；
+- `displayToBufferPos` 边界顺手统一为 `< count`。
+
+**验证**：先补行为测试（`TestQSyneditDisplay`，13 用例，只断言重构前后都成立的往返/行差/端到端不变量）钉住现状；重构后 `test-qsynedit` 全部 374 用例通过（Windows 原生平台），RedPandaIDE 主程序构建通过。
 
 ## 4. 语法高亮（待补）
 
