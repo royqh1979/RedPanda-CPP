@@ -721,17 +721,17 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
         TextDecoder decoder(realEncoding);
         text = decoder.decodeUnchecked(data);
     }
-    QString line;
+    QString lineText;
     internalClear();
-    while (textStream.readLineInto(&line)) {
-        if (line.endsWith("\r\n")) {
-            line.remove(line.length()-2,2);
-        } else if (line.endsWith("\r")) {
-            line.remove(line.length()-1,1);
-        } else if (line.endsWith("\n")){
-            line.remove(line.length()-1,1);
+    while (textStream.readLineInto(&lineText)) {
+        if (lineText.endsWith("\r\n")) {
+            lineText.remove(lineText.length()-2,2);
+        } else if (lineText.endsWith("\r")) {
+            lineText.remove(lineText.length()-1,1);
+        } else if (lineText.endsWith("\n")){
+            lineText.remove(lineText.length()-1,1);
         }
-        addItem(line);
+        addItem(lineText);
     }
 }
 

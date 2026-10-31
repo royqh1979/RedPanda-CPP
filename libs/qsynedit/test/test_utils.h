@@ -21,7 +21,7 @@ using PTokenInfo = std::shared_ptr<TokenInfo>;
 using TokenInfoList = QList<PTokenInfo>;
 
 TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer,
-                            const QString& line);
+                            const QString& lineText);
 
 QList<TokenInfoList> parseLines(QSynedit::Syntaxer *syntaxer,
                                  const QStringList &text);

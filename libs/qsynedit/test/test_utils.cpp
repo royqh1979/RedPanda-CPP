@@ -1,10 +1,10 @@
 #include "test_utils.h"
 
-TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer, const QString &line)
+TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer, const QString &lineText)
 {
     TokenInfoList result;
     syntaxer->resetState();
-    syntaxer->setLine(0,line,0);
+    syntaxer->setLine(0,lineText,0);
     while(!syntaxer->eol()) {
         PTokenInfo info = std::make_shared<TokenInfo>();
         info->token = syntaxer->getToken();

@@ -38,7 +38,7 @@ namespace QSynedit {
 
 int minMax(int x, int mi, int ma);
 
-int getEOL(const QString& Line, int start);
+int getEOL(const QString& lineText, int start);
 
 QStringList splitStrings(const QString& text);
 

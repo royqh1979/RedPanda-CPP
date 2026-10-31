@@ -169,9 +169,10 @@
 ### 3.2 已知不一致（确认的问题）
 
 - `document.h:545` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp:983`）——注释错误；
-- `QSynEdit::getLineIndent(const QString& line)` 与 `leftSpaces(const QString& line)`（`qsynedit.h:192-193`）的参数名 `line` 实为**行文本**而非行号，命名误导；
 - `Document::charToGlyphIndex` 声明参数名 `charIdx`（`document.h:573`），同族接口多用 `charPos`，命名不统一；
 - `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
+
+> 已解决（2026-04）：`getLineIndent`/`leftSpaces` 等 QString 类型的 `line` 参数/变量已统一改名为 `lineText`（含 `getEOL` 的 `Line` 参数，共 14 处），消除了"行号/行文本"的命名歧义。
 
 ### 3.3 CharPos 的多义使用（有意复用，非误用）
 

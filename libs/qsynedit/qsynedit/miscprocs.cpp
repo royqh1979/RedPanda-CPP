@@ -29,17 +29,17 @@ int minMax(int x, int mi, int ma)
     return std::max( x, mi );
 }
 
-int getEOL(const QString &Line, int start)
+int getEOL(const QString &lineText, int start)
 {
-    if (start<0 || start>=Line.size()) {
+    if (start<0 || start>=lineText.size()) {
         return start;
     }
-    for (int i=start;i<Line.size();i++) {
-        if (Line[i] == '\n' || Line[i] == '\r') {
+    for (int i=start;i<lineText.size();i++) {
+        if (lineText[i] == '\n' || lineText[i] == '\r') {
             return i;
         }
     }
-    return Line.size();
+    return lineText.size();
 }
 
 FontStyles getFontStyles(const QFont &font)

@@ -185,7 +185,7 @@ public:
 //    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
-    int leftSpaces(const QString& line) const;
+    int leftSpaces(const QString& lineText) const;
     QString genSpaces(int charCount) const;
     int charToGlyphLeft(int line, int ch) const;
     int charToGlyphLeft(int line, const QString& s, int ch) const;
@@ -194,8 +194,8 @@ public:
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
     int xposToGlyphLeft(int line, int xpos) const;
     //int xposToGlyphRight(int line, int xpos) const;
-    int stringWidth(const QString& line, int left) const;
-    int getLineIndent(const QString& line) const;
+    int stringWidth(const QString& lineText, int left) const;
+    int getLineIndent(const QString& lineText) const;
     int rowToLine(int aRow) const;
     int lineToRow(int aLine) const;
     int foldRowToLine(int row) const;
