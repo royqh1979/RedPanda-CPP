@@ -112,6 +112,7 @@ target_moc_classes(test-qsynedit
     test/test_qsynedit_base
     test/test_qsynedit_cpp
     test/test_qsynedit_cpp_search_replace
+    test/test_qsynedit_display
     test/test_qsynedit_emoji
     test/test_utils)
 
