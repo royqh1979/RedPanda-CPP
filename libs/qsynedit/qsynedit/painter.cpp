@@ -841,16 +841,16 @@ void QSynEditPainter::paintFoldAttributes()
 
         // Now loop through all the lines. The indices are valid for Lines.
         for (int row = mFirstRow; row<=mLastRow;row++) {
-            int vLine = mEdit->rowToLine(row);
-            if (vLine >= mEdit->mDocument->count())
+            int line = mEdit->rowToLine(row);
+            if (line >= mEdit->mDocument->count())
                 break;
             int X;
             // Set vertical coord
             int Y = row * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
-            if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
+            if (mEdit->mTextHeight % 2 == 1 && line % 2 == 0) {
                 Y++;
             }
-            int lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(vLine));
+            int lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(line));
             int indentLevel = 0 ;
             int tabSteps = 0;
             while (tabSteps < lineIndent) {
@@ -969,18 +969,18 @@ void QSynEditPainter::paintLines()
     CharPos selectionBegin = mEdit->selBegin();
     CharPos selectionEnd= mEdit->selEnd();
     for (int row = mFirstRow; row<=mLastRow; row++) {
-        int vLine = mEdit->rowToLine(row);
+        int line = mEdit->rowToLine(row);
         bool lineTextChanged = false;
-        if (vLine >= mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
+        if (line >= mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
             break;
 
         // Get the line.
-        sLine = mEdit->lineText(vLine);
+        sLine = mEdit->lineText(line);
         // determine whether will be painted with ActiveLineColor
         if (mEdit->mActiveSelectionMode == SelectionMode::Column) {
-            mIsCurrentLine = (vLine >= selectionBegin.line && vLine <= selectionEnd.line);
+            mIsCurrentLine = (line >= selectionBegin.line && line <= selectionEnd.line);
         } else {
-            mIsCurrentLine = (mEdit->mCaretY == vLine);
+            mIsCurrentLine = (mEdit->mCaretY == line);
         }
         if (mIsCurrentLine && !mEdit->mInputPreeditString.isEmpty()) {
             int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretY,mEdit->mCaretX);
@@ -994,11 +994,11 @@ void QSynEditPainter::paintLines()
         mBackground = colEditorBG();
         mSpecialLineForeground = QColor();
         mSpecialLineBackground = QColor();
-        mIsSpecialLine = mEdit->onGetSpecialLineColors(vLine, mSpecialLineForeground, mSpecialLineBackground);
+        mIsSpecialLine = mEdit->onGetSpecialLineColors(line, mSpecialLineForeground, mSpecialLineBackground);
 
         mSelectionForeground = mEdit->mSelectedForeground;
         mSelectionBackground = mEdit->mSelectedBackground;
-        mEdit->onGetEditingAreas(vLine, areaList);
+        mEdit->onGetEditingAreas(line, areaList);
         // Get the information about the line selection. Three different parts
         // are possible (unselected before, selected, unselected after), only
         // unselected or only selected means bComplexLine will be FALSE. Start
@@ -1059,25 +1059,25 @@ void QSynEditPainter::paintLines()
 
         QList<int> glyphStartCharList;
         if (lineTextChanged) {
-            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine,sLine);
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(line,sLine);
         } else {
-            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine);
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(line);
         }
         // Ensure the list has the right number of elements.
         // Values in it doesn't matter, we'll recalculate them.
         QList<int> glyphStartPositionsList;
-        bool lineWidthValid = mEdit->mDocument->lineWidthValid(vLine);
+        bool lineWidthValid = mEdit->mDocument->lineWidthValid(line);
         bool calculateGlyphPositions = ( lineTextChanged || !lineWidthValid);
         if (calculateGlyphPositions) {
             glyphStartPositionsList = glyphStartCharList;
         } else {
-            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine);
-            mCurrentLineWidth = mEdit->mDocument->lineWidth(vLine);
+            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(line);
+            mCurrentLineWidth = mEdit->mDocument->lineWidth(line);
         }
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
-        mEdit->startParseLine(mEdit->mSyntaxer.get(), vLine, sLine);
+        mEdit->startParseLine(mEdit->mSyntaxer.get(), line, sLine);
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
@@ -1145,7 +1145,7 @@ void QSynEditPainter::paintLines()
                         sLine,
                         sToken,
                         tokenLeft,
-                        vLine, attr,showGlyph,
+                        line, attr,showGlyph,
                         glyphStartCharList,
                         tokenStartChar,
                         tokenEndChar,
@@ -1161,12 +1161,12 @@ void QSynEditPainter::paintLines()
             mEdit->mSyntaxer->next();
         }
         if (!lineWidthValid)
-            mEdit->mDocument->setLineWidth(vLine, tokenLeft, glyphStartPositionsList);
+            mEdit->mDocument->setLineWidth(line, tokenLeft, glyphStartPositionsList);
         if (tokenLeft<mRight) {
             QString addOnStr;
 
             // Paint folding
-            foldRange = mEdit->foldStartAtLine(vLine);
+            foldRange = mEdit->foldStartAtLine(line);
             if ((foldRange) && foldRange->collapsed) {
                 addOnStr = mEdit->mSyntaxer->foldString(sLine);
                 attr = mEdit->mSyntaxer->symbolAttribute();
@@ -1190,7 +1190,7 @@ void QSynEditPainter::paintLines()
                             sLine,
                             addOnStr,
                             tokenLeft,
-                            vLine, attr, false,
+                            line, attr, false,
                             glyphStartCharList,
                             oldLen,
                             sLine.length(),
