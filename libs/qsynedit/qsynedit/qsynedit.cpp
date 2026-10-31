@@ -1748,12 +1748,12 @@ void QSynEdit::doUndoRedoInput(const QString &oldGlyph,
                              bool undo)
 {
     int changeLine = changeStartPos.line;
-    QString lineStr = mDocument->getLine(changeLine);
-    QString replacedStr = lineStr.mid(
+    QString lineText = mDocument->getLine(changeLine);
+    QString replacedStr = lineText.mid(
                 changeStartPos.ch,
                 changeEndPos.ch-changeStartPos.ch);
-    QString leftStr = lineStr.left(changeStartPos.ch);
-    QString rightStr = lineStr.mid(changeEndPos.ch);
+    QString leftStr = lineText.left(changeStartPos.ch);
+    QString rightStr = lineText.mid(changeEndPos.ch);
     QString restoredStr = leftStr+oldGlyph+rightStr;
     properSetLine(changeLine, restoredStr, true);
     if (undo) {
