@@ -170,7 +170,7 @@ public:
     void invalidateGutterLines(int startLine, int endLine);
 
     int yposToRow(int y) const {
-        return std::max(1, ((y + mTopPos) / mTextHeight) + 1 );
+        return std::max(0, (y + mTopPos) / mTextHeight);
     }
 
     DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;

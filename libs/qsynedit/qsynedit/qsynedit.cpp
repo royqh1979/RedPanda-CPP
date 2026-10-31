@@ -169,7 +169,9 @@ int QSynEdit::lineCount() const
 
 int QSynEdit::displayLineCount() const
 {
-    return lineToRow(mDocument->count()-1);
+    // returns the count of display rows (rows are 0-based internally,
+    // so the last row index is lineToRow(count-1))
+    return lineToRow(mDocument->count()-1)+1;
 }
 
 void QSynEdit::setCaretXY(const CharPos &pos)
@@ -593,8 +595,8 @@ void QSynEdit::invalidateGutterLines(int startLine, int endLine)
         else
             endRow = mDocument->count() + mLinesInWindow + 2;
         // any line visible?
-        int firstLineTop = std::max((firstRow-1)*mTextHeight, mTopPos);
-        int lastLineBottom = std::min((endRow)*mTextHeight, mTopPos+clientHeight());
+        int firstLineTop = std::max(firstRow*mTextHeight, mTopPos);
+        int lastLineBottom = std::min((endRow+1)*mTextHeight, mTopPos+clientHeight());
         rcInval = {0, firstLineTop - mTopPos,
                    mGutterWidth, lastLineBottom - firstLineTop};
         invalidateRect(rcInval);
@@ -648,7 +650,7 @@ QPoint QSynEdit::displayCoordToPixels(const DisplayCoord &coord) const
 {
     QPoint result;
     result.setX(coord.x + textOffset());
-    result.setY((coord.row-1) * mTextHeight - mTopPos);
+    result.setY(coord.row * mTextHeight - mTopPos);
     return result;
 }
 
@@ -679,12 +681,12 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
 CharPos QSynEdit::displayToBufferPos(const DisplayCoord &p) const
 {
     CharPos result{p.x,p.row};
-    if (p.row<1)
+    if (p.row<0)
         return result;
     // Account for code folding
     result.line = rowToLine(p.row);
     // Account for tabs
-    if (result.line <= mDocument->count() ) {
+    if (result.line < mDocument->count() ) {
         result.ch = xposToGlyphStartChar(result.line,p.x);
     }
     return result;
@@ -789,7 +791,7 @@ int QSynEdit::rowToLine(int aRow) const
     if (useCodeFolding())
         line = foldRowToLine(aRow);
     else
-        line = aRow-1;
+        line = aRow;
     if (line<0)
         line = 0;
     if (line>=mDocument->count())
@@ -802,12 +804,12 @@ int QSynEdit::lineToRow(int aLine) const
     if (useCodeFolding())
         return foldLineToRow(aLine);
     else
-        return aLine+1;
+        return aLine;
 }
 
 int QSynEdit::foldRowToLine(int row) const
 {
-    int resultLine = row-1;
+    int resultLine = row;
     for (int i=0;i<mCodeBlocks.count();i++) {
         PCodeBlock range = mCodeBlocks[i];
         if (range->collapsed && !range->parentCollapsed() && range->fromLine < resultLine) {
@@ -819,7 +821,7 @@ int QSynEdit::foldRowToLine(int row) const
 
 int QSynEdit::foldLineToRow(int line) const
 {
-    int resultRow = line+1;
+    int resultRow = line;
     for (int i=mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock range =mCodeBlocks[i];
         if (range->collapsed && !range->parentCollapsed()) {
@@ -855,7 +857,7 @@ void QSynEdit::invalidateLine(int line)
     int row = lineToRow(line);
     if (row >= yposToRow(0) && row <= yposToRow(clientHeight())) {
         rcInval = { mGutterWidth,
-                    mTextHeight * (row-1) - mTopPos,
+                    mTextHeight * row - mTopPos,
                     clientWidth(),
                     mTextHeight};
         invalidateRect(rcInval);
@@ -881,8 +883,8 @@ void QSynEdit::invalidateLines(int startLine, int endLine)
         else
             lastRow = lineToRow(endLine-1);
 
-        int firstLineTop = std::max((firstRow-1)*mTextHeight, mTopPos);
-        int lastLineBottom = std::min(lastRow*mTextHeight, mTopPos+clientHeight());
+        int firstLineTop = std::max(firstRow*mTextHeight, mTopPos);
+        int lastLineBottom = std::min((lastRow+1)*mTextHeight, mTopPos+clientHeight());
 
         // qDebug()<<firstLineTop<<lastLineBottom<<firstLine<<lastLine;
         // any line visible?
@@ -1059,7 +1061,7 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
             QRect rect;
             rect.setLeft(mGutterWidth - mGutter.rightOffset());
             rect.setRight(rect.left() + mGutter.rightOffset() - 4);
-            rect.setTop((row - 1) * mTextHeight - mTopPos);
+            rect.setTop(row * mTextHeight - mTopPos);
             rect.setBottom(rect.top() + mTextHeight - 1);
             if (rect.contains(event->pos())) {
                 if (foldRange->collapsed)
@@ -1697,7 +1699,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
     coord = pixelsToNearestGlyphPos(iMousePos.x(), iMousePos.y());
-    coord.row = minMax(coord.row, 1, displayLineCount());
+    coord.row = minMax(coord.row, 0, displayLineCount()-1);
     if (scrollX != 0) {
         int x;
         setLeftPos(leftPos() + scrollX * mMouseSelectionScrollSpeed);
@@ -1712,7 +1714,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         y = yposToRow(0);
         if (scrollY > 0)  // scrolling down?
             y+=mLinesInWindow - 1;
-        coord.row = minMax(y, 1, displayLineCount());
+        coord.row = minMax(y, 0, displayLineCount()-1);
     }
     CharPos vCaret = displayToBufferPos(coord);
     if ((mCaretX != vCaret.ch) || (mCaretY != vCaret.line)) {
@@ -2547,7 +2549,7 @@ void QSynEdit::computeCaret()
     int y=iMousePos.y();
 
     DisplayCoord vCaretNearestPos = pixelsToNearestGlyphPos(x, y);
-    vCaretNearestPos.row = minMax(vCaretNearestPos.row, 1, displayLineCount());
+    vCaretNearestPos.row = minMax(vCaretNearestPos.row, 0, displayLineCount()-1);
     setCaretDisplayXY(vCaretNearestPos, false);
 }
 
@@ -3100,15 +3102,15 @@ void QSynEdit::ensureCaretVisible(bool forceToMiddle)
     // Make sure Y is visible
     int vCaretRow = displayY();
     if (forceToMiddle) {
-        if ((vCaretRow-1) * mTextHeight < mTopPos
+        if (vCaretRow * mTextHeight < mTopPos
                 ||
-                vCaretRow * mTextHeight > mTopPos + clientHeight() )
-            setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
+                (vCaretRow+1) * mTextHeight > mTopPos + clientHeight() )
+            setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2) * mTextHeight);
     } else {
-        if ((vCaretRow-1) * mTextHeight < mTopPos)
-            setTopPos((vCaretRow - 1) * mTextHeight);
-        else if (vCaretRow * mTextHeight > mTopPos + clientHeight() ) {
-            int value = calcLineAlignedTopPos(vCaretRow * mTextHeight - clientHeight(), true);
+        if (vCaretRow * mTextHeight < mTopPos)
+            setTopPos(vCaretRow * mTextHeight);
+        else if ((vCaretRow+1) * mTextHeight > mTopPos + clientHeight() ) {
+            int value = calcLineAlignedTopPos((vCaretRow+1) * mTextHeight - clientHeight(), true);
             setTopPos(value);
         } else
             setTopPos(mTopPos);
@@ -5124,9 +5126,9 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     ptDst.row+=deltaY;
 
     if (deltaY >= 0) {
-        ptDst.row = std::min(ptDst.row, displayLineCount());
+        ptDst.row = std::min(ptDst.row, displayLineCount()-1);
     } else {
-        ptDst.row = std::max(ptDst.row, 1);
+        ptDst.row = std::max(ptDst.row, 0);
     }
 
     if (ptO.row != ptDst.row) {
@@ -5142,7 +5144,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
     CharPos posDst;
     if (ptDst.row == ptO.row && isSelection && deltaY!=0) {
-        if (ptDst.row==1 && mDocument->count()>1) {
+        if (ptDst.row==0 && mDocument->count()>1) {
             posDst = fileBegin();
         } else {
             posDst = fileEnd();
@@ -5992,9 +5994,9 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
             counter = -counter;
         }
         beginInternalChanges();
-        int gap = (lineToRow(caretY())-1) * mTextHeight - topPos();
+        int gap = lineToRow(caretY()) * mTextHeight - topPos();
         moveCaretVert(counter, command == EditCommand::SelPageUp || command == EditCommand::SelPageDown);
-        setTopPos((lineToRow(caretY())-1) * mTextHeight - gap);
+        setTopPos(lineToRow(caretY()) * mTextHeight - gap);
         endInternalChanges();
         break;
     }
@@ -6275,8 +6277,8 @@ void QSynEdit::paintEvent(QPaintEvent *event)
             nX1 += (rcClip.left() - mGutterWidth - 2 ) ;
         nX2 = mLeftPos + (rcClip.right() - mGutterWidth - 2);
         // lines
-        nL1 = minMax(yposToRow(0) + rcClip.top() / mTextHeight, yposToRow(0), displayLineCount());
-        nL2 = minMax(yposToRow(0) + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
+        nL1 = minMax(yposToRow(0) + rcClip.top() / mTextHeight, yposToRow(0), displayLineCount()-1);
+        nL2 = minMax(yposToRow(0) + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 0, displayLineCount()-1);
 
         //qDebug()<<"Paint:"<<nL1<<nL2<<nC1<<nC2;
 

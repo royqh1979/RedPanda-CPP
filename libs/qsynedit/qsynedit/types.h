@@ -103,8 +103,8 @@ QDataStream &operator>>(QDataStream &in, CharPos &data);
 QDebug operator<<(QDebug dbg, const CharPos& data);
 
 struct DisplayCoord {
-    int x;
-    int row;
+    int x;   // glyph x position in pixels, 0-based
+    int row; // display row, 0-based
 };
 
 enum FontStyle {

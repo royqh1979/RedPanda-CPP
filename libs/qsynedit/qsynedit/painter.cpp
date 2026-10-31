@@ -139,7 +139,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             } else {
                 mPainter->setPen(textColor);
             }
-            int lineTop = (row - 1) * mEdit->mTextHeight - mEdit->mTopPos;
+            int lineTop = row * mEdit->mTextHeight - mEdit->mTopPos;
 
             // next line rect
             rcLine.setTop(lineTop);
@@ -168,7 +168,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
         // Form a rectangle for the square the user can click on
           rcFold.setLeft(mEdit->mGutterWidth - mEdit->mGutter.rightOffset());
-          rcFold.setTop((row - 1) * mEdit->mTextHeight - mEdit->mTopPos);
+          rcFold.setTop(row * mEdit->mTextHeight - mEdit->mTopPos);
           rcFold.setRight(rcFold.left() + mEdit->mGutter.rightOffset() - 4);
           rcFold.setBottom(rcFold.top() + mEdit->mTextHeight);
 
@@ -846,7 +846,7 @@ void QSynEditPainter::paintFoldAttributes()
                 break;
             int X;
             // Set vertical coord
-            int Y = (row-1) * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
+            int Y = row * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
             if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }
@@ -961,7 +961,7 @@ void QSynEditPainter::paintLines()
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
     mRcLine = mClip;
-    mRcLine.setBottom((mFirstRow - 1) * mEdit->mTextHeight - mEdit->mTopPos);
+    mRcLine.setBottom(mFirstRow * mEdit->mTextHeight - mEdit->mTopPos);
     mTokenAccu.width = 0;
     mTokenAccu.left = 0;
     mTokenAccu.style = FontStyle::fsNone;
@@ -1045,7 +1045,7 @@ void QSynEditPainter::paintLines()
         // Update the rcLine rect to this line.
 //        rcLine.setTop(rcLine.bottom());
 //        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
-        mRcLine.setTop((row - 1) * mEdit->mTextHeight - mEdit->mTopPos);
+        mRcLine.setTop(row * mEdit->mTextHeight - mEdit->mTopPos);
         mRcLine.setHeight(mEdit->mTextHeight);
 
         // if (mIsSpecialLine && colSpBG.isValid())
