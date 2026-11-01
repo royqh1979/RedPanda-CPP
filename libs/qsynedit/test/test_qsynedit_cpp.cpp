@@ -11408,6 +11408,163 @@ void TestQSyneditCpp::test_column_delete_prop_font()
     QCOMPARE(mEdit->content(), textDeleted);
 }
 
+void TestQSyneditCpp::test_column_paste_single_line()
+{
+    // a single-line clipboard is broadcast to every line of the band
+    QStringList text({"abcde","fghij","klmno"});
+    QStringList textPasted({"aXde","fXij","kXno"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QApplication::clipboard()->setText("X");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    // pasted widths are equal: stay in column mode with the column
+    // cursor after the pasted text
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_paste_multi_line()
+{
+    // each clipboard line goes to the corresponding selection line
+    QStringList text({"abcde","fghij","klmno"});
+    QStringList textPasted({"a11de","f22ij","k33no"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QApplication::clipboard()->setText("11\n22\n33");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    // equal pasted widths: stay in column mode, column cursor after
+    // the pasted text
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({3,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({3,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+
+    // fewer clipboard lines than selection lines: repeat the last one
+    QStringList textPasted2({"a11de","f22ij","k22no"});
+    mEdit->undo();
+    QApplication::clipboard()->setText("11\n22");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted2);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted2);
+}
+
+void TestQSyneditCpp::test_column_paste_multi_line_unequal()
+{
+    // pasted lines with different display widths: no aligned column
+    // cursor exists, so leave column mode with a normal caret after
+    // the pasted text on the caret's line
+    QStringList text({"abcde","fghij","klmno"});
+    QStringList textPasted({"a1de","f22ij","k333no"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QApplication::clipboard()->setText("1\n22\n333");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Normal);
+    QCOMPARE(mEdit->caretPos(), CharPos({2,0}));
+    QVERIFY(!mEdit->selAvail());
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+}
+
+void TestQSyneditCpp::test_column_paste_short_line()
+{
+    // lines shorter than the band are padded with spaces up to the column
+    QStringList text({"abcde","fg","klmno"});
+    QStringList textPasted({"abcX","fg X","klmX"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{5,2}, CharPos{3,0}, CharPos{5,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QApplication::clipboard()->setText("X");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({4,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({4,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+}
+
+void TestQSyneditCpp::test_column_paste_at_column_cursor()
+{
+    // pasting at a zero-width column selection (column cursor) inserts
+    // on every line without deleting anything
+    QStringList text({"abcde","fghij","klmno"});
+    QStringList textPasted({"aXbcde","fXghij","kXlmno"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QApplication::clipboard()->setText("X");
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+}
+
 void TestQSyneditCpp::test_overwrite_input_with_selection()
 {
     QStringList text({

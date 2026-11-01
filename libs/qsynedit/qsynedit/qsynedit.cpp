@@ -5217,9 +5217,10 @@ void QSynEdit::doGotoBlockStart(bool isSelection)
         blockStart.ch++;
         if (!isSelection)
             setCaretPos(blockStart);
-        else
+        else {
             setActiveSelectionMode(SelectionMode::Normal);
-        setCaretAndSelection(blockStart, blockStart, caretPos());
+            setCaretAndSelection(blockStart, blockStart, caretPos());
+        }
     }
 }
 
@@ -5233,9 +5234,10 @@ void QSynEdit::doGotoBlockEnd(bool isSelection)
     if (getContainingBlockEnd(currentPos, blockEnd)) {
         if (!isSelection)
             setCaretPos(blockEnd);
-        else
+        else {
             setActiveSelectionMode(SelectionMode::Normal);
-        setCaretAndSelection(blockEnd, blockEnd, caretPos());
+            setCaretAndSelection(blockEnd, blockEnd, caretPos());
+        }
     }
 }
 
@@ -5244,9 +5246,10 @@ void QSynEdit::doGotoEditorStart(bool isSelection)
     CharPos newPos{fileBegin()};
     if (!isSelection)
         setCaretPos(newPos);
-    else
+    else {
         setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newPos, newPos, caretPos());
+    }
 }
 
 void QSynEdit::doGotoEditorEnd(bool isSelection)
@@ -5254,9 +5257,10 @@ void QSynEdit::doGotoEditorEnd(bool isSelection)
     CharPos newPos{fileEnd()};
     if (!isSelection)
         setCaretPos(newPos);
-    else
+    else {
         setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newPos, newPos, caretPos());
+    }
 }
 
 void QSynEdit::doDeleteSelection()
@@ -5283,18 +5287,24 @@ void QSynEdit::doSetSelTextPrimitive(const QStringList &text)
             beginEditing();
             groupUndo=true;
         }
+        // compute the band's display x before the deletion: afterwards the
+        // recorded positions may point past the shortened lines. The left
+        // edge is preserved by the deletion, so re-mapping it later is safe.
+        int xBegin = 0;
+        int xEnd = 0;
+        if (mode == SelectionMode::Column) {
+            xBegin = charToGlyphLeft(startPos.line,startPos.ch);
+            xEnd = charToGlyphLeft(endPos.line,endPos.ch);
+        }
         doDeleteText(startPos,endPos,activeSelectionMode());
         if (mode == SelectionMode::Column) {
-            int xBegin = charToGlyphLeft(startPos.line,startPos.ch);
-            int xEnd = charToGlyphLeft(endPos.line,endPos.ch);
-            int x;
-            if (xBegin<xEnd) {
-                internalSetCaretPos(startPos);
-                x=xBegin;
-            } else {
-                internalSetCaretPos(endPos);
-                x=xEnd;
-            }
+            CharPos caretTarget;
+            if (xBegin<xEnd)
+                caretTarget = startPos;
+            else
+                caretTarget = endPos;
+            int x = charToGlyphLeft(caretTarget.line, caretTarget.ch);
+            internalSetCaretPos(caretTarget);
             startPos.ch = xposToGlyphStartChar(startPos.line, x);
             endPos.ch = xposToGlyphStartChar(endPos.line, x);
             internalSetSelBegin(startPos);
@@ -5709,18 +5719,46 @@ void QSynEdit::doInsertText(const CharPos& pos,
     case SelectionMode::Column:{
         CharPos blockBegin=selBegin();
         CharPos blockEnd=selEnd();
-        int lenBefore = mDocument->getLine(blockEnd.line).length();
-        doInsertTextByColumnMode(pos, text, startLine,endLine);
-        if (!text.isEmpty()) {
-            int textLen = mDocument->getLine(blockEnd.line).length()-lenBefore;
-            blockBegin.ch+=textLen;
-            blockEnd.ch+=textLen;
-            // keep the column mode
-            beginInternalChanges();
-            internalSetCaretPos(blockBegin);
-            internalSetSelBegin(blockBegin);
-            internalSetSelEnd(blockEnd);
-            endInternalChanges();
+        QList<int> insertPositions;
+        doInsertTextByColumnMode(pos, text, startLine, endLine,
+                                 mUndoing?nullptr:&insertPositions);
+        if (!text.isEmpty() && !mUndoing) {
+            // a column cursor after the pasted text only exists if every
+            // pasted line has the same display width (design doc 8.5)
+            int pastedWidth = -1;
+            bool equalWidth = true;
+            for (int k = 0; k <= endLine-startLine; k++) {
+                const QString &s = text[std::min(k,(int)text.length()-1)];
+                int w = stringWidth(s,0);
+                if (pastedWidth<0)
+                    pastedWidth = w;
+                else if (w!=pastedWidth) {
+                    equalWidth = false;
+                    break;
+                }
+            }
+            auto endCharOf = [&](int line) {
+                int idx = line-startLine;
+                const QString &s = text[std::min(idx,(int)text.length()-1)];
+                return insertPositions[idx] + (int)s.length();
+            };
+            if (equalWidth) {
+                // keep the column mode: the column cursor sits right
+                // after the pasted text
+                CharPos newBegin{endCharOf(blockBegin.line), blockBegin.line};
+                CharPos newEnd{endCharOf(blockEnd.line), blockEnd.line};
+                beginInternalChanges();
+                internalSetCaretPos(newBegin);
+                internalSetSelBegin(newBegin);
+                internalSetSelEnd(newEnd);
+                endInternalChanges();
+            } else {
+                // no aligned column cursor exists; leave column mode with
+                // a normal caret after the pasted text on the caret's line
+                CharPos newCaret{endCharOf(blockBegin.line), blockBegin.line};
+                setActiveSelectionMode(SelectionMode::Normal);
+                setCaretPos(newCaret);
+            }
         }
     }
         break;
@@ -5832,7 +5870,8 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
     endEditing();
 }
 
-void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine)
+void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine,
+                                        QList<int> *insertPositions)
 {
     QString str;
     QString tempString;
@@ -5848,6 +5887,7 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
     while(line<=endLine) {
         str = text[i];
         int insertPos = 0;
+        int insertedLen = 0;
         if (line > mDocument->count()) {
             tempString = QString(startX/mCharWidth,' ') + str;
             properInsertLine(mDocument->count(), tempString, line==endLine);
@@ -5863,19 +5903,32 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
             tempString = mDocument->getLine(line);
             int lineWidth = mDocument->lineWidth(line);
             if (lineWidth < startX) {
+                // pad with spaces up to the insertion column
                 insertPos = tempString.length();
-                tempString = tempString + QString((startX - lineWidth)/mCharWidth,' ') + str;
+                if (!str.isEmpty()) {
+                    insertedLen = (startX - lineWidth)/mCharWidth;
+                    tempString = tempString + QString(insertedLen,' ') + str;
+                    insertedLen += str.length();
+                }
             } else {
                 insertPos = xposToGlyphStartChar(line,startX);
-                tempString.insert(insertPos,str);
+                if (!str.isEmpty()) {
+                    tempString.insert(insertPos,str);
+                    insertedLen = str.length();
+                }
             }
-            properSetLine(line, tempString, line==endLine);
+            // inserting an empty string must not modify the line
+            // (in particular, it must not pad it with spaces)
+            if (insertedLen>0)
+                properSetLine(line, tempString, line==endLine);
         }
+        if (insertPositions)
+            insertPositions->append(insertPos);
         // Add undo change here from PasteFromClipboard
         if (!mUndoing) {
             addChangeToUndo(ChangeReason::Insert,
                     CharPos{insertPos, line},
-                    CharPos{insertPos+(int)str.length(), line},
+                    CharPos{insertPos+insertedLen, line},
                     QStringList(),
                     SelectionMode::Normal);
         }
