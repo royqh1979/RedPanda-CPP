@@ -131,6 +131,11 @@ private slots:
     void test_move_down_before_collapsed_block();
 
     void test_copy_paste_rawstring();
+    void test_cut_selection();
+    void test_cut_current_line_without_selection();
+    void test_paste_replaces_selection();
+    void test_grouped_editing_undo_redo();
+    void test_nested_grouped_editing();
     void test_copy_paste_ending_with_backslash();
     void test_setseltext_and_indent();
     void test_setseltext_and_indent2();

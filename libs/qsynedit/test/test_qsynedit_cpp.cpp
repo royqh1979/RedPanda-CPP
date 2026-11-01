@@ -1,5 +1,7 @@
 #include <QTest>
 #include <QCoreApplication>
+#include <QApplication>
+#include <QClipboard>
 
 #include "test_qsynedit_cpp.h"
 #include "test_utils.h"
@@ -37,6 +39,7 @@ void TestQSyneditCpp::initTestCase()
 void TestQSyneditCpp::cleanup()
 {
     mEdit->setInsertMode(true);
+    mEdit->setReadOnly(false);
 }
 
 void TestQSyneditCpp::loadDemoFile()
@@ -10813,6 +10816,198 @@ void TestQSyneditCpp::test_copy_paste_ending_with_backslash()
 
     mEdit->undo();
     QCOMPARE(mEdit->content(), QStringList(""));
+}
+
+void TestQSyneditCpp::test_cut_selection()
+{
+    QStringList text({
+        "int main() {",
+        "    return 0;",
+        "}"
+    });
+    QStringList textCut({
+        "int main() {",
+        "     0;",
+        "}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QCOMPARE(QApplication::clipboard()->text(), QString("return"));
+    QCOMPARE(mEdit->caretPos(), CharPos({4,1}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_cut_current_line_without_selection()
+{
+    QStringList text({
+        "int main() {",
+        "    return 0;",
+        "}"
+    });
+    QStringList textCut({
+        "int main() {",
+        "}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretPos(CharPos{2,1});
+    clearSignalDatas();
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QVERIFY(QApplication::clipboard()->text().contains("    return 0;"));
+    QCOMPARE(mDeleteStartLines, QList<int>({1}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({1}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->setCaretPos(CharPos{2,1});
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_paste_replaces_selection()
+{
+    QStringList text({
+        "int main() {",
+        "    return 0;",
+        "}"
+    });
+    QStringList textPasted({
+        "int main() {",
+        "    1 0;",
+        "}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    EditorOptions oldOptions = mEdit->getOptions();
+    mEdit->setOptions(oldOptions & ~EditorOptions(EditorOption::AutoIndent));
+    QApplication::clipboard()->setText("1");
+    mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QCOMPARE(mEdit->caretPos(), CharPos({5,1}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textPasted);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
+    mEdit->pasteFromClipboard();
+    QCOMPARE(mEdit->content(), textPasted);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+    mEdit->setOptions(oldOptions);
+}
+
+void TestQSyneditCpp::test_grouped_editing_undo_redo()
+{
+    QStringList text({
+        "int main() {",
+        "}"
+    });
+    QStringList textEdited({
+        "int main() {x",
+        "y}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretPos(CharPos{12,0});
+    mEdit->beginEditing();
+    QTest::keyPress(mEdit.get(),'x');
+    mEdit->setCaretPos(CharPos{0,1});
+    QTest::keyPress(mEdit.get(),'y');
+    mEdit->endEditing();
+    QCOMPARE(mEdit->content(), textEdited);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->caretPos(), CharPos({12,0}));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->beginEditing();
+    QTest::keyPress(mEdit.get(),'q');
+    mEdit->endEditing();
+    QCOMPARE(mEdit->content(), textEdited);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_nested_grouped_editing()
+{
+    QStringList text({
+        "int main() {"
+    });
+    QStringList textEdited({
+        "int main() {xyz"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretPos(CharPos{12,0});
+    QVERIFY(!mEdit->editing());
+    mEdit->beginEditing();
+    QTest::keyPress(mEdit.get(),'x');
+    mEdit->beginEditing();
+    QVERIFY(mEdit->editing());
+    QTest::keyPress(mEdit.get(),'y');
+    mEdit->endEditing();
+    QVERIFY(mEdit->editing());
+    QTest::keyPress(mEdit.get(),'z');
+    mEdit->endEditing();
+    QVERIFY(!mEdit->editing());
+    QCOMPARE(mEdit->content(), textEdited);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
 }
 
 void TestQSyneditCpp::test_setseltext_and_indent()
