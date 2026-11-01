@@ -614,29 +614,29 @@ bool isScopeTypeKind(StatementKind kind)
 }
 
 EvalStatement::EvalStatement(
-        const QString &baseType,
-        EvalStatementKind kind,
-        const PStatement &baseStatement,
-        const PStatement& typeStatement,
-        const PStatement& effectiveTypeStatement,
-        int pointerLevel,
-        const QString& templateParams)
+        const QString &newBaseType,
+        EvalStatementKind newKind,
+        const PStatement &newBaseStatement,
+        const PStatement& newTypeStatement,
+        const PStatement& newEffectiveTypeStatement,
+        int newPointerLevel,
+        const QString& newTemplateParams)
+    : baseType{newBaseType},
+      templateParams{newTemplateParams},
+      kind{newKind},
+      pointerLevel{newPointerLevel},
+      baseStatement{newBaseStatement},
+      typeStatement{newTypeStatement},
+      effectiveTypeStatement{newEffectiveTypeStatement}
 {
-    this->baseType = baseType;
-    this->kind = kind;
-    this->baseStatement = baseStatement;
-    this->typeStatement = typeStatement;
-    this->effectiveTypeStatement = effectiveTypeStatement;
-    this->pointerLevel = pointerLevel;
-    this->templateParams = templateParams;
 }
 
-void EvalStatement::assignType(const PEvalStatement &typeStatement)
+void EvalStatement::assignType(const PEvalStatement &typeStmt)
 {
-    Q_ASSERT(typeStatement && typeStatement->kind==EvalStatementKind::Type);
-    baseType = typeStatement->baseType;
-    pointerLevel = typeStatement->pointerLevel;
-    effectiveTypeStatement = typeStatement->effectiveTypeStatement;
+    Q_ASSERT(typeStmt && typeStmt->kind==EvalStatementKind::Type);
+    baseType = typeStmt->baseType;
+    pointerLevel = typeStmt->pointerLevel;
+    effectiveTypeStatement = typeStmt->effectiveTypeStatement;
 }
 
 QStringList getOwnerExpressionAndMember(const QStringList expression, QString &memberOperator, QStringList &memberExpression)

@@ -571,11 +571,11 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
                         QMultiHash<int,QString> tempMacros2 = tempIngoreMacros;
                         tempIngoreMacros.clear();
                         int diff = newWord.length()-word.length();
-                        auto it = tempMacros2.begin();
-                        while(it!=tempMacros2.end()) {
-                            if (it.key()>=i)
-                                tempIngoreMacros.insert(it.key()+diff, it.value());
-                            ++it;
+                        auto tempIt = tempMacros2.begin();
+                        while(tempIt!=tempMacros2.end()) {
+                            if (tempIt.key()>=i)
+                                tempIngoreMacros.insert(tempIt.key()+diff, tempIt.value());
+                            ++tempIt;
                         }
                         //rescan (see ISO/IEC 9899:1999 6.10.3.4 Rescanning and futher replacement)
                         foreach(const QString& name, macrosUsed) {
@@ -1528,12 +1528,12 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                         lineLen = line.length();
                         QMultiHash tempMacros=usedMacros;
                         usedMacros.clear();
-                        auto it = tempMacros.begin();
-                        while (it!=tempMacros.end()) {
-                            if (it.key()>searchPos) {
-                                usedMacros.insert(it.key()-searchPos+insertValue.length(),it.value());
+                        auto tempIt = tempMacros.begin();
+                        while (tempIt!=tempMacros.end()) {
+                            if (tempIt.key()>searchPos) {
+                                usedMacros.insert(tempIt.key()-searchPos+insertValue.length(),tempIt.value());
                             }
-                            ++it;
+                            ++tempIt;
                         }
                         searchPos = 0;
                         usedMacros.insert(insertValue.length(), define->name);
@@ -1632,16 +1632,16 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
         if (argValues.length() >= define->argUsed.length()
                 && argValues.length()>0) {
             QStringList varArgs;
-            for (int i=0;i<argValues.length();i++) {
-                QString argValue = argValues[i];
+            for (int argIdx=0;argIdx<argValues.length();argIdx++) {
+                QString argValue = argValues[argIdx];
                 if (define->varArgIndex != -1
-                     && i >= define->varArgIndex ) {
+                     && argIdx >= define->varArgIndex ) {
                     if (!define->argNotExpand[define->varArgIndex])
                         argValue = expandMacros(argValue,macrosToBeIgnored);
                     varArgs.append(argValue.trimmed());
-                } else if (i<define->argUsed.length()
-                            && define->argUsed[i]) {                    
-                    if (!define->argNotExpand[i])
+                } else if (argIdx<define->argUsed.length()
+                            && define->argUsed[argIdx]) {                    
+                    if (!define->argNotExpand[argIdx])
                         argValue = expandMacros(argValue,macrosToBeIgnored);
                     result=result.arg(argValue.trimmed());
                 }

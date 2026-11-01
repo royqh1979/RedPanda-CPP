@@ -269,14 +269,14 @@ struct EvalStatement {
     PStatement typeStatement;
     PStatement effectiveTypeStatement;
 public:
-    EvalStatement (const QString& baseType,
-                   EvalStatementKind kind,
-                   const PStatement& baseStatement,
-                   const PStatement& typeStatement,
-                   const PStatement& effectiveTypeStatement,
-                   int pointerLevel=0,
-                   const QString& templateParams=QString());
-    void assignType(const PEvalStatement& typeStatement);
+    EvalStatement (const QString& newBaseType,
+                   EvalStatementKind newKind,
+                   const PStatement& newBaseStatement,
+                   const PStatement& newTypeStatement,
+                   const PStatement& newEffectiveTypeStatement,
+                   int newPointerLevel=0,
+                   const QString& newTemplateParams=QString());
+    void assignType(const PEvalStatement& typeStmt);
 
 };
 

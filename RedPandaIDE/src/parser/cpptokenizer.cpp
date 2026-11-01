@@ -515,12 +515,12 @@ QString CppTokenizer::getWord()
             if (currentWord!="operator" && currentWord != "auto") {
                 // Skip template contents, but keep template variable types
                 if (*mCurrent == '<') {
-                    const QChar* offset = mCurrent;
+                    const QChar* angleStart = mCurrent;
                     bool bFoundTemplate = isKeyword && (result == "template");
                     if (bFoundTemplate) {
                         skipTemplateArgs();
                     } else if (skipAngleBracketPair()){
-                        result += QString(offset, mCurrent-offset);
+                        result += QString(angleStart, mCurrent-angleStart);
                         skipToNextToken();
                     } else
                         break;
@@ -528,9 +528,9 @@ QString CppTokenizer::getWord()
                     if (*(mCurrent+1)!='[') {
                         // Append array stuff
                         while(true) {
-                            const QChar* offset = mCurrent;
+                            const QChar* arrayStart = mCurrent;
                             skipPair('[', ']');
-                            result += QString(offset,mCurrent-offset);
+                            result += QString(arrayStart,mCurrent-arrayStart);
                             simplifyArgs(result);
                             skipToNextToken();
                             if (*mCurrent!='[') //maybe multi-dimension array

@@ -495,9 +495,9 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
         parentScopeType=statement;
         statement = memberStatement;
         if (!memberName.isEmpty() && (statement->kind == StatementKind::Typedef)) {
-            PStatement typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
-            if (typeStatement)
-                statement = typeStatement;
+            PStatement typeDefStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
+            if (typeDefStatement)
+                statement = typeDefStatement;
         }
     }
     return statement;
@@ -3183,17 +3183,17 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
         scopeStatement->friends.insert(scopelessName);
     } else if (isValid) {
         // Use the class the function belongs to as the parent ID if the function is declared outside of the class body
-        QString scopelessName;
+        QString shortName;
         QString parentClassName;
-        if (!isOperatorOverload && splitLastMember(sName,scopelessName,parentClassName)) {
+        if (!isOperatorOverload && splitLastMember(sName,shortName,parentClassName)) {
             // Provide Bar instead of Foo::Bar
             scopeStatement = getIncompleteClass(parentClassName,getCurrentScope());
 
             //parent not found
             if (!parentClassName.isEmpty() && !scopeStatement)
-                scopelessName=sName;
+                shortName=sName;
         } else
-            scopelessName = sName;
+            shortName = sName;
 
         // For function definitions, the parent class is given. Only use that as a parent
         if (!isDeclaration) {
@@ -3201,7 +3201,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         scopeStatement,
                         mCurrentFile,
                         sType,
-                        scopelessName,
+                        shortName,
                         argStart,
                         argEnd,
                         "",
@@ -3242,7 +3242,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         "__func__",
                         "[]",
                         "",
-                        "\""+scopelessName+"\"",
+                        "\""+shortName+"\"",
                         startLine+1,
                         StatementKind::Variable,
                         StatementScope::Local,
@@ -3255,7 +3255,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         scopeStatement,
                         mCurrentFile,
                         sType,
-                        scopelessName,
+                        shortName,
                         argStart,
                         argEnd,
                         "",
@@ -3462,13 +3462,13 @@ void CppParser::handleOtherTypedefs(int maxIndex)
                 mIndex=indexOfNextSemicolon(paramStart, maxIndex)+1;
                 return;
             }
-            QString newType = findFunctionPointerName(mIndex);
-            if (!newType.isEmpty()) {
+            QString funcPtrName = findFunctionPointerName(mIndex);
+            if (!funcPtrName.isEmpty()) {
                 addStatement(
                         getCurrentScope(),
                         mCurrentFile,
                         oldType+tempType,
-                        newType,
+                        funcPtrName,
                         mergeArgs(paramStart,mTokenizer[paramStart]->matchIndex),
                         "",
                         "",
@@ -4309,9 +4309,9 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                     addedVar->type += aliasStatement->templateParams;
                                 } else {
                                     QString type = addedVar->type;
-                                    int pos = type.indexOf('<');
-                                    if (pos>=0) {
-                                        type = type.left(pos);
+                                    int anglePos = type.indexOf('<');
+                                    if (anglePos>=0) {
+                                        type = type.left(anglePos);
                                         addedVar->type = type + aliasStatement->templateParams;
                                     }
                                 }
@@ -4820,14 +4820,14 @@ PStatement CppParser::findMemberOfStatement(const QString& filename,
     } else {
         QList<PStatement> stats = statementMap.values(s);
         PParsedFileInfo fileInfo =  mPreprocessor.findFileInfo(filename);
-        foreach(const PStatement &s,stats) {
-            if (s->line==-1) {
-                return s; // hard defines
-            } if (s->fileName == filename || s->definitionFileName==filename) {
-                return s;
-            } else if (fileInfo && (fileInfo->including(s->fileName)
-                    || fileInfo->including(s->definitionFileName))) {
-                return s;
+        foreach(const PStatement &candidate,stats) {
+            if (candidate->line==-1) {
+                return candidate; // hard defines
+            } if (candidate->fileName == filename || candidate->definitionFileName==filename) {
+                return candidate;
+            } else if (fileInfo && (fileInfo->including(candidate->fileName)
+                    || fileInfo->including(candidate->definitionFileName))) {
+                return candidate;
             }
         }
         return PStatement();
@@ -5779,9 +5779,9 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int pos, PStatement m
         if (values.length()!=argList.length())
             return false;
         s = formatStr;
-        for (int i=0;i<values.length();i++) {
-            if (argUsed[i]) {
-                QString argValue = values[i];
+        for (int k=0;k<values.length();k++) {
+            if (argUsed[k]) {
+                QString argValue = values[k];
                 s=s.arg(argValue.trimmed());
             }
         }
@@ -6143,35 +6143,35 @@ PStatement CppParser::doParseEvalTypeInfo(
         baseType="";
         syntaxer.resetState();
         syntaxer.setLine(0, effectiveTypeStatement->type+effectiveTypeStatement->args, 0);
-        int bracketLevel = 0;
-        int templateLevel  = 0;
+        int typeBracketLevel = 0;
+        int typeTemplateLevel  = 0;
         while(!syntaxer.eol()) {
             QString token = syntaxer.getToken();
-            if (bracketLevel == 0 && templateLevel ==0) {
+            if (typeBracketLevel == 0 && typeTemplateLevel ==0) {
                 if (token == "*")
                     pointerLevel++;
                 else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
                     baseType += token;
                 } else if (token == "[") {
                     pointerLevel++;
-                    bracketLevel++;
+                    typeBracketLevel++;
                 } else if (token == "<") {
-                    templateLevel++;
+                    typeTemplateLevel++;
                     templateParams += token;
                 } else if (token == "::") {
                     baseType += token;
                 }
-            } else if (bracketLevel > 0) {
+            } else if (typeBracketLevel > 0) {
                 if (token == "[") {
-                    bracketLevel++;
+                    typeBracketLevel++;
                 } else if (token == "]") {
-                    bracketLevel--;
+                    typeBracketLevel--;
                 }
-            } else if (templateLevel > 0) {
+            } else if (typeTemplateLevel > 0) {
                 if (token == "<") {
-                    templateLevel++;
+                    typeTemplateLevel++;
                 } else if (token == ">") {
-                    templateLevel--;
+                    typeTemplateLevel--;
                 }
                 templateParams += token;
             }
@@ -6316,10 +6316,10 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                 && mTokenizer[i]->matchIndex+1<argEnd
                 && mTokenizer[mTokenizer[i]->matchIndex+1]->text=='(') {
             //function pointer
-            int argStart=mTokenizer[i]->matchIndex+1;
-            int argEnd=mTokenizer[argStart]->matchIndex;
+            int fpArgStart=mTokenizer[i]->matchIndex+1;
+            int fpArgEnd=mTokenizer[fpArgStart]->matchIndex;
             QString cmd=findFunctionPointerName(i);
-            QString args=mergeArgs(argStart,argEnd);
+            QString args=mergeArgs(fpArgStart,fpArgEnd);
             if (!cmd.isEmpty()) {
                 addStatement(
                             functionStatement,
