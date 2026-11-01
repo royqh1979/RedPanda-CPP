@@ -146,6 +146,10 @@ private slots:
     void test_column_mode_alt_selection();
     void test_column_delete_char();
     void test_column_overwrite_input();
+    void test_column_select_content_cjk();
+    void test_column_delete_cjk();
+    void test_column_delete_tab_snap();
+    void test_column_has_content_cjk_layout();
     void test_overwrite_input_with_selection();
     void test_no_auto_indent_break_line();
     void test_copy_paste_ending_with_backslash();

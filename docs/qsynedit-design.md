@@ -152,7 +152,8 @@
   替代按 OS 硬编码的 `defaultMonoFont()`；非等宽字体同时覆盖 `forceMonospace=false` 的渲染路径（目前零覆盖）；
 - 为 emoji / 中文测试专门制作一个小字体（仓库已有自制字体先例：`resources/fonts/asciicontrol.ttf`），
   只含测试用到的少量字形、宽度做成已知定值（如全角恒等于 2×半角），
-  避免捆绑 10MB+ 的完整 CJK 字体；
+  避免捆绑 10MB+ 的完整 CJK 字体；列模式的中英混排测试（删除/undo/边界吸附）
+  目前依赖"全角取整后 = 2 格"这一环境假设，是该方案最直接的受益者；
 - 即使自带字体，跨平台字体引擎取整仍可能有 ±1 像素差异，宽度断言应尽量运行时现算期望值，不写死像素。
 
 ## 3. 坐标体系
@@ -220,7 +221,9 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 **Document → QSynEdit（上行通知，唯一听众是所有者）：**
 
 - `changing()` / `changed()`：`beginUpdate`/`endUpdate` 发出；QSynEdit 据此做批量修改的内部收尾
-  （列选择修正、gutter autosize、滚动条与 topPos 修正）。
+  （gutter autosize、滚动条与 topPos 修正）。
+  **不做列选区修正**：该信号在编辑中间态也会触发（列删除逐行 putLine），此时光标还是旧值、
+  行可能已删短，全局重吸附会读到不一致状态；列选区的终态由各编辑操作自己维护（见 8.3）。
 - `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条。
 
 **UndoList / Gutter → QSynEdit（上行通知，唯一听众是所有者）：**

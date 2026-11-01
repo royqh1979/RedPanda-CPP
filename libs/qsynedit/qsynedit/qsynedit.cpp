@@ -4374,8 +4374,15 @@ void QSynEdit::doUndoItem()
             CharPos startPos = item->changeStartPos();
             CharPos endPos = item->changeEndPos();
             if (item->changeSelMode()==SelectionMode::Column) {
-                int xFrom = charToGlyphLeft(startPos.line, startPos.ch);
-                int xTo = charToGlyphLeft(endPos.line, endPos.ch);
+                // The recorded positions refer to the pre-deletion document
+                // and may point past the shortened lines. Column deletion
+                // preserves the part left of the band, so the left edge's
+                // display x is exact; clamping the right edge to the line
+                // length is safe since it stays >= the left edge's x.
+                int xFrom = charToGlyphLeft(startPos.line,
+                        std::min(startPos.ch,(int)mDocument->getLine(startPos.line).length()));
+                int xTo = charToGlyphLeft(endPos.line,
+                        std::min(endPos.ch,(int)mDocument->getLine(endPos.line).length()));
                 if (xFrom > xTo)
                     std::swap(xFrom, xTo);
                 startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
@@ -6789,15 +6796,11 @@ void QSynEdit::onBookMarkOptionsChanged()
 
 void QSynEdit::onLinesChanged()
 {
-    if (mActiveSelectionMode == SelectionMode::Column) {
-        CharPos oldBlockStart = selBegin();
-        CharPos oldBlockEnd = selEnd();
-        int xEnd = charToGlyphLeft(mCaretLine,mCaretCh);
-        oldBlockStart.ch = xposToGlyphStartChar(oldBlockStart.line,xEnd);
-        oldBlockEnd.ch = xposToGlyphStartChar(oldBlockEnd.line,xEnd);
-        internalSetSelBegin(oldBlockStart);
-        internalSetSelEnd(oldBlockEnd);
-    }
+    // Note: no column-selection fixup here. It used to re-snap the column
+    // selection to the caret's display x, but this slot also fires mid-edit
+    // (per line of a column deletion/insertion), where the caret is stale
+    // and the line may already be shortened. Editing operations are
+    // responsible for the final selection state themselves.
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))
         mGutter.autoSizeDigitCount(mDocument->count());
     setTopPos(mTopPos);

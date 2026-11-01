@@ -11235,6 +11235,133 @@ void TestQSyneditCpp::test_column_overwrite_input()
     QCOMPARE(mEdit->content(), textInput);
 }
 
+void TestQSyneditCpp::test_column_select_content_cjk()
+{
+    clearContent();
+    mEdit->setContent({"abcde","ab中文de","klmno"});
+    mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
+    // skip if the CJK fallback font does not render as exactly 2 cells
+    if (mEdit->charToGlyphLeft(1,3)-mEdit->charToGlyphLeft(1,2) != 2*mEdit->charWidth())
+        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
+    // select ch1..ch3 on the ASCII lines: the band is x = [1,3) cells
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QVERIFY(mEdit->hasSelContent());
+    // line 1 layout: a[0,1) b[1,2) 中[2,4) 文[4,6) d[6,7) e[7,8)
+    // x=1 -> 'b' (ch1); x=3 falls inside 中 -> snaps left to its start (ch2)
+    QCOMPARE(mEdit->selContent(), QStringList({"bc","b","lm"}));
+}
+
+void TestQSyneditCpp::test_column_delete_cjk()
+{
+    QStringList text({"abcde","ab中文de","klmno"});
+    QStringList textDeleted({"ade","a中文de","kno"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
+    if (mEdit->charToGlyphLeft(1,3)-mEdit->charToGlyphLeft(1,2) != 2*mEdit->charWidth())
+        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
+    // band x=[1,3): on line 1 only 'b' is removed; 中[2,4) is spared by the left snap
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    // band x=[1,4): its right edge is exactly the start of 文, so 中 is fully covered
+    QStringList textDeleted2({"ae","a文de","ko"});
+    mEdit->undo();
+    mEdit->setCaretAndSelection(CharPos{4,2}, CharPos{1,0}, CharPos{4,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted2);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted2);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_delete_tab_snap()
+{
+    // default tabSize is 4
+    QStringList text({"abcde","a\tbcde","klmno"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
+    // line 1 layout: a[0,1) \t[1,4) b[4,5) c[5,6) d[6,7) e[7,8)
+    // band x=[1,4): the right edge is exactly the start of 'b', only the tab is removed
+    QStringList textDeleted({"ae","abcde","ko"});
+    mEdit->setCaretAndSelection(CharPos{4,2}, CharPos{1,0}, CharPos{4,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    // band x=[2,3) lies fully inside the tab: line 1 is left untouched
+    QStringList textDeleted2({"abde","a\tbcde","klno"});
+    mEdit->undo();
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{2,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted2);
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted2);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted2);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_has_content_cjk_layout()
+{
+    // the content check only examines the begin/end lines' display x (design doc 8.1)
+    clearContent();
+    mEdit->setContent({"abcde","中lmno"});
+    mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
+    if (mEdit->charToGlyphLeft(1,1) != 2*mEdit->charWidth())
+        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
+    // same ch on both lines, but 中 is 2 cells wide:
+    // begin x = 1 cell, end x = 2 cells -> the band has content
+    mEdit->setCaretAndSelection(CharPos{1,1}, CharPos{1,0}, CharPos{1,1});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QVERIFY(mEdit->hasSelContent());
+    // line 0: x=[1,2) -> "b"; line 1: x=1 falls inside 中[0,2) -> snaps to ch0,
+    // x=2 is the start of 'l' -> content is "中"
+    QCOMPARE(mEdit->selContent(), QStringList({"b","中"}));
+}
+
 void TestQSyneditCpp::test_overwrite_input_with_selection()
 {
     QStringList text({
