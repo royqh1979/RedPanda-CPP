@@ -8434,9 +8434,9 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
     QStringList expression = editor->getExpressionAtPosition(oldCaret);
     if (expression.isEmpty() && oldCaret.ch>=0) {
-        QSynedit::CharPos coord=oldCaret;
-        coord.ch--;
-        expression = editor->getExpressionAtPosition(coord);
+        QSynedit::CharPos pos=oldCaret;
+        pos.ch--;
+        expression = editor->getExpressionAtPosition(pos);
     }
 
     if (editor->inProject() && mProject) {

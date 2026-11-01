@@ -341,14 +341,14 @@ public:
     QStringList content();
     QString text();
 
-    CharPos ensureCharPosValid(const CharPos& coord) const;
+    CharPos ensureCharPosValid(const CharPos& pos) const;
     bool validLine(int line) const;
     bool validInDoc(int line, int ch) const;
     bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
     bool validGlyphStart(const CharPos& pos) const;
     bool getPositionOfMouse(CharPos& aPos) const;
     bool getLineOfMouse(int& line) const;
-    bool pointToCharLine(const QPoint& point, CharPos& coord) const;
+    bool pointToCharLine(const QPoint& point, CharPos& pos) const;
     bool pointToLine(const QPoint& point, int& line) const;
     bool isIdentChar(const QChar& ch) const;
     bool isIdentStartChar(const QChar& ch) const;

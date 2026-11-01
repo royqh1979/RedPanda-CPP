@@ -20,38 +20,38 @@
 
 namespace QSynedit {
 
-bool CharPos::operator==(const CharPos &coord) const
+bool CharPos::operator==(const CharPos &pos) const
 {
-    return coord.ch == ch && coord.line == line;
+    return pos.ch == ch && pos.line == line;
 }
 
-bool CharPos::operator>=(const CharPos &coord) const
+bool CharPos::operator>=(const CharPos &pos) const
 {
-    return (line > coord.line)
-            || (line == coord.line && ch >= coord.ch);
+    return (line > pos.line)
+            || (line == pos.line && ch >= pos.ch);
 }
 
-bool CharPos::operator>(const CharPos &coord) const
+bool CharPos::operator>(const CharPos &pos) const
 {
-    return (line > coord.line)
-            || (line == coord.line && ch > coord.ch);
+    return (line > pos.line)
+            || (line == pos.line && ch > pos.ch);
 }
 
-bool CharPos::operator<(const CharPos &coord) const
+bool CharPos::operator<(const CharPos &pos) const
 {
-    return (line < coord.line)
-            || (line == coord.line && ch < coord.ch);
+    return (line < pos.line)
+            || (line == pos.line && ch < pos.ch);
 }
 
-bool CharPos::operator<=(const CharPos &coord) const
+bool CharPos::operator<=(const CharPos &pos) const
 {
-    return (line < coord.line)
-            || (line == coord.line && ch <= coord.ch);
+    return (line < pos.line)
+            || (line == pos.line && ch <= pos.ch);
 }
 
-bool CharPos::operator!=(const CharPos &coord) const
+bool CharPos::operator!=(const CharPos &pos) const
 {
-    return coord.ch != ch || coord.line != line;
+    return pos.ch != ch || pos.line != line;
 }
 
 bool isAssemblyLanguage(ProgrammingLanguage lang)

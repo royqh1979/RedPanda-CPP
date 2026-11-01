@@ -1696,22 +1696,22 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 }
             }
         } else if (!selAvail() && mEditorSettings->highlightMathingBraces()){
-            CharPos coord;
+            CharPos pos;
             //are there a brace char under caret?
             if (isBraceChar(charAt(caretPos()))) {
-                coord=caretPos();
+                pos=caretPos();
             } else if (isBraceChar(charAt(CharPos{caretCh()-1,caretLine()}))) {
-                coord=CharPos{caretCh()-1,caretLine()};
+                pos=CharPos{caretCh()-1,caretLine()};
             }
-            if (coord.isValid()) {
+            if (pos.isValid()) {
                 QSynedit::PTokenAttribute attr;
                 QString token;
-                if (getTokenAttr(coord,token,attr)
+                if (getTokenAttr(pos,token,attr)
                         && attr->tokenType() == QSynedit::TokenType::Symbol) {
-                    CharPos complementCharPos = getMatchingBracket(coord);
-                    if (!foldHidesLine(coord.line)
+                    CharPos complementCharPos = getMatchingBracket(pos);
+                    if (!foldHidesLine(pos.line)
                             && !foldHidesLine(complementCharPos.line)) {
-                        mHighlightCharPos1 = coord;
+                        mHighlightCharPos1 = pos;
                         mHighlightCharPos2 = complementCharPos;
                         invalidateLine(mHighlightCharPos1.line);
                         invalidateLine(mHighlightCharPos2.line);

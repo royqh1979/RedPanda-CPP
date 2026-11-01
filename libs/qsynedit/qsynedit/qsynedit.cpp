@@ -539,7 +539,7 @@ bool QSynEdit::getLineOfMouse(int &line) const
     return pointToLine(point,line);
 }
 
-bool QSynEdit::pointToCharLine(const QPoint &point, CharPos &coord) const
+bool QSynEdit::pointToCharLine(const QPoint &point, CharPos &pos) const
 {
     // Make sure it fits within the SynEdit bounds (and on the gutter)
     if ((point.x() < gutterWidth() + clientLeft())
@@ -549,7 +549,7 @@ bool QSynEdit::pointToCharLine(const QPoint &point, CharPos &coord) const
         return false;
     }
 
-    coord = displayToBufferPos(pixelsToGlyphPos(point.x(),point.y()));
+    pos = displayToBufferPos(pixelsToGlyphPos(point.x(),point.y()));
     return true;
 }
 
@@ -2190,10 +2190,10 @@ void QSynEdit::doSelectLine()
     setCaretAndSelection(blockBegin,blockBegin,blockEnd);
 }
 
-CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
+CharPos QSynEdit::ensureCharPosValid(const CharPos &pos) const
 {
     int nMaxX;
-    CharPos value = coord;
+    CharPos value = pos;
     if (value.line >= mDocument->count())
         return fileEnd();
     if (value.line < 0)
@@ -6179,9 +6179,9 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
         break;
     case EditCommand::MatchBracket:
         {
-        CharPos coord = getMatchingBracket();
-        if (coord.isValid())
-            setCaretPos(coord);
+        CharPos pos = getMatchingBracket();
+        if (pos.isValid())
+            setCaretPos(pos);
         }
         break;
     case EditCommand::TrimTrailingSpaces:
@@ -6651,9 +6651,9 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
         mDragCaretSave = caretPos();
         mDragSelBeginSave = selBegin();
         mDragSelEndSave = selEnd();
-        CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
+        CharPos pos = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
                                                                         event->pos().y()));
-        internalSetCaretPos(coord);
+        internalSetCaretPos(pos);
         internalSetSelBegin(mDragSelBeginSave);
         internalSetSelEnd(mDragSelEndSave);
         properInsertLine(mDocument->count(),"",true); //add a line to handle drag to the last
@@ -6666,14 +6666,14 @@ void QSynEdit::dropEvent(QDropEvent *event)
 {
     //mScrollTimer->stop();
 
-    CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
+    CharPos pos = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
                                                                     event->pos().y()));
     if (
             (event->proposedAction() == Qt::DropAction::CopyAction
-             && coord>mDragSelBeginSave && coord<mDragSelEndSave)
+             && pos>mDragSelBeginSave && pos<mDragSelEndSave)
              ||
              (event->proposedAction() != Qt::DropAction::CopyAction
-             && coord>=mDragSelBeginSave && coord<=mDragSelEndSave)
+             && pos>=mDragSelBeginSave && pos<=mDragSelEndSave)
             ) {
         properDeleteLine(mDocument->count()-1,true);
         ensureLineAlignedWithTop();
@@ -6683,14 +6683,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
         mDropped = true;
         return;
     }
-//    if (coord.line<=0 || coord.line>=mDocument->count()) {
-//        //do nothing if drag out of range
-//        event->acceptProposedAction();
-//        mDropped = true;
-//        return;
-//    }
-    // coord = ensureBufferCoordValid(coord);
-    bool lastLineUsed = (coord.line == mDocument->count()-1);
+    bool lastLineUsed = (pos.line == mDocument->count()-1);
     int topPos = mTopPos;
     int leftPos = mLeftPos;
     QStringList text=splitStrings(event->mimeData()->text());
@@ -6706,18 +6699,18 @@ void QSynEdit::dropEvent(QDropEvent *event)
     } else
         properDeleteLine(mDocument->count()-1, true);
     addLeftTopToUndo();
-    internalSetCaretPos(coord);
+    internalSetCaretPos(pos);
     if (event->proposedAction() == Qt::DropAction::CopyAction) {
         //just copy it
-        doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
+        doInsertText(pos,text,mActiveSelectionMode,pos.line,pos.line+text.length()-1);
     } else if (event->proposedAction() == Qt::DropAction::MoveAction)  {
-        if (coord < mDragSelBeginSave ) {
+        if (pos < mDragSelBeginSave ) {
             //delete old
             doDeleteText(mDragSelBeginSave,mDragSelEndSave,mActiveSelectionMode);
             //paste to new position
-            doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
+            doInsertText(pos,text,mActiveSelectionMode,pos.line,pos.line+text.length()-1);
         } else {
-            if (coord.line>mDocument->count()) {
+            if (pos.line>mDocument->count()) {
                 int line=mDocument->count();
                 QString s=mDocument->getLine(line);
                 beginEditing();
@@ -6726,25 +6719,25 @@ void QSynEdit::dropEvent(QDropEvent *event)
                                      CharPos{(int)s.length()+1,line},
                                      CharPos{(int)s.length()+1,line}, QStringList(), SelectionMode::Normal);
                 endEditing();
-                coord.line = line;
-                coord.ch=0;
+                pos.line = line;
+                pos.ch=0;
             } else {
 
             }
             //paste to new position
-            doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
+            doInsertText(pos,text,mActiveSelectionMode,pos.line,pos.line+text.length()-1);
             //delete old
             doDeleteText(mDragSelBeginSave,mDragSelEndSave,mActiveSelectionMode);
             //set caret to right pos
             if (mDragSelBeginSave.line == mDragSelEndSave.line) {
-                if (coord.line == mDragSelEndSave.line) {
-                    coord.ch -= mDragSelEndSave.ch-mDragSelBeginSave.ch;
+                if (pos.line == mDragSelEndSave.line) {
+                    pos.ch -= mDragSelEndSave.ch-mDragSelBeginSave.ch;
                 }
             } else {
-                if (coord.line == mDragSelEndSave.line) {
-                    coord.ch -= mDragSelEndSave.ch-1;
+                if (pos.line == mDragSelEndSave.line) {
+                    pos.ch -= mDragSelEndSave.ch-1;
                 } else {
-                    coord.line -= mDragSelEndSave.line-mDragSelBeginSave.line;
+                    pos.line -= mDragSelEndSave.line-mDragSelBeginSave.line;
                     topPos -= (mDragSelEndSave.line-mDragSelBeginSave.line) * mTextHeight;
                 }
             }
@@ -6757,7 +6750,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
     topPos = calcLineAlignedTopPos(topPos, false);
     setTopPos(topPos);
     setLeftPos(leftPos);
-    setCaretPos(coord);
+    setCaretPos(pos);
 }
 
 void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
@@ -6775,8 +6768,8 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
     iMousePos = mapFromGlobal(iMousePos);
     int x=iMousePos.x();
     int y=iMousePos.y();
-    CharPos coord = displayToBufferPos(pixelsToNearestGlyphPos(x,y));
-    internalSetCaretPos(coord);
+    CharPos pos = displayToBufferPos(pixelsToNearestGlyphPos(x,y));
+    internalSetCaretPos(pos);
     internalSetSelBegin(mDragSelBeginSave);
     internalSetSelEnd(mDragSelEndSave);
     showCaret();

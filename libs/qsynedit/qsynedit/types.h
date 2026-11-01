@@ -80,18 +80,18 @@ struct CharPos {
     CharPos(const CharPos &pos): ch{pos.ch}, line{pos.line} {}
     constexpr CharPos(int ch_, int line_) : ch{ch_}, line{line_} {}
 
-    const CharPos& operator=(const CharPos &coord) {
-        ch=coord.ch;
-        line=coord.line;
+    const CharPos& operator=(const CharPos &pos) {
+        ch=pos.ch;
+        line=pos.line;
         return *this;
     };
 
-    bool operator==(const CharPos& coord) const;
-    bool operator>=(const CharPos& coord) const;
-    bool operator>(const CharPos& coord) const;
-    bool operator<(const CharPos& coord) const;
-    bool operator<=(const CharPos& coord) const;
-    bool operator!=(const CharPos& coord) const;
+    bool operator==(const CharPos& pos) const;
+    bool operator>=(const CharPos& pos) const;
+    bool operator>(const CharPos& pos) const;
+    bool operator<(const CharPos& pos) const;
+    bool operator<=(const CharPos& pos) const;
+    bool operator!=(const CharPos& pos) const;
 
     bool isValid() const { return ch>=0 && line >=0; }
 };
