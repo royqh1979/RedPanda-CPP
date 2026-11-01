@@ -2449,9 +2449,9 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                 }
                 if (!mCompileSuccessionTask->isExecutable) {
                     QString targetFileName = QFileInfo(mCompileSuccessionTask->execName).absoluteFilePath();
-                    Editor *editor = mEditorManager->getOpenedEditor(targetFileName);
-                    if (editor) {
-                        mEditorManager->closeEditor(editor,false,true);
+                    Editor *targetEditor = mEditorManager->getOpenedEditor(targetFileName);
+                    if (targetEditor) {
+                        mEditorManager->closeEditor(targetEditor,false,true);
                     }
                 }
             }
@@ -2776,11 +2776,11 @@ void MainWindow::debug()
                 }
 
                 // Did we compiled?
-                PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
+                PCompilerSet defaultCompilerSet =pSettings->compilerSets().defaultSet();
                 bool isExecutable;
-                if (compilerSet) {
-                    filePath = compilerSet->getOutputFilename(e->filename());
-                    isExecutable = compilerSet->isOutputExecutable();
+                if (defaultCompilerSet) {
+                    filePath = defaultCompilerSet->getOutputFilename(e->filename());
+                    isExecutable = defaultCompilerSet->isOutputExecutable();
                 } else {
                     filePath = changeFileExt(e->filename(), DEFAULT_EXECUTABLE_SUFFIX);
                     isExecutable = true;
@@ -3853,11 +3853,11 @@ void MainWindow::buildEncodingMenu()
                     action->setChecked(info->name == editor->editorEncoding());
                 connect(action, &QAction::triggered,
                         [info,this](){
-                    Editor * editor = mEditorManager->getEditor();
-                    if (editor == nullptr)
+                    Editor * activeEditor = mEditorManager->getEditor();
+                    if (activeEditor == nullptr)
                         return;
                     try {
-                        setEditorEncoding(editor, info->name);
+                        setEditorEncoding(activeEditor, info->name);
                     } catch(FileError e) {
                         QMessageBox::critical(this,tr("Error"),e.reason());
                     }
@@ -5177,10 +5177,10 @@ void MainWindow::onProjectAddFolder()
                           QLineEdit::Normal, s,
                           &ok).trimmed();
     if (ok && !s.isEmpty()) {
-        PProjectModelNode node = mProject->addFolder(folderNode,s);
+        PProjectModelNode newFolderNode = mProject->addFolder(folderNode,s);
 
         mProject->saveAll();
-        setProjectViewCurrentNode(node);
+        setProjectViewCurrentNode(newFolderNode);
         updateProjectView();
     }
 }
@@ -5655,8 +5655,8 @@ void MainWindow::onFileChanged(const QString &path)
                     e->loadFile();
                     mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,caretPos.line});
                     e->setTopPos(top);
-                } catch(FileError e) {
-                    QMessageBox::critical(this,tr("Error"),e.reason());
+                } catch(FileError err) {
+                    QMessageBox::critical(this,tr("Error"),err.reason());
                 }
             } else {
                 e->setModified(true);
@@ -6242,8 +6242,8 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                         int line = e->caretLine();
                         int startLine = 0;
                         QString s = "# "+e->filename()+":";
-                        for(int i=0;i<editor->lineCount();i++) {
-                            QString t=editor->lineText(i).trimmed();
+                        for(int lineIdx=0;lineIdx<editor->lineCount();lineIdx++) {
+                            QString t=editor->lineText(lineIdx).trimmed();
                             if (t.startsWith(s,PATH_SENSITIVITY)) {
                                 t=t.mid(s.length());
                                 int pos = t.indexOf(":");
@@ -6253,7 +6253,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                                     int l=numstring.toInt(&isOk);
                                     if (isOk) {
                                         if (l<=line)
-                                            startLine=i;
+                                            startLine=lineIdx;
                                         if (l>=line)
                                             break;
                                     }
@@ -6304,20 +6304,20 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
         } else if ((mCompilerManager->compileIssueCount() > 0) && (!mCheckSyntaxInBack)) {
             bool hasError = false;
             // First try to find errors
-            for (int i=0;i<ui->tableIssues->count();i++) {
-                PCompileIssue issue = ui->tableIssues->issue(i);
+            for (int row=0;row<ui->tableIssues->count();row++) {
+                PCompileIssue issue = ui->tableIssues->issue(row);
                 if (issue->type == CompileIssueType::Error) {
-                    ui->tableIssues->selectRow(i);
+                    ui->tableIssues->selectRow(row);
                     hasError = true;
                     break;
                 }
             }
             if (!hasError) {
                 // Then try to find warnings
-                for (int i=0;i<ui->tableIssues->count();i++) {
-                    PCompileIssue issue = ui->tableIssues->issue(i);
+                for (int row=0;row<ui->tableIssues->count();row++) {
+                    PCompileIssue issue = ui->tableIssues->issue(row);
                     if (issue->type == CompileIssueType::Warning) {
-                        ui->tableIssues->selectRow(i);
+                        ui->tableIssues->selectRow(row);
                         break;
                     }
                 }
@@ -6484,10 +6484,10 @@ void MainWindow::on_actionCopy_triggered()
 void MainWindow::on_actionPaste_triggered()
 {
     QClipboard* clipboard = QGuiApplication::clipboard();
-    const QMimeData* data = clipboard->mimeData();
-    if (!data)
+    const QMimeData* mime = clipboard->mimeData();
+    if (!mime)
         return;
-    if (data->hasText()) {
+    if (mime->hasText()) {
         Editor * editor = mEditorManager->getEditor();
         if (editor) {
             editor->pasteFromClipboard();
@@ -9252,9 +9252,9 @@ QMap<QString, QString> MainWindow::macroVariables()
 
     if (e != nullptr && !e->inProject()) { // Non-project editor macros
         QString exeSuffix;
-        PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
-        if (compilerSet) {
-            exeSuffix = compilerSet->executableSuffix();
+        PCompilerSet defaultCompilerSet = pSettings->compilerSets().defaultSet();
+        if (defaultCompilerSet) {
+            exeSuffix = defaultCompilerSet->executableSuffix();
         } else {
             exeSuffix = DEFAULT_EXECUTABLE_SUFFIX;
         }

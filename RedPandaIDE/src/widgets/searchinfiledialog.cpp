@@ -250,9 +250,9 @@ void SearchInFileDialog::doSearch(bool replace)
                     editor.setSyntaxer(SyntaxerManager::getSyntaxer(getFileType(curFilename)));
                 try{
                     editor.loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
-                } catch (QSynedit::BinaryFileError e) {
+                } catch (QSynedit::BinaryFileError&) {
                     continue;
-                } catch (FileError e) {
+                } catch (FileError&) {
                     continue;
                 }
                 fileSearched++;
@@ -346,9 +346,9 @@ void SearchInFileDialog::doSearch(bool replace)
                     editor.setSyntaxer(SyntaxerManager::getSyntaxer(getFileType(curFilename)));
                 try {
                     editor.loadFromFile(curFilename,encoding, realEncoding);
-                } catch (QSynedit::BinaryFileError e) {
+                } catch (QSynedit::BinaryFileError&) {
                     continue;
-                } catch (FileError e) {
+                } catch (FileError&) {
                     continue;
                 }
                 fileSearched++;

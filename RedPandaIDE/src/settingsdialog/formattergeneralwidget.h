@@ -31,9 +31,9 @@ struct FormatterStyleItem {
     QString name;
     QString description;
     FormatterBraceStyle style;
-    explicit FormatterStyleItem(const QString& name,
-                                const QString& description,
-                                FormatterBraceStyle style);
+    explicit FormatterStyleItem(const QString& newName,
+                                const QString& newDescription,
+                                FormatterBraceStyle newStyle);
 };
 using PFormatterStyleItem = std::shared_ptr<FormatterStyleItem>;
 

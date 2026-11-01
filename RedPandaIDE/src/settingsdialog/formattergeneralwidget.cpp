@@ -315,11 +315,9 @@ PFormatterStyleItem FormatterStyleModel::getStyle(int index)
     return mStyles[index];
 }
 
-FormatterStyleItem::FormatterStyleItem(const QString &name, const QString &description, FormatterBraceStyle style)
+FormatterStyleItem::FormatterStyleItem(const QString &newName, const QString &newDescription, FormatterBraceStyle newStyle)
+    : name{newName}, description{newDescription}, style{newStyle}
 {
-    this->name = name;
-    this->description = description;
-    this->style = style;
 }
 
 void FormatterGeneralWidget::on_chkBreakMaxCodeLength_stateChanged(int)
