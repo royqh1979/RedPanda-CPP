@@ -199,7 +199,7 @@ public:
     bool hasBookmark(int line) const;
     void clearBookmarks();
     void removeActiveBreakpoint();
-    void setActiveBreakpoint(int Line);
+    void setActiveBreakpoint(int line);
     QString getPreviousWordAtPositionForSuggestion(const QSynedit::CharPos& p,
                                                    QSynedit::TokenType &tokenType);
     QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::CharPos& p) const;

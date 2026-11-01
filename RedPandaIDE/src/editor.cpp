@@ -633,17 +633,17 @@ void Editor::keyPressEvent(QKeyEvent *event)
             invalidateLine(caretLine());
             clearUserCodeInTabStops();
         } else if (!selAvail()){ // Completion for docstring
-            QString sLine;
+            QString lineContent;
             if (caretCh()>=0)
-                sLine = lineText().mid(0,caretCh()).trimmed();
-            QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretLine(), sLine);
+                lineContent = lineText().mid(0,caretCh()).trimmed();
+            QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretLine(), lineContent);
             if (syntaxer()->isCommentNotFinished(state)) {
-                if (sLine=="/**") { //javadoc style docstring
+                if (lineContent=="/**") { //javadoc style docstring
                     handled = true;
                     QStringList insertStrings;
                     insertStrings.append("");
-                    sLine = lineText().mid(caretCh()).trimmed();
-                    if (sLine=="*/") {
+                    lineContent = lineText().mid(caretCh()).trimmed();
+                    if (lineContent=="*/") {
                         PStatement function;
                         if (mParser)
                             function = mParser->findFunctionAt(mFilename,caretLine()+1);
@@ -672,12 +672,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     }
                     insertCodeSnippet(linesToText(insertStrings));
                 } else {
-                    sLine=trimLeft(lineText());
-                    if (sLine.startsWith("* ")) {
+                    lineContent=trimLeft(lineText());
+                    if (lineContent.startsWith("* ")) {
                         handled = true;
                         int right = lineText(caretLine()).length()-caretCh();
-                        sLine = lineBreak()+"* ";
-                        insertString(sLine,false);
+                        lineContent = lineBreak()+"* ";
+                        insertString(lineContent,false);
                         CharPos p = caretPos();
                         p.line++;
                         p.ch = lineText(p.line).length();
@@ -992,8 +992,8 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         CharPos p;
         TipType reason = getTipType(event->pos(),p);
         if (reason == TipType::Include) {
-            QString sLine = lineText(p.line);
-            if (mParser->isIncludeNextLine(sLine) || mParser->isIncludeLine(sLine))
+            QString lineContent = lineText(p.line);
+            if (mParser->isIncludeNextLine(lineContent) || mParser->isIncludeLine(lineContent))
                 updateHoverLink(p.line);
         } else if (reason == TipType::Identifier) {
             updateHoverLink(p.line);
@@ -1096,17 +1096,17 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
             areaList.append(p);
         }
     }
-    QString sLine = lineText(line);
-    if (mParser && mParser->isIncludeLine(sLine)) {
+    QString lineContent = lineText(line);
+    if (mParser && mParser->isIncludeLine(lineContent)) {
         if (line == mHoverModifiedLine) {
             int i=0;
-            while (i<sLine.length() && sLine[i]!='<' && sLine[i]!='\"')
+            while (i<lineContent.length() && lineContent[i]!='<' && lineContent[i]!='\"')
                 i++;
-            if (i<sLine.length()) {
-                if (sLine[i]=='<') {
-                    setIncludeUnderline(sLine,i,'>',syntaxer(), foregroundColor(), areaList);
+            if (i<lineContent.length()) {
+                if (lineContent[i]=='<') {
+                    setIncludeUnderline(lineContent,i,'>',syntaxer(), foregroundColor(), areaList);
                 } else {
-                    setIncludeUnderline(sLine,i,'"',syntaxer(), foregroundColor(), areaList);
+                    setIncludeUnderline(lineContent,i,'"',syntaxer(), foregroundColor(), areaList);
                 }
             }
         }
@@ -1143,11 +1143,11 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
                 foreground = syntaxer()->commentAttribute()->foreground();
             return;
         }
-        QString sLine = lineText(line);
-        if (mParser->isIncludeLine(sLine) && attr->tokenType() != QSynedit::TokenType::Comment) {
+        QString lineContent = lineText(line);
+        if (mParser->isIncludeLine(lineContent) && attr->tokenType() != QSynedit::TokenType::Comment) {
             // #include header names (<>)
-            int pos1=sLine.indexOf("<");
-            int pos2=sLine.indexOf(">",pos1);
+            int pos1=lineContent.indexOf("<");
+            int pos2=lineContent.indexOf(">",pos1);
             if (pos1>=0 && pos2>=0 && pos1<ch && ch<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
                 foreground = syntaxer()->identifierAttribute()->foreground();
@@ -1327,13 +1327,13 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
         CharPos p;
         if (mParser && pointToCharLine(event->pos(),p)) {
             cancelHoverLink();
-            QString sLine = lineText(p.line);
-            if (mParser->isIncludeNextLine(sLine)) {
-                QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
+            QString lineContent = lineText(p.line);
+            if (mParser->isIncludeNextLine(lineContent)) {
+                QString filename = mParser->getHeaderFileName(mFilename,lineContent, true);
                 openFileInContext(filename, CharPos{0,0});
                 return;
-            } if (mParser->isIncludeLine(sLine)) {
-                QString filename = mParser->getHeaderFileName(mFilename,sLine);
+            } if (mParser->isIncludeLine(lineContent)) {
+                QString filename = mParser->getHeaderFileName(mFilename,lineContent);
                 openFileInContext(filename, CharPos{0,0});
                 return;
             } else if (mParser->enabled()) {
@@ -2671,22 +2671,22 @@ bool Editor::handleBraceCompletion(QuoteStatus status)
         p = selBegin();
     else
         p = caretPos();
-    QString sLine = lineText(p.line).left(p.ch).trimmed();
+    QString lineContent = lineText(p.line).left(p.ch).trimmed();
     int i = p.line;
-    while ((sLine.isEmpty()) && (i>=0)) {
-        sLine=lineText(i).trimmed();
+    while ((lineContent.isEmpty()) && (i>=0)) {
+        lineContent=lineText(i).trimmed();
         i--;
     }
     if (
-        ( ( (sLine.startsWith("struct") && !sLine.endsWith(")"))
-          || sLine.startsWith("class")
-          || (sLine.startsWith("union") && !sLine.endsWith(")"))
-          || sLine.startsWith("typedef")
-          || sLine.startsWith("public")
-          || sLine.startsWith("private")
-          || (sLine.startsWith("enum") && !sLine.endsWith(")")) )
-          && !sLine.contains(';')
-        ) || sLine.endsWith('=')) {
+        ( ( (lineContent.startsWith("struct") && !lineContent.endsWith(")"))
+          || lineContent.startsWith("class")
+          || (lineContent.startsWith("union") && !lineContent.endsWith(")"))
+          || lineContent.startsWith("typedef")
+          || lineContent.startsWith("public")
+          || lineContent.startsWith("private")
+          || (lineContent.startsWith("enum") && !lineContent.endsWith(")")) )
+          && !lineContent.contains(';')
+        ) || lineContent.endsWith('=')) {
         addSemicolon = true;
     }
 
@@ -3679,19 +3679,19 @@ void Editor::headerCompletionInsert()
     CharPos p = caretPos();
     int posBegin = p.ch;
     int posEnd = p.ch;
-    QString sLine = lineText();
+    QString lineContent = lineText();
     while ((posBegin>0) &&
-           (sLine[posBegin-1]!='\"'
-            && sLine[posBegin-1]!='<'
-            && sLine[posBegin-1]!='/'
-            && sLine[posBegin-1]!='\\'))
+           (lineContent[posBegin-1]!='\"'
+            && lineContent[posBegin-1]!='<'
+            && lineContent[posBegin-1]!='/'
+            && lineContent[posBegin-1]!='\\'))
         posBegin--;
 
-    while ((posEnd < sLine.length()) &&
-           (sLine[posEnd]!='\"'
-            && sLine[posEnd]!='>'
-            && sLine[posEnd]!='/'
-            && sLine[posBegin-1]!='\\'))
+    while ((posEnd < lineContent.length()) &&
+           (lineContent[posEnd]!='\"'
+            && lineContent[posEnd]!='>'
+            && lineContent[posEnd]!='/'
+            && lineContent[posBegin-1]!='\\'))
         posEnd++;
     setSelBeginEnd(CharPos{posBegin, p.line}, CharPos{posEnd, p.line});
     setSelText(headerName);
