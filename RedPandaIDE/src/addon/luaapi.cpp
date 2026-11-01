@@ -112,8 +112,8 @@ static QString stringify(const QJsonValue &value) {
  */
 void luaApiImpl_Debug_debug(lua_State *L) {
     QString s = AddOn::RaiiLuaState::fetchString(L, 1);
-    int nArgs = lua_gettop(L);
-    for (int i = 2; i <= nArgs; ++i) {
+    int argCount = lua_gettop(L);
+    for (int i = 2; i <= argCount; ++i) {
         QJsonValue arg;
         try {
             arg = AddOn::RaiiLuaState::fetch(L, i);
@@ -145,8 +145,8 @@ extern "C" int luaApi_Debug_debug(lua_State *L) noexcept {
 
 void luaApiImpl_Debug_messageBox(lua_State *L) {
     QString s = AddOn::RaiiLuaState::fetchString(L, 1);
-    int nArgs = lua_gettop(L);
-    for (int i = 2; i <= nArgs; ++i) {
+    int argCount = lua_gettop(L);
+    for (int i = 2; i <= argCount; ++i) {
         QJsonValue arg;
         try {
             arg = AddOn::RaiiLuaState::fetch(L, i);
@@ -521,8 +521,8 @@ extern "C" int luaApi_System_readRegistry(lua_State *L) noexcept
 void luaApiImpl_Util_format(lua_State *L)
 {
     QString s = AddOn::RaiiLuaState::fetchString(L, 1);
-    int nArgs = lua_gettop(L);
-    for (int i = 2; i <= nArgs; ++i) {
+    int argCount = lua_gettop(L);
+    for (int i = 2; i <= argCount; ++i) {
         QJsonValue arg;
         try {
             arg = AddOn::RaiiLuaState::fetch(L, i);

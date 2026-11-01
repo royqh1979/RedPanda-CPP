@@ -22,12 +22,12 @@
 #include "projectoptions.h"
 
 struct TemplateUnit {
-  QString CName;
-  QString CppName;
-  QString CText;
-  QString CppText;
-  QString Source;
-  QString Target;
+  QString cName;
+  QString cppName;
+  QString cText;
+  QString cppText;
+  QString source;
+  QString target;
   bool overwrite;
 };
 

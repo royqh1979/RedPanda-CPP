@@ -231,28 +231,28 @@ QString QConsole::selText()
 {
     if (!hasSelection())
         return "";
-    int ColFrom = selectionBegin().ch;
-    int First = selectionBegin().line;
-    int ColTo = selectionEnd().ch;
-    int Last = selectionEnd().line;
-    if (First == Last) {
-        QString s = mContents.getLine(First);
-        if (First == mContents.lines()) {
+    int colFrom = selectionBegin().ch;
+    int firstLine = selectionBegin().line;
+    int colTo = selectionEnd().ch;
+    int lastLine = selectionEnd().line;
+    if (firstLine == lastLine) {
+        QString s = mContents.getLine(firstLine);
+        if (firstLine == mContents.lines()) {
             s += this->mCommand;
         }
-        return s.mid(ColFrom, ColTo - ColFrom);
+        return s.mid(colFrom, colTo - colFrom);
 
     } else  {
-        QString result = mContents.getLine(First).mid(ColFrom);
+        QString result = mContents.getLine(firstLine).mid(colFrom);
         result+= lineBreak();
-        for (int i = First + 1; i<=Last - 1; i++) {
+        for (int i = firstLine + 1; i<=lastLine - 1; i++) {
             result += mContents.getLine(i);
             result+= lineBreak();
         }
-        QString s = mContents.getLine(Last);
-        if (Last == mContents.lines())
+        QString s = mContents.getLine(lastLine);
+        if (lastLine == mContents.lines())
             s+= this->mCommand;
-        result.append(s.constData(), ColTo);
+        result.append(s.constData(), colTo);
         return result;
     }
 }
@@ -300,17 +300,17 @@ void QConsole::updateScrollbars()
 {
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
-    int nMaxScroll = maxScrollHeight();
-    int nMin = 1;
-    int nMax = std::max(1, nMaxScroll);
-    int nPage = mRowsInWindow;
-    int nPos = std::min(std::max(mTopRow,nMin),nMax);
-    verticalScrollBar()->setMinimum(nMin);
-    verticalScrollBar()->setMaximum(nMax);
-    verticalScrollBar()->setPageStep(nPage);
+    int maxScroll = maxScrollHeight();
+    int minValue = 1;
+    int maxValue = std::max(1, maxScroll);
+    int pageStep = mRowsInWindow;
+    int value = std::min(std::max(mTopRow,minValue),maxValue);
+    verticalScrollBar()->setMinimum(minValue);
+    verticalScrollBar()->setMaximum(maxValue);
+    verticalScrollBar()->setPageStep(pageStep);
     verticalScrollBar()->setSingleStep(1);
-    if (nPos != verticalScrollBar()->value())
-        verticalScrollBar()->setValue(nPos);
+    if (value != verticalScrollBar()->value())
+        verticalScrollBar()->setValue(value);
     else
         invalidate();
 }
@@ -508,16 +508,14 @@ void QConsole::scrollTimerHandler()
 void QConsole::mousePressEvent(QMouseEvent *event)
 {
     Qt::MouseButton button = event->button();
-    int X=event->pos().x();
-    int Y=event->pos().y();
+    int x=event->pos().x();
+    int y=event->pos().y();
 
     QAbstractScrollArea::mousePressEvent(event);
 
-    //fKbdHandler.ExecuteMouseDown(Self, Button, Shift, X, Y);
-
     if (button == Qt::LeftButton) {
 //        setMouseTracking(true);
-        RowColumn mousePosRC = pixelsToNearestRowColumn(X,Y);
+        RowColumn mousePosRC = pixelsToNearestRowColumn(x,y);
         LineChar mousePos = mContents.rowColumnToLineChar(mousePosRC);
         //I couldn't track down why, but sometimes (and definitely not all the time)
         //the block positioning is lost.  This makes sure that the block is
@@ -717,17 +715,17 @@ void QConsole::paintEvent(QPaintEvent *event)
         // only update caret
         painter.drawImage(rcCaret,*mContentImage,rcCaret);
     } else {
-        int nL1, nL2;
+        int firstRow, lastRow;
         // Compute the invalid area in lines
         // lines
-        nL1 = std::min(std::max(mTopRow + rcClip.top() / mRowHeight, mTopRow), maxScrollHeight() + mRowsInWindow  - 1 );
-        nL2 = std::min(std::max(mTopRow + (rcClip.bottom() + mRowHeight - 1) / mRowHeight, 1), maxScrollHeight() + mRowsInWindow  - 1);
+        firstRow = std::min(std::max(mTopRow + rcClip.top() / mRowHeight, mTopRow), maxScrollHeight() + mRowsInWindow  - 1 );
+        lastRow = std::min(std::max(mTopRow + (rcClip.bottom() + mRowHeight - 1) / mRowHeight, 1), maxScrollHeight() + mRowsInWindow  - 1);
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
         if (viewport()->rect() == rcClip) {
             cachePainter.fillRect(rcClip, mBackground);
         }
-        paintRows(cachePainter,nL1,nL2);
+        paintRows(cachePainter,firstRow,lastRow);
         painter.drawImage(rcClip,*mContentImage,rcClip);
     }
     paintCaret(painter, rcCaret);

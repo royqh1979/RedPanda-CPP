@@ -41,23 +41,23 @@ PTemplateUnit ProjectTemplate::unit(int index)
     PTemplateUnit unit = std::make_shared<TemplateUnit>();
     QString lang = pSettings->environment().language();
     if (!lang.isEmpty()) {
-        unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), QString("Source[%1]").arg(lang).toUtf8(), ""));
-        unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), QString("C[%1]").arg(lang).toUtf8(), ""));
-        unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), QString("Cpp[%1]").arg(lang).toUtf8(), ""));
+        unit->source = fromByteArray(mIni->GetValue(toByteArray(section), QString("Source[%1]").arg(lang).toUtf8(), ""));
+        unit->cText = fromByteArray(mIni->GetValue(toByteArray(section), QString("C[%1]").arg(lang).toUtf8(), ""));
+        unit->cppText = fromByteArray(mIni->GetValue(toByteArray(section), QString("Cpp[%1]").arg(lang).toUtf8(), ""));
     }
-    if (unit->Source.isEmpty())
-        unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), "Source", ""));
-    if (unit->CText.isEmpty())
-        unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), "C", ""));
-    if (unit->CppText.isEmpty())
-        unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), "Cpp", ""));
-    if (unit->CppText.isEmpty())
-        unit->CppText = unit->CText;
-    unit->CName = fromByteArray(mIni->GetValue(toByteArray(section), "CName", ""));
-    unit->CppName = fromByteArray(mIni->GetValue(toByteArray(section), "CppName", ""));
-    if (unit->CppName.isEmpty())
-        unit->CppName = unit->CName;
-    unit->Target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
+    if (unit->source.isEmpty())
+        unit->source = fromByteArray(mIni->GetValue(toByteArray(section), "Source", ""));
+    if (unit->cText.isEmpty())
+        unit->cText = fromByteArray(mIni->GetValue(toByteArray(section), "C", ""));
+    if (unit->cppText.isEmpty())
+        unit->cppText = fromByteArray(mIni->GetValue(toByteArray(section), "Cpp", ""));
+    if (unit->cppText.isEmpty())
+        unit->cppText = unit->cText;
+    unit->cName = fromByteArray(mIni->GetValue(toByteArray(section), "CName", ""));
+    unit->cppName = fromByteArray(mIni->GetValue(toByteArray(section), "CppName", ""));
+    if (unit->cppName.isEmpty())
+        unit->cppName = unit->cName;
+    unit->target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
     unit->overwrite = mIni->GetBoolValue(toByteArray(section), "Overwrite", true);
     return unit;
 }

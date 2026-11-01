@@ -174,7 +174,7 @@ private:
 private:
     void fontChanged();
     void recalcCharExtent();
-    void sizeOrFontChanged(bool bFont);
+    void sizeOrFontChanged(bool fontChanged);
     int clientWidth();
     int clientHeight();
     /**

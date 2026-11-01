@@ -965,15 +965,15 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
             PTemplateUnit templateUnit = aTemplate->unit(i);
             if (!templateUnit)
                 continue;
-            if (!templateUnit->Source.isEmpty()) {
-                QString target = templateUnit->Source;
+            if (!templateUnit->source.isEmpty()) {
+                QString target = templateUnit->source;
                 PProjectUnit unit;
-                if (!templateUnit->Target.isEmpty())
-                    target = templateUnit->Target;
+                if (!templateUnit->target.isEmpty())
+                    target = templateUnit->target;
                 unit = newUnit(mRootNode, target);
                 if (templateUnit->overwrite || !fileExists(unit->fileName()) ) {
                         QFile::copy(
-                                    cleanPath(dir.absoluteFilePath(templateUnit->Source)),
+                                    cleanPath(dir.absoluteFilePath(templateUnit->source)),
                                     includeTrailingPathDelimiter(this->directory())+target);
                 }
 
@@ -993,11 +993,11 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 QString s;
                 PProjectUnit unit;
                 if (mOptions.isCpp) {
-                    s = templateUnit->CppText;
-                    unit = newUnit(mRootNode, templateUnit->CppName);
+                    s = templateUnit->cppText;
+                    unit = newUnit(mRootNode, templateUnit->cppName);
                 } else {
-                    s = templateUnit->CText;
-                    unit = newUnit(mRootNode,templateUnit->CName);
+                    s = templateUnit->cText;
+                    unit = newUnit(mRootNode,templateUnit->cName);
                 }
                 Editor * editor = mEditorManager->newEditor(
                             unit->fileName(),
