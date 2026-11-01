@@ -5,6 +5,38 @@
 
 namespace QSynedit {
 
+namespace {
+
+QByteArray utf16LeBytes(const QString& text)
+{
+    QByteArray data;
+    for (QChar ch : text) {
+        data.append(char(ch.unicode() & 0xFF));
+        data.append(char(ch.unicode() >> 8));
+    }
+    return data;
+}
+
+QByteArray utf32LeBytes(const QString& text)
+{
+    QByteArray data;
+    for (char32_t ch : text.toUcs4()) {
+        data.append(char(ch & 0xFF));
+        data.append(char((ch >> 8) & 0xFF));
+        data.append(char((ch >> 16) & 0xFF));
+        data.append(char((ch >> 24) & 0xFF));
+    }
+    return data;
+}
+
+bool gbkCodecAvailable()
+{
+    TextEncoder encoder("GBK");
+    return encoder.isValid();
+}
+
+}
+
 TestDocument::TestDocument()
 {
 }
@@ -34,6 +66,38 @@ void TestDocument::initTestCase()
         QFileInfo file("resources/emoji.txt");
         QVERIFY(file.exists());
     }
+    QVERIFY(mTempDir.isValid());
+    writeFixture("utf8_bom.txt",
+                 QByteArray("\xEF\xBB\xBF") + QString("中文第一行\nsecond line\n").toUtf8());
+    writeFixture("utf16_bom.txt",
+                 QByteArray("\xFF\xFE") + utf16LeBytes("中文第一行\r\nsecond line\r\n"));
+    writeFixture("utf32_bom.txt",
+                 QByteArray("\xFF\xFE\x00\x00",4) + utf32LeBytes("abc\ndef\n"));
+    writeFixture("newline_unix.txt", "abc\ndef\n");
+    writeFixture("no_trailing_newline.txt", "abc\ndef");
+    writeFixture("mixed_newlines.txt", "a\r\nb\nc\r\n");
+    writeFixture("binary.bin", QByteArray("abc\0def\n", 8));
+    writeFixture("utf8_plain.txt", QString("中文测试\n第二行\n").toUtf8());
+    if (gbkCodecAvailable()) {
+        TextEncoder encoder("GBK");
+        writeFixture("gbk.txt", encoder.encodeUnchecked("中文测试\r\n第二行\r\n"));
+    }
+}
+
+QString TestDocument::writeFixture(const QString& name, const QByteArray& data)
+{
+    QString path = fixturePath(name);
+    QFile file(path);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate))
+        return QString();
+    if (file.write(data) != data.size())
+        return QString();
+    return path;
+}
+
+QString TestDocument::fixturePath(const QString& name) const
+{
+    return mTempDir.filePath(name);
 }
 
 void TestDocument::cleanupTestCase()
@@ -98,6 +162,248 @@ void TestDocument::test_load_from_empty_file()
     QCOMPARE(mDoc->content(), QStringList({""}));
 
     QVERIFY(mDoc->empty());
+}
+
+void TestDocument::test_load_utf8_bom()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("utf8_bom.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(encoding, ENCODING_UTF8_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_load_utf16_bom()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("utf16_bom.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(encoding, ENCODING_UTF16_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_load_utf32_bom()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("utf32_bom.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(encoding, ENCODING_UTF32_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
+}
+
+void TestDocument::test_load_newline_unix()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("newline_unix.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(mDoc->getNewlineType(), NewlineType::Unix);
+    QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
+}
+
+void TestDocument::test_load_no_trailing_newline()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("no_trailing_newline.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
+}
+
+void TestDocument::test_load_mixed_newlines()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("mixed_newlines.txt"),ENCODING_AUTO_DETECT,encoding);
+    QCOMPARE(mDoc->getNewlineType(), NewlineType::Windows);
+    QCOMPARE(mDoc->content(), QStringList({"a","b","c"}));
+}
+
+void TestDocument::test_load_nonexistent_file()
+{
+    QByteArray encoding;
+
+    QVERIFY_EXCEPTION_THROWN(
+                mDoc->loadFromFile(fixturePath("no_such_file.txt"),ENCODING_AUTO_DETECT,encoding),
+                FileError);
+}
+
+void TestDocument::test_load_binary_file()
+{
+    QByteArray encoding;
+
+    QVERIFY_EXCEPTION_THROWN(
+                mDoc->loadFromFile(fixturePath("binary.bin"),ENCODING_AUTO_DETECT,encoding),
+                BinaryFileError);
+}
+
+void TestDocument::test_load_with_utf8_encoding()
+{
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("utf8_plain.txt"),ENCODING_UTF8,encoding);
+    QCOMPARE(encoding, ENCODING_UTF8);
+    QCOMPARE(mDoc->content(), QStringList({"中文测试","第二行"}));
+}
+
+void TestDocument::test_load_with_gbk_encoding()
+{
+    if (!gbkCodecAvailable())
+        QSKIP("GBK codec not available in this Qt build");
+    QByteArray encoding;
+
+    mDoc->loadFromFile(fixturePath("gbk.txt"),"GBK",encoding);
+    QCOMPARE(encoding, "GBK");
+    QCOMPARE(mDoc->content(), QStringList({"中文测试","第二行"}));
+}
+
+void TestDocument::test_save_utf8_roundtrip()
+{
+    mDoc->setContents({"中文第一行","second line"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf8.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF8,encoding);
+    }
+    QCOMPARE(encoding, ENCODING_UTF8);
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QCOMPARE(file.readAll(), QString("中文第一行\nsecond line\n").toUtf8());
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
+    QCOMPARE(loadEncoding, ENCODING_UTF8);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_save_utf8_bom()
+{
+    mDoc->setContents({"中文第一行","second line"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf8_bom.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF8_BOM,encoding);
+    }
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QVERIFY(file.readAll().startsWith("\xEF\xBB\xBF"));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
+    QCOMPARE(loadEncoding, ENCODING_UTF8_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_save_utf16_bom()
+{
+    mDoc->setContents({"中文第一行","second line"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf16_bom.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF16_BOM,encoding);
+    }
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QVERIFY(file.readAll().startsWith("\xFF\xFE"));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
+    QCOMPARE(loadEncoding, ENCODING_UTF16_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_save_utf32_bom()
+{
+    mDoc->setContents({"abc","def"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf32_bom.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF32_BOM,encoding);
+    }
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QVERIFY(file.readAll().startsWith(QByteArray("\xFF\xFE\x00\x00",4)));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
+    QCOMPARE(loadEncoding, ENCODING_UTF32_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
+}
+
+void TestDocument::test_save_gbk()
+{
+    if (!gbkCodecAvailable())
+        QSKIP("GBK codec not available in this Qt build");
+    mDoc->setContents({"中文测试","第二行"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_gbk.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,"GBK",encoding);
+    }
+    {
+        TextEncoder encoder("GBK");
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QCOMPARE(file.readAll(), encoder.encodeUnchecked("中文测试\n第二行\n"));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,"GBK",loadEncoding);
+    QCOMPARE(mDoc->content(), QStringList({"中文测试","第二行"}));
+}
+
+void TestDocument::test_save_all_ascii_reports_ascii()
+{
+    mDoc->setContents({"abc","def"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_ascii.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF8,encoding);
+    }
+    QCOMPARE(encoding, ENCODING_ASCII);
+}
+
+void TestDocument::test_save_newline_windows()
+{
+    mDoc->setContents({"abc","def"});
+    mDoc->setNewlineType(NewlineType::Windows);
+    QString path = fixturePath("save_crlf.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF8,encoding);
+    }
+    QFile file(path);
+    QVERIFY(file.open(QFile::ReadOnly));
+    QCOMPARE(file.readAll(), QByteArray("abc\r\ndef\r\n"));
+}
+
+void TestDocument::test_save_newline_unix()
+{
+    mDoc->setContents({"abc","def"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_lf.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF8,encoding);
+    }
+    QFile file(path);
+    QVERIFY(file.open(QFile::ReadOnly));
+    QCOMPARE(file.readAll(), QByteArray("abc\ndef\n"));
 }
 
 void TestDocument::test_emoji_glyphs()

@@ -1,5 +1,6 @@
 #ifndef TEST_DOCUMENT_H
 #define TEST_DOCUMENT_H
+#include <QTemporaryDir>
 namespace QSynedit {
 class TestDocumentHelpers : public QObject
 {
@@ -27,8 +28,12 @@ public:
     TestDocument();
     ~TestDocument();
 private:
+    QString writeFixture(const QString& name, const QByteArray& data);
+    QString fixturePath(const QString& name) const;
+private:
     int mChangedCount;
     std::shared_ptr<Document> mDoc;
+    QTemporaryDir mTempDir;
 private slots:
     void init();
     void cleanup();
@@ -37,6 +42,24 @@ private slots:
     void test_load_from_file();
     void test_load_from_file2();
     void test_load_from_empty_file();
+    void test_load_utf8_bom();
+    void test_load_utf16_bom();
+    void test_load_utf32_bom();
+    void test_load_newline_unix();
+    void test_load_no_trailing_newline();
+    void test_load_mixed_newlines();
+    void test_load_nonexistent_file();
+    void test_load_binary_file();
+    void test_load_with_utf8_encoding();
+    void test_load_with_gbk_encoding();
+    void test_save_utf8_roundtrip();
+    void test_save_utf8_bom();
+    void test_save_utf16_bom();
+    void test_save_utf32_bom();
+    void test_save_gbk();
+    void test_save_all_ascii_reports_ascii();
+    void test_save_newline_windows();
+    void test_save_newline_unix();
     void test_emoji_glyphs();
     void test_set_text();
     void test_set_empty_text();
