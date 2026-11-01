@@ -268,7 +268,7 @@ public:
 
     void replaceLine(int line, const QString& lineText) { processCommand(EditCommand::ReplaceLine, line, lineText);};
 
-    int searchReplace(const QString& sSearch, const QString& sReplace,
+    int searchReplace(const QString& searchText, const QString& replaceWith,
                       const CharPos & scopeBegin,
                       const CharPos & scopeEnd,
                       CharPos& newScopeEnd,
@@ -605,8 +605,8 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void doDeleteSelection();
     void doSetSelTextPrimitive(const QStringList& text);
-    void properSetLine(int line, const QString& sLineText, bool parseToEnd);
-    void properInsertLine(int line, const QString& sLineText, bool parseToEnd);
+    void properSetLine(int line, const QString& lineText, bool parseToEnd);
+    void properInsertLine(int line, const QString& lineText, bool parseToEnd);
     void properDeleteLines(int line, int count, bool parseToEnd);
     void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 1, parseToEnd); }
     void properInsertLines(int line, int count, bool parseToEnd);
