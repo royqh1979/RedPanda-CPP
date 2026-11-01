@@ -5531,6 +5531,9 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
         return;
     mDocument->deleteLines(line, count);
     processFoldsOnLinesDeleted(line, count);
+    // Unlike properInsertLine(s)/properSetLine/properMoveLine, deletion has no
+    // new lines to parse: with a line-local syntaxer the shifted lines' states
+    // stay valid, so the reparse can be skipped entirely.
     if (parseToEnd && mSyntaxer->needsLineState())
         reparseLines(line, line + count, true);
     emit linesDeleted(line,count);
