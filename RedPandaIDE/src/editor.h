@@ -424,7 +424,7 @@ private:
     void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-    void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString& token,
+    void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int line, int ch, const QString& token,
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
     void updateHoverLink(int line);
@@ -563,6 +563,20 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 };
 
+/**
+ * @brief Gets the word around a caret-style (gap) position.
+ *
+ * @p p.ch is treated as a caret gap index: the word is formed by scanning
+ * backwards from p.ch-1 and (for wpEvaluation/wpInformation) forwards from
+ * p.ch. For an identifier spanning [begin, end), any p.ch in [begin, end]
+ * yields the same word. Completion-oriented purposes (wpKeywords,
+ * wpDirective, wpJavadoc, wpATTASMKeywords, wpHeaderCompletion,
+ * wpHeaderCompletionStart) only scan backwards, i.e. they assume the caret
+ * is at the end of the word.
+ *
+ * On failure (p not in document) returns an empty string and sets
+ * pWordBegin/pWordEnd to p unchanged.
+ */
 QString getWordAtPosition(QSynedit::QSynEdit* editor,
                           const QSynedit::CharPos& p,
                           QSynedit::CharPos& pWordBegin,

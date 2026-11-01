@@ -4245,7 +4245,7 @@ void Editor::popUserCodeInTabStops()
     }
 }
 
-void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString &token, QSynedit::PTokenAttribute& attr)
+void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int line, int ch, const QString &token, QSynedit::PTokenAttribute& attr)
 {
     if (!syntaxer)
         return;
@@ -4256,7 +4256,7 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
         return;
 
     if (mParser && (attr == syntaxer->identifierAttribute())) {
-        CharPos p{column,Line};
+        CharPos p{ch,line};
         CharPos pBeginPos,pEndPos;
         QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
 //        qDebug()<<s;

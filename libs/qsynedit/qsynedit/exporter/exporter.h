@@ -38,7 +38,8 @@ using PConstSyntaxer = std::shared_ptr<const Syntaxer>;
 class TokenAttribute;
 using PTokenAttribute = std::shared_ptr<TokenAttribute>;
 
-using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int column, const QString& token,
+// line: 0-based buffer line index; ch: 0-based index of the token's first char in the line
+using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int ch, const QString& token,
     PTokenAttribute& attr)>;
 class Exporter
 {

@@ -108,7 +108,7 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
 
             QString Token = replaceReservedChars(token);
             if (mOnFormatToken)
-                mOnFormatToken(mSyntaxer, i, mSyntaxer->getTokenPos()+1, mSyntaxer->getToken(),attri);
+                mOnFormatToken(mSyntaxer, i, mSyntaxer->getTokenPos(), mSyntaxer->getToken(),attri);
             setTokenAttribute(attri);
             formatToken(Token);
             mSyntaxer->next();
