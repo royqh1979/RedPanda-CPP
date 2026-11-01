@@ -1105,20 +1105,20 @@ void QSynEdit::hideCaret()
 
 bool QSynEdit::inSelection(const CharPos &pos) const
 {
-    CharPos ptBegin = selBegin();
-    CharPos ptEnd = selEnd();
-    if ((pos.line >= ptBegin.line) && (pos.line <= ptEnd.line) &&
-            ((ptBegin.line != ptEnd.line) || (ptBegin.ch != ptEnd.ch))) {
+    CharPos blockBegin = selBegin();
+    CharPos blockEnd = selEnd();
+    if ((pos.line >= blockBegin.line) && (pos.line <= blockEnd.line) &&
+            ((blockBegin.line != blockEnd.line) || (blockBegin.ch != blockEnd.ch))) {
         if (mActiveSelectionMode == SelectionMode::Column) {
-            if (ptBegin.ch > ptEnd.ch)
-                return (pos.ch >= ptEnd.ch) && (pos.ch < ptBegin.ch);
-            else if (ptBegin.ch < ptEnd.ch)
-                return (pos.ch >= ptBegin.ch) && (pos.ch < ptEnd.ch);
+            if (blockBegin.ch > blockEnd.ch)
+                return (pos.ch >= blockEnd.ch) && (pos.ch < blockBegin.ch);
+            else if (blockBegin.ch < blockEnd.ch)
+                return (pos.ch >= blockBegin.ch) && (pos.ch < blockEnd.ch);
             else
                 return false;
         } else
-            return ((pos.line > ptBegin.line) || (pos.ch >= ptBegin.ch)) &&
-      ((pos.line < ptEnd.line) || (pos.ch < ptEnd.ch));
+            return ((pos.line > blockBegin.line) || (pos.ch >= blockBegin.ch)) &&
+      ((pos.line < blockEnd.line) || (pos.ch < blockEnd.ch));
     } else
         return false;
 }
@@ -1413,9 +1413,9 @@ void QSynEdit::selTokenAt(const CharPos &pos)
     PTokenAttribute attr;
     if (getTokenAttr(pos, token, start, attr)) {
         if (!token.isEmpty()) {
-            CharPos vWordStart{start, pos.line};
-            CharPos vWordEnd{start+(int)token.length(), pos.line};
-            setCaretAndSelection(vWordEnd, vWordStart, vWordEnd);
+            CharPos wordStart{start, pos.line};
+            CharPos wordEnd{start+(int)token.length(), pos.line};
+            setCaretAndSelection(wordEnd, wordStart, wordEnd);
         }
     }
     endInternalChanges();
@@ -1716,14 +1716,14 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
             y+=mLinesInWindow - 1;
         coord.row = minMax(y, 0, displayLineCount()-1);
     }
-    CharPos vCaret = displayToBufferPos(coord);
-    if ((mCaretCh != vCaret.ch) || (mCaretLine != vCaret.line)) {
+    CharPos caret = displayToBufferPos(coord);
+    if ((mCaretCh != caret.ch) || (mCaretLine != caret.line)) {
         // changes to line / column in one go
         beginInternalChanges();
         auto action = finally([this]{
             endInternalChanges();
         });
-        internalSetCaretPos(vCaret, false);
+        internalSetCaretPos(caret, false);
 
         // if MouseCapture is True we're changing selection. otherwise we're dragging
         if (isDragging) {
@@ -2181,13 +2181,13 @@ void QSynEdit::doDuplicateSelection()
 
 void QSynEdit::doSelectLine()
 {
-    CharPos ptBegin{0,mCaretLine};
-    CharPos ptEnd;
+    CharPos blockBegin{0,mCaretLine};
+    CharPos blockEnd;
     if (mCaretLine==mDocument->count()-1)
-        ptEnd = CharPos{(int)lineText().length(),mCaretLine};
+        blockEnd = CharPos{(int)lineText().length(),mCaretLine};
     else
-        ptEnd = CharPos{0,mCaretLine+1};
-    setCaretAndSelection(ptBegin,ptBegin,ptEnd);
+        blockEnd = CharPos{0,mCaretLine+1};
+    setCaretAndSelection(blockBegin,blockBegin,blockEnd);
 }
 
 CharPos QSynEdit::ensureCharPosValid(const CharPos &coord) const
@@ -5055,14 +5055,14 @@ void QSynEdit::startParseLine(Syntaxer *syntaxer, int lineIndex, const QString l
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
-    CharPos posDst = caretPos();
+    CharPos dstPos = caretPos();
     QString s = lineText();
     int nLineLen = s.length();
     if (!isSelection && selAvail() && (deltaX!=0)) {
         if (deltaX<0)
-            posDst = selBegin();
+            dstPos = selBegin();
         else
-            posDst = selEnd();
+            dstPos = selEnd();
     } else {
         if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
             if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
@@ -5074,42 +5074,42 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
         // only moving or selecting one char can change the line
         //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
         bool bChangeY=true;
-        int glyphIndex = mDocument->charToGlyphIndex(posDst.line,posDst.ch);
-        if (bChangeY && (deltaX == -1) && (glyphIndex==0) && (posDst.line > 0)) {
+        int glyphIndex = mDocument->charToGlyphIndex(dstPos.line,dstPos.ch);
+        if (bChangeY && (deltaX == -1) && (glyphIndex==0) && (dstPos.line > 0)) {
             // end of previous line
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
             }
-            int row = lineToRow(posDst.line);
+            int row = lineToRow(dstPos.line);
             row--;
             int line = rowToLine(row);
-            if (line!=posDst.line && line>=0) {
-                posDst.line = line;
-                posDst.ch = getDisplayStringAtLine(posDst.line).length();
+            if (line!=dstPos.line && line>=0) {
+                dstPos.line = line;
+                dstPos.ch = getDisplayStringAtLine(dstPos.line).length();
             }
-        } else if (bChangeY && (deltaX == 1) && (glyphIndex >= mDocument->glyphCount(posDst.line)) && (posDst.line < mDocument->count()-1)) {
+        } else if (bChangeY && (deltaX == 1) && (glyphIndex >= mDocument->glyphCount(dstPos.line)) && (dstPos.line < mDocument->count()-1)) {
             // start of next line
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
             }
-            int row = lineToRow(posDst.line);
+            int row = lineToRow(dstPos.line);
             row++;
             int line = rowToLine(row);
-            if (line!=posDst.line && line<=mDocument->count()) {
-                posDst.line = line;
-                posDst.ch = 0;
+            if (line!=dstPos.line && line<=mDocument->count()) {
+                dstPos.line = line;
+                dstPos.ch = 0;
             }
         } else {
-            posDst.ch = std::max(0, mDocument->glyphStartChar(posDst.line, glyphIndex + deltaX));
+            dstPos.ch = std::max(0, mDocument->glyphStartChar(dstPos.line, glyphIndex + deltaX));
             // don't go past last char when ScrollPastEol option not set
             if ((deltaX > 0) && bChangeY)
-              posDst.ch = std::min(posDst.ch, nLineLen);
+              dstPos.ch = std::min(dstPos.ch, nLineLen);
         }
     }
     // set caret and block begin / end
     beginInternalChanges();
     //ensureCaretVisible();
-    moveCaretAndSelection(caretPos(), posDst, isSelection);
+    moveCaretAndSelection(caretPos(), dstPos, isSelection);
     endInternalChanges();
 }
 
@@ -5142,18 +5142,18 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
             setActiveSelectionMode(SelectionMode::Normal);
     }
 
-    CharPos posDst;
+    CharPos dstPos;
     if (ptDst.row == ptO.row && isSelection && deltaY!=0) {
         if (ptDst.row==0 && mDocument->count()>1) {
-            posDst = fileBegin();
+            dstPos = fileBegin();
         } else {
-            posDst = fileEnd();
+            dstPos = fileEnd();
         }
     } else
-        posDst = displayToBufferPos(ptDst);
+        dstPos = displayToBufferPos(ptDst);
 
     if (mActiveSelectionMode==SelectionMode::Column) {
-        int w=mDocument->lineWidth(posDst.line);
+        int w=mDocument->lineWidth(dstPos.line);
         if (w+1<ptO.x)
             return;
     }
@@ -5163,7 +5163,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     // set caret and block begin / end
     beginInternalChanges();
     //ensureCaretVisible();
-    moveCaretAndSelection(caretPos(), posDst, isSelection);
+    moveCaretAndSelection(caretPos(), dstPos, isSelection);
     endInternalChanges();
 
     // Restore fLastCaretX after moving caret, since
@@ -5172,16 +5172,16 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     mLastCaretX = SaveLastCaretX;
 }
 
-void QSynEdit::moveCaretAndSelection(const CharPos &ptBefore, const CharPos &ptAfter, bool isSelection, bool ensureCaretVisible)
+void QSynEdit::moveCaretAndSelection(const CharPos &before, const CharPos &after, bool isSelection, bool ensureCaretVisible)
 {
     beginInternalChanges();
     if (isSelection) {
         if (!selAvail())
-          internalSetSelBegin(ptBefore);
-        internalSetSelEnd(ptAfter);
+          internalSetSelBegin(before);
+        internalSetSelEnd(after);
     } else
-        internalSetSelBegin(ptAfter);
-    internalSetCaretPos(ptAfter,ensureCaretVisible);
+        internalSetSelBegin(after);
+    internalSetCaretPos(after,ensureCaretVisible);
     endInternalChanges();
 }
 
@@ -5449,7 +5449,6 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace,
                 bool isInValidSearchRange = true;
                 int first = chFound;
                 int last = chFound + searchLen;
-//                    qDebug()<<ptStart.line<<ptStart.ch<<ptEnd.line<<ptEnd.ch<<ptCurrent.line<<first<<last;
                 if  ((searchLen==0) &&
                      (((posCurrent.line == posBegin.line) && (first == posBegin.ch) && !backwards)
                       ||  ((posCurrent.line == posEnd.line) && (last == posEnd.ch) && backwards))
@@ -7017,8 +7016,8 @@ void QSynEdit::setSelLength(int len)
             y = mDocument->count()-1;
             x = mDocument->getLine(y).length();
         }
-        CharPos iNewEnd{x,y};
-        setCaretAndSelection(iNewEnd, mSelectionBegin, iNewEnd);
+        CharPos newEnd{x,y};
+        setCaretAndSelection(newEnd, mSelectionBegin, newEnd);
     } else {
         int y = mSelectionBegin.line;
         int ch = mSelectionBegin.ch;
@@ -7040,8 +7039,8 @@ void QSynEdit::setSelLength(int len)
         } else {
             x = ch - x;
         }
-        CharPos iNewStart{x,y};
-        setCaretAndSelection(iNewStart, iNewStart, mSelectionBegin);
+        CharPos newStart{x,y};
+        setCaretAndSelection(newStart, newStart, mSelectionBegin);
     }
 }
 

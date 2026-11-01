@@ -602,7 +602,7 @@ private:
      */
     void moveCaretHorz(int deltaX, bool isSelection);
     void moveCaretVert(int deltaY, bool isSelection);
-    void moveCaretAndSelection(const CharPos& ptBefore, const CharPos& ptAfter,
+    void moveCaretAndSelection(const CharPos& before, const CharPos& after,
                                bool isSelection, bool ensureCaretVisible = true);
     void moveCaretToLineStart(bool isSelection);
     void moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible = true);

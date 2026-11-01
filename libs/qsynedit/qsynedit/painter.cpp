@@ -246,65 +246,65 @@ QColor QSynEditPainter::colEditorBG()
 
 void QSynEditPainter::computeSelectionInfo()
 {
-    CharPos vStart;
-    CharPos vEnd;
+    CharPos selStart;
+    CharPos selEnd;
     bAnySelection = false;
     // Only if selection is visible anyway.
     bAnySelection = true;
     // Get the *real* start of the selected area.
     if (mEdit->mSelectionBegin.line < mEdit->mSelectionEnd.line) {
-        vStart = mEdit->mSelectionBegin;
-        vEnd = mEdit->mSelectionEnd;
+        selStart = mEdit->mSelectionBegin;
+        selEnd = mEdit->mSelectionEnd;
     } else if (mEdit->mSelectionBegin.line > mEdit->mSelectionEnd.line) {
-        vEnd = mEdit->mSelectionBegin;
-        vStart = mEdit->mSelectionEnd;
+        selEnd = mEdit->mSelectionBegin;
+        selStart = mEdit->mSelectionEnd;
     } else if (mEdit->mSelectionBegin.ch != mEdit->mSelectionEnd.ch) {
         // it is only on this line.
-        vStart.line = mEdit->mSelectionBegin.line;
-        vEnd.line = vStart.line;
+        selStart.line = mEdit->mSelectionBegin.line;
+        selEnd.line = selStart.line;
         if (mEdit->mSelectionBegin.ch < mEdit->mSelectionEnd.ch) {
-            vStart.ch = mEdit->mSelectionBegin.ch;
-            vEnd.ch = mEdit->mSelectionEnd.ch;
+            selStart.ch = mEdit->mSelectionBegin.ch;
+            selEnd.ch = mEdit->mSelectionEnd.ch;
         } else {
-            vStart.ch = mEdit->mSelectionEnd.ch;
-            vEnd.ch = mEdit->mSelectionBegin.ch;
+            selStart.ch = mEdit->mSelectionEnd.ch;
+            selEnd.ch = mEdit->mSelectionBegin.ch;
         }
     } else
         bAnySelection = false;
     if (mEdit->mInputPreeditString.length()>0) {
-        if (vStart.line == mEdit->mCaretLine && vStart.ch >= mEdit->mCaretCh) {
-            vStart.ch+=mEdit->mInputPreeditString.length();
+        if (selStart.line == mEdit->mCaretLine && selStart.ch >= mEdit->mCaretCh) {
+            selStart.ch+=mEdit->mInputPreeditString.length();
         }
-        if (vEnd.line == mEdit->mCaretLine && vEnd.ch > mEdit->mCaretCh) {
-            vEnd.ch+=mEdit->mInputPreeditString.length();
+        if (selEnd.line == mEdit->mCaretLine && selEnd.ch > mEdit->mCaretCh) {
+            selEnd.ch+=mEdit->mInputPreeditString.length();
         }
     }
     // If there is any visible selection so far, then test if there is an
     // intersection with the area to be painted.
     if (bAnySelection) {
         // Don't care if the selection is not visible.
-        bAnySelection = (vEnd.line >= mFirstLine) && (vStart.line <= mLastLine);
+        bAnySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
         if (bAnySelection) {
             // Transform the selection from text space into screen space
-            mSelStart.row = mEdit->lineToRow(vStart.line);
-            mSelEnd.row = mEdit->lineToRow(vEnd.line);
+            mSelStart.row = mEdit->lineToRow(selStart.line);
+            mSelEnd.row = mEdit->lineToRow(selEnd.line);
             if (mEdit->mInputPreeditString.length() > 0
-                    && vStart.line == mEdit->mCaretLine) {
+                    && selStart.line == mEdit->mCaretLine) {
                 QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelStart.x = mEdit->charToGlyphLeft(vStart.line, sLine,vStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(selStart.line, sLine,selStart.ch);
             } else {
-                mSelStart.x = mEdit->charToGlyphLeft(vStart.line,vStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(selStart.line,selStart.ch);
             }
             if (mEdit->mInputPreeditString.length() > 0
-                    && vEnd.line == mEdit->mCaretLine) {
+                    && selEnd.line == mEdit->mCaretLine) {
                 QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, sLine,vEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, sLine,selEnd.ch);
             } else {
-                mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, vEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, selEnd.ch);
             }
             // In the column selection mode sort the begin and end of the selection,
             // this makes the painting code simpler.
