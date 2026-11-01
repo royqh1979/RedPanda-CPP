@@ -11092,8 +11092,9 @@ void TestQSyneditCpp::test_column_backspace()
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
     QCOMPARE(mEdit->content(), textDeleted);
+    // column deletion leaves a zero-width column selection (column cursor)
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
 
-    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
     mEdit->undo();
     QCOMPARE(mEdit->content(), text);
     mEdit->redo();
@@ -11129,11 +11130,12 @@ void TestQSyneditCpp::test_column_cut()
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     mEdit->cutToClipboard();
     QCOMPARE(mEdit->content(), textCut);
+    // column deletion leaves a zero-width column selection (column cursor)
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
     QString clipboardText = QApplication::clipboard()->text();
     clipboardText.replace("\r\n","\n");
     QCOMPARE(clipboardText, QString("bc\ngh\nlm"));
 
-    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
     mEdit->undo();
     QCOMPARE(mEdit->content(), text);
     mEdit->redo();
@@ -11195,8 +11197,9 @@ void TestQSyneditCpp::test_column_delete_char()
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
     QCOMPARE(mEdit->content(), textDeleted);
+    // column deletion leaves a zero-width column selection (column cursor)
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
 
-    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
     mEdit->undo();
     QCOMPARE(mEdit->content(), text);
     mEdit->redo();

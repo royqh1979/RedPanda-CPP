@@ -5633,7 +5633,13 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         newStartPos.ch = xposToGlyphStartChar(newStartPos.line,xFrom);
         newEndPos.line = lastLine;
         newEndPos.ch = xposToGlyphStartChar(newEndPos.line, xFrom);
-        setCaretAndSelection(newStartPos,newStartPos,newEndPos);
+        // keep the column mode: deletion leaves a zero-width column
+        // selection (i.e. a column cursor)
+        beginInternalChanges();
+        internalSetCaretPos(newStartPos);
+        internalSetSelBegin(newStartPos);
+        internalSetSelEnd(newEndPos);
+        endInternalChanges();
         // Column deletion never removes a line entirely, so no mark
         // updating is needed here.
         break;
@@ -5674,7 +5680,12 @@ void QSynEdit::doInsertText(const CharPos& pos,
             int textLen = mDocument->getLine(blockEnd.line).length()-lenBefore;
             blockBegin.ch+=textLen;
             blockEnd.ch+=textLen;
-            setCaretAndSelection(blockBegin,blockBegin,blockEnd);
+            // keep the column mode
+            beginInternalChanges();
+            internalSetCaretPos(blockBegin);
+            internalSetSelBegin(blockBegin);
+            internalSetSelEnd(blockEnd);
+            endInternalChanges();
         }
     }
         break;
@@ -5791,9 +5802,9 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
     QString str;
     QString tempString;
     int line;
-    int len;
     CharPos  lineBreakPos;
-    int startGlyph = mDocument->charToGlyphIndex(pos.line,pos.ch);
+    // pixel x of the insertion column, consistent with doDeleteText's column branch
+    int startX = charToGlyphLeft(pos.line,pos.ch);
     line = startLine;
     if (!mUndoing) {
         beginEditing();
@@ -5803,7 +5814,7 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
         str = text[i];
         int insertPos = 0;
         if (line > mDocument->count()) {
-            tempString = QString(startGlyph,' ') + str;
+            tempString = QString(startX/mCharWidth,' ') + str;
             properInsertLine(mDocument->count(), tempString, line==endLine);
             if (!mUndoing) {
                 lineBreakPos.line = line - 1;
@@ -5815,12 +5826,12 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
             }
         } else {
             tempString = mDocument->getLine(line);
-            len = mDocument->glyphCount(line);
-            if (len < startGlyph) {
-                insertPos = tempString.length()+1;
-                tempString = tempString + QString(startGlyph - len,' ') + str;
+            int lineWidth = mDocument->lineWidth(line);
+            if (lineWidth < startX) {
+                insertPos = tempString.length();
+                tempString = tempString + QString((startX - lineWidth)/mCharWidth,' ') + str;
             } else {
-                insertPos = xposToGlyphStartChar(line,startGlyph);
+                insertPos = xposToGlyphStartChar(line,startX);
                 tempString.insert(insertPos,str);
             }
             properSetLine(line, tempString, line==endLine);
