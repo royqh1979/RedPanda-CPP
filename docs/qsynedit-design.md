@@ -315,3 +315,7 @@ EditorManager 等外部观察者只需跟踪行号结构变化；行内容的变
 即**列光标**状态。Backspace/Delete 对零宽列选区"先扩一个字符再删"
 （`doDeletePrevChar`/`doDeleteCurrentChar` 列分支）就是这一语义的体现；
 未来实现列模式输入（多光标输入）时，该状态是入口条件。
+
+**列删除/列插入后保持列模式**：`doDeleteText`/`doInsertText` 的列分支结束后
+只设置光标与选区、不触碰选择模式（不能用会重置为 Normal 的 `setCaretAndSelection`），
+使列删除留下零宽列选区（列光标），连续 Backspace 等操作保持多光标语义。
