@@ -318,14 +318,14 @@ void CompilerManager::run(
         execArgs << localizePath(filename);
         execArgs += parseArgumentsWithoutVariables(arguments);
         if (useCustomTerminal) {
-            auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
+            auto [wrappedFilename, args, fileOwner] = wrapCommandForTerminalEmulator(
                 pSettings->environment().terminalPath(),
                 pSettings->environment().terminalArgumentsPattern(),
                 execArgs,
                 &pSettings->dirs()
             );
             //delete when thread finished
-            execRunner = new ExecutableRunner(filename, args, workDir);
+            execRunner = new ExecutableRunner(wrappedFilename, args, workDir);
             mTempFileOwner = std::move(fileOwner);
         } else {
             //delete when thread finished

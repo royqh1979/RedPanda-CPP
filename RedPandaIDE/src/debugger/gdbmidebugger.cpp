@@ -500,14 +500,14 @@ void GDBMIDebuggerClient::handleListVarChildren(const GDBMIResultParser::ParseOb
         int numChild = childObj["numchild"].intValue(0);
         QString value = childObj["value"].value();
         QString type = childObj["type"].value();
-        bool hasMore = childObj["has_more"].value() != "0";
+        bool childHasMore = childObj["has_more"].value() != "0";
         emit addVarChild(parentName,
                          name,
                          exp,
                          numChild,
                          value,
                          type,
-                         hasMore);
+                         childHasMore);
     }
 }
 
@@ -847,7 +847,7 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                     foreach(const QString& origLine, disOutput) {
                         QStringList subLines = textToLines(origLine);
                         foreach (const QString& s, subLines) {
-                            QString line = s;
+                            QString outputLine = s;
                             if (!s.isEmpty() && s.front().isDigit()) {
                                 QRegularExpressionMatch match = REGdbSourceLine.match(s);
     //                            qDebug()<<s;
@@ -865,12 +865,12 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                                             mFileCache[filename]=contents;
                                         }
                                         if (lineno>=0 && lineno<contents.size()) {
-                                            line = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
+                                            outputLine = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
                                         }
                                     }
                                 }
                             }
-                            newOutput.append(line);
+                            newOutput.append(outputLine);
                         }
                     }
                     disOutput=newOutput;

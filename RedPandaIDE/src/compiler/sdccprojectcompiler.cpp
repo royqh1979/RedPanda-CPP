@@ -230,8 +230,8 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
             }
         } else {
             foreach(const PProjectUnit &unit2, projectUnits) {
-                FileType fileType = getFileType(unit2->fileName());
-                if (isC_CPPHeaderFile(fileType)) {
+                FileType unit2FileType = getFileType(unit2->fileName());
+                if (isC_CPPHeaderFile(unit2FileType)) {
                     QString header = extractRelativePath(mProject->makeFileName(),unit2->fileName());
                     objStr = objStr + ' ' + escapeFilenameForMakefilePrerequisite(header);
                 }

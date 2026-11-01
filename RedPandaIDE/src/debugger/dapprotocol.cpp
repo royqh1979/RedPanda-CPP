@@ -105,7 +105,6 @@ QString createDAPEventMessage(qint64 seq, const QString &event, const QJsonObjec
 std::shared_ptr<DAPProtocolMessage> parseDAPMessage(const QByteArray &contentPart)
 {
     QJsonObject obj = contentPartToDAPMessageObj(contentPart);
-    DAPRequest req;
     qint64 seq = parseJsonObjNumberProperty(obj, "seq");
     QString type = parseJsonObjStringProperty(obj, "type");
     if (type == "request") {

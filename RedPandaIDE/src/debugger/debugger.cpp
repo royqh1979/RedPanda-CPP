@@ -824,8 +824,8 @@ void Debugger::save(const QString &filename, const QString& projectFolder)
     if (forProject) {
         //convert project file's absolute path to relative path
         foreach (const PBreakpoint& breakpoint, mBreakpointModel->breakpoints(forProject)) {
-            QString filename = extractRelativePath(projectFolder, breakpoint->filename);
-            QString key = QString("%1-%2").arg(filename).arg(breakpoint->line);
+            QString relativeFilename = extractRelativePath(projectFolder, breakpoint->filename);
+            QString key = QString("%1-%2").arg(relativeFilename).arg(breakpoint->line);
             breakpointCompareSet.insert(key);
         }
     } else {
