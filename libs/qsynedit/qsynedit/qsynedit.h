@@ -166,38 +166,31 @@ public:
     }
 
     void invalidateGutter();
-    void invalidateGutterLine(int aLine);
+    void invalidateGutterLine(int line);
     void invalidateGutterLines(int startLine, int endLine);
 
     int yposToRow(int y) const {
         return std::max(0, (y + mTopPos) / mTextHeight);
     }
 
-    DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
-    DisplayCoord pixelsToGlyphPos(int aX, int aY) const;
+    DisplayCoord pixelsToNearestGlyphPos(int x, int y) const;
+    DisplayCoord pixelsToGlyphPos(int x, int y) const;
     QPoint displayCoordToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const CharPos& p) const;
     CharPos displayToBufferPos(const DisplayCoord& p) const;
-
-    //normalized buffer coord operations
-//    ContentsCoord fromCharPos(const CharPos& p) const;
-//    ContentsCoord createNormalizedCharPos(int aChar,int aLine) const;
-//    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
-//    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& lineText) const;
     QString genSpaces(int charCount) const;
     int charToGlyphLeft(int line, int ch) const;
     int charToGlyphLeft(int line, const QString& s, int ch) const;
-    //int charToColumn(const QString& s, int aChar) const;
     int xposToGlyphStartChar(int line, int xpos) const;
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
     int xposToGlyphLeft(int line, int xpos) const;
     //int xposToGlyphRight(int line, int xpos) const;
     int stringWidth(const QString& lineText, int left) const;
     int getLineIndent(const QString& lineText) const;
-    int rowToLine(int aRow) const;
-    int lineToRow(int aLine) const;
+    int rowToLine(int row) const;
+    int lineToRow(int line) const;
     int foldRowToLine(int row) const;
     int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
@@ -346,7 +339,7 @@ public:
     bool validInDoc(int line, int ch) const;
     bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
     bool validGlyphStart(const CharPos& pos) const;
-    bool getPositionOfMouse(CharPos& aPos) const;
+    bool getPositionOfMouse(CharPos& pos) const;
     bool getLineOfMouse(int& line) const;
     bool pointToCharLine(const QPoint& point, CharPos& pos) const;
     bool pointToLine(const QPoint& point, int& line) const;
@@ -395,7 +388,7 @@ public:
     void setGutterWidth(int value);
 
     bool modified() const;
-    void setModified(bool Value, bool skipUndo=false);
+    void setModified(bool value, bool skipUndo=false);
 
     const PConstSyntaxer syntaxer() const;
     void setSyntaxer(const PSyntaxer &syntaxer);
@@ -521,14 +514,14 @@ signals:
     void linesReparesd(int start, int count);
 #endif
 protected:
-    virtual bool onGetSpecialLineColors(int Line,
+    virtual bool onGetSpecialLineColors(int line,
          QColor& foreground, QColor& backgroundColor) ;
-    virtual void onGetEditingAreas(int Line, EditingAreaList& areaList);
-    virtual void onGutterGetText(int aLine, QString& aText);
-    virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
+    virtual void onGetEditingAreas(int line, EditingAreaList& areaList);
+    virtual void onGutterGetText(int line, QString& text);
+    virtual void onGutterPaint(QPainter& painter, int line, int x, int y);
     virtual void onPaint(QPainter& painter);
     virtual void onPreparePaintHighlightToken(int line,
-            int aChar, const QString& token, PTokenAttribute attr,
+            int ch, const QString& token, PTokenAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
 protected:
     void replaceAll(const QString& text);
@@ -562,9 +555,9 @@ private:
     void doSetSelText(const QString& value);
 
     void updateLastCaretX();
-    void ensureCaretVisible(bool ForceToMiddle=false);
+    void ensureCaretVisible(bool forceToMiddle=false);
     void scrollWindow(int dx,int dy);
-    void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
+    void setCaretDisplayXY(const DisplayCoord& pos, bool ensureCaretVisible = true);
     void internalSetSelBegin(const CharPos &value);
     void internalSetSelEnd(const CharPos &value);
     void internalSetCaretPos(CharPos value, bool ensureVisible = true);
@@ -586,11 +579,11 @@ private:
     void processFoldsOnLineMoved(int from, int to);
     void rescanCodeBlocks(); // rescan for folds
     void internalScanCodeBlocks();
-    PCodeBlock foldStartAtLine(int Line) const;
+    PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeBlock foldAroundLine(int line);
     PCodeBlock foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
-    PCodeBlock checkFoldRange(const QVector<PCodeBlock> &blocksToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeBlock checkFoldRange(const QVector<PCodeBlock> &blocksToCheck,int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
     PCodeBlock foldEndAtLine(int line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset() const;

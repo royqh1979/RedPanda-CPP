@@ -25,18 +25,18 @@ RegexSearcher::RegexSearcher(QObject* parent):Searcher(parent)
 
 }
 
-int RegexSearcher::length(int aIndex)
+int RegexSearcher::length(int index)
 {
-    if (aIndex<0 || aIndex >= mResults.length())
+    if (index<0 || index >= mResults.length())
         return -1;
-    return mLengths[aIndex];
+    return mLengths[index];
 }
 
-int RegexSearcher::result(int aIndex)
+int RegexSearcher::result(int index)
 {
-    if (aIndex<0 || aIndex >= mResults.length())
+    if (index<0 || index >= mResults.length())
         return -1;
-    return mResults[aIndex];
+    return mResults[index];
 }
 
 int RegexSearcher::resultCount()

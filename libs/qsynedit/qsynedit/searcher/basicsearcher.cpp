@@ -23,18 +23,18 @@ BasicSearcher::BasicSearcher(QObject *parent):Searcher(parent)
 
 }
 
-int BasicSearcher::length(int aIndex)
+int BasicSearcher::length(int index)
 {
-    if (aIndex<0 || aIndex >= mResults.length())
+    if (index<0 || index >= mResults.length())
         return 0;
     return pattern().length();
 }
 
-int BasicSearcher::result(int aIndex)
+int BasicSearcher::result(int index)
 {
-    if (aIndex<0 || aIndex >= mResults.length())
+    if (index<0 || index >= mResults.length())
         return -1;
-    return mResults[aIndex];
+    return mResults[index];
 }
 
 int BasicSearcher::resultCount()

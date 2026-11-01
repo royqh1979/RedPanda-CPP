@@ -525,11 +525,11 @@ bool QSynEdit::validGlyphStart(const CharPos &pos) const
 }
 
 
-bool QSynEdit::getPositionOfMouse(CharPos &aPos) const
+bool QSynEdit::getPositionOfMouse(CharPos &pos) const
 {
     QPoint point = QCursor::pos();
     point = mapFromGlobal(point);
-    return pointToCharLine(point,aPos);
+    return pointToCharLine(point,pos);
 }
 
 bool QSynEdit::getLineOfMouse(int &line) const
@@ -605,15 +605,15 @@ void QSynEdit::invalidateGutterLines(int startLine, int endLine)
 
 /**
  * @brief Convert point on the edit (x,y) to (row,column)
- * @param aX
- * @param aY
+ * @param x
+ * @param y
  * @return
  */
 
-DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int aX, int aY) const
+DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
 {
-    int xpos = std::max(0, leftPos() + aX - mGutterWidth - 2);
-    int row = yposToRow(aY);
+    int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
+    int row = yposToRow(y);
     int line = rowToLine(row);
     if (xpos<0) {
         xpos=0;
@@ -630,10 +630,10 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int aX, int aY) const
     return DisplayCoord{xpos, row};
 }
 
-DisplayCoord QSynEdit::pixelsToGlyphPos(int aX, int aY) const
+DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
 {
-    int xpos = std::max(0, leftPos() + aX - mGutterWidth - 2);
-    int row = yposToRow(aY);
+    int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
+    int row = yposToRow(y);
     int line = rowToLine(row);
     if (xpos<0) {
         xpos=0;
@@ -730,9 +730,6 @@ int QSynEdit::charToGlyphLeft(int line, const QString &s, int ch) const
     return mDocument->charToGlyphStartPosition(line, s, ch);
 }
 
-// int QSynEdit::charToColumn(const QString &s, int aChar) const
-// {
-//     return mDocument->charToColumn(s, aChar);
 // }
 
 int QSynEdit::xposToGlyphStartChar(int line, int xpos) const
@@ -785,13 +782,13 @@ int QSynEdit::getLineIndent(const QString &lineText) const
     return indents;
 }
 
-int QSynEdit::rowToLine(int aRow) const
+int QSynEdit::rowToLine(int row) const
 {
     int line;
     if (useCodeFolding())
-        line = foldRowToLine(aRow);
+        line = foldRowToLine(row);
     else
-        line = aRow;
+        line = row;
     if (line<0)
         line = 0;
     if (line>=mDocument->count())
@@ -799,12 +796,12 @@ int QSynEdit::rowToLine(int aRow) const
     return line;
 }
 
-int QSynEdit::lineToRow(int aLine) const
+int QSynEdit::lineToRow(int line) const
 {
     if (useCodeFolding())
-        return foldLineToRow(aLine);
+        return foldLineToRow(line);
     else
-        return aLine;
+        return line;
 }
 
 int QSynEdit::foldRowToLine(int row) const
@@ -3148,10 +3145,10 @@ void QSynEdit::scrollWindow(int dx, int dy)
     verticalScrollBar()->setValue(ny);
 }
 
-void QSynEdit::setCaretDisplayXY(const DisplayCoord &aPos, bool ensureCaretVisible)
+void QSynEdit::setCaretDisplayXY(const DisplayCoord &pos, bool ensureCaretVisible)
 {
     beginInternalChanges();
-    internalSetCaretPos(displayToBufferPos(aPos), ensureCaretVisible);
+    internalSetCaretPos(displayToBufferPos(pos), ensureCaretVisible);
     endInternalChanges();
 }
 
@@ -6795,11 +6792,11 @@ int QSynEdit::gutterWidth() const
     return mGutterWidth;
 }
 
-void QSynEdit::setGutterWidth(int Value)
+void QSynEdit::setGutterWidth(int value)
 {
-    Value = std::max(Value, 0);
-    if (mGutterWidth != Value) {
-        mGutterWidth = Value;
+    value = std::max(value, 0);
+    if (mGutterWidth != value) {
+        mGutterWidth = value;
         // onSizeOrFontChanged(false);
         invalidate();
     }
