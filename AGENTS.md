@@ -95,6 +95,7 @@ CI（`.github/workflows/unit.yml`）在 Ubuntu + Qt 5 上运行的正是上述�
 - 翻译：用户可见字符串走 `tr()`；`.ts` 文件位于 `RedPandaIDE/translations/`。Qt 5 下通过 `update_translations` 目标更新（`cmake --build . --target update_translations`）；Qt 6 下由 `qt_add_translations` 处理。
 - 资源通过 `target_embed_resources`/`target_embed_translations` CMake 辅助函数嵌入，这些集合不手写 `.qrc`。
 - 注释与文档使用英文；新写的注释和文档也请使用英文。
+- 设计文档（`docs/architecture.md`、`docs/qsynedit-design.md`）只描述**现状与约定**，以代码为准；具体修改记录（改名、bug 修复等）写入 git 提交信息，不放进设计文档。提交信息使用英文。
 - 特性代码用 `ENABLE_LUA_ADDON`、`ENABLE_SDCC`、`ENABLE_VCS` 宏做条件编译——相应的 `#include` 也要加保护。
 - Lua 插件 API 用 Teal 标注类型；API 定义位于 `addon/defs/*.d.tl`，文档见 `docs/addon.md`。插件 API 的版本规则很严格——修改接口前请先阅读 `docs/addon.md`。
 
