@@ -90,7 +90,7 @@ private:
     void paintHighlightToken(const QString& lineText,
                              const QList<int> &glyphStartCharList,
                              const QList<int> &glyphStartPositionsList,
-                             bool bFillToEOL);
+                             bool fillToEOL);
     void addHighlightToken(
             const QString& lineText,
             const QString& token, int tokenLeft,
@@ -111,10 +111,10 @@ private:
 private:
     QSynEdit* mEdit;
     QPainter* mPainter;
-    bool bDoRightEdge; // right edge
-    int nRightEdge;
+    bool doRightEdge; // right edge
+    int rightEdge;
     // selection info
-    bool bAnySelection; // any selection visible?
+    bool anySelection; // any selection visible?
     DisplayCoord mSelStart; // start of selected area
     DisplayCoord mSelEnd; // end of selected area
     // info about normal and selected text and background colors

@@ -43,11 +43,11 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
     mIsCurrentLine = false;
     // If the right edge is visible and in the invalid area, prepare to paint it.
     // Do this first to realize the pen when getting the dc variable.
-    bDoRightEdge = false;
+    doRightEdge = false;
     if (mEdit->mRightEdge > 0) { // column value
-        nRightEdge = mEdit->textOffset()+ mEdit->mRightEdge * mEdit->mCharWidth; // pixel value
-        if (nRightEdge >= mClip.left() &&nRightEdge <= mClip.right()) {
-            bDoRightEdge = true;
+        rightEdge = mEdit->textOffset()+ mEdit->mRightEdge * mEdit->mCharWidth; // pixel value
+        if (rightEdge >= mClip.left() &&rightEdge <= mClip.right()) {
+            doRightEdge = true;
         }
     }
 
@@ -78,10 +78,10 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
     if (mRcToken.top() < mRcToken.bottom()) {
         mPainter->fillRect(mRcToken,colEditorBG());
         // Draw the right edge if necessary.
-        if (bDoRightEdge) {
+        if (doRightEdge) {
             QPen pen(mEdit->mRightEdgeColor,1);
             mPainter->setPen(pen);
-            mPainter->drawLine(nRightEdge, mRcToken.top(),nRightEdge, mRcToken.bottom() + 1);
+            mPainter->drawLine(rightEdge, mRcToken.top(),rightEdge, mRcToken.bottom() + 1);
         }
     }
 
@@ -248,9 +248,9 @@ void QSynEditPainter::computeSelectionInfo()
 {
     CharPos selStart;
     CharPos selEnd;
-    bAnySelection = false;
+    anySelection = false;
     // Only if selection is visible anyway.
-    bAnySelection = true;
+    anySelection = true;
     // Get the *real* start of the selected area.
     if (mEdit->mSelectionBegin.line < mEdit->mSelectionEnd.line) {
         selStart = mEdit->mSelectionBegin;
@@ -270,7 +270,7 @@ void QSynEditPainter::computeSelectionInfo()
             selEnd.ch = mEdit->mSelectionBegin.ch;
         }
     } else
-        bAnySelection = false;
+        anySelection = false;
     if (mEdit->mInputPreeditString.length()>0) {
         if (selStart.line == mEdit->mCaretLine && selStart.ch >= mEdit->mCaretCh) {
             selStart.ch+=mEdit->mInputPreeditString.length();
@@ -281,28 +281,28 @@ void QSynEditPainter::computeSelectionInfo()
     }
     // If there is any visible selection so far, then test if there is an
     // intersection with the area to be painted.
-    if (bAnySelection) {
+    if (anySelection) {
         // Don't care if the selection is not visible.
-        bAnySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
-        if (bAnySelection) {
+        anySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
+        if (anySelection) {
             // Transform the selection from text space into screen space
             mSelStart.row = mEdit->lineToRow(selStart.line);
             mSelEnd.row = mEdit->lineToRow(selEnd.line);
             if (mEdit->mInputPreeditString.length() > 0
                     && selStart.line == mEdit->mCaretLine) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
+                QString lineTextWithPreedit = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelStart.x = mEdit->charToGlyphLeft(selStart.line, sLine,selStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(selStart.line, lineTextWithPreedit,selStart.ch);
             } else {
                 mSelStart.x = mEdit->charToGlyphLeft(selStart.line,selStart.ch);
             }
             if (mEdit->mInputPreeditString.length() > 0
                     && selEnd.line == mEdit->mCaretLine) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
+                QString lineTextWithPreedit = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, sLine,selEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, lineTextWithPreedit,selEnd.ch);
             } else {
                 mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, selEnd.ch);
             }
@@ -355,13 +355,13 @@ void QSynEditPainter::paintLine()
         }
         int fontHeight = fm.descent() + fm.ascent();
         int linePadding = (lineHeight - fontHeight) / 2;
-        int nY = mRcLine.bottom() - linePadding - fm.descent();
+        int y = mRcLine.bottom() - linePadding - fm.descent();
         if (font!=mPainter->font())
             mPainter->setFont(font);
         QPen pen(mLineTokens[i].foreground);
         if (pen!=mPainter->pen())
             mPainter->setPen(pen);
-        mPainter->drawText(mLineTokens[i].left,nY, mLineTokens[i].token);
+        mPainter->drawText(mLineTokens[i].left,y, mLineTokens[i].token);
     }
     mLineTokens.clear();
     mLineTokenBackgrounds.clear();
@@ -383,7 +383,7 @@ void QSynEditPainter::paintToken(
     int tokenRight = tokenWidth+tokenLeft;
 
     if (last >= first && mRcToken.right() > mRcToken.left()) {
-        int nX = fixXValue(first);
+        int x = fixXValue(first);
         first -= tokenLeft;
         last -= tokenLeft;
         QRect rcTokenBack = mRcToken;
@@ -404,7 +404,7 @@ void QSynEditPainter::paintToken(
                 int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
                 if (accWidth+glyphWidth>first) {
                     if (!startPaint ) {
-                        nX-= (first - accWidth - 1) ;
+                        x-= (first - accWidth - 1) ;
                         startPaint = true;
                     }
                 }
@@ -443,7 +443,7 @@ void QSynEditPainter::paintToken(
                                 textToPaint += glyph2;
                             }
                             TokenTextInfo tokenInfo;
-                            tokenInfo.left = nX;
+                            tokenInfo.left = x;
                             tokenInfo.token = textToPaint;
                             tokenInfo.foreground=foreground;
                             tokenInfo.font = font;
@@ -470,7 +470,7 @@ void QSynEditPainter::paintToken(
                             }
                             if (textToPaint!=" " && textToPaint!="\t") {
                                 TokenTextInfo tokenInfo;
-                                tokenInfo.left = nX+padding;
+                                tokenInfo.left = x+padding;
                                 tokenInfo.token = textToPaint;
                                 tokenInfo.foreground=foreground;
                                 tokenInfo.font = font;
@@ -478,7 +478,7 @@ void QSynEditPainter::paintToken(
                             }
                         }
                     }
-                    nX += glyphWidth;
+                    x += glyphWidth;
                 }
                 accWidth += glyphWidth;
                 if (accWidth >= last)
@@ -577,24 +577,24 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
 void QSynEditPainter::paintHighlightToken(const QString& lineText,
                                           const QList<int> &glyphStartCharList,
                                           const QList<int> &glyphStartPositionsList,
-                                          bool bFillToEOL)
+                                          bool fillToEOL)
 {
     bool isComplexToken;
-    int nC1, nC2, nC1Sel, nC2Sel;
-    bool bU1, bSel, bU2;
+    int colStart, colEnd, colSelStart, colSelEnd;
+    bool unselBefore, hasSelected, unselAfter;
     // Compute some helper variables.
-    nC1 = std::max(mLeft, mTokenAccu.left);
-    nC2 = std::min(mRight, mTokenAccu.left + mTokenAccu.width);
+    colStart = std::max(mLeft, mTokenAccu.left);
+    colEnd = std::min(mRight, mTokenAccu.left + mTokenAccu.width);
     if (mHasSelectionInLine) {
-        bU1 = (nC1 < mLineSelStart);
-        bSel = (nC1 < mLineSelEnd) && (nC2 >= mLineSelStart);
-        bU2 = (nC2 >= mLineSelEnd);
-        isComplexToken = bSel && (bU1 || bU2);
+        unselBefore = (colStart < mLineSelStart);
+        hasSelected = (colStart < mLineSelEnd) && (colEnd >= mLineSelStart);
+        unselAfter = (colEnd >= mLineSelEnd);
+        isComplexToken = hasSelected && (unselBefore || unselAfter);
     } else {
-        bSel = false;
+        hasSelected = false;
         isComplexToken = false;
-        bU1 = false;
-        bU2 = false;
+        unselBefore = false;
+        unselAfter = false;
     }
     // Any token chars accumulated?
     if (mTokenAccu.width > 0) {
@@ -609,7 +609,7 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
         // Paint the chars
         if (isComplexToken) {
             // first unselected part of the token
-            if (bU1) {
+            if (unselBefore) {
                 QColor unselectedForeground,unselectedBackground;
                 getDrawingColors(false,unselectedForeground,unselectedBackground);
                 mRcToken.setRight(fixXValue(mLineSelStart));
@@ -619,58 +619,58 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
                             glyphStartPositionsList,
                             mTokenAccu.startGlyph,
                             mTokenAccu.endGlyph,
-                            mTokenAccu.width,mTokenAccu.left,nC1,mLineSelStart,
+                            mTokenAccu.width,mTokenAccu.left,colStart,mLineSelStart,
                             unselectedForeground,unselectedBackground,
                             mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             }
             // selected part of the token
             QColor foreground,background;
             getDrawingColors(true,foreground,background);
-            nC1Sel = std::max(mLineSelStart, nC1);
-            nC2Sel = std::min(mLineSelEnd, nC2);
-            mRcToken.setRight(fixXValue(nC2Sel));
+            colSelStart = std::max(mLineSelStart, colStart);
+            colSelEnd = std::min(mLineSelEnd, colEnd);
+            mRcToken.setRight(fixXValue(colSelEnd));
             paintToken(
                         lineText,
                         glyphStartCharList,
                         glyphStartPositionsList,
                         mTokenAccu.startGlyph,
                         mTokenAccu.endGlyph,
-                        mTokenAccu.width, mTokenAccu.left, nC1Sel, nC2Sel,
+                        mTokenAccu.width, mTokenAccu.left, colSelStart, colSelEnd,
                         foreground,background,
                         mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             // second unselected part of the token
-            if (bU2) {
+            if (unselAfter) {
                 QColor unselectedForeground,unselectedBackground;
                 getDrawingColors(false,unselectedForeground,unselectedBackground);
-                mRcToken.setRight(fixXValue(nC2));
+                mRcToken.setRight(fixXValue(colEnd));
                 paintToken(
                             lineText,
                             glyphStartCharList,
                             glyphStartPositionsList,
                             mTokenAccu.startGlyph,
                             mTokenAccu.endGlyph,
-                            mTokenAccu.width, mTokenAccu.left, mLineSelEnd, nC2,
+                            mTokenAccu.width, mTokenAccu.left, mLineSelEnd, colEnd,
                             unselectedForeground,unselectedBackground,
                             mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             }
         } else {
             QColor foreground,background;
-            getDrawingColors(bSel,foreground,background);
-            mRcToken.setRight(fixXValue(nC2));
+            getDrawingColors(hasSelected,foreground,background);
+            mRcToken.setRight(fixXValue(colEnd));
             paintToken(
                         lineText,
                         glyphStartCharList,
                         glyphStartPositionsList,
                         mTokenAccu.startGlyph,
                         mTokenAccu.endGlyph,
-                        mTokenAccu.width, mTokenAccu.left, nC1, nC2,
+                        mTokenAccu.width, mTokenAccu.left, colStart, colEnd,
                         foreground,background,
                         mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
         }
     }
 
     // Fill the background to the end of this line if necessary.
-    if (bFillToEOL && mRcToken.left() < mRcLine.right()) {
+    if (fillToEOL && mRcToken.left() < mRcLine.right()) {
         if (mIsSpecialLine && mSpecialLineBackground.isValid())
             mBackground = mSpecialLineBackground;
         else
@@ -691,7 +691,7 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
         backInfo.background=background;
         mLineTokenBackgrounds.append(backInfo);
     }
-    if (bFillToEOL) {
+    if (fillToEOL) {
         paintLine();
     }
 }
@@ -760,12 +760,12 @@ void QSynEditPainter::addHighlightToken(
     }
 
     // Do we have to paint the old chars first, or can we just append?
-    bool bCanAppend = false;
-    bool bInitFont = (mTokenAccu.width==0);
+    bool canAppend = false;
+    bool initFont = (mTokenAccu.width==0);
     if (mTokenAccu.width > 0 ) {
         // font style must be the same or token is only spaces
         if (mTokenAccu.style != style) {
-            bInitFont = true;
+            initFont = true;
         } else {
             if (
                 (showGlyphs == mTokenAccu.showSpecialGlyphs) &&
@@ -773,14 +773,14 @@ void QSynEditPainter::addHighlightToken(
                 (mTokenAccu.background == background) &&
               // foreground color must be the same or token is only spaces
               (mTokenAccu.foreground == foreground)) {
-                bCanAppend = true;
+                canAppend = true;
             }
         }
         // If we can't append it, then we have to paint the old token chars first.
-        if (!bCanAppend)
+        if (!canAppend)
             paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList, false);
     }
-    if (bInitFont) {
+    if (initFont) {
         mTokenAccu.style = style;
         mTokenAccu.font = mEdit->font();
         mTokenAccu.font.setBold(style & FontStyle::fsBold);
@@ -805,7 +805,7 @@ void QSynEditPainter::addHighlightToken(
 
     // Only accumulate tokens if it's visible.
     if (tokenLeft < mRight && tokenRight>mLeft) {
-        if (bCanAppend) {
+        if (canAppend) {
             mTokenAccu.width += tokenWidth;
             Q_ASSERT(startGlyph == mTokenAccu.endGlyph);
             mTokenAccu.endGlyph = endGlyph;
@@ -844,17 +844,17 @@ void QSynEditPainter::paintFoldAttributes()
             int line = mEdit->rowToLine(row);
             if (line >= mEdit->mDocument->count())
                 break;
-            int X;
+            int x;
             // Set vertical coord
-            int Y = row * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
+            int y = row * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
             if (mEdit->mTextHeight % 2 == 1 && line % 2 == 0) {
-                Y++;
+                y++;
             }
             int lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(line));
             int indentLevel = 0 ;
             int tabSteps = 0;
             while (tabSteps < lineIndent) {
-                X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                x = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
                 if (mEdit->mCodeFolding.rainbowIndentGuides) {
@@ -871,17 +871,17 @@ void QSynEditPainter::paintFoldAttributes()
                     gradientStart=attr->foreground();
                 }
                 if (mEdit->mCodeFolding.fillIndents) {
-                    int X1;
+                    int x1;
                     if (tabSteps>lineIndent)
-                        X1 = lineIndent * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = lineIndent * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                     else
-                        X1 = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
-                    QLinearGradient gradient(X,Y,X1,Y);
+                    QLinearGradient gradient(x,y,x1,y);
                     gradient.setColorAt(1,gradientStart);
                     gradient.setColorAt(0,gradientEnd);
-                    mPainter->fillRect(X,Y,(X1-X),mEdit->mTextHeight,gradient);
+                    mPainter->fillRect(x,y,(x1-x),mEdit->mTextHeight,gradient);
                 }
 
                 // Move to top of vertical line
@@ -889,7 +889,7 @@ void QSynEditPainter::paintFoldAttributes()
                     QPen dottedPen(Qt::PenStyle::DashLine);
                     dottedPen.setColor(paintColor);
                     mPainter->setPen(dottedPen);
-                    mPainter->drawLine(X,Y,X,Y+mEdit->mTextHeight);
+                    mPainter->drawLine(x,y,x,y+mEdit->mTextHeight);
                 }
             }
         }
@@ -906,8 +906,8 @@ void QSynEditPainter::paintFoldAttributes()
             if (block->collapsed && !block->parentCollapsed() &&
                     (block->fromLine <= mLastLine) && (block->fromLine >= mFirstLine) ) {
                 // Get starting and end points
-                int Y = (mEdit->lineToRow(block->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
-                mPainter->drawLine(mClip.left(),Y, mClip.right(),Y);
+                int y = (mEdit->lineToRow(block->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
+                mPainter->drawLine(mClip.left(),y, mClip.right(),y);
             }
         }
     }
@@ -950,8 +950,8 @@ void QSynEditPainter::paintLines()
     auto action = finally([this](){
         mEdit->mDocument->endSetLinesWidth();
     });
-    QString sLine; // the current line
-    QString sToken; // token info
+    QString lineTextWithPreedit; // the current line
+    QString token; // token info
     int tokenLeft, tokenWidth;
     PTokenAttribute attr;
     EditingAreaList  areaList;
@@ -975,7 +975,7 @@ void QSynEditPainter::paintLines()
             break;
 
         // Get the line.
-        sLine = mEdit->lineText(line);
+        lineTextWithPreedit = mEdit->lineText(line);
         // determine whether will be painted with ActiveLineColor
         if (mEdit->mActiveSelectionMode == SelectionMode::Column) {
             mIsCurrentLine = (line >= selectionBegin.line && line <= selectionEnd.line);
@@ -984,8 +984,8 @@ void QSynEditPainter::paintLines()
         }
         if (mIsCurrentLine && !mEdit->mInputPreeditString.isEmpty()) {
             int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretLine,mEdit->mCaretCh);
-            sLine = sLine.left(ch) + mEdit->mInputPreeditString
-                    + sLine.mid(ch);
+            lineTextWithPreedit = lineTextWithPreedit.left(ch) + mEdit->mInputPreeditString
+                    + lineTextWithPreedit.mid(ch);
             lineTextChanged = true;
         }
         // Initialize the text and background colors, maybe the line should
@@ -1009,7 +1009,7 @@ void QSynEditPainter::paintLines()
         mIsLineEndSelected = false;
 
         // Does the selection intersect the visible area?
-        if (bAnySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
+        if (anySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
             // selection mode and a good start for the smNormal mode.
             mHasSelectionInLine = true;
@@ -1040,7 +1040,7 @@ void QSynEditPainter::paintLines()
             if (mEdit->mActiveSelectionMode == SelectionMode::Normal) {
                 mIsLineEndSelected = (row>=mSelStart.row && row < mSelEnd.row);
             }
-        } //endif bAnySelection
+        } //endif anySelection
 
         // Update the rcLine rect to this line.
 //        rcLine.setTop(rcLine.bottom());
@@ -1059,7 +1059,7 @@ void QSynEditPainter::paintLines()
 
         QList<int> glyphStartCharList;
         if (lineTextChanged) {
-            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(line,sLine);
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(line,lineTextWithPreedit);
         } else {
             glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(line);
         }
@@ -1077,7 +1077,7 @@ void QSynEditPainter::paintLines()
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
-        mEdit->startParseLine(mEdit->mSyntaxer.get(), line, sLine);
+        mEdit->startParseLine(mEdit->mSyntaxer.get(), line, lineTextWithPreedit);
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
@@ -1086,30 +1086,30 @@ void QSynEditPainter::paintLines()
         tokenLeft = 0;
         // Test first whether anything of this token is visible.
         while (!mEdit->mSyntaxer->eol()) {
-            sToken = mEdit->mSyntaxer->getToken();
-            if (sToken.isEmpty())  {
+            token = mEdit->mSyntaxer->getToken();
+            if (token.isEmpty())  {
                 mEdit->mSyntaxer->next();
                 continue;
             }
             int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
-            int tokenEndChar = tokenStartChar + sToken.length();
+            int tokenEndChar = tokenStartChar + token.length();
 
             // It's at least partially visible. Get the token attributes now.
             attr = mEdit->mSyntaxer->getTokenAttribute();
 
             //rainbow parenthesis
-            if (sToken == "["
-                    || sToken == "("
-                    || sToken == "{"
+            if (token == "["
+                    || token == "("
+                    || token == "{"
                     ) {
                 PSyntaxState rangeState = mEdit->mSyntaxer->getState();
                 getBraceColorAttr(rangeState->bracketLevel
                                   +rangeState->braceLevel
                                   +rangeState->parenthesisLevel
                                   ,attr);
-            } else if (sToken == "]"
-                       || sToken == ")"
-                       || sToken == "}"
+            } else if (token == "]"
+                       || token == ")"
+                       || token == "}"
                        ){
                 PSyntaxState rangeState = mEdit->mSyntaxer->getState();
                 getBraceColorAttr(rangeState->bracketLevel
@@ -1120,7 +1120,7 @@ void QSynEditPainter::paintLines()
             //input method
 //            if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
 //                int startPos = mEdit->mSyntaxer->getTokenPos();
-//                int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
+//                int endPos = mEdit->mSyntaxer->getTokenPos() + token.length();
 //                if (!(endPos < mEdit->mCaretCh
 //                        || startPos >= mEdit->mCaretCh+mEdit->mInputPreeditString.length())) {
 //                    if (!preeditAttr) {
@@ -1135,15 +1135,15 @@ void QSynEditPainter::paintLines()
                 int pos = mEdit->mSyntaxer->getTokenPos();
                 if (pos==0) {
                     showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowLeadingSpaces);
-                } else if (pos+sToken.length()==sLine.length()) {
+                } else if (pos+token.length()==lineTextWithPreedit.length()) {
                     showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowTrailingSpaces);
                 } else {
                     showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowInnerSpaces);
                 }
             }
             addHighlightToken(
-                        sLine,
-                        sToken,
+                        lineTextWithPreedit,
+                        token,
                         tokenLeft,
                         line, attr,showGlyph,
                         glyphStartCharList,
@@ -1168,7 +1168,7 @@ void QSynEditPainter::paintLines()
             // Paint folding
             foldRange = mEdit->foldStartAtLine(line);
             if ((foldRange) && foldRange->collapsed) {
-                addOnStr = mEdit->mSyntaxer->foldString(sLine);
+                addOnStr = mEdit->mSyntaxer->foldString(lineTextWithPreedit);
                 attr = mEdit->mSyntaxer->symbolAttribute();
                 getBraceColorAttr(mEdit->mSyntaxer->getState()->braceLevel,attr);
             } else {
@@ -1179,21 +1179,21 @@ void QSynEditPainter::paintLines()
                 }
             }
             if (!addOnStr.isEmpty()) {
-                expandGlyphStartCharList(addOnStr, sLine.length(), glyphStartCharList);
+                expandGlyphStartCharList(addOnStr, lineTextWithPreedit.length(), glyphStartCharList);
                 int len=glyphStartCharList.length()-glyphStartPositionsList.length();
                 for (int i=0;i<len;i++) {
                     glyphStartPositionsList.append(tokenLeft);
                 }
-                int oldLen = sLine.length();
-                sLine += addOnStr;
+                int oldLen = lineTextWithPreedit.length();
+                lineTextWithPreedit += addOnStr;
                 addHighlightToken(
-                            sLine,
+                            lineTextWithPreedit,
                             addOnStr,
                             tokenLeft,
                             line, attr, false,
                             glyphStartCharList,
                             oldLen,
-                            sLine.length(),
+                            lineTextWithPreedit.length(),
                             true,
                             glyphStartPositionsList,
                             tokenWidth);
@@ -1202,7 +1202,7 @@ void QSynEditPainter::paintLines()
         }
         // Draw anything that's left in the TokenAccu record. Fill to the end
         // of the invalid area with the correct colors.
-        paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList, true);
+        paintHighlightToken(lineTextWithPreedit, glyphStartCharList, glyphStartPositionsList, true);
 
         //Paint editingAreaBorders
         foreach (const PEditingArea& area, areaList) {
@@ -1215,18 +1215,18 @@ void QSynEditPainter::paintLines()
                 }
             }
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->beginX);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, lineTextWithPreedit.length(), area->beginX);
             area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->endX);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, lineTextWithPreedit.length(), area->endX);
             area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
         }
         //input method
         if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
             PEditingArea area = std::make_shared<EditingArea>();
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretCh);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, lineTextWithPreedit.length(), mEdit->mCaretCh);
             area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretCh+mEdit->mInputPreeditString.length());
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, lineTextWithPreedit.length(), mEdit->mCaretCh+mEdit->mInputPreeditString.length());
             area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
             area->type = EditingAreaType::eatUnderLine;
 //            if (preeditAttr) {
@@ -1236,7 +1236,7 @@ void QSynEditPainter::paintLines()
 //            }
             areaList.append(area);
 
-            mEdit->mGlyphPostionCacheForInputMethod.str = sLine;
+            mEdit->mGlyphPostionCacheForInputMethod.str = lineTextWithPreedit;
             mEdit->mGlyphPostionCacheForInputMethod.glyphCharList = glyphStartCharList;
             mEdit->mGlyphPostionCacheForInputMethod.glyphPositionList = glyphStartPositionsList;
             mEdit->mGlyphPostionCacheForInputMethod.strWidth = tokenLeft;
@@ -1246,9 +1246,9 @@ void QSynEditPainter::paintLines()
         // Now paint the right edge if necessary. We do it line by line to reduce
         // the flicker. Should not cost very much anyway, compared to the many
         // calls to ExtTextOut.
-        if (bDoRightEdge) {
+        if (doRightEdge) {
             mPainter->setPen(mEdit->mRightEdgeColor);
-            mPainter->drawLine(nRightEdge, mRcLine.top(),nRightEdge,mRcLine.bottom()+1);
+            mPainter->drawLine(rightEdge, mRcLine.top(),rightEdge,mRcLine.bottom()+1);
         }
         mIsCurrentLine = false;
     }
