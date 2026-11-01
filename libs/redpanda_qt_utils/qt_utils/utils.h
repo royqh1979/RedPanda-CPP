@@ -30,7 +30,7 @@
 # include <QStringEncoder>
 # include <QStringDecoder>
 #else
-class QTextCodec;
+# include <QTextCodec>
 #endif
 
 class QByteArray;
@@ -230,8 +230,8 @@ public:
 
 public:
     static TextEncoder encoderForUtf8();
-    static TextEncoder encoderForUtf16();
-    static TextEncoder encoderForUtf32();
+    static TextEncoder encoderForUtf16LE();
+    static TextEncoder encoderForUtf32LE();
     static TextEncoder encoderForSystem();
 
 private:
@@ -239,6 +239,8 @@ private:
     QStringEncoder mEncoder;
 #else
     QTextCodec *mCodec;
+    // mimic the BOM-less behavior of QTextCodec::fromUnicode(const QString&)
+    QTextCodec::ConversionFlags mConversionFlags = QTextCodec::IgnoreHeader;
 #endif
 };
 

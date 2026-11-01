@@ -790,7 +790,7 @@ std::pair<bool, QByteArray> TextEncoder::encode(const QString &text)
         return {false, QByteArray()};
     }
 #else
-    QTextCodec::ConverterState state;
+    QTextCodec::ConverterState state(mConversionFlags);
     result = mCodec->fromUnicode(text.constData(), text.length(), &state);
     if (state.invalidChars > 0)
         return {false, QByteArray()};
@@ -808,7 +808,8 @@ QByteArray TextEncoder::encodeUnchecked(const QString &text)
         mEncoder.resetState();
     return result;
 #else
-    return mCodec->fromUnicode(text);
+    QTextCodec::ConverterState state(mConversionFlags);
+    return mCodec->fromUnicode(text.constData(), text.length(), &state);
 #endif
 }
 
@@ -821,21 +822,21 @@ TextEncoder TextEncoder::encoderForUtf8()
 #endif
 }
 
-TextEncoder TextEncoder::encoderForUtf16()
+TextEncoder TextEncoder::encoderForUtf16LE()
 {
 #if QT_VERSION_MAJOR >= 6
-    return QStringEncoder(QStringConverter::Utf16, QStringConverter::Flag::Stateless);
+    return QStringEncoder(QStringConverter::Utf16LE, QStringConverter::Flag::Stateless);
 #else
-    return TextEncoder(ENCODING_UTF16);
+    return TextEncoder("UTF-16LE");
 #endif
 }
 
-TextEncoder TextEncoder::encoderForUtf32()
+TextEncoder TextEncoder::encoderForUtf32LE()
 {
 #if QT_VERSION_MAJOR >= 6
-    return QStringEncoder(QStringConverter::Utf32, QStringConverter::Flag::Stateless);
+    return QStringEncoder(QStringConverter::Utf32LE, QStringConverter::Flag::Stateless);
 #else
-    return TextEncoder(ENCODING_UTF32);
+    return TextEncoder("UTF-32LE");
 #endif
 }
 
