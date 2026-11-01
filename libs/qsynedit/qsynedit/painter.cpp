@@ -395,16 +395,16 @@ void QSynEditPainter::paintToken(
         //mPainter->fillRect(rcTokenBack,mPainter->brush());
         if (first > tokenWidth) {
         } else {
-            int tokenWidth=0;
+            int accWidth=0;
             startPaint = false;
             for (int i=startGlyph; i<endGlyph;i++) {
                 int glyphStart = glyphStartCharList[i];
                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i);
                 QString glyph = lineText.mid(glyphStart,glyphLen);
                 int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
-                if (tokenWidth+glyphWidth>first) {
+                if (accWidth+glyphWidth>first) {
                     if (!startPaint ) {
-                        nX-= (first - tokenWidth - 1) ;
+                        nX-= (first - accWidth - 1) ;
                         startPaint = true;
                     }
                 }
@@ -421,10 +421,10 @@ void QSynEditPainter::paintToken(
                         }
                         if (tryLigature) {
                             QString textToPaint = glyph;
-                            while(i+1<endGlyph && tokenWidth + glyphWidth < last) {
-                                int glyphStart = glyphStartCharList[i+1];
-                                int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i+1);
-                                QString glyph2 = lineText.mid(glyphStart,glyphLen);
+                            while(i+1<endGlyph && accWidth + glyphWidth < last) {
+                                int nextGlyphStart = glyphStartCharList[i+1];
+                                int nextGlyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i+1);
+                                QString glyph2 = lineText.mid(nextGlyphStart,nextGlyphLen);
                                 // if (!OperatorGlyphs.contains(glyph))
                                 //     break;
                                 if ( glyph2.length()<1
@@ -480,8 +480,8 @@ void QSynEditPainter::paintToken(
                     }
                     nX += glyphWidth;
                 }
-                tokenWidth += glyphWidth;
-                if (tokenWidth >= last)
+                accWidth += glyphWidth;
+                if (accWidth >= last)
                     break;
             }
         }
@@ -610,8 +610,8 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
         if (isComplexToken) {
             // first unselected part of the token
             if (bU1) {
-                QColor foreground,background;
-                getDrawingColors(false,foreground,background);
+                QColor unselectedForeground,unselectedBackground;
+                getDrawingColors(false,unselectedForeground,unselectedBackground);
                 mRcToken.setRight(fixXValue(mLineSelStart));
                 paintToken(
                             lineText,
@@ -620,7 +620,7 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
                             mTokenAccu.startGlyph,
                             mTokenAccu.endGlyph,
                             mTokenAccu.width,mTokenAccu.left,nC1,mLineSelStart,
-                            foreground,background,
+                            unselectedForeground,unselectedBackground,
                             mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             }
             // selected part of the token
@@ -640,8 +640,8 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
                         mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             // second unselected part of the token
             if (bU2) {
-                QColor foreground,background;
-                getDrawingColors(false,foreground,background);
+                QColor unselectedForeground,unselectedBackground;
+                getDrawingColors(false,unselectedForeground,unselectedBackground);
                 mRcToken.setRight(fixXValue(nC2));
                 paintToken(
                             lineText,
@@ -650,7 +650,7 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
                             mTokenAccu.startGlyph,
                             mTokenAccu.endGlyph,
                             mTokenAccu.width, mTokenAccu.left, mLineSelEnd, nC2,
-                            foreground,background,
+                            unselectedForeground,unselectedBackground,
                             mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
             }
         } else {

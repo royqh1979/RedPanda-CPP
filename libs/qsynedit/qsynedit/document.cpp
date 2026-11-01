@@ -1829,12 +1829,9 @@ void GlyphCalculator::setFont(const QFont &newFont)
     mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
 }
 
-CaretAndSelectionInfo::CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin, const CharPos &selEnd, SelectionMode selMode)
+CaretAndSelectionInfo::CaretAndSelectionInfo(const CharPos &newCaret, const CharPos &newSelBegin, const CharPos &newSelEnd, SelectionMode newSelMode)
+    : caret{newCaret}, selBegin{newSelBegin}, selEnd{newSelEnd}, selMode{newSelMode}
 {
-    this->caret=caret;
-    this->selBegin=selBegin;
-    this->selEnd=selEnd;
-    this->selMode = selMode;
 }
 
 }

@@ -693,7 +693,7 @@ struct CaretAndSelectionInfo{
     CharPos selBegin;
     CharPos selEnd;
     SelectionMode selMode;
-    CaretAndSelectionInfo(const CharPos &caret, const CharPos &selBegin,const CharPos &selEnd, SelectionMode selMode);
+    CaretAndSelectionInfo(const CharPos &newCaret, const CharPos &newSelBegin,const CharPos &newSelEnd, SelectionMode newSelMode);
 };
 
 using PCaretAndSelectionInfo = std::shared_ptr<CaretAndSelectionInfo>;

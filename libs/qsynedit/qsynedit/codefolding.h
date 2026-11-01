@@ -41,7 +41,7 @@ typedef std::shared_ptr<CodeBlock> PCodeBlock;
 // A single fold
 class CodeBlock {
 public:
-    explicit CodeBlock(PCodeBlock parent, int fromLine, int toLine);
+    explicit CodeBlock(PCodeBlock parentBlock, int from, int to);
     CodeBlock(const CodeBlock&)=delete;
     CodeBlock& operator=(const CodeBlock&)=delete;
     int fromLine; // Beginning line

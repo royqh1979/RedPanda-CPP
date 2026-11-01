@@ -305,7 +305,7 @@ public:
     void addLeftTopToUndo();
     void addSelectionToUndo();
 
-    void processCommand(EditCommand Command, QVariant data=QVariant(),QVariant data2=QVariant());
+    void processCommand(EditCommand command, QVariant commandData=QVariant(),QVariant extraCommandData=QVariant());
 
 
     //Commands

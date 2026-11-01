@@ -445,13 +445,13 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                         }
                         syntaxer->next();
                     }
-                    for (int i=bracketsFound.length()-1;i>=0;i--) {
-                        if (bracketsFound[i] == bracketOpen)
+                    for (int j=bracketsFound.length()-1;j>=0;j--) {
+                        if (bracketsFound[j] == bracketOpen)
                             bracketsLevel++;
-                        else if (bracketsFound[i] == bracketClose) {
+                        else if (bracketsFound[j] == bracketClose) {
                             bracketsLevel--;
                             if (bracketsLevel == 0)
-                                return CharPos{bracketsPos[i], line};
+                                return CharPos{bracketsPos[j], line};
                         }
                     }
                 }
@@ -2805,10 +2805,10 @@ void QSynEdit::doInputStr(const QString& s)
                         && undoItem->changeEndPos().ch == mCaretCh
                         && undoItem->changeStartPos().line == mCaretLine
                         && undoItem->changeStartPos().ch == mCaretCh-1) {
-                        QString s = mDocument->getLine(mCaretLine);
+                        QString lineText = mDocument->getLine(mCaretLine);
                         int i=mCaretCh-1;
-                        if (i>=0 && i<s.length())
-                            lastCh=s[i];
+                        if (i>=0 && i<lineText.length())
+                            lastCh=lineText[i];
                     } else {
                         addGroupUndoBreak();
                     }
@@ -3298,58 +3298,38 @@ void QSynEdit::recalcCharExtent()
     if (hasStyles[0]) { // has bold font
         QFont f = font();
         f.setBold(true);
-        QFontMetrics fm(f);
-        QFont f2 = font();
-        f2.setBold(true);
-        QFontMetrics fm2(f);
-        if (fm.lineSpacing()>mTextHeight)
-            mTextHeight=fm.lineSpacing();
-        if (fm2.lineSpacing()>mTextHeight)
-            mTextHeight=fm2.lineSpacing();
-        if (fm.horizontalAdvance("M")>mCharWidth)
-            mCharWidth = fm.horizontalAdvance("M");
+        QFontMetrics styleFm(f);
+        if (styleFm.lineSpacing()>mTextHeight)
+            mTextHeight=styleFm.lineSpacing();
+        if (styleFm.horizontalAdvance("M")>mCharWidth)
+            mCharWidth = styleFm.horizontalAdvance("M");
     }
-    if (hasStyles[1]) { // has strike out font
+    if (hasStyles[1]) { // has italic font
         QFont f = font();
         f.setItalic(true);
-        QFontMetrics fm(f);
-        QFont f2 = font();
-        f2.setItalic(true);
-        QFontMetrics fm2(f);
-        if (fm.lineSpacing()>mTextHeight)
-            mTextHeight=fm.lineSpacing();
-        if (fm2.lineSpacing()>mTextHeight)
-            mTextHeight=fm2.lineSpacing();
-        if (fm.horizontalAdvance("M")>mCharWidth)
-            mCharWidth = fm.horizontalAdvance("M");
+        QFontMetrics styleFm(f);
+        if (styleFm.lineSpacing()>mTextHeight)
+            mTextHeight=styleFm.lineSpacing();
+        if (styleFm.horizontalAdvance("M")>mCharWidth)
+            mCharWidth = styleFm.horizontalAdvance("M");
     }
     if (hasStyles[2]) { // has strikeout
         QFont f = font();
         f.setStrikeOut(true);
-        QFontMetrics fm(f);
-        QFont f2 = font();
-        f2.setStrikeOut(true);
-        QFontMetrics fm2(f);
-        if (fm.lineSpacing()>mTextHeight)
-            mTextHeight=fm.lineSpacing();
-        if (fm2.lineSpacing()>mTextHeight)
-            mTextHeight=fm2.lineSpacing();
-        if (fm.horizontalAdvance("M")>mCharWidth)
-            mCharWidth = fm.horizontalAdvance("M");
+        QFontMetrics styleFm(f);
+        if (styleFm.lineSpacing()>mTextHeight)
+            mTextHeight=styleFm.lineSpacing();
+        if (styleFm.horizontalAdvance("M")>mCharWidth)
+            mCharWidth = styleFm.horizontalAdvance("M");
     }
     if (hasStyles[3]) { // has underline
         QFont f = font();
         f.setUnderline(true);
-        QFontMetrics fm(f);
-        QFont f2 = font();
-        f2.setUnderline(true);
-        QFontMetrics fm2(f);
-        if (fm.lineSpacing()>mTextHeight)
-            mTextHeight=fm.lineSpacing();
-        if (fm2.lineSpacing()>mTextHeight)
-            mTextHeight=fm2.lineSpacing();
-        if (fm.horizontalAdvance("M")>mCharWidth)
-            mCharWidth = fm.horizontalAdvance("M");
+        QFontMetrics styleFm(f);
+        if (styleFm.lineSpacing()>mTextHeight)
+            mTextHeight=styleFm.lineSpacing();
+        if (styleFm.horizontalAdvance("M")>mCharWidth)
+            mCharWidth = styleFm.horizontalAdvance("M");
     }
     mTextHeight *= mLineSpacingFactor;
 
@@ -4507,9 +4487,9 @@ void QSynEdit::doRedo()
     beginEditing();
     //skip group chain breakers
     while (mRedoList->lastChangeReason()==ChangeReason::GroupBreak) {
-        PUndoItem item = mRedoList->popItem();
-        redoedNumbers.insert(item->changeNumber());
-        mUndoList->restoreChange(item);
+        PUndoItem poppedItem = mRedoList->popItem();
+        redoedNumbers.insert(poppedItem->changeNumber());
+        mUndoList->restoreChange(poppedItem);
     }
     ChangeReason lastChange = mRedoList->lastChangeReason();
     bool keepGoing;
@@ -5926,7 +5906,7 @@ void QSynEdit::onPreparePaintHighlightToken(int , int , const QString &,
 
 }
 
-void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
+void QSynEdit::processCommand(EditCommand command, QVariant commandData,QVariant extraCommandData)
 {
     hideCaret();
     beginInternalChanges();
@@ -6017,8 +5997,8 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
     // goto special line / column position
     case EditCommand::GotoXY:
     case EditCommand::SelGotoXY:
-        if (data.isValid())
-            moveCaretAndSelection(caretPos(), data.value<CharPos>(), command == EditCommand::SelGotoXY);
+        if (commandData.isValid())
+            moveCaretAndSelection(caretPos(), commandData.value<CharPos>(), command == EditCommand::SelGotoXY);
         break;
     // word selection
     case EditCommand::PrevWordBegin:
@@ -6106,13 +6086,13 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
         break;
     case EditCommand::ImeStr:
     case EditCommand::Input:
-        if (data.canConvert<QChar>()) {
-            doInputStr(data.toChar());
+        if (commandData.canConvert<QChar>()) {
+            doInputStr(commandData.toChar());
         } else
-            doInputStr(data.toString());
+            doInputStr(commandData.toString());
         break;
     case EditCommand::ReplaceLine:
-        doReplaceLine(data.toInt(), data2.toString());
+        doReplaceLine(commandData.toInt(), extraCommandData.toString());
         break;
     case EditCommand::InsertMode:
         setInsertMode(true);
