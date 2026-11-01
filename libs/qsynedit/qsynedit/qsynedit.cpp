@@ -3158,7 +3158,6 @@ void QSynEdit::setCaretDisplayXY(const DisplayCoord &aPos, bool ensureCaretVisib
 void QSynEdit::internalSetCaretPos(CharPos value, bool ensureVisible)
 {
     Q_ASSERT(validInDoc(value));
-    //value = ensureBufferCoordValid(value);
     Q_ASSERT(validGlyphStart(value));
     if ((value.ch != mCaretCh) || (value.line != mCaretLine)) {
         beginInternalChanges();
@@ -3171,28 +3170,20 @@ void QSynEdit::internalSetCaretPos(CharPos value, bool ensureVisible)
             invalidateLine(mCaretLine);
         }
         if (mCaretLine != value.line) {
-            int oldCaretY = mCaretLine;
+            int oldCaretLine = mCaretLine;
             mCaretLine = value.line;
             invalidateLine(mCaretLine);
             invalidateGutterLine(mCaretLine);
-            invalidateLine(oldCaretY);
-            invalidateGutterLine(oldCaretY);
+            invalidateLine(oldCaretLine);
+            invalidateGutterLine(oldCaretLine);
             setStatusChanged(StatusChange::CaretY);
         }
-        // Call UpdateLastCaretX before DecPaintLock because the event handler it
-        // calls could raise an exception, and we don't want fLastCaretX to be
-        // left in an undefined state if that happens.
         updateLastCaretX();
         if (ensureVisible)
             ensureCaretVisible();
     } else {
-        // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
-        // anything about fLastCaretX and they shouldn't need to. So, to avoid any
-        // unwanted surprises, always update fLastCaretX whenever CaretXY is
-        // assigned to.
-        // Note to SynEdit developers: If this is undesirable in some obscure
-        // case, just save the value of fLastCaretX before assigning to CaretXY and
-        // restore it afterward as appropriate.
+        // Always update mLastCaretX whenever the caret is assigned to,
+        // even if it didn't move.
         updateLastCaretX();
     }
 }
@@ -5725,15 +5716,15 @@ void QSynEdit::doInsertText(const CharPos& pos,
         doInsertTextByNormalMode(pos,text);
         break;
     case SelectionMode::Column:{
-        CharPos bb=selBegin();
-        CharPos be=selEnd();
-        int lenBefore = mDocument->getLine(be.line).length();
+        CharPos blockBegin=selBegin();
+        CharPos blockEnd=selEnd();
+        int lenBefore = mDocument->getLine(blockEnd.line).length();
         doInsertTextByColumnMode(pos, text, startLine,endLine);
         if (!text.isEmpty()) {
-            int textLen = mDocument->getLine(be.line).length()-lenBefore;
-            bb.ch+=textLen;
-            be.ch+=textLen;
-            setCaretAndSelection(bb,bb,be);
+            int textLen = mDocument->getLine(blockEnd.line).length()-lenBefore;
+            blockBegin.ch+=textLen;
+            blockEnd.ch+=textLen;
+            setCaretAndSelection(blockBegin,blockBegin,blockEnd);
         }
     }
         break;
