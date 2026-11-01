@@ -45,20 +45,20 @@ void HTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &styleName)
+QString HTMLExporter::attrToCSS(PTokenAttribute attr, const QString &styleName)
 {
     QString result = "." + styleName + " { ";
-    if (mUseBackground && attri->background().isValid())
-        result += "background-color: " + colorToHTML(attri->background()) + "; ";
-    if (attri->foreground().isValid())
-        result += "color: " + colorToHTML(attri->foreground()) + "; ";
-    if (attri->styles().testFlag(FontStyle::fsBold))
+    if (mUseBackground && attr->background().isValid())
+        result += "background-color: " + colorToHTML(attr->background()) + "; ";
+    if (attr->foreground().isValid())
+        result += "color: " + colorToHTML(attr->foreground()) + "; ";
+    if (attr->styles().testFlag(FontStyle::fsBold))
         result += "font-weight: bold; ";
-    if (attri->styles().testFlag(FontStyle::fsItalic))
+    if (attr->styles().testFlag(FontStyle::fsItalic))
         result += "font-style: italic; ";
-    if (attri->styles().testFlag(FontStyle::fsUnderline))
+    if (attr->styles().testFlag(FontStyle::fsUnderline))
         result += "text-decoration: underline; ";
-    if (attri->styles().testFlag(FontStyle::fsStrikeOut))
+    if (attr->styles().testFlag(FontStyle::fsStrikeOut))
         result += "text-decoration: line-through; ";
     result += "}";
     return result;
@@ -69,9 +69,9 @@ QString HTMLExporter::colorToHTML(const QColor &color) const
     return color.name();
 }
 
-QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attri)
+QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attr)
 {
-    QString name  = syntaxer->languageName() + '-' + attri->name();
+    QString name  = syntaxer->languageName() + '-' + attr->name();
     QString cssName = mCssNames.value(name);
     if (cssName.isEmpty()) {
         //cssName = makeValidName(name);
@@ -101,7 +101,7 @@ void HTMLExporter::formatAttributeDone(bool , bool , FontStyles )
 
 void HTMLExporter::formatAttributeInit(bool , bool , FontStyles )
 {
-    QString styleName = getStyleName(mSyntaxer, mLastAttri);
+    QString styleName = getStyleName(mSyntaxer, mLastAttr);
     addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
@@ -112,7 +112,7 @@ void HTMLExporter::formatAfterLastAttribute()
 
 void HTMLExporter::formatBeforeFirstAttribute(bool, bool, FontStyles)
 {
-    QString styleName = getStyleName(mSyntaxer, mLastAttri);
+    QString styleName = getStyleName(mSyntaxer, mLastAttr);
     addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
@@ -142,8 +142,8 @@ QString HTMLExporter::getHeader()
     using namespace std::placeholders;
     QString styles;
     foreach (const PTokenAttribute &pAttr, mSyntaxer->attributes()){
-        QString uniqueAttriName = getStyleName(mSyntaxer, pAttr);
-        styles.append(attriToCSS(pAttr,uniqueAttriName) + lineBreak());
+        QString uniqueAttrName = getStyleName(mSyntaxer, pAttr);
+        styles.append(attrToCSS(pAttr,uniqueAttrName) + lineBreak());
     }
 
     QString HTMLAsTextHeader =
@@ -199,10 +199,10 @@ QString HTMLExporter::getHeader()
     return result;
 }
 
-void HTMLExporter::setTokenAttribute(PTokenAttribute attri)
+void HTMLExporter::setTokenAttribute(PTokenAttribute attr)
 {
-    mLastAttri = attri;
-    Exporter::setTokenAttribute(attri);
+    mLastAttr = attr;
+    Exporter::setTokenAttribute(attr);
 }
 
 QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)

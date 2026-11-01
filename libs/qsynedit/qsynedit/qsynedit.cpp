@@ -248,28 +248,28 @@ int QSynEdit::maxScrollWidth() const
         return std::max(maxWidth-viewWidth()+mCharWidth, 0);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, PTokenAttribute &attri) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, PTokenAttribute &attr) const
 {
     int tmpStart;
     PSyntaxState syntaxState;
-    return getTokenAttr(pos, token, tmpStart, attri,syntaxState);
+    return getTokenAttr(pos, token, tmpStart, attr,syntaxState);
 }
 
 bool QSynEdit::getTokenAttr(
         const CharPos &pos, QString &token,
-        PTokenAttribute &attri, PSyntaxState &syntaxState) const
+        PTokenAttribute &attr, PSyntaxState &syntaxState) const
 {
     int start;
-    return getTokenAttr(pos, token, start, attri, syntaxState);
+    return getTokenAttr(pos, token, start, attr, syntaxState);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr) const
 {
     PSyntaxState syntaxState;
-    return getTokenAttr(pos, token, start, attri, syntaxState);
+    return getTokenAttr(pos, token, start, attr, syntaxState);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri, PSyntaxState &syntaxState) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr, PSyntaxState &syntaxState) const
 {
     int chIdx, lineIdx, endPos;
     QString lineText;
@@ -286,7 +286,7 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
                 syntaxState = syntaxer->getState();
                 endPos = start + token.length();
                 if ((chIdx >= start) && (chIdx < endPos)) {
-                    attri = syntaxer->getTokenAttribute();
+                    attr = syntaxer->getTokenAttribute();
                     return true;
                 }
                 syntaxer->next();
@@ -294,7 +294,7 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
         }
     }
     token = "";
-    attri = PTokenAttribute();
+    attr = PTokenAttribute();
     return false;
 }
 
@@ -752,7 +752,6 @@ int QSynEdit::xposToGlyphLeft(int line, int xpos) const
     return mDocument->glyphStartPostion(line,glyphIndex);
 }
 
-// int QSynEdit::xposToGlyphRight(int line, int xpos) const
 // {
 //     Q_ASSERT(line>=1 && line <= mDocument->count());
 //     int glyphIndex = mDocument->xposToGlyphIndex(line-1,xpos);
@@ -2364,8 +2363,6 @@ void QSynEdit::doBreakLine()
 //            }
 //        }
 //    }
-
-    PTokenAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
     // too, so they could be moved depending on whether they are after the caret...
@@ -4232,11 +4229,11 @@ void QSynEdit::doUndoItem()
 {
     mUndoing = true;
     beginEditing();
-    bool ChangeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
+    bool changeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
     mOptions.setFlag(EditorOption::ScrollPastEol);
     auto action = finally([&,this]{
         endEditing();
-        if (ChangeScrollPastEol)
+        if (changeScrollPastEol)
             mOptions.setFlag(EditorOption::ScrollPastEol,false);
         mUndoing = false;
     });
@@ -4529,14 +4526,14 @@ void QSynEdit::doRedo()
 void QSynEdit::doRedoItem()
 {
     mUndoing = true;
-    bool ChangeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
+    bool changeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
     mOptions.setFlag(EditorOption::ScrollPastEol);
     mUndoList->setInsideRedo(true);
     beginEditing();
     auto action = finally([&,this]{
         endEditing();
         mUndoList->setInsideRedo(false);
-        if (ChangeScrollPastEol)
+        if (changeScrollPastEol)
             mOptions.setFlag(EditorOption::ScrollPastEol,false);
         mUndoing = false;
     });
@@ -5717,7 +5714,6 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
     QString str;
     bool changeScroll;
     beginEditing();
-//    int SpaceCount;
     QString lineText = mDocument->getLine(pos.line);
     leftSide = lineText.left(pos.ch);
     rightSide = lineText.mid(pos.ch);
@@ -6439,7 +6435,6 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     beginInternalChanges();
     QAbstractScrollArea::mouseReleaseEvent(event);
     int x=event->pos().x();
-    /* int Y=event->pos().y(); */
 
     if (!mMouseMoved && (x < mGutterWidth )) {
         processGutterClick(event);

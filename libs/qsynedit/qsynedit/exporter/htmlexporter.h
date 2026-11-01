@@ -33,11 +33,11 @@ public:
 protected:
     bool mCreateHTMLFragment;
 private:
-    PTokenAttribute mLastAttri;
-    QString attriToCSS(PTokenAttribute attri, const QString& uniqueAttriName);
+    PTokenAttribute mLastAttr;
+    QString attrToCSS(PTokenAttribute attr, const QString& uniqueAttrName);
     QString colorToHTML(const QColor &color) const;
     QString getStyleName(PSyntaxer syntaxer,
-                         PTokenAttribute attri);
+                         PTokenAttribute attr);
 //    QString makeValidName(const QString &name);
     // Exporter interface
 protected:
@@ -49,7 +49,7 @@ protected:
     QString getFooter() override;
     QString getFormatName() override;
     QString getHeader() override;
-    void setTokenAttribute(PTokenAttribute Attri) override;
+    void setTokenAttribute(PTokenAttribute Attr) override;
 protected:
     QString getStartLineNumberString(int startLine, int endLine) override;
     QString getEndLineNumberString(int startLine, int endLine) override;

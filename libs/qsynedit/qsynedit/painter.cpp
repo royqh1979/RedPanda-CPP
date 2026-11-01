@@ -702,7 +702,7 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
 void QSynEditPainter::addHighlightToken(
         const QString& lineText,
         const QString& token, int tokenLeft,
-        int line, PTokenAttribute attri, bool showGlyphs,
+        int line, PTokenAttribute attr, bool showGlyphs,
         const QList<int> &glyphStartCharList,
         int tokenStartChar,
         int tokenEndChar,
@@ -728,10 +728,10 @@ void QSynEditPainter::addHighlightToken(
     QColor foreground, background;
     FontStyles style;
 
-    if (attri) {
-        foreground = attri->foreground();
-        background = attri->background();
-        style = attri->styles();
+    if (attr) {
+        foreground = attr->foreground();
+        background = attr->background();
+        style = attr->styles();
     } else {
         foreground = mForeground;
         background = mBackground;
@@ -743,7 +743,7 @@ void QSynEditPainter::addHighlightToken(
 //    }
 
     mEdit->onPreparePaintHighlightToken(line,mEdit->mSyntaxer->getTokenPos(),
-        token,attri,style,foreground,background);
+        token,attr,style,foreground,background);
 
     if (!background.isValid() ) {
         background = colEditorBG();

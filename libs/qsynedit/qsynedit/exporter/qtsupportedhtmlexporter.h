@@ -17,8 +17,8 @@ public:
 protected:
     bool mCreateHTMLFragment;
 private:
-    PTokenAttribute mLastAttri;
-    QString attriToCSS(PTokenAttribute attri);
+    PTokenAttribute mLastAttr;
+    QString attrToCSS(PTokenAttribute attr);
     QString colorToHTML(const QColor &color);
 
     // SynExporter interface
@@ -31,7 +31,7 @@ protected:
     QString getFooter();
     QString getFormatName();
     QString getHeader();
-    void setTokenAttribute(PTokenAttribute Attri);
+    void setTokenAttribute(PTokenAttribute Attr);
 };
 }
 #endif // QTSUPPORTEDHTMLEXPORTER_H

@@ -280,13 +280,13 @@ public:
     int maxScrollHeight() const;
 
     bool getTokenAttr(const CharPos& pos, QString& token,
-      PTokenAttribute& attri) const;
+      PTokenAttribute& attr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      PTokenAttribute& attri, PSyntaxState &syntaxState) const;
+      PTokenAttribute& attr, PSyntaxState &syntaxState) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      int &start, PTokenAttribute& attri) const;
+      int &start, PTokenAttribute& attr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
+      int &start, PTokenAttribute& attr, PSyntaxState &syntaxState) const;
 
     void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri) const;
     QSet<int> getTokenBorders(int line) const;

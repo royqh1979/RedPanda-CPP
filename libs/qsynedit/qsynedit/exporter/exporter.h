@@ -261,9 +261,9 @@ protected:
      * @brief Sets the token attribute of the next token to determine the changes
      *   of colors and font styles so the properties of the next token can be
      *     added to the output buffer.
-     * @param attri
+     * @param attr
      */
-    virtual void setTokenAttribute(PTokenAttribute attri);
+    virtual void setTokenAttribute(PTokenAttribute attr);
 
     virtual QString getStartLineNumberString(int startLine, int endLine);
     virtual QString getLineNumberString(int line);

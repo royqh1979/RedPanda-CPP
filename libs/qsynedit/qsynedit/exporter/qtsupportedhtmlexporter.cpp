@@ -45,21 +45,21 @@ void QtSupportedHtmlExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString QtSupportedHtmlExporter::attriToCSS(PTokenAttribute attri)
+QString QtSupportedHtmlExporter::attrToCSS(PTokenAttribute attr)
 {
     QString result;
-    if (mUseBackground && attri->background().isValid())
-        result += "background-color: " + colorToHTML(attri->background()) + "; ";
-    if (attri->foreground().isValid())
-        result += "color: " + colorToHTML(attri->foreground()) + "; ";
+    if (mUseBackground && attr->background().isValid())
+        result += "background-color: " + colorToHTML(attr->background()) + "; ";
+    if (attr->foreground().isValid())
+        result += "color: " + colorToHTML(attr->foreground()) + "; ";
 
-    if (attri->styles().testFlag(FontStyle::fsBold))
+    if (attr->styles().testFlag(FontStyle::fsBold))
         result += "font-weight: bold; ";
-    if (attri->styles().testFlag(FontStyle::fsItalic))
+    if (attr->styles().testFlag(FontStyle::fsItalic))
         result += "font-style: italic; ";
-    if (attri->styles().testFlag(FontStyle::fsUnderline))
+    if (attr->styles().testFlag(FontStyle::fsUnderline))
         result += "text-decoration: underline; ";
-    if (attri->styles().testFlag(FontStyle::fsStrikeOut))
+    if (attr->styles().testFlag(FontStyle::fsStrikeOut))
         result += "text-decoration: line-through; ";
     return result;
 }
@@ -76,7 +76,7 @@ void QtSupportedHtmlExporter::formatAttributeDone(bool , bool , FontStyles )
 
 void QtSupportedHtmlExporter::formatAttributeInit(bool , bool , FontStyles )
 {
-    addData(QString("<span style=\"%1\">").arg(attriToCSS(mLastAttri)));
+    addData(QString("<span style=\"%1\">").arg(attrToCSS(mLastAttr)));
 }
 
 void QtSupportedHtmlExporter::formatAfterLastAttribute()
@@ -86,7 +86,7 @@ void QtSupportedHtmlExporter::formatAfterLastAttribute()
 
 void QtSupportedHtmlExporter::formatBeforeFirstAttribute(bool, bool, FontStyles)
 {
-    addData(QString("<span style=\"%1\">").arg(attriToCSS(mLastAttri)));
+    addData(QString("<span style=\"%1\">").arg(attrToCSS(mLastAttr)));
 }
 
 void QtSupportedHtmlExporter::formatNewLine()
@@ -158,9 +158,9 @@ QString QtSupportedHtmlExporter::getHeader()
     return result;
 }
 
-void QtSupportedHtmlExporter::setTokenAttribute(PTokenAttribute Attri)
+void QtSupportedHtmlExporter::setTokenAttribute(PTokenAttribute Attr)
 {
-    mLastAttri = Attri;
-    Exporter::setTokenAttribute(Attri);
+    mLastAttr = Attr;
+    Exporter::setTokenAttribute(Attr);
 }
 }

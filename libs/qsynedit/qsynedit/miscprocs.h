@@ -45,7 +45,7 @@ QStringList splitStrings(const QString& text);
 int calSpanLines(const CharPos& startPos, const CharPos& endPos);
 
 using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
-    PTokenAttribute attri, const QString& uniqueAttriName,
+    PTokenAttribute attr, const QString& uniqueAttrName,
     QList<void *> params)>;
 
 FontStyles getFontStyles(const QFont& font);
