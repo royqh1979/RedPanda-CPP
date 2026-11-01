@@ -1206,8 +1206,8 @@ RowColumn ConsoleLines::lineCharToRowColumn(int line, int ch)
                 int columnsBefore = 0;
                 int len = std::min(ch-charsBefore,fragment.size());
                 for (int j=0;j<len;j++) {
-                    QChar ch = fragment[j];
-                    int charColumns = mConsole->charColumns(ch,columnsBefore);
+                    QChar fragCh = fragment[j];
+                    int charColumns = mConsole->charColumns(fragCh,columnsBefore);
                     columnsBefore += charColumns;
                 }
                 result.column=columnsBefore;

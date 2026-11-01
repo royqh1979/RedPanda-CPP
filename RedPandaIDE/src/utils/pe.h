@@ -28,7 +28,7 @@ struct PortableExecutable
 {
     QString path;
 
-    PortableExecutable(const QString &path);
+    PortableExecutable(const QString &filePath);
     ~PortableExecutable() = default;
 
     bool isWin32GuiApp();

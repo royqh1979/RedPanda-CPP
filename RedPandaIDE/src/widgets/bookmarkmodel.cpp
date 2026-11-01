@@ -222,8 +222,8 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
     }
     for (int i=0;i<list.count();i++) {
         const PBookmark& bookmark=list[i];
-        QString filename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
-        QString key = QString("%1-%2").arg(filename).arg(bookmark->line);
+        QString bookmarkFilename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
+        QString key = QString("%1-%2").arg(bookmarkFilename).arg(bookmark->line);
         compareHash.insert(key,i);
     }
     QList<PBookmark> fileBookmarks;
@@ -278,8 +278,8 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
         QJsonArray array;
         foreach (const PBookmark& bookmark, list) {
             QJsonObject obj;
-            QString filename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
-            obj["filename"]=filename;
+            QString bookmarkFilename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
+            obj["filename"]=bookmarkFilename;
             obj["line"]=bookmark->line;
             obj["description"]=bookmark->description;
             obj["timestamp"]=QString("%1").arg(bookmark->timestamp);

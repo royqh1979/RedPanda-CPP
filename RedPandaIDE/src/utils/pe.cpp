@@ -36,7 +36,7 @@
 #include <windows.h>
 #include <dbghelp.h>
 
-PortableExecutable::PortableExecutable(const QString &path) : path(path)
+PortableExecutable::PortableExecutable(const QString &filePath) : path(filePath)
 {
 }
 

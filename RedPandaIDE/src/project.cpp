@@ -663,9 +663,9 @@ void Project::saveLayout()
             jsonLayout["left"]=editor->leftPos();
             jsonLayout["isOpen"]=true;
             jsonLayout["focused"]=(editor==e);
-            int order=editorOrderSet.value(editor->filename(),-1);
-            if (order>=0) {
-                jsonLayout["order"]=order;
+            int editorOrder=editorOrderSet.value(editor->filename(),-1);
+            if (editorOrder>=0) {
+                jsonLayout["order"]=editorOrder;
             }
             jsonLayouts.append(jsonLayout);
         } else {
@@ -2708,9 +2708,9 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
                         mProject->editorList()->closeEditor(e);
 
                     // Remove it from the current project...
-                    PProjectUnit unit = mProject->findUnit(newName);
-                    if (unit) {
-                        mProject->removeUnit(unit,false);
+                    PProjectUnit targetUnit = mProject->findUnit(newName);
+                    if (targetUnit) {
+                        mProject->removeUnit(targetUnit,false);
                     }
 
                     // All references to the file are removed. Delete the file from disk

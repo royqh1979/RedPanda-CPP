@@ -131,15 +131,15 @@ void CompetitiveCompanionThread::onNewProblemConnection(QTcpSocket* clientConnec
         problemCase->testState = ProblemCaseTestState::NotTested;
         problemCase->setName( tr("Problem Case %1").arg(problem->cases().count()+1) );
         if (pSettings->executor().convertHTMLToTextForInput()) {
-            QTextDocument doc;
-            doc.setHtml(caseObj["input"].toString());
-            problemCase->setInput( doc.toPlainText() );
+            QTextDocument htmlDoc;
+            htmlDoc.setHtml(caseObj["input"].toString());
+            problemCase->setInput( htmlDoc.toPlainText() );
         } else
             problemCase->setInput( caseObj["input"].toString() );
         if (pSettings->executor().convertHTMLToTextForExpected()) {
-            QTextDocument doc;
-            doc.setHtml(caseObj["output"].toString());
-            problemCase->setExpected(doc.toPlainText());
+            QTextDocument htmlDoc;
+            htmlDoc.setHtml(caseObj["output"].toString());
+            problemCase->setExpected(htmlDoc.toPlainText());
         } else
             problemCase->setExpected(caseObj["output"].toString());
         problemCase->setModified(false);
