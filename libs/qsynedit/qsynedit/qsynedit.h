@@ -729,8 +729,8 @@ private:
     bool  mAlwaysShowCaret;
     CharPos mSelectionBegin;
     CharPos mSelectionEnd;
+    int mLastCaretX;
     int mCaretCh;
-    int mLastCaretColumn;
     int mCaretLine;
     int mCharWidth;
     QFont mFontDummy;

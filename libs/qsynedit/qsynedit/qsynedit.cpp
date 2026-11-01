@@ -120,7 +120,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mLeftPos = 0;
     mTopPos = 0;
     mCaretCh = 0;
-    mLastCaretColumn = 0;
+    mLastCaretX = 0;
     mCaretLine = 0;
     mSelectionBegin.ch = 0;
     mSelectionBegin.line = 0;
@@ -3094,7 +3094,7 @@ void QSynEdit::synFontChanged()
 
 void QSynEdit::updateLastCaretX()
 {
-    mLastCaretColumn = displayX();
+    mLastCaretX = displayX();
 }
 
 void QSynEdit::ensureCaretVisible(bool forceToMiddle)
@@ -5133,7 +5133,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
     if (ptO.row != ptDst.row) {
         if (mOptions.testFlag(EditorOption::KeepCaretX))
-            ptDst.x = mLastCaretColumn;
+            ptDst.x = mLastCaretX;
     }
     if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
@@ -5158,7 +5158,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
             return;
     }
 
-    int SaveLastCaretX = mLastCaretColumn;
+    int SaveLastCaretX = mLastCaretX;
 
     // set caret and block begin / end
     beginInternalChanges();
@@ -5169,7 +5169,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     // Restore fLastCaretX after moving caret, since
     // UpdateLastCaretX, called by SetCaretXYEx, changes them. This is the one
     // case where we don't want that.
-    mLastCaretColumn = SaveLastCaretX;
+    mLastCaretX = SaveLastCaretX;
 }
 
 void QSynEdit::moveCaretAndSelection(const CharPos &ptBefore, const CharPos &ptAfter, bool isSelection, bool ensureCaretVisible)

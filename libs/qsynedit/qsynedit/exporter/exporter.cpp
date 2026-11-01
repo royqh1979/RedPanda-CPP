@@ -54,18 +54,18 @@ void Exporter::exportAll(const std::shared_ptr<const Document>& doc)
     exportRange(doc, CharPos{0, 0}, CharPos{INT_MAX, INT_MAX});
 }
 
-void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos start, CharPos stop)
+void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos start, CharPos end)
 {
     // abort if not all necessary conditions are met
     if (!doc || (doc->count() == 0))
         return;
-    stop.line = std::max(0, std::min(stop.line, doc->count()-1));
-    stop.ch = std::max(0, std::min(stop.ch, doc->getLine(stop.line).length()));
+    end.line = std::max(0, std::min(end.line, doc->count()-1));
+    end.ch = std::max(0, std::min(end.ch, doc->getLine(end.line).length()));
     start.line = std::max(0, std::min(start.line, doc->count()-1));
     start.ch = std::max(0, std::min(start.ch, doc->getLine(start.line).length()));
-    if ( (start.line >= doc->count()) || (start.line > stop.line) )
+    if ( (start.line >= doc->count()) || (start.line > end.line) )
         return;
-    if ((start.line == stop.line) && (start.ch >= stop.ch))
+    if ((start.line == end.line) && (start.ch >= end.ch))
         return;
     // initialization
     clear();
@@ -76,12 +76,12 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
     if (mRecalcLineNumber)
         baseStartLine = mLineNumberStartFromZero?start.line:start.line-1;
     if (mExportLineNumber)
-        addData(getStartLineNumberString(start.line-baseStartLine, stop.line-baseStartLine));
+        addData(getStartLineNumberString(start.line-baseStartLine, end.line-baseStartLine));
     if (start.line == 0)
         mSyntaxer->resetState();
     else
         mSyntaxer->setState(doc->getSyntaxState(start.line-1));
-    for (int i = start.line; i<=stop.line; i++) {
+    for (int i = start.line; i<=end.line; i++) {
         if (mExportLineNumber)
             addData(getLineNumberString(i-baseStartLine));
         QString lineText = doc->getLine(i);
@@ -95,12 +95,12 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
                 mSyntaxer->next();
                 continue;
             }
-            if (i==stop.line && (startPos >= stop.ch)) {
+            if (i==end.line && (startPos >= end.ch)) {
                 mSyntaxer->next();
                 continue;
             }
-            if (i==stop.line && (startPos+token.length() > stop.ch )) {
-                token = token.left(stop.ch - startPos);
+            if (i==end.line && (startPos+token.length() > end.ch )) {
+                token = token.left(end.ch - startPos);
             }
             if (i==start.line && startPos < start.ch) {
                 token = token.mid(start.ch-startPos);
@@ -113,13 +113,13 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
             formatToken(Token);
             mSyntaxer->next();
         }
-        if (i!=stop.line)
+        if (i!=end.line)
             formatNewLine();
     }
     if (!mFirstAttribute)
         formatAfterLastAttribute();
     if (mExportLineNumber)
-        addData(getEndLineNumberString(start.line-baseStartLine, stop.line-baseStartLine));
+        addData(getEndLineNumberString(start.line-baseStartLine, end.line-baseStartLine));
     // insert header
     insertData(0, getHeader());
     // add footer
