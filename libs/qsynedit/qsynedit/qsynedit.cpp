@@ -298,18 +298,18 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
     return false;
 }
 
-void QSynEdit::getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri) const
+void QSynEdit::getTokenAttrList(int line, QStringList &tokens, QList<int> &positions, QList<PTokenAttribute> attrs) const
 {
     Q_ASSERT((line >= 0) && (line < mDocument->count()));
-    lstToken.clear();
-    lstPos.clear();
-    lstAttri.clear();
+    tokens.clear();
+    positions.clear();
+    attrs.clear();
     PSyntaxer syntaxer = mSyntaxer->createInstance();
     startParseLine(syntaxer.get(), line);
     while (!syntaxer->eol()) {
-        lstPos.append(syntaxer->getTokenPos());
-        lstToken.append(syntaxer->getToken());
-        lstAttri.append(syntaxer->getTokenAttribute());
+        positions.append(syntaxer->getTokenPos());
+        tokens.append(syntaxer->getToken());
+        attrs.append(syntaxer->getTokenAttribute());
         syntaxer->next();
     }
 }
