@@ -1,6 +1,6 @@
 # QSynEdit 设计文档
 
-本文档记录 QSynEdit（`libs/qsynedit/`）当前实现的设计与关键决策依据，内容以代码为准，随实现演进而更新。
+本文档记录 QSynEdit（`libs/qsynedit/`）当前实现的设计与关键决策依据，内容以代码为准，随实现演进而更新。只写现状与约定；具体修改历史见 git log，不记入本文档。
 
 ## 目录
 
@@ -134,22 +134,14 @@
 
 > 历史背景：该拆分是公认的大改动，因此一直未动；本文档先固化职责清单与耦合点，作为动手前的事实基线。
 
-### 2.4 实证案例：字体度量平台差异导致测试失败（2026-11 记录）
+### 2.4 注意事项：测试与字体度量的耦合
 
-**现象**：`TestQSyneditEmoji::test_move_caret_y("Up in the middle of emoji")`（`test_qsynedit_emoji.cpp:235`）在 Windows 上以 `QT_QPA_PLATFORM=offscreen` 运行时失败——光标从 emoji 字形中间（`{3,1}`）按 ↑，期望吸附到字形边界 `{2,0}`，实际落在 `{4,0}`。同一二进制在 `QT_QPA_PLATFORM=windows` 下全部通过；CI（Linux headless offscreen）也通过。
+- 光标上下移动保持**显示 x 像素位置**，再按目标行的字形宽度换算回字符位置——编辑行为的结果依赖字体度量；
+- 测试通过 `defaultMonoFont()`（`test_utils.cpp:66-83`）按 OS 硬编码字体名（Windows 为 Consolas），而 Consolas **不含 emoji 字形**，emoji 走系统回退字体，其 `QFontMetrics` 度量随 QPA 平台（offscreen / windows / Linux）不同而不同。因此涉及多字形（emoji 等）的用例如把期望坐标写死，本质是绑定了特定环境的字体度量，换环境会脆断；
+- 写这类用例时应与字体解耦：运行时测量期望、只断言字形边界吸附关系，或用 `QFontDatabase::addApplicationFont` 注入捆绑字体使度量可复现；
+- **运行方式**：Windows 桌面环境跑测试**不要**设 `QT_QPA_PLATFORM=offscreen`（offscreen 仅用于 Linux 无头 CI）；运行前需将 Qt bin 与 mingw64/bin 加入 `PATH`。
 
-**根因链**：
-
-1. 光标上下移动保持**显示 x 像素位置**，再按目标行的字形宽度换算回字符位置——行为结果依赖字体度量；
-2. 测试通过 `defaultMonoFont()`（`test_utils.cpp:66-83`）按 OS 硬编码字体名（Windows 为 Consolas），其 `exactMatch()` 结果依赖当前 QPA 平台的字体数据库；
-3. 关键：Consolas **不含 emoji 字形**，emoji 由系统回退字体渲染（Windows 为 Segoe UI Emoji），`QFontMetrics` 宽度走平台回退链——不同 QPA 平台（offscreen vs windows）下度量不同；
-4. 因此用例期望实质是把**某个特定环境的字体度量**硬编码成了断言，环境一变就脆断（本机 offscreen 失败、本机 windows 通过、Linux CI offscreen 通过，三者度量两两不同只是恰好后两者凑对）。
-
-**结论与启示**：
-
-- 这是"字形分段（字体无关）与宽度度量（字体相关）混在 Document 中"的直接代价：编辑行为测试被字体环境绑架；
-- 该用例测的是"编辑逻辑 + 字体度量"混合行为，应改造为：断言与字体解耦（运行时测量期望，或只断言字形边界吸附关系）、或用捆绑字体注入（`QFontDatabase::addApplicationFont`）使度量可复现、或环境探测 + `QSKIP`；
-- **运行方式备忘**：Windows 桌面环境跑测试**不要**设 `QT_QPA_PLATFORM=offscreen`（offscreen 仅用于 Linux 无头 CI）；且运行前需将 `Qt bin` 与 `mingw64/bin` 加入 `PATH`。
+这也是"字形分段（字体无关）与宽度度量（字体相关）混在 Document 中"（见 2.1 职责 3）的直接代价：编辑行为测试被字体环境绑架。
 
 ## 3. 坐标体系
 
@@ -159,22 +151,30 @@
 |---|---|---|---|
 | 缓冲区字符位置 | `CharPos{ch, line}`（`types.h:75`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
 | 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp:515`） |
-| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | 均 **0 基**（x 像素、row 显示行） | 2026-11 起统一为全 0 基（原 row 为 1 基，见 3.6） |
+| 显示位置 | `DisplayCoord{x, row}`（`types.h:105`） | 均 **0 基**（x 像素、row 显示行） | `displayLineCount()` 返回**行数**而非末行索引，转换边界处注意 |
 | 滚动偏移 | `leftPos()`/`topPos()` | 像素 | `setTopPos` 按 `maxScrollHeight()` 钳制并驱动滚动条（`qsynedit.cpp:7141`） |
 | Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp:148` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp:115`）——换算分散在两侧，自洽但易误解 |
 | 解析器行号 | `Statement->line` 等 | **0 基** | tokenizer `mCurrentLine` 从 0 起（`cpptokenizer.cpp:61`），与 `CharPos.line` 一致，跨模块传递无需换算 |
+| 导出回调 | `Exporter::FormatTokenHandler(line, ch)` | 均 **0 基** | line 为缓冲区行号，ch 为 token 首字符索引（`exporter.h:41`） |
 
 转换路径：`bufferToDisplayPos`/`displayToBufferPos`（折叠映射 + char↔像素换算）、`lineToRow`/`rowToLine`（0 基，无折叠时 `line==row`，折叠时经 `foldRowToLine`/`foldLineToRow` 映射）、`yposToRow`（像素→0 基显示行）。
 
-### 3.2 已知不一致（确认的问题）
+### 3.2 命名约定
+
+- `CharPos` 变量/参数命名为 `pos`/`xxxPos`（`startPos`/`endPos`/`blockBegin`/`blockEnd` 等）；`coord` 一词专指 `DisplayCoord`；
+- caret 访问器与 `CharPos{ch,line}` 对齐：`caretCh()`/`caretLine()`/`caretPos()`、`setCaretCh()`/`setCaretLine()`/`setCaretPos()`/`setCaretPosCentered()`，成员 `mCaretCh`/`mCaretLine`；`displayX()`/`displayY()`/`displayXY()` 返回 `DisplayCoord`（成员本就是 `x`/`row`），用 X/Y 命名；
+- `mLastCaretX` 存的是 `displayX()`（glyph 显示列），不是缓冲区 ch；
+- `getWordAtPosition`（RedPandaIDE 侧）的 `p.ch` 是 caret 缝隙索引，语义契约见其声明处注释（`editor.h`）；
+- 禁用匈牙利前缀（`v`/`pt`/`i` 等）和 PascalCase 局部变量。
+
+### 3.3 已知不一致（确认的问题）
 
 - `document.h:545` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp:983`）——注释错误；
 - `Document::charToGlyphIndex` 声明参数名 `charIdx`（`document.h:573`），同族接口多用 `charPos`，命名不统一；
-- `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
+- `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导；
+- `RedPandaIDE/src/editor.cpp` `onExportedFormatToken` 中 `pEndPos.line >= 1` 疑似 1 基时代残留（0 基行号应判 `>= 0`），待查。
 
-> 已解决（2026-11）：`getLineIndent`/`leftSpaces` 等 QString 类型的 `line` 参数/变量已统一改名为 `lineText`（含 `getEOL` 的 `Line` 参数，共 14 处），消除了"行号/行文本"的命名歧义。
-
-### 3.3 CharPos 的多义使用（有意复用，非误用）
+### 3.4 CharPos 的多义使用（有意复用，非误用）
 
 `UndoItem` 只有 `CharPos` 字段承载位置信息，其含义随 `ChangeReason` 而变：
 
@@ -185,51 +185,10 @@
 
 undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误用；但 C 类项的正确性另需块级快照兜底（见 1.5）。改进方向是拆分类型（如独立 `ScrollPos`）或加注释，而非改行为。
 
-### 3.4 审计发现的问题及处理结果（2026-11 已修复）
-
-坐标审计发现三项问题，已全部验证并修复（修复后 `test-qsynedit` 全部通过）：
-
-- **`setLeftPos` 忽略新值（真 bug，已修复）**：无滚动条且 `maxLineWidth()>0` 时，else 分支钳制的是旧 `mLeftPos` 自身，`value` 未赋入——导致 `ScrollStyle::None` 下 `ensureCaretVisible` 的水平滚动失效。修复：`std::max(mLeftPos, 0)` 改为 `std::max(value, 0)`。
-- **`xposToGlyphStartChar(line, newStr, xpos)` 忽略 `newStr`（死分支陷阱，已修复）**：else 分支原本用旧行文本计算字形位置；修复后改用 `newStr`。修复前唯一调用路径（折叠行点击定位）下结果凑巧正确（越界钳制到行尾），但参数名不副实，是未来调用者的陷阱。
-- **`uncollapseAroundLines` 条件恒假（死代码，已删除）**：条件 `pFold->toLine <= endLine && endLine <= pFold->toLine` 恒等价于 `toLine == endLine`，与函数意图不符；全仓库无调用者，已从 `qsynedit.h/.cpp` 整体删除。
-
 ### 3.5 改进方向
 
-- 修正 3.2 中的错误/过时注释；
+- 修正 3.3 中的错误/过时注释；
 - 中期：引入强类型坐标（`CharIndex`/`BufferLine`/`DisplayRow`/像素类型）；gutter 行号换算收敛到单侧。
-
-### 3.6 变更记录：DisplayCoord 全 0 基化（2026-11，3.6 版本）
-
-**背景**：3.4 及之前 `CharPos` 为 ch 0 基 / line 1 基，易出错；3.5 已将 `CharPos` 统一为全 0 基。本次将 `DisplayCoord`（仅 QSynedit 内部使用）的 `row` 从 1 基统一为 0 基，`x`（像素）维持 0 基不变。
-
-**改动要点**：
-
-- 5 个转换函数改 0 基语义：`yposToRow`（去 `+1`）、`rowToLine`/`lineToRow`（无折叠时 `line==row`）、`foldRowToLine`/`foldLineToRow`（平移调整）；
-- 行→像素换算全部改为 `row * mTextHeight`（`displayCoordToPixels`、`invalidateLine(s)`、`invalidateGutterLines`、`processGutterClick`、`ensureCaretVisible`、painter 的 5 处）；
-- 行范围钳制统一为 `[0, displayLineCount()-1]`（`moveCaretVert`、`computeScroll`、paintEvent 的 nL1/nL2）；
-- **`displayLineCount()` 保持"行数"语义**：0 基化后原实现 `lineToRow(count-1)` 会变成"末行索引"，已显式 `+1` 保持值不变——这是本次重构最易踩的陷阱；
-- `moveCaretVert` 的"已到首行仍按选择键上移则跳到文件头"特殊分支，判定由 `row==1` 改为 `row==0`（漏改会导致跳到文件尾，行为测试当场抓获）；
-- `displayToBufferPos` 边界顺手统一为 `< count`。
-
-**验证**：先补行为测试（`TestQSyneditDisplay`，13 用例，只断言重构前后都成立的往返/行差/端到端不变量）钉住现状；重构后 `test-qsynedit` 全部 374 用例通过（Windows 原生平台），RedPandaIDE 主程序构建通过。
-
-### 3.7 变更记录：CharPos 相关命名统一（2026-11）
-
-**确立的命名约定**：
-
-- `CharPos` 变量/参数命名为 `pos`/`xxxPos`（`startPos`/`endPos`/`blockBegin`/`blockEnd` 等）；`coord` 一词专指 `DisplayCoord`；
-- 禁用匈牙利前缀（`v`/`pt`/`i` 等）和 PascalCase 局部变量；过时/无用注释直接删除或改写，不留旧名。
-
-**接口改名**：
-
-- caret 系列与 `CharPos{ch,line}` 对齐：`caretX/caretY` → `caretCh/caretLine`，`setCaretX/setCaretY` → `setCaretCh/setCaretLine`，`caretXY/setCaretXY/setCaretXYCentered/internalSetCaretXY` → `caretPos/setCaretPos/setCaretPosCentered/internalSetCaretPos`，成员 `mCaretX/mCaretY` → `mCaretCh/mCaretLine`；`displayX/displayY/displayXY` 返回 `DisplayCoord`（成员本就是 `x`/`row`），保留不动；
-- `getTokenAttriAtRowCol` → `getTokenAttr`（4 个重载）：参数实为缓冲区 CharPos，原名误用 RowCol；顺带修正 `Attri`→`Attr` 缩写；
-- `mLastCaretColumn` → `mLastCaretX`：实际存的是 `displayX()`（glyph 显示列），不是缓冲区列；
-- `Exporter::exportRange` 参数 `stop` → `end`，与全库 `start/end` 惯例一致。
-
-**FormatTokenHandler 基数修正**：`Exporter` 的 `FormatTokenHandler` 回调原来传 `getTokenPos()+1`（1 基 caret 风格位置，为迁就 `getWordAtPosition` 的 `wordBegin=ch-1` 语义），与 0 基的 `line` 混杂；确认该 `+1` 是 CharPos 1 基→0 基迁移时的机械残留后删除（`getWordAtPosition` 的 gap 语义对词内任意位置结果等价，identifier token 传 `ch` 或 `ch+1` 结果相同），接口统一为全 0 基 `(line, ch)`；`getWordAtPosition`（editor.h）补充了 gap 语义、各 purpose 差异与失败行为的契约文档。
-
-**待查**：`RedPandaIDE/src/editor.cpp` 中 `pEndPos.line >= 1` 疑似 1 基时代残留（0 基行号应判 `>= 0`），记录在案未改动。
 
 ## 4. 语法高亮（待补）
 
