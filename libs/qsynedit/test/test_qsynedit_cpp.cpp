@@ -11202,8 +11202,15 @@ void TestQSyneditCpp::test_column_delete_char()
 
     mEdit->undo();
     QCOMPARE(mEdit->content(), text);
+    // undo restores the pre-edit state: column mode with the selection
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({1,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({3,2}));
     mEdit->redo();
     QCOMPARE(mEdit->content(), textDeleted);
+    // redo restores the post-edit state: column mode with a zero-width
+    // column selection (column cursor)
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
 
     mEdit->setModified(false);
     mEdit->setReadOnly(true);
@@ -11240,9 +11247,6 @@ void TestQSyneditCpp::test_column_select_content_cjk()
     clearContent();
     mEdit->setContent({"abcde","ab中文de","klmno"});
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
-    // skip if the CJK fallback font does not render as exactly 2 cells
-    if (mEdit->charToGlyphLeft(1,3)-mEdit->charToGlyphLeft(1,2) != 2*mEdit->charWidth())
-        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
     // select ch1..ch3 on the ASCII lines: the band is x = [1,3) cells
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
@@ -11259,8 +11263,6 @@ void TestQSyneditCpp::test_column_delete_cjk()
     clearContent();
     mEdit->setContent(text);
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
-    if (mEdit->charToGlyphLeft(1,3)-mEdit->charToGlyphLeft(1,2) != 2*mEdit->charWidth())
-        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
     // band x=[1,3): on line 1 only 'b' is removed; 中[2,4) is spared by the left snap
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
@@ -11350,8 +11352,6 @@ void TestQSyneditCpp::test_column_has_content_cjk_layout()
     clearContent();
     mEdit->setContent({"abcde","中lmno"});
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
-    if (mEdit->charToGlyphLeft(1,1) != 2*mEdit->charWidth())
-        QSKIP("CJK glyph width is not exactly 2 cells in this environment");
     // same ch on both lines, but 中 is 2 cells wide:
     // begin x = 1 cell, end x = 2 cells -> the band has content
     mEdit->setCaretAndSelection(CharPos{1,1}, CharPos{1,0}, CharPos{1,1});
@@ -11360,6 +11360,52 @@ void TestQSyneditCpp::test_column_has_content_cjk_layout()
     // line 0: x=[1,2) -> "b"; line 1: x=1 falls inside 中[0,2) -> snaps to ch0,
     // x=2 is the start of 'l' -> content is "中"
     QCOMPARE(mEdit->selContent(), QStringList({"b","中"}));
+}
+
+void TestQSyneditCpp::test_column_delete_prop_font()
+{
+    // cover the forceMonospace=false path with the bundled proportional
+    // test font (deterministic but non-uniform glyph widths)
+    QFont propFont(testProportionalFont());
+    propFont.setPointSize(14);
+    mEdit->setFont(propFont);
+    auto restoreFont = finally([this](){
+        QFont monoFont(defaultMonoFont());
+        monoFont.setPointSize(14);
+        mEdit->setFont(monoFont);
+    });
+    QStringList text({"abcde","fghij","klmno"});
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QStringList textDeleted = mEdit->content();
+    // with non-uniform widths the snapped boundaries differ per line,
+    // so don't assert exact contents; column deletion must remove one
+    // contiguous span per line, preserving what is left of the band
+    QVERIFY(textDeleted != text);
+    for (int i=0;i<text.size();i++) {
+        const QString &orig = text[i];
+        const QString &cur = textDeleted[i];
+        int removed = orig.length()-cur.length();
+        QVERIFY(removed >= 0);
+        int prefix = 0;
+        while (prefix < cur.length() && cur[prefix]==orig[prefix])
+            prefix++;
+        QCOMPARE(orig.mid(prefix+removed), cur.mid(prefix));
+    }
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+
+    QEXPECT_FAIL("", "undo of a column deletion loses the per-line snapped positions under non-uniform glyph widths (pending the column-delete undo item rework)", Abort);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
 }
 
 void TestQSyneditCpp::test_overwrite_input_with_selection()

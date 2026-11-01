@@ -328,3 +328,19 @@ EditorManager 等外部观察者只需跟踪行号结构变化；行内容的变
 **列删除/列插入后保持列模式**：`doDeleteText`/`doInsertText` 的列分支结束后
 只设置光标与选区、不触碰选择模式（不能用会重置为 Normal 的 `setCaretAndSelection`），
 使列删除留下零宽列选区（列光标），连续 Backspace 等操作保持多光标语义。
+
+### 8.4 `setCaretAndSelection` 与选择模式
+
+`setCaretAndSelection` **不改变选择模式**。历史上它曾无条件重置为 Normal——
+2023-03 为修"列模式下格式化（astyle）把文档弄乱"而加（`7a8a239d`），但修在了
+API 层而非格式化调用点，此后在列删除/列插入/undo-redo 恢复三处造成模式被意外冲掉。
+现行约定：
+
+- 需要 **Normal** 选区的调用方，在调用前显式 `setActiveSelectionMode(SelectionMode::Normal)`
+  （IDE 侧 3 处、qsynedit 内列可达的 Normal 语义操作均如此）；
+- 需要**保模式**的代码（列编辑、undo/redo 块级恢复）使用内部 setter 序列
+  （`internalSetCaretPos`/`internalSetSelBegin`/`internalSetSelEnd`），不经过
+  `setCaretAndSelection`（其 `ensureCharPosValid` 还会按当前模式钳制 ch，对行尾之外的
+  列位置不忠实）；
+- undo/redo 的块级恢复（`caretAndSelBeforeChange`/`caretAndSelAfterChange`）完整恢复
+  caret、选区和**模式**：undo 回到编辑前状态，redo 回到编辑后状态。

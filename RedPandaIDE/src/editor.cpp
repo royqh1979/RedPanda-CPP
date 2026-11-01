@@ -3604,6 +3604,7 @@ void Editor::completionInsert(bool appendFunc)
         pEnd = caret;
 //    if (caret == pStart && caret.ch>0)
 //        pStart = getTokenBegin(CharPos{caret.ch-1,caret.line});
+    setActiveSelectionMode(QSynedit::SelectionMode::Normal);
     setCaretAndSelection(pStart,pStart,pEnd);
 
     // if we are inserting a function,
@@ -4230,6 +4231,7 @@ void Editor::popUserCodeInTabStops()
         mTabStopY = caretLine() + p->y;
         newCursorPos.line = mTabStopY;
         newCursorPos.ch = tabStopBegin;
+        setActiveSelectionMode(QSynedit::SelectionMode::Normal);
         setCaretAndSelection(newCursorPos,newCursorPos,CharPos{tabStopEnd, mTabStopY});
 
         mTabStopBegin = tabStopBegin;

@@ -946,9 +946,12 @@ QChar QSynEdit::charAt(const CharPos &pos) const
 
 void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posSelBegin, const CharPos &posSelEnd)
 {
+    // Note: this function does NOT touch the active selection mode.
+    // Callers that intend a normal-mode selection must reset the mode
+    // themselves; mode-preserving (e.g. column-mode) code should use
+    // the internal setters instead.
     beginInternalChanges();
     internalSetCaretPos(ensureCharPosValid(posCaret));
-    setActiveSelectionMode(SelectionMode::Normal);
     internalSetSelBegin(ensureCharPosValid(posSelBegin));
     internalSetSelEnd(ensureCharPosValid(posSelEnd));
     endInternalChanges();
@@ -1386,6 +1389,7 @@ void QSynEdit::selTokenAt(const CharPos &pos)
         if (!token.isEmpty()) {
             CharPos wordStart{start, pos.line};
             CharPos wordEnd{start+(int)token.length(), pos.line};
+            setActiveSelectionMode(SelectionMode::Normal);
             setCaretAndSelection(wordEnd, wordStart, wordEnd);
         }
     }
@@ -1497,6 +1501,7 @@ void QSynEdit::doSelectAll()
     auto action = finally([this](){
         endInternalChanges();
     });
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(caretPos(), fileBegin(), fileEnd());
 }
 
@@ -1532,6 +1537,7 @@ void QSynEdit::doComment()
         if (i == origCaret.line)
             origCaret.ch+=symbolLen;
     }
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
     endEditing();
 }
@@ -1579,6 +1585,7 @@ void QSynEdit::doUncomment()
             origCaret.ch = std::max(0, origCaret.ch-symbolLen);
         }
     }
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
     endEditing();
 }
@@ -2146,6 +2153,7 @@ void QSynEdit::doDuplicateSelection()
     mOptions = oldOptions;
     CharPos newSelBegin{endPos};
     CharPos newSelEnd{caretPos()};
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(newSelEnd, newSelBegin, newSelEnd);
     endEditing();
 }
@@ -2158,6 +2166,7 @@ void QSynEdit::doSelectLine()
         blockEnd = CharPos{(int)lineText().length(),mCaretLine};
     else
         blockEnd = CharPos{0,mCaretLine+1};
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(blockBegin,blockBegin,blockEnd);
 }
 
@@ -2678,6 +2687,7 @@ void QSynEdit::doBlockUnindent()
     oldCaretPos.ch -= caretLineIndent;
     blockBegin.ch -= firstLineIndent;
     blockEnd.ch -= lastLineIndent;
+    setActiveSelectionMode(SelectionMode::Normal);
     setCaretAndSelection(oldCaretPos, blockBegin, blockEnd);
     endEditing();
 }
@@ -4186,8 +4196,15 @@ void QSynEdit::doUndo()
                 lastChange = item->changeReason();
             }
         } while (keepGoing);
+        // restore the pre-edit caret/selection/mode as recorded by the block;
+        // use the internal setters so the restored mode (e.g. Column)
+        // is not clobbered
+        beginInternalChanges();
+        internalSetCaretPos(endInfo->caret);
+        internalSetSelBegin(endInfo->selBegin);
+        internalSetSelEnd(endInfo->selEnd);
         setActiveSelectionMode(endInfo->selMode);
-        setCaretAndSelection(endInfo->caret,endInfo->selBegin,endInfo->selEnd);
+        endInternalChanges();
     }
     foreach(size_t number, undoedNumbers) {
         mRedoList->addCaretAndSelectionInfo(
@@ -4252,7 +4269,10 @@ void QSynEdit::doUndoItem()
                         QStringList(),
                         item->changeSelMode(),
                         item->changeNumber());
-            setCaretAndSelection(caretPos(), item->changeStartPos(), item->changeEndPos());
+            // the mode was already restored from the item at function
+            // entry; use the internal setters so it is not clobbered
+            internalSetSelBegin(item->changeStartPos());
+            internalSetSelEnd(item->changeEndPos());
             break;
         case ChangeReason::InsertLine:
             Q_ASSERT(mDocument->count()==1);
@@ -4499,9 +4519,16 @@ void QSynEdit::doRedo()
                     mRedoList->caretAndSelAfterChange(number));
         mRedoList->removeCaretAndSelInfo(number);
     }
+    // restore the post-edit caret/selection/mode as recorded by the block;
+    // use the internal setters so the restored mode (e.g. Column)
+    // is not clobbered
+    beginInternalChanges();
+    internalSetCaretPos(endInfo->caret);
+    internalSetSelBegin(endInfo->selBegin);
+    internalSetSelEnd(endInfo->selEnd);
     setActiveSelectionMode(endInfo->selMode);
-    setCaretAndSelection(endInfo->caret,endInfo->selBegin,endInfo->selEnd);
-    updateModifiedStatusForUndoRedo();    
+    endInternalChanges();
+    updateModifiedStatusForUndoRedo();
     onChanged();
     endEditing();
 }
@@ -5191,7 +5218,8 @@ void QSynEdit::doGotoBlockStart(bool isSelection)
         if (!isSelection)
             setCaretPos(blockStart);
         else
-            setCaretAndSelection(blockStart, blockStart, caretPos());
+            setActiveSelectionMode(SelectionMode::Normal);
+        setCaretAndSelection(blockStart, blockStart, caretPos());
     }
 }
 
@@ -5206,7 +5234,8 @@ void QSynEdit::doGotoBlockEnd(bool isSelection)
         if (!isSelection)
             setCaretPos(blockEnd);
         else
-            setCaretAndSelection(blockEnd, blockEnd, caretPos());
+            setActiveSelectionMode(SelectionMode::Normal);
+        setCaretAndSelection(blockEnd, blockEnd, caretPos());
     }
 }
 
@@ -5216,6 +5245,7 @@ void QSynEdit::doGotoEditorStart(bool isSelection)
     if (!isSelection)
         setCaretPos(newPos);
     else
+        setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newPos, newPos, caretPos());
 }
 
@@ -5225,6 +5255,7 @@ void QSynEdit::doGotoEditorEnd(bool isSelection)
     if (!isSelection)
         setCaretPos(newPos);
     else
+        setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newPos, newPos, caretPos());
 }
 
@@ -6937,6 +6968,7 @@ void QSynEdit::setSelLength(int len)
             x = mDocument->getLine(y).length();
         }
         CharPos newEnd{x,y};
+        setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newEnd, mSelectionBegin, newEnd);
     } else {
         int y = mSelectionBegin.line;
@@ -6960,6 +6992,7 @@ void QSynEdit::setSelLength(int len)
             x = ch - x;
         }
         CharPos newStart{x,y};
+        setActiveSelectionMode(SelectionMode::Normal);
         setCaretAndSelection(newStart, newStart, mSelectionBegin);
     }
 }

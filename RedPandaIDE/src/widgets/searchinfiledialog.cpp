@@ -429,6 +429,7 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
     e->setCaretPos(caretBackup);
     e->setTopPos(topPosBackup);
     e->setLeftPos(leftPosBackup);
+    e->setActiveSelectionMode(QSynedit::SelectionMode::Normal);
     e->setCaretAndSelection(
                 caretBackup,
                 blockBeginBackup,
