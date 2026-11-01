@@ -40,6 +40,7 @@ void TestQSyneditCpp::cleanup()
 {
     mEdit->setInsertMode(true);
     mEdit->setReadOnly(false);
+    mEdit->setActiveSelectionMode(SelectionMode::Normal);
 }
 
 void TestQSyneditCpp::loadDemoFile()
@@ -11008,6 +11009,165 @@ void TestQSyneditCpp::test_nested_grouped_editing()
     QCOMPARE(mEdit->content(), text);
     mEdit->redo();
     QCOMPARE(mEdit->content(), textEdited);
+}
+
+void TestQSyneditCpp::test_grouped_editing_keeps_selection_mode()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    mEdit->beginEditing();
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    mEdit->endEditing();
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+}
+
+void TestQSyneditCpp::test_column_select_content()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QVERIFY(mEdit->colSelAvail());
+    QCOMPARE(mEdit->selContent(), QStringList({"bc","gh","lm"}));
+    mEdit->setActiveSelectionMode(SelectionMode::Normal);
+    QVERIFY(!mEdit->colSelAvail());
+}
+
+void TestQSyneditCpp::test_column_input_char()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textInput({
+        "axde",
+        "fxij",
+        "kxno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),'x');
+    QEXPECT_FAIL("", "column-mode input is not implemented (see the todo in doInputStr)", Abort);
+    QCOMPARE(mEdit->content(), textInput);
+}
+
+void TestQSyneditCpp::test_column_backspace()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textDeleted({
+        "ade",
+        "fij",
+        "kno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(), textDeleted);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_cut()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textCut({
+        "ade",
+        "fij",
+        "kno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QString clipboardText = QApplication::clipboard()->text();
+    clipboardText.replace("\r\n","\n");
+    QCOMPARE(clipboardText, QString("bc\ngh\nlm"));
+
+    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textCut);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->cutToClipboard();
+    QCOMPARE(mEdit->content(), textCut);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_mode_alt_selection()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretPos(CharPos{1,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Down,Qt::AltModifier|Qt::ShiftModifier);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({1,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,1}));
+    QTest::keyPress(mEdit.get(),Qt::Key_Down,Qt::AltModifier|Qt::ShiftModifier);
+    QEXPECT_FAIL("", "a zero-width column selection is treated as no selection, so the anchor is lost when extending", Abort);
+    QCOMPARE(mEdit->selBegin(), CharPos({1,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({1,2}));
+    QTest::keyPress(mEdit.get(),Qt::Key_Right,Qt::AltModifier|Qt::ShiftModifier);
+    QVERIFY(mEdit->colSelAvail());
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+    QCOMPARE(mEdit->selContent(), QStringList({"b","h","l"}));
+
+    QTest::keyPress(mEdit.get(),Qt::Key_Right,Qt::ShiftModifier);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Normal);
 }
 
 void TestQSyneditCpp::test_setseltext_and_indent()

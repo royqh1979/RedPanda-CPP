@@ -136,6 +136,12 @@ private slots:
     void test_paste_replaces_selection();
     void test_grouped_editing_undo_redo();
     void test_nested_grouped_editing();
+    void test_grouped_editing_keeps_selection_mode();
+    void test_column_select_content();
+    void test_column_input_char();
+    void test_column_backspace();
+    void test_column_cut();
+    void test_column_mode_alt_selection();
     void test_copy_paste_ending_with_backslash();
     void test_setseltext_and_indent();
     void test_setseltext_and_indent2();
