@@ -1208,9 +1208,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 background = syntaxer()->identifierAttribute()->background();
             }
             if (line == mHoverModifiedLine) {
-                CharPos p;
-                if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
-                    if (line==p.line && (aChar<=p.ch && p.ch<aChar+token.length())) {
+                CharPos mouseCharPos;
+                if (pointToCharLine(mapFromGlobal(QCursor::pos()),mouseCharPos)) {
+                    if (line==mouseCharPos.line && (aChar<=mouseCharPos.ch && mouseCharPos.ch<aChar+token.length())) {
                         style.setFlag(QSynedit::FontStyle::fsUnderline);
                     }
                 }
@@ -1892,9 +1892,9 @@ void Editor::onTooltipTimer()
             QSynedit::PTokenAttribute attr;
             int start;
             if (getTokenAttr(p,s,start,attr)) {
-                QString line=lineText(p.line);
+                QString lineText=this->lineText(p.line);
                 int idx=start-2;
-                if (idx>=0 && idx<line.length() && line[idx]=='-')
+                if (idx>=0 && idx<lineText.length() && lineText[idx]=='-')
                     s='-'+s;
             }
         }
@@ -2229,13 +2229,13 @@ QStringList Editor::getExpressionAtPosition(
                     return result;
                 break;
             case LastSymbolType::AsteriskSign: // before '*':
-                if (token == '*') {                    
+                if (token == '*') {
                 } else {
-                    QChar ch=token.front();
-                    if (isIdentChar(ch)
-                            || ch.isDigit()
-                            || ch == '.'
-                            || ch == ')' ) {
+                    QChar firstCh=token.front();
+                    if (isIdentChar(firstCh)
+                            || firstCh.isDigit()
+                            || firstCh == '.'
+                            || firstCh == ')' ) {
                         result.pop_front();
                     }
                     return result;
@@ -2243,11 +2243,11 @@ QStringList Editor::getExpressionAtPosition(
                 break;
             case LastSymbolType::AmpersandSign: // before '&':
             {
-                QChar ch=token.front();
-                if (isIdentChar(ch)
-                        || ch.isDigit()
-                        || ch == '.'
-                        || ch == ')' ) {
+                QChar firstCh=token.front();
+                if (isIdentChar(firstCh)
+                        || firstCh.isDigit()
+                        || firstCh == '.'
+                        || firstCh == ')' ) {
                     result.pop_front();
                 }
                 return result;
@@ -4031,16 +4031,16 @@ void Editor::updateFunctionTip(bool showTip)
         startParseLine(pSyntaxer.get(), currentLine);
         while(!pSyntaxer->eol()) {
             int start = pSyntaxer->getTokenPos();
-            QString token = pSyntaxer->getToken();
-            QSynedit::PTokenAttribute attr = pSyntaxer->getTokenAttribute();
+            QString lineToken = pSyntaxer->getToken();
+            QSynedit::PTokenAttribute lineAttr = pSyntaxer->getTokenAttribute();
             if (start>=currentChar)
                 break;
 
-            if (attr->tokenType() != QSynedit::TokenType::Comment
-                    && attr->tokenType() != QSynedit::TokenType::Space) {
-                if (attr->tokenType() == QSynedit::TokenType::String)
-                    token="\"\"";
-                tokens.append(token);
+            if (lineAttr->tokenType() != QSynedit::TokenType::Comment
+                    && lineAttr->tokenType() != QSynedit::TokenType::Space) {
+                if (lineAttr->tokenType() == QSynedit::TokenType::String)
+                    lineToken="\"\"";
+                tokens.append(lineToken);
                 positions.append(start);
             }
             pSyntaxer->next();
@@ -4124,12 +4124,12 @@ void Editor::updateFunctionTip(bool showTip)
     QString line = lineText(pWordBegin.line);
     bool hasPreviousWord=false;
     while (x>=0) {
-        QChar ch=line[x];
-        if (ch == ' ' || ch == '\t') {
+        QChar prevCh=line[x];
+        if (prevCh == ' ' || prevCh == '\t') {
             x--;
             continue;
         }
-        if (isIdentChar(ch)) {
+        if (isIdentChar(prevCh)) {
             hasPreviousWord = true;
             break;
         }
@@ -4139,29 +4139,25 @@ void Editor::updateFunctionTip(bool showTip)
 
     //handle class initializer
     if (x >= 0 && hasPreviousWord) {
-        CharPos pos = pWordBegin;
+        CharPos prevWordPos = pWordBegin;
         QSynedit::TokenType wordType;
-        pos.ch = pWordBegin.ch;
-        QString previousWord = getPreviousWordAtPositionForSuggestion(pos, wordType);
+        prevWordPos.ch = pWordBegin.ch;
+        QString previousWord = getPreviousWordAtPositionForSuggestion(prevWordPos, wordType);
         if (wordType != QSynedit::TokenType::Identifier)
             return;
         PStatement statement = mParser->findStatementOf(
                     mFilename,
                     previousWord,
-                    pos.line);
+                    prevWordPos.line);
         if (statement) {
             PStatement typeStatement = mParser->findTypeDef(statement,mFilename);
             if (typeStatement && typeStatement->kind == StatementKind::Class) {
                 s = previousWord;
-                functionNamePos = pos;
+                functionNamePos = prevWordPos;
             }
         }
     }
 
-//    qDebug()<<QString("find word at %1:%2 - '%3'")
-//              .arg(FuncStartXY.Line)
-//              .arg(FuncStartXY.Char)
-//              .arg(s);
     // Don't bother scanning the database when there's no identifier to scan for
 
     // Only do the cumbersome list filling when showing a new tooltip...

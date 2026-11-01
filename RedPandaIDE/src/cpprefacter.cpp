@@ -230,11 +230,11 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
                 p.line = posY;
                 p.ch = syntaxer->getTokenPos();
 
-                QStringList expression = editor->getExpressionAtPosition(p);
-                if (expression.length() == 1) {
+                QStringList tokenExpression = editor->getExpressionAtPosition(p);
+                if (tokenExpression.length() == 1) {
                     PStatement tokenStatement = editor->parser()->findStatementOf(
                                 editor->filename(),
-                                expression, p.line);
+                                tokenExpression, p.line);
                     if (!tokenStatement) {
                         token = newWord;
                     }
