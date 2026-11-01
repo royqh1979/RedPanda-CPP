@@ -5718,7 +5718,7 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
     leftSide = lineText.left(pos.ch);
     rightSide = lineText.mid(pos.ch);
     int currentLine=pos.line;
-    // step1: insert the first line of Value into current line
+    // step1: insert the first line of text into current line
     if (text.length()>1) {
         if (!mUndoing) {
             QString s = text[0];
@@ -5748,7 +5748,7 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
             properInsertLines(currentLine+1, text.length()-1, false);
         }
         properSetLine(currentLine, str, false);
-        // step2: insert remaining lines of Value
+        // step2: insert remaining lines of text
         for (int i=1;i<text.length();i++) {
             currentLine=pos.line+i;
             if (text[i].isEmpty()) {
@@ -6856,12 +6856,12 @@ SelectionMode QSynEdit::activeSelectionMode() const
     return mActiveSelectionMode;
 }
 
-void QSynEdit::setActiveSelectionMode(const SelectionMode &Value)
+void QSynEdit::setActiveSelectionMode(const SelectionMode &value)
 {
-    if (mActiveSelectionMode != Value) {
+    if (mActiveSelectionMode != value) {
         if (selAvail())
             invalidateSelection();
-        mActiveSelectionMode = Value;
+        mActiveSelectionMode = value;
         if (selAvail())
             invalidateSelection();
         setStatusChanged(StatusChange::Selection);

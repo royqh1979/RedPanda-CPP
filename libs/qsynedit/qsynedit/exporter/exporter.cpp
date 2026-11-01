@@ -106,11 +106,11 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
                 token = token.mid(start.ch-startPos);
             }
 
-            QString Token = replaceReservedChars(token);
+            QString escapedToken = replaceReservedChars(token);
             if (mOnFormatToken)
                 mOnFormatToken(mSyntaxer, i, mSyntaxer->getTokenPos(), mSyntaxer->getToken(),attr);
             setTokenAttribute(attr);
-            formatToken(Token);
+            formatToken(escapedToken);
             mSyntaxer->next();
         }
         if (i!=end.line)
@@ -176,11 +176,11 @@ QString Exporter::title() const
     return mTitle;
 }
 
-void Exporter::setTitle(const QString &Value)
+void Exporter::setTitle(const QString &value)
 {
-    if (mTitle != Value) {
-      if (!Value.isEmpty())
-          mTitle = Value;
+    if (mTitle != value) {
+      if (!value.isEmpty())
+          mTitle = value;
       else
           mTitle = "Untitled";
     }
@@ -191,10 +191,10 @@ bool Exporter::useBackground() const
     return mUseBackground;
 }
 
-void Exporter::setUseBackground(bool Value)
+void Exporter::setUseBackground(bool value)
 {
-    if (mUseBackground != Value) {
-        mUseBackground = Value;
+    if (mUseBackground != value) {
+        mUseBackground = value;
         clear();
         if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground
                 && mSyntaxer->whitespaceAttribute()->background().isValid())
@@ -332,19 +332,19 @@ void Exporter::setTokenAttribute(PTokenAttribute attr)
                     mUseBackground && (mLastBG != mBackgroundColor),
                     mLastFG != mForegroundColor, attr->styles());
     } else {
-        bool ChangedBG = mUseBackground &&
+        bool changedBG = mUseBackground &&
           (mLastBG != ValidatedColor(attr->background(), mBackgroundColor));
-        bool ChangedFG = (mLastFG != ValidatedColor(attr->foreground(), mForegroundColor));
-        if (ChangedBG || ChangedFG ||  (mLastStyle != attr->styles())) {
+        bool changedFG = (mLastFG != ValidatedColor(attr->foreground(), mForegroundColor));
+        if (changedBG || changedFG ||  (mLastStyle != attr->styles())) {
             // which font style bits are to reset?
-            FontStyles ChangedStyles = mLastStyle & ~(attr->styles());
-            formatAttributeDone(ChangedBG, ChangedFG, ChangedStyles);
+            FontStyles changedStyles = mLastStyle & ~(attr->styles());
+            formatAttributeDone(changedBG, changedFG, changedStyles);
             // which font style bits are to set?
-            ChangedStyles = attr->styles() & ~(mLastStyle);
+            changedStyles = attr->styles() & ~(mLastStyle);
             mLastBG = ValidatedColor(attr->background(), mBackgroundColor);
             mLastFG = ValidatedColor(attr->foreground(), mForegroundColor);
             mLastStyle = attr->styles();
-            formatAttributeInit(ChangedBG, ChangedFG, ChangedStyles);
+            formatAttributeInit(changedBG, changedFG, changedStyles);
         }
     }
 }

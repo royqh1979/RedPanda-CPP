@@ -374,7 +374,7 @@ public:
     void setSelBeginEnd(const CharPos &beginPos, const CharPos &endPos);
 
     SelectionMode activeSelectionMode() const;
-    void setActiveSelectionMode(const SelectionMode &Value);
+    void setActiveSelectionMode(const SelectionMode &value);
 
     int charWidth() const {
         return mCharWidth;
@@ -423,7 +423,7 @@ public:
     QString lineBreak() const;
 
     EditorOptions getOptions() const;
-    void setOptions(const EditorOptions &Value);
+    void setOptions(const EditorOptions &value);
 
     int tabSize() const;
     void setTabSize(int tabSize);

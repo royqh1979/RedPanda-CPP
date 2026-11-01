@@ -146,7 +146,7 @@ QString HTMLExporter::getHeader()
         styles.append(attrToCSS(pAttr,uniqueAttrName) + lineBreak());
     }
 
-    QString HTMLAsTextHeader =
+    QString htmlAsTextHeader =
             "<html>" + lineBreak() +
             "<head>"+ lineBreak() +
             "<title>%1</title>" + lineBreak() +
@@ -160,14 +160,14 @@ QString HTMLExporter::getHeader()
             "</style>" + lineBreak() +
             "</head>" + lineBreak() +
             "<body>" + lineBreak();
-    QString header = HTMLAsTextHeader
+    QString header = htmlAsTextHeader
             .arg(mTitle,
                  QString(mCharset),
                  colorToHTML(mForegroundColor),
                  colorToHTML(mBackgroundColor),
                  styles);
     if (mCreateHTMLFragment) {
-        HTMLAsTextHeader =
+        htmlAsTextHeader =
                     "<html>" + lineBreak() +
                     "<head>"+ lineBreak() +
                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%1\" />" + lineBreak() +
@@ -180,7 +180,7 @@ QString HTMLExporter::getHeader()
                     "</style>" + lineBreak() +
                     "</head>" + lineBreak() +
                     "<body>" + lineBreak();
-        header = HTMLAsTextHeader
+        header = htmlAsTextHeader
                     .arg(QString(mCharset),
                          colorToHTML(mForegroundColor),
                          colorToHTML(mBackgroundColor),

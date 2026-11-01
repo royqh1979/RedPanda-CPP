@@ -114,7 +114,7 @@ QString QtSupportedHtmlExporter::getHeader()
 {
     using namespace std::placeholders;
 
-    QString HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
+    QString htmlAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
             "<html xmlns=\"http://www.w3.org/1999/xhtml\">" + lineBreak() +
             "<head>"+ lineBreak() +
@@ -123,11 +123,11 @@ QString QtSupportedHtmlExporter::getHeader()
             "<meta name=\"generator\" content=\"QSynEdit HTML exporter\" />" + lineBreak() +
             "</head>" + lineBreak() +
             "<body>" + lineBreak();
-    QString header = HTMLAsTextHeader
+    QString header = htmlAsTextHeader
             .arg(mTitle,
                  QString(mCharset));
     if (mCreateHTMLFragment) {
-        HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
+        htmlAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
                     "<html xmlns=\"http://www.w3.org/1999/xhtml\">" + lineBreak() +
                     "<head>"+ lineBreak() +
@@ -135,7 +135,7 @@ QString QtSupportedHtmlExporter::getHeader()
                     "<meta name=\"generator\" content=\"QSynEdit HTML exporter\" />" + lineBreak() +
                     "</head>" + lineBreak() +
                     "<body>" + lineBreak();
-        header = HTMLAsTextHeader
+        header = htmlAsTextHeader
                     .arg(QString(mCharset));
     }
     QString result = header;

@@ -86,10 +86,10 @@ public:
     void setSyntaxer(PSyntaxer value);
 
     QString title() const;
-    void setTitle(const QString &Value);
+    void setTitle(const QString &value);
 
     bool useBackground() const;
-    void setUseBackground(bool Value);
+    void setUseBackground(bool value);
 
     NewlineType fileEndingType() const;
     void setFileEndingType(const NewlineType &fileEndingType);
