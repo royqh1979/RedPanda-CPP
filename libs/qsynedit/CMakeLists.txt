@@ -114,6 +114,7 @@ target_moc_classes(test-qsynedit
     test/test_qsynedit_cpp_search_replace
     test/test_qsynedit_display
     test/test_qsynedit_emoji
+    test/test_qsynedit_infra
     test/test_utils)
 
 target_include_directories(test-qsynedit PRIVATE
@@ -142,6 +143,9 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/test/resources
     ${CMAKE_CURRENT_BINARY_DIR}/resources
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/fonts
+    ${CMAKE_CURRENT_BINARY_DIR}/fonts
     COMMENT "Copying test-qsynedit resources"
 )
 

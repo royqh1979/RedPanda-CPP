@@ -7,6 +7,7 @@
 #include "test_qsynedit_display.h"
 #include "test_qsynedit_emoji.h"
 #include "test_qsynedit_cpp_search_replace.h"
+#include "test_qsynedit_infra.h"
 #include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
@@ -14,6 +15,11 @@ int main(int argc, char *argv[]) {
     QTest::setMainSourcePath(__FILE__, QT_TESTCASE_BUILDDIR); // Optional: for source path resolution
 
     QApplication app(argc,argv);
+    //Test infrastructure
+    {
+        QSynedit::TestQSyneditInfra tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
     //CharPos Test
     {
         QSynedit::TestCharPos tc;

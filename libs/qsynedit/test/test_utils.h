@@ -32,5 +32,6 @@ QStringList filterTokens(const QList<TokenInfoList> &infoList,
                             const QSynedit::PTokenAttribute &targetAttribute);
 
 QString defaultMonoFont();
+QString testProportionalFont();
 
 #endif // TEST_UTILS_H
