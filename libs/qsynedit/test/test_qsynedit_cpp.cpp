@@ -24,6 +24,7 @@ void TestQSyneditCpp::initTestCase()
             | QSynedit::EditorOption::GroupUndo
             | QSynedit::EditorOption::AutoIndent
             | QSynedit::EditorOption::SelectWordByDblClick;
+    mDefaultOptions = options;
     mEdit->setOptions(options);
     mEdit->setSyntaxer(std::make_shared<CppSyntaxer>());
     mEdit->setFormatter(std::make_shared<CppFormatter>());
@@ -38,6 +39,7 @@ void TestQSyneditCpp::initTestCase()
 
 void TestQSyneditCpp::cleanup()
 {
+    mEdit->setOptions(mDefaultOptions);
     mEdit->setInsertMode(true);
     mEdit->setReadOnly(false);
     mEdit->setActiveSelectionMode(SelectionMode::Normal);
@@ -10910,8 +10912,7 @@ void TestQSyneditCpp::test_paste_replaces_selection()
     });
     clearContent();
     mEdit->setContent(text);
-    EditorOptions oldOptions = mEdit->getOptions();
-    mEdit->setOptions(oldOptions & ~EditorOptions(EditorOption::AutoIndent));
+    mEdit->setOptions(mEdit->getOptions() & ~EditorOptions(EditorOption::AutoIndent));
     QApplication::clipboard()->setText("1");
     mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
     mEdit->pasteFromClipboard();
@@ -10934,7 +10935,6 @@ void TestQSyneditCpp::test_paste_replaces_selection()
     QCOMPARE(mEdit->content(), textPasted);
     QVERIFY(!mEdit->modified());
     mEdit->setReadOnly(false);
-    mEdit->setOptions(oldOptions);
 }
 
 void TestQSyneditCpp::test_grouped_editing_undo_redo()
@@ -11168,6 +11168,134 @@ void TestQSyneditCpp::test_column_mode_alt_selection()
 
     QTest::keyPress(mEdit.get(),Qt::Key_Right,Qt::ShiftModifier);
     QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Normal);
+}
+
+void TestQSyneditCpp::test_column_delete_char()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textDeleted({
+        "ade",
+        "fij",
+        "kno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    QEXPECT_FAIL("", "undo of a column deletion reinserts the text at a wrong offset", Abort);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textDeleted);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    QTest::keyPress(mEdit.get(),Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), textDeleted);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_overwrite_input()
+{
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textInput({
+        "axde",
+        "fxij",
+        "kxno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setInsertMode(false);
+    mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),'x');
+    QEXPECT_FAIL("", "column-mode input is not implemented (see the todo in doInputStr)", Abort);
+    QCOMPARE(mEdit->content(), textInput);
+}
+
+void TestQSyneditCpp::test_overwrite_input_with_selection()
+{
+    QStringList text({
+        "int main() {",
+        "}"
+    });
+    QStringList textEdited({
+        "int x() {",
+        "}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setInsertMode(false);
+    mEdit->setCaretAndSelection(CharPos{8,0}, CharPos{4,0}, CharPos{8,0});
+    QTest::keyPress(mEdit.get(),'x');
+    QCOMPARE(mEdit->content(), textEdited);
+    QCOMPARE(mEdit->caretPos(), CharPos({5,0}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textEdited);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->setCaretAndSelection(CharPos{8,0}, CharPos{4,0}, CharPos{8,0});
+    QTest::keyPress(mEdit.get(),'y');
+    QCOMPARE(mEdit->content(), textEdited);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_no_auto_indent_break_line()
+{
+    QStringList text({
+        "int main() {",
+        "}"
+    });
+    QStringList textBroken({
+        "int main() {",
+        "",
+        "}"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setOptions(mEdit->getOptions() & ~EditorOptions(EditorOption::AutoIndent));
+    mEdit->setCaretPos(CharPos{12,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Return);
+    QCOMPARE(mEdit->content(), textBroken);
+    QCOMPARE(mEdit->caretPos(), CharPos({0,1}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textBroken);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textBroken);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    mEdit->setCaretPos(CharPos{12,0});
+    QTest::keyPress(mEdit.get(),Qt::Key_Return);
+    QCOMPARE(mEdit->content(), textBroken);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
 }
 
 void TestQSyneditCpp::test_setseltext_and_indent()

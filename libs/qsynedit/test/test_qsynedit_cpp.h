@@ -7,6 +7,8 @@ namespace QSynedit{
 class TestQSyneditCpp : public TestQSyneditBase
 {
     Q_OBJECT
+private:
+    EditorOptions mDefaultOptions;
 private slots:
     void initTestCase();
     void cleanup();
@@ -142,6 +144,10 @@ private slots:
     void test_column_backspace();
     void test_column_cut();
     void test_column_mode_alt_selection();
+    void test_column_delete_char();
+    void test_column_overwrite_input();
+    void test_overwrite_input_with_selection();
+    void test_no_auto_indent_break_line();
     void test_copy_paste_ending_with_backslash();
     void test_setseltext_and_indent();
     void test_setseltext_and_indent2();
