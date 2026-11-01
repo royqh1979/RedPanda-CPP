@@ -147,7 +147,7 @@ public:
      * @return
      */
     DisplayCoord displayXY() const {
-        return bufferToDisplayPos(caretXY());
+        return bufferToDisplayPos(caretPos());
     }
     int displayX() const {
         return displayXY().x;
@@ -155,14 +155,14 @@ public:
     int displayY() const {
         return displayXY().row;
     }
-    CharPos caretXY() const {
-        return CharPos{caretX(),caretY()};
+    CharPos caretPos() const {
+        return CharPos{caretCh(),caretLine()};
     }
-    int caretX() const {
-        return mCaretX;
+    int caretCh() const {
+        return mCaretCh;
     }
-    int caretY() const {
-        return mCaretY;
+    int caretLine() const {
+        return mCaretLine;
     }
 
     void invalidateGutter();
@@ -242,14 +242,14 @@ public:
     //Caret
     void showCaret();
     void hideCaret();
-    void setCaretX(int ch) {
-        setCaretXY({ch,mCaretY});
+    void setCaretCh(int ch) {
+        setCaretPos({ch,mCaretLine});
     }
-    void setCaretY(int line) {
-        setCaretXY({mCaretX,line});
+    void setCaretLine(int line) {
+        setCaretPos({mCaretCh,line});
     }
-    void setCaretXY(const CharPos& pos);
-    void setCaretXYCentered(const CharPos& pos);
+    void setCaretPos(const CharPos& pos);
+    void setCaretPosCentered(const CharPos& pos);
     void setCaretAndSelection(const CharPos& posCaret,
                               const CharPos& posSelBegin,
                               const CharPos& posSelEnd);
@@ -567,8 +567,8 @@ private:
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetSelBegin(const CharPos &value);
     void internalSetSelEnd(const CharPos &value);
-    void internalSetCaretXY(CharPos value, bool ensureVisible = true);
-    void internalSetCaretX(int value);
+    void internalSetCaretPos(CharPos value, bool ensureVisible = true);
+    void internalSetCaretCh(int value);
     void notifyStatusChange(StatusChanges changes);
     void updateHScrollbar();
     void doUpdateHScrollbar();
@@ -729,9 +729,9 @@ private:
     bool  mAlwaysShowCaret;
     CharPos mSelectionBegin;
     CharPos mSelectionEnd;
-    int mCaretX;
+    int mCaretCh;
     int mLastCaretColumn;
-    int mCaretY;
+    int mCaretLine;
     int mCharWidth;
     QFont mFontDummy;
     bool mMouseMoved;

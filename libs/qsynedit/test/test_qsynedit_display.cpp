@@ -118,39 +118,39 @@ void TestQSyneditDisplay::test_page_up_down()
     int linesInWindow = mEdit->linesInWindow();
     QVERIFY(linesInWindow > 0 && linesInWindow < 50);
 
-    mEdit->setCaretXY(CharPos{0, 0});
+    mEdit->setCaretPos(CharPos{0, 0});
     mEdit->processCommand(EditCommand::PageDown);
-    QCOMPARE(mEdit->caretXY().line, linesInWindow);
+    QCOMPARE(mEdit->caretPos().line, linesInWindow);
 
     mEdit->processCommand(EditCommand::PageDown);
-    QCOMPARE(mEdit->caretXY().line, 2 * linesInWindow);
+    QCOMPARE(mEdit->caretPos().line, 2 * linesInWindow);
 
     mEdit->processCommand(EditCommand::PageUp);
-    QCOMPARE(mEdit->caretXY().line, linesInWindow);
+    QCOMPARE(mEdit->caretPos().line, linesInWindow);
 
     mEdit->processCommand(EditCommand::PageUp);
-    QCOMPARE(mEdit->caretXY().line, 0);
+    QCOMPARE(mEdit->caretPos().line, 0);
 }
 
 void TestQSyneditDisplay::test_page_top_bottom()
 {
     mEdit->setContent(makeLines(50));
-    mEdit->setCaretXY(CharPos{0, 10});
+    mEdit->setCaretPos(CharPos{0, 10});
 
     mEdit->processCommand(EditCommand::PageTop);
-    QCOMPARE(mEdit->caretXY().line, 0);
+    QCOMPARE(mEdit->caretPos().line, 0);
 
     mEdit->processCommand(EditCommand::PageBottom);
-    QCOMPARE(mEdit->caretXY().line, mEdit->linesInWindow() - 1);
+    QCOMPARE(mEdit->caretPos().line, mEdit->linesInWindow() - 1);
 }
 
 void TestQSyneditDisplay::test_file_start_end()
 {
     mEdit->setContent(makeLines(50));
     mEdit->processCommand(EditCommand::FileEnd);
-    QCOMPARE(mEdit->caretXY().line, mEdit->lineCount() - 1);
+    QCOMPARE(mEdit->caretPos().line, mEdit->lineCount() - 1);
     mEdit->processCommand(EditCommand::FileStart);
-    QCOMPARE(mEdit->caretXY(), CharPos(0, 0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 0));
 }
 
 void TestQSyneditDisplay::test_scroll_top_pos()
@@ -165,7 +165,7 @@ void TestQSyneditDisplay::test_ensure_caret_visible()
 {
     mEdit->setContent(makeLines(50));
     mEdit->setTopPos(0);
-    mEdit->setCaretXYCentered(CharPos{0, 49});
+    mEdit->setCaretPosCentered(CharPos{0, 49});
     int caretPixelY = mEdit->displayCoordToPixels(mEdit->displayXY()).y();
     QVERIFY(caretPixelY >= 0);
     QVERIFY(caretPixelY < mEdit->viewport()->height());

@@ -120,7 +120,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
     ui->editDemo->addSyntaxIssues(12, 8, 13, CompileIssueType::Error, "[Error] 'Total' was not declared in this scope; did you mean 'total'?");
     ui->editDemo->addSyntaxIssues(7, 8, 15, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
     ui->editDemo->setActiveBreakpoint(9);
-    ui->editDemo->setCaretXY(QSynedit::CharPos{0,0});
+    ui->editDemo->setCaretPos(QSynedit::CharPos{0,0});
 
     //ui->editDemo->reparseDocument();
     //ui->editDemo->invalidate();

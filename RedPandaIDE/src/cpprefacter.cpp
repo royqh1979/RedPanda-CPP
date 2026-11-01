@@ -247,7 +247,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
             editor->replaceLine(posY,newLine);
         posY++;
     }
-    editor->setCaretXY(editor->ensureCharPosValid(editor->caretXY()));
+    editor->setCaretPos(editor->ensureCharPosValid(editor->caretPos()));
     editor->endEditing();
 }
 void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser){
@@ -422,7 +422,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                 oldEditor->replaceLine(posY,newLine);
             posY++;
         }
-        oldEditor->setCaretXY(oldEditor->ensureCharPosValid(oldEditor->caretXY()));
+        oldEditor->setCaretPos(oldEditor->ensureCharPosValid(oldEditor->caretPos()));
         oldEditor->endEditing();
     } else {
         Editor editor(nullptr);

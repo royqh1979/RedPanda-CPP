@@ -400,7 +400,7 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
         QSynedit::SearchOptions searchOptions, bool useRegex)
 {
     //backup
-    QSynedit::CharPos caretBackup = e->caretXY();
+    QSynedit::CharPos caretBackup = e->caretPos();
     QSynedit::CharPos blockBeginBackup = e->selBegin();
     QSynedit::CharPos blockEndBackup = e->selEnd();
     int topPosBackup = e->topPos();
@@ -426,7 +426,7 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
     });
 
     // restore
-    e->setCaretXY(caretBackup);
+    e->setCaretPos(caretBackup);
     e->setTopPos(topPosBackup);
     e->setLeftPos(leftPosBackup);
     e->setCaretAndSelection(

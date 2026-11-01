@@ -88,7 +88,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_in_empty_doc()
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),0);
-    QCOMPARE(mEdit->caretXY(), CharPos(0,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,0));
     QCOMPARE(mEdit->selBegin(), CharPos(0,0));
     QCOMPARE(mEdit->selEnd(), CharPos(0,0));
     QCOMPARE(newEndPos,CharPos(0,0));
@@ -106,7 +106,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_in_empty_doc()
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(0,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,0));
     QCOMPARE(mEdit->selBegin(), CharPos(0,0));
     QCOMPARE(mEdit->selEnd(), CharPos(0,0));
     QCOMPARE(newEndPos,CharPos(0,0));
@@ -129,7 +129,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -142,7 +142,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -155,7 +155,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -168,7 +168,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(18,18));
+    QCOMPARE(mEdit->caretPos(), CharPos(18,18));
     QCOMPARE(mEdit->selBegin(), CharPos(12,18));
     QCOMPARE(mEdit->selEnd(), CharPos(18,18));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -181,7 +181,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(11,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -194,7 +194,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(27,52));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,52));
     QCOMPARE(mEdit->selBegin(), CharPos(21,52));
     QCOMPARE(mEdit->selEnd(), CharPos(27,52));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -207,7 +207,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(27,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -220,7 +220,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(35,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(35,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -233,7 +233,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(10,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -246,7 +246,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -260,7 +260,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),0);
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -286,7 +286,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
 
@@ -303,7 +303,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -321,7 +321,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -339,7 +339,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(12,18)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(18,18));
+    QCOMPARE(mEdit->caretPos(), CharPos(18,18));
     QCOMPARE(mEdit->selBegin(), CharPos(12,18));
     QCOMPARE(mEdit->selEnd(), CharPos(18,18));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -357,7 +357,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(5,48)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(11,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -375,7 +375,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,52)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,52));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,52));
     QCOMPARE(mEdit->selBegin(), CharPos(21,52));
     QCOMPARE(mEdit->selEnd(), CharPos(27,52));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -393,7 +393,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -411,7 +411,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(35,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(35,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -429,7 +429,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -447,7 +447,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -466,7 +466,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_without_
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -483,7 +483,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     //no selection, caret at the second "thread" begin
     //should found the second "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{6,12});
+    mEdit->setCaretPos(CharPos{6,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -496,7 +496,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -504,7 +504,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     //no selection, caret at the second "thread" end
     //should found the third "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{12,12});
+    mEdit->setCaretPos(CharPos{12,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -517,7 +517,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -538,7 +538,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -559,7 +559,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -580,7 +580,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -601,7 +601,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_sel
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(5,48)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(11,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -619,7 +619,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     //no selection, caret at the second "thread" begin
     //should found the second "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{6,12});
+    mEdit->setCaretPos(CharPos{6,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -632,7 +632,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -640,7 +640,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     //no selection, caret at the second "thread" end
     //should found the third "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{12,12});
+    mEdit->setCaretPos(CharPos{12,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -653,7 +653,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -674,7 +674,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -695,7 +695,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -716,7 +716,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -737,7 +737,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_include_
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(5,48)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(11,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(11,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -754,7 +754,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     //no selection, caret at the second "thread" begin
     //should found the first "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{6,12});
+    mEdit->setCaretPos(CharPos{6,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -767,7 +767,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -775,7 +775,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     //no selection, caret at the second "thread" end
     //should found the first "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos{12,12});
+    mEdit->setCaretPos(CharPos{12,12});
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -788,7 +788,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -809,7 +809,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -830,7 +830,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -851,7 +851,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -872,7 +872,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -888,7 +888,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wra
     CharPos newEndPos;
 
     //caret before last "thread"
-    mEdit->setCaretXY({10,67});
+    mEdit->setCaretPos({10,67});
 
     //found the last "thread"
     clearFounds();
@@ -904,7 +904,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wra
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -923,13 +923,13 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wra
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret at file end, and don't confirm wrap
-    mEdit->setCaretXY(mEdit->fileEnd());
+    mEdit->setCaretPos(mEdit->fileEnd());
     clearFounds();
     QCOMPARE(mEdit->searchReplace(
                  "thread","",
@@ -945,13 +945,13 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wra
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), mEdit->fileEnd());
+    QCOMPARE(mEdit->caretPos(), mEdit->fileEnd());
     QCOMPARE(mEdit->selBegin(), mEdit->fileEnd());
     QCOMPARE(mEdit->selEnd(), mEdit->fileEnd());
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret at file end, and confirm wrap
-    mEdit->setCaretXY(mEdit->fileEnd());
+    mEdit->setCaretPos(mEdit->fileEnd());
     clearFounds();
     QCOMPARE(mEdit->searchReplace(
                  "thread","",
@@ -967,7 +967,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_forward_from_caret_with_wra
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -994,7 +994,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_whole_word()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1012,7 +1012,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_whole_word()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1031,7 +1031,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_whole_word()
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1123,7 +1123,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1141,7 +1141,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(12,18)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(18,18));
+    QCOMPARE(mEdit->caretPos(), CharPos(18,18));
     QCOMPARE(mEdit->selBegin(), CharPos(12,18));
     QCOMPARE(mEdit->selEnd(), CharPos(18,18));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1159,7 +1159,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,52)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,52));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,52));
     QCOMPARE(mEdit->selBegin(), CharPos(21,52));
     QCOMPARE(mEdit->selEnd(), CharPos(27,52));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1177,7 +1177,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(27,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(27,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1195,7 +1195,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(35,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(35,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1213,7 +1213,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1232,7 +1232,7 @@ void TestQSyneditCppSearchReplace::test_search_forward_from_caret_match_case()
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(28,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(28,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -1321,7 +1321,7 @@ void TestQSyneditCppSearchReplace::test_search_all_forward_in_whole_file_from_ca
     SearchOptions options = SearchOption::ssoFromCaret | SearchOption::ssoWrapAround;
     CharPos newEndPos;
     //caret at begin of the 3rd "thread"
-    mEdit->setCaretXY({4,15});
+    mEdit->setCaretPos({4,15});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -1388,7 +1388,7 @@ void TestQSyneditCppSearchReplace::test_search_all_forward_in_whole_file_from_ca
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret at end of the third "thread"
-    mEdit->setCaretXY({10,15});
+    mEdit->setCaretPos({10,15});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -1455,7 +1455,7 @@ void TestQSyneditCppSearchReplace::test_search_all_forward_in_whole_file_from_ca
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret in the middle of the third "thread"
-    mEdit->setCaretXY({5,15});
+    mEdit->setCaretPos({5,15});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -1527,7 +1527,7 @@ void TestQSyneditCppSearchReplace::test_search_all_forward_in_whole_file_from_ca
     CharPos newEndPos;
 
     //before the 3rd "thread"
-    mEdit->setCaretXY({3,15});
+    mEdit->setCaretPos({3,15});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -2089,7 +2089,7 @@ void TestQSyneditCppSearchReplace::test_ensure_caret_pos_not_used_in_scope_searc
 
     //search from begin of the 2nd "thread" to begin of the 9th "thread"
     //caret in the middle of the 6th "thread"
-    mEdit->setCaretXY({22,52});
+    mEdit->setCaretPos({22,52});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   CharPos(6,12),
@@ -2161,7 +2161,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_in_empty_doc()
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),0);
-    QCOMPARE(mEdit->caretXY(), CharPos(0,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,0));
     QCOMPARE(mEdit->selBegin(), CharPos(0,0));
     QCOMPARE(mEdit->selEnd(), CharPos(0,0));
     QCOMPARE(newEndPos,CharPos(0,0));
@@ -2179,7 +2179,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_in_empty_doc()
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(0,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,0));
     QCOMPARE(mEdit->selBegin(), CharPos(0,0));
     QCOMPARE(mEdit->selEnd(), CharPos(0,0));
     QCOMPARE(newEndPos,CharPos(0,0));
@@ -2194,7 +2194,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     CharPos newEndPos;
 
     //caret at file end
-    mEdit->setCaretXY(mEdit->fileEnd());
+    mEdit->setCaretPos(mEdit->fileEnd());
 
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -2204,7 +2204,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(22,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2217,7 +2217,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2230,7 +2230,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2243,7 +2243,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2256,7 +2256,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(21,52));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,52));
     QCOMPARE(mEdit->selBegin(), CharPos(21,52));
     QCOMPARE(mEdit->selEnd(), CharPos(27,52));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2269,7 +2269,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(5,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(5,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2282,7 +2282,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(12,18));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,18));
     QCOMPARE(mEdit->selBegin(), CharPos(12,18));
     QCOMPARE(mEdit->selEnd(), CharPos(18,18));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2295,7 +2295,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(4,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2308,7 +2308,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(6,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(6,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2321,7 +2321,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(10,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2335,7 +2335,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),0);
-    QCOMPARE(mEdit->caretXY(), CharPos(10,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2350,7 +2350,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     CharPos newEndPos;
 
     //caret at file end
-    mEdit->setCaretXY(mEdit->fileEnd());
+    mEdit->setCaretPos(mEdit->fileEnd());
 
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
@@ -2365,7 +2365,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(22,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2383,7 +2383,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2401,7 +2401,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2419,7 +2419,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2437,7 +2437,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,52)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(21,52));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,52));
     QCOMPARE(mEdit->selBegin(), CharPos(21,52));
     QCOMPARE(mEdit->selEnd(), CharPos(27,52));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2455,7 +2455,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(5,48)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(5,48));
+    QCOMPARE(mEdit->caretPos(), CharPos(5,48));
     QCOMPARE(mEdit->selBegin(), CharPos(5,48));
     QCOMPARE(mEdit->selEnd(), CharPos(11,48));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2473,7 +2473,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(12,18)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(12,18));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,18));
     QCOMPARE(mEdit->selBegin(), CharPos(12,18));
     QCOMPARE(mEdit->selEnd(), CharPos(18,18));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2491,7 +2491,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,15)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,15));
     QCOMPARE(mEdit->selBegin(), CharPos(4,15));
     QCOMPARE(mEdit->selEnd(), CharPos(10,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2509,7 +2509,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(6,12)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(6,12));
+    QCOMPARE(mEdit->caretPos(), CharPos(6,12));
     QCOMPARE(mEdit->selBegin(), CharPos(6,12));
     QCOMPARE(mEdit->selEnd(), CharPos(12,12));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2527,7 +2527,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_without
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2545,7 +2545,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     //no selection, caret at the 9th "thread" end
     //should found the 9th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(10,67));
+    mEdit->setCaretPos(CharPos(10,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -2558,7 +2558,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2566,7 +2566,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     //no selection, caret at the 9th "thread" begin
     //should found the 8th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(4,67));
+    mEdit->setCaretPos(CharPos(4,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -2579,7 +2579,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2600,7 +2600,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2621,7 +2621,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2642,7 +2642,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2663,7 +2663,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_se
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2681,7 +2681,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     //no selection, caret at the 9th "thread" end
     //should found the 9th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(10,67));
+    mEdit->setCaretPos(CharPos(10,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -2694,7 +2694,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2702,7 +2702,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     //no selection, caret at the 9th "thread" begin
     //should found the 8th "thread"
     clearFounds();
-    mEdit->setCaretXY(CharPos(4,67));
+    mEdit->setCaretPos(CharPos(4,67));
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -2715,7 +2715,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(29,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(29,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(29,62));
     QCOMPARE(mEdit->selBegin(), CharPos(29,62));
     QCOMPARE(mEdit->selEnd(), CharPos(35,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2736,7 +2736,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2757,7 +2757,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2778,7 +2778,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(4,67)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(4,67));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,67));
     QCOMPARE(mEdit->selBegin(), CharPos(4,67));
     QCOMPARE(mEdit->selEnd(), CharPos(10,67));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2799,7 +2799,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_include
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(21,62)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(21,62));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,62));
     QCOMPARE(mEdit->selBegin(), CharPos(21,62));
     QCOMPARE(mEdit->selEnd(), CharPos(27,62));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2814,7 +2814,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wr
     CharPos newEndPos;
 
     //found the first "thread"
-    mEdit->setCaretXY({16,3});
+    mEdit->setCaretPos({16,3});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -2828,7 +2828,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wr
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(10,3)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(10,3));
+    QCOMPARE(mEdit->caretPos(), CharPos(10,3));
     QCOMPARE(mEdit->selBegin(), CharPos(10,3));
     QCOMPARE(mEdit->selEnd(), CharPos(16,3));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2847,13 +2847,13 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wr
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(22,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //at file begin, don't confirm
-    mEdit->setCaretXY({0,0});
+    mEdit->setCaretPos({0,0});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -2868,7 +2868,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wr
     QCOMPARE(mReplaces,{});
     QCOMPARE(mFoundPositions,{});
     QCOMPARE(mFoundLens,{});
-    QCOMPARE(mEdit->caretXY(), CharPos(0,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,0));
     QCOMPARE(mEdit->selBegin(), CharPos(0,0));
     QCOMPARE(mEdit->selEnd(), CharPos(0,0));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2888,7 +2888,7 @@ void TestQSyneditCppSearchReplace::test_basic_search_backward_from_caret_with_wr
     QCOMPARE(mReplaces,{""});
     QCOMPARE(mFoundPositions,{CharPos(22,72)});
     QCOMPARE(mFoundLens,{6});
-    QCOMPARE(mEdit->caretXY(), CharPos(22,72));
+    QCOMPARE(mEdit->caretPos(), CharPos(22,72));
     QCOMPARE(mEdit->selBegin(), CharPos(22,72));
     QCOMPARE(mEdit->selEnd(), CharPos(28,72));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -2979,7 +2979,7 @@ void TestQSyneditCppSearchReplace::test_search_all_backward_in_whole_file_from_c
     CharPos newEndPos;
 
     //caret at begin of the 8th "thread"
-    mEdit->setCaretXY({29,62});
+    mEdit->setCaretPos({29,62});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -3046,7 +3046,7 @@ void TestQSyneditCppSearchReplace::test_search_all_backward_in_whole_file_from_c
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret at end of the 8th "thread"
-    mEdit->setCaretXY({35,62});
+    mEdit->setCaretPos({35,62});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -3113,7 +3113,7 @@ void TestQSyneditCppSearchReplace::test_search_all_backward_in_whole_file_from_c
     QCOMPARE(newEndPos,CharPos(1,76));
 
     //caret in the middle of the 8th "thread"
-    mEdit->setCaretXY({30,62});
+    mEdit->setCaretPos({30,62});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -3186,7 +3186,7 @@ void TestQSyneditCppSearchReplace::test_search_all_backward_in_whole_file_from_c
     CharPos newEndPos;
 
     //before the 8th "thread"
-    mEdit->setCaretXY({28,62});
+    mEdit->setCaretPos({28,62});
     clearFounds();
     QCOMPARE(mEdit->searchReplace("thread","",
                                   mEdit->fileBegin(),
@@ -3812,7 +3812,7 @@ void TestQSyneditCppSearchReplace::test_search_regex()
     QCOMPARE(mReplaces, {""});
     QCOMPARE(mFoundPositions,{CharPos(1,0)});
     QCOMPARE(mFoundLens,{7});
-    QCOMPARE(mEdit->caretXY(), CharPos(8,0));
+    QCOMPARE(mEdit->caretPos(), CharPos(8,0));
     QCOMPARE(mEdit->selBegin(), CharPos(1,0));
     QCOMPARE(mEdit->selEnd(), CharPos(8,0));
 
@@ -3830,7 +3830,7 @@ void TestQSyneditCppSearchReplace::test_search_regex()
     QCOMPARE(mReplaces, {""});
     QCOMPARE(mFoundPositions,{CharPos(13,10)});
     QCOMPARE(mFoundLens,{3});
-    QCOMPARE(mEdit->caretXY(), CharPos(16,10));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,10));
     QCOMPARE(mEdit->selBegin(), CharPos(13,10));
     QCOMPARE(mEdit->selEnd(), CharPos(16,10));
 }
@@ -3849,7 +3849,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
 //    QCOMPARE(mReplaces, {""});
 //    QCOMPARE(mFoundPositions, {CharPos(29,15)});
 //    QCOMPARE(mFoundLens, {4});
-//    QCOMPARE(mEdit->caretXY(), CharPos(33,15));
+//    QCOMPARE(mEdit->caretPos(), CharPos(33,15));
 //    QCOMPARE(mEdit->selBegin(), CharPos(29,15));
 //    QCOMPARE(mEdit->selEnd(), CharPos(33,15));
 
@@ -3867,7 +3867,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(33,15));
+    QCOMPARE(mEdit->caretPos(), CharPos(33,15));
     QCOMPARE(mEdit->selBegin(), CharPos(29,15));
     QCOMPARE(mEdit->selEnd(), CharPos(33,15));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3880,7 +3880,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(65,23));
+    QCOMPARE(mEdit->caretPos(), CharPos(65,23));
     QCOMPARE(mEdit->selBegin(), CharPos(61,23));
     QCOMPARE(mEdit->selEnd(), CharPos(65,23));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3893,7 +3893,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(52,26));
+    QCOMPARE(mEdit->caretPos(), CharPos(52,26));
     QCOMPARE(mEdit->selBegin(), CharPos(48,26));
     QCOMPARE(mEdit->selEnd(), CharPos(52,26));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3906,7 +3906,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(12,49));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,49));
     QCOMPARE(mEdit->selBegin(), CharPos(8,49));
     QCOMPARE(mEdit->selEnd(), CharPos(12,49));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3919,7 +3919,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),1);
-    QCOMPARE(mEdit->caretXY(), CharPos(26,59));
+    QCOMPARE(mEdit->caretPos(), CharPos(26,59));
     QCOMPARE(mEdit->selBegin(), CharPos(22,59));
     QCOMPARE(mEdit->selEnd(), CharPos(26,59));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3932,7 +3932,7 @@ void QSynedit::TestQSyneditCppSearchReplace::test_basic_forward_search_without_w
                          mBasicSearcher.get(),
                          nullptr,
                          nullptr),0);
-    QCOMPARE(mEdit->caretXY(), CharPos(26,59));
+    QCOMPARE(mEdit->caretPos(), CharPos(26,59));
     QCOMPARE(mEdit->selBegin(), CharPos(22,59));
     QCOMPARE(mEdit->selEnd(), CharPos(26,59));
     QCOMPARE(newEndPos,CharPos(1,76));
@@ -3991,7 +3991,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
     };
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({8,1});
+    mEdit->setCaretPos({8,1});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4002,12 +4002,12 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(3,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(1,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(1,1));
     QCOMPARE(mEdit->selBegin(), CharPos(1,1));
     QCOMPARE(mEdit->selEnd(), CharPos(1,1));
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({9,1});
+    mEdit->setCaretPos({9,1});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4018,12 +4018,12 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(3,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(1,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(1,1));
     QCOMPARE(mEdit->selBegin(), CharPos(1,1));
     QCOMPARE(mEdit->selEnd(), CharPos(1,1));
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({8,1});
+    mEdit->setCaretPos({8,1});
     mEdit->searchReplace("int","beautiful",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4034,7 +4034,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(39,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(19,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(19,1));
     QCOMPARE(mEdit->selBegin(), CharPos(19,1));
     QCOMPARE(mEdit->selEnd(), CharPos(19,1));
 }
@@ -4071,7 +4071,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
 
     //no selection,caret at begin of the second "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({4,2});
+    mEdit->setCaretPos({4,2});
     mEdit->searchReplace("int","replaced",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4082,13 +4082,13 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(20,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(16,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,2));
     QCOMPARE(mEdit->selBegin(), CharPos(13,2));
     QCOMPARE(mEdit->selEnd(), CharPos(16,2));
 
     //no selection,caret at end of the second "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({7,2});
+    mEdit->setCaretPos({7,2});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4099,7 +4099,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(12,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(12,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,2));
     QCOMPARE(mEdit->selBegin(), CharPos(9,2));
     QCOMPARE(mEdit->selEnd(), CharPos(12,2));
 
@@ -4116,7 +4116,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(21,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,2));
     QCOMPARE(mEdit->selBegin(), CharPos(18,2));
     QCOMPARE(mEdit->selEnd(), CharPos(21,2));
 
@@ -4133,7 +4133,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_with_selectio
                          nullptr);
     QCOMPARE(mEdit->content(),text5);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(21,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(21,2));
     QCOMPARE(mEdit->selBegin(), CharPos(18,2));
     QCOMPARE(mEdit->selEnd(), CharPos(21,2));
 }
@@ -4175,7 +4175,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
 
     //no selection,caret at begin of the second "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({4,2});
+    mEdit->setCaretPos({4,2});
     mEdit->searchReplace("int","replaced",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4186,14 +4186,14 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(20,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(16,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(16,2));
     QCOMPARE(mEdit->selBegin(), CharPos(13,2));
     QCOMPARE(mEdit->selEnd(), CharPos(16,2));
 
 
     //no selection,caret at end of the second "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({7,2});
+    mEdit->setCaretPos({7,2});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4204,7 +4204,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(12,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(12,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,2));
     QCOMPARE(mEdit->selBegin(), CharPos(9,2));
     QCOMPARE(mEdit->selEnd(), CharPos(12,2));
 
@@ -4222,7 +4222,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(17,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(17,2));
     QCOMPARE(mEdit->selBegin(), CharPos(14,2));
     QCOMPARE(mEdit->selEnd(), CharPos(17,2));
 
@@ -4239,7 +4239,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
                          nullptr);
     QCOMPARE(mEdit->content(),text5);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(17,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(17,2));
     QCOMPARE(mEdit->selBegin(), CharPos(14,2));
     QCOMPARE(mEdit->selEnd(), CharPos(17,2));
 
@@ -4256,7 +4256,7 @@ void TestQSyneditCppSearchReplace::test_replace_forward_from_caret_include_selec
                          nullptr);
     QCOMPARE(mEdit->content(),text6);
     QCOMPARE(newEndPos,CharPos(15,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(3,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(3,2));
     QCOMPARE(mEdit->selBegin(), CharPos(0,2));
     QCOMPARE(mEdit->selEnd(), CharPos(3,2));
 }
@@ -4300,7 +4300,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
     };
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({8,1});
+    mEdit->setCaretPos({8,1});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4311,12 +4311,12 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(3,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(5,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(5,1));
     QCOMPARE(mEdit->selBegin(), CharPos(5,1));
     QCOMPARE(mEdit->selEnd(), CharPos(5,1));
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({12,1});
+    mEdit->setCaretPos({12,1});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4327,12 +4327,12 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(3,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(6,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(6,1));
     QCOMPARE(mEdit->selBegin(), CharPos(6,1));
     QCOMPARE(mEdit->selEnd(), CharPos(6,1));
 
     mEdit->setContent(text1);
-    mEdit->setCaretXY({12,1});
+    mEdit->setCaretPos({12,1});
     mEdit->searchReplace("int","beautiful",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4343,7 +4343,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret()
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(39,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(24,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(24,1));
     QCOMPARE(mEdit->selBegin(), CharPos(24,1));
     QCOMPARE(mEdit->selEnd(), CharPos(24,1));
 }
@@ -4380,7 +4380,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selecti
 
     //no selection,caret at begin of the third "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({8,2});
+    mEdit->setCaretPos({8,2});
     mEdit->searchReplace("int","replaced",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4391,13 +4391,13 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selecti
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(20,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(0,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,2));
     QCOMPARE(mEdit->selBegin(), CharPos(0,2));
     QCOMPARE(mEdit->selEnd(), CharPos(3,2));
 
     //no selection,caret at end of the third "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({11,2});
+    mEdit->setCaretPos({11,2});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4408,7 +4408,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selecti
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(12,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(4,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,2));
     QCOMPARE(mEdit->selBegin(), CharPos(4,2));
     QCOMPARE(mEdit->selEnd(), CharPos(7,2));
 
@@ -4425,7 +4425,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selecti
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(0,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,2));
     QCOMPARE(mEdit->selBegin(), CharPos(0,2));
     QCOMPARE(mEdit->selEnd(), CharPos(3,2));
 
@@ -4442,7 +4442,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_with_selecti
                          nullptr);
     QCOMPARE(mEdit->content(),text5);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(0,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,2));
     QCOMPARE(mEdit->selBegin(), CharPos(0,2));
     QCOMPARE(mEdit->selEnd(), CharPos(3,2));
 }
@@ -4489,7 +4489,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
 
     //no selection,caret at begin of the third "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({8,2});
+    mEdit->setCaretPos({8,2});
     mEdit->searchReplace("int","replaced",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4500,13 +4500,13 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text2);
     QCOMPARE(newEndPos,CharPos(20,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(0,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(0,2));
     QCOMPARE(mEdit->selBegin(), CharPos(0,2));
     QCOMPARE(mEdit->selEnd(), CharPos(3,2));
 
     //no selection,caret at end of the third "int" on 3rd line
     mEdit->setContent(text1);
-    mEdit->setCaretXY({11,2});
+    mEdit->setCaretPos({11,2});
     mEdit->searchReplace("int","",
                                   mEdit->fileBegin(),
                                   mEdit->fileEnd(),
@@ -4517,7 +4517,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text3);
     QCOMPARE(newEndPos,CharPos(12,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(4,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,2));
     QCOMPARE(mEdit->selBegin(), CharPos(4,2));
     QCOMPARE(mEdit->selEnd(), CharPos(7,2));
 
@@ -4534,7 +4534,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text4);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(4,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,2));
     QCOMPARE(mEdit->selBegin(), CharPos(4,2));
     QCOMPARE(mEdit->selEnd(), CharPos(7,2));
 
@@ -4551,7 +4551,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text5);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(4,2));
+    QCOMPARE(mEdit->caretPos(), CharPos(4,2));
     QCOMPARE(mEdit->selBegin(), CharPos(4,2));
     QCOMPARE(mEdit->selEnd(), CharPos(7,2));
 
@@ -4568,7 +4568,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text6);
     QCOMPARE(newEndPos,CharPos(21,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(12,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(12,1));
     QCOMPARE(mEdit->selBegin(), CharPos(12,1));
     QCOMPARE(mEdit->selEnd(), CharPos(15,1));
 
@@ -4585,7 +4585,7 @@ void TestQSyneditCppSearchReplace::test_replace_backward_from_caret_include_sele
                          nullptr);
     QCOMPARE(mEdit->content(),text7);
     QCOMPARE(newEndPos,CharPos(15,2));
-    QCOMPARE(mEdit->caretXY(), CharPos(8,1));
+    QCOMPARE(mEdit->caretPos(), CharPos(8,1));
     QCOMPARE(mEdit->selBegin(), CharPos(8,1));
     QCOMPARE(mEdit->selEnd(), CharPos(11,1));
 }

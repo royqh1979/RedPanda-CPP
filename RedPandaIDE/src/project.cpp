@@ -426,8 +426,8 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
         editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), true, false);
         if (editor) {
             //editor->setInProject(true);
-            editor->setCaretY(layout->caretY);
-            editor->setCaretX(layout->caretX);
+            editor->setCaretLine(layout->caretY);
+            editor->setCaretCh(layout->caretX);
             editor->setTopPos(layout->top);
             editor->setLeftPos(layout->left);
             mEditorManager->activeEditor(editor,true);
@@ -657,8 +657,8 @@ void Project::saveLayout()
         if (editor) {
             QJsonObject jsonLayout;
             jsonLayout["filename"]=unit->fileName();
-            jsonLayout["caretX"]=editor->caretX();
-            jsonLayout["caretY"]=editor->caretY();
+            jsonLayout["caretX"]=editor->caretCh();
+            jsonLayout["caretY"]=editor->caretLine();
             jsonLayout["top"]=editor->topPos();
             jsonLayout["left"]=editor->leftPos();
             jsonLayout["isOpen"]=true;
@@ -2136,8 +2136,8 @@ void Project::loadUnitLayout(Editor *e)
 
     PProjectEditorLayout layout = layouts.value(e->filename(),PProjectEditorLayout());
     if (layout) {
-        e->setCaretY(layout->caretY);
-        e->setCaretX(layout->caretX);
+        e->setCaretLine(layout->caretY);
+        e->setCaretCh(layout->caretX);
         e->setTopPos(layout->top);
         e->setLeftPos(layout->left);
     }

@@ -416,7 +416,7 @@ void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
     }
 
     if (changes.testFlag(QSynedit::StatusChange::CaretY)) {
-        pMainWindow->caretList().addCaret(e,e->caretY(),e->caretX());
+        pMainWindow->caretList().addCaret(e,e->caretLine(),e->caretCh());
         pMainWindow->updateCaretActions();
     }
 }

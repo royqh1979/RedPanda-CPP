@@ -140,7 +140,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
     ui->txtCode->reparseDocument();
     ui->txtCode->invalidate();
     if (activeLine!=-1)
-        ui->txtCode->setCaretXYCentered(QSynedit::CharPos{0,activeLine});
+        ui->txtCode->setCaretPosCentered(QSynedit::CharPos{0,activeLine});
     mSetting=false;
 }
 

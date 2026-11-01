@@ -776,7 +776,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionClose_All->setEnabled(true);
         ui->actionClose_Others->setEnabled(mEditorManager->pageCount()>1);
 
-        int line = e->caretY();
+        int line = e->caretLine();
         ui->actionToggle_Bookmark->setEnabled(e->lineCount()>0);
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
@@ -1732,32 +1732,32 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e)
     } else {
         QString msg;
         if (pSettings->editor().forceFixedFontWidth()){
-            int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
+            int col = e->charToGlyphLeft(e->caretLine(),e->caretCh())/e->charWidth()+1;
             if (e->selAvail()) {
                 msg = tr("Line: %1/%2 Col: %3 Sel: %4")
-                        .arg(e->caretY()+1)
+                        .arg(e->caretLine()+1)
                         .arg(e->lineCount())
                         .arg(col)
                         .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Col: %3")
-                        .arg(e->caretY()+1)
+                        .arg(e->caretLine()+1)
                         .arg(e->lineCount())
                         .arg(col);
             }
         } else {
             if (e->selAvail()) {
                 msg = tr("Line: %1/%2 Char: %3/%4 Sel: %5")
-                        .arg(e->caretY()+1)
+                        .arg(e->caretLine()+1)
                         .arg(e->lineCount())
-                        .arg(e->caretX()+1)
+                        .arg(e->caretCh()+1)
                         .arg(e->lineText().length())
                         .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Char: %3/%4")
-                        .arg(e->caretY()+1)
+                        .arg(e->caretLine()+1)
                         .arg(e->lineCount())
-                        .arg(e->caretX()+1)
+                        .arg(e->caretCh()+1)
                         .arg(e->lineText().length());
             }
         }
@@ -3526,8 +3526,8 @@ bool MainWindow::saveLastOpens()
       fileObj["filename"] = editor->filename();
       fileObj["onLeft"] = (mEditorManager->findPageControlForEditor(editor) != mEditorManager->rightPageWidget());
       fileObj["focused"] = editor->hasFocus();
-      fileObj["caretX"] = editor->caretX();
-      fileObj["caretY"] = editor->caretY();
+      fileObj["caretX"] = editor->caretCh();
+      fileObj["caretY"] = editor->caretLine();
       fileObj["top"] = editor->topPos();
       fileObj["left"] = editor->leftPos();
       fileObj["fileType"] =  fileTypeToName(editor->fileType());
@@ -3649,7 +3649,7 @@ void MainWindow::loadLastOpens()
             editor->setReadOnly(isReadOnly);
         }
         pos = editor->ensureCharPosValid(pos);
-        editor->setCaretXY(pos);
+        editor->setCaretPos(pos);
         editor->setTopPos(
                     fileObj["top"].toInt(1)
                     );
@@ -5651,7 +5651,7 @@ void MainWindow::onFileChanged(const QString &path)
                                       QMessageBox::No) == QMessageBox::Yes) {
                 try {
                     int top = e->topPos();
-                    QSynedit::CharPos caretPos = e->caretXY();
+                    QSynedit::CharPos caretPos = e->caretPos();
                     e->loadFile();
                     mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,caretPos.line});
                     e->setTopPos(top);
@@ -6239,7 +6239,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                     if (e && editor) {
                         editor->setReadOnly(true);
                         updateEditorActions(editor);
-                        int line = e->caretY();
+                        int line = e->caretLine();
                         int startLine = 0;
                         QString s = "# "+e->filename()+":";
                         for(int i=0;i<editor->lineCount();i++) {
@@ -6700,7 +6700,7 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         Editor *e=mEditorManager->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
-            mDebugger->runTo(e->filename(), e->caretY());
+            mDebugger->runTo(e->filename(), e->caretLine());
         }
     }
 
@@ -7128,7 +7128,7 @@ void MainWindow::on_actionToggle_Breakpoint_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
     if (editor)
-        editor->toggleBreakpoint(editor->caretY());
+        editor->toggleBreakpoint(editor->caretLine());
 }
 
 
@@ -7151,7 +7151,7 @@ void MainWindow::on_actionBreakpoint_property_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
-        int line = editor->caretY();
+        int line = editor->caretLine();
         if (editor->hasBreakpoint(line)) {
             int index;
             PBreakpoint breakpoint = mDebugger->breakpointAt(line,editor->filename(),&index,editor->inProject());
@@ -7175,7 +7175,7 @@ void MainWindow::on_actionGoto_Declaration_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
-        editor->gotoDeclaration(editor->caretXY());
+        editor->gotoDeclaration(editor->caretPos());
     }
 }
 
@@ -7183,7 +7183,7 @@ void MainWindow::on_actionGoto_Definition_triggered()
 {
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
-        editor->gotoDefinition(editor->caretXY());
+        editor->gotoDefinition(editor->caretPos());
     }
 }
 
@@ -7193,7 +7193,7 @@ void MainWindow::on_actionFind_references_triggered()
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
         CppRefacter refactor(this);
-        refactor.findOccurence(editor, editor->caretXY());
+        refactor.findOccurence(editor, editor->caretPos());
         showSearchPanel(false);
     }
 }
@@ -7610,7 +7610,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
                 && statement->definitionFileName==currentEditor->filename()) {
             filename = statement->definitionFileName;
             line = statement->definitionLine;
-        } else if (currentEditor->caretY()==statement->line) {
+        } else if (currentEditor->caretLine()==statement->line) {
             filename = statement->definitionFileName;
             line = statement->definitionLine;
         } else {
@@ -8422,7 +8422,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!editor->parser())
         return;
     editor->beginEditing();
-    QSynedit::CharPos oldCaret = editor->caretXY();
+    QSynedit::CharPos oldCaret = editor->caretPos();
     //    mClassBrowserModel->beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
@@ -8877,7 +8877,7 @@ void MainWindow::on_actionModify_Bookmark_Description_triggered()
 {
     Editor* editor = mEditorManager->getEditor();
     if (editor) {
-        int line = editor->caretY();
+        int line = editor->caretLine();
         PBookmark bookmark = mBookmarkModel->bookmark(editor->filename(),line);
         if (bookmark) {
             QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
@@ -10231,9 +10231,9 @@ void MainWindow::on_actionGo_to_Line_triggered()
         return;
     bool ok;
     int line=QInputDialog::getInt(e,tr("Go to Line"),tr("Line"),
-                                    e->caretY(),1,e->lineCount(),
+                                    e->caretLine(),1,e->lineCount(),
                                     1,&ok) - 1; //editor line starts with 0
-    if (ok && line!=e->caretY()) {
+    if (ok && line!=e->caretLine()) {
         e->setCaretPosition(QSynedit::CharPos{0,line});
         e->setFocus();
     }
@@ -10692,7 +10692,7 @@ void MainWindow::on_actionToggle_Bookmark_triggered()
     if (editor) {
         if (editor->lineCount()<=0)
             return;
-        int line = editor->caretY();
+        int line = editor->caretLine();
         editor->toggleBookmark(line);
         if (editor->hasBookmark(line)) {
             QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),

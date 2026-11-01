@@ -130,7 +130,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                 break;
             if (mEdit->mGutter.activeLineTextColor().isValid()) {
                 if (
-                        (mEdit->mCaretY==line)     ||
+                        (mEdit->mCaretLine==line)     ||
                         (mEdit->mActiveSelectionMode == SelectionMode::Column && line >= selectionStart.line && line <= selectionEnd.line)
                         )
                     mPainter->setPen(mEdit->mGutter.activeLineTextColor());
@@ -272,10 +272,10 @@ void QSynEditPainter::computeSelectionInfo()
     } else
         bAnySelection = false;
     if (mEdit->mInputPreeditString.length()>0) {
-        if (vStart.line == mEdit->mCaretY && vStart.ch >= mEdit->mCaretX) {
+        if (vStart.line == mEdit->mCaretLine && vStart.ch >= mEdit->mCaretCh) {
             vStart.ch+=mEdit->mInputPreeditString.length();
         }
-        if (vEnd.line == mEdit->mCaretY && vEnd.ch > mEdit->mCaretX) {
+        if (vEnd.line == mEdit->mCaretLine && vEnd.ch > mEdit->mCaretCh) {
             vEnd.ch+=mEdit->mInputPreeditString.length();
         }
     }
@@ -289,19 +289,19 @@ void QSynEditPainter::computeSelectionInfo()
             mSelStart.row = mEdit->lineToRow(vStart.line);
             mSelEnd.row = mEdit->lineToRow(vEnd.line);
             if (mEdit->mInputPreeditString.length() > 0
-                    && vStart.line == mEdit->mCaretY) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretX)
+                    && vStart.line == mEdit->mCaretLine) {
+                QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
-                        + mEdit->lineText().mid(mEdit->mCaretX);
+                        + mEdit->lineText().mid(mEdit->mCaretCh);
                 mSelStart.x = mEdit->charToGlyphLeft(vStart.line, sLine,vStart.ch);
             } else {
                 mSelStart.x = mEdit->charToGlyphLeft(vStart.line,vStart.ch);
             }
             if (mEdit->mInputPreeditString.length() > 0
-                    && vEnd.line == mEdit->mCaretY) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretX)
+                    && vEnd.line == mEdit->mCaretLine) {
+                QString sLine = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
-                        + mEdit->lineText().mid(mEdit->mCaretX);
+                        + mEdit->lineText().mid(mEdit->mCaretCh);
                 mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, sLine,vEnd.ch);
             } else {
                 mSelEnd.x = mEdit->charToGlyphLeft(vEnd.line, vEnd.ch);
@@ -980,10 +980,10 @@ void QSynEditPainter::paintLines()
         if (mEdit->mActiveSelectionMode == SelectionMode::Column) {
             mIsCurrentLine = (line >= selectionBegin.line && line <= selectionEnd.line);
         } else {
-            mIsCurrentLine = (mEdit->mCaretY == line);
+            mIsCurrentLine = (mEdit->mCaretLine == line);
         }
         if (mIsCurrentLine && !mEdit->mInputPreeditString.isEmpty()) {
-            int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretY,mEdit->mCaretX);
+            int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretLine,mEdit->mCaretCh);
             sLine = sLine.left(ch) + mEdit->mInputPreeditString
                     + sLine.mid(ch);
             lineTextChanged = true;
@@ -1121,8 +1121,8 @@ void QSynEditPainter::paintLines()
 //            if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
 //                int startPos = mEdit->mSyntaxer->getTokenPos();
 //                int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
-//                if (!(endPos < mEdit->mCaretX
-//                        || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
+//                if (!(endPos < mEdit->mCaretCh
+//                        || startPos >= mEdit->mCaretCh+mEdit->mInputPreeditString.length())) {
 //                    if (!preeditAttr) {
 //                        preeditAttr = attr;
 //                    } else {
@@ -1207,10 +1207,10 @@ void QSynEditPainter::paintLines()
         //Paint editingAreaBorders
         foreach (const PEditingArea& area, areaList) {
             if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                if (area->beginX > mEdit->mCaretX) {
+                if (area->beginX > mEdit->mCaretCh) {
                     area->beginX += mEdit->mInputPreeditString.length();
                 }
-                if (area->endX > mEdit->mCaretX) {
+                if (area->endX > mEdit->mCaretCh) {
                     area->endX += mEdit->mInputPreeditString.length();
                 }
             }
@@ -1224,9 +1224,9 @@ void QSynEditPainter::paintLines()
         if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
             PEditingArea area = std::make_shared<EditingArea>();
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretX);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretCh);
             area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length());
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretCh+mEdit->mInputPreeditString.length());
             area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
             area->type = EditingAreaType::eatUnderLine;
 //            if (preeditAttr) {
