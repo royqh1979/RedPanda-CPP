@@ -4700,11 +4700,11 @@ void QSynEdit::doRedoItem()
             setCaretPos(item->changeStartPos());
             break;
         case ChangeReason::LineBreak: {
-            CharPos CaretPt = item->changeStartPos();
+            CharPos caret = item->changeStartPos();
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
-            setCaretAndSelection(CaretPt, CaretPt, CaretPt);
+            setCaretAndSelection(caret, caret, caret);
             doBreakLine();
             break;
         }
@@ -5158,7 +5158,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
             return;
     }
 
-    int SaveLastCaretX = mLastCaretX;
+    int saveLastCaretX = mLastCaretX;
 
     // set caret and block begin / end
     beginInternalChanges();
@@ -5166,10 +5166,10 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     moveCaretAndSelection(caretPos(), dstPos, isSelection);
     endInternalChanges();
 
-    // Restore fLastCaretX after moving caret, since
-    // UpdateLastCaretX, called by SetCaretXYEx, changes them. This is the one
-    // case where we don't want that.
-    mLastCaretX = SaveLastCaretX;
+    // Restore mLastCaretX after moving caret, since
+    // updateLastCaretX, called by internalSetCaretPos, changes it. This is the
+    // one case where we don't want that.
+    mLastCaretX = saveLastCaretX;
 }
 
 void QSynEdit::moveCaretAndSelection(const CharPos &before, const CharPos &after, bool isSelection, bool ensureCaretVisible)
@@ -6033,15 +6033,15 @@ void QSynEdit::processCommand(EditCommand command, QVariant data,QVariant data2)
     case EditCommand::PrevWordBegin:
     case EditCommand::SelPrevWordBegin:
     {
-        CharPos CaretNew = prevWordBegin(caretPos());
-        moveCaretAndSelection(caretPos(), CaretNew, command == EditCommand::SelPrevWordBegin);
+        CharPos newCaret = prevWordBegin(caretPos());
+        moveCaretAndSelection(caretPos(), newCaret, command == EditCommand::SelPrevWordBegin);
         break;
     }
     case EditCommand::nextWordBegin:
     case EditCommand::SelNextWordBegin:
     {
-        CharPos CaretNew = nextWordBegin(caretPos());
-        moveCaretAndSelection(caretPos(), CaretNew, command == EditCommand::SelNextWordBegin);
+        CharPos newCaret = nextWordBegin(caretPos());
+        moveCaretAndSelection(caretPos(), newCaret, command == EditCommand::SelNextWordBegin);
         break;
     }
     case EditCommand::SelWord:
