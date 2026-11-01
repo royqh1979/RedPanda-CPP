@@ -11055,6 +11055,7 @@ void TestQSyneditCpp::test_column_select_content()
 
 void TestQSyneditCpp::test_column_input_char()
 {
+    // typing with a column band replaces the band's content on every line
     QStringList text({
         "abcde",
         "fghij",
@@ -11070,7 +11071,62 @@ void TestQSyneditCpp::test_column_input_char()
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),'x');
-    QEXPECT_FAIL("", "column-mode input is not implemented (see the todo in doInputStr)", Abort);
+    QCOMPARE(mEdit->content(), textInput);
+    // same string on every line, so the column cursor stays aligned:
+    // keep column mode with the cursor after the inserted text
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+
+    mEdit->setModified(false);
+    mEdit->setReadOnly(true);
+    QTest::keyPress(mEdit.get(),'y');
+    QCOMPARE(mEdit->content(), textInput);
+    QVERIFY(!mEdit->modified());
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCpp::test_column_input_at_column_cursor()
+{
+    // typing at a zero-width column selection (column cursor) inserts
+    // the string at the cursor column on every line
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textInput({
+        "axbcde",
+        "fxghij",
+        "kxlmno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),'x');
+    QCOMPARE(mEdit->content(), textInput);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
     QCOMPARE(mEdit->content(), textInput);
 }
 
@@ -11238,7 +11294,90 @@ void TestQSyneditCpp::test_column_overwrite_input()
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),'x');
-    QEXPECT_FAIL("", "column-mode input is not implemented (see the todo in doInputStr)", Abort);
+    // overwrite mode with a band: the typed text replaces the band,
+    // just like in insert mode
+    QCOMPARE(mEdit->content(), textInput);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+}
+
+void TestQSyneditCpp::test_column_overwrite_at_column_cursor()
+{
+    // overwrite mode at a zero-width column selection: overwrite the
+    // glyph under the cursor on every line
+    QStringList text({
+        "abcde",
+        "fghij",
+        "klmno"
+    });
+    QStringList textInput({
+        "axcde",
+        "fxhij",
+        "kxmno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setInsertMode(false);
+    mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),'x');
+    QCOMPARE(mEdit->content(), textInput);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({2,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+}
+
+void TestQSyneditCpp::test_column_overwrite_at_eol()
+{
+    // overwriting with the cursor at a short line's end falls back to
+    // appending on that line
+    QStringList text({
+        "abcde",
+        "fg",
+        "klmno"
+    });
+    QStringList textInput({
+        "abxde",
+        "fgx",
+        "klxno"
+    });
+    clearContent();
+    mEdit->setContent(text);
+    mEdit->setInsertMode(false);
+    mEdit->setCaretAndSelection(CharPos{2,2}, CharPos{2,0}, CharPos{2,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QTest::keyPress(mEdit.get(),'x');
+    QCOMPARE(mEdit->content(), textInput);
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
+    QCOMPARE(mEdit->selBegin(), CharPos({3,0}));
+    QCOMPARE(mEdit->selEnd(), CharPos({3,2}));
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), textInput);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    mEdit->redo();
     QCOMPARE(mEdit->content(), textInput);
 }
 

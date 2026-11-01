@@ -2747,16 +2747,20 @@ void QSynEdit::doInputStr(const QString& s)
     }
 
     if (mActiveSelectionMode == SelectionMode::Column) {
-        //todo: column-mode input is not implemented
-        if (mInserting == false && !hasSelContent()) {
+        // column-mode input: perform the same replacement on every line
+        // (design doc 8.6)
+        if (!mInserting && !hasSelContent()) {
+            // overwrite mode at a column cursor: expand the selection to
+            // cover the chars to be overwritten on each line
             CharPos start=mSelectionBegin;
             CharPos end=mSelectionEnd;
             if (start.line > end.line )
                 std::swap(start,end);
-            start.ch++; // make sure we select a whole char in the start line
+            start.ch += inputStr.length();
             internalSetSelBegin(start);
             internalSetSelEnd(end);
         }
+        doSetSelText(inputStr);
         return;
     }
     beginEditing();

@@ -141,11 +141,14 @@ private slots:
     void test_grouped_editing_keeps_selection_mode();
     void test_column_select_content();
     void test_column_input_char();
+    void test_column_input_at_column_cursor();
     void test_column_backspace();
     void test_column_cut();
     void test_column_mode_alt_selection();
     void test_column_delete_char();
     void test_column_overwrite_input();
+    void test_column_overwrite_at_column_cursor();
+    void test_column_overwrite_at_eol();
     void test_column_select_content_cjk();
     void test_column_delete_cjk();
     void test_column_delete_tab_snap();
