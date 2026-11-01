@@ -141,7 +141,7 @@ void ExecutableRunner::run()
         }
     });
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
-    int BUF_SIZE=1024;
+    constexpr int BUF_SIZE=1024;
     char* pBuf=nullptr;
     if (mStartConsole) {
         hSharedMemory = CreateFileMappingA(
@@ -165,7 +165,7 @@ void ExecutableRunner::run()
         }
     }
 #else
-    int BUF_SIZE=1024;
+    constexpr int BUF_SIZE=1024;
     char* pBuf=nullptr;
     int fd_shm = shm_open(mShareMemoryId.toLocal8Bit().data(),O_RDWR | O_CREAT,S_IRWXU);
     if (fd_shm==-1) {

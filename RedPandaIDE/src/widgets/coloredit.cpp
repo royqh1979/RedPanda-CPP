@@ -50,7 +50,7 @@ QColor ColorEdit::contrast()
         crBg = palette().color(QPalette::Base).rgb() & 0xFFFFFF;
     else
         crBg = mColor.rgb() & 0xFFFFFF;
-    int TOLERANCE = 30;
+    constexpr int TOLERANCE = 30;
     int result;
 
     if (
