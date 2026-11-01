@@ -514,7 +514,7 @@ void Editor::undoSymbolCompletion(const CharPos &pos)
 
     if (!mEditorSettings->removeSymbolPairs())
         return;
-    if (!getTokenAttriAtRowCol(pos, token, attr, syntaxState))
+    if (!getTokenAttr(pos, token, attr, syntaxState))
         return;
     if (syntaxer()->isCommentNotFinished(syntaxState))
         return ;
@@ -1538,7 +1538,7 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
         start = 0;
         token = lineText(line);
     } else if (endChar < 0) {
-        if (!getTokenAttriAtRowCol(p,token,start,attr))
+        if (!getTokenAttr(p,token,start,attr))
             return;
     } else {
         start = startChar;
@@ -1706,7 +1706,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             if (coord.isValid()) {
                 QSynedit::PTokenAttribute attr;
                 QString token;
-                if (getTokenAttriAtRowCol(coord,token,attr)
+                if (getTokenAttr(coord,token,attr)
                         && attr->tokenType() == QSynedit::TokenType::Symbol) {
                     CharPos complementCharPos = getMatchingBracket(coord);
                     if (!foldHidesLine(coord.line)
@@ -1741,7 +1741,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         if (!selAvail() && mEditorSettings->highlightCurrentWord()) {
             QString token;
             QSynedit::PTokenAttribute attri;
-            if (getTokenAttriAtRowCol(caretXY(), token,attri)
+            if (getTokenAttr(caretXY(), token,attri)
                 && (
                     (attri->tokenType()==QSynedit::TokenType::Identifier)
                         || (attri->tokenType() == QSynedit::TokenType::Keyword)
@@ -1757,7 +1757,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             QSynedit::PTokenAttribute attri;
             int start;
             QSynedit::PSyntaxState state;
-            if (getTokenAttriAtRowCol(selBegin(), token,start, attri,state)
+            if (getTokenAttr(selBegin(), token,start, attri,state)
                     && selBegin().ch == start
                     && selEnd().ch == start+token.length()
                     ) {
@@ -1891,7 +1891,7 @@ void Editor::onTooltipTimer()
              && !headerCompletionPopupVisible()) {
             QSynedit::PTokenAttribute attr;
             int start;
-            if (getTokenAttriAtRowCol(p,s,start,attr)) {
+            if (getTokenAttr(p,s,start,attr)) {
                 QString line=lineText(p.line);
                 int idx=start-2;
                 if (idx>=0 && idx<line.length() && line[idx]=='-')
@@ -2474,7 +2474,7 @@ bool Editor::handleSymbolCompletion(QChar key)
             QSynedit::PTokenAttribute attr;
             QString token;
             QSynedit::PSyntaxState syntaxState;
-            if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
+            if (getTokenAttr(highlightPos, token, attr, syntaxState)) {
                 inComment = syntaxer()->isCommentNotFinished(syntaxState);
                 inNumber = attr->tokenType() == QSynedit::TokenType::Number;
             }
@@ -2918,7 +2918,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
         //raw string end must be determined with the following '"'
         QString token;
         QSynedit::PTokenAttribute attribute;
-        if (getTokenAttriAtRowCol(caretXY(),token,attribute,state)
+        if (getTokenAttr(caretXY(),token,attribute,state)
                 && cppSyntaxer->isRawStringEnd(state))
             return QuoteStatus::RawStringEnd;
 
@@ -3253,7 +3253,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     QSynedit::PTokenAttribute attr;
     CharPos pBeginPos, pEndPos;
     int start;
-    if (getTokenAttriAtRowCol(
+    if (getTokenAttr(
                 CharPos{caretX() - 1,
                 caretY()}, s,start, attr)) {
         if (attr->tokenType() == QSynedit::TokenType::Preprocessor) {//Preprocessor
@@ -3441,7 +3441,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     QSynedit::PTokenAttribute attr;
     QString token;
     QSynedit::PSyntaxState syntaxState;
-    if (getTokenAttriAtRowCol(highlightPos, token, attr, syntaxState)) {
+    if (getTokenAttr(highlightPos, token, attr, syntaxState)) {
         if (attr && attr->tokenType()==QSynedit::TokenType::Comment)
             return;
     }
@@ -3862,7 +3862,7 @@ Editor::TipType Editor::getTipType(QPoint point, CharPos& pos)
         QString s;
 
         // Only allow hand tips in highlighted areas
-        if (getTokenAttriAtRowCol(pos,s,attr)) {
+        if (getTokenAttr(pos,s,attr)) {
             // Only allow Identifiers, Preprocessor directives, and selection
             if (attr) {
                 if (dragging()) {
@@ -4012,7 +4012,7 @@ void Editor::updateFunctionTip(bool showTip)
     QString token;
     QSynedit::PSyntaxState syntaxState;
     CharPos pos{caretX()-1, caretY()};
-    if (getTokenAttriAtRowCol(pos, token, attr, syntaxState)) {
+    if (getTokenAttr(pos, token, attr, syntaxState)) {
         if (syntaxer()->isStringNotFinished(syntaxState))
             return;
         if (syntaxer()->isCommentNotFinished(syntaxState))
@@ -4411,7 +4411,7 @@ PStatement Editor::constructorToClass(PStatement statement, const CharPos& p)
         QString token;
         int start;
         QSynedit::PTokenAttribute attri;
-        if (getTokenAttriAtRowCol(p,token,start,attri)) {
+        if (getTokenAttr(p,token,start,attri)) {
             QString s = lineText(p.line);
             int pos = start+token.length()-1;
             while (pos<s.length() && CppParser::isSpaceChar(s[pos]))
@@ -4431,7 +4431,7 @@ int Editor::previousIdChars(const CharPos &pos)
     QString token;
     QSynedit::PTokenAttribute attr;
     int start;
-    if (getTokenAttriAtRowCol(CharPos{pos.ch-1, pos.line}, token, start, attr)) {
+    if (getTokenAttr(CharPos{pos.ch-1, pos.line}, token, start, attr)) {
         if (attr->tokenType() == QSynedit::TokenType::Identifier
                 || attr->tokenType() == QSynedit::TokenType::Keyword)
             return pos.ch - start;

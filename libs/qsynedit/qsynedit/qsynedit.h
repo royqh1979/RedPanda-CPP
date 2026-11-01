@@ -286,13 +286,13 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+    bool getTokenAttr(const CharPos& pos, QString& token,
       PTokenAttribute& attri) const;
-    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+    bool getTokenAttr(const CharPos& pos, QString& token,
       PTokenAttribute& attri, PSyntaxState &syntaxState) const;
-    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+    bool getTokenAttr(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri) const;
-    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+    bool getTokenAttr(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
 
     void getTokenAttriList(int line, QStringList &lstToken, QList<int> &lstPos, QList<PTokenAttribute> lstAttri) const;
