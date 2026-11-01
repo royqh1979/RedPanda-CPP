@@ -324,10 +324,10 @@ int Document::addLine(const QString &s)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
-    int Result = mLines.count();
-    insertItem(Result, s);
+    int result = mLines.count();
+    insertItem(result, s);
     endUpdate();
-    return Result;
+    return result;
 }
 
 void Document::addLines(const QStringList &strings)
@@ -348,16 +348,16 @@ void Document::addLines(const QStringList &strings)
 int Document::getTextLength() const
 {
     QMutexLocker locker(&mMutex);
-    int Result = 0;
+    int result = 0;
     foreach (const PDocumentLine& line, mLines ) {
-        Result += line->glyphsCount();
+        result += line->glyphsCount();
         if (mNewlineType == NewlineType::Windows) {
-            Result += 2;
+            result += 2;
         } else {
-            Result += 1;
+            result += 1;
         }
     }
-    return Result;
+    return result;
 }
 
 void Document::clear()
@@ -382,8 +382,8 @@ void Document::deleteLines(int index, int numLines)
             mIndexOfLongestLine -= numLines;
         }
     }
-    int LinesAfter = mLines.count() - (index + numLines);
-    if (LinesAfter < 0) {
+    int linesAfter = mLines.count() - (index + numLines);
+    if (linesAfter < 0) {
        numLines = mLines.count() - index;
     }
     for (int i=0;i<numLines;i++) {
@@ -1184,13 +1184,13 @@ void Document::updateMaxLineWidthChanged()
 
 void Document::updateMaxLineWidthAndNotify()
 {
-    int MaxLen = -1;
+    int maxLen = -1;
     mIndexOfLongestLine = -1;
     if (mLines.count() > 0 ) {
         for (int i=0;i<mLines.size();i++) {
             int len = mLines[i]->mWidth;
-            if (len > MaxLen) {
-                MaxLen = len;
+            if (len > maxLen) {
+                maxLen = len;
                 mIndexOfLongestLine = i;
             }
         }

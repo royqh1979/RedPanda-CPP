@@ -103,9 +103,9 @@ void Gutter::autoSizeDigitCount(int linesCount)
     if (mVisible && mAutoSize && mShowLineNumbers) {
         linesCount += (mLineNumberStart - 1);
     }
-    int nDigits = std::max(QString::number(linesCount).length(), mDigitCount);
-    if (mAutoSizeDigitCount!=nDigits) {
-        mAutoSizeDigitCount = nDigits;
+    int digits = std::max(QString::number(linesCount).length(), mDigitCount);
+    if (mAutoSizeDigitCount!=digits) {
+        mAutoSizeDigitCount = digits;
         setChanged();
     }
 }
