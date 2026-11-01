@@ -11397,7 +11397,6 @@ void TestQSyneditCpp::test_column_delete_prop_font()
     }
     QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
 
-    QEXPECT_FAIL("", "undo of a column deletion loses the per-line snapped positions under non-uniform glyph widths (pending the column-delete undo item rework)", Abort);
     mEdit->undo();
     QCOMPARE(mEdit->content(), text);
     mEdit->redo();

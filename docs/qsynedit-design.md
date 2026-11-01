@@ -17,13 +17,22 @@
 
 ### 1.1 数据结构
 
-**`UndoItem`**（`document.h:701`）——一次变更的记录：
+**`UndoItem`**（`document.h:701`）——一次变更的记录，**immutable**（构造后只读）：
 
 - `changeReason`（`ChangeReason`，`document.h:671`）：变更类型，决定 undo/redo 的逆操作方式；
 - `changeStartPos` / `changeEndPos`（`CharPos`）：变更区间；
 - `changeText`（`QStringList`）：变更相关文本（含义随 reason 而变）；
 - `changeNumber`：分组编号，同一次逻辑操作（块）内的多个变更共享同一编号；
 - `changeSelMode`（`SelectionMode`）：变更发生时的选择模式（普通/列）。
+
+**派生类扩展**：需要额外字段的变更类型通过派生携带（基类只有虚析构，item 经
+`shared_ptr` 在 undo/redo 栈间原样往返），避免所有 item 分摊内存。现有：
+
+- **`ColumnDeleteUndoItem`**（`ChangeReason::ColumnDelete`）：列删除的撤销记录。
+  列删除的带边缘在**每行独立吸附**字形边界，这些左缘位置在删除后无法从带位置
+  重新推导（非等宽字形下信息已丢失），因此在删除时把每行左缘字符索引
+  （`perLineLeftChars`，与 `changeText` 平行）记入 item；undo 按记录逐行精确回插，
+  redo 仍在恢复后的文档上按带重放（该路径本就精确）。
 
 **`CaretAndSelectionInfo`**（`document.h:691`）——光标与选区快照，按 `changeNumber` 成对（变更前/变更后）保存。
 

@@ -670,6 +670,7 @@ enum class ChangeReason {
     InsertLine,
     Insert,
     Delete,
+    ColumnDelete, //delete a column band; positions are snapped per line
     Caret, //just restore the Caret, allowing better Undo behavior
     Selection, //restore Selection
     GroupBreak,
@@ -711,6 +712,7 @@ public:
         CharPos endPos,
         const QStringList& text,
         int number);
+    virtual ~UndoItem();
 
     ChangeReason changeReason() const;
     SelectionMode changeSelMode() const;
@@ -718,6 +720,34 @@ public:
     CharPos changeEndPos() const;
     QStringList changeText() const;
     size_t changeNumber() const;
+};
+
+/**
+ * @brief Undo item for a column-mode band deletion.
+ *
+ * Column deletion snaps the band's edges to glyph boundaries on each
+ * line independently, so the per-line left edge can not be derived
+ * from the recorded band positions afterwards (it is lost as soon as
+ * the glyphs are gone, e.g. under non-uniform glyph widths). Keep them
+ * here, parallel to changeText(), so undo can reinsert the deleted
+ * text at the exact per-line positions.
+ *
+ * Derived from UndoItem so that plain items don't pay for the list.
+ */
+class ColumnDeleteUndoItem : public UndoItem {
+private:
+    QList<int> mPerLineLeftChars;
+public:
+    ColumnDeleteUndoItem(SelectionMode selMode,
+        CharPos startPos,
+        CharPos endPos,
+        const QStringList& text,
+        int number,
+        const QList<int>& perLineLeftChars);
+
+    // left-edge char index of the deleted band on each line,
+    // parallel to changeText()
+    QList<int> perLineLeftChars() const;
 };
 
 using PUndoItem = std::shared_ptr<UndoItem>;
@@ -729,6 +759,9 @@ public:
 
     PUndoItem addChange(ChangeReason reason, const CharPos& start, const CharPos& end,
       const QStringList& changeText, SelectionMode selMode);
+
+    PUndoItem addColumnDeleteChange(const CharPos& start, const CharPos& end,
+      const QStringList& changeText, const QList<int>& perLineLeftChars);
 
     void restoreChange(ChangeReason reason, const CharPos& start, const CharPos& end,
                        const QStringList& changeText, SelectionMode selMode, size_t changeNumber);

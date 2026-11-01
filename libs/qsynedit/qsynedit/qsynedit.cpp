@@ -4388,25 +4388,8 @@ void QSynEdit::doUndoItem()
         case ChangeReason::Delete: {
             // If there's no selection, we have to set
             // the Caret's position manualy.
-//            qDebug()<<"undo delete";
-//            qDebug()<<Item->changeText();
-//            qDebug()<<Item->changeStartPos().Line<<Item->changeStartPos().Char;
             CharPos startPos = item->changeStartPos();
             CharPos endPos = item->changeEndPos();
-            if (item->changeSelMode()==SelectionMode::Column) {
-                // The recorded positions refer to the pre-deletion document
-                // and may point past the shortened lines. Column deletion
-                // preserves the part left of the band, so the left edge's
-                // display x is exact; clamping the right edge to the line
-                // length is safe since it stays >= the left edge's x.
-                int xFrom = charToGlyphLeft(startPos.line,
-                        std::min(startPos.ch,(int)mDocument->getLine(startPos.line).length()));
-                int xTo = charToGlyphLeft(endPos.line,
-                        std::min(endPos.ch,(int)mDocument->getLine(endPos.line).length()));
-                if (xFrom > xTo)
-                    std::swap(xFrom, xTo);
-                startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
-            }
             doInsertText(startPos,item->changeText(),item->changeSelMode(),
                          startPos.line,
                          endPos.line);
@@ -4422,6 +4405,28 @@ void QSynEdit::doUndoItem()
                         item->changeText(),
                         item->changeSelMode(),
                         item->changeNumber());
+            break;
+        }
+        case ChangeReason::ColumnDelete: {
+            std::shared_ptr<ColumnDeleteUndoItem> colItem =
+                    std::dynamic_pointer_cast<ColumnDeleteUndoItem>(item);
+            Q_ASSERT(colItem);
+            const QStringList &text = item->changeText();
+            const QList<int> &leftChars = colItem->perLineLeftChars();
+            Q_ASSERT(text.size() == leftChars.size());
+            // reinsert the deleted text at the exact per-line positions
+            // recorded by the deletion
+            int line = std::min(item->changeStartPos().line,
+                                item->changeEndPos().line);
+            for (int i = 0; i < text.size(); i++, line++) {
+                QString s = mDocument->getLine(line);
+                s.insert(leftChars[i], text[i]);
+                properSetLine(line, s, i == text.size()-1);
+            }
+            setCaretPos(item->changeEndPos());
+            // push the same item to the redo list, keeping the per-line
+            // left edges for a subsequent undo
+            mRedoList->addRedo(item);
             break;
         }
         case ChangeReason::LineBreak:{
@@ -4672,6 +4677,13 @@ void QSynEdit::doRedoItem()
             mUndoList->restoreChange(item->changeReason(), item->changeStartPos(),
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
+            setCaretPos(item->changeStartPos());
+            break;
+        case ChangeReason::ColumnDelete:
+            doDeleteText(item->changeStartPos(),item->changeEndPos(),item->changeSelMode());
+            // push the same item back to the undo list, keeping the
+            // per-line left edges for a subsequent undo
+            mUndoList->restoreChange(item);
             setCaretPos(item->changeStartPos());
             break;
         case ChangeReason::LineBreak: {
@@ -5635,6 +5647,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
 //        }
 //    }
     QStringList deleted=getContent(startPos,endPos,mode);
+    QList<int> perLineLeftChars;
     beginEditing();
     switch(mode) {
     case SelectionMode::Normal:
@@ -5668,6 +5681,7 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
             int l = xposToGlyphStartChar(i,xFrom);
             int r = xposToGlyphStartChar(i,xTo);
             QString s = mDocument->getLine(i);
+            perLineLeftChars.append(l);
             s.remove(l,r-l);
             properSetLine(i,s, i==lastLine);
         }
@@ -5690,11 +5704,20 @@ void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode
         break;
     }
     }
-    addChangeToUndo(ChangeReason::Delete,
-            startPos,
-            endPos,
-            deleted,
-            mode);
+    if (mode == SelectionMode::Column) {
+        // the per-line left edges are lost as soon as the glyphs are
+        // gone (they can not be derived from the band afterwards), so
+        // record them in a dedicated undo item
+        if (!mUndoing)
+            mUndoList->addColumnDeleteChange(startPos, endPos, deleted,
+                                             perLineLeftChars);
+    } else {
+        addChangeToUndo(ChangeReason::Delete,
+                startPos,
+                endPos,
+                deleted,
+                mode);
+    }
     endEditing();
 }
 

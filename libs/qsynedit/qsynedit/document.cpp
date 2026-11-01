@@ -1352,6 +1352,21 @@ PUndoItem UndoList::addChange(ChangeReason reason, const CharPos &startPos,
     return newItem;
 }
 
+PUndoItem UndoList::addColumnDeleteChange(const CharPos &startPos, const CharPos &endPos,
+                                          const QStringList &changeText,
+                                          const QList<int> &perLineLeftChars)
+{
+    Q_ASSERT(inBlock());
+    PUndoItem newItem = std::make_shared<ColumnDeleteUndoItem>(
+                SelectionMode::Column, startPos, endPos, changeText,
+                mBlockChangeNumber, perLineLeftChars);
+    mItems.append(newItem);
+    if (!inBlock()) {
+        emit addedUndo();
+    }
+    return newItem;
+}
+
 void UndoList::restoreChange(ChangeReason reason, const CharPos &startPos,
                              const CharPos &endPos, const QStringList &changeText,
                              SelectionMode selMode, size_t changeNumber)
@@ -1588,6 +1603,23 @@ UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
     foreach (const QString& s, text) {
         length+=s.length();
     }
+}
+
+UndoItem::~UndoItem()
+{
+}
+
+ColumnDeleteUndoItem::ColumnDeleteUndoItem(SelectionMode selMode, CharPos startPos, CharPos endPos,
+                                           const QStringList &text, int number,
+                                           const QList<int> &perLineLeftChars):
+    UndoItem(ChangeReason::ColumnDelete, selMode, startPos, endPos, text, number),
+    mPerLineLeftChars(perLineLeftChars)
+{
+}
+
+QList<int> ColumnDeleteUndoItem::perLineLeftChars() const
+{
+    return mPerLineLeftChars;
 }
 
 ChangeReason UndoItem::changeReason() const
