@@ -213,6 +213,24 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 **验证**：先补行为测试（`TestQSyneditDisplay`，13 用例，只断言重构前后都成立的往返/行差/端到端不变量）钉住现状；重构后 `test-qsynedit` 全部 374 用例通过（Windows 原生平台），RedPandaIDE 主程序构建通过。
 
+### 3.7 变更记录：CharPos 相关命名统一（2026-11）
+
+**确立的命名约定**：
+
+- `CharPos` 变量/参数命名为 `pos`/`xxxPos`（`startPos`/`endPos`/`blockBegin`/`blockEnd` 等）；`coord` 一词专指 `DisplayCoord`；
+- 禁用匈牙利前缀（`v`/`pt`/`i` 等）和 PascalCase 局部变量；过时/无用注释直接删除或改写，不留旧名。
+
+**接口改名**：
+
+- caret 系列与 `CharPos{ch,line}` 对齐：`caretX/caretY` → `caretCh/caretLine`，`setCaretX/setCaretY` → `setCaretCh/setCaretLine`，`caretXY/setCaretXY/setCaretXYCentered/internalSetCaretXY` → `caretPos/setCaretPos/setCaretPosCentered/internalSetCaretPos`，成员 `mCaretX/mCaretY` → `mCaretCh/mCaretLine`；`displayX/displayY/displayXY` 返回 `DisplayCoord`（成员本就是 `x`/`row`），保留不动；
+- `getTokenAttriAtRowCol` → `getTokenAttr`（4 个重载）：参数实为缓冲区 CharPos，原名误用 RowCol；顺带修正 `Attri`→`Attr` 缩写；
+- `mLastCaretColumn` → `mLastCaretX`：实际存的是 `displayX()`（glyph 显示列），不是缓冲区列；
+- `Exporter::exportRange` 参数 `stop` → `end`，与全库 `start/end` 惯例一致。
+
+**FormatTokenHandler 基数修正**：`Exporter` 的 `FormatTokenHandler` 回调原来传 `getTokenPos()+1`（1 基 caret 风格位置，为迁就 `getWordAtPosition` 的 `wordBegin=ch-1` 语义），与 0 基的 `line` 混杂；确认该 `+1` 是 CharPos 1 基→0 基迁移时的机械残留后删除（`getWordAtPosition` 的 gap 语义对词内任意位置结果等价，identifier token 传 `ch` 或 `ch+1` 结果相同），接口统一为全 0 基 `(line, ch)`；`getWordAtPosition`（editor.h）补充了 gap 语义、各 purpose 差异与失败行为的契约文档。
+
+**待查**：`RedPandaIDE/src/editor.cpp` 中 `pEndPos.line >= 1` 疑似 1 基时代残留（0 基行号应判 `>= 0`），记录在案未改动。
+
 ## 4. 语法高亮（待补）
 
 ## 5. 代码折叠（待补）
