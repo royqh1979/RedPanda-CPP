@@ -526,10 +526,10 @@ private:
 
     // SynEdit interface
 protected:
-    void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
-    void onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList) override;
-    bool onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor) override;
-    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
+    void onGutterPaint(QPainter &painter, int line, int x, int y) override;
+    void onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList) override;
+    bool onGetSpecialLineColors(int line, QColor &foreground, QColor &backgroundColor) override;
+    void onPreparePaintHighlightToken(int line, int ch, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
 public:

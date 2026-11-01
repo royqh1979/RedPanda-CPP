@@ -1006,18 +1006,18 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
     QSynedit::QSynEdit::mouseMoveEvent(event);
 }
 
-void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
+void Editor::onGutterPaint(QPainter &painter, int line, int x, int y)
 {
     if(mIconsManager==nullptr)
         return;
     IconsManager::PPixmap icon;
 
-    if (mActiveBreakpointLine == aLine) {
+    if (mActiveBreakpointLine == line) {
         icon = mIconsManager->getPixmap(IconsManager::GUTTER_ACTIVEBREAKPOINT);
-    } else if (hasBreakpoint(aLine)) {
+    } else if (hasBreakpoint(line)) {
         icon = mIconsManager->getPixmap(IconsManager::GUTTER_BREAKPOINT);
     } else {
-        PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
+        PSyntaxIssueList lst = getSyntaxIssuesAtLine(line);
         if (lst) {
             bool hasError=false;
             foreach (const PSyntaxIssue& issue, *lst) {
@@ -1031,15 +1031,15 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
             } else {
                 icon = mIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_WARNING);
             }
-        } else if (hasBookmark(aLine)) {
+        } else if (hasBookmark(line)) {
             icon = mIconsManager->getPixmap(IconsManager::GUTTER_BOOKMARK);
         }
     }
     if (icon) {
         qreal dpr=icon->devicePixelRatioF();
-        X = 5/dpr;
-        Y += (this->textHeight() - icon->height()/dpr) / 2;
-        painter.drawPixmap(X,Y,*icon);
+        x = 5/dpr;
+        y += (this->textHeight() - icon->height()/dpr) / 2;
+        painter.drawPixmap(x,y,*icon);
     }
 }
 
@@ -1113,15 +1113,15 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
     }
 }
 
-bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor)
+bool Editor::onGetSpecialLineColors(int line, QColor &foreground, QColor &backgroundColor)
 {
-    if (Line == mActiveBreakpointLine &&
+    if (line == mActiveBreakpointLine &&
         mActiveBreakpointBackgroundColor.isValid()) {
         if (mActiveBreakpointForegroundColor.isValid())
             foreground = mActiveBreakpointForegroundColor;
         backgroundColor = mActiveBreakpointBackgroundColor;
         return true;
-    } else if (hasBreakpoint(Line) && mBreakpointBackgroundColor.isValid()) {
+    } else if (hasBreakpoint(line) && mBreakpointBackgroundColor.isValid()) {
         if (mBreakpointForegroundColor.isValid())
             foreground = mBreakpointForegroundColor;
         backgroundColor = mBreakpointBackgroundColor;
@@ -1130,7 +1130,7 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
     return false;
 }
 
-void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
+void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
 {
     if (token.isEmpty())
         return;
@@ -1148,7 +1148,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             // #include header names (<>)
             int pos1=sLine.indexOf("<");
             int pos2=sLine.indexOf(">",pos1);
-            if (pos1>=0 && pos2>=0 && pos1<aChar && aChar<pos2) {
+            if (pos1>=0 && pos2>=0 && pos1<ch && ch<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
                 foreground = syntaxer()->identifierAttribute()->foreground();
                 background = syntaxer()->identifierAttribute()->background();
@@ -1156,11 +1156,11 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             return;
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
             //Syntax color for different identifier types
-            CharPos p{aChar,line};
+            CharPos p{ch,line};
 
             StatementKind kind;
             if (mParser->parsing()){
-                kind=mIdCache.value(QString("%1 %2 %3").arg(line).arg(aChar).arg(token),StatementKind::Unknown);
+                kind=mIdCache.value(QString("%1 %2 %3").arg(line).arg(ch).arg(token),StatementKind::Unknown);
             } else {
                 QStringList expression = getExpressionAtPosition(p);
                 PStatement statement = parser()->findStatementOf(
@@ -1171,7 +1171,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                     statement = mParser->findAliasedStatement(statement);
                 if (statement && statement->kind == StatementKind::Constructor) {
                     QString s=lineText(line);
-                    int pos  = aChar+token.length();
+                    int pos  = ch+token.length();
                     while(pos<s.length() && CppParser::isSpaceChar(s[pos])) {
                         pos++;
                     }
@@ -1180,7 +1180,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                     }
                 }
                 kind = getKindOfStatement(statement);
-                mIdCache.insert(QString("%1 %2 %3").arg(line).arg(aChar).arg(token),kind);
+                mIdCache.insert(QString("%1 %2 %3").arg(line).arg(ch).arg(token),kind);
             }
             if (kind == StatementKind::Unknown) {
                 CharPos pBeginPos,pEndPos;
@@ -1210,7 +1210,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             if (line == mHoverModifiedLine) {
                 CharPos mouseCharPos;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),mouseCharPos)) {
-                    if (line==mouseCharPos.line && (aChar<=mouseCharPos.ch && mouseCharPos.ch<aChar+token.length())) {
+                    if (line==mouseCharPos.line && (ch<=mouseCharPos.ch && mouseCharPos.ch<ch+token.length())) {
                         style.setFlag(QSynedit::FontStyle::fsUnderline);
                     }
                 }
@@ -1258,14 +1258,14 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                    && mEditorSettings->highlightMathingBraces()) {
             // matching braces
             if ( (line == mHighlightCharPos1.line)
-                    && (aChar == mHighlightCharPos1.ch)) {
+                    && (ch == mHighlightCharPos1.ch)) {
                 if (mCurrentHighlighWordForeground.isValid())
                     foreground = mCurrentHighlighWordForeground;
                 if (mCurrentHighlighWordBackground.isValid())
                     background = mCurrentHighlighWordBackground;
             }
             if ((line == mHighlightCharPos2.line)
-                    && (aChar == mHighlightCharPos2.ch)) {
+                    && (ch == mHighlightCharPos2.ch)) {
                 if (mCurrentHighlighWordForeground.isValid())
                     foreground = mCurrentHighlighWordForeground;
                 if (mCurrentHighlighWordBackground.isValid())
