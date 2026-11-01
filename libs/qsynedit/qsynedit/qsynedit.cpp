@@ -2746,9 +2746,8 @@ void QSynEdit::doInputStr(const QString& s)
     }
 
     if (mActiveSelectionMode == SelectionMode::Column) {
+        //todo: column-mode input is not implemented
         if (mInserting == false && !selAvail()) {
-            //todo
-            //we can't use blockBegin()/blockEnd()
             CharPos start=mSelectionBegin;
             CharPos end=mSelectionEnd;
             if (start.line > end.line )
@@ -2757,8 +2756,10 @@ void QSynEdit::doInputStr(const QString& s)
             internalSetSelBegin(start);
             internalSetSelEnd(end);
         }
-    } else {
-        beginEditing();
+        return;
+    }
+    beginEditing();
+    {
 
         if (inputStr.length()>1) {
             bool shouldAddBreak = true;
