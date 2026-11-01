@@ -311,11 +311,32 @@ void TestDocument::test_save_utf16_bom()
     {
         QFile file(path);
         QVERIFY(file.open(QFile::ReadOnly));
-        QVERIFY(file.readAll().startsWith("\xFF\xFE"));
+        QCOMPARE(file.readAll(),
+                 QByteArray("\xFF\xFE",2) + utf16LeBytes("中文第一行\nsecond line\n"));
     }
     QByteArray loadEncoding;
     mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
     QCOMPARE(loadEncoding, ENCODING_UTF16_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
+}
+
+void TestDocument::test_save_utf16_no_bom()
+{
+    mDoc->setContents({"中文第一行","second line"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf16.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF16,encoding);
+    }
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QCOMPARE(file.readAll(), utf16LeBytes("中文第一行\nsecond line\n"));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_UTF16,loadEncoding);
     QCOMPARE(mDoc->content(), QStringList({"中文第一行","second line"}));
 }
 
@@ -332,11 +353,32 @@ void TestDocument::test_save_utf32_bom()
     {
         QFile file(path);
         QVERIFY(file.open(QFile::ReadOnly));
-        QVERIFY(file.readAll().startsWith(QByteArray("\xFF\xFE\x00\x00",4)));
+        QCOMPARE(file.readAll(),
+                 QByteArray("\xFF\xFE\x00\x00",4) + utf32LeBytes("abc\ndef\n"));
     }
     QByteArray loadEncoding;
     mDoc->loadFromFile(path,ENCODING_AUTO_DETECT,loadEncoding);
     QCOMPARE(loadEncoding, ENCODING_UTF32_BOM);
+    QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
+}
+
+void TestDocument::test_save_utf32_no_bom()
+{
+    mDoc->setContents({"abc","def"});
+    mDoc->setNewlineType(NewlineType::Unix);
+    QString path = fixturePath("save_utf32.txt");
+    QByteArray encoding;
+    {
+        QFile file(path);
+        mDoc->saveToFile(file,ENCODING_UTF32,encoding);
+    }
+    {
+        QFile file(path);
+        QVERIFY(file.open(QFile::ReadOnly));
+        QCOMPARE(file.readAll(), utf32LeBytes("abc\ndef\n"));
+    }
+    QByteArray loadEncoding;
+    mDoc->loadFromFile(path,ENCODING_UTF32,loadEncoding);
     QCOMPARE(mDoc->content(), QStringList({"abc","def"}));
 }
 

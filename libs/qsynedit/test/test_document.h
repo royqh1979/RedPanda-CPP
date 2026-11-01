@@ -55,7 +55,9 @@ private slots:
     void test_save_utf8_roundtrip();
     void test_save_utf8_bom();
     void test_save_utf16_bom();
+    void test_save_utf16_no_bom();
     void test_save_utf32_bom();
+    void test_save_utf32_no_bom();
     void test_save_gbk();
     void test_save_all_ascii_reports_ascii();
     void test_save_newline_windows();

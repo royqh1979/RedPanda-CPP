@@ -646,8 +646,6 @@ private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
-    void saveUTF16File(QFile& file, TextEncoder &encoder) const;
-    void saveUTF32File(QFile& file, TextEncoder &encoder) const;
 private:
     DocumentLines mLines;
     QMap<size_t,PDocumentLine> mLineSeqIndice;

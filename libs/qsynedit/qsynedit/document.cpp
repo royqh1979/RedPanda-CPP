@@ -550,22 +550,6 @@ void Document::loadUTF32BOMFile(QFile &file)
     this->setText(text);
 }
 
-void Document::saveUTF16File(QFile &file, TextEncoder &encoder) const
-{
-    if (!encoder.isValid())
-        return;
-    QString text=getTextStr();
-    file.write(encoder.encodeUnchecked(text));
-}
-
-void Document::saveUTF32File(QFile &file, TextEncoder &encoder) const
-{
-    if (!encoder.isValid())
-        return;
-    QString text=getTextStr();
-    file.write(encoder.encodeUnchecked(text));
-}
-
 PDocumentLine Document::findLineBySeq(size_t lineSeq) const
 {
     QMutexLocker locker(&mMutex);
@@ -745,10 +729,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding, QByteArray& r
     realEncoding = encoding;
     QString codecName = realEncoding;
     if (realEncoding == ENCODING_UTF16_BOM || realEncoding == ENCODING_UTF16) {
-        encoder = TextEncoder::encoderForUtf16();
+        encoder = TextEncoder::encoderForUtf16LE();
         codecName = ENCODING_UTF16;
     } else if (realEncoding == ENCODING_UTF32_BOM || realEncoding == ENCODING_UTF32) {
-        encoder = TextEncoder::encoderForUtf32();
+        encoder = TextEncoder::encoderForUtf32LE();
         codecName = ENCODING_UTF32;
     } else if (realEncoding == ENCODING_UTF8_BOM) {
         encoder = TextEncoder::encoderForUtf8();
@@ -766,13 +750,11 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding, QByteArray& r
         throw FileError(tr("Can't open file '%1' for save!").arg(file.fileName()));
     if (mLines.isEmpty())
         return;
-    if (realEncoding == ENCODING_UTF16 || realEncoding == ENCODING_UTF16_BOM) {
-        saveUTF16File(file, encoder.value());
-        return;
-    } else if (realEncoding == ENCODING_UTF32 || realEncoding == ENCODING_UTF32_BOM) {
-        saveUTF32File(file, encoder.value());
-        return;
-    } if (realEncoding == ENCODING_UTF8_BOM) {
+    if (realEncoding == ENCODING_UTF16_BOM) {
+        file.write("\xFF\xFE", 2);
+    } else if (realEncoding == ENCODING_UTF32_BOM) {
+        file.write("\xFF\xFE\x00\x00", 4);
+    } else if (realEncoding == ENCODING_UTF8_BOM) {
         file.putChar(0xEF);
         file.putChar(0xBB);
         file.putChar(0xBF);
