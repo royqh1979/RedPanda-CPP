@@ -895,31 +895,22 @@ void QSynEdit::invalidate()
 
 bool QSynEdit::selAvail() const
 {
-    if (mSelectionBegin.ch == mSelectionEnd.ch && mSelectionBegin.line == mSelectionEnd.line)
-        return false;
-    // start line != end line  or start char != end char
-    if (mActiveSelectionMode==SelectionMode::Column) {
-        if (mSelectionBegin.line != mSelectionEnd.line) {
-            DisplayCoord coordBegin = bufferToDisplayPos(mSelectionBegin);
-            DisplayCoord coordEnd = bufferToDisplayPos(mSelectionEnd);
-            return coordBegin.x!=coordEnd.x;
-        } else
-            return true;
-    }
-    return true;
+    // a selection exists iff its anchor differs from its active end,
+    // even if its content is empty (e.g. a zero-width column selection)
+    return mSelectionBegin != mSelectionEnd;
 }
 
-bool QSynEdit::colSelAvail() const
+bool QSynEdit::hasSelContent() const
 {
+    if (!selAvail())
+        return false;
     if (mActiveSelectionMode != SelectionMode::Column)
-        return false;
-    if (mSelectionBegin.ch == mSelectionEnd.ch && mSelectionBegin.line == mSelectionEnd.line)
-        return false;
-    if (mSelectionBegin.line == mSelectionEnd.line && mSelectionBegin.ch!=mSelectionEnd.ch)
         return true;
+    if (mSelectionBegin.line == mSelectionEnd.line)
+        return true; // same line and begin != end, so chars differ
     DisplayCoord coordBegin = bufferToDisplayPos(mSelectionBegin);
     DisplayCoord coordEnd = bufferToDisplayPos(mSelectionEnd);
-    return coordBegin.x!=coordEnd.x;
+    return coordBegin.x != coordEnd.x;
 }
 
 QString QSynEdit::wordAtCursor() const
@@ -1809,7 +1800,7 @@ void QSynEdit::doDeletePrevChar()
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
         CharPos end=selEnd();
-        if (!selAvail()) {
+        if (!hasSelContent()) {
             start.ch--;
             internalSetSelBegin(start);
             internalSetSelEnd(end);
@@ -1895,7 +1886,7 @@ void QSynEdit::doDeleteCurrentChar()
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
         CharPos end=selEnd();
-        if (!selAvail()) {
+        if (!hasSelContent()) {
             end.ch++;
             internalSetSelBegin(start);
             internalSetSelEnd(end);
@@ -2133,7 +2124,7 @@ void QSynEdit::doDuplicate()
 {
     if (mReadOnly)
         return;
-    if (selAvail()) {
+    if (hasSelContent()) {
         doDuplicateSelection();
     } else {
         doDuplicateCurrentLine();
@@ -2144,7 +2135,7 @@ void QSynEdit::doDuplicateSelection()
 {
     if (mReadOnly)
         return;
-    if (!selAvail())
+    if (!hasSelContent())
         return;
     //CharPos beginPos = selBegin();
     CharPos endPos = selEnd();
@@ -2323,7 +2314,7 @@ void QSynEdit::doBreakLine()
             endEditing();
     });
     QString helper;
-    if (selAvail()) {
+    if (hasSelContent()) {
         helper = selText();
         doDeleteSelection();
     }
@@ -2431,7 +2422,7 @@ void QSynEdit::doTabKey()
         return;
     }
     beginEditing();
-    if (selAvail()) {
+    if (hasSelContent()) {
         doDeleteSelection();
     }
     QString spaces;
@@ -2574,7 +2565,7 @@ void QSynEdit::doBlockIndent()
     QString spaces;
 
     // keep current selection detail
-    if (selAvail()) {
+    if (hasSelContent()) {
         blockBegin = selBegin();
         blockEnd = selEnd();
     } else {
@@ -2636,7 +2627,7 @@ void QSynEdit::doBlockUnindent()
 
     CharPos blockBegin,blockEnd;
     // keep current selection detail
-    if (selAvail()) {
+    if (hasSelContent()) {
         blockBegin = selBegin();
         blockEnd = selEnd();
     } else {
@@ -2747,7 +2738,7 @@ void QSynEdit::doInputStr(const QString& s)
 
     if (mActiveSelectionMode == SelectionMode::Column) {
         //todo: column-mode input is not implemented
-        if (mInserting == false && !selAvail()) {
+        if (mInserting == false && !hasSelContent()) {
             CharPos start=mSelectionBegin;
             CharPos end=mSelectionEnd;
             if (start.line > end.line )
@@ -2900,7 +2891,7 @@ void QSynEdit::doCutToClipboard()
     if (mReadOnly || mDocument->empty())
         return;
     beginEditing();
-    if (!selAvail()) {
+    if (!hasSelContent()) {
         doSelectLine();
     }
     internalDoCopyToClipboard(selText());
@@ -2910,7 +2901,7 @@ void QSynEdit::doCutToClipboard()
 
 void QSynEdit::doCopyToClipboard()
 {
-    bool selected=selAvail();
+    bool selected=hasSelContent();
     if (!selected)
         doSelectLine();
     QString text;
@@ -4695,7 +4686,7 @@ void QSynEdit::doZoomOut()
 
 QString QSynEdit::selText() const
 {
-    if (!selAvail()) {
+    if (!hasSelContent()) {
         return "";
     } else {
         int firstLine = selBegin().line;
@@ -4758,7 +4749,7 @@ QString QSynEdit::selText() const
 QStringList QSynEdit::selContent() const
 {
     QStringList result;
-    if (!selAvail()) {
+    if (!hasSelContent()) {
         return result;
     } else {
         int firstLine = selBegin().line;
@@ -4807,7 +4798,7 @@ QStringList QSynEdit::selContent() const
 
 int QSynEdit::selCount() const
 {
-    if (!selAvail())
+    if (!hasSelContent())
         return 0;
     if (mActiveSelectionMode == SelectionMode::Column)
         return selText().length();
@@ -5249,7 +5240,7 @@ void QSynEdit::doSetSelTextPrimitive(const QStringList &text)
     CharPos startPos = selBegin();
     CharPos endPos = selEnd();
     bool selChanged = false;
-    if (selAvail()) {
+    if (hasSelContent()) {
         if (!mUndoing && !text.isEmpty()) {
             beginEditing();
             groupUndo=true;
@@ -5292,7 +5283,7 @@ void QSynEdit::doSetSelText(const QString &value)
         if (blockBeginned)
             endEditing();
     });
-    if (selAvail()) {
+    if (hasSelContent()) {
       beginEditing();
       blockBeginned = true;
     }

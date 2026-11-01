@@ -201,7 +201,7 @@ public:
     void invalidateRect(const QRect& rect);
     void invalidate();
     bool selAvail() const;
-    bool colSelAvail() const;
+    bool hasSelContent() const;
     QString wordAtCursor() const;
     QString tokenAt(const CharPos& XY) const;
 

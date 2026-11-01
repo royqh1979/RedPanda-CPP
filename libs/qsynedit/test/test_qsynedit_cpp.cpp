@@ -11039,10 +11039,18 @@ void TestQSyneditCpp::test_column_select_content()
     mEdit->setContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
-    QVERIFY(mEdit->colSelAvail());
+    QVERIFY(mEdit->hasSelContent());
     QCOMPARE(mEdit->selContent(), QStringList({"bc","gh","lm"}));
+    // in normal mode, selection content == selection state
     mEdit->setActiveSelectionMode(SelectionMode::Normal);
-    QVERIFY(!mEdit->colSelAvail());
+    QVERIFY(mEdit->hasSelContent());
+    // a zero-width column selection exists, but has no content
+    mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
+    mEdit->setActiveSelectionMode(SelectionMode::Column);
+    QVERIFY(mEdit->selAvail());
+    QVERIFY(!mEdit->hasSelContent());
+    QCOMPARE(mEdit->selText(), QString());
+    QCOMPARE(mEdit->selContent(), QStringList());
 }
 
 void TestQSyneditCpp::test_column_input_char()
@@ -11158,13 +11166,12 @@ void TestQSyneditCpp::test_column_mode_alt_selection()
     QCOMPARE(mEdit->selBegin(), CharPos({1,0}));
     QCOMPARE(mEdit->selEnd(), CharPos({1,1}));
     QTest::keyPress(mEdit.get(),Qt::Key_Down,Qt::AltModifier|Qt::ShiftModifier);
-    QEXPECT_FAIL("", "a zero-width column selection is treated as no selection, so the anchor is lost when extending", Abort);
     QCOMPARE(mEdit->selBegin(), CharPos({1,0}));
     QCOMPARE(mEdit->selEnd(), CharPos({1,2}));
     QTest::keyPress(mEdit.get(),Qt::Key_Right,Qt::AltModifier|Qt::ShiftModifier);
-    QVERIFY(mEdit->colSelAvail());
+    QVERIFY(mEdit->hasSelContent());
     QCOMPARE(mEdit->selEnd(), CharPos({2,2}));
-    QCOMPARE(mEdit->selContent(), QStringList({"b","h","l"}));
+    QCOMPARE(mEdit->selContent(), QStringList({"b","g","l"}));
 
     QTest::keyPress(mEdit.get(),Qt::Key_Right,Qt::ShiftModifier);
     QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Normal);
