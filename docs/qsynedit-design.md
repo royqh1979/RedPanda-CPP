@@ -9,6 +9,8 @@
 - [3. 坐标体系](#3-坐标体系)
 - 4. 语法高亮（待补）
 - 5. 代码折叠（待补）
+- [6. 信号机制](#6-信号机制)
+- [7. 文件编码与 BOM](#7-文件编码与-bom)
 
 ## 1. 撤销/重做（Undo/Redo）
 
@@ -193,3 +195,78 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 ## 4. 语法高亮（待补）
 
 ## 5. 代码折叠（待补）
+
+## 6. 信号机制
+
+### 6.1 设计约定
+
+修改内容后的各项处理（undo 记录、语法状态级联重算、显示刷新、代码折叠维护）**不靠信号驱动**，
+而是全部通过四个 chokepoint 成员函数直接调用完成：
+`properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`。
+所有编辑命令都汇聚到这四个函数，"不遗漏"由 chokepoint 集中化保证，而不是由信号机制保证。
+
+### 6.2 信号清单与用途
+
+**Document → QSynEdit（上行通知，唯一听众是所有者）：**
+
+- `changing()` / `changed()`：`beginUpdate`/`endUpdate` 发出；QSynEdit 据此做批量修改的内部收尾
+  （列选择修正、gutter autosize、滚动条与 topPos 修正）。
+- `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条。
+
+**UndoList / Gutter → QSynEdit（上行通知，唯一听众是所有者）：**
+
+- `UndoList::addedUndo()`：QSynEdit 据此更新 modified 状态并清空 redo 栈。
+- `Gutter::changed()`：Gutter 各属性 setter 经 `setChanged()` 发出，是标准的属性变更通知。
+
+注意 gutter 宽度有**两个触发源**：Gutter 自身属性（信号路径）和编辑器字体/尺寸变化
+（`onSizeOrFontChanged` 直接调用 `onGutterChanged`，因为宽度计算依赖编辑器字体度量，
+Gutter 自己感知不到）。两条路径不是冗余。
+
+**QSynEdit → 外部观察者（正当的观察者模式，保留）：**
+
+- `linesInserted(firstLine, count)` / `linesDeleted(firstLine, count)` / `lineMoved(from, to)`：
+  行级结构变化。RedPandaIDE 的 EditorManager 依赖它们平移断点行号，语义必须精确。
+- `statusChanged(StatusChanges)`：caret/selection/modified/滚动位置等状态位的聚合通知，
+  带 `mStatusChanges` 合并机制（一次编辑聚合后只发一次）。用于状态栏更新等。
+- `changed()`：内容被修改过（如设置对话框标记"已编辑"）。与
+  `statusChanged(StatusChange::ModifyChanged)` 语义重叠，前者是简单的"改过"标记，
+  后者携带具体状态位。
+- `gutterClicked(button, x, y, line)`：gutter 鼠标点击的语义化转发（用于切换断点）。
+
+**行内容修改（不增删行）没有对外行级信号，这是有意为之**：
+EditorManager 等外部观察者只需跟踪行号结构变化；行内容的变化通过重绘和语法状态体现。
+
+**测试专用（`QSYNEDIT_TEST` 下才有）：**
+
+- `linesReparesd(start, count)`（拼写保持现状）：`reparseLines`/`reparseDocument` 的观察口，
+  用于测试断言"被修改的行有被重解析/刷新"。
+- `foldsRescaned()`：折叠重扫描的观察口。
+
+### 6.3 测试断言约定
+
+信号测试不断言发射次数（合并、级联会导致次数随实现细节变化），而是断言**覆盖性**：
+被修改的行 ⊆ 通知区间的并集；结构信号（linesInserted/Deleted/Moved）因语义精确，
+可断言精确的 (line, count)。更本质的断言是修改行及下游行的语法状态内容正确。
+
+## 7. 文件编码与 BOM
+
+### 7.1 写出侧约定
+
+- `TextEncoder` 恒不写 BOM：Qt5 下默认带 `IgnoreHeader` 转换标志
+  （state 版 `QTextCodec::fromUnicode` 默认每次调用都写 BOM，与 QString 版行为不一致，须显式抑制）；
+  Qt6 下用 `Stateless` 构造，LE 变体本就不写 BOM。
+- `ENCODING_UTF16` / `ENCODING_UTF32` 写出**无 BOM** 的小端文件；
+  `ENCODING_UTF16_BOM` / `ENCODING_UTF32_BOM` = 显式写入 BOM 字节 + 相同内容。
+  BOM 由 `Document::saveToFile` 显式写出，不依赖 codec 默认行为。
+- 全 ASCII 内容保存后 `realEncoding` 报告为 `ENCODING_ASCII`。
+- 换行符按 `Document::newlineType` 写出，每行（含末行）追加换行。
+
+### 7.2 读入侧约定
+
+- 自动检测顺序：UTF-8 BOM → UTF-32 BOM → UTF-16 BOM → UTF-8 试行 →
+  失败后回退系统默认编码 → 按 locale 猜测。回退路径的结果依赖系统区域设置。
+- 含 `\0` 字节的行按二进制文件拒绝（`BinaryFileError`），故无 BOM 的 UTF-16/32 无法自动检测。
+
+### 7.3 已知疑点
+
+- Qt6 下显式 `UTF-16` 解码无 BOM 内容的默认端序未验证（Qt5 实测按小端处理，与写出侧自洽）。
