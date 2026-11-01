@@ -766,10 +766,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding, QByteArray& r
         throw FileError(tr("Can't open file '%1' for save!").arg(file.fileName()));
     if (mLines.isEmpty())
         return;
-    if (realEncoding == ENCODING_UTF16) {
+    if (realEncoding == ENCODING_UTF16 || realEncoding == ENCODING_UTF16_BOM) {
         saveUTF16File(file, encoder.value());
         return;
-    } else if (realEncoding == ENCODING_UTF32) {
+    } else if (realEncoding == ENCODING_UTF32 || realEncoding == ENCODING_UTF32_BOM) {
         saveUTF32File(file, encoder.value());
         return;
     } if (realEncoding == ENCODING_UTF8_BOM) {
