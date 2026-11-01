@@ -227,7 +227,7 @@ public:
     CharPos getTokenBegin(const CharPos& pos) const;
     CharPos getTokenEnd(const CharPos& pos) const;
 
-    CharPos prevWordBegin(CharPos) const;
+    CharPos prevWordBegin(CharPos pos) const;
     CharPos prevWordEnd(const CharPos &pos) const;
     CharPos nextWordBegin(const CharPos & pos) const;
     CharPos nextWordEnd(const CharPos &pos) const;
