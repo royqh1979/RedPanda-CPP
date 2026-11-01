@@ -687,10 +687,6 @@ private:
 
     QString getDisplayStringAtLine(int line) const;
 
-    void onLinesDeleted(int line, int count);
-    void onLinesInserted(int line, int count);
-    void onLineMoved(int from, int to);
-
     void addGroupUndoBreak();
     void addChangeToUndo(ChangeReason reason, const CharPos& start, const CharPos& end,
                  const QStringList& changeText, SelectionMode selMode);

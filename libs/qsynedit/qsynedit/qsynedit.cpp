@@ -5518,10 +5518,7 @@ void QSynEdit::properInsertLine(int line, const QString &lineText, bool parseToE
 {
     mDocument->insertLine(line, lineText);
     processCodeBlocksOnLinesInserted(line,1);
-    if (parseToEnd)
-        onLinesInserted(line, 1);
-    else
-        reparseLines(line,line+1, false);
+    reparseLines(line,line+1, parseToEnd && mSyntaxer->needsLineState());
     emit linesInserted(line, 1);
     updateVScrollbar();
     //we must invalidate whole editor to properly render contents
@@ -5534,8 +5531,8 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
         return;
     mDocument->deleteLines(line, count);
     processFoldsOnLinesDeleted(line, count);
-    if (parseToEnd)
-        onLinesDeleted(line,count);
+    if (parseToEnd && mSyntaxer->needsLineState())
+        reparseLines(line, line + count, true);
     emit linesDeleted(line,count);
     updateVScrollbar();
 
@@ -5549,10 +5546,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
         return;
     mDocument->insertLines(line, count);
     processCodeBlocksOnLinesInserted(line, count);
-    if (parseToEnd)
-        onLinesInserted(line,count);
-    else
-        reparseLines(line,line+count, false);
+    reparseLines(line,line+count, parseToEnd && mSyntaxer->needsLineState());
     emit linesInserted(line, count);
     updateVScrollbar();
     //we must invalidate whole editor to properly render contents
@@ -6810,22 +6804,6 @@ void QSynEdit::onLinesChanged()
 void QSynEdit::onLinesChanging()
 {
     beginInternalChanges();
-}
-
-void QSynEdit::onLinesDeleted(int line, int count)
-{
-    if (count<=0)
-        return;
-    if (mSyntaxer->needsLineState()) {
-        reparseLines(line, line + count, true);
-    }
-}
-
-void QSynEdit::onLinesInserted(int line, int count)
-{
-    if (count<=0)
-        return;
-    reparseLines(line, line + count, mSyntaxer->needsLineState());
 }
 
 void QSynEdit::onUndoAdded()
