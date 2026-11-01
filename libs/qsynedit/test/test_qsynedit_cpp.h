@@ -150,6 +150,7 @@ private slots:
     void test_column_delete_cjk();
     void test_column_delete_tab_snap();
     void test_column_has_content_cjk_layout();
+    void test_column_delete_prop_font();
     void test_overwrite_input_with_selection();
     void test_no_auto_indent_break_line();
     void test_copy_paste_ending_with_backslash();
