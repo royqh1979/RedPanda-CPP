@@ -287,8 +287,6 @@ public:
       int &start, PTokenAttribute& attr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attr, PSyntaxState &syntaxState) const;
-
-    void getTokenAttrList(int line, QStringList &tokens, QList<int> &positions, QList<PTokenAttribute> attrs) const;
     QSet<int> getTokenBorders(int line) const;
 
     void beginEditing();
