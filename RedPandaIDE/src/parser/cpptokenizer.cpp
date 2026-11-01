@@ -516,8 +516,8 @@ QString CppTokenizer::getWord()
                 // Skip template contents, but keep template variable types
                 if (*mCurrent == '<') {
                     const QChar* angleStart = mCurrent;
-                    bool bFoundTemplate = isKeyword && (result == "template");
-                    if (bFoundTemplate) {
+                    bool foundTemplate = isKeyword && (result == "template");
+                    if (foundTemplate) {
                         skipTemplateArgs();
                     } else if (skipAngleBracketPair()){
                         result += QString(angleStart, mCurrent-angleStart);

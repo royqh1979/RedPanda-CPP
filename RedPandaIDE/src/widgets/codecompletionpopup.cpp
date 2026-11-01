@@ -637,7 +637,7 @@ void CodeCompletionPopup::getCompletionFor(
         //C++ preprocessor directives
         if (mMemberPhrase.startsWith('#')) {
             if (mShowKeywords) {
-                foreach (const QString& keyword, CppDirectives) {
+                foreach (const QString& keyword, cppDirectives) {
                     addKeyword(keyword);
                 }
             }
@@ -647,7 +647,7 @@ void CodeCompletionPopup::getCompletionFor(
         //docstring tags (javadoc style)
         if (mMemberPhrase.startsWith('@')) {
             if (mShowKeywords) {
-                foreach (const QString& keyword,JavadocTags) {
+                foreach (const QString& keyword,javadocTags) {
                     addKeyword(keyword);
                 }
             }

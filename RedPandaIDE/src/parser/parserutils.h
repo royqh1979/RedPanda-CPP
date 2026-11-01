@@ -367,8 +367,8 @@ private:
 
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
 
-extern QStringList CppDirectives;
-extern QStringList JavadocTags;
+extern QStringList cppDirectives;
+extern QStringList javadocTags;
 extern QMap<QString,KeywordType> CppKeywords;
 #ifdef ENABLE_SDCC
 extern QMap<QString,KeywordType> SDCCKeywords;

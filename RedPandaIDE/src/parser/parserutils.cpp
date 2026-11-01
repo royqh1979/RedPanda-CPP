@@ -24,8 +24,8 @@
 #include "../systemconsts.h"
 #include <qt_utils/utils.h>
 
-QStringList CppDirectives;
-QStringList JavadocTags;
+QStringList cppDirectives;
+QStringList javadocTags;
 QMap<QString,KeywordType> CppKeywords;
 #ifdef ENABLE_SDCC
 QMap<QString,KeywordType> SDCCKeywords;
@@ -348,39 +348,39 @@ void initParser()
     AutoTypes.insert("const auto &");
 
     //C/CPP preprocessor directives
-    CppDirectives.append("#include");
-    CppDirectives.append("#if");
-    CppDirectives.append("#ifdef");
-    CppDirectives.append("#ifndef");
-    CppDirectives.append("#else");
-    CppDirectives.append("#elif");
-    CppDirectives.append("#endif");
-    CppDirectives.append("#define");
-    CppDirectives.append("#error");
-    CppDirectives.append("#pragma");
-    CppDirectives.append("#line");
-    CppDirectives.append("#undef");
+    cppDirectives.append("#include");
+    cppDirectives.append("#if");
+    cppDirectives.append("#ifdef");
+    cppDirectives.append("#ifndef");
+    cppDirectives.append("#else");
+    cppDirectives.append("#elif");
+    cppDirectives.append("#endif");
+    cppDirectives.append("#define");
+    cppDirectives.append("#error");
+    cppDirectives.append("#pragma");
+    cppDirectives.append("#line");
+    cppDirectives.append("#undef");
 
     // javadoc tags
-    JavadocTags.append("@author");
-    JavadocTags.append("@code");
-    JavadocTags.append("@docRoot");
-    JavadocTags.append("@deprecated");
-    JavadocTags.append("@exception");
-    JavadocTags.append("@inheritDoc");
-    JavadocTags.append("@link");
-    JavadocTags.append("@linkplain");
-    JavadocTags.append("@literal");
-    JavadocTags.append("@param");
-    JavadocTags.append("@return");
-    JavadocTags.append("@see");
-    JavadocTags.append("@serial");
-    JavadocTags.append("@serialData");
-    JavadocTags.append("@serialField");
-    JavadocTags.append("@since");
-    JavadocTags.append("@throws");
-    JavadocTags.append("@value");
-    JavadocTags.append("@version");
+    javadocTags.append("@author");
+    javadocTags.append("@code");
+    javadocTags.append("@docRoot");
+    javadocTags.append("@deprecated");
+    javadocTags.append("@exception");
+    javadocTags.append("@inheritDoc");
+    javadocTags.append("@link");
+    javadocTags.append("@linkplain");
+    javadocTags.append("@literal");
+    javadocTags.append("@param");
+    javadocTags.append("@return");
+    javadocTags.append("@see");
+    javadocTags.append("@serial");
+    javadocTags.append("@serialData");
+    javadocTags.append("@serialField");
+    javadocTags.append("@since");
+    javadocTags.append("@throws");
+    javadocTags.append("@value");
+    javadocTags.append("@version");
 
     MemberOperators.insert(".");
     MemberOperators.insert("::");
