@@ -472,10 +472,10 @@ int wmain(int argc, wchar_t** argv) {
     // Make us look like the paused program
     SetConsoleTitleW(AP::gArgs.program.data());
 
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = NULL;
-    sa.bInheritHandle = FALSE;
+    SECURITY_ATTRIBUTES jobSa;
+    jobSa.nLength = sizeof(jobSa);
+    jobSa.lpSecurityDescriptor = NULL;
+    jobSa.bInheritHandle = FALSE;
 
     // Then build the to-run application command
     wstring command;
@@ -485,7 +485,7 @@ int wmain(int argc, wchar_t** argv) {
         command = GetCommand(AP::gArgs.program, AP::gArgs.args, reInp);
 
     if (enableJobControl) {
-        hJob= CreateJobObject( &sa, NULL );
+        hJob= CreateJobObject( &jobSa, NULL );
 
         if ( hJob == NULL ) {
             PrintWin32ApiError(L"CreateJobObject");
@@ -504,13 +504,13 @@ int wmain(int argc, wchar_t** argv) {
 
     HANDLE hOutput = NULL;
     if (reInp) {
-        SECURITY_ATTRIBUTES sa;
-        sa.nLength = sizeof(sa);
-        sa.lpSecurityDescriptor = NULL;
-        sa.bInheritHandle = TRUE;
+        SECURITY_ATTRIBUTES outSa;
+        outSa.nLength = sizeof(outSa);
+        outSa.lpSecurityDescriptor = NULL;
+        outSa.bInheritHandle = TRUE;
 
         hOutput = CreateFileA("CONOUT$", GENERIC_WRITE | GENERIC_READ,
-                FILE_SHARE_WRITE , &sa, OPEN_EXISTING, /*FILE_ATTRIBUTE_NORMAL*/0, NULL);
+                FILE_SHARE_WRITE , &outSa, OPEN_EXISTING, /*FILE_ATTRIBUTE_NORMAL*/0, NULL);
         SetStdHandle(STD_OUTPUT_HANDLE, hOutput);
         SetStdHandle(STD_ERROR_HANDLE, hOutput);
         freopen("CONOUT$","w+",stdout);

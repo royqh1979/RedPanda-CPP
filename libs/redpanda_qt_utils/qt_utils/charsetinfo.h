@@ -27,11 +27,11 @@ struct CharsetInfo{
     QString language;
     QString localeName;
     bool enabled;
-    explicit CharsetInfo(int codepage,
-                         const QByteArray& name,
-                         const QString& language,
-                         const QString& locale,
-                         bool enabled);
+    explicit CharsetInfo(int newCodepage,
+                         const QByteArray& newName,
+                         const QString& newLanguage,
+                         const QString& newLocaleName,
+                         bool newEnabled);
 };
 
 using PCharsetInfo = std::shared_ptr<CharsetInfo>;

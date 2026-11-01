@@ -277,11 +277,7 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
 
 }
 
-CharsetInfo::CharsetInfo(int codepage, const QByteArray &name, const QString &language,const QString& localeName, bool enabled)
+CharsetInfo::CharsetInfo(int newCodepage, const QByteArray &newName, const QString &newLanguage, const QString& newLocaleName, bool newEnabled)
+    : codepage{newCodepage}, name{newName}, language{newLanguage}, localeName{newLocaleName}, enabled{newEnabled}
 {
-    this->codepage = codepage;
-    this->name = name;
-    this->language = language;
-    this->localeName = localeName;
-    this->enabled = enabled;
 }
