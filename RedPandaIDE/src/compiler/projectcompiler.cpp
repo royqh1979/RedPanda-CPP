@@ -175,7 +175,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 {
     // Get list of object files
     QStringList objects;
-    QStringList LinkObjects;
+    QStringList linkObjects;
     QStringList cleanObjects;
     QStringList moduleDefines;
 
@@ -197,13 +197,13 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
                 objects << relativeObjFile;
                 cleanObjects << localizeMakefilePath(relativeObjFile);
                 if (unit->link()) {
-                    LinkObjects << relativeObjFile;
+                    linkObjects << relativeObjFile;
                 }
             } else {
                 objects << changeFileExt(relativeName, OBJ_EXT);
                 cleanObjects << localizeMakefilePath(changeFileExt(relativeName, OBJ_EXT));
                 if (unit->link())
-                    LinkObjects << changeFileExt(relativeName, OBJ_EXT);
+                    linkObjects << changeFileExt(relativeName, OBJ_EXT);
             }
         }
         if (fileType == FileType::ModuleDef)
@@ -324,10 +324,10 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     // object referenced in command arguments
     // use them in targets or prerequisites, they have different escaping rules
     if (!objResFile.isEmpty()) {
-        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects) + " " + escapeArgumentForMakefileVariableValue(objResFile, false));
+        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(linkObjects) + " " + escapeArgumentForMakefileVariableValue(objResFile, false));
         writeln(file, "CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanRes, false) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
     } else {
-        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects));
+        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(linkObjects));
         writeln(file, "CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
     };
 
@@ -458,9 +458,9 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
         // Write custom build command
         if (unit->overrideBuildCmd() && !unit->buildCmd().isEmpty()) {
-            QString BuildCmd = unit->buildCmd();
-            BuildCmd.replace("<CRTAB>", "\n\t");
-            writeln(file, '\t' + BuildCmd);
+            QString buildCmd = unit->buildCmd();
+            buildCmd.replace("<CRTAB>", "\n\t");
+            writeln(file, '\t' + buildCmd);
             // Or roll our own
         } else {
             QString encodingStr;
@@ -544,8 +544,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
                 continue;
             if (fileExists(unit->fileName())) {
-                QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
-                resFiles = resFiles + escapeFilenameForMakefilePrerequisite(ResFile) + ' ';
+                QString resFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
+                resFiles = resFiles + escapeFilenameForMakefilePrerequisite(resFile) + ' ';
             }
         }
 

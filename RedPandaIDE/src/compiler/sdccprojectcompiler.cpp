@@ -106,8 +106,8 @@ void SDCCProjectCompiler::writeMakeHeader(QFile &file)
 void SDCCProjectCompiler::writeMakeDefines(QFile &file)
 {
     // Get list of object files
-    QStringList Objects;
-    QStringList LinkObjects;
+    QStringList objects;
+    QStringList linkObjects;
     QStringList cleanObjects;
 
     // Create a list of object files
@@ -116,8 +116,8 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
             continue;
 
         // Only process source files
-        QString RelativeName = extractRelativePath(mProject->directory(), unit->fileName());
-        FileType fileType = getFileType(RelativeName);
+        QString relativeName = extractRelativePath(mProject->directory(), unit->fileName());
+        FileType fileType = getFileType(relativeName);
 
         if (isC_CPP_ASMSourceFile(fileType)) {
             if (!mProject->options().folderForObjFiles.isEmpty()) {
@@ -125,16 +125,16 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().folderForObjFiles)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, SDCC_REL_SUFFIX));
-                Objects << relativeObjFile;
+                objects << relativeObjFile;
                 cleanObjects << localizeMakefilePath(relativeObjFile);
                 if (unit->link()) {
-                    LinkObjects << relativeObjFile;
+                    linkObjects << relativeObjFile;
                 }
             } else {
-                Objects << changeFileExt(RelativeName, SDCC_REL_SUFFIX);
-                cleanObjects << localizeMakefilePath(changeFileExt(RelativeName, SDCC_REL_SUFFIX));
+                objects << changeFileExt(relativeName, SDCC_REL_SUFFIX);
+                cleanObjects << localizeMakefilePath(changeFileExt(relativeName, SDCC_REL_SUFFIX));
                 if (unit->link())
-                    LinkObjects << changeFileExt(RelativeName, SDCC_REL_SUFFIX);
+                    linkObjects << changeFileExt(relativeName, SDCC_REL_SUFFIX);
             }
         }
     }
@@ -154,8 +154,8 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "PACKIHX  = " PACKIHX_PROGRAM);
     writeln(file, "MAKEBIN  = " MAKEBIN_PROGRAM);
 
-    writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects));
-    writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects));
+    writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(objects));
+    writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(linkObjects));
     writeln(file,"CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + ' ' +
         escapeArgumentForMakefileVariableValue(cleanIhx, false) + ' ' +
         escapeArgumentForMakefileVariableValue(cleanExe, false));
@@ -258,9 +258,9 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         // Write custom build command
 
         if (unit->overrideBuildCmd() && !unit->buildCmd().isEmpty()) {
-            QString BuildCmd = unit->buildCmd();
-            BuildCmd.replace("<CRTAB>", "\n\t");
-            writeln(file, '\t' + BuildCmd);
+            QString buildCmd = unit->buildCmd();
+            buildCmd.replace("<CRTAB>", "\n\t");
+            writeln(file, '\t' + buildCmd);
             // Or roll our own
         } else {
             if (fileType==FileType::CSource) {

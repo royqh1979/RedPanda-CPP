@@ -28,30 +28,30 @@ static QString contextualBackslashEscaping(const QString &arg, const QSet<QChar>
 {
     QString result;
     for (auto it = arg.begin(); ; ++it) {
-        int nBackSlash = 0;
+        int backSlashCount = 0;
         while (it != arg.end() && *it == '\\') {
             ++it;
-            ++nBackSlash;
+            ++backSlashCount;
         }
         if (it == arg.end()) {
             if (escapeFinal) {
                 // escape all backslashes, but leave following character unescaped
                 // (terminating double quote for CreateProcess, or LF or space in makefile)
-                result.append(QString('\\').repeated(nBackSlash * 2));
+                result.append(QString('\\').repeated(backSlashCount * 2));
             } else {
                 // leave all backslashes unescaped, and add a space to protect LF
-                result.append(QString('\\').repeated(nBackSlash));
-                if (nBackSlash > 0)
+                result.append(QString('\\').repeated(backSlashCount));
+                if (backSlashCount > 0)
                     result.push_back(' ');
             }
             break;
         } else if (needsEscaping.contains(*it)) {
             // escape all backslashes and the following character
-            result.append(QString('\\').repeated(nBackSlash * 2 + 1));
+            result.append(QString('\\').repeated(backSlashCount * 2 + 1));
             result.push_back(*it);
         } else {
             // backslashes aren't special here
-            result.append(QString('\\').repeated(nBackSlash));
+            result.append(QString('\\').repeated(backSlashCount));
             result.push_back(*it);
         }
     }
