@@ -35,11 +35,6 @@ WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int cont
 
 void WrapLayoutJob::run()
 {
-    {
-        QMutexLocker locker(&mSharedState->mutex);
-        if (mSharedState->pendingJob == this)
-            mSharedState->pendingJob = nullptr;
-    }
     PSyntaxer syntaxer = mDocument->createSyntaxerInstance();
     int count = mDocument->count();
     for (int line=0; line<count; line++) {

@@ -150,7 +150,6 @@ struct WrapJobSharedState {
     bool viewDead = false;
     int jobsInFlight = 0;
     int latestGeneration = -1;
-    WrapLayoutJob *pendingJob = nullptr;
 };
 using PWrapJobSharedState = std::shared_ptr<WrapJobSharedState>;
 

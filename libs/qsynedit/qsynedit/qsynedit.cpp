@@ -297,17 +297,8 @@ void QSynEdit::scheduleWrapLayoutJob() const
         return;
     qRegisterMetaType<WrapLayoutBatch>();
     QMutexLocker locker(&mWrapJobState->mutex);
-    // cancel a queued-but-not-started stale job; a running one aborts via
-    // the generation check in its loop
-    if (mWrapJobState->pendingJob) {
-        WrapLayoutJob *pending = mWrapJobState->pendingJob;
-        mWrapJobState->pendingJob = nullptr;
-        if (QThreadPool::globalInstance()->tryTake(pending)) {
-            mWrapJobState->jobsInFlight--;
-            mWrapJobState->jobsDone.wakeAll();
-            delete pending;
-        }
-    }
+    // only deduplicate same-generation jobs: a stale worker aborts on its
+    // own via the generation check in its loop
     if (mWrapJobState->latestGeneration == mWrapGeneration && mWrapJobState->jobsInFlight > 0)
         return;
     mWrapJobState->latestGeneration = mWrapGeneration;
@@ -315,7 +306,6 @@ void QSynEdit::scheduleWrapLayoutJob() const
     WrapLayoutJob *job = new WrapLayoutJob(
                 mDocument, mWrapGeneration, mWrapContentVersion,
                 font(), mGlyphCalculator, wrapWidth(), mWrapJobState);
-    mWrapJobState->pendingJob = job;
     connect(job, &WrapLayoutJob::layoutsReady,
             this, &QSynEdit::onWrapLayoutBatch, Qt::QueuedConnection);
     QThreadPool::globalInstance()->start(job);
@@ -873,7 +863,10 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
 {
     int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
     int row = yposToRow(y);
-    int line = rowToLine(row);
+    int line, segment;
+    rowToLineSegment(row, line, segment);
+    int segStartX = mOptions.testFlag(EditorOption::WordWrap) ? wrapLayout(line).segmentStartXs[segment] : 0;
+    xpos += segStartX;
     if (xpos<0) {
         xpos=0;
     } else if (xpos>lineWidth(line)) {
@@ -886,14 +879,17 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
         else
             xpos = glyphStartPosition(line, glyphIndex);
     }
-    return DisplayCoord{xpos, row};
+    return DisplayCoord{xpos - segStartX, row};
 }
 
 DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
 {
     int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
     int row = yposToRow(y);
-    int line = rowToLine(row);
+    int line, segment;
+    rowToLineSegment(row, line, segment);
+    int segStartX = mOptions.testFlag(EditorOption::WordWrap) ? wrapLayout(line).segmentStartXs[segment] : 0;
+    xpos += segStartX;
     if (xpos<0) {
         xpos=0;
     } else if (xpos>lineWidth(line)) {
@@ -902,7 +898,7 @@ DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
         int glyphIndex = xposToGlyphIndex(line, xpos);
         xpos = glyphStartPosition(line, glyphIndex);
     }
-    return DisplayCoord{xpos, row};
+    return DisplayCoord{xpos - segStartX, row};
 }
 
 QPoint QSynEdit::displayCoordToPixels(const DisplayCoord &coord) const
@@ -1369,13 +1365,13 @@ void QSynEdit::invalidateLine(int line)
                    line!=0) || !isVisible())
         return;
 
-    // invalidate text area of this line
+    // invalidate text area of this line (all of its wrap segments)
     int row = lineToRow(line);
     if (row >= yposToRow(0) && row <= yposToRow(clientHeight())) {
         rcInval = { mGutterWidth,
                     mTextHeight * row - mTopPos,
                     clientWidth(),
-                    mTextHeight};
+                    mTextHeight * wrapSegmentCount(line)};
         invalidateRect(rcInval);
     }
 }
@@ -1397,7 +1393,7 @@ void QSynEdit::invalidateLines(int startLine, int endLine)
         if (endLine>= mDocument->count())
             lastRow = lineToRow(mDocument->count() + mLinesInWindow + 2); // paint empty space beyond last line
         else
-            lastRow = lineToRow(endLine-1);
+            lastRow = lineSegmentToRow(endLine-1, wrapSegmentCount(endLine-1)-1);
 
         int firstLineTop = std::max(firstRow*mTextHeight, mTopPos);
         int lastLineBottom = std::min((lastRow+1)*mTextHeight, mTopPos+clientHeight());
@@ -5743,6 +5739,25 @@ void QSynEdit::moveCaretAndSelection(const CharPos &before, const CharPos &after
 void QSynEdit::moveCaretToLineStart(bool isSelection)
 {
     int newX;
+    if (mOptions.testFlag(EditorOption::WordWrap)) {
+        // home goes to the wrap segment's start
+        int segment = wrapSegmentOfChar(mCaretLine, mCaretCh);
+        int segStart = wrapLayout(mCaretLine).segmentStartChars[segment];
+        if (mOptions.testFlag(EditorOption::EnhanceHomeKey)) {
+            QString s = mDocument->getLine(mCaretLine);
+            int first_nonblank = segStart;
+            int maxX = wrapSegmentEndChar(mCaretLine, segment);
+            while ((first_nonblank < maxX) && (s[first_nonblank] == ' ' || s[first_nonblank] == '\t')) {
+                first_nonblank++;
+            }
+            newX = mCaretCh;
+            if ((newX > first_nonblank) || (newX == segStart))
+                newX = first_nonblank;
+            else
+                newX = segStart;
+        } else
+            newX = segStart;
+    } else
     // home key enhancement
     if (mOptions.testFlag(EditorOption::EnhanceHomeKey)) {
         QString s = mDocument->getLine(mCaretLine);
@@ -5767,6 +5782,24 @@ void QSynEdit::moveCaretToLineStart(bool isSelection)
 void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 {
     int newX;
+    if (mOptions.testFlag(EditorOption::WordWrap)) {
+        // end goes to the wrap segment's end
+        int segment = wrapSegmentOfChar(mCaretLine, mCaretCh);
+        int segEnd = wrapSegmentEndChar(mCaretLine, segment);
+        if (mOptions.testFlag(EditorOption::EnhanceEndKey)) {
+            QString text = lineText();
+            int lastNonBlank = segEnd-1;
+            int minX = wrapLayout(mCaretLine).segmentStartChars[segment];
+            while ((lastNonBlank >= minX) && (text[lastNonBlank] == ' ' || text[lastNonBlank] =='\t'))
+                lastNonBlank--;
+            newX = mCaretCh;
+            if ((newX <= lastNonBlank) || (newX == segEnd))
+                newX = lastNonBlank+1;
+            else
+                newX = segEnd;
+        } else
+            newX = segEnd;
+    } else
     if (mOptions.testFlag(EditorOption::EnhanceEndKey)) {
         QString text = lineText();
         int lastNonBlank = text.length()-1;
