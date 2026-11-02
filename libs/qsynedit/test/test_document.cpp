@@ -851,6 +851,88 @@ void TestDocument::test_clear()
     QCOMPARE(mChangedCount, 1);
 }
 
+void TestDocument::test_content_changed()
+{
+    QList<DocumentChangeSet> batches;
+    connect(mDoc.get(), &Document::contentChanged, this,
+            [&batches](const DocumentChangeSet &changes){
+        batches.append(changes);
+    });
+    auto checkEntry = [](const DocumentChange &change, DocumentChangeKind kind,
+                         int line, int count) {
+        return change.kind == kind && change.line == line && change.count == count;
+    };
+
+    // setText on a fresh doc: delete the initial empty line + insert all,
+    // one batch, inserts coalesced
+    mDoc->setText("a\nb\nc");
+    QCOMPARE(batches.count(), 1);
+    QCOMPARE(batches[0].count(), 2);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Delete, 0, 1));
+    QVERIFY(checkEntry(batches[0][1], DocumentChangeKind::Insert, 0, 3));
+
+    // setText again: delete all + insert all, still one batch
+    batches.clear();
+    mDoc->setText("x\ny");
+    QCOMPARE(batches.count(), 1);
+    QCOMPARE(batches[0].count(), 2);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Delete, 0, 3));
+    QVERIFY(checkEntry(batches[0][1], DocumentChangeKind::Insert, 0, 2));
+
+    // clear: delete all lines but the last, then set the last one empty
+    mDoc->setContents({"a","b","c"});
+    batches.clear();
+    mDoc->clear();
+    QCOMPARE(batches.count(), 1);
+    QCOMPARE(batches[0].count(), 2);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Delete, 0, 2));
+    QVERIFY(checkEntry(batches[0][1], DocumentChangeKind::SetLine, 0, 1));
+
+    // clear on an already-empty doc: no changes, no signal
+    batches.clear();
+    mDoc->clear();
+    QCOMPARE(batches.count(), 0);
+
+    // putLine with unchanged text: not recorded
+    batches.clear();
+    mDoc->putLine(0, "");
+    QCOMPARE(batches.count(), 0);
+
+    // putLine with changed text: SetLine
+    batches.clear();
+    mDoc->putLine(0, "hello");
+    QCOMPARE(batches.count(), 1);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::SetLine, 0, 1));
+
+    // same-index consecutive deletes coalesce within one batch
+    mDoc->setText("a\nb\nc\nd");
+    batches.clear();
+    mDoc->beginUpdate();
+    mDoc->deleteLine(1);
+    mDoc->deleteLine(1);
+    mDoc->endUpdate();
+    QCOMPARE(batches.count(), 1);
+    QCOMPARE(batches[0].count(), 1);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Delete, 1, 2));
+
+    // no cross-kind merging: insert then delete stay separate entries
+    batches.clear();
+    mDoc->beginUpdate();
+    mDoc->insertLine(0, "new");
+    mDoc->deleteLine(0);
+    mDoc->endUpdate();
+    QCOMPARE(batches.count(), 1);
+    QCOMPARE(batches[0].count(), 2);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Insert, 0, 1));
+    QVERIFY(checkEntry(batches[0][1], DocumentChangeKind::Delete, 0, 1));
+
+    // Move entry: line=from, count=to
+    batches.clear();
+    mDoc->moveLine(0, 1);
+    QCOMPARE(batches.count(), 1);
+    QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Move, 0, 1));
+}
+
 void TestDocument::test_find_last_line_by_seq()
 {
     mDoc=std::make_shared<Document>(QFont{});

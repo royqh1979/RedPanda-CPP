@@ -661,7 +661,7 @@ private:
     void doBlockIndent();
     void doBlockUnindent();
     void internalInputStr(const QString& inputStr);
-    void internalClearAll();
+    void resetEditState();
     void doInputStr(const QString& chText);
     void doCutToClipboard();
     void doCopyToClipboard();
@@ -698,6 +698,7 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
+    void onDocumentContentChanged(const DocumentChangeSet &changes);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();

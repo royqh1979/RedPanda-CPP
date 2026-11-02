@@ -71,6 +71,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
+    connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
 
@@ -959,38 +960,28 @@ void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posS
 
 void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
-    int oldCount = mDocument->count();
     beginEditing();
-    internalClearAll();
+    resetEditState();
     mDocument->loadFromFile(filename, encoding, realEncoding);
     reparseDocument();
-    emit linesDeleted(0, oldCount);
-    emit linesInserted(0, mDocument->count());
-    updateVScrollbar();
     endEditing();
 }
 
 void QSynEdit::setContent(const QString &text)
 {
-    int oldCount = mDocument->count();
     beginEditing();
-    internalClearAll();
+    resetEditState();
     mDocument->setText(text);
     reparseDocument();
-    emit linesDeleted(0, oldCount);
-    emit linesInserted(0, mDocument->count());
     endEditing();
 }
 
 void QSynEdit::setContent(const QStringList &text)
 {
-    int oldCount = mDocument->count();
     beginEditing();
-    internalClearAll();
+    resetEditState();
     mDocument->setContents(text);
     reparseDocument();
-    emit linesDeleted(0, oldCount);
-    emit linesInserted(0, mDocument->count());
     endEditing();
 }
 
@@ -1757,6 +1748,7 @@ void QSynEdit::doUndoRedoInput(const QString &oldGlyph,
 void QSynEdit::beginEditing()
 {
     beginInternalChanges();
+    mDocument->beginUpdate();
     if (mEditingCount==0) {
         if (!mUndoing) {
             mUndoList->beginBlock(caretPos(), mSelectionBegin, mSelectionEnd, mActiveSelectionMode);
@@ -1772,7 +1764,14 @@ void QSynEdit::endEditing()
     if (mEditingCount==0) {
         if (!mUndoing)
             mUndoList->endBlock(caretPos(), mSelectionBegin, mSelectionEnd, mActiveSelectionMode);
+        // The outermost document endUpdate emits contentChanged: the slot
+        // shifts fold ranges etc. while the map still carries the pre-edit
+        // line numbering, and runs before rescanCodeBlocks so the rescan
+        // can re-apply collapsed states by matching the shifted ranges.
+        mDocument->endUpdate();
         rescanCodeBlocks();
+    } else {
+        mDocument->endUpdate();
     }
     endInternalChanges();
 }
@@ -2293,23 +2292,22 @@ void QSynEdit::doMoveSelDown()
     }
 }
 
-void QSynEdit::internalClearAll()
+void QSynEdit::resetEditState()
 {
-    beginEditing();
+    // reset view/edit state only; document content is replaced by the caller
     setCaretPos(fileBegin());
     mCodeBlocks.clear();
-    mDocument->clear();
-    reparseDocument();
     setModified(false);
     clearUndo();
-    endEditing();
 }
 
 void QSynEdit::doClearAll()
 {
-    int oldCount = mDocument->count();
-    internalClearAll();
-    emit linesDeleted(0, oldCount-1);
+    beginEditing();
+    resetEditState();
+    mDocument->clear();
+    reparseDocument();
+    endEditing();
 }
 
 void QSynEdit::doBreakLine()
@@ -5574,12 +5572,7 @@ void QSynEdit::properSetLine(int line, const QString &lineText, bool parseToEnd)
 void QSynEdit::properInsertLine(int line, const QString &lineText, bool parseToEnd)
 {
     mDocument->insertLine(line, lineText);
-    processCodeBlocksOnLinesInserted(line,1);
     reparseLines(line,line+1, parseToEnd && mSyntaxer->needsLineState());
-    emit linesInserted(line, 1);
-    updateVScrollbar();
-    //we must invalidate whole editor to properly render contents
-    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
@@ -5587,17 +5580,11 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
     if (count<=0)
         return;
     mDocument->deleteLines(line, count);
-    processFoldsOnLinesDeleted(line, count);
     // Unlike properInsertLine(s)/properSetLine/properMoveLine, deletion has no
     // new lines to parse: with a line-local syntaxer the shifted lines' states
     // stay valid, so the reparse can be skipped entirely.
     if (parseToEnd && mSyntaxer->needsLineState())
         reparseLines(line, line + count, true);
-    emit linesDeleted(line,count);
-    updateVScrollbar();
-
-    //we must invalidate whole editor to properly render contents
-    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
@@ -5605,12 +5592,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
     if (count<=0)
         return;
     mDocument->insertLines(line, count);
-    processCodeBlocksOnLinesInserted(line, count);
     reparseLines(line,line+count, parseToEnd && mSyntaxer->needsLineState());
-    emit linesInserted(line, count);
-    updateVScrollbar();
-    //we must invalidate whole editor to properly render contents
-    invalidateLines(line,INT_MAX);
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
@@ -5618,12 +5600,9 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     if (from==to)
         return;
     mDocument->moveLine(from, to);
-    processFoldsOnLineMoved(from,to);
     int minLine = std::min(from,to);
     int maxLine = std::max(from,to);
     reparseLines(minLine, maxLine+1, parseToEnd && mSyntaxer->needsLineState());
-    emit lineMoved(from, to);
-    updateVScrollbar();
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -6900,6 +6879,48 @@ void QSynEdit::setGutterWidth(int value)
 void QSynEdit::onBookMarkOptionsChanged()
 {
     invalidateGutter();
+}
+
+void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
+{
+    // Structural guard: the signal is emitted at the outermost endUpdate,
+    // so the document must be quiescent here (see design doc chapter 6).
+    Q_ASSERT(!mDocument->inUpdate());
+    // Only idempotent, fact-driven maintenance is allowed in this slot.
+    bool scrollbarChanged = false;
+    int invalidateFrom = -1;
+    for (const DocumentChange &change : changes) {
+        switch (change.kind) {
+        case DocumentChangeKind::Insert:
+            processCodeBlocksOnLinesInserted(change.line, change.count);
+            emit linesInserted(change.line, change.count);
+            scrollbarChanged = true;
+            if (invalidateFrom < 0 || change.line < invalidateFrom)
+                invalidateFrom = change.line;
+            break;
+        case DocumentChangeKind::Delete:
+            processFoldsOnLinesDeleted(change.line, change.count);
+            emit linesDeleted(change.line, change.count);
+            scrollbarChanged = true;
+            if (invalidateFrom < 0 || change.line < invalidateFrom)
+                invalidateFrom = change.line;
+            break;
+        case DocumentChangeKind::Move:
+            processFoldsOnLineMoved(change.line, change.count);
+            emit lineMoved(change.line, change.count);
+            scrollbarChanged = true;
+            break;
+        case DocumentChangeKind::SetLine:
+            // repaint of content-changed lines is driven by reparseLines
+            break;
+        }
+    }
+    if (scrollbarChanged)
+        updateVScrollbar();
+    if (invalidateFrom >= 0) {
+        //we must invalidate whole editor to properly render contents
+        invalidateLines(invalidateFrom, INT_MAX);
+    }
 }
 
 void QSynEdit::onLinesChanged()

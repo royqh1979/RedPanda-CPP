@@ -223,28 +223,62 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 ### 6.1 设计约定
 
-修改内容后的各项处理（undo 记录、语法状态级联重算、显示刷新、代码折叠维护）**不靠信号驱动**，
-而是全部通过四个 chokepoint 成员函数直接调用完成：
-`properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`。
-所有编辑命令都汇聚到这四个函数，"不遗漏"由 chokepoint 集中化保证，而不是由信号机制保证。
+修改内容后的处理分两层：
 
-**信号挂接准则**：信号的发射粒度是实现细节（如一次列删除逐行 `putLine` 就发 N 次 `changed`），
-槽函数无法区分编辑中间态与编辑边界。因此能挂在信号上的处理必须**与调用时机无关（幂等）、
-只依赖持久状态**（如 gutter autosize 只依赖行数）；凡是需要编辑上下文（操作类型、前后状态）
-的处理，必须在编辑操作内部直接完成。违反该准则的实例（已移除）：`onLinesChanged` 曾在此
-对列选区做重吸附，编辑中间态下光标仍是旧值、行可能已删短，导致坐标断言崩溃。
+- **文档内部级联**（undo 记录、语法状态级联重算）由四个 chokepoint 直接调用完成：
+  `properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`；
+- **视图侧维护**（折叠映射平移、滚动条修正、重绘、对外结构信号转发）由
+  `Document::contentChanged(DocumentChangeSet)` 信号驱动，QSynEdit 在槽
+  `onDocumentContentChanged`（`qsynedit.cpp`）中完成。多视图下每个视图各自挂接、
+  各自维护（见 `qsynedit-multiview-analysis.md`）。
+
+**批次与发射时机**：`QSynEdit::beginEditing/endEditing` 同时包裹
+`Document::beginUpdate/endUpdate`（两者都计数嵌套），文档批次边界 == 编辑操作边界。
+`endEditing` 的顺序：`endBlock` 拍"变更后"快照 → 文档 `endUpdate`（发
+`contentChanged`，槽做折叠增量平移等）→ `rescanCodeBlocks`（全量重扫按平移后的
+行号回贴 collapsed 状态）→ `endInternalChanges`。发射时文档静默、发起视图 caret
+已是终态。未走 `beginEditing` 的 Document 直改路径（如测试直接调 document 方法）
+按原语自身批次发射，粒度退化为逐原语但语义不变。
+
+**ChangeSet 累积规则**（`Document::recordChange`，`document.cpp`）：
+
+- 原语在批次内按序记录 `(kind, line, count)`（`DocumentChangeKind`：
+  `SetLine`/`Insert`/`Delete`/`Move`，Move 的 count 字段承载目标行）；
+- 只允许**同类相邻**合并：Insert/SetLine 相邻（`last.line+last.count==line`）、
+  Delete 同位置（`last.line==line`）；Move 不合并；**不做跨类合并或抵销**——
+  序列必须忠实反映原语实际做了什么，消费者可朴素按序回放；
+- DEBUG 断言：记录时按变更后状态检查范围合法；`endUpdate` 断言批次计数配对；
+  槽内 `Q_ASSERT(!inUpdate())`（发射必在静默点，中间态发射在结构上不可能）；
+- `putLine` 内容未变时不记录（空写不产生伪变更）；
+- `Document::clear()` 语义：删除前 n-1 行并把保留的最后一行置空
+  （Delete(n-1) + SetLine），而非全删后插新行——外部观察者看到
+  `linesDeleted(0, n-1)`，末行上的断点等标记得以保留。
+
+**信号挂接两条铁律**（旧"挂接准则"的可执行版）：
+
+1. 槽里只允许**事实驱动的派生维护**：幂等、只凭"哪几行变了"就能做
+   （折叠平移、滚动条、重绘、非发起视图的光标按行差平移）；
+2. **跨组件一致性恢复禁止进槽**（选区按光标吸附、光标钳制等需要 caret/选区/文本
+   同时处于终态的操作）——由编辑操作自己在收尾完成。
+
+历史教训：`onLinesChanged` 曾在 `changed` 槽里对列选区做重吸附，编辑中间态下
+光标仍是旧值、行可能已删短，导致坐标断言崩溃。
 
 ### 6.2 信号清单与用途
 
-**Document → QSynEdit（上行通知，唯一听众是所有者）：**
+**Document → 视图（上行通知，听众 = 挂接该文档的所有视图）：**
 
-- `changing()` / `changed()`：`beginUpdate`/`endUpdate` 发出；QSynEdit 据此做批量修改的内部收尾
-  （gutter autosize、滚动条与 topPos 修正）。
-  **不做列选区修正**：该信号在编辑中间态也会触发（列删除逐行 putLine），此时光标还是旧值、
-  行可能已删短，全局重吸附会读到不一致状态；列选区的终态由各编辑操作自己维护（见 8.3）。
-- `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条。
+- `contentChanged(DocumentChangeSet)`：批次内行级变更的有序、合并列表，
+  最外层 `endUpdate` 发射一次。QSynEdit 槽据此做折叠平移、滚动条修正、重绘，
+  并**转发**对外结构信号（见下）。
+- `changing()` / `changed()`：批次边界；QSynEdit 据此做批量收尾
+  （gutter autosize、topPos 钳制、`endInternalChanges` 聚合刷新）。
+  注意：编辑被 `beginEditing/endEditing` 包裹后，编辑期间该信号**每次编辑一次**，
+  不再是逐原语 N 次。不做跨组件一致性恢复（见 6.1 铁律 2）。
+- `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条
+  （依赖字体度量，多视图归属待度量拆分时处理）。
 
-**UndoList / Gutter → QSynEdit（上行通知，唯一听众是所有者）：**
+**UndoList / Gutter → QSynEdit（上行通知）：**
 
 - `UndoList::addedUndo()`：QSynEdit 据此更新 modified 状态并清空 redo 栈。
 - `Gutter::changed()`：Gutter 各属性 setter 经 `setChanged()` 发出，是标准的属性变更通知。
@@ -256,7 +290,10 @@ Gutter 自己感知不到）。两条路径不是冗余。
 **QSynEdit → 外部观察者（正当的观察者模式，保留）：**
 
 - `linesInserted(firstLine, count)` / `linesDeleted(firstLine, count)` / `lineMoved(from, to)`：
-  行级结构变化。RedPandaIDE 的 EditorManager 依赖它们平移断点行号，语义必须精确。
+  行级结构变化，由 `onDocumentContentChanged` 从 changeSet 逐项转发；
+  相邻变更已按 6.1 的合并规则聚合（如 undo 一次删除相邻两行 = 一个
+  `linesDeleted(line, 2)`）。RedPandaIDE 的 EditorManager 依赖它们平移断点行号，
+  语义必须精确。
 - `statusChanged(StatusChanges)`：caret/selection/modified/滚动位置等状态位的聚合通知，
   带 `mStatusChanges` 合并机制（一次编辑聚合后只发一次）。用于状态栏更新等。
 - `changed()`：内容被修改过（如设置对话框标记"已编辑"）。与
@@ -277,7 +314,10 @@ EditorManager 等外部观察者只需跟踪行号结构变化；行内容的变
 
 信号测试不断言发射次数（合并、级联会导致次数随实现细节变化），而是断言**覆盖性**：
 被修改的行 ⊆ 通知区间的并集；结构信号（linesInserted/Deleted/Moved）因语义精确，
-可断言精确的 (line, count)。更本质的断言是修改行及下游行的语法状态内容正确。
+可断言精确的 (line, count)——注意同一批次的相邻变更已合并（一个信号而非 N 个）。
+更本质的断言是修改行及下游行的语法状态内容正确。
+Document 层的 `contentChanged` 契约（批次边界、合并规则、clear 语义、空写不通知）
+由 `TestDocument::test_content_changed` 锁定。
 
 ## 7. 文件编码与 BOM
 

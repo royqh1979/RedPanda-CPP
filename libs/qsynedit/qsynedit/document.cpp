@@ -173,6 +173,7 @@ void Document::insertItem(int line, const QString &s)
     mLineSeqIndice.insert(documentLine->lineSeq(), documentLine);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
+    recordChange(DocumentChangeKind::Insert, line, 1);
     endUpdate();
 }
 
@@ -184,6 +185,7 @@ void Document::addItem(const QString &s)
     mLines.append(line);
     mLineSeqIndice.insert(line->lineSeq(), line);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    recordChange(DocumentChangeKind::Insert, mLines.count()-1, 1);
     endUpdate();
 }
 
@@ -312,11 +314,68 @@ void Document::beginUpdate()
 
 void Document::endUpdate()
 {
+    Q_ASSERT(mUpdateCount > 0);
     mUpdateCount--;
     if (mUpdateCount == 0) {
+        if (!mPendingChanges.isEmpty()) {
+            DocumentChangeSet changes;
+            changes.swap(mPendingChanges);
+            emit contentChanged(changes);
+        }
         emit changed();
         endSetLinesWidth();
     }
+}
+
+bool Document::inUpdate() const
+{
+    return mUpdateCount > 0;
+}
+
+void Document::recordChange(DocumentChangeKind kind, int line, int count)
+{
+    // sanity checks against the post-mutation state
+    Q_ASSERT(line >= 0);
+    switch (kind) {
+    case DocumentChangeKind::Insert:
+    case DocumentChangeKind::SetLine:
+        Q_ASSERT(count > 0 && line + count <= mLines.count());
+        break;
+    case DocumentChangeKind::Delete:
+        // after removal, line may equal count() if lines were deleted at the end
+        Q_ASSERT(count > 0 && line <= mLines.count());
+        break;
+    case DocumentChangeKind::Move:
+        // for Move, count carries the target line
+        Q_ASSERT(line < mLines.count() && count >= 0 && count < mLines.count());
+        break;
+    }
+    // Only same-kind, adjacent entries coalesce. No cross-kind merging or
+    // cancellation: the sequence must faithfully mirror what the primitives
+    // did, so consumers can replay it naively.
+    if (!mPendingChanges.isEmpty()) {
+        DocumentChange &last = mPendingChanges.last();
+        if (last.kind == kind) {
+            switch (kind) {
+            case DocumentChangeKind::Insert:
+            case DocumentChangeKind::SetLine:
+                if (last.line + last.count == line) {
+                    last.count += count;
+                    return;
+                }
+                break;
+            case DocumentChangeKind::Delete:
+                if (last.line == line) {
+                    last.count += count;
+                    return;
+                }
+                break;
+            case DocumentChangeKind::Move:
+                break;
+            }
+        }
+    }
+    mPendingChanges.append(DocumentChange{kind, line, count});
 }
 
 
@@ -364,8 +423,12 @@ void Document::clear()
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
-    internalClear();
-    ensureHasLine();
+    // keep the last line as the remaining empty line instead of
+    // deleting everything and inserting a fresh one
+    if (mLines.count() > 1)
+        deleteLines(0, mLines.count()-1);
+    if (!mLines[0]->lineText().isEmpty())
+        putLine(0, "");
     endUpdate();
 }
 
@@ -391,6 +454,7 @@ void Document::deleteLines(int index, int numLines)
     }
     mLines.remove(index,numLines);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    recordChange(DocumentChangeKind::Delete, index, numLines);
     ensureHasLine();
     endUpdate();
 }
@@ -404,6 +468,7 @@ void Document::moveLine(int from, int to)
     PDocumentLine temp = mLines[from];
     mLines.remove(from);
     mLines.insert(to, temp);
+    recordChange(DocumentChangeKind::Move, from, to);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     if (from<to) {
         if (mIndexOfLongestLine == from) {
@@ -442,6 +507,7 @@ void Document::deleteLine(int index)
     mLineSeqIndice.remove(mLines[index]->lineSeq());
     mLines.removeAt(index);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
+    recordChange(DocumentChangeKind::Delete, index, 1);
     ensureHasLine();
     endUpdate();
 }
@@ -467,10 +533,13 @@ void Document::putLine(int index, const QString &s) {
         addLine(s);
     } else {
         beginUpdate();
-        mLines[index]->setLineText(s);
-        if (mIndexOfLongestLine == index) {
-            // width is invalidated, so we must recalculate longest line
-            mIndexOfLongestLine = -1;
+        if (mLines[index]->lineText() != s) {
+            mLines[index]->setLineText(s);
+            if (mIndexOfLongestLine == index) {
+                // width is invalidated, so we must recalculate longest line
+                mIndexOfLongestLine = -1;
+            }
+            recordChange(DocumentChangeKind::SetLine, index, 1);
         }
         endUpdate();
     }
@@ -493,6 +562,7 @@ void Document::insertLines(int index, int numLines)
     }
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
+    recordChange(DocumentChangeKind::Insert, index, numLines);
 }
 
 bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
@@ -1091,9 +1161,12 @@ void Document::internalClear()
 {
     Q_ASSERT(mLines.count() == mLineSeqIndice.count());
     beginUpdate();
+    int oldCount = mLines.count();
     mLines.clear();
     mLineSeqIndice.clear();
     mIndexOfLongestLine = -1;
+    if (oldCount > 0)
+        recordChange(DocumentChangeKind::Delete, 0, oldCount);
     endUpdate();
 }
 

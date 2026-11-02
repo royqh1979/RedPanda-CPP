@@ -27,6 +27,32 @@ namespace QSynedit {
 
 enum class SelectionMode {Normal, Column};
 
+/**
+ * @brief kinds of line-level content changes recorded in a DocumentChangeSet
+ */
+enum class DocumentChangeKind {
+    SetLine,    // line content replaced: line = first line, count = number of lines
+    Insert,     // count lines inserted at line
+    Delete,     // count lines deleted at line
+    Move        // one line moved: line = from, count = to
+};
+
+struct DocumentChange {
+    DocumentChangeKind kind;
+    int line;
+    int count;
+};
+
+/**
+ * @brief ordered list of line-level changes accumulated in one document
+ * update batch, emitted via Document::contentChanged at the outermost
+ * endUpdate. Entries are coalesced when adjacent (see Document::recordChange).
+ *
+ * Consumers must treat the entries as plain facts and only do idempotent,
+ * fact-driven maintenance in response (see design doc chapter 6).
+ */
+using DocumentChangeSet = QList<DocumentChange>;
+
 enum class EditCaretType {
     VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
 };

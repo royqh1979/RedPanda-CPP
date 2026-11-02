@@ -863,6 +863,7 @@ void TestQSyneditCpp::test_clear()
 
     clearSignalDatas();
     mEdit->processCommand(EditCommand::ClearAll);
+    // clear deletes all lines but the last, which becomes the empty line
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mDeleteStartLines, QList<int>{0});
     QCOMPARE(mDeleteLineCounts, QList<int>{1});
@@ -898,8 +899,8 @@ void TestQSyneditCpp::test_load_file()
     QCOMPARE(mDeleteStartLines, QList<int>({0}));
     QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
-    QCOMPARE(mReparseStarts, QList<int>({0,0}));
-    QCOMPARE(mReparseCounts, QList<int>({1,77}));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({77}));
     QCOMPARE(mStatusChanges, QList<int>{ StatusChange::ModifyChanged | StatusChange::CaretY});
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->canRedo());
@@ -984,8 +985,8 @@ void TestQSyneditCpp::test_set_content_qstring()
     QCOMPARE(mDeleteStartLines, QList<int>({0}));
     QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
-    QCOMPARE(mReparseStarts, QList<int>({0,0}));
-    QCOMPARE(mReparseCounts, QList<int>({1,3}));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({3}));
     QCOMPARE(mStatusChanges, QList<int>{ StatusChange::ModifyChanged | StatusChange::CaretY});
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->canRedo());
@@ -1013,8 +1014,8 @@ void TestQSyneditCpp::test_set_content_qstringlist()
     QCOMPARE(mDeleteStartLines, QList<int>({0}));
     QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
-    QCOMPARE(mReparseStarts, QList<int>({0,0}));
-    QCOMPARE(mReparseCounts, QList<int>({1,3}));
+    QCOMPARE(mReparseStarts, QList<int>({0}));
+    QCOMPARE(mReparseCounts, QList<int>({3}));
     QCOMPARE(mStatusChanges, QList<int>{ StatusChange::ModifyChanged | StatusChange::CaretY});
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->canRedo());
@@ -5813,8 +5814,8 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->selEnd(), CharPos(13,3));
     QCOMPARE(mInsertStartLines, QList<int>({}));
     QCOMPARE(mInsertLineCounts, QList<int>({}));
-    QCOMPARE(mDeleteStartLines, QList<int>({4,4}));
-    QCOMPARE(mDeleteLineCounts, QList<int>({1,1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({4}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<int>({
@@ -5930,8 +5931,8 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->selEnd(), CharPos(13,3));
     QCOMPARE(mInsertStartLines, QList<int>({}));
     QCOMPARE(mInsertLineCounts, QList<int>({}));
-    QCOMPARE(mDeleteStartLines, QList<int>({4,4}));
-    QCOMPARE(mDeleteLineCounts, QList<int>({1,1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({4}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<int>({

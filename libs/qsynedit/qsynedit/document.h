@@ -483,6 +483,11 @@ public:
 
     void beginUpdate();
     void endUpdate();
+    /**
+     * @brief whether the document is inside an update batch
+     * (beginUpdate/endUpdate not balanced yet)
+     */
+    bool inUpdate() const;
 
     int addLine(const QString& s);
     void addLines(const QStringList& strings);
@@ -623,6 +628,14 @@ signals:
     void changed();
     void changing();
     void maxLineWidthChanged();
+    /**
+     * @brief emitted once at the outermost endUpdate with the ordered,
+     * coalesced line-level changes accumulated in the batch. When emitted,
+     * the document is quiescent (inUpdate()==false). Slots must only do
+     * idempotent, fact-driven maintenance; cross-component consistency
+     * repair (e.g. re-snapping the selection to the caret) is forbidden.
+     */
+    void contentChanged(const DocumentChangeSet &changes);
 protected:
     QString getTextStr() const;
     void insertItem(int line, const QString& s);
@@ -631,6 +644,7 @@ protected:
 private:
     void ensureHasLine();
     void invalidateAllLineWidth();
+    void recordChange(DocumentChangeKind kind, int line, int count);
     bool lineWidthValid(int line);
     void beginSetLinesWidth();
     void endSetLinesWidth();
@@ -656,6 +670,7 @@ private:
     bool mAppendNewLineAtEOF;
     int mIndexOfLongestLine;
     int mUpdateCount;
+    DocumentChangeSet mPendingChanges;
 
     int mSetLineWidthLockCount;
     bool mMaxLineChangedInSetLinesWidth;
