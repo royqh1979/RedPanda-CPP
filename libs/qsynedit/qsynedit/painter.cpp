@@ -168,9 +168,8 @@ void QSynEditPainter::paintGutter(const QRect& clip)
       for (int row = mLastRow; row>= mFirstRow; row--) {
           int line, segment;
           mEdit->rowToLineSegment(row, line, segment);
-          // fold buttons/lines are only drawn on a line's first wrap segment
-          if (segment != 0)
-              continue;
+          // fold vertical lines are drawn on EVERY wrap segment (continuous
+          // across the fold); only the +/- button is first-segment-only
           if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             continue;
 
@@ -199,7 +198,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         }
         // Any fold ranges beginning on this line?
           PCodeBlock foldRange = mEdit->foldStartAtLine(line);
-        if (foldRange) {
+        if (foldRange && segment == 0) {
             // Draw the bottom part of a line
             if (!foldRange->collapsed) {
                 x = rcFold.left() + (rcFold.width() / 2);

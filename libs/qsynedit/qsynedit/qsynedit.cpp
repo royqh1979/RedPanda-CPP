@@ -341,7 +341,8 @@ static bool isWrapBreakableGlyph(const QString &glyph)
     if (glyph.isEmpty())
         return false;
     QChar ch = glyph[0];
-    return ch == '\t' || ch == ' ' || ch.isPunct();
+    // underscore is a word constituent (foo_bar), NOT a break opportunity
+    return ch == '\t' || ch == ' ' || (ch.isPunct() && ch != '_');
 }
 
 WrapLayout QSynEdit::computeWrapLayout(int line) const
