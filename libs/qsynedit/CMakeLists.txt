@@ -169,3 +169,12 @@ add_test(
     COMMAND test-qsynedit)
 
 add_dependencies(all-test-targets test-qsynedit)
+
+################
+# Demo programs #
+################
+
+option(QSYNEDIT_BUILD_MULTIVIEW_DEMO "Build the qsynedit multiview demo program" OFF)
+if (QSYNEDIT_BUILD_MULTIVIEW_DEMO)
+    add_subdirectory(demos/multiview)
+endif()
