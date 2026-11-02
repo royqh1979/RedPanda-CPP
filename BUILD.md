@@ -224,6 +224,8 @@ CMake variables:
   - `registry`: yes if current instance matches uninstall registry key; no otherwise.
   - Windows default: `registry`.
   - Other platforms force `non`.
+- `QSYNEDIT_BUILD_MULTIVIEW_DEMO`: build the qsynedit multiview demo program.
+  - A minimal GUI with two editor views sharing one document, for manually testing qsynedit's multiview support. Default: `OFF`.
 - `SDCC`: enable SDCC compiler support.
 - `WINDOWS_PREFER_OPENCONSOLE`: prefer UTF-8 compatible `OpenConsole.exe`.
   - Applies to: Windows.

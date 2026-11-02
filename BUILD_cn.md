@@ -1,4 +1,4 @@
-﻿# 构建 Red Panda C++
+# 构建 Red Panda C++
 
 有多种方式构建 Red Panda C++：包管理器、独立应用、手动构建。
 
@@ -225,6 +225,8 @@ CMake 变量：
   - `registry`：如果当前实例匹配卸载注册表项则为是，否则为否。
   - Windows 默认：`registry`。
   - 其他平台强制 `non`。
+- `QSYNEDIT_BUILD_MULTIVIEW_DEMO`：构建 qsynedit 多视图演示程序。
+  - 一个最小 GUI，两个编辑器视图共享同一文档，用于手工测试 qsynedit 的多视图支持。默认：`OFF`。
 - `SDCC`：启用 SDCC 编译器支持。
 - `WINDOWS_PREFER_OPENCONSOLE`：首选兼容 UTF-8 的 `OpenConsole.exe`。
   - 适用于：Windows。
