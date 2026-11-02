@@ -80,6 +80,7 @@ enum class EditorOption {
     ShowInnerSpaces =       0x00800000,
     ShowLineBreaks =        0x01000000,
     ForceMonospace =        0x02000000,
+    WordWrap =              0x04000000, //wrap long lines at the viewport's text width (per-view; disables horizontal scrolling)
 };
 
 Q_DECLARE_FLAGS(EditorOptions, EditorOption)
@@ -116,6 +117,15 @@ struct LineMetrics {
     int width = -1;                     // -1 = invalid/dirty
     QList<int> glyphStartPositionList;  // pixel position of each glyph
     bool isTemp = true;                 // computed with the base (unstyled) font
+};
+
+// word-wrap layout of one buffer line: the line is broken into
+// segmentStartChars.size() display segments. Both lists are parallel;
+// segmentStartXs are the segments' absolute start x in the line's glyph
+// space (with per-token styled fonts, so painting and wrapping agree).
+struct WrapLayout {
+    QList<int> segmentStartChars;   // first entry is always 0
+    QList<int> segmentStartXs;      // parallel to segmentStartChars
 };
 
 
@@ -221,6 +231,15 @@ public:
     int getLineIndent(const QString& lineText) const;
     int rowToLine(int row) const;
     int lineToRow(int line) const;
+    // word-wrap segment mapping (when WordWrap is off, a line has exactly
+    // one segment and these reduce to rowToLine/lineToRow)
+    void rowToLineSegment(int row, int &line, int &segment) const;
+    int lineSegmentToRow(int line, int segment) const;
+    int wrapWidth() const;
+    int wrapSegmentCount(int line) const;
+    int wrapSegmentOfChar(int line, int ch) const;
+    int wrapSegmentEndChar(int line, int segment) const;
+    const WrapLayout &wrapLayout(int line) const;
     int foldRowToLine(int row) const;
     int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
@@ -628,6 +647,10 @@ private:
     void invalidateAllLineMetrics();
     void invalidateNonTempLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
+    // word-wrap layout computation (view-side, lazily cached per line seq)
+    WrapLayout computeWrapLayout(int line) const;
+    bool lineVisibleForWrap(int line) const;
+    QFont fontForTokenAttribute(PTokenAttribute attr) const;
     void noteMaxLineWidthDirty();
     void recomputeMaxLineWidthAndNotify();
     void beginSetLineMetrics();
@@ -786,6 +809,9 @@ private:
     // SetLine invalidates the line's entry). See design doc 2.1 item 3.
     GlyphCalculator mGlyphCalculator{QFont("monospace")};
     mutable QHash<size_t, LineMetrics> mLineMetrics;
+    // per-line word-wrap layouts, keyed by line seq (same lifecycle rules
+    // as mLineMetrics). Invalidated with invalidateAllLineMetrics().
+    mutable QHash<size_t, WrapLayout> mWrapLayouts;
     mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
     int mSetLineMetricsLockCount = 0;
     bool mMaxLineWidthDirtyInBatch = false;

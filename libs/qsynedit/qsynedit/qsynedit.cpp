@@ -180,9 +180,179 @@ int QSynEdit::lineCount() const
 
 int QSynEdit::displayLineCount() const
 {
+    if (mOptions.testFlag(EditorOption::WordWrap)) {
+        int total = 0;
+        int count = mDocument->count();
+        for (int l=0;l<count;l++) {
+            if (lineVisibleForWrap(l))
+                total += wrapSegmentCount(l);
+        }
+        return total;
+    }
     // returns the count of display rows (rows are 0-based internally,
     // so the last row index is lineToRow(count-1))
     return lineToRow(mDocument->count()-1)+1;
+}
+
+int QSynEdit::wrapWidth() const
+{
+    return viewport()->width() - mGutterWidth - 2;
+}
+
+bool QSynEdit::lineVisibleForWrap(int line) const
+{
+    if (!useCodeFolding() || line == 0)
+        return true;
+    return foldLineToRow(line) > foldLineToRow(line-1);
+}
+
+void QSynEdit::rowToLineSegment(int row, int &line, int &segment) const
+{
+    if (!mOptions.testFlag(EditorOption::WordWrap)) {
+        line = rowToLine(row);
+        segment = 0;
+        return;
+    }
+    int acc = 0;
+    int count = mDocument->count();
+    for (int l=0;l<count;l++) {
+        if (!lineVisibleForWrap(l))
+            continue;
+        int c = wrapSegmentCount(l);
+        if (row < acc + c) {
+            line = l;
+            segment = row - acc;
+            return;
+        }
+        acc += c;
+    }
+    line = count-1;
+    segment = wrapSegmentCount(line)-1;
+}
+
+int QSynEdit::lineSegmentToRow(int line, int segment) const
+{
+    if (!mOptions.testFlag(EditorOption::WordWrap))
+        return lineToRow(line);
+    int row = 0;
+    for (int l=0;l<line;l++) {
+        if (lineVisibleForWrap(l))
+            row += wrapSegmentCount(l);
+    }
+    return row + segment;
+}
+
+int QSynEdit::wrapSegmentCount(int line) const
+{
+    return wrapLayout(line).segmentStartChars.count();
+}
+
+int QSynEdit::wrapSegmentOfChar(int line, int ch) const
+{
+    const WrapLayout &layout = wrapLayout(line);
+    int seg = searchForSegmentIdx(layout.segmentStartChars, mDocument->getLine(line).length(), ch);
+    return std::min(seg, layout.segmentStartChars.count()-1);
+}
+
+int QSynEdit::wrapSegmentEndChar(int line, int segment) const
+{
+    const WrapLayout &layout = wrapLayout(line);
+    if (segment+1 < layout.segmentStartChars.count())
+        return layout.segmentStartChars[segment+1];
+    return mDocument->getLine(line).length();
+}
+
+const WrapLayout &QSynEdit::wrapLayout(int line) const
+{
+    size_t seq = mDocument->getLineSeq(line);
+    auto it = mWrapLayouts.constFind(seq);
+    if (it != mWrapLayouts.constEnd())
+        return it.value();
+    WrapLayout layout = computeWrapLayout(line);
+    return mWrapLayouts.insert(seq, layout).value();
+}
+
+QFont QSynEdit::fontForTokenAttribute(PTokenAttribute attr) const
+{
+    QFont result = font();
+    if (attr) {
+        FontStyles style = attr->styles();
+        result.setBold(style & FontStyle::fsBold);
+        result.setItalic(style & FontStyle::fsItalic);
+        result.setStrikeOut(style & FontStyle::fsStrikeOut);
+        result.setUnderline(style & FontStyle::fsUnderline);
+    }
+    return result;
+}
+
+static bool isWrapBreakableGlyph(const QString &glyph)
+{
+    if (glyph.isEmpty())
+        return false;
+    QChar ch = glyph[0];
+    return ch == '\t' || ch == ' ' || ch.isPunct();
+}
+
+WrapLayout QSynEdit::computeWrapLayout(int line) const
+{
+    WrapLayout result;
+    result.segmentStartChars.append(0);
+    result.segmentStartXs.append(0);
+    if (!mOptions.testFlag(EditorOption::WordWrap))
+        return result;
+    QString text = mDocument->getLine(line);
+    int width = wrapWidth();
+    if (text.isEmpty() || width <= 0)
+        return result;
+    // short-line fast path: no styled token scan needed
+    if (mGlyphCalculator.stringWidth(text, 0) <= width)
+        return result;
+    // exact per-token styled measurement (same font logic as the painter)
+    QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line);
+    startParseLine(mSyntaxer.get(), line, text);
+    int x = 0;
+    int segStart = 0;
+    int breakChar = -1;  // preferred break point (char after a breakable glyph)
+    int breakX = 0;
+    while (!mSyntaxer->eol()) {
+        QString token = mSyntaxer->getToken();
+        if (token.isEmpty()) {
+            mSyntaxer->next();
+            continue;
+        }
+        int tokenStart = mSyntaxer->getTokenPos();
+        int tokenEnd = tokenStart + token.length();
+        QFontMetrics fm(fontForTokenAttribute(mSyntaxer->getTokenAttribute()));
+        int startGlyph = searchForSegmentIdx(glyphStartCharList, text.length(), tokenStart);
+        int endGlyph = searchForSegmentIdx(glyphStartCharList, text.length(), tokenEnd);
+        for (int i=startGlyph;i<endGlyph;i++) {
+            int glyphEnd = (i+1<glyphStartCharList.count()) ? glyphStartCharList[i+1] : text.length();
+            QString glyph = text.mid(glyphStartCharList[i], glyphEnd-glyphStartCharList[i]);
+            int gw = mGlyphCalculator.glyphWidth(glyph, x, fm, mGlyphCalculator.forceMonospace());
+            if (x + gw > width && x > 0) {
+                int newStart, newX;
+                if (breakChar > segStart) {
+                    newStart = breakChar;
+                    newX = breakX;
+                } else {
+                    newStart = glyphStartCharList[i];
+                    newX = x;
+                }
+                result.segmentStartChars.append(newStart);
+                result.segmentStartXs.append(newX);
+                segStart = newStart;
+                x -= newX;
+                breakChar = -1;
+            }
+            x += gw;
+            if (isWrapBreakableGlyph(glyph)) {
+                breakChar = glyphEnd;
+                breakX = x;
+            }
+        }
+        mSyntaxer->next();
+    }
+    return result;
 }
 
 void QSynEdit::setCaretPos(const CharPos &pos)
@@ -248,6 +418,8 @@ bool QSynEdit::canRedo() const
 
 int QSynEdit::maxScrollWidth() const
 {
+    if (mOptions.testFlag(EditorOption::WordWrap))
+        return 0;
     int maxWidth = maxLineWidth();
     if (maxWidth < 0)
         return -1;
@@ -665,9 +837,16 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
     if (p.line<0)
         return result;
     // Account for tabs and charColumns
-    if (p.line<mDocument->count())
-        result.x = charToGlyphLeft(p.line,p.ch);
-    result.row = lineToRow(result.row);
+    if (p.line<mDocument->count()) {
+        if (mOptions.testFlag(EditorOption::WordWrap)) {
+            int segment = wrapSegmentOfChar(p.line, p.ch);
+            result.x = charToGlyphLeft(p.line,p.ch) - wrapLayout(p.line).segmentStartXs[segment];
+            result.row = lineSegmentToRow(p.line, segment);
+        } else {
+            result.x = charToGlyphLeft(p.line,p.ch);
+            result.row = lineToRow(result.row);
+        }
+    }
     return result;
 }
 
@@ -681,6 +860,16 @@ CharPos QSynEdit::displayToBufferPos(const DisplayCoord &p) const
     CharPos result{p.x,p.row};
     if (p.row<0)
         return result;
+    if (mOptions.testFlag(EditorOption::WordWrap)) {
+        int line, segment;
+        rowToLineSegment(p.row, line, segment);
+        result.line = line;
+        if (line < mDocument->count()) {
+            int x = p.x + wrapLayout(line).segmentStartXs[segment];
+            result.ch = xposToGlyphStartChar(line, x);
+        }
+        return result;
+    }
     // Account for code folding
     result.line = rowToLine(p.row);
     // Account for tabs
@@ -927,6 +1116,7 @@ int QSynEdit::spaceWidth() const
 void QSynEdit::invalidateAllLineMetrics()
 {
     mLineMetrics.clear();
+    mWrapLayouts.clear();
     mMaxLineWidthSeq = 0;
 }
 
@@ -1014,6 +1204,11 @@ int QSynEdit::getLineIndent(const QString &lineText) const
 
 int QSynEdit::rowToLine(int row) const
 {
+    if (mOptions.testFlag(EditorOption::WordWrap)) {
+        int line, segment;
+        rowToLineSegment(row, line, segment);
+        return line;
+    }
     int line;
     if (useCodeFolding())
         line = foldRowToLine(row);
@@ -1028,6 +1223,8 @@ int QSynEdit::rowToLine(int row) const
 
 int QSynEdit::lineToRow(int line) const
 {
+    if (mOptions.testFlag(EditorOption::WordWrap))
+        return lineSegmentToRow(line, 0);
     if (useCodeFolding())
         return foldLineToRow(line);
     else
@@ -4330,7 +4527,10 @@ void QSynEdit::setOptions(const EditorOptions &value)
                 || !sameEditorOption(value,mOptions, EditorOption::ShowTrailingSpaces)
                 || !sameEditorOption(value,mOptions, EditorOption::ShowLineBreaks)
                 || !sameEditorOption(value,mOptions, EditorOption::ShowRainbowColor);
+        bool wordWrapChanged = !sameEditorOption(value,mOptions, EditorOption::WordWrap);
         mOptions = value;
+        if (wordWrapChanged)
+            mLeftPos = 0;
 
         setScrollBars(mScrollBars);
         mGlyphCalculator.setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace));
@@ -4344,7 +4544,7 @@ void QSynEdit::setOptions(const EditorOptions &value)
         }
         updateHScrollbar();
         updateVScrollbar();
-        if (updateAll)
+        if (updateAll || wordWrapChanged)
             invalidate();
         endInternalChanges();
     }
@@ -6629,6 +6829,9 @@ void QSynEdit::resizeEvent(QResizeEvent *)
                                                             QImage::Format_ARGB32);
     mContentImage->setDevicePixelRatio(dpr);
 
+    // the wrap width depends on the viewport width
+    if (mOptions.testFlag(EditorOption::WordWrap))
+        invalidateAllLineMetrics();
     onSizeOrFontChanged();
 }
 
@@ -7221,6 +7424,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
                 if (seq == mMaxLineWidthSeq)
                     mMaxLineWidthSeq = 0;
                 mLineMetrics.remove(seq);
+                mWrapLayouts.remove(seq);
             }
             break;
         }

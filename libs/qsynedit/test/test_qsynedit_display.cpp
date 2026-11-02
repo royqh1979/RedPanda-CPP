@@ -192,4 +192,48 @@ void TestQSyneditDisplay::test_mouse_positioning_with_fold()
     QCOMPARE(pos, CharPos(4, 5));
 }
 
+void TestQSyneditDisplay::test_wordwrap_basics()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+
+    int width = mEdit->wrapWidth();
+    QVERIFY(width > 0);
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    QCOMPARE(mEdit->wrapSegmentCount(0), 1);
+    QCOMPARE(mEdit->wrapSegmentCount(2), 1);
+
+    // every segment fits the wrap width and segments partition the line
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    int segments = layout.segmentStartChars.count();
+    QCOMPARE(segments, mEdit->wrapSegmentCount(1));
+    QCOMPARE(layout.segmentStartChars.first(), 0);
+    QCOMPARE(layout.segmentStartXs.first(), 0);
+    for (int i=0;i<segments;i++) {
+        int start = layout.segmentStartChars[i];
+        int end = mEdit->wrapSegmentEndChar(1, i);
+        QVERIFY(end > start);
+        if (i+1<segments) {
+            int w = layout.segmentStartXs[i+1] - layout.segmentStartXs[i];
+            QVERIFY2(w <= width+1, qPrintable(QString("seg %1 w %2 width %3").arg(i).arg(w).arg(width)));
+        }
+    }
+    QVERIFY(layout.segmentStartXs.last() < width+1);
+    // row mapping roundtrip
+    for (int row=0; row<mEdit->displayLineCount(); row++) {
+        int line, seg;
+        mEdit->rowToLineSegment(row, line, seg);
+        QCOMPARE(mEdit->lineSegmentToRow(line, seg), row);
+    }
+    // disabling restores single-segment behavior
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+    QCOMPARE(mEdit->wrapSegmentCount(1), 1);
+    QCOMPARE(mEdit->displayLineCount(), 3);
+}
 }

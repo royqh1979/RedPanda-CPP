@@ -200,6 +200,16 @@ int main(int argc, char *argv[])
     action = fileMenu->addAction(QStringLiteral("&Close"), &window, newFile);
     action->setShortcut(QKeySequence::Close);
 
+    QMenu *viewMenu = window.menuBar()->addMenu(QStringLiteral("&View"));
+    QAction *wrapAct = viewMenu->addAction(QStringLiteral("&Word Wrap"), &window,
+                                           [&](bool checked) {
+        QSynedit::EditorOptions opts = edit1->getOptions();
+        opts.setFlag(QSynedit::EditorOption::WordWrap, checked);
+        edit1->setOptions(opts);
+        edit2->setOptions(opts);
+    });
+    wrapAct->setCheckable(true);
+
     if (argc > 1) {
         QByteArray realEncoding;
         try {
@@ -218,6 +228,7 @@ int main(int argc, char *argv[])
             "// - caret, selection, scrolling and font are per-view\n"
             "\n"
             "#include <iostream>\n"
+            "// a deliberately long line to exercise word wrap: 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789\n"
             "\n"
             "int main()\n"
             "{\n"

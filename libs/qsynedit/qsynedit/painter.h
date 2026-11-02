@@ -134,6 +134,9 @@ private:
 
     QRect mClip;
     int mFirstRow, mLastRow, mLeft, mRight;
+    // start x of the wrap segment being painted (0 when word wrap is off
+    // or on the first segment)
+    int mSegmentStartX = 0;
     SynTokenAccu mTokenAccu;
 };
 

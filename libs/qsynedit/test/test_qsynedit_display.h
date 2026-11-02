@@ -22,6 +22,7 @@ private slots:
     void test_ensure_caret_visible();
     void test_mouse_positioning();
     void test_mouse_positioning_with_fold();
+    void test_wordwrap_basics();
 };
 
 }

@@ -45,7 +45,7 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
     // Do this first to realize the pen when getting the dc variable.
     doRightEdge = false;
     if (mEdit->mRightEdge > 0) { // column value
-        rightEdge = mEdit->textOffset()+ mEdit->mRightEdge * mEdit->mCharWidth; // pixel value
+        rightEdge = mEdit->textOffset() - mSegmentStartX + mEdit->mRightEdge * mEdit->mCharWidth; // pixel value
         if (rightEdge >= mClip.left() &&rightEdge <= mClip.right()) {
             doRightEdge = true;
         }
@@ -125,7 +125,11 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         CharPos selectionStart = mEdit->selBegin();
         CharPos selectionEnd = mEdit->selEnd();
         for (int row = mFirstRow; row <= mLastRow; row++) {
-            int line = mEdit->rowToLine(row);
+            int line, segment;
+            mEdit->rowToLineSegment(row, line, segment);
+            // line numbers are only drawn on a line's first wrap segment
+            if (segment != 0)
+                continue;
             if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() > 0 ))
                 break;
             if (mEdit->mGutter.activeLineTextColor().isValid()) {
@@ -162,7 +166,11 @@ void QSynEditPainter::paintGutter(const QRect& clip)
     if (mEdit->useCodeFolding()) {
       int lineWidth = std::max(0.0,std::ceil(mEdit->font().pixelSize() / 15));
       for (int row = mLastRow; row>= mFirstRow; row--) {
-          int line = mEdit->rowToLine(row);
+          int line, segment;
+          mEdit->rowToLineSegment(row, line, segment);
+          // fold buttons/lines are only drawn on a line's first wrap segment
+          if (segment != 0)
+              continue;
           if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             continue;
 
@@ -228,7 +236,11 @@ void QSynEditPainter::paintGutter(const QRect& clip)
     }
 
     for (int row = mFirstRow; row <= mLastRow; row++) {
-        int line = mEdit->rowToLine(row);
+        int line, segment;
+        mEdit->rowToLineSegment(row, line, segment);
+        // gutter marks (breakpoints/bookmarks) only on a line's first segment
+        if (segment != 0)
+            continue;
         if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             break;
         mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->yposToRow(0)) * mEdit->mTextHeight);
@@ -286,8 +298,10 @@ void QSynEditPainter::computeSelectionInfo()
         anySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
         if (anySelection) {
             // Transform the selection from text space into screen space
-            mSelStart.row = mEdit->lineToRow(selStart.line);
-            mSelEnd.row = mEdit->lineToRow(selEnd.line);
+            mSelStart.row = mEdit->lineSegmentToRow(selStart.line,
+                                                    mEdit->wrapSegmentOfChar(selStart.line, selStart.ch));
+            mSelEnd.row = mEdit->lineSegmentToRow(selEnd.line,
+                                                  mEdit->wrapSegmentOfChar(selEnd.line, selEnd.ch));
             if (mEdit->mInputPreeditString.length() > 0
                     && selStart.line == mEdit->mCaretLine) {
                 QString lineTextWithPreedit = mEdit->lineText().left(mEdit->mCaretCh)
@@ -333,7 +347,7 @@ void QSynEditPainter::getDrawingColors(bool selected, QColor &foreground, QColor
 
 int QSynEditPainter::fixXValue(int xpos)
 {
-    return mEdit->textOffset() + xpos;
+    return mEdit->textOffset() + xpos - mSegmentStartX;
 }
 
 void QSynEditPainter::paintLine()
@@ -854,7 +868,7 @@ void QSynEditPainter::paintFoldAttributes()
             int indentLevel = 0 ;
             int tabSteps = 0;
             while (tabSteps < lineIndent) {
-                x = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - 1;
+                x = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
                 if (mEdit->mCodeFolding.rainbowIndentGuides) {
@@ -873,9 +887,9 @@ void QSynEditPainter::paintFoldAttributes()
                 if (mEdit->mCodeFolding.fillIndents) {
                     int x1;
                     if (tabSteps>lineIndent)
-                        x1 = lineIndent * mEdit->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = lineIndent * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
                     else
-                        x1 = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(x,y,x1,y);
@@ -969,7 +983,8 @@ void QSynEditPainter::paintLines()
     CharPos selectionBegin = mEdit->selBegin();
     CharPos selectionEnd= mEdit->selEnd();
     for (int row = mFirstRow; row<=mLastRow; row++) {
-        int line = mEdit->rowToLine(row);
+        int line, segment;
+        mEdit->rowToLineSegment(row, line, segment);
         bool lineTextChanged = false;
         if (line >= mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
             break;
@@ -1074,6 +1089,15 @@ void QSynEditPainter::paintLines()
             glyphStartPositionsList = mEdit->glyphStartPositionList(line);
             mCurrentLineWidth = mEdit->lineWidth(line);
         }
+        // clip token scanning/drawing to this wrap segment (absolute glyph x)
+        const WrapLayout &wrap = mEdit->wrapLayout(line);
+        mSegmentStartX = wrap.segmentStartXs[segment];
+        mLeft = mSegmentStartX;
+        if (segment+1 < wrap.segmentStartChars.count())
+            mRight = wrap.segmentStartXs[segment+1]-1;
+        else
+            mRight = mSegmentStartX + mEdit->wrapWidth() + 1;
+        bool isLastSegment = (segment+1 == wrap.segmentStartChars.count());
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
@@ -1162,7 +1186,9 @@ void QSynEditPainter::paintLines()
         }
         if (!lineWidthValid)
             mEdit->setLineMetrics(line, tokenLeft, glyphStartPositionsList);
-        if (tokenLeft<mRight) {
+        // line-end decorations (fold string, line break glyph) belong to the
+        // line's LAST wrap segment only
+        if (isLastSegment && tokenLeft<mRight) {
             QString addOnStr;
 
             // Paint folding
