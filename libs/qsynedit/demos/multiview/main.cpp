@@ -39,27 +39,29 @@ using namespace QSynedit;
 
 // Ctrl+wheel font zoom, one instance per view (font size is a per-view
 // property). QSynEdit itself only handles plain/Shift wheel scrolling.
+// Note: QSynEdit is a QAbstractScrollArea, so wheel events are delivered
+// to its viewport() child widget, not to the editor itself — the filter
+// must be installed on the viewport.
 class WheelZoomFilter : public QObject {
 public:
-    using QObject::QObject;
+    explicit WheelZoomFilter(QSynEdit *edit) : QObject(edit), mEdit(edit) {}
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override
     {
         if (event->type() == QEvent::Wheel) {
             auto *wheelEvent = static_cast<QWheelEvent *>(event);
             if (wheelEvent->modifiers() & Qt::ControlModifier) {
-                auto *edit = static_cast<QSynEdit *>(watched);
                 if ((mAccumulatedDelta > 0 && wheelEvent->angleDelta().y() < 0)
                         || (mAccumulatedDelta < 0 && wheelEvent->angleDelta().y() > 0))
                     mAccumulatedDelta = 0;
                 mAccumulatedDelta += wheelEvent->angleDelta().y();
                 while (mAccumulatedDelta >= 120) {
                     mAccumulatedDelta -= 120;
-                    edit->processCommand(EditCommand::ZoomIn);
+                    mEdit->processCommand(EditCommand::ZoomIn);
                 }
                 while (mAccumulatedDelta <= -120) {
                     mAccumulatedDelta += 120;
-                    edit->processCommand(EditCommand::ZoomOut);
+                    mEdit->processCommand(EditCommand::ZoomOut);
                 }
                 return true;
             }
@@ -67,6 +69,7 @@ protected:
         return false;
     }
 private:
+    QSynEdit *mEdit;
     int mAccumulatedDelta = 0;
 };
 
@@ -80,10 +83,12 @@ int main(int argc, char *argv[])
 
     auto *edit1 = new QSynEdit(splitter);
     edit1->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit1->setExtraKeystrokes();
 
     auto *edit2 = new QSynEdit(splitter);
     // attach the second view to the same shared document
     edit2->setDocument(edit1->document());
+    edit2->setExtraKeystrokes();
 
     // font metrics are per-view: the two views may use different fonts/sizes
     QFont font1 = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -104,8 +109,8 @@ int main(int argc, char *argv[])
     edit2->setUseCodeFolding(true);
 
     // Ctrl+wheel zooms the view under the mouse
-    edit1->installEventFilter(new WheelZoomFilter(edit1));
-    edit2->installEventFilter(new WheelZoomFilter(edit2));
+    edit1->viewport()->installEventFilter(new WheelZoomFilter(edit1));
+    edit2->viewport()->installEventFilter(new WheelZoomFilter(edit2));
 
     splitter->addWidget(edit1);
     splitter->addWidget(edit2);
