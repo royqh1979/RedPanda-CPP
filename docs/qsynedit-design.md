@@ -231,8 +231,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   `test_shared_document_caret_shift`。
 - **手工验证程序**：`libs/qsynedit/demos/multiview/`（目标
   `qsynedit-multiview-demo`，CMake 开关 `QSYNEDIT_BUILD_MULTIVIEW_DEMO`，
-  默认 OFF）——一窗两视图共享同一 Document，两视图用不同字号，
-  可传入文件路径参数；用于实际检验双视图编辑、共享 undo/redo、
+  默认 OFF）——一窗两视图共享同一 Document，两视图用不同字号；
+  带文件菜单（New/Open/Save/Save As/Close，作用于共享文档），
+  也可传入文件路径参数；用于实际检验双视图编辑、共享 undo/redo、
   逐视图字体度量与滚动。
 
 ## 3. 坐标体系

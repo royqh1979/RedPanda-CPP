@@ -18,10 +18,16 @@
 // Minimal multiview demo: two QSynEdit views share one Document.
 // Editing in either view updates the other; undo/redo history is shared
 // (Document-owned); caret/selection/scroll/font are per-view.
+//
+// File menu: New / Open / Save / Save As / Close operate on the shared
+// document, so both views always show the same file.
 
 #include <QApplication>
+#include <QFileDialog>
 #include <QFontDatabase>
 #include <QMainWindow>
+#include <QMenuBar>
+#include <QMessageBox>
 #include <QSplitter>
 #include "qsynedit/qsynedit.h"
 #include "qsynedit/syntaxer/cpp.h"
@@ -34,7 +40,6 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QMainWindow window;
-    window.setWindowTitle(QStringLiteral("QSynedit multiview demo (two views, one document)"));
 
     auto *splitter = new QSplitter(&window);
 
@@ -53,14 +58,109 @@ int main(int argc, char *argv[])
     font2.setPointSize(14);
     edit2->setFont(font2);
 
+    // the library default active-line color (Qt::blue) is unreadably dark
+    const QColor activeLineColor = window.palette().color(QPalette::AlternateBase);
+    edit1->setActiveLineColor(activeLineColor);
+    edit2->setActiveLineColor(activeLineColor);
+
     splitter->addWidget(edit1);
     splitter->addWidget(edit2);
     window.setCentralWidget(splitter);
     window.resize(1100, 650);
 
+    // ---- file state (the shared document's file) ----
+    QString currentFile;
+    QByteArray encoding = ENCODING_UTF8;
+
+    auto updateTitle = [&] {
+        if (currentFile.isEmpty())
+            window.setWindowTitle(QStringLiteral("untitled - QSynedit multiview demo"));
+        else
+            window.setWindowTitle(QStringLiteral("%1 - QSynedit multiview demo").arg(currentFile));
+    };
+
+    // the undo/redo stacks are owned by the shared document: clearing them
+    // once clears the history for both views
+    auto clearHistory = [&] {
+        edit1->document()->undoList()->clear();
+        edit1->document()->redoList()->clear();
+    };
+
+    auto newFile = [&] {
+        edit1->document()->setText(QString());
+        clearHistory();
+        currentFile.clear();
+        encoding = ENCODING_UTF8;
+        updateTitle();
+    };
+
+    auto saveTo = [&](const QString &path) -> bool {
+        QFile file(path);
+        QByteArray realEncoding = encoding;
+        try {
+            edit1->saveToFile(file, encoding, realEncoding);
+        } catch (const FileError &e) {
+            QMessageBox::warning(&window, QStringLiteral("Save failed"), e.reason());
+            return false;
+        }
+        currentFile = path;
+        encoding = realEncoding;
+        updateTitle();
+        return true;
+    };
+
+    auto saveFile = [&] {
+        if (currentFile.isEmpty()) {
+            QString path = QFileDialog::getSaveFileName(&window, QStringLiteral("Save file"));
+            if (path.isEmpty())
+                return;
+            saveTo(path);
+        } else {
+            saveTo(currentFile);
+        }
+    };
+
+    QMenu *fileMenu = window.menuBar()->addMenu(QStringLiteral("&File"));
+    QAction *action = fileMenu->addAction(QStringLiteral("&New"), &window, newFile);
+    action->setShortcut(QKeySequence::New);
+    action = fileMenu->addAction(QStringLiteral("&Open..."), &window, [&] {
+        QString path = QFileDialog::getOpenFileName(&window, QStringLiteral("Open file"));
+        if (path.isEmpty())
+            return;
+        QByteArray realEncoding;
+        try {
+            edit1->loadFromFile(path, ENCODING_AUTO_DETECT, realEncoding);
+        } catch (const FileError &e) {
+            QMessageBox::warning(&window, QStringLiteral("Open failed"), e.reason());
+            return;
+        }
+        clearHistory();
+        currentFile = path;
+        encoding = realEncoding;
+        updateTitle();
+    });
+    action->setShortcut(QKeySequence::Open);
+    action = fileMenu->addAction(QStringLiteral("&Save"), &window, saveFile);
+    action->setShortcut(QKeySequence::Save);
+    action = fileMenu->addAction(QStringLiteral("Save &As..."), &window, [&] {
+        QString path = QFileDialog::getSaveFileName(&window, QStringLiteral("Save file as"));
+        if (!path.isEmpty())
+            saveTo(path);
+    });
+    action->setShortcut(QKeySequence::SaveAs);
+    action = fileMenu->addAction(QStringLiteral("&Close"), &window, newFile);
+    action->setShortcut(QKeySequence::Close);
+
     if (argc > 1) {
         QByteArray realEncoding;
-        edit1->loadFromFile(QString::fromLocal8Bit(argv[1]), ENCODING_AUTO_DETECT, realEncoding);
+        try {
+            edit1->loadFromFile(QString::fromLocal8Bit(argv[1]), ENCODING_AUTO_DETECT, realEncoding);
+            clearHistory();
+            currentFile = QString::fromLocal8Bit(argv[1]);
+            encoding = realEncoding;
+        } catch (const FileError &e) {
+            QMessageBox::warning(&window, QStringLiteral("Open failed"), e.reason());
+        }
     } else {
         edit1->document()->setText(QStringLiteral(
             "// Two QSynEdit views sharing one Document.\n"
@@ -76,6 +176,7 @@ int main(int argc, char *argv[])
             "    return 0;\n"
             "}\n"));
     }
+    updateTitle();
 
     window.show();
     return app.exec();
