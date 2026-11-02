@@ -197,6 +197,11 @@ typedef std::shared_ptr<DocumentLines> PDocumentLines;
 
 typedef std::shared_ptr<Document> PDocument;
 
+class UndoList;
+class RedoList;
+using PUndoList = std::shared_ptr<UndoList>;
+using PRedoList = std::shared_ptr<RedoList>;
+
 class BinaryFileError : public FileError {
 public:
     explicit BinaryFileError (const QString& reason);
@@ -489,6 +494,13 @@ public:
      */
     bool inUpdate() const;
 
+    /**
+     * @brief the undo/redo histories are owned by the document and shared
+     * by all attached views (see design doc chapter 1 and 2.5)
+     */
+    PUndoList undoList() const;
+    PRedoList redoList() const;
+
     int addLine(const QString& s);
     void addLines(const QStringList& strings);
 
@@ -636,6 +648,12 @@ signals:
      * repair (e.g. re-snapping the selection to the caret) is forbidden.
      */
     void contentChanged(const DocumentChangeSet &changes);
+    /**
+     * @brief emitted after an undo/redo operation has been performed on the
+     * shared stacks (by whichever view triggered it), so all views can
+     * re-sync their modified status
+     */
+    void undoRedoStateChanged();
 protected:
     QString getTextStr() const;
     void insertItem(int line, const QString& s);
@@ -645,6 +663,13 @@ private:
     void ensureHasLine();
     void invalidateAllLineWidth();
     void recordChange(DocumentChangeKind kind, int line, int count);
+public:
+    /**
+     * @brief emit undoRedoStateChanged(); called by the view that performed
+     * an undo/redo so every attached view re-syncs its modified status
+     */
+    void notifyUndoRedoStateChanged();
+private:
     bool lineWidthValid(int line);
     void beginSetLinesWidth();
     void endSetLinesWidth();
@@ -671,6 +696,9 @@ private:
     int mIndexOfLongestLine;
     int mUpdateCount;
     DocumentChangeSet mPendingChanges;
+
+    PUndoList mUndoList;
+    PRedoList mRedoList;
 
     int mSetLineWidthLockCount;
     bool mMaxLineChangedInSetLinesWidth;
@@ -863,9 +891,6 @@ protected:
     QMap<size_t, PCaretAndSelectionInfo> mCaretInfoAfterChange;
 };
 
-
-using PUndoList = std::shared_ptr<UndoList>;
-using PRedoList = std::shared_ptr<RedoList>;
 
 }
 

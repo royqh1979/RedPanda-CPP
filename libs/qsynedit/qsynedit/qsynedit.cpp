@@ -74,13 +74,16 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
+    connect(mDocument.get(), &Document::undoRedoStateChanged,
+            this, &QSynEdit::updateModifiedStatusForUndoRedo);
 
     mGutterWidth = 0;
 
-    mUndoList = std::make_shared<UndoList>();
-    mUndoList->connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
-    mRedoList = std::make_shared<RedoList>();
-//    mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
+    // the undo/redo stacks are owned by the (possibly shared) document;
+    // the view keeps pointers to them for convenience
+    mUndoList = mDocument->undoList();
+    mRedoList = mDocument->redoList();
+    connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
 
     mForegroundColor=palette().color(QPalette::Text);
     mBackgroundColor=palette().color(QPalette::Base);
@@ -4215,6 +4218,7 @@ void QSynEdit::doUndo()
         mUndoList->removeCaretAndSelInfo(number);
     }
     updateModifiedStatusForUndoRedo();
+    mDocument->notifyUndoRedoStateChanged();
     endEditing();
     onChanged();
 }
@@ -4535,6 +4539,7 @@ void QSynEdit::doRedo()
     setActiveSelectionMode(endInfo->selMode);
     endInternalChanges();
     updateModifiedStatusForUndoRedo();
+    mDocument->notifyUndoRedoStateChanged();
     onChanged();
     endEditing();
 }
@@ -5019,17 +5024,30 @@ void QSynEdit::setDocument(const PDocument &document)
     if (!document || mDocument == document)
         return;
     disconnect(mDocument.get(), nullptr, this, nullptr);
+    disconnect(mUndoList.get(), nullptr, this, nullptr);
     mDocument = document;
+    // the undo/redo stacks are owned by the document; the view re-points
+    // its aliases and inherits the shared history as-is
+    mUndoList = mDocument->undoList();
+    mRedoList = mDocument->redoList();
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
-    // reset per-view state; the undo/redo stacks refer to the old
-    // document's positions and cannot be kept
-    resetEditState();
+    connect(mDocument.get(), &Document::undoRedoStateChanged,
+            this, &QSynEdit::updateModifiedStatusForUndoRedo);
+    connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
+    // reset per-view state; the caret/scroll reset must not be recorded
+    // into the shared undo stacks
+    bool oldUndoing = mUndoing;
+    mUndoing = true;
     mTopPos = 0;
     mLeftPos = 0;
+    setCaretPos(fileBegin());
+    mCodeBlocks.clear();
+    mUndoing = oldUndoing;
+    updateModifiedStatusForUndoRedo();
     reparseDocument();
     onGutterChanged();
     updateVScrollbar();
@@ -6972,11 +6990,8 @@ void QSynEdit::onUndoAdded()
 {
     updateModifiedStatusForUndoRedo();
 
-    // we have to clear the redo information, since adding undo info removes
-    // the necessary context to undo earlier edit actions
-    if (! mUndoList->insideRedo() &&
-            mUndoList->peekItem() && (mUndoList->peekItem()->changeReason()!=ChangeReason::GroupBreak))
-        mRedoList->clear();
+    // the redo stack clearing on new edits is handled by the Document
+    // (it owns the shared stacks)
 
     onChanged();
 }

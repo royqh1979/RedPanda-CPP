@@ -410,9 +410,9 @@ public:
      * @brief attach this view to a (possibly shared) document.
      *
      * The view's per-view state is reset: caret/selection to the document
-     * begin, scroll to top-left, fold ranges rebuilt, undo/redo history
-     * cleared (until undo moves to the document level, the stacks refer to
-     * the old document's positions and cannot be kept).
+     * begin, scroll to top-left, fold ranges rebuilt. The undo/redo
+     * histories belong to the document and are inherited as-is; the view's
+     * modified status is synced from the shared undo state.
      * The document keeps the font it was constructed with; views sharing a
      * document must use the same font metrics until line metrics move out
      * of Document.

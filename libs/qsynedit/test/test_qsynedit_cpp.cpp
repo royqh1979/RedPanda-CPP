@@ -12103,13 +12103,27 @@ void TestQSyneditCpp::test_shared_document_basics()
     QTest::keyPress(mEdit.get(), 'x');
     QCOMPARE(edit2->content(), mEdit->content());
     edit2->setReadOnly(false);
+    QStringList contentAfterX = mEdit->content();
 
-    // undo histories are per-view for now: view 2 cannot undo view 1's edits
-    QVERIFY(!edit2->canUndo());
-    clearSignalDatas();
-    mEdit->undo(); // undoes the 'x'
+    // undo history is shared (document-level): view 2 can undo view 1's
+    // edit; the caret snapshot is applied to the view triggering the undo
+    QVERIFY(edit2->canUndo());
+    edit2->undo();
+    QCOMPARE(mEdit->content(), edit2->content());
+    QVERIFY(mEdit->content() != contentAfterX);
+    // both views re-sync their modified status on undo/redo
+    QVERIFY(mEdit->modified());
+    QVERIFY(edit2->modified());
+    // redo from view 1, then undo from view 1 and redo from view 2
+    QVERIFY(mEdit->canRedo());
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), contentAfterX);
+    QCOMPARE(edit2->content(), contentAfterX);
+    mEdit->undo();
     QCOMPARE(edit2->content(), mEdit->content());
-    QVERIFY(mEdit->canUndo());
+    edit2->redo();
+    QCOMPARE(mEdit->content(), contentAfterX);
+    QCOMPARE(edit2->content(), contentAfterX);
 }
 
 void TestQSyneditCpp::test_shared_document_fold_shift()

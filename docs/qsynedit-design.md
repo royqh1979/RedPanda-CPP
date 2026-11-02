@@ -16,6 +16,13 @@
 
 ## 1. 撤销/重做（Undo/Redo）
 
+> 归属：`UndoList`/`RedoList` 实例由 **Document** 持有（多视图共享同一份历史；
+> 各视图经 `QSynEdit::mUndoList`/`mRedoList` 别名访问）。新编辑使 redo 栈失效的清理
+> 由 Document 自己完成（`addedUndo` 时按 `insideRedo`/栈顶类型判定）；undo/redo 操作
+> 完成后由触发视图调 `Document::notifyUndoRedoStateChanged()`，所有视图据此同步
+> modified。块级 caret/选区快照是视图无关的纯数据，恢复时套用到触发 undo/redo 的
+> 视图（详见 2.5 与 `qsynedit-multiview-analysis.md` 2.3）。
+
 ### 1.1 数据结构
 
 **`UndoItem`**（`document.h:700`）——一次变更的记录，**immutable**（构造后只读）：
@@ -59,9 +66,9 @@
 
 ### 1.4 协作流程
 
-1. **编辑时**：`QSynEdit::beginEditing`/`endEditing`（`qsynedit.cpp:1757,1768`）包装编辑操作，内部调 `mUndoList->beginBlock/endBlock`；各编辑命令经 `addChangeToUndo`（`qsynedit.cpp:322`）记录 `UndoItem`。
+1. **编辑时**：`QSynEdit::beginEditing`/`endEditing`（`qsynedit.cpp:1751,1763`）包装编辑操作，内部调 `mUndoList->beginBlock/endBlock`；各编辑命令经 `addChangeToUndo`（`qsynedit.cpp:326`）记录 `UndoItem`。
 2. **undo 时**（`doUndo`，`qsynedit.cpp:4163`）：先弹出连续的 `GroupBreak` 项搬入 redo 栈；然后按 `changeNumber` 归并执行（同编号视为一次逻辑操作；`GroupUndo` 选项开启时还会归并相邻同类型变更）；每个 `doUndoItem` 把 redo 所需数据 push 进 `mRedoList`；结束后把 caret/selection 快照从 undo 侧搬到 redo 侧，并按"变更前"快照恢复光标与选区。
-3. **redo 时**（`doRedo`，`qsynedit.cpp:4482`）：镜像过程——`GroupBreak` 搬回 undo 栈（`restoreChange`），按编号归并执行 `doRedoItem`，快照搬回 undo 侧，按"变更后"快照恢复光标与选区。
+3. **redo 时**（`doRedo`，`qsynedit.cpp:4483`）：镜像过程——`GroupBreak` 搬回 undo 栈（`restoreChange`），按编号归并执行 `doRedoItem`，快照搬回 undo 侧，按"变更后"快照恢复光标与选区。
 4. **新编辑发生时**：redo 栈清空。
 
 ### 1.5 编辑操作的三种实现类型
@@ -134,7 +141,8 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责（后台解析线程会读语法状态）。
 6. **变更通知**：`changed`/`changing`/`maxLineWidthChanged` 信号。
 
-撤销/重做**不在** Document 内——`UndoList`/`RedoList` 由 `QSynEdit` 持有（`qsynedit.cpp:79-82`），见第 1 章。
+撤销/重做的栈归 Document 持有（多视图共享，见 2.5）；视图经 `QSynEdit::mUndoList`/`mRedoList`
+别名访问同一份实例，见第 1 章。
 
 ### 2.2 职责间的耦合点
 
@@ -176,20 +184,23 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 分支 `qsynedit-multiview` 上的进展：
 
 - **`QSynEdit::setDocument(PDocument)`**：视图可挂接到（共享的）文档；挂接时复位
-  视图态（caret/选区到文档头、滚动归零、折叠重建、undo/redo 栈清空——栈里是旧文档
-  的坐标，不能保留）。`document()` 返回非 const `PDocument` 以便共享。
+  视图态（caret/选区到文档头、滚动归零、折叠重建、modified 从共享 undo 状态同步），
+  undo/redo 历史随文档继承。`document()` 返回非 const `PDocument` 以便共享。
 - **视图侧维护由 `Document::contentChanged` 驱动**（见第 6 章）：任何视图发起的编辑，
   所有挂接视图各自完成折叠平移/重扫、滚动条修正与重绘。语法状态共享（同一语法器
   类型下结果一致），折叠扫描只读共享状态，安全。
+- **undo/redo 栈归 Document 持有（共享）**：视图经 `mUndoList`/`mRedoList` 别名访问
+  同一份栈；undo/redo 由触发视图发起，块级 caret/选区快照套用到触发视图（分析文档
+  2.3 的语义）；`Document::undoRedoStateChanged` 让全部视图同步 modified；
+  新编辑使 redo 栈失效的清理由 Document 自己完成。
 - **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly。
 - **已知限制（后续阶段解除）**：
-  - undo/redo 栈仍属视图——跨视图编辑会使其它视图的栈内坐标漂移，挂接时清空
-    只是规避；undo 需移入文档级（分析文档第 2 节）；
   - 非发起视图的 caret 目前**不随编辑平移**（只在越界时由其它路径钳制）；
     marker 式平移待做；
   - Document 持有字体与行宽度量缓存——共享文档的视图必须用同一字体；
   - 语法器实例每视图一个，多视图下重复解析同一文本（结果一致但浪费）。
-- 单元测试：`test_shared_document_basics` / `test_shared_document_fold_shift`。
+- 单元测试：`test_shared_document_basics`（含跨视图 undo/redo 两轮往返）/
+  `test_shared_document_fold_shift`。
 
 ## 3. 坐标体系
 

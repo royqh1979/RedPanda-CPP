@@ -46,7 +46,32 @@ Document::Document(const QFont& font, QObject *parent):
         std::placeholders::_1,
         std::placeholders::_2,
         std::placeholders::_3);
+    mUndoList = std::make_shared<UndoList>();
+    mRedoList = std::make_shared<RedoList>();
+    // adding a new change invalidates the redo history; this is a
+    // document-level concern (the stacks are shared by all views)
+    connect(mUndoList.get(), &UndoList::addedUndo, this, [this](){
+        if (!mUndoList->insideRedo() &&
+                mUndoList->peekItem() &&
+                mUndoList->peekItem()->changeReason()!=ChangeReason::GroupBreak)
+            mRedoList->clear();
+    });
     ensureHasLine();
+}
+
+PUndoList Document::undoList() const
+{
+    return mUndoList;
+}
+
+PRedoList Document::redoList() const
+{
+    return mRedoList;
+}
+
+void Document::notifyUndoRedoStateChanged()
+{
+    emit undoRedoStateChanged();
 }
 
 int Document::parenthesisLevel(int line) const
