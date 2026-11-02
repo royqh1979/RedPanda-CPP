@@ -3,6 +3,7 @@
 #include <QSignalSpy>
 #include "test_document.h"
 #include "qsynedit/document.h"
+#include "qsynedit/glyphcalculator.h"
 #include "qsynedit/syntaxer/cpp.h"
 
 namespace QSynedit {
@@ -50,7 +51,7 @@ TestDocument::~TestDocument()
 
 void TestDocument::init()
 {
-    mDoc=std::make_shared<Document>(QFont{"monospace"});
+    mDoc=std::make_shared<Document>();
 }
 
 void TestDocument::cleanup()
@@ -973,7 +974,7 @@ void TestDocument::test_reparse()
 
 void TestDocument::test_find_last_line_by_seq()
 {
-    mDoc=std::make_shared<Document>(QFont{});
+    mDoc=std::make_shared<Document>();
     QByteArray encoding;
 
     mDoc->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
@@ -987,13 +988,13 @@ void TestDocument::test_find_last_line_by_seq()
 
 void TestDocument::test_crash_on_debian_amd_64()
 {
-    mDoc=std::make_shared<Document>(QFont{});
+    mDoc=std::make_shared<Document>();
     QByteArray encoding;
 
     mDoc->loadFromFile("resources/queue1.cpp",ENCODING_AUTO_DETECT,encoding);
 
     QCOMPARE(mDoc->getLine(0), "#include <iostream>");
-    QCOMPARE(mDoc->charToGlyphStartPosition(0, mDoc->getLine(0), 0),0);
+    QCOMPARE(mDoc->charToGlyphIndex(0, 0),0);
 }
 
 void TestDocument::initSignalTest()

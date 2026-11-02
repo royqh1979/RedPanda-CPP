@@ -29,6 +29,7 @@
 #include "gutter.h"
 #include "codefolding.h"
 #include "document.h"
+#include "glyphcalculator.h"
 #include "types.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
@@ -743,7 +744,6 @@ private:
     void addChangeToUndo(ChangeReason reason, const CharPos& start, const CharPos& end,
                  const QStringList& changeText, SelectionMode selMode);
 private slots:
-    void onMaxLineWidthChanged();
     void updateHScrollBarLater();
     void onBookMarkOptionsChanged();
     void onGutterChanged();

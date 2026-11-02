@@ -10,6 +10,7 @@ target("qsynedit")
     add_files(
         "qsynedit/codefolding.cpp",
         "qsynedit/constants.cpp",
+        "qsynedit/glyphcalculator.cpp",
         "qsynedit/keystrokes.cpp",
         "qsynedit/miscprocs.cpp",
         "qsynedit/painter.cpp",

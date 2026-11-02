@@ -18,7 +18,6 @@
 #define QSYNEDIT_DOCUMENT_H
 
 #include <QStringList>
-#include <QFontMetrics>
 #include <QMutex>
 #include <QVector>
 #include <memory>
@@ -28,14 +27,6 @@
 #include "qt_utils/utils.h"
 
 namespace QSynedit {
-
-int searchForSegmentIdx(const QList<int> &segList, int maxVal, int value);
-
-//calc length of each segments
-int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx);
-int segmentIntervalStart(const QList<int> &segList, int maxVal, int idx);
-QList<int> calcGlyphStartCharList(const QString &text);
-void expandGlyphStartCharList(const QString& strAdded, int oldStrLen, QList<int> &glyphStartCharList);
 
 class Document;
 
@@ -56,9 +47,7 @@ using SearchConfirmAroundProc = std::function<bool ()>;
  */
 class DocumentLine {
 public:
-    using UpdateWidthFunc = std::function<QList<int>(const QString&, const QList<int> &, int &)>;
-
-    explicit DocumentLine(UpdateWidthFunc updateWidthFunc);
+    explicit DocumentLine();
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
 
@@ -87,12 +76,6 @@ private:
     const QList<int>& glyphStartCharList() const { return mGlyphStartCharList; }
 
     /**
-     * @brief get list of start position of the glyphs in the line text
-     * @return start positions of the glyph (in pixel)
-     */
-    const QList<int>& glyphStartPositionList();
-
-    /**
      * @brief get start index of the chars representing the specified glyph.
      * @param i index of the glyph in the line (starting from 0)
      * @return char index in the line text (start from 0)
@@ -114,28 +97,6 @@ private:
     QString glyph(int i) const;
 
     /**
-     * @brief get start position of the specified glyph.
-     * @param i index of the glyph in the line (starting from 0)
-     * @return start position in the line (pixel)
-     */
-    int glyphStartPosition(int i);
-
-    /**
-     * @brief get width （pixels) of the specified glyph.
-     * @param i index of the glyph of the line (starting from 0)
-     * @return
-     */
-    int glyphWidth(int i);
-
-
-    /**
-     * @brief get the width (pixel) of the line text
-     * @return the width (in width)
-     */
-    int width();
-
-
-    /**
      * @brief get the state of the syntax highlighter after this line is parsed
      * @return
      */
@@ -147,8 +108,6 @@ private:
     void setSyntaxState(const PSyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 
     void setLineText(const QString &newLineText);
-    void updateWidth();
-    void invalidateWidth() { mWidth = -1; mGlyphStartPositionList.clear(); mIsTempWidth = true;}
 private:
     QString mLineText; /* the unicode code points of the text */
     /**
@@ -160,30 +119,12 @@ private:
      */
     QList<int> mGlyphStartCharList;
     /**
-     * @brief start columns of the glyphs
-     *
-     * A glyph may occupy more than one columns in the screen.
-     * Each elements of mGlyphStartPositionList is the columns occupied by the glyph.
-     * The width of a glyph is affected by the font used to display,
-     * so it must be recalculated each time the font is changed.
-     */
-    QList<int> mGlyphStartPositionList;
-    /**
      * @brief state of the syntax highlighter after this line is parsed
      *
      * QSynedit use this state to speed up syntax highlight parsing.
      * Which is also used in auto-indent calculating and other functions.
      */
     PSyntaxState mSyntaxState;
-    /**
-     * @brief total width (pixel) of the line text
-     *
-     * The width of glyphs is affected by the font used to display,
-     * so it must be recalculated each time the font is changed.
-     */
-    int mWidth;
-    bool mIsTempWidth;
-    UpdateWidthFunc mUpdateWidthFunc;
     size_t mLineSeq;
     static size_t seqCounter;
     friend class Document;
@@ -207,85 +148,6 @@ public:
     explicit BinaryFileError (const QString& reason);
 };
 
-class GlyphCalculator {
-public:
-    explicit GlyphCalculator(const QFont& font);
-
-    int tabSize() const {
-        return mTabSize;
-    }
-    void setTabSize(int newTabSize) { mTabSize = newTabSize; }
-
-
-    int tabWidth() const {
-        return mTabSize * spaceWidth();
-    }
-
-    int spaceWidth() const {
-        if (mForceMonospace)
-            return mCharWidth;
-        return mSpaceWidth;
-    }
-
-    bool forceMonospace() const { return mForceMonospace; }
-
-    void setForceMonospace(bool newForceMonospace) { mForceMonospace = newForceMonospace; }
-
-    const QFontMetrics &fontMetrics() const { return mFontMetrics; }
-
-    void setFont(const QFont &newFont);
-
-    int glyphWidth(const QString& glyph, int left,
-                   const QFontMetrics &fontMetrics,
-                   bool forceMonospace) const;
-
-    int glyphWidth(const QString &glyph, int left) const{
-        return glyphWidth(glyph,left,mFontMetrics,mForceMonospace);
-    }
-
-    QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList,
-                                     const QFontMetrics &fontMetrics,
-                                     int left, int &right) const;
-
-    QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const {
-        return calcGlyphPositionList(lineText, glyphStartCharList,
-                                     mFontMetrics,
-                                     left,right);
-    }
-
-    /**
-     * @brief calculate display width of a string
-     *
-     * The string may contains the tab char, whose width depends on the tab size and it's position
-     *
-     * @param str the string to be displayed
-     * @param left start x pos of the string
-     * @return width of the string, don't including colsBefore
-     */
-    int stringWidth(const QString &str, int left) const;
-
-    int stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics) const;
-
-    QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width) const {
-        return calcGlyphPositionList(lineText,glyphStartCharList,0,width);
-    }
-    QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
-
-    int updateGlyphStartPositionList(
-            const QString& lineText,
-            const QList<int> &glyphStartCharList,
-            int startChar, int endChar,
-            const QFontMetrics &fontMetrics,
-            QList<int> &glyphStartPositionList,
-            int left, int &right, int &startGlyph, int &endGlyph) const;
-private:
-    QFontMetrics mFontMetrics;
-    int mTabSize;
-    int mCharWidth;
-    int mSpaceWidth;
-    bool mForceMonospace;
-};
-
 /**
  * @brief The Document class
  *
@@ -296,7 +158,7 @@ class Document : public QObject
 {  
     Q_OBJECT
 public:
-    explicit Document(const QFont& font, QObject* parent=nullptr);
+    explicit Document(QObject* parent=nullptr);
     Document(const Document&)=delete;
     Document& operator=(const Document&)=delete;
 
@@ -331,31 +193,6 @@ public:
     int braceLevel(int line) const;
 
     /**
-     * @brief get width of the specified line
-     *
-     * It's thread safe
-     *
-     * @param line line index (starts frome 0)
-     * @return
-     */
-    int lineWidth(int line) const;
-
-    /**
-     * @brief get width of the specified text / line
-     *
-     * It's thread safe.
-     * If the new text is the same as the line text, it just
-     * returns the line width pre-calculated.
-     * If the new text is not the same as the line text, it
-     * calculates the width of the new text and return.
-     *
-     * @param line line index (starts frome 0)
-     * @param newText the new text
-     * @return
-     */
-    int lineWidth(int line, const QString &newText) const;
-
-    /**
      * @brief get block (indent) level of the specified line
      *
      * It's thread safe.
@@ -378,15 +215,6 @@ public:
      * @return
      */
     int blockEnded(int line) const;
-
-    /**
-     * @brief get width of the longest line (has the max width)
-     *
-     * It's thread safe.
-     *
-     * @return
-     */
-    int maxLineWidth() const;
 
     /**
      * @brief get line break of the current document
@@ -426,17 +254,6 @@ public:
     QString getLine(int line) const;
 
     size_t getLineSeq(int line) const;
-
-    // /**
-    //  * @brief get position list of the glyphs on the specified line.
-    //  *
-    //  * It's thread safe.
-    //  * Each element of the list is the index of the starting char in the line text.
-    //  *
-    //  * @param line line index (starts frome 0)
-    //  * @return
-    //  */
-    // QList<int> getGlyphPositions(int index);
 
     /**
      * @brief get count of lines in the document
@@ -570,10 +387,6 @@ public:
     QString glyph(int line, int glyphIdx) const;
     QString glyphAt(int line, int charPos) const;
 
-    int stringWidth(const QString &str, int left) const {
-        return mGlyphCalculator.stringWidth(str, left);
-    }
-
     int charToGlyphStartChar(int line, int charPos) const;
     //int columnToGlyphStartColumn(int line, int charPos);
 
@@ -603,32 +416,6 @@ public:
     int glyphLength(int line, int glyphIdx) const;
 
     /**
-     * @brief get start column of the specified glyph in the specified line.
-     *
-     * It's thread safe.
-     *
-     * @param line index of the line in the document (starting from 0)
-     * @param glyphIdx index of the glyph in the line (starting from 0)
-     * @return the column (starting from 1)
-     */
-    int glyphStartPostion(int line, int glyphIdx) const;
-
-    /**
-     * @brief get width (in columns) of the specified glyph in the specified line.
-     *
-     * It's thread safe.
-     *
-     * @param line index of the line in the document (starting from 0)
-     * @param glyphIdx index of the glyph in the line (starting from 0)
-     * @return
-     */
-    int glyphWidth(int line, int glyphIdx) const;
-
-    int glyphWidth(const QString &glyph, int left) const {
-        return mGlyphCalculator.glyphWidth(glyph,left);
-    }
-
-    /**
      * @brief get index of the glyph represented by the specified char
      *
      * It's thread safe.
@@ -647,22 +434,6 @@ public:
     QList<int> getGlyphStartCharList(int line, const QString &lineText);
     QList<int> getGlyphStartCharList(int line);
 
-    /**
-     * @brief get index of the glyph displayed on the specified column
-     *
-     * It's thread safe.
-     *
-     * @param line index of the line (starting from 0)
-     * @param column the column (starting from 1)
-     * @return glyph index in the line (starting from 0)
-     */
-    int xposToGlyphIndex(int line, int xpos) const;
-
-    int charToGlyphStartPosition(int line, int charPos) const;
-    int xposToGlyphStartChar(int line, int xpos) const;
-    int charToGlyphStartPosition(int line, const QString newStr, int charPos) const;
-    int xposToGlyphStartChar(int line, const QString newStr, int xpos) const;
-
     bool getAppendNewLineAtEOF() const;
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
@@ -671,33 +442,13 @@ public:
 
     bool empty() const;
 
-    int tabSize() const { return mGlyphCalculator.tabSize(); }
-
-    int tabWidth() const { return mGlyphCalculator.tabWidth(); }
-
-    int spaceWidth() const { return mGlyphCalculator.spaceWidth(); }
-
-    void setTabSize(int newTabSize);
-
-    const QFontMetrics &fontMetrics() const { return mGlyphCalculator.fontMetrics(); }
-    void setFont(const QFont &newFont) {
-        mGlyphCalculator.setFont(newFont);
-        invalidateAllLineWidth();
-    }
-
-    bool forceMonospace() const { return mGlyphCalculator.forceMonospace(); }
-    void setForceMonospace(bool newForceMonospace);
 #ifdef QSYNEDIT_TEST
     QList<int> getGlyphStartCharListForTest(int line);
 #endif
 
-public slots:
-    void invalidateAllNonTempLineWidth();
-
 signals:
     void changed();
     void changing();
-    void maxLineWidthChanged();
     /**
      * @brief emitted once at the outermost endUpdate with the ordered,
      * coalesced line-level changes accumulated in the batch. When emitted,
@@ -734,7 +485,6 @@ protected:
     void internalClear();
 private:
     void ensureHasLine();
-    void invalidateAllLineWidth();
     void recordChange(DocumentChangeKind kind, int line, int count);
     // reparse lines [startLine, endLine) with mSyntaxer and store the states;
     // when parseToEnd is set and the syntaxer needs line states, parsing
@@ -748,15 +498,6 @@ public:
      * an undo/redo so every attached view re-syncs its modified status
      */
     void notifyUndoRedoStateChanged();
-private:
-    bool lineWidthValid(int line);
-    void beginSetLinesWidth();
-    void endSetLinesWidth();
-    void setLineWidth(int line, int newWidth, const QList<int> &glyphStartPositionList);
-    void updateMaxLineWidthChanged();
-    void updateMaxLineWidthAndNotify();
-
-    int xposToGlyphIndex(int strWidth, const QList<int> &glyphPositionList, int xpos) const;
     int charToGlyphIndex(const QString& str, const QList<int> &glyphStartCharList, int charPos) const;
     QList<int> getGlyphStartPositionList(int line);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
@@ -766,11 +507,8 @@ private:
     DocumentLines mLines;
     QMap<size_t,PDocumentLine> mLineSeqIndice;
 
-    DocumentLine::UpdateWidthFunc mUpdateDocumentLineWidthFunc;
-
     NewlineType mNewlineType;
     bool mAppendNewLineAtEOF;
-    int mIndexOfLongestLine;
     int mUpdateCount;
     DocumentChangeSet mPendingChanges;
 
@@ -778,13 +516,7 @@ private:
     PRedoList mRedoList;
     PSyntaxer mSyntaxer;
 
-    int mSetLineWidthLockCount;
-    bool mMaxLineChangedInSetLinesWidth;
     mutable QRecursiveMutex mMutex;
-
-    GlyphCalculator mGlyphCalculator;
-
-    friend class QSynEditPainter;    
 };
 
 enum class ChangeReason {

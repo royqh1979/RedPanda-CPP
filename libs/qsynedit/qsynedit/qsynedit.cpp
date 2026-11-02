@@ -62,7 +62,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mPaintLock = 0;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    mDocument = std::make_shared<Document>(mFontDummy, this);
+    mDocument = std::make_shared<Document>(this);
 
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
@@ -72,8 +72,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
-    connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
     connect(mDocument.get(), &Document::syntaxerChanged,
@@ -2025,12 +2023,6 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
         return s+mSyntaxer->foldString(s);
     }
     return s;
-}
-
-void QSynEdit::onMaxLineWidthChanged()
-{
-    invalidate(); // repaint first, to update line widths
-    updateHScrollBarLater();
 }
 
 void QSynEdit::updateHScrollBarLater()
@@ -4298,7 +4290,6 @@ void QSynEdit::setTabSize(int newTabSize)
     if (newTabSize!=tabSize()) {
         beginInternalChanges();
         mGlyphCalculator.setTabSize(newTabSize);
-        mDocument->setTabSize(newTabSize);
         invalidateAllLineMetrics();
         invalidate();
         endInternalChanges();
@@ -4334,7 +4325,6 @@ void QSynEdit::setOptions(const EditorOptions &value)
 
         setScrollBars(mScrollBars);
         mGlyphCalculator.setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace));
-        mDocument->setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace) );
         invalidateAllLineMetrics();
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
@@ -5249,8 +5239,6 @@ void QSynEdit::setDocument(const PDocument &document)
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
-    connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
     connect(mDocument.get(), &Document::syntaxerChanged,
@@ -6664,8 +6652,6 @@ bool QSynEdit::event(QEvent *event)
     case QEvent::FontChange: {
         mGlyphCalculator.setFont(font());
         invalidateAllLineMetrics();
-        if (mDocument)
-            mDocument->setFont(font());
         synFontChanged();
         break;
     }

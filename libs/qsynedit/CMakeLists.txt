@@ -5,6 +5,7 @@
 set(QSYNEDIT_QT_PLAIN_CPP
     qsynedit/codefolding
     qsynedit/constants
+    qsynedit/glyphcalculator
     qsynedit/keystrokes
     qsynedit/miscprocs
     qsynedit/painter

@@ -136,21 +136,22 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 1. **文本内容**：行存储与编辑（`insertLine`/`deleteLines`/`moveLine`/`putLine`/`setText`/`setContents` 等）、空文档不变式（`ensureHasLine`，`document.cpp:1100`）、行序号（`lineSeq`/`findLineBySeq`/`mLineSeqIndice`）、批量更新（`beginUpdate`/`endUpdate`）。
 2. **语法分析结果**：每行 `PSyntaxState` 的存取（`getSyntaxState`/`setSyntaxState`），以及其字段的访问器——`parenthesisLevel`/`bracketLevel`/`braceLevel`/`blockLevel`/`blockStarted`/`blockEnded` 全部直接读 `syntaxState()` 的字段（`document.cpp:52-131`）。注意语法状态不只服务高亮：`shouldInsertAfterCurrentLine`（`qsynedit.cpp:1411`）用它做编辑决策，因此它是"模型+编辑"共享的数据。
-3. **绘制缓存**（已视图化，Document 侧残留待批 2 移除）：字形分段
-   （`mGlyphStartCharList`，**与字体无关**，留在 `DocumentLine`）；字形像素位置与行宽
-   （**与字体有关**）已移到视图侧——QSynEdit 持有 `GlyphCalculator`（视图字体）与
-   按行 seq 键控的 `LineMetrics` 缓存（`mLineMetrics`），绘制时由 painter 用逐 token
-   样式字体精确计算并写回（`setLineMetrics`），未绘制行按需用基础字体惰性估算
-   （`isTemp` 标记）；最长行跟踪（`mMaxLineWidthSeq`）与 `maxLineWidthChanged` 的
-   滚动条联动也视图化了。失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、
-   惰性压缩；Move 的 seq 随行走、缓存自然有效。Document 侧的旧宽度缓存/GlyphCalculator/
-   `maxLineWidthChanged` 信号暂时保留（不再有读者），批 2 移除。
+3. **字形分段**（`mGlyphStartCharList`，**与字体无关**，留在 `DocumentLine`；
+   分段工具函数与 `GlyphCalculator` 同在 `glyphcalculator.h/.cpp`）。
+   字形像素位置与行宽（**与字体有关**）已完全移到视图侧：QSynEdit 持有
+   `GlyphCalculator`（视图字体）与按行 seq 键控的 `LineMetrics` 缓存
+   （`mLineMetrics`），绘制时由 painter 用逐 token 样式字体精确计算并写回
+   （`setLineMetrics`），未绘制行按需用基础字体惰性估算（`isTemp` 标记）；
+   最长行跟踪（`mMaxLineWidthSeq`）与水平滚动条联动也在视图侧。
+   失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、惰性压缩；
+   Move 的 seq 随行走、缓存自然有效。**Document 不再持有字体/字号/tabSize
+   等任何度量状态**（构造函数不再接收 `QFont`），也不再提供像素 API。
 4. **文件 I/O 与编码**：`loadFromFile`/`saveToFile`、UTF-16/32 BOM 处理（`loadUTF16BOMFile` 等，`document.cpp:525-567`）、编码探测（`tryLoadFileByEncoding`）、换行风格（`NewlineType`/`lineBreak`）、`appendNewLineAtEOF`。
 5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责。线程访问约定（多视图共享后同样成立）：
    - **文本内容/语法状态**：后台线程会读文档，现有两条路径：(a) CppParser 解析线程经 `EditorManager::getContentFromOpenedEditor`（`editormanager.cpp:901`，由 `CppFileParserThread` 触发）读全文；(b) 编译器线程构建命令行时取 `WORDXY` 宏（`compiler.cpp:466` → `macroVariables` → `wordAtCursor` → `tokenAt` → `getTokenAttr`，`qsynedit.cpp:285`），后者**克隆局部 syntaxer 扫描**、只经锁读 Document。因此文档读写都必须过 `mMutex`，且 syntaxer 指针本身的读取也要加锁（`setSyntaxer` 在 GUI 线程写）；
    - **UndoList/RedoList 自身无锁**：约定只在 GUI 线程访问（编辑、undo/redo 均由用户操作/快捷键触发，事件循环天然串行化）。多视图共享不产生竞争——两个视图不可能"同时"编辑，所有操作在 GUI 线程排队执行；后台线程不得触碰 undo/redo 栈；
    - **信号连接**：Document/UndoList 的信号只允许直接连接到 GUI 线程对象；跨线程 queued 连接的槽不得再回写文档（不得在持锁状态下引入跨线程重入）。
-6. **变更通知**：`changed`/`changing`/`maxLineWidthChanged` 信号。
+6. **变更通知**：`changed`/`changing`/`contentChanged`/`linesReparsed`/`syntaxerChanged`/`undoRedoStateChanged` 信号（见 6.2）。
 
 撤销/重做的栈归 Document 持有（多视图共享，见 2.5）；视图经 `QSynEdit::mUndoList`/`mRedoList`
 别名访问同一份实例，见第 1 章。
@@ -158,7 +159,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 ### 2.2 职责间的耦合点
 
 - **失效级联**：文本修改 → 字形分段与宽度缓存失效（`invalidateWidth`）→ 最长行重估；语法状态由 chokepoint 同步重解析更新（见 6.1 顺序约束 1）。目前三层失效在同一对象内就地完成，拆开后需设计跨对象的失效通知链。
-- **API 面**：`lineWidth`/`maxLineWidth`/`stringWidth`/`glyph*`/`fontMetrics`/`setFont` 挂在 `Document` 上，被 `QSynEdit`（约 10 处）使用，且 `QSynEditPainter` 是 `Document` 的 friend 直接访问内部（`document.h:666`、`painter.cpp:793`）。
+- **API 面**（已解除）：像素 API（`lineWidth`/`maxLineWidth`/`stringWidth`/`glyphStartPosition`/`xposToGlyph*`/`fontMetrics`/`setFont`/`setTabSize` 等）已全部从 `Document` 移除，挂在 `QSynEdit` 上（视图字体）；`QSynEditPainter` 不再是 `Document` 的 friend。`Document` 保留的 `glyph*`/`charToGlyph*` 均为**字体无关**的索引类接口。
 - **锁粒度**：拆分后文本锁、语法状态锁、度量缓存锁的关系需要重新设计，否则易死锁或丢保护。
 
 ### 2.3 拆分思路（讨论稿）
@@ -171,7 +172,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 注意：`mGlyphStartCharList`（字形分段）与字体无关，可留在文本侧或独立成纯函数模块；只有"位置/宽度"必须跟字体走。
 
-务实的走法是分两步：先移出职责 3 中字体相关的部分（位置/宽度/GlyphCalculator/最长行），字形分段留下；验证后再议语法状态与文件 I/O 的归属。每步的失效链与调用点迁移都可控。
+务实的走法是分两步：先移出职责 3 中字体相关的部分（位置/宽度/GlyphCalculator/最长行）——**已完成**（GlyphCalculator 独立为 `glyphcalculator.h/.cpp`，归视图持有；Document/DocumentLine 的度量成员与像素 API 全部移除），字形分段留下；后续再议语法状态与文件 I/O 的归属。
 
 > 历史背景：该拆分是公认的大改动，因此一直未动；本文档先固化职责清单与耦合点，作为动手前的事实基线。
 
@@ -185,9 +186,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 - 即使自带字体，跨平台字体引擎取整仍可能有 ±1 像素差异，宽度断言应尽量运行时现算期望值，不写死像素；
 - **运行方式**：Windows 桌面环境跑测试**不要**设 `QT_QPA_PLATFORM=offscreen`（offscreen 仅用于 Linux 无头 CI）；运行前需将 Qt bin 与 mingw64/bin 加入 `PATH`。
 
-自带字体解除了对系统字体环境（字体缺失、回退字体度量随 QPA 平台变化）的依赖；
-但"字形分段（字体无关）与宽度度量（字体相关）混在 Document 中"（见 2.1 职责 3）
-意味着编辑行为测试仍与字体度量耦合，只是度量现已可复现。
+自带字体解除了对系统字体环境（字体缺失、回退字体度量随 QPA 平台变化）的依赖。
+宽度度量已移到视图侧（见 2.1 职责 3），但编辑行为（如光标上下移动的像素位置
+保持）仍经视图字体度量换算，因此行为测试仍与字体度量耦合，只是度量现已可复现。
 
 ### 2.5 多视图支持现状（进行中）
 
@@ -217,9 +218,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   （`ensureVisible=false`），只钳制实际受影响的坐标（列模式越界 caret 不受
   误钳）。undo/redo 同样生效（发起者恢复快照，其它视图平移）。
 - **已知限制（后续阶段解除）**：
-  - ~~共享文档的视图必须用同一字体~~ 已解除：字体度量已视图化（GlyphCalculator +
-    seq 键控 LineMetrics 缓存），不同视图可用不同字体；Document 侧的字体残留
-    待批 2 移除；
+  - ~~共享文档的视图必须用同一字体~~ 已解除：字体度量已完全视图化
+    （GlyphCalculator 独立成 `glyphcalculator.h/.cpp` 归视图持有 +
+    seq 键控 LineMetrics 缓存；Document 不再持有任何度量状态），
+    不同视图可用不同字体；
   - 非发起视图在语言切换后得到默认配色实例，配色重应用是应用侧的职责
     （IDE 多视图接线时处理）；
   - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形
@@ -422,8 +424,6 @@ caret 已是终态。
   （gutter autosize、topPos 钳制、`endInternalChanges` 聚合刷新）。
   注意：编辑被 `beginEditing/endEditing` 包裹后，编辑期间该信号**每次编辑一次**，
   不再是逐原语 N 次。不做跨组件一致性恢复（见 6.1 铁律 2）。
-- `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条
-  （依赖字体度量，多视图归属待度量拆分时处理）。
 - `syntaxerChanged()`：文档语法器更换且全量重解析完成后发出；非发起视图据此
   换自己的语法器实例（默认配色）、重扫折叠、重绘（见 4.1）。
 - `linesReparsed(startLine, endLine)`：编辑原语内建的重解析（或 `reparseAll`）更新
