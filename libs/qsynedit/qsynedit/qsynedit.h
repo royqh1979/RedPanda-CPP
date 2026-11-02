@@ -579,8 +579,6 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatusForUndoRedo();
-    int reparseLines(int startLine, int endLine, bool toDocumentEnd);
-    //void reparseLine(int line);
     void uncollapse(const PCodeBlock &foldRange);
     void collapse(const PCodeBlock &foldRange);
     void processCodeBlocksOnLinesInserted(int line, int count);
@@ -712,6 +710,7 @@ private slots:
     void onLinesChanging();
     void onDocumentContentChanged(const DocumentChangeSet &changes);
     void onDocumentSyntaxerChanged();
+    void onDocumentLinesReparsed(int startLine, int endLine);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();
@@ -750,6 +749,11 @@ private:
     int mTextHeight;
     int mTopPos;
     PSyntaxer mSyntaxer;
+    // reparse ranges reported by Document::linesReparsed while a document
+    // batch is in flight; the repaint is deferred to onDocumentContentChanged
+    // (after the fold rescan). -1 = no pending range; end may be INT_MAX.
+    int mPendingReparseInvalidateStart = -1;
+    int mPendingReparseInvalidateEnd = -1;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mForegroundColor;

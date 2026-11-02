@@ -519,6 +519,22 @@ public:
      */
     void setSyntaxer(const PSyntaxer &syntaxer);
 
+    /**
+     * @brief reparse lines [startLine, endLine) with the document's syntaxer
+     * and store the resulting syntax states; when parseToEnd is set and the
+     * syntaxer needs line states, parsing continues past endLine until the
+     * states converge. Must be called synchronously from the edit path:
+     * editing decisions (auto indent) read the states of just-edited lines
+     * within the same batch. Emits linesReparsed with the actually parsed
+     * range. Returns the line where parsing stopped (exclusive).
+     */
+    int reparseLines(int startLine, int endLine, bool parseToEnd);
+    /**
+     * @brief unconditionally reparse the whole document (no early stop on
+     * state convergence) and emit linesReparsed(0, count())
+     */
+    void reparseAll();
+
     int addLine(const QString& s);
     void addLines(const QStringList& strings);
 
@@ -678,6 +694,15 @@ signals:
      * adopt the new language (createInstance() from syntaxer()) and refresh.
      */
     void syntaxerChanged();
+    /**
+     * @brief emitted synchronously after reparseLines()/reparseAll() have
+     * updated the syntax states of [startLine, endLine). endLine is
+     * exclusive; INT_MAX means "to the end of the document". Views use it to
+     * repaint the reparsed range (including the reparse tail that lies
+     * outside the edited lines); when emitted mid-batch the view defers the
+     * repaint until after the fold rescan in the contentChanged slot.
+     */
+    void linesReparsed(int startLine, int endLine);
 protected:
     QString getTextStr() const;
     void insertItem(int line, const QString& s);
@@ -687,9 +712,6 @@ private:
     void ensureHasLine();
     void invalidateAllLineWidth();
     void recordChange(DocumentChangeKind kind, int line, int count);
-    // reparse every line with mSyntaxer and store the resulting states;
-    // caller must hold mMutex (it is recursive)
-    void reparseAll();
 public:
     /**
      * @brief emit undoRedoStateChanged(); called by the view that performed

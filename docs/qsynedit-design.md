@@ -149,7 +149,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 ### 2.2 职责间的耦合点
 
-- **失效级联**：文本修改 → 字形分段与宽度缓存失效（`invalidateWidth`）→ 最长行重估；语法状态由重解析异步更新。目前三层失效在同一对象内就地完成，拆开后需设计跨对象的失效通知链。
+- **失效级联**：文本修改 → 字形分段与宽度缓存失效（`invalidateWidth`）→ 最长行重估；语法状态由 chokepoint 同步重解析更新（见 6.1 顺序约束 1）。目前三层失效在同一对象内就地完成，拆开后需设计跨对象的失效通知链。
 - **API 面**：`lineWidth`/`maxLineWidth`/`stringWidth`/`glyph*`/`fontMetrics`/`setFont` 挂在 `Document` 上，被 `QSynEdit`（约 10 处）使用，且 `QSynEditPainter` 是 `Document` 的 friend 直接访问内部（`document.h:666`、`painter.cpp:793`）。
 - **锁粒度**：拆分后文本锁、语法状态锁、度量缓存锁的关系需要重新设计，否则易死锁或丢保护。
 
@@ -264,8 +264,12 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 - **Document 持有一个裸 syntaxer 实例**（`Document::mSyntaxer`，默认构造、不应用配色），
   职责只有一个：编辑级联中重算每行 `PSyntaxState`——多视图共享文档时它是这些共享状态的
-  **唯一写入者**（视图的 chokepoint `properSetLine` 等经 `mDocument->syntaxer()` 取用它，
-  `QSynEdit::reparseLines`/`reparseDocument` 同样用它）。`Document::syntaxer()` 加锁返回，
+  **唯一写入者**。重解析函数也归 Document 所有：`Document::reparseLines(startLine,
+  endLine, parseToEnd)`（`parseToEnd` 内部与 `needsLineState()` 相与；解析至状态收敛，
+  返回停止行）与 `Document::reparseAll()`（无条件全量，供 `setSyntaxer` 与
+  `QSynEdit::reparseDocument` 使用）；视图的 chokepoint（`properSetLine` 等）在编辑原语
+  之后**同步**调用它们。完成后发射 `linesReparsed(startLine, endLine)` 驱动视图重绘
+  （见 6.1/6.2）。`Document::syntaxer()` 加锁返回，
   后台线程（编译器线程 WORDXY 路径，`qsynedit.cpp` `getTokenAttr`）只能从这里取指针、
   再 `createInstance()` 出线程局部的克隆来扫描，**不得触碰任何长效实例的扫描状态**。
 - **每个 QSynEdit 持有自己的 syntaxer 实例**（`mSyntaxer`，IDE 已应用配色方案），供绘制
@@ -316,6 +320,21 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 未走 `beginEditing` 的 Document 直改路径（如测试直接调 document 方法）
 按原语自身批次发射，粒度退化为逐原语但语义不变。
 
+**两条顺序硬约束**：
+
+1. **重解析必须与编辑同步交错**（不能 defer 到 `endUpdate`）：批次内后续编辑决策
+   要读刚编辑行的语法状态——Enter 换行（`doInsertNewLine`）在 `properSetLine`/
+   `properInsertLine` 后立即用该行新状态算下一行的自动缩进；undo 的
+   MergeWithNext/PrevLine 重放同构。所以 chokepoint 内同步调
+   `Document::reparseLines`。
+2. **重绘必须在折叠重扫之后**：`invalidateLines` 经 `lineToRow()` 依赖折叠映射。
+   因此 `linesReparsed` 在批次内到达时，视图只记录区间
+   （`mPendingReparseInvalidateStart/End`），重绘延迟到 `onDocumentContentChanged`
+   中 `rescanCodeBlocks` 之后统一执行；Insert/Delete 的 `invalidateFrom→INT_MAX`
+   全覆盖天然吞并重解析尾部的 pending 区间，纯 SetLine 批次行号稳定、区间准确。
+   非批次的 `linesReparsed`（`setSyntaxer`/`reparseDocument`）立即重绘。
+   Qt 的 `update()` 自动合并，多次 invalidate 无性能问题。
+
 **ChangeSet 累积规则**（`Document::recordChange`，`document.cpp`）：
 
 - 原语在批次内按序记录 `(kind, line, count)`（`DocumentChangeKind`：
@@ -364,6 +383,10 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
   （依赖字体度量，多视图归属待度量拆分时处理）。
 - `syntaxerChanged()`：文档语法器更换且全量重解析完成后发出；非发起视图据此
   换自己的语法器实例（默认配色）、重扫折叠、重绘（见 4.1）。
+- `linesReparsed(startLine, endLine)`：`reparseLines`/`reparseAll` 更新语法状态后
+  同步发出，endLine 排他、`INT_MAX` 表示到文档末尾。视图用它重绘重解析范围
+  （含编辑行之外的状态收敛尾部）；批次内到达时延迟到折叠重扫后应用（见 6.1
+  顺序约束 2）。
 - `undoRedoStateChanged()`：undo/redo 执行后发出，全部视图同步 modified 状态。
 
 **UndoList / Gutter → QSynEdit（上行通知）：**

@@ -78,6 +78,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
     connect(mDocument.get(), &Document::syntaxerChanged,
             this, &QSynEdit::onDocumentSyntaxerChanged);
+    connect(mDocument.get(), &Document::linesReparsed,
+            this, &QSynEdit::onDocumentLinesReparsed);
 
     mGutterWidth = 0;
 
@@ -3336,70 +3338,35 @@ void QSynEdit::updateModifiedStatusForUndoRedo()
 //    qDebug()<<mModified<<oldModified;
 }
 
-int QSynEdit::reparseLines(int startLine, int endLine, bool toDocumentEnd)
+void QSynEdit::onDocumentLinesReparsed(int startLine, int endLine)
 {
-    PSyntaxState state;
-    int maxLine = toDocumentEnd ? mDocument->count() : endLine;
-    startLine = std::max(0,startLine);
-    endLine = std::min(endLine, mDocument->count());
-    maxLine = std::min(maxLine, mDocument->count());
-
-
-    if (startLine >= maxLine) {
-        invalidateLines(startLine, INT_MAX);
-        return startLine;
-    }
-
-    // the syntax-state cascade runs on the document's own (bare) syntaxer,
-    // so the shared states have a single writer no matter which view edits
-    PSyntaxer syntaxer = mDocument->syntaxer();
-    if (startLine == 0) {
-        syntaxer->resetState();
-    } else {
-        syntaxer->setState(mDocument->getSyntaxState(startLine-1));
-    }
-    int line = startLine;
-    do {
-        syntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
-        syntaxer->nextToEol();
-        state = syntaxer->getState();
-        if (line >= endLine && state->equals(mDocument->getSyntaxState(line)) ) {
-            break;
-        }
-        mDocument->setSyntaxState(line,state);
-        line++;
-    } while (line < maxLine);
-    invalidateLines(startLine, line);
-#ifdef QT_DEBUG
-//    qDebug()<<"parse endLine"<<endLine<<"real end"<<line;
-#endif
-    //don't rescan folds if only currentLine is reparsed
 #ifdef QSYNEDIT_TEST
-        emit linesReparesd(startLine, line-startLine);
+    if (endLine != INT_MAX)
+        emit linesReparesd(startLine, endLine-startLine);
 #endif
-    if (line-startLine==1)
-        return line;
-
-    if (mEditingCount>0) {
-        return line;
+    if (mDocument->inUpdate()) {
+        // mid-batch: the fold mapping is not updated yet (it is shifted and
+        // rescanned in onDocumentContentChanged), and invalidateLines()
+        // depends on it via lineToRow(). Defer the repaint to there.
+        if (mPendingReparseInvalidateStart < 0 || startLine < mPendingReparseInvalidateStart)
+            mPendingReparseInvalidateStart = startLine;
+        if (endLine == INT_MAX || mPendingReparseInvalidateEnd == INT_MAX) {
+            mPendingReparseInvalidateEnd = INT_MAX;
+        } else if (endLine > mPendingReparseInvalidateEnd) {
+            mPendingReparseInvalidateEnd = endLine;
+        }
+    } else {
+        invalidateLines(startLine, endLine);
     }
-    return line;
 }
 
 void QSynEdit::reparseDocument()
 {
-    PSyntaxer syntaxer = mDocument->syntaxer();
-    syntaxer->resetState();
-    for (int i =0;i<mDocument->count();i++) {
-        syntaxer->setLine(i, mDocument->getLine(i), mDocument->getLineSeq(i));
-        syntaxer->nextToEol();
-        mDocument->setSyntaxState(i, syntaxer->getState());
-    }
-#ifdef QSYNEDIT_TEST
-    emit linesReparesd(0, mDocument->count());
-#endif
-    invalidateLines(0,mDocument->count());
+    mDocument->reparseAll();
+    // invalidate after the fold rescan: invalidateLines() maps lines to rows
+    // through the fold mapping, so it must run on the rescanned state
     rescanCodeBlocks();
+    invalidateLines(0,mDocument->count());
 }
 
 void QSynEdit::uncollapse(const PCodeBlock &foldRange)
@@ -5063,6 +5030,8 @@ void QSynEdit::setDocument(const PDocument &document)
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
     connect(mDocument.get(), &Document::syntaxerChanged,
             this, &QSynEdit::onDocumentSyntaxerChanged);
+    connect(mDocument.get(), &Document::linesReparsed,
+            this, &QSynEdit::onDocumentLinesReparsed);
     connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
     // reset per-view state; the caret/scroll reset must not be recorded
     // into the shared undo stacks
@@ -5080,6 +5049,8 @@ void QSynEdit::setDocument(const PDocument &document)
         mSyntaxer = mDocument->syntaxer()->createInstance();
         recalcCharExtent();
     }
+    mPendingReparseInvalidateStart = -1;
+    mPendingReparseInvalidateEnd = -1;
     updateModifiedStatusForUndoRedo();
     reparseDocument();
     onGutterChanged();
@@ -5639,13 +5610,13 @@ int QSynEdit::searchReplace(const QString &searchText, const QString &replaceWit
 void QSynEdit::properSetLine(int line, const QString &lineText, bool parseToEnd)
 {
     mDocument->putLine(line,lineText);
-    reparseLines(line, line + 1, parseToEnd && mDocument->syntaxer()->needsLineState());
+    mDocument->reparseLines(line, line + 1, parseToEnd);
 }
 
 void QSynEdit::properInsertLine(int line, const QString &lineText, bool parseToEnd)
 {
     mDocument->insertLine(line, lineText);
-    reparseLines(line,line+1, parseToEnd && mDocument->syntaxer()->needsLineState());
+    mDocument->reparseLines(line,line+1, parseToEnd);
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
@@ -5656,8 +5627,8 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
     // Unlike properInsertLine(s)/properSetLine/properMoveLine, deletion has no
     // new lines to parse: with a line-local syntaxer the shifted lines' states
     // stay valid, so the reparse can be skipped entirely.
-    if (parseToEnd && mDocument->syntaxer()->needsLineState())
-        reparseLines(line, line + count, true);
+    if (parseToEnd)
+        mDocument->reparseLines(line, line + count, true);
 }
 
 void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
@@ -5665,7 +5636,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
     if (count<=0)
         return;
     mDocument->insertLines(line, count);
-    reparseLines(line,line+count, parseToEnd && mDocument->syntaxer()->needsLineState());
+    mDocument->reparseLines(line,line+count, parseToEnd);
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
@@ -5675,7 +5646,7 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     mDocument->moveLine(from, to);
     int minLine = std::min(from,to);
     int maxLine = std::max(from,to);
-    reparseLines(minLine, maxLine+1, parseToEnd && mDocument->syntaxer()->needsLineState());
+    mDocument->reparseLines(minLine, maxLine+1, parseToEnd);
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -6984,21 +6955,31 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
             scrollbarChanged = true;
             break;
         case DocumentChangeKind::SetLine:
-            // repaint of content-changed lines is driven by reparseLines
+            // repaint of content-changed lines is driven by the deferred
+            // linesReparsed invalidate below
             break;
         }
-    }
-    if (scrollbarChanged)
-        updateVScrollbar();
-    if (invalidateFrom >= 0) {
-        //we must invalidate whole editor to properly render contents
-        invalidateLines(invalidateFrom, INT_MAX);
     }
     // rebuild fold ranges from the (shared) syntax states: incremental
     // shifts above only track line numbers, they don't notice blocks
     // appearing/disappearing. Every view needs this, not just the one
     // that initiated the edit.
     rescanCodeBlocks();
+    if (scrollbarChanged)
+        updateVScrollbar();
+    // repaint after the fold rescan: invalidateLines() maps lines to rows
+    // through the fold mapping, so it must run on the rescanned state.
+    // Insert/Delete invalidate to the end, which subsumes any deferred
+    // reparse-tail range; a SetLine-only batch repaints just the reparsed
+    // range.
+    if (invalidateFrom >= 0) {
+        //we must invalidate whole editor to properly render contents
+        invalidateLines(invalidateFrom, INT_MAX);
+    } else if (mPendingReparseInvalidateStart >= 0) {
+        invalidateLines(mPendingReparseInvalidateStart, mPendingReparseInvalidateEnd);
+    }
+    mPendingReparseInvalidateStart = -1;
+    mPendingReparseInvalidateEnd = -1;
 }
 
 void QSynEdit::onLinesChanged()

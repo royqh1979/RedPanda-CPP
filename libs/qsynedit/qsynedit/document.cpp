@@ -92,12 +92,48 @@ void Document::setSyntaxer(const PSyntaxer &syntaxer)
 
 void Document::reparseAll()
 {
+    QMutexLocker locker(&mMutex);
     mSyntaxer->resetState();
     for (int i = 0; i < mLines.size(); i++) {
         mSyntaxer->setLine(i, mLines[i]->lineText(), mLines[i]->lineSeq());
         mSyntaxer->nextToEol();
         mLines[i]->setSyntaxState(mSyntaxer->getState());
     }
+    emit linesReparsed(0, mLines.size());
+}
+
+int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
+{
+    QMutexLocker locker(&mMutex);
+    bool toDocumentEnd = parseToEnd && mSyntaxer->needsLineState();
+    int maxLine = toDocumentEnd ? mLines.size() : endLine;
+    startLine = std::max(0,startLine);
+    endLine = std::min(endLine, (int)mLines.size());
+    maxLine = std::min(maxLine, (int)mLines.size());
+
+    if (startLine >= maxLine) {
+        emit linesReparsed(startLine, INT_MAX);
+        return startLine;
+    }
+
+    if (startLine == 0) {
+        mSyntaxer->resetState();
+    } else {
+        mSyntaxer->setState(getSyntaxState(startLine-1));
+    }
+    int line = startLine;
+    do {
+        mSyntaxer->setLine(line, getLine(line), getLineSeq(line));
+        mSyntaxer->nextToEol();
+        PSyntaxState state = mSyntaxer->getState();
+        if (line >= endLine && state->equals(getSyntaxState(line)) ) {
+            break;
+        }
+        setSyntaxState(line, state);
+        line++;
+    } while (line < maxLine);
+    emit linesReparsed(startLine, line);
+    return line;
 }
 
 void Document::notifyUndoRedoStateChanged()

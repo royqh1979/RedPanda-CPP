@@ -1,7 +1,9 @@
 #include <QTest>
 #include <QCoreApplication>
+#include <QSignalSpy>
 #include "test_document.h"
 #include "qsynedit/document.h"
+#include "qsynedit/syntaxer/cpp.h"
 
 namespace QSynedit {
 
@@ -931,6 +933,37 @@ void TestDocument::test_content_changed()
     mDoc->moveLine(0, 1);
     QCOMPARE(batches.count(), 1);
     QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Move, 0, 1));
+}
+
+void TestDocument::test_reparse()
+{
+    QSignalSpy reparseSpy(mDoc.get(), &Document::linesReparsed);
+
+    // setSyntaxer reparses the whole (empty) document itself
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+    QCOMPARE(reparseSpy.count(), 1);
+
+    // content changes alone do not reparse; the document reparses on demand
+    // and the states are correct without any view attached
+    mDoc->setContents({"int main() {", "    return 0;", "}"});
+    reparseSpy.clear();
+    int end = mDoc->reparseLines(0, 1, true);
+    // parsing continues past endLine until the states converge (the early
+    // stop line is an optimization detail, only the states are contractual)
+    QVERIFY(end>=2);
+    QCOMPARE(mDoc->braceLevel(0), 1);
+    QCOMPARE(mDoc->braceLevel(1), 1);
+    QCOMPARE(mDoc->braceLevel(2), 0);
+    QCOMPARE(reparseSpy.count(), 1);
+    QCOMPARE(reparseSpy.takeFirst().at(0).toInt(), 0);
+
+    // without parseToEnd the reparse stops at endLine
+    mDoc->putLine(0, "void f() {}");
+    reparseSpy.clear();
+    end = mDoc->reparseLines(0, 1, false);
+    QCOMPARE(end, 1);
+    QCOMPARE(mDoc->braceLevel(0), 0);
+    QCOMPARE(reparseSpy.count(), 1);
 }
 
 void TestDocument::test_find_last_line_by_seq()
