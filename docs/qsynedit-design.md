@@ -328,6 +328,10 @@ glyph 不拆，空格/tab/标点处优先折行，CJK 任意位置。短行粗�
 `glyphStartXList` 同一坐标系），caret 的 displayX 再减段起始 x 得到段内 x，
 不依赖 painter 是否已运行。命名约定：StartChar=字符索引、StartX=像素、
 GlyphIndex=glyph 序号。
+**WrapLayout 同时取代了旧 LineMetrics**：行宽与逐 glyph 位置统一存一份，
+没有基础字体粗估路径（isTemp 已删除）——所有布局都按样式字体精算，
+可见行/编辑行同步算、其余行后台补算，不存在"估算值可不可用"的窗口。
+无换行模式只复用其位置/宽度（段数恒为 1）。
 
 **后台补全与同步**（大文件不阻塞 GUI）：
 - 可见行的布局由 GUI 同步按需计算；`WrapLayoutJob`（`wraplayoutjob.h/.cpp`，

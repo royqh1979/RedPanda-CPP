@@ -347,12 +347,15 @@ static bool isWrapBreakableGlyph(const QString &glyph)
 
 WrapLayout QSynEdit::computeWrapLayout(int line) const
 {
-    WrapLayout result;
-    result.segmentStartChars.append(0);
-    result.segmentStartXs.append(0);
-    if (!mOptions.testFlag(EditorOption::WordWrap))
-        return result;
-    return computeWrapLayoutForLine(mDocument, line, mSyntaxer.get(), mGlyphCalculator, font(), wrapWidth());
+    WrapLayout result = computeWrapLayoutForLine(
+                mDocument, line, mSyntaxer.get(), mGlyphCalculator, font(), wrapWidth());
+    if (!mOptions.testFlag(EditorOption::WordWrap)) {
+        // positions/width are still used for metrics, but a line is always
+        // exactly one display segment when wrapping is off
+        result.segmentStartChars = {0};
+        result.segmentStartXs = {0};
+    }
+    return result;
 }
 
 static void startParseLineForDocument(Syntaxer *syntaxer, const PDocument &document, int line, const QString &text)
@@ -376,12 +379,8 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
     if (text.isEmpty() || wrapWidth <= 0)
         return result;
     QList<int> glyphStartCharList = document->getGlyphStartCharList(line);
-    // short-line fast path: positions with the base font, no styled scan
-    if (glyphCalculator.stringWidth(text, 0) <= wrapWidth) {
-        result.glyphStartXList = glyphCalculator.calcLineWidth(text, glyphStartCharList, result.totalWidth);
-        return result;
-    }
-    // exact per-token styled measurement (same font logic as the painter)
+    // exact per-token styled measurement (same font logic as the painter):
+    // every layout is exact, there is no base-font estimate path
     startParseLineForDocument(syntaxer, document, line, text);
     int x = 0;          // absolute x in the line's glyph space
     int segStart = 0;   // current segment's start char
@@ -1032,9 +1031,9 @@ int QSynEdit::xposToGlyphStartChar(int line, const QString &s, int xpos) const
     QList<int> glyphPositionList;
     int width;
     if (mDocument->getLine(line) == s) {
-        const LineMetrics &metrics = lineMetrics(line);
-        glyphPositionList = metrics.glyphStartXList;
-        width = metrics.width;
+        const WrapLayout &layout = wrapLayout(line);
+        glyphPositionList = layout.glyphStartXList;
+        width = layout.totalWidth;
     } else {
         glyphPositionList = mGlyphCalculator.calcGlyphPositionList(s, width);
     }
@@ -1060,35 +1059,16 @@ int QSynEdit::stringWidth(const QString &lineText, int left) const
     return mGlyphCalculator.stringWidth(lineText, left);
 }
 
-LineMetrics &QSynEdit::lineMetrics(int line) const
-{
-    size_t seq = mDocument->getLineSeq(line);
-    auto it = mLineMetrics.find(seq);
-    if (it == mLineMetrics.end() || it->width < 0) {
-        // lazy compute with the base (unstyled) font metrics; stays "temp"
-        // until the painter recomputes with the styled per-token fonts
-        LineMetrics metrics;
-        metrics.glyphStartXList = mGlyphCalculator.calcLineWidth(
-                    mDocument->getLine(line),
-                    mDocument->getGlyphStartCharList(line),
-                    metrics.width);
-        metrics.isTemp = true;
-        it = mLineMetrics.insert(seq, metrics);
-    }
-    return *it;
-}
-
 void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartXList)
 {
     // called by the painter with exact (styled) metrics
     if (line<0 || line>=mDocument->count())
         return;
     size_t seq = mDocument->getLineSeq(line);
-    LineMetrics &metrics = mLineMetrics[seq];
-    int oldWidth = metrics.width;
-    metrics.width = width;
-    metrics.isTemp = false;
-    metrics.glyphStartXList = glyphStartXList;
+    WrapLayout &layout = mWrapLayouts[seq];
+    int oldWidth = layout.totalWidth;
+    layout.totalWidth = width;
+    layout.glyphStartXList = glyphStartXList;
     if (mMaxLineWidthSeq == 0) {
         mMaxLineWidthSeq = seq;
         noteMaxLineWidthDirty();
@@ -1100,8 +1080,8 @@ void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartX
             noteMaxLineWidthDirty();
         }
     } else {
-        auto it = mLineMetrics.constFind(mMaxLineWidthSeq);
-        if (it != mLineMetrics.constEnd() && it->width < width) {
+        auto it = mWrapLayouts.constFind(mMaxLineWidthSeq);
+        if (it != mWrapLayouts.constEnd() && it->totalWidth < width) {
             mMaxLineWidthSeq = seq;
             noteMaxLineWidthDirty();
         }
@@ -1113,7 +1093,7 @@ void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartX
 int QSynEdit::lineWidth(int line) const
 {
     if (line>=0 && line < mDocument->count())
-        return lineMetrics(line).width;
+        return wrapLayout(line).totalWidth;
     return 0;
 }
 
@@ -1122,7 +1102,7 @@ int QSynEdit::lineWidth(int line, const QString &newText) const
     if (line<0 || line >= mDocument->count())
         return 0;
     if (mDocument->getLine(line)==newText)
-        return lineMetrics(line).width;
+        return wrapLayout(line).totalWidth;
     return mGlyphCalculator.stringWidth(newText,0);
 }
 
@@ -1130,16 +1110,16 @@ bool QSynEdit::lineWidthValid(int line) const
 {
     if (line<0 || line>=mDocument->count())
         return false;
-    auto it = mLineMetrics.constFind(mDocument->getLineSeq(line));
-    return it != mLineMetrics.constEnd() && it->width >= 0 && !it->isTemp;
+    auto it = mWrapLayouts.constFind(mDocument->getLineSeq(line));
+    return it != mWrapLayouts.constEnd() && it->totalWidth >= 0;
 }
 
 int QSynEdit::maxLineWidth() const
 {
     if (mMaxLineWidthSeq != 0) {
-        auto it = mLineMetrics.constFind(mMaxLineWidthSeq);
-        if (it != mLineMetrics.constEnd())
-            return it->width;
+        auto it = mWrapLayouts.constFind(mMaxLineWidthSeq);
+        if (it != mWrapLayouts.constEnd())
+            return it->totalWidth;
         mMaxLineWidthSeq = 0;  // stale entry (e.g. its line was deleted)
     }
     if (mDocument->empty())
@@ -1149,7 +1129,7 @@ int QSynEdit::maxLineWidth() const
 
 QList<int> QSynEdit::glyphStartXList(int line) const
 {
-    return lineMetrics(line).glyphStartXList;
+    return wrapLayout(line).glyphStartXList;
 }
 
 int QSynEdit::glyphStartX(int line, int glyphIdx) const
@@ -1158,18 +1138,18 @@ int QSynEdit::glyphStartX(int line, int glyphIdx) const
         return 0;
     if (glyphIdx<0)
         return 0;
-    const LineMetrics &metrics = lineMetrics(line);
-    if (glyphIdx >= metrics.glyphStartXList.length())
-        return metrics.width;
-    return metrics.glyphStartXList[glyphIdx];
+    const WrapLayout &layout = wrapLayout(line);
+    if (glyphIdx >= layout.glyphStartXList.length())
+        return layout.totalWidth;
+    return layout.glyphStartXList[glyphIdx];
 }
 
 int QSynEdit::glyphWidth(int line, int glyphIdx) const
 {
     if (line<0 || line>=mDocument->count())
         return 0;
-    const LineMetrics &metrics = lineMetrics(line);
-    return calcSegmentInterval(metrics.glyphStartXList, metrics.width, glyphIdx);
+    const WrapLayout &layout = wrapLayout(line);
+    return calcSegmentInterval(layout.glyphStartXList, layout.totalWidth, glyphIdx);
 }
 
 int QSynEdit::glyphWidth(const QString &glyph, int left) const
@@ -1181,8 +1161,8 @@ int QSynEdit::xposToGlyphIndex(int line, int xpos) const
 {
     if (line<0 || line>=mDocument->count())
         return 0;
-    const LineMetrics &metrics = lineMetrics(line);
-    return searchForSegmentIdx(metrics.glyphStartXList, metrics.width, xpos);
+    const WrapLayout &layout = wrapLayout(line);
+    return searchForSegmentIdx(layout.glyphStartXList, layout.totalWidth, xpos);
 }
 
 int QSynEdit::charToGlyphStartX(int line, int charPos) const
@@ -1215,7 +1195,7 @@ int QSynEdit::spaceWidth() const
 
 void QSynEdit::invalidateAllLineMetrics()
 {
-    mLineMetrics.clear();
+    mWrapLayouts.clear();
     mWrapLayouts.clear();
     mWrapGeneration++;
     mWrapDirtySeqs.clear();
@@ -1223,22 +1203,15 @@ void QSynEdit::invalidateAllLineMetrics()
     mMaxLineWidthSeq = 0;
 }
 
-void QSynEdit::invalidateNonTempLineMetrics()
-{
-    for (auto it = mLineMetrics.begin(); it != mLineMetrics.end(); ++it) {
-        if (!it->isTemp)
-            it->isTemp = true;
-    }
-}
 
 void QSynEdit::compactLineMetrics()
 {
     // entries of deleted lines are unreachable (seqs are never reused) but
     // would leak; rebuild when the map grows well past the line count
-    if (mLineMetrics.size() > 2*mDocument->count()+64) {
-        for (auto it = mLineMetrics.begin(); it != mLineMetrics.end();) {
+    if (mWrapLayouts.size() > 2*mDocument->count()+64) {
+        for (auto it = mWrapLayouts.begin(); it != mWrapLayouts.end();) {
             if (!mDocument->findLineBySeq(it.key()))
-                it = mLineMetrics.erase(it);
+                it = mWrapLayouts.erase(it);
             else
                 ++it;
         }
@@ -1260,7 +1233,7 @@ void QSynEdit::recomputeMaxLineWidthAndNotify()
     int maxWidth = -1;
     size_t maxSeq = 0;
     for (int i=0;i<mDocument->count();i++) {
-        int width = lineMetrics(i).width;
+        int width = wrapLayout(i).totalWidth;
         if (width > maxWidth) {
             maxWidth = width;
             maxSeq = mDocument->getLineSeq(i);
@@ -3549,7 +3522,7 @@ PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineTex
 
 void QSynEdit::invalidateAllNonTempLineWidth()
 {
-    invalidateNonTempLineMetrics();
+    invalidateAllLineMetrics();
 }
 
 int QSynEdit::calcLineAlignedTopPos(int currentValue, bool passFirstLine)
@@ -5513,7 +5486,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
         // the shared syntax states; it reparses and notifies the other views
         mDocument->setSyntaxer(syntaxer->createInstance());
     }
-    invalidateNonTempLineMetrics();
+    invalidateAllLineMetrics();
     invalidate();
 }
 
@@ -5525,7 +5498,7 @@ void QSynEdit::onDocumentSyntaxerChanged()
         // scheme is the application side's business
         mSyntaxer = mDocument->createSyntaxerInstance();
         recalcCharExtent();
-        invalidateNonTempLineMetrics();
+        invalidateAllLineMetrics();
     }
     rescanCodeBlocks();
     invalidate();
@@ -7563,7 +7536,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
                 size_t seq = mDocument->getLineSeq(i);
                 if (seq == mMaxLineWidthSeq)
                     mMaxLineWidthSeq = 0;
-                mLineMetrics.remove(seq);
+                mWrapLayouts.remove(seq);
                 mWrapLayouts.remove(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;

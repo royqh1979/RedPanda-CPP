@@ -114,12 +114,6 @@ struct GlyphPostionsListCache {
  * demand with the view's base font) and cached by the view, keyed by the
  * document line's seq. The document only holds font-independent data.
  */
-struct LineMetrics {
-    int width = -1;                     // -1 = invalid/dirty
-    QList<int> glyphStartXList;  // pixel position of each glyph
-    bool isTemp = true;                 // computed with the base (unstyled) font
-};
-
 // word-wrap layout of one buffer line: the line is broken into
 // segmentStartChars.size() display segments. Both lists are parallel;
 // segmentStartXs are the segments' absolute start x in the line's glyph
@@ -132,6 +126,9 @@ struct WrapLayout {
     // painter has run: no base-font/styled-font mismatch
     QList<int> glyphStartXList;
     int totalWidth = 0;
+    // true = computed with the base (unstyled) font (short path);
+    // false = exact per-token styled metrics (long path or painter writeback)
+    bool isTemp = true;
 };
 
 // a batch of background-computed wrap layouts, posted to the view by a
@@ -672,11 +669,8 @@ private:
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
-    // per-line font metrics cache (view-side, keyed by line seq):
-    LineMetrics &lineMetrics(int line) const;  // lazily computes with the base font
     void setLineMetrics(int line, int width, const QList<int> &glyphStartXList);
     void invalidateAllLineMetrics();
-    void invalidateNonTempLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
     // word-wrap layout computation (view-side, lazily cached per line seq)
     WrapLayout computeWrapLayout(int line) const;
@@ -840,9 +834,6 @@ private:
     // insert/delete/move, so cached entries stay attached to their line;
     // SetLine invalidates the line's entry). See design doc 2.1 item 3.
     GlyphCalculator mGlyphCalculator{QFont("monospace")};
-    mutable QHash<size_t, LineMetrics> mLineMetrics;
-    // per-line word-wrap layouts, keyed by line seq (same lifecycle rules
-    // as mLineMetrics). Invalidated with invalidateAllLineMetrics().
     mutable QHash<size_t, WrapLayout> mWrapLayouts;
     // shared with in-flight WrapLayoutJobs: the destructor marks the view
     // dead, serialized with the jobs' result posting
