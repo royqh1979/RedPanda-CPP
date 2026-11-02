@@ -201,14 +201,22 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   新编辑使 redo 栈失效的清理由 Document 自己完成。
 - **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly、
   配色方案（两个视图可对同一文档用不同配色）。
+- **非发起视图的 caret/选区平移（已实现）**：其它视图发起编辑时，本视图在
+  `onDocumentContentChanged` 里按 changeSet 做 marker 式平移（Insert 行号+n、
+  Delete 落入删除带的钳到删除点、Move 跟随被移行、SetLine 所在行 ch 钳到行长）；
+  发起视图靠 `mEditingCount>0` 识别并跳过（`endEditing` 把计数递减推迟到
+  `endUpdate` 之后，使发起标记在 contentChanged 槽内成立）。平移不滚动本视图
+  （`ensureVisible=false`），只钳制实际受影响的坐标（列模式越界 caret 不受
+  误钳）。undo/redo 同样生效（发起者恢复快照，其它视图平移）。
 - **已知限制（后续阶段解除）**：
-  - 非发起视图的 caret 目前**不随编辑平移**（只在越界时由其它路径钳制）；
-    marker 式平移待做；
   - Document 持有字体与行宽度量缓存——共享文档的视图必须用同一字体；
   - 非发起视图在语言切换后得到默认配色实例，配色重应用是应用侧的职责
-    （IDE 多视图接线时处理）。
+    （IDE 多视图接线时处理）；
+  - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形
+    （单视图时代同样存在）。
 - 单元测试：`test_shared_document_basics`（含跨视图 undo/redo 两轮往返）/
-  `test_shared_document_fold_shift`/`test_shared_document_syntaxer`。
+  `test_shared_document_fold_shift`/`test_shared_document_syntaxer`/
+  `test_shared_document_caret_shift`。
 
 ## 3. 坐标体系
 
@@ -335,8 +343,11 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 `Document::beginUpdate/endUpdate`（两者都计数嵌套），文档批次边界 == 编辑操作边界。
 `endEditing` 的顺序：`endBlock` 拍"变更后"快照 → 文档 `endUpdate`（发
 `contentChanged`；槽内先按 changeSet 做折叠增量平移，再 `rescanCodeBlocks`
-全量重扫——重扫按平移后的行号回贴 collapsed 状态——然后滚动条修正与重绘）
-→ `endInternalChanges`。发射时文档静默、发起视图 caret 已是终态。
+全量重扫——重扫按平移后的行号回贴 collapsed 状态——然后非发起视图做 caret/选区
+marker 式平移、滚动条修正与重绘）→ `endInternalChanges`。
+`mEditingCount` 的递减**推迟到 `endUpdate` 之后**，使槽内可用 `mEditingCount>0`
+识别出发起视图（其 caret/选区已是终态，跳过平移）。发射时文档静默、发起视图
+caret 已是终态。
 未走 `beginEditing` 的 Document 直改路径（如测试直接调 document 方法）
 按原语自身批次发射，粒度退化为逐原语但语义不变。
 

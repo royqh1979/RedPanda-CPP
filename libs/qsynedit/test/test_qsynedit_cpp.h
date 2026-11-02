@@ -175,6 +175,7 @@ private slots:
     void test_shared_document_basics();
     void test_shared_document_fold_shift();
     void test_shared_document_syntaxer();
+    void test_shared_document_caret_shift();
 };
 
 }

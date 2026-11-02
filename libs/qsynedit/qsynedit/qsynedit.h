@@ -584,6 +584,9 @@ private:
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);
     void rescanCodeBlocks(); // rescan for folds
+    // marker-style caret/selection shift for views that did not initiate an
+    // edit (called from onDocumentContentChanged when mEditingCount==0)
+    void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
     void internalScanCodeBlocks();
     PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);

@@ -1767,17 +1767,18 @@ void QSynEdit::beginEditing()
 
 void QSynEdit::endEditing()
 {
-    mEditingCount--;
-    Q_ASSERT(mEditingCount>=0);
-    if (mEditingCount==0) {
+    Q_ASSERT(mEditingCount>0);
+    if (mEditingCount==1) {
         if (!mUndoing)
             mUndoList->endBlock(caretPos(), mSelectionBegin, mSelectionEnd, mActiveSelectionMode);
-        // The outermost document endUpdate emits contentChanged: the slot
-        // shifts fold ranges and rescans them (fold maintenance moved to
-        // the slot so that every view of a shared document maintains
-        // itself; see design doc chapter 6).
+        // keep mEditingCount>0 while the document's outermost endUpdate emits
+        // contentChanged: it marks this view as the initiator, so the
+        // marker-style caret/selection shift in onDocumentContentChanged
+        // (meant for the OTHER views of a shared document) skips it
         mDocument->endUpdate();
+        mEditingCount--;
     } else {
+        mEditingCount--;
         mDocument->endUpdate();
     }
     endInternalChanges();
@@ -6903,6 +6904,41 @@ void QSynEdit::onBookMarkOptionsChanged()
     invalidateGutter();
 }
 
+namespace {
+// shift a buffer position by a line-level document change, marker-style.
+// Pure line math; character-index clamping is done by the caller afterwards.
+CharPos shiftPosByChange(const CharPos &pos, const DocumentChange &change)
+{
+    switch (change.kind) {
+    case DocumentChangeKind::Insert:
+        if (pos.line >= change.line)
+            return CharPos{pos.ch, pos.line + change.count};
+        break;
+    case DocumentChangeKind::Delete:
+        if (pos.line >= change.line + change.count)
+            return CharPos{pos.ch, pos.line - change.count};
+        if (pos.line >= change.line)
+            // inside the deleted band: land at the deletion point
+            return CharPos{pos.ch, change.line};
+        break;
+    case DocumentChangeKind::Move:
+        // count carries the target line
+        if (pos.line == change.line)
+            return CharPos{pos.ch, change.count};
+        if (change.line < change.count
+                && change.line < pos.line && pos.line <= change.count)
+            return CharPos{pos.ch, pos.line - 1};
+        if (change.count < change.line
+                && change.count <= pos.line && pos.line < change.line)
+            return CharPos{pos.ch, pos.line + 1};
+        break;
+    case DocumentChangeKind::SetLine:
+        break;
+    }
+    return pos;
+}
+}
+
 void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
 {
     // Structural guard: the signal is emitted at the outermost endUpdate,
@@ -6943,6 +6979,12 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
     // appearing/disappearing. Every view needs this, not just the one
     // that initiated the edit.
     rescanCodeBlocks();
+    if (mEditingCount == 0) {
+        // this view did not initiate the edit (the initiator is inside
+        // endEditing with mEditingCount>0 and its caret/selection are
+        // already final): shift the caret/selection marker-style
+        shiftCaretAndSelectionByChanges(changes);
+    }
     if (scrollbarChanged)
         updateVScrollbar();
     // repaint after the fold rescan: invalidateLines() maps lines to rows
@@ -6958,6 +7000,52 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
     }
     mPendingReparseInvalidateStart = -1;
     mPendingReparseInvalidateEnd = -1;
+}
+
+void QSynEdit::shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes)
+{
+    CharPos caret = caretPos();
+    CharPos selB = selBegin();
+    CharPos selE = selEnd();
+    bool caretTouched = false, selBTouched = false, selETouched = false;
+    for (const DocumentChange &change : changes) {
+        CharPos newCaret = shiftPosByChange(caret, change);
+        CharPos newSelB = shiftPosByChange(selB, change);
+        CharPos newSelE = shiftPosByChange(selE, change);
+        // a SetLine on the position's line may have shortened it
+        bool onSetLine = change.kind == DocumentChangeKind::SetLine;
+        caretTouched = caretTouched || newCaret != caret
+                || (onSetLine && caret.line == change.line);
+        selBTouched = selBTouched || newSelB != selB
+                || (onSetLine && selB.line == change.line);
+        selETouched = selETouched || newSelE != selE
+                || (onSetLine && selE.line == change.line);
+        caret = newCaret;
+        selB = newSelB;
+        selE = newSelE;
+    }
+    // clamp only touched positions (the document is quiescent here): a
+    // position inside a deleted band may point past the new line end, and a
+    // SetLine may have shortened its line. Untouched positions stay as-is:
+    // a column-mode caret may legitimately sit past the line end.
+    if (caretTouched)
+        caret = ensureCharPosValid(caret);
+    if (selBTouched)
+        selB = ensureCharPosValid(selB);
+    if (selETouched)
+        selE = ensureCharPosValid(selE);
+    if (selE < selB)
+        // shifting is monotone per position, but a Move can invert a
+        // selection spanning the move boundary; keep the invariant
+        std::swap(selB, selE);
+    if (caret != caretPos() || selB != selBegin() || selE != selEnd()) {
+        beginInternalChanges();
+        // ensureVisible=false: another view's edit must not scroll this view
+        internalSetCaretPos(caret, false);
+        internalSetSelBegin(selB);
+        internalSetSelEnd(selE);
+        endInternalChanges();
+    }
 }
 
 void QSynEdit::onLinesChanged()

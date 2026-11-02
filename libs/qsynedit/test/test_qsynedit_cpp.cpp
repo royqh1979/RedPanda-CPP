@@ -12085,12 +12085,13 @@ void TestQSyneditCpp::test_shared_document_basics()
     QCOMPARE(edit2->content(), mEdit->content());
     QCOMPARE(edit2->codeBlockCount(), 1);
 
-    // editing in view 1 syncs content to view 2;
-    // view 2's caret/selection are not touched
+    // editing in view 1 syncs content to view 2; view 2's caret/selection
+    // shift marker-style with the changed lines (the caret sits on line 0,
+    // the inserted line goes before it, so it moves to line 1)
     mEdit->setCaretPos(CharPos{0,0});
     QTest::keyPress(mEdit.get(), Qt::Key_Enter);
     QCOMPARE(edit2->content(), mEdit->content());
-    QCOMPARE(edit2->caretPos(), CharPos(0,0));
+    QCOMPARE(edit2->caretPos(), CharPos(0,1));
     QVERIFY(!edit2->selAvail());
 
     // selection in view 1 does not affect view 2
@@ -12186,6 +12187,62 @@ void TestQSyneditCpp::test_shared_document_syntaxer()
 
     // restore the fixture state
     mEdit->setSyntaxer(std::make_shared<CppSyntaxer>());
+}
+
+void TestQSyneditCpp::test_shared_document_caret_shift()
+{
+    mEdit->setContent({"int a;", "int b;", "int c;", "int d;", "int e;"});
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+
+    // insert above view 2's positions: caret and selection shift down
+    edit2->setCaretAndSelection(CharPos{2,2}, CharPos{1,1}, CharPos{4,3});
+    mEdit->setCaretPos(CharPos{0,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Enter);
+    QCOMPARE(mEdit->caretPos(), CharPos(0,1));
+    QCOMPARE(edit2->caretPos(), CharPos(2,3));
+    QCOMPARE(edit2->selBegin(), CharPos(1,2));
+    QCOMPARE(edit2->selEnd(), CharPos(4,4));
+    QVERIFY(edit2->selAvail());
+
+    // insert below view 2's positions: unchanged
+    mEdit->setCaretPos(mEdit->fileEnd());
+    QTest::keyPress(mEdit.get(), Qt::Key_Enter);
+    QCOMPARE(edit2->caretPos(), CharPos(2,3));
+    QCOMPARE(edit2->selBegin(), CharPos(1,2));
+    QCOMPARE(edit2->selEnd(), CharPos(4,4));
+
+    // delete the caret's line: the caret lands at the deletion point (same
+    // line index, now holding the following content); selEnd shifts up
+    mEdit->setCaretPos(CharPos{0,3});
+    mEdit->processCommand(EditCommand::DeleteLine);
+    QCOMPARE(mEdit->lineText(3), QString("int d;"));
+    QCOMPARE(edit2->caretPos(), CharPos(2,3));
+    QCOMPARE(edit2->selBegin(), CharPos(1,2));
+    QCOMPARE(edit2->selEnd(), CharPos(4,3));
+
+    // SetLine shortening the caret's line clamps the char index
+    edit2->setCaretPos(CharPos{5,2});
+    mEdit->setCaretAndSelection(CharPos{0,2}, CharPos{0,2}, CharPos{4,2});
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->lineText(2), QString("b;"));
+    QCOMPARE(edit2->caretPos(), CharPos(2,2));
+
+    // Move: a caret on the moved line follows it
+    edit2->setCaretPos(CharPos{2,4});
+    mEdit->setCaretPos(CharPos{0,4});
+    mEdit->processCommand(EditCommand::MoveSelUp);
+    QCOMPARE(mEdit->lineText(3), QString("int e;"));
+    QCOMPARE(edit2->caretPos(), CharPos(2,3));
+
+    // deleting a band shifts both selection endpoints to the deletion point
+    edit2->setCaretAndSelection(CharPos{1,1}, CharPos{1,1}, CharPos{2,2});
+    mEdit->setCaretAndSelection(CharPos{0,1}, CharPos{0,1}, CharPos{0,3});
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(edit2->caretPos(), CharPos(1,1));
+    QCOMPARE(edit2->selBegin(), CharPos(1,1));
+    QCOMPARE(edit2->selEnd(), CharPos(2,1));
 }
 
 }
