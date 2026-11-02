@@ -23,17 +23,52 @@
 // document, so both views always show the same file.
 
 #include <QApplication>
+#include <QEvent>
 #include <QFileDialog>
 #include <QFontDatabase>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QSplitter>
+#include <QWheelEvent>
 #include "qsynedit/qsynedit.h"
 #include "qsynedit/syntaxer/cpp.h"
 #include "qt_utils/charsetinfo.h"
 
 using namespace QSynedit;
+
+// Ctrl+wheel font zoom, one instance per view (font size is a per-view
+// property). QSynEdit itself only handles plain/Shift wheel scrolling.
+class WheelZoomFilter : public QObject {
+public:
+    using QObject::QObject;
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (event->type() == QEvent::Wheel) {
+            auto *wheelEvent = static_cast<QWheelEvent *>(event);
+            if (wheelEvent->modifiers() & Qt::ControlModifier) {
+                auto *edit = static_cast<QSynEdit *>(watched);
+                if ((mAccumulatedDelta > 0 && wheelEvent->angleDelta().y() < 0)
+                        || (mAccumulatedDelta < 0 && wheelEvent->angleDelta().y() > 0))
+                    mAccumulatedDelta = 0;
+                mAccumulatedDelta += wheelEvent->angleDelta().y();
+                while (mAccumulatedDelta >= 120) {
+                    mAccumulatedDelta -= 120;
+                    edit->processCommand(EditCommand::ZoomIn);
+                }
+                while (mAccumulatedDelta <= -120) {
+                    mAccumulatedDelta += 120;
+                    edit->processCommand(EditCommand::ZoomOut);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+private:
+    int mAccumulatedDelta = 0;
+};
 
 int main(int argc, char *argv[])
 {
@@ -62,6 +97,15 @@ int main(int argc, char *argv[])
     const QColor activeLineColor = window.palette().color(QPalette::AlternateBase);
     edit1->setActiveLineColor(activeLineColor);
     edit2->setActiveLineColor(activeLineColor);
+
+    // gutter with line numbers is on by default; enable code folding so the
+    // fold buttons show up in the gutter (per-view setting)
+    edit1->setUseCodeFolding(true);
+    edit2->setUseCodeFolding(true);
+
+    // Ctrl+wheel zooms the view under the mouse
+    edit1->installEventFilter(new WheelZoomFilter(edit1));
+    edit2->installEventFilter(new WheelZoomFilter(edit2));
 
     splitter->addWidget(edit1);
     splitter->addWidget(edit2);
