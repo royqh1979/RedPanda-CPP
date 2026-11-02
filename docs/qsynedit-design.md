@@ -136,7 +136,15 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 1. **文本内容**：行存储与编辑（`insertLine`/`deleteLines`/`moveLine`/`putLine`/`setText`/`setContents` 等）、空文档不变式（`ensureHasLine`，`document.cpp:1100`）、行序号（`lineSeq`/`findLineBySeq`/`mLineSeqIndice`）、批量更新（`beginUpdate`/`endUpdate`）。
 2. **语法分析结果**：每行 `PSyntaxState` 的存取（`getSyntaxState`/`setSyntaxState`），以及其字段的访问器——`parenthesisLevel`/`bracketLevel`/`braceLevel`/`blockLevel`/`blockStarted`/`blockEnded` 全部直接读 `syntaxState()` 的字段（`document.cpp:52-131`）。注意语法状态不只服务高亮：`shouldInsertAfterCurrentLine`（`qsynedit.cpp:1411`）用它做编辑决策，因此它是"模型+编辑"共享的数据。
-3. **绘制缓存**：字形分段（`mGlyphStartCharList`，**与字体无关**）、字形像素位置与行宽（`mGlyphStartPositionList`/`mWidth`/`mIsTempWidth`，**与字体有关**）、`GlyphCalculator`（持有 `QFontMetrics`、tabSize、forceMonospace，`document.h:205`）、最长行跟踪（`mIndexOfLongestLine` 与 `maxLineWidthChanged` 信号）。`Document` 构造函数因此依赖 `QFont`（`document.h:294`）。
+3. **绘制缓存**（已视图化，Document 侧残留待批 2 移除）：字形分段
+   （`mGlyphStartCharList`，**与字体无关**，留在 `DocumentLine`）；字形像素位置与行宽
+   （**与字体有关**）已移到视图侧——QSynEdit 持有 `GlyphCalculator`（视图字体）与
+   按行 seq 键控的 `LineMetrics` 缓存（`mLineMetrics`），绘制时由 painter 用逐 token
+   样式字体精确计算并写回（`setLineMetrics`），未绘制行按需用基础字体惰性估算
+   （`isTemp` 标记）；最长行跟踪（`mMaxLineWidthSeq`）与 `maxLineWidthChanged` 的
+   滚动条联动也视图化了。失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、
+   惰性压缩；Move 的 seq 随行走、缓存自然有效。Document 侧的旧宽度缓存/GlyphCalculator/
+   `maxLineWidthChanged` 信号暂时保留（不再有读者），批 2 移除。
 4. **文件 I/O 与编码**：`loadFromFile`/`saveToFile`、UTF-16/32 BOM 处理（`loadUTF16BOMFile` 等，`document.cpp:525-567`）、编码探测（`tryLoadFileByEncoding`）、换行风格（`NewlineType`/`lineBreak`）、`appendNewLineAtEOF`。
 5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责。线程访问约定（多视图共享后同样成立）：
    - **文本内容/语法状态**：后台线程会读文档，现有两条路径：(a) CppParser 解析线程经 `EditorManager::getContentFromOpenedEditor`（`editormanager.cpp:901`，由 `CppFileParserThread` 触发）读全文；(b) 编译器线程构建命令行时取 `WORDXY` 宏（`compiler.cpp:466` → `macroVariables` → `wordAtCursor` → `tokenAt` → `getTokenAttr`，`qsynedit.cpp:285`），后者**克隆局部 syntaxer 扫描**、只经锁读 Document。因此文档读写都必须过 `mMutex`，且 syntaxer 指针本身的读取也要加锁（`setSyntaxer` 在 GUI 线程写）；
@@ -209,7 +217,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   （`ensureVisible=false`），只钳制实际受影响的坐标（列模式越界 caret 不受
   误钳）。undo/redo 同样生效（发起者恢复快照，其它视图平移）。
 - **已知限制（后续阶段解除）**：
-  - Document 持有字体与行宽度量缓存——共享文档的视图必须用同一字体；
+  - ~~共享文档的视图必须用同一字体~~ 已解除：字体度量已视图化（GlyphCalculator +
+    seq 键控 LineMetrics 缓存），不同视图可用不同字体；Document 侧的字体残留
+    待批 2 移除；
   - 非发起视图在语言切换后得到默认配色实例，配色重应用是应用侧的职责
     （IDE 多视图接线时处理）；
   - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形

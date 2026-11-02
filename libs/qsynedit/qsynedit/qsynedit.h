@@ -28,6 +28,7 @@
 #include <QFile>
 #include "gutter.h"
 #include "codefolding.h"
+#include "document.h"
 #include "types.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
@@ -101,6 +102,19 @@ struct GlyphPostionsListCache {
     QList<int> glyphCharList;
     QList<int> glyphPositionList;
     int strWidth;
+};
+
+/**
+ * @brief font-dependent per-line display metrics
+ *
+ * Computed lazily (at paint time with the styled per-token fonts, or on
+ * demand with the view's base font) and cached by the view, keyed by the
+ * document line's seq. The document only holds font-independent data.
+ */
+struct LineMetrics {
+    int width = -1;                     // -1 = invalid/dirty
+    QList<int> glyphStartPositionList;  // pixel position of each glyph
+    bool isTemp = true;                 // computed with the base (unstyled) font
 };
 
 
@@ -188,6 +202,21 @@ public:
     int xposToGlyphLeft(int line, int xpos) const;
     //int xposToGlyphRight(int line, int xpos) const;
     int stringWidth(const QString& lineText, int left) const;
+    // font-dependent line metrics (this view's font; cached per line):
+    int lineWidth(int line) const;
+    int lineWidth(int line, const QString &newText) const;
+    bool lineWidthValid(int line) const;
+    // -1: the longest line is unknown (metrics incomplete, e.g. right after
+    // a font change; re-established during the next paint pass)
+    int maxLineWidth() const;
+    QList<int> glyphStartPositionList(int line) const;
+    int glyphStartPosition(int line, int glyphIdx) const;
+    int glyphWidth(int line, int glyphIdx) const;
+    int glyphWidth(const QString &glyph, int left) const;
+    int xposToGlyphIndex(int line, int xpos) const;
+    int charToGlyphStartPosition(int line, int charPos) const;
+    int charToGlyphStartPosition(int line, const QString &newStr, int charPos) const;
+    int spaceWidth() const;
     int getLineIndent(const QString& lineText) const;
     int rowToLine(int row) const;
     int lineToRow(int line) const;
@@ -587,6 +616,16 @@ private:
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
+    // per-line font metrics cache (view-side, keyed by line seq):
+    LineMetrics &lineMetrics(int line) const;  // lazily computes with the base font
+    void setLineMetrics(int line, int width, const QList<int> &glyphStartPositionList);
+    void invalidateAllLineMetrics();
+    void invalidateNonTempLineMetrics();
+    void compactLineMetrics();  // drop entries of deleted lines when the map grows
+    void noteMaxLineWidthDirty();
+    void recomputeMaxLineWidthAndNotify();
+    void beginSetLineMetrics();
+    void endSetLineMetrics();
     void internalScanCodeBlocks();
     PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
@@ -736,6 +775,15 @@ private:
     int mCaretLine;
     int mCharWidth;
     QFont mFontDummy;
+    // font-dependent line metrics, computed with this view's font and cached
+    // per line, keyed by the document line's seq (seqs follow lines through
+    // insert/delete/move, so cached entries stay attached to their line;
+    // SetLine invalidates the line's entry). See design doc 2.1 item 3.
+    GlyphCalculator mGlyphCalculator{QFont("monospace")};
+    mutable QHash<size_t, LineMetrics> mLineMetrics;
+    mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
+    int mSetLineMetricsLockCount = 0;
+    bool mMaxLineWidthDirtyInBatch = false;
     bool mMouseMoved;
     QPoint mMouseOrigin;
 

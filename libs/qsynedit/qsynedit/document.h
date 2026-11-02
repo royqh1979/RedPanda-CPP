@@ -264,9 +264,9 @@ public:
      */
     int stringWidth(const QString &str, int left) const;
 
-    int stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics);
+    int stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics) const;
 
-    QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width) {
+    QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width) const {
         return calcGlyphPositionList(lineText,glyphStartCharList,0,width);
     }
     QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
@@ -640,6 +640,14 @@ public:
     int charToGlyphIndex(int line, int charPos) const;
 
     /**
+     * @brief the glyph segmentation of the line (font-independent)
+     *
+     * It's thread safe.
+     */
+    QList<int> getGlyphStartCharList(int line, const QString &lineText);
+    QList<int> getGlyphStartCharList(int line);
+
+    /**
      * @brief get index of the glyph displayed on the specified column
      *
      * It's thread safe.
@@ -750,8 +758,6 @@ private:
 
     int xposToGlyphIndex(int strWidth, const QList<int> &glyphPositionList, int xpos) const;
     int charToGlyphIndex(const QString& str, const QList<int> &glyphStartCharList, int charPos) const;
-    QList<int> getGlyphStartCharList(int line, const QString &lineText);
-    QList<int> getGlyphStartCharList(int line);
     QList<int> getGlyphStartPositionList(int line);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);

@@ -246,7 +246,7 @@ bool QSynEdit::canRedo() const
 
 int QSynEdit::maxScrollWidth() const
 {
-    int maxWidth = mDocument->maxLineWidth();
+    int maxWidth = maxLineWidth();
     if (maxWidth < 0)
         return -1;
     if (useCodeFolding())
@@ -613,15 +613,15 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
     int line = rowToLine(row);
     if (xpos<0) {
         xpos=0;
-    } else if (xpos>mDocument->lineWidth(line)) {
-        xpos=mDocument->lineWidth(line)+1;
+    } else if (xpos>lineWidth(line)) {
+        xpos=lineWidth(line)+1;
     } else {
-        int glyphIndex = mDocument->xposToGlyphIndex(line, xpos);
-        int nextGlyphPos = mDocument->glyphStartPostion(line, glyphIndex+1);
+        int glyphIndex = xposToGlyphIndex(line, xpos);
+        int nextGlyphPos = glyphStartPosition(line, glyphIndex+1);
         if (nextGlyphPos - xpos < mCharWidth / 2)
             xpos = nextGlyphPos;
         else
-            xpos = mDocument->glyphStartPostion(line, glyphIndex);
+            xpos = glyphStartPosition(line, glyphIndex);
     }
     return DisplayCoord{xpos, row};
 }
@@ -633,11 +633,11 @@ DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
     int line = rowToLine(row);
     if (xpos<0) {
         xpos=0;
-    } else if (xpos>mDocument->lineWidth(line)) {
-        xpos=mDocument->lineWidth(line)+1;
+    } else if (xpos>lineWidth(line)) {
+        xpos=lineWidth(line)+1;
     } else {
-        int glyphIndex = mDocument->xposToGlyphIndex(line, xpos);
-        xpos = mDocument->glyphStartPostion(line, glyphIndex);
+        int glyphIndex = xposToGlyphIndex(line, xpos);
+        xpos = glyphStartPosition(line, glyphIndex);
     }
     return DisplayCoord{xpos, row};
 }
@@ -718,12 +718,12 @@ int QSynEdit::charToGlyphLeft(int line, int ch) const
 {
     QString s = getDisplayStringAtLine(line);
     Q_ASSERT(ch>=0 && ch<=s.length());
-    return mDocument->charToGlyphStartPosition(line, s, ch);
+    return charToGlyphStartPosition(line, s, ch);
 }
 
 int QSynEdit::charToGlyphLeft(int line, const QString &s, int ch) const
 {
-    return mDocument->charToGlyphStartPosition(line, s, ch);
+    return charToGlyphStartPosition(line, s, ch);
 }
 
 // }
@@ -732,31 +732,264 @@ int QSynEdit::xposToGlyphStartChar(int line, int xpos) const
 {
     Q_ASSERT(line>=0 && line < mDocument->count());
     QString s = getDisplayStringAtLine(line);
-    return mDocument->xposToGlyphStartChar(line,s,xpos);
+    return xposToGlyphStartChar(line,s,xpos);
 }
 
 int QSynEdit::xposToGlyphStartChar(int line, const QString &s, int xpos) const
 {
     Q_ASSERT(line>=0 && line < mDocument->count());
-    return mDocument->xposToGlyphStartChar(line,s,xpos);
+    QList<int> glyphPositionList;
+    int width;
+    if (mDocument->getLine(line) == s) {
+        const LineMetrics &metrics = lineMetrics(line);
+        glyphPositionList = metrics.glyphStartPositionList;
+        width = metrics.width;
+    } else {
+        glyphPositionList = mGlyphCalculator.calcGlyphPositionList(s, width);
+    }
+    int glyphIdx = searchForSegmentIdx(glyphPositionList, width, xpos);
+    return mDocument->glyphStartChar(line, glyphIdx);
 }
 
 int QSynEdit::xposToGlyphLeft(int line, int xpos) const
 {
     Q_ASSERT(line>=0 && line < mDocument->count());
-    int glyphIndex = mDocument->xposToGlyphIndex(line,xpos);
-    return mDocument->glyphStartPostion(line,glyphIndex);
+    int glyphIndex = xposToGlyphIndex(line,xpos);
+    return glyphStartPosition(line,glyphIndex);
 }
 
 // {
 //     Q_ASSERT(line>=1 && line <= mDocument->count());
-//     int glyphIndex = mDocument->xposToGlyphIndex(line-1,xpos);
-//     return mDocument->glyphStartPostion(line-1,glyphIndex) + mDocument->glyphLength(line-1,glyphIndex)+1;
+//     int glyphIndex = xposToGlyphIndex(line-1,xpos);
+//     return glyphStartPosition(line-1,glyphIndex) + mDocument->glyphLength(line-1,glyphIndex)+1;
 // }
 
 int QSynEdit::stringWidth(const QString &lineText, int left) const
 {
-    return mDocument->stringWidth(lineText, left);
+    return mGlyphCalculator.stringWidth(lineText, left);
+}
+
+LineMetrics &QSynEdit::lineMetrics(int line) const
+{
+    size_t seq = mDocument->getLineSeq(line);
+    auto it = mLineMetrics.find(seq);
+    if (it == mLineMetrics.end() || it->width < 0) {
+        // lazy compute with the base (unstyled) font metrics; stays "temp"
+        // until the painter recomputes with the styled per-token fonts
+        LineMetrics metrics;
+        metrics.glyphStartPositionList = mGlyphCalculator.calcLineWidth(
+                    mDocument->getLine(line),
+                    mDocument->getGlyphStartCharList(line),
+                    metrics.width);
+        metrics.isTemp = true;
+        it = mLineMetrics.insert(seq, metrics);
+    }
+    return *it;
+}
+
+void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartPositionList)
+{
+    // called by the painter with exact (styled) metrics
+    if (line<0 || line>=mDocument->count())
+        return;
+    size_t seq = mDocument->getLineSeq(line);
+    LineMetrics &metrics = mLineMetrics[seq];
+    int oldWidth = metrics.width;
+    metrics.width = width;
+    metrics.isTemp = false;
+    metrics.glyphStartPositionList = glyphStartPositionList;
+    if (mMaxLineWidthSeq == 0) {
+        mMaxLineWidthSeq = seq;
+        noteMaxLineWidthDirty();
+    } else if (mMaxLineWidthSeq == seq) {
+        if (oldWidth > width) {
+            mMaxLineWidthSeq = 0;
+            noteMaxLineWidthDirty();
+        } else if (oldWidth < width) {
+            noteMaxLineWidthDirty();
+        }
+    } else {
+        auto it = mLineMetrics.constFind(mMaxLineWidthSeq);
+        if (it != mLineMetrics.constEnd() && it->width < width) {
+            mMaxLineWidthSeq = seq;
+            noteMaxLineWidthDirty();
+        }
+    }
+    Q_ASSERT(glyphStartPositionList.length()
+             == mDocument->getGlyphStartCharList(line).length());
+}
+
+int QSynEdit::lineWidth(int line) const
+{
+    if (line>=0 && line < mDocument->count())
+        return lineMetrics(line).width;
+    return 0;
+}
+
+int QSynEdit::lineWidth(int line, const QString &newText) const
+{
+    if (line<0 || line >= mDocument->count())
+        return 0;
+    if (mDocument->getLine(line)==newText)
+        return lineMetrics(line).width;
+    return mGlyphCalculator.stringWidth(newText,0);
+}
+
+bool QSynEdit::lineWidthValid(int line) const
+{
+    if (line<0 || line>=mDocument->count())
+        return false;
+    auto it = mLineMetrics.constFind(mDocument->getLineSeq(line));
+    return it != mLineMetrics.constEnd() && it->width >= 0 && !it->isTemp;
+}
+
+int QSynEdit::maxLineWidth() const
+{
+    if (mMaxLineWidthSeq != 0) {
+        auto it = mLineMetrics.constFind(mMaxLineWidthSeq);
+        if (it != mLineMetrics.constEnd())
+            return it->width;
+        mMaxLineWidthSeq = 0;  // stale entry (e.g. its line was deleted)
+    }
+    if (mDocument->empty())
+        return 0;
+    return -1;
+}
+
+QList<int> QSynEdit::glyphStartPositionList(int line) const
+{
+    return lineMetrics(line).glyphStartPositionList;
+}
+
+int QSynEdit::glyphStartPosition(int line, int glyphIdx) const
+{
+    if (line<0 || line>=mDocument->count())
+        return 0;
+    if (glyphIdx<0)
+        return 0;
+    const LineMetrics &metrics = lineMetrics(line);
+    if (glyphIdx >= metrics.glyphStartPositionList.length())
+        return metrics.width;
+    return metrics.glyphStartPositionList[glyphIdx];
+}
+
+int QSynEdit::glyphWidth(int line, int glyphIdx) const
+{
+    if (line<0 || line>=mDocument->count())
+        return 0;
+    const LineMetrics &metrics = lineMetrics(line);
+    return calcSegmentInterval(metrics.glyphStartPositionList, metrics.width, glyphIdx);
+}
+
+int QSynEdit::glyphWidth(const QString &glyph, int left) const
+{
+    return mGlyphCalculator.glyphWidth(glyph, left);
+}
+
+int QSynEdit::xposToGlyphIndex(int line, int xpos) const
+{
+    if (line<0 || line>=mDocument->count())
+        return 0;
+    const LineMetrics &metrics = lineMetrics(line);
+    return searchForSegmentIdx(metrics.glyphStartPositionList, metrics.width, xpos);
+}
+
+int QSynEdit::charToGlyphStartPosition(int line, int charPos) const
+{
+    if (line<0 || line>=mDocument->count())
+        return 0;
+    QString lineText = mDocument->getLine(line);
+    QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line);
+    int glyphIdx = searchForSegmentIdx(glyphStartCharList, lineText.length(), charPos);
+    return glyphStartPosition(line, glyphIdx);
+}
+
+int QSynEdit::charToGlyphStartPosition(int line, const QString &newStr, int charPos) const
+{
+    if (line>=0 && line<mDocument->count() && mDocument->getLine(line) == newStr)
+        return charToGlyphStartPosition(line, charPos);
+    QList<int> glyphStartCharList = calcGlyphStartCharList(newStr);
+    int glyphIdx = searchForSegmentIdx(glyphStartCharList, newStr.length(), charPos);
+    int width;
+    QList<int> glyphStartPositionList = mGlyphCalculator.calcGlyphPositionList(newStr, width);
+    if (glyphIdx<glyphStartCharList.length())
+        return glyphStartPositionList[glyphIdx];
+    return width;
+}
+
+int QSynEdit::spaceWidth() const
+{
+    return mGlyphCalculator.spaceWidth();
+}
+
+void QSynEdit::invalidateAllLineMetrics()
+{
+    mLineMetrics.clear();
+    mMaxLineWidthSeq = 0;
+}
+
+void QSynEdit::invalidateNonTempLineMetrics()
+{
+    for (auto it = mLineMetrics.begin(); it != mLineMetrics.end(); ++it) {
+        if (!it->isTemp)
+            it->isTemp = true;
+    }
+}
+
+void QSynEdit::compactLineMetrics()
+{
+    // entries of deleted lines are unreachable (seqs are never reused) but
+    // would leak; rebuild when the map grows well past the line count
+    if (mLineMetrics.size() > 2*mDocument->count()+64) {
+        for (auto it = mLineMetrics.begin(); it != mLineMetrics.end();) {
+            if (!mDocument->findLineBySeq(it.key()))
+                it = mLineMetrics.erase(it);
+            else
+                ++it;
+        }
+    }
+}
+
+void QSynEdit::noteMaxLineWidthDirty()
+{
+    if (mSetLineMetricsLockCount>0) {
+        mMaxLineWidthDirtyInBatch = true;
+    } else {
+        invalidate(); // repaint first, to update line widths
+        updateHScrollBarLater();
+    }
+}
+
+void QSynEdit::recomputeMaxLineWidthAndNotify()
+{
+    int maxWidth = -1;
+    size_t maxSeq = 0;
+    for (int i=0;i<mDocument->count();i++) {
+        int width = lineMetrics(i).width;
+        if (width > maxWidth) {
+            maxWidth = width;
+            maxSeq = mDocument->getLineSeq(i);
+        }
+    }
+    if (maxSeq != 0) {
+        mMaxLineWidthSeq = maxSeq;
+        invalidate(); // repaint first, to update line widths
+        updateHScrollBarLater();
+    }
+}
+
+void QSynEdit::beginSetLineMetrics()
+{
+    if (mSetLineMetricsLockCount == 0)
+        mMaxLineWidthDirtyInBatch = false;
+    mSetLineMetricsLockCount++;
+}
+
+void QSynEdit::endSetLineMetrics()
+{
+    mSetLineMetricsLockCount--;
+    if (mSetLineMetricsLockCount == 0 && mMaxLineWidthDirtyInBatch)
+        recomputeMaxLineWidthAndNotify();
 }
 
 int QSynEdit::getLineIndent(const QString &lineText) const
@@ -2498,7 +2731,7 @@ QRect QSynEdit::calculateCaretRect() const
     if (mCaretLine >= 0 && mCaretLine < mDocument->count()
             && mCaretCh >=0 && mCaretCh < mDocument->getLine(mCaretLine).length()) {
         int glyphIndex = mDocument->charToGlyphIndex(mCaretLine, mCaretCh);
-        caretWidth = mDocument->glyphWidth(mCaretLine, glyphIndex);
+        caretWidth = glyphWidth(mCaretLine, glyphIndex);
     }
 //    qDebug()<<"caret:"<<mCaretCh<<mCaretLine<<caretWidth;
     if (mActiveSelectionMode == SelectionMode::Column) {
@@ -2518,7 +2751,7 @@ QRect QSynEdit::calculateInputCaretRect() const
     if (mCaretLine >= 0 && mCaretLine < mDocument->count()
             && mCaretCh >=0 && mCaretCh < mDocument->getLine(mCaretLine).length()) {
         int glyphIndex = mDocument->charToGlyphIndex(mCaretLine, mCaretCh);
-        caretWidth = mDocument->glyphWidth(mCaretLine, glyphIndex);
+        caretWidth = glyphWidth(mCaretLine, glyphIndex);
     }
     return QRect(caretPos.x(),caretPos.y(),caretWidth,
                  mTextHeight);
@@ -3020,7 +3253,7 @@ PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineTex
 
 void QSynEdit::invalidateAllNonTempLineWidth()
 {
-    mDocument->invalidateAllNonTempLineWidth();
+    invalidateNonTempLineMetrics();
 }
 
 int QSynEdit::calcLineAlignedTopPos(int currentValue, bool passFirstLine)
@@ -3105,7 +3338,7 @@ void QSynEdit::ensureCaretVisible(bool forceToMiddle)
             setTopPos(mTopPos);
     }
     // Make sure X is visible
-    if (mDocument->maxLineWidth()<0) {
+    if (maxLineWidth()<0) {
         if (forceToMiddle)
             mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, true);
         else
@@ -3258,7 +3491,7 @@ void QSynEdit::doUpdateVScrollbar()
 
 void QSynEdit::updateCaret()
 {
-    if (mDocument->maxLineWidth()<0)
+    if (maxLineWidth()<0)
         return;
     invalidateRect(calculateCaretRect());
 }
@@ -4064,7 +4297,9 @@ void QSynEdit::setTabSize(int newTabSize)
 {
     if (newTabSize!=tabSize()) {
         beginInternalChanges();
+        mGlyphCalculator.setTabSize(newTabSize);
         mDocument->setTabSize(newTabSize);
+        invalidateAllLineMetrics();
         invalidate();
         endInternalChanges();
     }
@@ -4072,7 +4307,7 @@ void QSynEdit::setTabSize(int newTabSize)
 
 int QSynEdit::tabWidth() const
 {
-    return mDocument->tabWidth();
+    return mGlyphCalculator.tabWidth();
 }
 
 EditorOptions QSynEdit::getOptions() const
@@ -4098,7 +4333,9 @@ void QSynEdit::setOptions(const EditorOptions &value)
         mOptions = value;
 
         setScrollBars(mScrollBars);
+        mGlyphCalculator.setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace));
         mDocument->setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace) );
+        invalidateAllLineMetrics();
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretPos(caretPos());
@@ -4116,7 +4353,7 @@ void QSynEdit::setOptions(const EditorOptions &value)
 
 int QSynEdit::tabSize() const
 {
-    return mDocument->tabSize();
+    return mGlyphCalculator.tabSize();
 }
 
 inline bool isGroupChange(ChangeReason reason){
@@ -4974,7 +5211,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
         // the shared syntax states; it reparses and notifies the other views
         mDocument->setSyntaxer(syntaxer->createInstance());
     }
-    mDocument->invalidateAllNonTempLineWidth();
+    invalidateNonTempLineMetrics();
     invalidate();
 }
 
@@ -4986,7 +5223,7 @@ void QSynEdit::onDocumentSyntaxerChanged()
         // scheme is the application side's business
         mSyntaxer = mDocument->createSyntaxerInstance();
         recalcCharExtent();
-        mDocument->invalidateAllNonTempLineWidth();
+        invalidateNonTempLineMetrics();
     }
     rescanCodeBlocks();
     invalidate();
@@ -5039,6 +5276,7 @@ void QSynEdit::setDocument(const PDocument &document)
     }
     mPendingReparseInvalidateStart = -1;
     mPendingReparseInvalidateEnd = -1;
+    invalidateAllLineMetrics();
     updateModifiedStatusForUndoRedo();
     // no reparse here: the shared document keeps its own states consistent;
     // the view only rebuilds its fold ranges from them
@@ -5176,7 +5414,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
         dstPos = displayToBufferPos(dstCoord);
 
     if (mActiveSelectionMode==SelectionMode::Column) {
-        int w=mDocument->lineWidth(dstPos.line);
+        int w=lineWidth(dstPos.line);
         if (w+1<originCoord.x)
             return;
     }
@@ -5930,12 +6168,12 @@ void QSynEdit::doInsertTextByColumnMode(const CharPos& pos, const QStringList& t
             }
         } else {
             tempString = mDocument->getLine(line);
-            int lineWidth = mDocument->lineWidth(line);
-            if (lineWidth < startX) {
+            int lineWidthInPixels = lineWidth(line);
+            if (lineWidthInPixels < startX) {
                 // pad with spaces up to the insertion column
                 insertPos = tempString.length();
                 if (!str.isEmpty()) {
-                    insertedLen = (startX - lineWidth)/mCharWidth;
+                    insertedLen = (startX - lineWidthInPixels)/mCharWidth;
                     tempString = tempString + QString(insertedLen,' ') + str;
                     insertedLen += str.length();
                 }
@@ -6318,7 +6556,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
     QRect rcClip = event->rect();
     QRect rcCaret;
     bool onlyUpdateCaret = false;
-    if (mDocument->maxLineWidth()>=0) {
+    if (maxLineWidth()>=0) {
         onlyUpdateCaret = (calculateCaretRect() == rcClip);
     }
     if (onlyUpdateCaret) {
@@ -6424,6 +6662,8 @@ bool QSynEdit::event(QEvent *event)
         break;
     }
     case QEvent::FontChange: {
+        mGlyphCalculator.setFont(font());
+        invalidateAllLineMetrics();
         if (mDocument)
             mDocument->setFont(font());
         synFontChanged();
@@ -6962,6 +7202,9 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
             scrollbarChanged = true;
             if (invalidateFrom < 0 || change.line < invalidateFrom)
                 invalidateFrom = change.line;
+            // seqs of deleted lines die with them; their cached metrics are
+            // unreachable (seqs are never reused) and get purged lazily
+            compactLineMetrics();
             break;
         case DocumentChangeKind::Move:
             processFoldsOnLineMoved(change.line, change.count);
@@ -6971,6 +7214,13 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
         case DocumentChangeKind::SetLine:
             // repaint of content-changed lines is driven by the deferred
             // linesReparsed invalidate below
+            for (int i=change.line; i<change.line+change.count; i++) {
+                // the text changed: the cached metrics are stale now
+                size_t seq = mDocument->getLineSeq(i);
+                if (seq == mMaxLineWidthSeq)
+                    mMaxLineWidthSeq = 0;
+                mLineMetrics.remove(seq);
+            }
             break;
         }
     }
@@ -7287,13 +7537,13 @@ void QSynEdit::setLeftPos(int value)
 {
     value = std::max(value, 0);
     if (value != mLeftPos) {
-        if (mDocument->maxLineWidth()<0)
+        if (maxLineWidth()<0)
             mLeftPos = value;
         setStatusChanged(StatusChange::LeftPos);
         if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyHorizontal)
             horizontalScrollBar()->setValue(value);
         else {
-            if (mDocument->maxLineWidth()>0) {
+            if (maxLineWidth()>0) {
                 mLeftPos = std::max(value, 0);
                 mLeftPos = std::min(mLeftPos, maxScrollWidth());
             }

@@ -1076,7 +1076,7 @@ int GlyphCalculator::stringWidth(const QString &str, int left) const
     return right - left;
 }
 
-int GlyphCalculator::stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics)
+int GlyphCalculator::stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics) const
 {
     QList<int> glyphStartCharList = calcGlyphStartCharList(str);
     int right;

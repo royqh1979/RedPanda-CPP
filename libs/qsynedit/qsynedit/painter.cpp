@@ -790,7 +790,7 @@ void QSynEditPainter::addHighlightToken(
     }
     //calculate width of the token ( and update it's glyph start positions )
     if (calcGlyphPosition) {
-        tokenWidth = mEdit->mDocument->mGlyphCalculator.updateGlyphStartPositionList(
+        tokenWidth = mEdit->mGlyphCalculator.updateGlyphStartPositionList(
                     lineText,
                     glyphStartCharList,
                     tokenStartChar,
@@ -854,7 +854,7 @@ void QSynEditPainter::paintFoldAttributes()
             int indentLevel = 0 ;
             int tabSteps = 0;
             while (tabSteps < lineIndent) {
-                x = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                x = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
                 if (mEdit->mCodeFolding.rainbowIndentGuides) {
@@ -873,9 +873,9 @@ void QSynEditPainter::paintFoldAttributes()
                 if (mEdit->mCodeFolding.fillIndents) {
                     int x1;
                     if (tabSteps>lineIndent)
-                        x1 = lineIndent * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = lineIndent * mEdit->spaceWidth() + mEdit->textOffset() - 1;
                     else
-                        x1 = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
+                        x1 = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - 1;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(x,y,x1,y);
@@ -946,9 +946,9 @@ void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
 
 void QSynEditPainter::paintLines()
 {
-    mEdit->mDocument->beginSetLinesWidth();
+    mEdit->beginSetLineMetrics();
     auto action = finally([this](){
-        mEdit->mDocument->endSetLinesWidth();
+        mEdit->endSetLineMetrics();
     });
     QString lineTextWithPreedit; // the current line
     QString token; // token info
@@ -1066,13 +1066,13 @@ void QSynEditPainter::paintLines()
         // Ensure the list has the right number of elements.
         // Values in it doesn't matter, we'll recalculate them.
         QList<int> glyphStartPositionsList;
-        bool lineWidthValid = mEdit->mDocument->lineWidthValid(line);
+        bool lineWidthValid = mEdit->lineWidthValid(line);
         bool calculateGlyphPositions = ( lineTextChanged || !lineWidthValid);
         if (calculateGlyphPositions) {
             glyphStartPositionsList = glyphStartCharList;
         } else {
-            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(line);
-            mCurrentLineWidth = mEdit->mDocument->lineWidth(line);
+            glyphStartPositionsList = mEdit->glyphStartPositionList(line);
+            mCurrentLineWidth = mEdit->lineWidth(line);
         }
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
@@ -1161,7 +1161,7 @@ void QSynEditPainter::paintLines()
             mEdit->mSyntaxer->next();
         }
         if (!lineWidthValid)
-            mEdit->mDocument->setLineWidth(line, tokenLeft, glyphStartPositionsList);
+            mEdit->setLineMetrics(line, tokenLeft, glyphStartPositionsList);
         if (tokenLeft<mRight) {
             QString addOnStr;
 
