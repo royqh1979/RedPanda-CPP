@@ -141,12 +141,12 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::fileSaved, this, &EditorManager::onFileSaved);
     connect(e, &Editor::fileSaveAsed, this, &EditorManager::onFileSaveAsed);
     connect(e, &Editor::fileRenamed, this, &EditorManager::onFileRenamed);
-    connect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
-    connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
-    connect(e, &Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
+    connectStructuralSignals(e);
     connect(e, &Editor::statusChanged, this, &EditorManager::onEditorStatusChanged);
     connect(e, &Editor::fontSizeChangedByWheel, this, &EditorManager::onEditorFontSizeChangedByWheel);
     connect(e, &Editor::fileEncodingChanged, this, &EditorManager::onEditorFileEncodingChanged);
+    connect(e, &Editor::editorEncodingChanged, this, &EditorManager::onEditorEncodingChanged);
+    connect(e, &Editor::fileTypeChanged, this, &EditorManager::onEditorFileTypeChanged);
 
     connect(e, &Editor::syntaxCheckRequested, pMainWindow, &MainWindow::checkSyntaxInBack);
     connect(e, &Editor::parseTodoRequested, pMainWindow->todoParser().get(), &TodoParser::parseFile);
@@ -236,11 +236,84 @@ void EditorManager::doRemoveEditor(Editor *e)
         int index = parentPage->indexOf(e);
         parentPage->removeTab(index);
     }
-    pMainWindow->fileSystemWatcher()->removePath(e->filename());
+    // hand the structural-change wiring over to the surviving peer view
+    Editor *peer = peerOf(e);
+    auto doc = e->document();
+    if (mStructuralWired.value(doc.get()) == e) {
+        mStructuralWired.remove(doc.get());
+        if (peer) {
+            connectStructuralSignals(peer);
+            mStructuralWired[doc.get()] = peer;
+        }
+    }
+    // keep the watch while another view of the same file is still open
+    if (!getOpenedEditor(e->filename()))
+        pMainWindow->fileSystemWatcher()->removePath(e->filename());
     pMainWindow->caretList().removeEditor(e);
     pMainWindow->updateCaretActions();
     e->setParent(nullptr);
     delete e;
+}
+
+void EditorManager::connectStructuralSignals(Editor *e)
+{
+    connect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved, Qt::UniqueConnection);
+    connect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted, Qt::UniqueConnection);
+    connect(e, &Editor::lineMoved, this, &EditorManager::onEditorLineMoved, Qt::UniqueConnection);
+}
+
+void EditorManager::disconnectStructuralSignals(Editor *e)
+{
+    disconnect(e, &Editor::linesDeleted, this, &EditorManager::onEditorLinesRemoved);
+    disconnect(e, &Editor::linesInserted, this, &EditorManager::onEditorLinesInserted);
+    disconnect(e, &Editor::lineMoved, this, &EditorManager::onEditorLineMoved);
+}
+
+Editor* EditorManager::peerOf(const Editor *editor) const
+{
+    if (!editor)
+        return nullptr;
+    QTabWidget *sourcePage = findPageControlForEditor(const_cast<Editor*>(editor));
+    QTabWidget *pages[2] = {mLeftPageWidget, mRightPageWidget};
+    for (QTabWidget *page : pages) {
+        if (page == sourcePage)
+            continue;
+        for (int i=0;i<page->count();i++) {
+            Editor *e = static_cast<Editor*>(page->widget(i));
+            if (e != editor && e->document() == editor->document())
+                return e;
+        }
+    }
+    return nullptr;
+}
+
+Editor* EditorManager::splitEditor(Editor *editor)
+{
+    if (!editor || peerOf(editor))
+        return nullptr;
+    QMutexLocker locker(&mMutex);
+    QTabWidget *sourcePage = findPageControlForEditor(editor);
+    QTabWidget *targetPage = (sourcePage == mLeftPageWidget)
+            ? mRightPageWidget : mLeftPageWidget;
+    Editor *e = newEditor(editor->filename(), editor->editorEncoding(),
+                          editor->fileType(), editor->contextFile(),
+                          editor->inProject(), true, targetPage);
+    e->setIsNew(editor->isNew());
+    // attach to the shared document instead of loading the file again:
+    // unsaved modifications, undo/redo history and syntax states carry over
+    e->setDocument(editor->document());
+    e->setCppParser(editor->parser());
+    e->setAutoBackupEnabled(false);
+    e->applyColorScheme(pSettings->editor().colorScheme());
+    e->resetBookmarks(pMainWindow->bookmarkModel());
+    e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+    // structural-change handling must run only once per shared document:
+    // the existing view keeps the wiring
+    mStructuralWired[editor->document().get()] = editor;
+    disconnectStructuralSignals(e);
+    updateLayout();
+    activeEditor(e, true);
+    return e;
 }
 
 #ifdef ENABLE_SDCC
@@ -342,6 +415,11 @@ void EditorManager::onFileRenamed(Editor *e, const QString &oldFilename, const Q
         pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
         pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
     }
+    if (Editor *peer = peerOf(e)) {
+        peer->setFilename(newFilename);
+        peer->setIsNew(e->isNew());
+        updateEditorTabCaption(peer);
+    }
     updateEditorTabCaption(e);
 }
 
@@ -351,6 +429,11 @@ void EditorManager::onFileSaveAsed(Editor *e, const QString &oldFilename, const 
     if (!e->inProject()) {
         pMainWindow->bookmarkModel()->renameBookmarkFile(oldFilename,newFilename,false);
         pMainWindow->debugger()->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
+    }
+    if (Editor *peer = peerOf(e)) {
+        peer->setFilename(newFilename);
+        peer->setIsNew(e->isNew());
+        updateEditorTabCaption(peer);
     }
 }
 
@@ -369,6 +452,11 @@ void EditorManager::onEditorLinesInserted(int startLine, int count)
     pMainWindow->bookmarkModel()->onFileInsertLines(e->filename(), startLine,count, e->inProject());
     e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
     e->resetBookmarks(pMainWindow->bookmarkModel());
+    if (Editor *peer = peerOf(e)) {
+        pMainWindow->caretList().onLinesInserted(peer,startLine,count);
+        peer->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+        peer->resetBookmarks(pMainWindow->bookmarkModel());
+    }
 }
 
 void EditorManager::onEditorLinesRemoved(int startLine, int count)
@@ -379,6 +467,11 @@ void EditorManager::onEditorLinesRemoved(int startLine, int count)
     pMainWindow->bookmarkModel()->onFileDeleteLines(e->filename(),startLine,count,e->inProject());
     e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
     e->resetBookmarks(pMainWindow->bookmarkModel());
+    if (Editor *peer = peerOf(e)) {
+        pMainWindow->caretList().onLinesDeleted(peer,startLine,count);
+        peer->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+        peer->resetBookmarks(pMainWindow->bookmarkModel());
+    }
 }
 
 void EditorManager::onEditorLineMoved(int fromLine, int toLine)
@@ -390,6 +483,11 @@ void EditorManager::onEditorLineMoved(int fromLine, int toLine)
 
     e->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
     e->resetBookmarks(pMainWindow->bookmarkModel());
+    if (Editor *peer = peerOf(e)) {
+        pMainWindow->caretList().onLinesMoved(peer, fromLine, toLine);
+        peer->resetBreakpoints(pMainWindow->debugger()->breakpointModel().get());
+        peer->resetBookmarks(pMainWindow->bookmarkModel());
+    }
 }
 
 void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
@@ -436,6 +534,20 @@ void EditorManager::onEditorFileEncodingChanged(Editor *e)
             unit->setRealEncoding(e->fileEncoding());
         }
     }
+    if (Editor *peer = peerOf(e))
+        peer->syncEncoding(e->editorEncoding(), e->fileEncoding());
+}
+
+void EditorManager::onEditorEncodingChanged(Editor *e)
+{
+    if (Editor *peer = peerOf(e))
+        peer->syncEncoding(e->editorEncoding(), e->fileEncoding());
+}
+
+void EditorManager::onEditorFileTypeChanged(Editor *e)
+{
+    if (Editor *peer = peerOf(e))
+        peer->syncFileTypeFromPeer(e->fileType());
 }
 
 QTabWidget *EditorManager::rightPageWidget() const
@@ -590,7 +702,8 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
-        editor->clearBreakpoints();
+        if (!peerOf(editor))
+            editor->clearBreakpoints();
         doRemoveEditor(editor);
     }
     updateLayout();
@@ -620,6 +733,12 @@ bool EditorManager::swapEditor(Editor *editor)
     });
     //remember old index
     QTabWidget* fromPageControl = findPageControlForEditor(editor);
+    QTabWidget *targetPage = (fromPageControl == mLeftPageWidget)
+            ? mRightPageWidget : mLeftPageWidget;
+    // keep the invariant that peer views never live in the same panel
+    Editor *peer = peerOf(editor);
+    if (peer && findPageControlForEditor(peer) == targetPage)
+        return false;
     if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
         // setCppParser would invalidate file
         editor->setCppParser(nullptr);
@@ -948,7 +1067,7 @@ MainWindow *EditorManager::mainWindow()
     return pMainWindow;
 }
 
-QTabWidget *EditorManager::findPageControlForEditor(Editor *e)
+QTabWidget *EditorManager::findPageControlForEditor(Editor *e) const
 {
     if (mLeftPageWidget->indexOf(e)!=-1)
         return mLeftPageWidget;

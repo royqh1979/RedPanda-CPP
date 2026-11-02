@@ -708,6 +708,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFind_references->setEnabled(false);
 
         ui->actionMove_To_Other_View->setEnabled(false);
+        ui->actionSplit_View->setEnabled(false);
         ui->actionC_C_Header->setEnabled(false);
         ui->actionC_File->setEnabled(false);
         ui->actionCPP_File->setEnabled(false);
@@ -798,6 +799,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
         ui->actionMove_To_Other_View->setEnabled(editorManager()->pageCount()>1);
+        ui->actionSplit_View->setEnabled(editorManager()->peerOf(e)==nullptr);
 
         ui->actionC_C_Header->setEnabled(true);
         ui->actionC_File->setEnabled(true);
@@ -5321,6 +5323,8 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addSeparator();
         menu.addAction(ui->actionGo_to_Line);
         menu.addSeparator();
+        menu.addAction(ui->actionSplit_View);
+        menu.addSeparator();
         menu.addAction(ui->actionFile_Properties);
     } else {
         //mouse on gutter
@@ -6120,6 +6124,10 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
             if (col < 0)
                 col = e->lineText(line).length();
             e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
+            // split views share the document, so the issue markers must
+            // show up in both
+            if (Editor *peer = mEditorManager->peerOf(e))
+                peer->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
 }
@@ -8818,6 +8826,14 @@ void MainWindow::on_actionMove_To_Other_View_triggered()
     Editor * editor = mEditorManager->getEditor();
     if (editor) {
         mEditorManager->swapEditor(editor);
+    }
+}
+
+void MainWindow::on_actionSplit_View_triggered()
+{
+    Editor * editor = mEditorManager->getEditor();
+    if (editor) {
+        mEditorManager->splitEditor(editor);
     }
 }
 

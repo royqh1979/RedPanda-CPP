@@ -271,6 +271,7 @@
     <addaction name="actionClose"/>
     <addaction name="actionMaximize_Editor"/>
     <addaction name="separator"/>
+    <addaction name="actionSplit_View"/>
     <addaction name="actionMove_To_Other_View"/>
     <addaction name="actionNext_Editor"/>
     <addaction name="actionPrevious_Editor"/>
@@ -2678,6 +2679,11 @@
   <action name="actionExport_As_HTML">
    <property name="text">
     <string>Export As HTML</string>
+   </property>
+  </action>
+  <action name="actionSplit_View">
+   <property name="text">
+    <string>Split View</string>
    </property>
   </action>
   <action name="actionMove_To_Other_View">

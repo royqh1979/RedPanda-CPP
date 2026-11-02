@@ -4374,7 +4374,35 @@ void Editor::setFileType(FileType newFileType, bool parse)
         reparseTodo();
         checkSyntaxInBack();
     }
+    emit fileTypeChanged(this);
     emit statusChanged(QSynedit::StatusChange::Custom0);
+}
+
+void Editor::syncFileTypeFromPeer(FileType newFileType)
+{
+    if (mFileType == newFileType)
+        return;
+    mFileType = newFileType;
+    // the syntaxer is shared via the document and already switched by the
+    // peer; only adopt the view-side consequences
+    setFormatter(SyntaxerManager::getFormatter(syntaxer()->language()));
+    setUseCodeFolding(syntaxer()->supportFolding());
+    applyColorScheme(mEditorSettings->colorScheme());
+    emit statusChanged(QSynedit::StatusChange::Custom0);
+}
+
+void Editor::syncEncoding(const QByteArray &editorEncoding, const QByteArray &fileEncoding) noexcept
+{
+    bool editorChanged = (mEditorEncoding != editorEncoding);
+    bool fileChanged = (mFileEncoding != fileEncoding);
+    if (!editorChanged && !fileChanged)
+        return;
+    mEditorEncoding = editorEncoding;
+    mFileEncoding = fileEncoding;
+    if (editorChanged)
+        emit editorEncodingChanged(this);
+    if (fileChanged)
+        emit fileEncodingChanged(this);
 }
 
 void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)

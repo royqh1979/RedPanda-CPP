@@ -52,6 +52,13 @@ public:
     bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
 
     bool swapEditor(Editor* editor);
+    // create a second, fully peer view of the editor in the other panel,
+    // sharing the same QSynedit::Document; returns nullptr if the editor
+    // already has a peer view
+    Editor* splitEditor(Editor* editor);
+    // the other view sharing the editor's document (always lives in the
+    // other panel); nullptr if there is none
+    Editor* peerOf(const Editor *editor) const;
     void activeEditor(Editor *e, bool focus);
     void activeEditorAndSetCaret(Editor *e, QSynedit::CharPos pos);
 
@@ -76,7 +83,7 @@ public:
     MainWindow * mainWindow();
 
 
-    QTabWidget *findPageControlForEditor(Editor *e);
+    QTabWidget *findPageControlForEditor(Editor *e) const;
 
     void updateEditorBookmarks();
     void updateEditorBreakpoints();
@@ -120,6 +127,11 @@ private:
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
     void doRemoveEditor(Editor* e);
+    // breakpoint/bookmark/caret-list shifting must run only once per shared
+    // document: exactly one view of a peer pair is connected to the
+    // structural-change signals (linesInserted/linesDeleted/lineMoved)
+    void connectStructuralSignals(Editor *e);
+    void disconnectStructuralSignals(Editor *e);
 #ifdef ENABLE_SDCC
     CompilerType getCompilerTypeForEditor(const Editor *e) const;
 #endif
@@ -140,6 +152,8 @@ private slots:
     void onEditorStatusChanged(QSynedit::StatusChanges changes);
     void onEditorFontSizeChangedByWheel(int newSize);
     void onEditorFileEncodingChanged(Editor *e);
+    void onEditorEncodingChanged(Editor *e);
+    void onEditorFileTypeChanged(Editor *e);
 private:
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;
@@ -147,6 +161,7 @@ private:
     QSplitter *mSplitter;
     QWidget *mPanel;
     int mUpdateCount;
+    QHash<const QSynedit::Document*, Editor*> mStructuralWired;
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForRight;
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForLeft;

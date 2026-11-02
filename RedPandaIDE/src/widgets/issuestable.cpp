@@ -111,8 +111,12 @@ void IssuesModel::clearIssues()
     }
     foreach (const QString& filename, issueFiles) {
         Editor *e=pMainWindow->editorManager()->getOpenedEditor(filename);
-        if (e)
+        if (e) {
             e->clearSyntaxIssues();
+            // split views share the document: clear the peer view as well
+            if (Editor *peer = pMainWindow->editorManager()->peerOf(e))
+                peer->clearSyntaxIssues();
+        }
     }
     if (mIssues.size()>0) {
         beginResetModel();

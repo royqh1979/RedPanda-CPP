@@ -158,10 +158,14 @@ public:
     void setEditorEncoding(const QByteArray& encoding) noexcept;
     const QByteArray& fileEncoding() const noexcept;
     void convertToEncoding(const QByteArray& encoding);
+    // adopt the peer view's encoding values (no save/reload): used by
+    // EditorManager to keep split views consistent
+    void syncEncoding(const QByteArray &editorEncoding, const QByteArray &fileEncoding) noexcept;
     const QString& filename() const noexcept;
 
     bool inProject() const noexcept;
     bool isNew() const noexcept;
+    void setIsNew(bool isNew) noexcept { mIsNew = isNew; }
 
     void loadFile(QString filename = "", bool parse = true);
     void saveFile(QString filename);
@@ -279,6 +283,9 @@ public:
 
     FileType fileType() const;
     void setFileType(FileType newFileType, bool parse = true);
+    // adopt the peer view's file type without switching the syntaxer
+    // (the syntaxer is shared via the document and already switched)
+    void syncFileTypeFromPeer(FileType newFileType);
     const QString &contextFile() const;
     void setContextFile(const QString &newContextFile, bool parse = true);
     ParserLanguage calcParserLanguage() const;
@@ -350,6 +357,7 @@ signals:
     void symbolChoosed(const QString& filename, int usageCount);
     void fileEncodingChanged(Editor *e);
     void editorEncodingChanged(Editor *e);
+    void fileTypeChanged(Editor *e);
     void showOccured(Editor *e);
     void focusInOccured(Editor *e);
     void closeOccured(Editor *e);

@@ -225,6 +225,19 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
     （IDE 多视图接线时处理）；
   - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形
     （单视图时代同样存在）。
+- **IDE 侧拆分视图（RedPandaIDE）**：Window 主菜单与编辑器正文右键菜单的
+  Split View 项调用 `EditorManager::splitEditor`——在另一面板新建 Editor 并
+  `setDocument` 挂接共享文档（不重读磁盘）；`peerOf` 按 `document()` 在另一
+  面板查找对等视图（不变式：两 peer 永不同面板，`swapEditor` 拒绝会破坏
+  该不变式的移动）；**Editor 不存 peer 指针**，联动全由 EditorManager 经信号
+  完成（filename/isNew 经 fileSaveAsed/fileRenamed，FileType 经新增的
+  fileTypeChanged 信号 + `syncFileTypeFromPeer`，编码经 fileEncodingChanged/
+  editorEncodingChanged + `syncEncoding`——只同步值，不重载/重存）。
+  断点/书签的全局模型平移在对等组中只接一个视图的结构信号
+  （`mStructuralWired` 记录接线对象，关闭时移交给留存视图），两视图都刷新
+  显示并平移 caret 历史；issue 不共享，外部写入方（onCompileIssue/
+  clearIssues）投递到两视图；文件 watcher 仅在该文件无打开视图时移除；
+  第二视图禁用自动备份；有 peer 时菜单项禁用。
 - 单元测试：`test_shared_document_basics`（含跨视图 undo/redo 两轮往返）/
   `test_shared_document_fold_shift`/`test_shared_document_syntaxer`/
   `test_shared_document_caret_shift`。
