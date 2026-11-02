@@ -405,7 +405,19 @@ public:
 
     bool findLineTextBySeq(size_t lineSeq, QString& text) const;
 
-    const std::shared_ptr<const Document> document() const;
+    PDocument document() const;
+    /**
+     * @brief attach this view to a (possibly shared) document.
+     *
+     * The view's per-view state is reset: caret/selection to the document
+     * begin, scroll to top-left, fold ranges rebuilt, undo/redo history
+     * cleared (until undo moves to the document level, the stacks refer to
+     * the old document's positions and cannot be kept).
+     * The document keeps the font it was constructed with; views sharing a
+     * document must use the same font metrics until line metrics move out
+     * of Document.
+     */
+    void setDocument(const PDocument &document);
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void setContent(const QString& text);

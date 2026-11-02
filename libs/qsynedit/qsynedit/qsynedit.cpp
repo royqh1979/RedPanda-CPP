@@ -1765,11 +1765,10 @@ void QSynEdit::endEditing()
         if (!mUndoing)
             mUndoList->endBlock(caretPos(), mSelectionBegin, mSelectionEnd, mActiveSelectionMode);
         // The outermost document endUpdate emits contentChanged: the slot
-        // shifts fold ranges etc. while the map still carries the pre-edit
-        // line numbering, and runs before rescanCodeBlocks so the rescan
-        // can re-apply collapsed states by matching the shifted ranges.
+        // shifts fold ranges and rescans them (fold maintenance moved to
+        // the slot so that every view of a shared document maintains
+        // itself; see design doc chapter 6).
         mDocument->endUpdate();
-        rescanCodeBlocks();
     } else {
         mDocument->endUpdate();
     }
@@ -5009,9 +5008,32 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
     invalidate();
 }
 
-const std::shared_ptr<const Document> QSynEdit::document() const
+PDocument QSynEdit::document() const
 {
     return mDocument;
+}
+
+void QSynEdit::setDocument(const PDocument &document)
+{
+    Q_ASSERT(document);
+    if (!document || mDocument == document)
+        return;
+    disconnect(mDocument.get(), nullptr, this, nullptr);
+    mDocument = document;
+    connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
+    connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
+    connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
+    connect(mDocument.get(), &Document::maxLineWidthChanged,
+            this, &QSynEdit::onMaxLineWidthChanged);
+    // reset per-view state; the undo/redo stacks refer to the old
+    // document's positions and cannot be kept
+    resetEditState();
+    mTopPos = 0;
+    mLeftPos = 0;
+    reparseDocument();
+    onGutterChanged();
+    updateVScrollbar();
+    invalidate();
 }
 
 bool QSynEdit::isSpaceChar(const QChar &ch) const
@@ -6921,6 +6943,11 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
         //we must invalidate whole editor to properly render contents
         invalidateLines(invalidateFrom, INT_MAX);
     }
+    // rebuild fold ranges from the (shared) syntax states: incremental
+    // shifts above only track line numbers, they don't notice blocks
+    // appearing/disappearing. Every view needs this, not just the one
+    // that initiated the edit.
+    rescanCodeBlocks();
 }
 
 void QSynEdit::onLinesChanged()

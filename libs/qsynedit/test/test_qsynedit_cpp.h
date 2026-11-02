@@ -171,6 +171,9 @@ private slots:
     void test_auto_indent_for_if_else();
     void test_auto_indent_for_if_else_2();
     void test_auto_indent_for_if_else_3();
+
+    void test_shared_document_basics();
+    void test_shared_document_fold_shift();
 };
 
 }

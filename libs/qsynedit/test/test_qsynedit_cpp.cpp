@@ -12075,5 +12075,68 @@ void TestQSyneditCpp::test_auto_indent_for_if_else_3()
     QCOMPARE(mEdit->content(),text1);
 }
 
+void TestQSyneditCpp::test_shared_document_basics()
+{
+    mEdit->setContent({"int main() {", "    return 0;", "}"});
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+    QCOMPARE(edit2->content(), mEdit->content());
+    QCOMPARE(edit2->codeBlockCount(), 1);
+
+    // editing in view 1 syncs content to view 2;
+    // view 2's caret/selection are not touched
+    mEdit->setCaretPos(CharPos{0,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Enter);
+    QCOMPARE(edit2->content(), mEdit->content());
+    QCOMPARE(edit2->caretPos(), CharPos(0,0));
+    QVERIFY(!edit2->selAvail());
+
+    // selection in view 1 does not affect view 2
+    mEdit->setCaretPos(CharPos{0,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Right, Qt::ShiftModifier);
+    QVERIFY(mEdit->selAvail());
+    QVERIFY(!edit2->selAvail());
+
+    // readOnly is per-view: it does not block content sync from view 1
+    edit2->setReadOnly(true);
+    QTest::keyPress(mEdit.get(), 'x');
+    QCOMPARE(edit2->content(), mEdit->content());
+    edit2->setReadOnly(false);
+
+    // undo histories are per-view for now: view 2 cannot undo view 1's edits
+    QVERIFY(!edit2->canUndo());
+    clearSignalDatas();
+    mEdit->undo(); // undoes the 'x'
+    QCOMPARE(edit2->content(), mEdit->content());
+    QVERIFY(mEdit->canUndo());
+}
+
+void TestQSyneditCpp::test_shared_document_fold_shift()
+{
+    mEdit->setContent({"void f() {", "}", "int main() {", "    return 0;", "}"});
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+    QVERIFY(mEdit->hasCodeBlock(0,1));
+    QVERIFY(mEdit->hasCodeBlock(2,4));
+    QVERIFY(edit2->hasCodeBlock(0,1));
+    QVERIFY(edit2->hasCodeBlock(2,4));
+
+    // deleting line 0 in view 1: view 2's fold map maintains itself
+    // (incremental shift + rescan from the shared syntax states)
+    mEdit->setCaretPos(CharPos{0,0});
+    mEdit->processCommand(EditCommand::DeleteLine);
+    QCOMPARE(mEdit->content(), QStringList({"}", "int main() {", "    return 0;", "}"}));
+    QVERIFY(!edit2->hasCodeBlock(0,1));
+    QVERIFY(edit2->hasCodeBlock(1,3));
+
+    // collapsing in view 2 does not collapse in view 1
+    QVERIFY(edit2->collapse(1,3));
+    QVERIFY(edit2->isCollapsed(1,3));
+    QVERIFY(edit2->foldHidesLine(2));
+    QVERIFY(!mEdit->foldHidesLine(2));
+}
+
 }
 
