@@ -223,7 +223,7 @@ void TestQSyneditDisplay::test_wordwrap_basics()
             QVERIFY2(w <= width+1, qPrintable(QString("seg %1 w %2 width %3").arg(i).arg(w).arg(width)));
         }
     }
-    QVERIFY(layout.segmentStartXs.last() < width+1);
+    QVERIFY(layout.totalWidth - layout.segmentStartXs.last() <= width+1);
     // row mapping roundtrip
     for (int row=0; row<mEdit->displayLineCount(); row++) {
         int line, seg;
@@ -235,5 +235,186 @@ void TestQSyneditDisplay::test_wordwrap_basics()
     mEdit->setOptions(opts);
     QCOMPARE(mEdit->wrapSegmentCount(1), 1);
     QCOMPARE(mEdit->displayLineCount(), 3);
+}
+
+void TestQSyneditDisplay::test_wordwrap_caret_display()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    QVERIFY(layout.segmentStartChars.count() > 1);
+
+
+    for (int seg=0; seg<layout.segmentStartChars.count(); seg++) {
+        int start = layout.segmentStartChars[seg];
+        mEdit->setCaretPos(CharPos{start, 1});
+        DisplayCoord coord = mEdit->displayXY();
+        QCOMPARE(coord.x, 0);
+        QCOMPARE(coord.row, mEdit->lineSegmentToRow(1, seg));
+        int end = mEdit->wrapSegmentEndChar(1, seg);
+        mEdit->setCaretPos(CharPos{end, 1});
+        DisplayCoord endCoord = mEdit->displayXY();
+        // a segment end that is also the next segment's start belongs to
+        // the next segment's row; only the line end stays on the same row
+        if (seg+1 < layout.segmentStartChars.count())
+            QCOMPARE(endCoord.row, mEdit->lineSegmentToRow(1, seg+1));
+        else
+            QCOMPARE(endCoord.row, coord.row);
+        QVERIFY(endCoord.x >= 0);
+        QCOMPARE(mEdit->displayToBufferPos(endCoord), CharPos(end, 1));
+    }
+
+    // Home/End operate on the wrap segment, not the buffer line.
+    // EnhanceEndKey first goes after the last non-blank of the segment
+    // (char 43 = 'z'), then to the segment end (char 45)
+    mEdit->setCaretPos(CharPos{layout.segmentStartChars[1]+2, 1});
+    mEdit->processCommand(QSynedit::EditCommand::LineStart);
+    QCOMPARE(mEdit->caretCh(), layout.segmentStartChars[1]);
+    mEdit->processCommand(QSynedit::EditCommand::LineEnd);
+    QCOMPARE(mEdit->caretCh(), 44);
+    mEdit->processCommand(QSynedit::EditCommand::LineEnd);
+    QCOMPARE(mEdit->caretCh(), mEdit->wrapSegmentEndChar(1, 1));
+}
+
+void TestQSyneditDisplay::test_wordwrap_vertical_movement()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+
+    mEdit->setCaretPos(CharPos{0,0});
+    mEdit->processCommand(QSynedit::EditCommand::Down);
+    QCOMPARE(mEdit->caretLine(), 1);
+    QCOMPARE(mEdit->caretCh(), 0);
+    mEdit->processCommand(QSynedit::EditCommand::Down);
+    QCOMPARE(mEdit->caretLine(), 1);
+    QVERIFY(mEdit->caretCh() > 0);
+    mEdit->processCommand(QSynedit::EditCommand::Up);
+    QCOMPARE(mEdit->caretCh(), 0);
+    mEdit->processCommand(QSynedit::EditCommand::Up);
+    QCOMPARE(mEdit->caretLine(), 0);
+}
+
+void TestQSyneditDisplay::test_wordwrap_mouse()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    QVERIFY(layout.segmentStartChars.count() > 1);
+
+    // click on the second segment of the long line
+    int seg = 1;
+    int start = layout.segmentStartChars[seg];
+    QPoint pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{start, 1}));
+    CharPos pos = mEdit->displayToBufferPos(mEdit->pixelsToGlyphPos(pt.x(), pt.y() + 2));
+    QCOMPARE(pos, CharPos(start, 1));
+
+    // and on the first segment
+    pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{2, 1}));
+    pos = mEdit->displayToBufferPos(mEdit->pixelsToGlyphPos(pt.x(), pt.y() + 2));
+    QCOMPARE(pos, CharPos(2, 1));
+}
+
+void TestQSyneditDisplay::test_wordwrap_fold()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    int a = 1;",
+        "    if (a) {",
+        "        a = 2;",
+        "    }",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    int longLine = 1;
+    int longSegments = mEdit->wrapSegmentCount(longLine);
+    QVERIFY(longSegments > 1);
+    int rowsBeforeFold = mEdit->displayLineCount();
+
+    QVERIFY(mEdit->collapse(3, 5));
+    // the fold hides whole lines with all their segments; only the long
+    // line's segments remain beyond the fold
+    int rowsAfterFold = mEdit->displayLineCount();
+    QVERIFY(rowsAfterFold < rowsBeforeFold);
+
+    // row mapping stays consistent for the long line
+    int seg = longSegments - 1;
+    int row = mEdit->lineSegmentToRow(longLine, seg);
+    int line, segment;
+    mEdit->rowToLineSegment(row, line, segment);
+    QCOMPARE(line, longLine);
+    QCOMPARE(segment, seg);
+}
+
+void TestQSyneditDisplay::test_wordwrap_batch_stale_rejection()
+{
+    mEdit->loadContent(makeLines(5));
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+
+    // a batch with a stale generation must be dropped entirely
+    WrapLayoutBatch batch;
+    batch.generation = mEdit->mWrapGeneration + 100;
+    batch.contentVersion = mEdit->mWrapContentVersion;
+    batch.document = mEdit->document();
+    WrapLayout fake;
+    fake.segmentStartChars = {0, 3};
+    fake.segmentStartXs = {0, 10};
+    batch.layouts.insert(mEdit->document()->getLineSeq(1), fake);
+    batch.finished = true;
+    mEdit->onWrapLayoutBatch(batch);
+    QVERIFY(!mEdit->mWrapLayouts.contains(mEdit->document()->getLineSeq(1)));
+    QVERIFY(!mEdit->mWrapAllComputed);
+
+    // a batch from a different document must be dropped too
+    batch.generation = mEdit->mWrapGeneration;
+    batch.document = std::make_shared<Document>();
+    mEdit->onWrapLayoutBatch(batch);
+    QVERIFY(!mEdit->mWrapLayouts.contains(mEdit->document()->getLineSeq(1)));
+
+    // a valid batch is accepted
+    batch.document = mEdit->document();
+    mEdit->onWrapLayoutBatch(batch);
+    QVERIFY(mEdit->mWrapLayouts.contains(mEdit->document()->getLineSeq(1)));
+
+    // after an edit, a result computed BEFORE the edit is rejected for that
+    // line, while other lines are still accepted
+    size_t editedSeq = mEdit->document()->getLineSeq(1);
+    size_t otherSeq = mEdit->document()->getLineSeq(2);
+    mEdit->mWrapLayouts.remove(editedSeq);
+    mEdit->mWrapLayouts.remove(otherSeq);
+    WrapLayoutBatch early = batch;
+    early.layouts.insert(otherSeq, fake);
+    early.contentVersion = mEdit->mWrapContentVersion - 1;
+    early.finished = false;
+    mEdit->setCaretPos(CharPos{0,1});
+    QTest::keyPress(mEdit.get(), 'x');
+    mEdit->onWrapLayoutBatch(early);
+    QVERIFY(!mEdit->mWrapLayouts.contains(editedSeq));
+    QVERIFY(mEdit->mWrapLayouts.contains(otherSeq));
+
+    // a batch computed AFTER the edit is accepted for the edited line
+    WrapLayoutBatch later = batch;
+    later.contentVersion = mEdit->mWrapContentVersion;
+    later.finished = false;
+    mEdit->onWrapLayoutBatch(later);
+    QVERIFY(mEdit->mWrapLayouts.contains(editedSeq));
 }
 }

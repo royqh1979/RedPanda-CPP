@@ -116,7 +116,7 @@ struct GlyphPostionsListCache {
  */
 struct LineMetrics {
     int width = -1;                     // -1 = invalid/dirty
-    QList<int> glyphStartPositionList;  // pixel position of each glyph
+    QList<int> glyphStartXList;  // pixel position of each glyph
     bool isTemp = true;                 // computed with the base (unstyled) font
 };
 
@@ -127,6 +127,11 @@ struct LineMetrics {
 struct WrapLayout {
     QList<int> segmentStartChars;   // first entry is always 0
     QList<int> segmentStartXs;      // parallel to segmentStartChars
+    // per-glyph pixel positions with the SAME (styled) measurement as the
+    // segment boundaries, so caret x positions never depend on whether the
+    // painter has run: no base-font/styled-font mismatch
+    QList<int> glyphStartXList;
+    int totalWidth = 0;
 };
 
 // a batch of background-computed wrap layouts, posted to the view by a
@@ -246,13 +251,13 @@ public:
     // -1: the longest line is unknown (metrics incomplete, e.g. right after
     // a font change; re-established during the next paint pass)
     int maxLineWidth() const;
-    QList<int> glyphStartPositionList(int line) const;
-    int glyphStartPosition(int line, int glyphIdx) const;
+    QList<int> glyphStartXList(int line) const;
+    int glyphStartX(int line, int glyphIdx) const;
     int glyphWidth(int line, int glyphIdx) const;
     int glyphWidth(const QString &glyph, int left) const;
     int xposToGlyphIndex(int line, int xpos) const;
-    int charToGlyphStartPosition(int line, int charPos) const;
-    int charToGlyphStartPosition(int line, const QString &newStr, int charPos) const;
+    int charToGlyphStartX(int line, int charPos) const;
+    int charToGlyphStartX(int line, const QString &newStr, int charPos) const;
     int spaceWidth() const;
     int getLineIndent(const QString& lineText) const;
     int rowToLine(int row) const;
@@ -669,7 +674,7 @@ private:
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
     // per-line font metrics cache (view-side, keyed by line seq):
     LineMetrics &lineMetrics(int line) const;  // lazily computes with the base font
-    void setLineMetrics(int line, int width, const QList<int> &glyphStartPositionList);
+    void setLineMetrics(int line, int width, const QList<int> &glyphStartXList);
     void invalidateAllLineMetrics();
     void invalidateNonTempLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
@@ -937,6 +942,7 @@ private:
     bool mDragging;
 
 friend class QSynEditPainter;
+friend class TestQSyneditDisplay;
 
 // QWidget interface
 protected:

@@ -375,14 +375,17 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
     QString text = document->getLine(line);
     if (text.isEmpty() || wrapWidth <= 0)
         return result;
-    // short-line fast path: no styled token scan needed
-    if (glyphCalculator.stringWidth(text, 0) <= wrapWidth)
-        return result;
-    // exact per-token styled measurement (same font logic as the painter)
     QList<int> glyphStartCharList = document->getGlyphStartCharList(line);
+    // short-line fast path: positions with the base font, no styled scan
+    if (glyphCalculator.stringWidth(text, 0) <= wrapWidth) {
+        result.glyphStartXList = glyphCalculator.calcLineWidth(text, glyphStartCharList, result.totalWidth);
+        return result;
+    }
+    // exact per-token styled measurement (same font logic as the painter)
     startParseLineForDocument(syntaxer, document, line, text);
-    int x = 0;
-    int segStart = 0;
+    int x = 0;          // absolute x in the line's glyph space
+    int segStart = 0;   // current segment's start char
+    int segStartX = 0;  // current segment's absolute start x
     int breakChar = -1;  // preferred break point (char after a breakable glyph)
     int breakX = 0;
     while (!syntaxer->eol()) {
@@ -407,8 +410,9 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
         for (int i=startGlyph;i<endGlyph;i++) {
             int glyphEnd = (i+1<glyphStartCharList.count()) ? glyphStartCharList[i+1] : text.length();
             QString glyph = text.mid(glyphStartCharList[i], glyphEnd-glyphStartCharList[i]);
+            result.glyphStartXList.append(x);
             int gw = glyphCalculator.glyphWidth(glyph, x, fm, glyphCalculator.forceMonospace());
-            if (x + gw > wrapWidth && x > 0) {
+            if (x - segStartX + gw > wrapWidth && x - segStartX > 0) {
                 int newStart, newX;
                 if (breakChar > segStart) {
                     newStart = breakChar;
@@ -420,7 +424,7 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
                 result.segmentStartChars.append(newStart);
                 result.segmentStartXs.append(newX);
                 segStart = newStart;
-                x -= newX;
+                segStartX = newX;
                 breakChar = -1;
             }
             x += gw;
@@ -431,6 +435,7 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
         }
         syntaxer->next();
     }
+    result.totalWidth = x;
     return result;
 }
 
@@ -873,11 +878,11 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
         xpos=lineWidth(line)+1;
     } else {
         int glyphIndex = xposToGlyphIndex(line, xpos);
-        int nextGlyphPos = glyphStartPosition(line, glyphIndex+1);
+        int nextGlyphPos = glyphStartX(line, glyphIndex+1);
         if (nextGlyphPos - xpos < mCharWidth / 2)
             xpos = nextGlyphPos;
         else
-            xpos = glyphStartPosition(line, glyphIndex);
+            xpos = glyphStartX(line, glyphIndex);
     }
     return DisplayCoord{xpos - segStartX, row};
 }
@@ -896,7 +901,7 @@ DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
         xpos=lineWidth(line)+1;
     } else {
         int glyphIndex = xposToGlyphIndex(line, xpos);
-        xpos = glyphStartPosition(line, glyphIndex);
+        xpos = glyphStartX(line, glyphIndex);
     }
     return DisplayCoord{xpos - segStartX, row};
 }
@@ -924,8 +929,14 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
     // Account for tabs and charColumns
     if (p.line<mDocument->count()) {
         if (mOptions.testFlag(EditorOption::WordWrap)) {
+            const WrapLayout &layout = wrapLayout(p.line);
             int segment = wrapSegmentOfChar(p.line, p.ch);
-            result.x = charToGlyphLeft(p.line,p.ch) - wrapLayout(p.line).segmentStartXs[segment];
+            // use the layout's own styled glyph positions: no dependence on
+            // the painter's (possibly base-font) metrics
+            int glyphIdx = mDocument->charToGlyphIndex(p.line, p.ch);
+            int absX = (glyphIdx < layout.glyphStartXList.count())
+                    ? layout.glyphStartXList[glyphIdx] : layout.totalWidth;
+            result.x = absX - layout.segmentStartXs[segment];
             result.row = lineSegmentToRow(p.line, segment);
         } else {
             result.x = charToGlyphLeft(p.line,p.ch);
@@ -950,8 +961,12 @@ CharPos QSynEdit::displayToBufferPos(const DisplayCoord &p) const
         rowToLineSegment(p.row, line, segment);
         result.line = line;
         if (line < mDocument->count()) {
-            int x = p.x + wrapLayout(line).segmentStartXs[segment];
-            result.ch = xposToGlyphStartChar(line, x);
+            const WrapLayout &layout = wrapLayout(line);
+            int absX = p.x + layout.segmentStartXs[segment];
+            // same styled measurement as the layout, so the caret roundtrip
+            // is exact even before the painter has run
+            int glyphIdx = searchForSegmentIdx(layout.glyphStartXList, layout.totalWidth, absX);
+            result.ch = mDocument->glyphStartChar(line, glyphIdx);
         }
         return result;
     }
@@ -994,12 +1009,12 @@ int QSynEdit::charToGlyphLeft(int line, int ch) const
 {
     QString s = getDisplayStringAtLine(line);
     Q_ASSERT(ch>=0 && ch<=s.length());
-    return charToGlyphStartPosition(line, s, ch);
+    return charToGlyphStartX(line, s, ch);
 }
 
 int QSynEdit::charToGlyphLeft(int line, const QString &s, int ch) const
 {
-    return charToGlyphStartPosition(line, s, ch);
+    return charToGlyphStartX(line, s, ch);
 }
 
 // }
@@ -1018,7 +1033,7 @@ int QSynEdit::xposToGlyphStartChar(int line, const QString &s, int xpos) const
     int width;
     if (mDocument->getLine(line) == s) {
         const LineMetrics &metrics = lineMetrics(line);
-        glyphPositionList = metrics.glyphStartPositionList;
+        glyphPositionList = metrics.glyphStartXList;
         width = metrics.width;
     } else {
         glyphPositionList = mGlyphCalculator.calcGlyphPositionList(s, width);
@@ -1031,13 +1046,13 @@ int QSynEdit::xposToGlyphLeft(int line, int xpos) const
 {
     Q_ASSERT(line>=0 && line < mDocument->count());
     int glyphIndex = xposToGlyphIndex(line,xpos);
-    return glyphStartPosition(line,glyphIndex);
+    return glyphStartX(line,glyphIndex);
 }
 
 // {
 //     Q_ASSERT(line>=1 && line <= mDocument->count());
 //     int glyphIndex = xposToGlyphIndex(line-1,xpos);
-//     return glyphStartPosition(line-1,glyphIndex) + mDocument->glyphLength(line-1,glyphIndex)+1;
+//     return glyphStartX(line-1,glyphIndex) + mDocument->glyphLength(line-1,glyphIndex)+1;
 // }
 
 int QSynEdit::stringWidth(const QString &lineText, int left) const
@@ -1053,7 +1068,7 @@ LineMetrics &QSynEdit::lineMetrics(int line) const
         // lazy compute with the base (unstyled) font metrics; stays "temp"
         // until the painter recomputes with the styled per-token fonts
         LineMetrics metrics;
-        metrics.glyphStartPositionList = mGlyphCalculator.calcLineWidth(
+        metrics.glyphStartXList = mGlyphCalculator.calcLineWidth(
                     mDocument->getLine(line),
                     mDocument->getGlyphStartCharList(line),
                     metrics.width);
@@ -1063,7 +1078,7 @@ LineMetrics &QSynEdit::lineMetrics(int line) const
     return *it;
 }
 
-void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartPositionList)
+void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartXList)
 {
     // called by the painter with exact (styled) metrics
     if (line<0 || line>=mDocument->count())
@@ -1073,7 +1088,7 @@ void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartP
     int oldWidth = metrics.width;
     metrics.width = width;
     metrics.isTemp = false;
-    metrics.glyphStartPositionList = glyphStartPositionList;
+    metrics.glyphStartXList = glyphStartXList;
     if (mMaxLineWidthSeq == 0) {
         mMaxLineWidthSeq = seq;
         noteMaxLineWidthDirty();
@@ -1091,7 +1106,7 @@ void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartP
             noteMaxLineWidthDirty();
         }
     }
-    Q_ASSERT(glyphStartPositionList.length()
+    Q_ASSERT(glyphStartXList.length()
              == mDocument->getGlyphStartCharList(line).length());
 }
 
@@ -1132,21 +1147,21 @@ int QSynEdit::maxLineWidth() const
     return -1;
 }
 
-QList<int> QSynEdit::glyphStartPositionList(int line) const
+QList<int> QSynEdit::glyphStartXList(int line) const
 {
-    return lineMetrics(line).glyphStartPositionList;
+    return lineMetrics(line).glyphStartXList;
 }
 
-int QSynEdit::glyphStartPosition(int line, int glyphIdx) const
+int QSynEdit::glyphStartX(int line, int glyphIdx) const
 {
     if (line<0 || line>=mDocument->count())
         return 0;
     if (glyphIdx<0)
         return 0;
     const LineMetrics &metrics = lineMetrics(line);
-    if (glyphIdx >= metrics.glyphStartPositionList.length())
+    if (glyphIdx >= metrics.glyphStartXList.length())
         return metrics.width;
-    return metrics.glyphStartPositionList[glyphIdx];
+    return metrics.glyphStartXList[glyphIdx];
 }
 
 int QSynEdit::glyphWidth(int line, int glyphIdx) const
@@ -1154,7 +1169,7 @@ int QSynEdit::glyphWidth(int line, int glyphIdx) const
     if (line<0 || line>=mDocument->count())
         return 0;
     const LineMetrics &metrics = lineMetrics(line);
-    return calcSegmentInterval(metrics.glyphStartPositionList, metrics.width, glyphIdx);
+    return calcSegmentInterval(metrics.glyphStartXList, metrics.width, glyphIdx);
 }
 
 int QSynEdit::glyphWidth(const QString &glyph, int left) const
@@ -1167,29 +1182,29 @@ int QSynEdit::xposToGlyphIndex(int line, int xpos) const
     if (line<0 || line>=mDocument->count())
         return 0;
     const LineMetrics &metrics = lineMetrics(line);
-    return searchForSegmentIdx(metrics.glyphStartPositionList, metrics.width, xpos);
+    return searchForSegmentIdx(metrics.glyphStartXList, metrics.width, xpos);
 }
 
-int QSynEdit::charToGlyphStartPosition(int line, int charPos) const
+int QSynEdit::charToGlyphStartX(int line, int charPos) const
 {
     if (line<0 || line>=mDocument->count())
         return 0;
     QString lineText = mDocument->getLine(line);
     QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line);
     int glyphIdx = searchForSegmentIdx(glyphStartCharList, lineText.length(), charPos);
-    return glyphStartPosition(line, glyphIdx);
+    return glyphStartX(line, glyphIdx);
 }
 
-int QSynEdit::charToGlyphStartPosition(int line, const QString &newStr, int charPos) const
+int QSynEdit::charToGlyphStartX(int line, const QString &newStr, int charPos) const
 {
     if (line>=0 && line<mDocument->count() && mDocument->getLine(line) == newStr)
-        return charToGlyphStartPosition(line, charPos);
+        return charToGlyphStartX(line, charPos);
     QList<int> glyphStartCharList = calcGlyphStartCharList(newStr);
     int glyphIdx = searchForSegmentIdx(glyphStartCharList, newStr.length(), charPos);
     int width;
-    QList<int> glyphStartPositionList = mGlyphCalculator.calcGlyphPositionList(newStr, width);
+    QList<int> glyphStartXList = mGlyphCalculator.calcGlyphPositionList(newStr, width);
     if (glyphIdx<glyphStartCharList.length())
-        return glyphStartPositionList[glyphIdx];
+        return glyphStartXList[glyphIdx];
     return width;
 }
 

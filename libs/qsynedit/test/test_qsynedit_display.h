@@ -23,6 +23,11 @@ private slots:
     void test_mouse_positioning();
     void test_mouse_positioning_with_fold();
     void test_wordwrap_basics();
+    void test_wordwrap_caret_display();
+    void test_wordwrap_vertical_movement();
+    void test_wordwrap_mouse();
+    void test_wordwrap_fold();
+    void test_wordwrap_batch_stale_rejection();
 };
 
 }

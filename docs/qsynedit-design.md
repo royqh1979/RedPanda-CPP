@@ -318,11 +318,16 @@ glyph 不拆，空格/tab/标点处优先折行，CJK 任意位置。短行粗�
 段数恒 1，不做逐 token 扫描）。水平滚动禁用，Home/End 作用于段首尾。
 折行是**视图属性**，多视图各自独立。
 
-**布局与缓存**：`WrapLayout`（段起始 char 列表 + 段起始绝对像素 x）按行 seq
+**布局与缓存**：`WrapLayout`（段起始 char 列表 + 段起始绝对像素 x +
+逐 glyph 绝对像素位置 `glyphStartXList` + 行总宽 `totalWidth`）按行 seq
 缓存于 `QSynEdit::mWrapLayouts`，失效规则与 `mLineMetrics` 相同：
 `invalidateAllLineMetrics()` 全量失效（字体/宽度/gutter/setDocument/选项变化），
 `onDocumentContentChanged` 的 SetLine 分支单行失效。`displayLineCount()` =
 可见行总段数（折叠隐藏整行全部段）。
+布局与 caret 的 x 全部用**绝对行坐标**（`segmentStartXs` 与
+`glyphStartXList` 同一坐标系），caret 的 displayX 再减段起始 x 得到段内 x，
+不依赖 painter 是否已运行。命名约定：StartChar=字符索引、StartX=像素、
+GlyphIndex=glyph 序号。
 
 **后台补全与同步**（大文件不阻塞 GUI）：
 - 可见行的布局由 GUI 同步按需计算；`WrapLayoutJob`（`wraplayoutjob.h/.cpp`，

@@ -203,7 +203,7 @@ int GlyphCalculator::updateGlyphStartPositionList(
         const QString &lineText,
         const QList<int> &glyphStartCharList, int startChar, int endChar,
         const QFontMetrics &fontMetrics,
-        QList<int> &glyphStartPositionList, int left, int &right, int &startGlyph, int &endGlyph) const
+        QList<int> &glyphStartXList, int left, int &right, int &startGlyph, int &endGlyph) const
 {
     right = std::max(0,left);
     startGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),startChar);
@@ -218,11 +218,11 @@ int GlyphCalculator::updateGlyphStartPositionList(
         }
         QString glyph = lineText.mid(start,end-start);
         int gWidth = glyphWidth(glyph, right, fontMetrics, mForceMonospace);
-        glyphStartPositionList[i] = right;
+        glyphStartXList[i] = right;
         right += gWidth;
     }
-    if (endGlyph<glyphStartPositionList.length())
-        glyphStartPositionList[endGlyph] = right;
+    if (endGlyph<glyphStartXList.length())
+        glyphStartXList[endGlyph] = right;
     return right-left;
 }
 

@@ -384,7 +384,7 @@ void QSynEditPainter::paintLine()
 void QSynEditPainter::paintToken(
         const QString& lineText,
         const QList<int> &glyphStartCharList,
-        const QList<int> &glyphStartPositionList,
+        const QList<int> &glyphStartXList,
         int startGlyph,
         int endGlyph,
         int tokenWidth, int tokenLeft,
@@ -415,7 +415,7 @@ void QSynEditPainter::paintToken(
                 int glyphStart = glyphStartCharList[i];
                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i);
                 QString glyph = lineText.mid(glyphStart,glyphLen);
-                int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
+                int glyphWidth = calcSegmentInterval(glyphStartXList, tokenRight, i);
                 if (accWidth+glyphWidth>first) {
                     if (!startPaint ) {
                         x-= (first - accWidth - 1) ;
@@ -446,7 +446,7 @@ void QSynEditPainter::paintToken(
                                      (glyph2.length()==1
                                       && glyph2.front().unicode()<=32))
                                     break;
-                                int glyph2Width = calcSegmentInterval(glyphStartPositionList, tokenRight, i+1);
+                                int glyph2Width = calcSegmentInterval(glyphStartXList, tokenRight, i+1);
                                 if (mEdit->mOptions.testFlag(EditorOption::ForceMonospace)) {
                                     if (glyph2Width != mPainter->fontMetrics().horizontalAdvance(glyph2)) {
                                         break;
@@ -721,7 +721,7 @@ void QSynEditPainter::addHighlightToken(
         int tokenStartChar,
         int tokenEndChar,
         bool calcGlyphPosition,
-        QList<int> &glyphStartPositionList,
+        QList<int> &glyphStartXList,
         int &tokenWidth)
 {
     int tokenRight;
@@ -731,7 +731,7 @@ void QSynEditPainter::addHighlightToken(
         startGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),tokenStartChar);
         endGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),tokenEndChar);
         for (int i=startGlyph;i<endGlyph;i++) {
-            int gWidth = calcSegmentInterval(glyphStartPositionList, mCurrentLineWidth, i);
+            int gWidth = calcSegmentInterval(glyphStartXList, mCurrentLineWidth, i);
             tokenRight += gWidth;
         }
         tokenWidth = tokenRight-tokenLeft;
@@ -792,7 +792,7 @@ void QSynEditPainter::addHighlightToken(
         }
         // If we can't append it, then we have to paint the old token chars first.
         if (!canAppend)
-            paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList, false);
+            paintHighlightToken(lineText, glyphStartCharList, glyphStartXList, false);
     }
     if (initFont) {
         mTokenAccu.style = style;
@@ -810,7 +810,7 @@ void QSynEditPainter::addHighlightToken(
                     tokenStartChar,
                     tokenEndChar,
                     QFontMetrics(mTokenAccu.font),
-                    glyphStartPositionList,
+                    glyphStartXList,
                     tokenLeft,
                     tokenRight,
                     startGlyph,
@@ -1086,7 +1086,7 @@ void QSynEditPainter::paintLines()
         if (calculateGlyphPositions) {
             glyphStartPositionsList = glyphStartCharList;
         } else {
-            glyphStartPositionsList = mEdit->glyphStartPositionList(line);
+            glyphStartPositionsList = mEdit->glyphStartXList(line);
             mCurrentLineWidth = mEdit->lineWidth(line);
         }
         // clip token scanning/drawing to this wrap segment (absolute glyph x)

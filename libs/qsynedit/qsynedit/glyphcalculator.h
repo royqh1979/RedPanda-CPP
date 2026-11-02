@@ -112,7 +112,7 @@ public:
             const QList<int> &glyphStartCharList,
             int startChar, int endChar,
             const QFontMetrics &fontMetrics,
-            QList<int> &glyphStartPositionList,
+            QList<int> &glyphStartXList,
             int left, int &right, int &startGlyph, int &endGlyph) const;
 private:
     QFontMetrics mFontMetrics;

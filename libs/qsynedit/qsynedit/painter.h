@@ -77,7 +77,7 @@ private:
     void paintToken(
             const QString& lineText,
             const QList<int> &glyphStartCharList,
-            const QList<int> &glyphStartPositionList,
+            const QList<int> &glyphStartXList,
             int startGlyph,
             int endGlyph,
             int tokenWidth, int tokenLeft,
@@ -99,7 +99,7 @@ private:
             int tokenStartChar,
             int tokenEndChar,
             bool calcGlyphPosition,
-            QList<int> &glyphStartPositionList,
+            QList<int> &glyphStartXList,
             int &tokenWidth
             );
 
