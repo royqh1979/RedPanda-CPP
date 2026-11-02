@@ -1,7 +1,8 @@
-# QSynEdit 多视图共享 Document：分析（讨论稿）
+# QSynEdit 多视图共享 Document：分析（已实施）
 
 本文是关于"多视图共享一个 `Document`"的分析稿，供研究讨论用；**不是现状文档**
-（现状与约定见 `qsynedit-design.md`）。结论与建议均未实施。
+（现状与约定见 `qsynedit-design.md`）。结论已在分支 `qsynedit-multiview` 上实施，
+实施状态与偏差见文末第 6 节。
 
 三个问题：
 
@@ -247,3 +248,39 @@ N 个听众时才是正当的。
 4. **解析器**：文档级单实例（推荐）/ 每视图重复解析（不推荐）；
 5. **行级通知粒度**：逐行发（方案 A，靠纪律）/ 编辑边界聚合发（方案 B 完全体，可断言，见 3.5；倾向后者）；
 6. **modified/save point**：随 undo 栈移到文档级（若 1 选共享则自然成立）。
+
+## 6. 实施状态（分支 qsynedit-multiview）
+
+第 5 节决策点的落地情况：
+
+1. **undo 归属**：按推荐实施——UndoList/RedoList 归 Document 持有，全部视图共享；
+   块级 caret/选区快照只套用到发起 undo/redo 的视图（2.3 语义），
+   `undoRedoStateChanged` 驱动各视图同步 modified；新编辑使 redo 栈失效的清理
+   由 Document 自己完成。
+2. **折叠状态**：每视图独立（现状保留），折叠平移/重扫由各视图在
+   `contentChanged` 槽里完成。
+3. **字体与度量缓存**：每视图，已完成两阶段拆分——视图侧 `GlyphCalculator`
+   （独立为 `glyphcalculator.h/.cpp`）+ 按行 seq 键控的 `LineMetrics` 缓存；
+   Document/DocumentLine 的度量成员与像素 API 全部移除。
+4. **解析器**：**有偏差**——不是"文档级单实例解析一切"。Document 持有裸实例，
+   仅做语法状态级联（共享 SyntaxState 的唯一写入者，编辑原语内建重解析，
+   `linesReparsed` 通知视图）；各视图另持带配色实例供绘制/编辑决策
+   （语法器需要字体度量来算 token 宽度，无法纯文档级共享）。
+5. **行级通知粒度**：按倾向实施 B 完全体——`contentChanged(DocumentChangeSet)`
+   在最外层 `endUpdate` 聚合发射一次，只含有序事实、同类相邻才合并并带 DEBUG 断言；
+   原语信号 `changing/changed` 保留为批次边界。
+6. **modified/save point**：随 undo 栈共享文档级状态，各视图的 modified 标志
+   经 `undoRedoStateChanged` 同步。
+
+分析之外的增量：
+
+- `QSynEdit::setDocument` 挂接协议（视图态复位、undo 历史继承）；
+- 非发起视图的 caret/选区 **marker 式平移**（`shiftCaretAndSelectionByChanges`），
+  发起者靠 `mEditingCount>0` 识别；
+- 重绘延迟协议：批次内 `linesReparsed` 的重绘推迟到 `contentChanged` 的
+  折叠重扫之后（rowToLine/lineToRow 依赖新折叠结构）；
+- 手工验证程序 `libs/qsynedit/demos/multiview/`（CMake 开关
+  `QSYNEDIT_BUILD_MULTIVIEW_DEMO`，默认 OFF）。
+
+单元测试：`test_shared_document_basics`/`_fold_shift`/`_syntaxer`/`_caret_shift`
+四个共享文档用例；既有 267 项测试全程保持零漂移。

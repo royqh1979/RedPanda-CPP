@@ -6,7 +6,7 @@
 
 - [1. 撤销/重做（Undo/Redo）](#1-撤销重做undoredo)
 - [2. 文档模型](#2-文档模型)
-  - [2.5 多视图支持现状（进行中）](#25-多视图支持现状进行中)
+  - [2.5 多视图支持现状（已实现）](#25-多视图支持现状已实现)
 - [3. 坐标体系](#3-坐标体系)
 - 4. 语法高亮（待补）
 - 5. 代码折叠（待补）
@@ -190,10 +190,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 宽度度量已移到视图侧（见 2.1 职责 3），但编辑行为（如光标上下移动的像素位置
 保持）仍经视图字体度量换算，因此行为测试仍与字体度量耦合，只是度量现已可复现。
 
-### 2.5 多视图支持现状（进行中）
+### 2.5 多视图支持现状（已实现）
 
 目标：多个 QSynEdit 视图共享一个 `Document`（分析见 `qsynedit-multiview-analysis.md`）。
-分支 `qsynedit-multiview` 上的进展：
+已在分支 `qsynedit-multiview` 上实现：
 
 - **`QSynEdit::setDocument(PDocument)`**：视图可挂接到（共享的）文档；挂接时复位
   视图态（caret/选区到文档头、滚动归零、折叠重建、modified 从共享 undo 状态同步），
@@ -209,7 +209,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   2.3 的语义）；`Document::undoRedoStateChanged` 让全部视图同步 modified；
   新编辑使 redo 栈失效的清理由 Document 自己完成。
 - **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly、
-  配色方案（两个视图可对同一文档用不同配色）。
+  字体/字号（字体度量已完全视图化：GlyphCalculator 独立成
+  `glyphcalculator.h/.cpp` 归视图持有，LineMetrics 缓存按行 seq 键控；
+  Document 不再持有任何度量状态）、配色方案（两个视图可对同一文档
+  用不同配色）。
 - **非发起视图的 caret/选区平移（已实现）**：其它视图发起编辑时，本视图在
   `onDocumentContentChanged` 里按 changeSet 做 marker 式平移（Insert 行号+n、
   Delete 落入删除带的钳到删除点、Move 跟随被移行、SetLine 所在行 ch 钳到行长）；
@@ -217,11 +220,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   `endUpdate` 之后，使发起标记在 contentChanged 槽内成立）。平移不滚动本视图
   （`ensureVisible=false`），只钳制实际受影响的坐标（列模式越界 caret 不受
   误钳）。undo/redo 同样生效（发起者恢复快照，其它视图平移）。
-- **已知限制（后续阶段解除）**：
-  - ~~共享文档的视图必须用同一字体~~ 已解除：字体度量已完全视图化
-    （GlyphCalculator 独立成 `glyphcalculator.h/.cpp` 归视图持有 +
-    seq 键控 LineMetrics 缓存；Document 不再持有任何度量状态），
-    不同视图可用不同字体；
+- **已知限制**：
   - 非发起视图在语言切换后得到默认配色实例，配色重应用是应用侧的职责
     （IDE 多视图接线时处理）；
   - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形
