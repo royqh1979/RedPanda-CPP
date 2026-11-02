@@ -4911,20 +4911,20 @@ void QSynEdit::doRedoItem()
 void QSynEdit::doZoomIn()
 {
     QFont newFont = font();
-    int size = newFont.pixelSize();
+    int size = newFont.pointSize();
     size++;
-    newFont.setPixelSize(size);
+    newFont.setPointSize(size);
     setFont(newFont);
 }
 
 void QSynEdit::doZoomOut()
 {
     QFont newFont = font();
-    int size = newFont.pixelSize();
+    int size = newFont.pointSize();
     size--;
     if (size<2)
         size = 2;
-    newFont.setPixelSize(size);
+    newFont.setPointSize(size);
     setFont(newFont);
 }
 

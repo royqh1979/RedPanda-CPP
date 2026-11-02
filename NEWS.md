@@ -1,3 +1,7 @@
+Red Panda C++ Version 3.6
+
+  - fix: Column mode doesn't work.
+
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.
   - fix: The first line of disassembled code is lost in the cpu dialog.
