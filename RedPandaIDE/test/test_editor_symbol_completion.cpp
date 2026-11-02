@@ -30,7 +30,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_string1()
     QStringList text3{
         "const char *s = \"abc\";",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text1);
@@ -87,7 +87,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_string2()
     QStringList text2{
         "const char *s = \"ab\\\"-\"cdef\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     mEditor->setCaretPos(CharPos{19,0});
     QTest::keyPress(mEditor.get(),'\\');
@@ -137,7 +137,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_string3()
     QStringList text2{
         "const char *s = \"abcdef\"\"\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'\"');
     QCOMPARE(mEditor->content(), text1);
@@ -181,7 +181,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_string4()
     QStringList text2{
         "const char *s = \"ab\"\"\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
@@ -228,7 +228,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_string5()
     QStringList text2{
         "const char *s = \"\"\"\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text1);
@@ -273,7 +273,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_on_selection()
     QStringList text2{
         "const char *s = \"abc\";",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left,Qt::ShiftModifier);
     QTest::keyPress(mEditor.get(),Qt::Key_Left,Qt::ShiftModifier);
@@ -327,7 +327,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string1()
     QStringList text4{
         "const char *s = R\"(ab)\"\"\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'"');
     QCOMPARE(mEditor->content(), text1);
@@ -392,7 +392,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string2()
     QStringList text2{
         "const char *s = R\"\"a\""
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'"');
@@ -437,7 +437,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string3()
     QStringList text2{
         "const char *s = R\"(\"a\")\""
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
@@ -484,7 +484,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_raw_string4()
     QStringList text2{
         "const char *s = R\"a\"\"\""
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
@@ -534,7 +534,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_char_literals1()
     QStringList text3{
         "char ch = '\"';"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'\'');
     QCOMPARE(mEditor->content(), text1);
@@ -591,7 +591,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_char_literals2()
     QStringList text3{
         "char ch = '\\\"';"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'\'');
     QCOMPARE(mEditor->content(), text1);
@@ -648,7 +648,7 @@ void TestEditorSymbolCompletion::test_input_double_quotes_in_comments()
     QStringList text3{
         "// const char *s = \"abc\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), '"');
     QCOMPARE(mEditor->content(), text1);
@@ -703,7 +703,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals1()
     QStringList text2{
         "char ch = 'ab'''"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
@@ -750,7 +750,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals2()
     QStringList text2{
         "char ch = ''''"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), '\'');
     QCOMPARE(mEditor->content(), text1);
@@ -796,7 +796,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_char_literals3()
     QStringList text2{
         "char ch = '\\\''"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), '\'');
     QCOMPARE(mEditor->content(), text1);
@@ -843,7 +843,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_string_literals()
     QStringList text3 = {
         "\"\'ab\'\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), '\'');
@@ -894,7 +894,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_rawstring_not_escap
     QStringList text1 = {
         "const char* s = R\"(')\";",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
@@ -911,7 +911,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_rawstring_start()
     QStringList text1 = {
         "const char* s = R\"'()\";",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
@@ -929,7 +929,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_rawstring_end()
     QStringList text1 = {
         "const char* s = R\"()'\";",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
@@ -951,7 +951,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_comments1()
     QStringList text3 = {
         "// test\'ab\'",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), '\'');
     QCOMPARE(mEditor->content(), text1);
@@ -977,7 +977,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_comments2()
     QStringList text3 = {
         "/* test\'ab\'",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), '\'');
     QCOMPARE(mEditor->content(), text1);
@@ -1001,7 +1001,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_on_selection()
     QStringList text2{
         "char ch = '\\n';",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left,Qt::ShiftModifier);
     QTest::keyPress(mEditor.get(),Qt::Key_Left,Qt::ShiftModifier);
@@ -1049,7 +1049,7 @@ void TestEditorSymbolCompletion::test_input_single_quotes_in_number()
     QStringList text3{
         "double x = 2.13'45'",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'\'');
     QCOMPARE(mEditor->content(), text1);
@@ -1107,7 +1107,7 @@ void TestEditorSymbolCompletion::test_input_parenthesis1()
     QStringList text4{
         "int x=(())();",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'(');
     QCOMPARE(mEditor->content(), text1);
@@ -1179,7 +1179,7 @@ void TestEditorSymbolCompletion::test_input_parenthesis_in_string()
     QStringList text4{
         "\"int x=(())\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'(');
@@ -1228,7 +1228,7 @@ void TestEditorSymbolCompletion::test_input_parenthesis_in_comment()
     QStringList text4{
         "/* int x=(())",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'(');
     QCOMPARE(mEditor->content(), text1);
@@ -1272,7 +1272,7 @@ void TestEditorSymbolCompletion::test_input_parenthesis_in_escaping_sequence()
     QStringList text3{
         "\"int x=\\()ab)",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'(');
@@ -1319,7 +1319,7 @@ void TestEditorSymbolCompletion::test_input_parenthesis_on_selection()
     QStringList text2{
         "\"int x=(abc)++;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left, Qt::ShiftModifier);
@@ -1373,7 +1373,7 @@ void TestEditorSymbolCompletion::test_input_brackets1()
     QStringList text4{
         "int x=[[]][];",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'[');
     QCOMPARE(mEditor->content(), text1);
@@ -1446,7 +1446,7 @@ void TestEditorSymbolCompletion::test_input_brackets_in_string()
     QStringList text4{
         "\"int x=[[]]\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'[');
@@ -1495,7 +1495,7 @@ void TestEditorSymbolCompletion::test_input_brackets_in_comment()
     QStringList text4{
         "/* int x=[[]]",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'[');
     QCOMPARE(mEditor->content(), text1);
@@ -1539,7 +1539,7 @@ void TestEditorSymbolCompletion::test_input_brackets_in_escaping_sequence()
     QStringList text3{
         "\"int x=\\[]ab]",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'[');
@@ -1586,7 +1586,7 @@ void TestEditorSymbolCompletion::test_input_brackets_on_selection()
     QStringList text2{
         "\"int x=[abc]++;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left, Qt::ShiftModifier);
@@ -1640,7 +1640,7 @@ void TestEditorSymbolCompletion::test_input_braces1()
     QStringList text4{
         "int x={{}}{};ab",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'{');
     QCOMPARE(mEditor->content(), text1);
@@ -1716,7 +1716,7 @@ void TestEditorSymbolCompletion::test_input_braces_in_string()
     QStringList text4{
         "\"int x={{}}\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'{');
@@ -1765,7 +1765,7 @@ void TestEditorSymbolCompletion::test_input_braces_in_comment()
     QStringList text4{
         "/* int x={{}}",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'{');
     QCOMPARE(mEditor->content(), text1);
@@ -1809,7 +1809,7 @@ void TestEditorSymbolCompletion::test_input_braces_in_escaping_sequence()
     QStringList text3{
         "\"int x=\\{}ab}",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'{');
@@ -1856,7 +1856,7 @@ void TestEditorSymbolCompletion::test_input_braces_on_selection()
     QStringList text2{
         "\"int x={abc}++;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(), Qt::Key_Left);
     QTest::keyPress(mEditor.get(), Qt::Key_Left, Qt::ShiftModifier);
@@ -1913,7 +1913,7 @@ void TestEditorSymbolCompletion::test_input_braces_with_indent()
         "\t{ab}x=100;",
         "}"
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos({2,2});
     QTest::keyPress(mEditor.get(), '{');
     QCOMPARE(mEditor->content(), text1);
@@ -1957,7 +1957,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_for_ansi_c_comments()
     QStringList text2{
         "  /*++*/",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -1998,7 +1998,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_comments()
     QStringList text1{
         "\"  /*",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -2030,7 +2030,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_comments2()
     QStringList text1{
         "/*  /*",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -2044,7 +2044,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_char_literal()
     QStringList text1{
         "'/*",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -2076,7 +2076,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_string_literal()
     QStringList text1{
         "\"/*",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -2108,7 +2108,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_begin()
     QStringList text1{
         "R\"/*",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'*');
     QCOMPARE(mEditor->content(), text1);
@@ -2140,7 +2140,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring()
     QStringList text1{
         "R\"(/*)\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
@@ -2175,7 +2175,7 @@ void TestEditorSymbolCompletion::test_input_asterisk_in_rawstring_end()
     QStringList text1{
         "R\"/()/*\"",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),'*');
@@ -2211,7 +2211,7 @@ void TestEditorSymbolCompletion::test_input_periods1()
     QStringList text2{
         "int x=10;ab;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),';');
@@ -2258,7 +2258,7 @@ void TestEditorSymbolCompletion::test_input_periods_in_comments()
     QStringList text2{
         "// int x=10;ab;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),';');
@@ -2303,7 +2303,7 @@ void TestEditorSymbolCompletion::test_input_periods_in_string()
     QStringList text2{
         "\" int x=10;ab;",
     };
-    mEditor->setContent(text);
+    mEditor->loadContent(text);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),Qt::Key_Left);
     QTest::keyPress(mEditor.get(),';');
@@ -2410,7 +2410,7 @@ void TestEditorSymbolCompletion::test_input_after_cpp_comment()
         "{}",
     };
     mEditor->clear();
-    mEditor->setContent(text1);
+    mEditor->loadContent(text1);
     mEditor->setCaretPos(mEditor->fileEnd());
     QTest::keyPress(mEditor.get(),'{');
     QCOMPARE(mEditor->content(),text2);
