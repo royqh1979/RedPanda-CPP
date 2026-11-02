@@ -194,8 +194,6 @@ int QSynEdit::displayLineCount() const
             auto it = mWrapLayouts.constFind(seq);
             total += (it != mWrapLayouts.constEnd()) ? it->segmentStartChars.count() : 1;
         }
-        if (!mWrapAllComputed)
-            scheduleWrapLayoutJob();
         return total;
     }
     // returns the count of display rows (rows are 0-based internally,
@@ -293,7 +291,7 @@ QSynEdit::~QSynEdit()
 
 void QSynEdit::scheduleWrapLayoutJob() const
 {
-    if (!mOptions.testFlag(EditorOption::WordWrap) || mWrapAllComputed)
+    if (mWrapAllComputed)
         return;
     qRegisterMetaType<WrapLayoutBatch>();
     QMutexLocker locker(&mWrapJobState->mutex);
@@ -305,7 +303,8 @@ void QSynEdit::scheduleWrapLayoutJob() const
     mWrapJobState->jobsInFlight++;
     WrapLayoutJob *job = new WrapLayoutJob(
                 mDocument, mWrapGeneration, mWrapContentVersion,
-                font(), mGlyphCalculator, wrapWidth(), mWrapJobState);
+                font(), mGlyphCalculator, wrapWidth(),
+                mOptions.testFlag(EditorOption::WordWrap), mWrapJobState);
     connect(job, &WrapLayoutJob::layoutsReady,
             this, &QSynEdit::onWrapLayoutBatch, Qt::QueuedConnection);
     QThreadPool::globalInstance()->start(job);
@@ -347,15 +346,9 @@ static bool isWrapBreakableGlyph(const QString &glyph)
 
 WrapLayout QSynEdit::computeWrapLayout(int line) const
 {
-    WrapLayout result = computeWrapLayoutForLine(
-                mDocument, line, mSyntaxer.get(), mGlyphCalculator, font(), wrapWidth());
-    if (!mOptions.testFlag(EditorOption::WordWrap)) {
-        // positions/width are still used for metrics, but a line is always
-        // exactly one display segment when wrapping is off
-        result.segmentStartChars = {0};
-        result.segmentStartXs = {0};
-    }
-    return result;
+    return computeWrapLayoutForLine(
+                mDocument, line, mSyntaxer.get(), mGlyphCalculator, font(), wrapWidth(),
+                mOptions.testFlag(EditorOption::WordWrap));
 }
 
 static void startParseLineForDocument(Syntaxer *syntaxer, const PDocument &document, int line, const QString &text)
@@ -370,7 +363,8 @@ static void startParseLineForDocument(Syntaxer *syntaxer, const PDocument &docum
 WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
                                     Syntaxer *syntaxer,
                                     const GlyphCalculator &glyphCalculator,
-                                    const QFont &baseFont, int wrapWidth)
+                                    const QFont &baseFont, int wrapWidth,
+                                    bool wordWrap)
 {
     WrapLayout result;
     result.segmentStartChars.append(0);
@@ -411,7 +405,7 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
             QString glyph = text.mid(glyphStartCharList[i], glyphEnd-glyphStartCharList[i]);
             result.glyphStartXList.append(x);
             int gw = glyphCalculator.glyphWidth(glyph, x, fm, glyphCalculator.forceMonospace());
-            if (x - segStartX + gw > wrapWidth && x - segStartX > 0) {
+            if (wordWrap && x - segStartX + gw > wrapWidth && x - segStartX > 0) {
                 int newStart, newX;
                 if (breakChar > segStart) {
                     newStart = breakChar;
@@ -1196,11 +1190,12 @@ int QSynEdit::spaceWidth() const
 void QSynEdit::invalidateAllLineMetrics()
 {
     mWrapLayouts.clear();
-    mWrapLayouts.clear();
     mWrapGeneration++;
     mWrapDirtySeqs.clear();
     mWrapAllComputed = false;
     mMaxLineWidthSeq = 0;
+    // eager: recompute in the background on every full invalidation
+    scheduleWrapLayoutJob();
 }
 
 
@@ -7536,7 +7531,6 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
                 size_t seq = mDocument->getLineSeq(i);
                 if (seq == mMaxLineWidthSeq)
                     mMaxLineWidthSeq = 0;
-                mWrapLayouts.remove(seq);
                 mWrapLayouts.remove(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;

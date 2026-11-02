@@ -30,7 +30,8 @@ namespace QSynedit {
 WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
                                     Syntaxer *syntaxer,
                                     const GlyphCalculator &glyphCalculator,
-                                    const QFont &baseFont, int wrapWidth);
+                                    const QFont &baseFont, int wrapWidth,
+                                    bool wordWrap);
 
 // background whole-document wrap-layout computation. Result batches are
 // delivered by the layoutsReady signal (queued to the view); the view is
@@ -42,7 +43,7 @@ class WrapLayoutJob : public QObject, public QRunnable
 public:
     WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
                   const QFont &baseFont, const GlyphCalculator &glyphCalculator,
-                  int wrapWidth, const PWrapJobSharedState &sharedState);
+                  int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState);
     void run() override;
 signals:
     void layoutsReady(const QSynedit::WrapLayoutBatch &batch);
@@ -54,6 +55,7 @@ private:
     QFont mBaseFont;
     GlyphCalculator mGlyphCalculator;
     int mWrapWidth;
+    bool mWordWrap;
     PWrapJobSharedState mSharedState;
     QHash<size_t, WrapLayout> mLayouts;
 };

@@ -22,13 +22,14 @@ namespace QSynedit {
 
 WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
                              const QFont &baseFont, const GlyphCalculator &glyphCalculator,
-                             int wrapWidth, const PWrapJobSharedState &sharedState):
+                             int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState):
     mDocument(document),
     mGeneration(generation),
     mContentVersion(contentVersion),
     mBaseFont(baseFont),
     mGlyphCalculator(glyphCalculator),
     mWrapWidth(wrapWidth),
+    mWordWrap(wordWrap),
     mSharedState(sharedState)
 {
 }
@@ -45,10 +46,12 @@ void WrapLayoutJob::run()
         }
         size_t seq = mDocument->getLineSeq(line);
         WrapLayout layout = computeWrapLayoutForLine(
-                    mDocument, line, syntaxer.get(), mGlyphCalculator, mBaseFont, mWrapWidth);
+                    mDocument, line, syntaxer.get(), mGlyphCalculator, mBaseFont, mWrapWidth, mWordWrap);
         mLayouts.insert(seq, layout);
-        if (mLayouts.count() >= 256)
+        if (mLayouts.count() >= 256) {
+            QMutexLocker locker(&mSharedState->mutex);
             postBatch(false);
+        }
     }
     {
         QMutexLocker locker(&mSharedState->mutex);
@@ -63,7 +66,6 @@ void WrapLayoutJob::run()
 
 void WrapLayoutJob::postBatch(bool finished)
 {
-    QMutexLocker locker(&mSharedState->mutex);
     if (mSharedState->viewDead || mGeneration != mSharedState->latestGeneration)
         return;
     WrapLayoutBatch batch;
