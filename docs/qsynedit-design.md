@@ -233,8 +233,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   `qsynedit-multiview-demo`，CMake 开关 `QSYNEDIT_BUILD_MULTIVIEW_DEMO`，
   默认 OFF）——一窗两视图共享同一 Document，两视图用不同字号；
   带文件菜单（New/Open/Save/Save As/Close，作用于共享文档），
-  也可传入文件路径参数；用于实际检验双视图编辑、共享 undo/redo、
-  逐视图字体度量与滚动。
+  也可传入文件路径参数；两视图均开启代码折叠（gutter 行号 + 折叠钮，
+  折叠状态逐视图）；Ctrl+滚轮只缩放鼠标所在视图的字号（demo 侧
+  事件过滤器实现）。用于实际检验双视图编辑、共享 undo/redo、
+  逐视图字体度量、折叠与滚动。
 
 ## 3. 坐标体系
 
