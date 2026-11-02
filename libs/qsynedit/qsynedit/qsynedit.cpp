@@ -58,7 +58,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mTextHeight = 1;
     mLastKey = 0;
     mLastKeyModifiers = Qt::NoModifier;
-    mModified = false;
     mPaintLock = 0;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
@@ -77,6 +76,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
+    connect(mDocument.get(), &Document::modifiedChanged,
+            this, &QSynEdit::onDocumentModifiedChanged);
     connect(mDocument.get(), &Document::syntaxerChanged,
             this, &QSynEdit::onDocumentSyntaxerChanged);
     connect(mDocument.get(), &Document::linesReparsed,
@@ -1211,7 +1212,7 @@ void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding,
     endEditing();
 }
 
-void QSynEdit::setContent(const QString &text)
+void QSynEdit::loadContent(const QString &text)
 {
     beginEditing();
     resetEditState();
@@ -1219,7 +1220,7 @@ void QSynEdit::setContent(const QString &text)
     endEditing();
 }
 
-void QSynEdit::setContent(const QStringList &text)
+void QSynEdit::loadContent(const QStringList &text)
 {
     beginEditing();
     resetEditState();
@@ -3560,8 +3561,13 @@ void QSynEdit::recalcCharExtent()
 
 void QSynEdit::updateModifiedStatusForUndoRedo()
 {
-    setModified(!mUndoList->initialState(), true);
-//    qDebug()<<mModified<<oldModified;
+    if (!mUndoList->initialState()) {
+        // per-view notification on every edit away from the save point
+        // (not only on flag transitions)
+        mLastModifyTime = QDateTime::currentDateTime();
+        setStatusChanged(StatusChange::Modified);
+    }
+    mDocument->setModified(!mUndoList->initialState(), true);
 }
 
 void QSynEdit::onDocumentLinesReparsed(int startLine, int endLine)
@@ -5244,6 +5250,8 @@ void QSynEdit::setDocument(const PDocument &document)
     connect(mDocument.get(), &Document::contentChanged, this, &QSynEdit::onDocumentContentChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
+    connect(mDocument.get(), &Document::modifiedChanged,
+            this, &QSynEdit::onDocumentModifiedChanged);
     connect(mDocument.get(), &Document::syntaxerChanged,
             this, &QSynEdit::onDocumentSyntaxerChanged);
     connect(mDocument.get(), &Document::linesReparsed,
@@ -5268,7 +5276,10 @@ void QSynEdit::setDocument(const PDocument &document)
     mPendingReparseInvalidateStart = -1;
     mPendingReparseInvalidateEnd = -1;
     invalidateAllLineMetrics();
-    updateModifiedStatusForUndoRedo();
+    // the document's modified flag is authoritative: attaching a view must
+    // not recompute it from the undo stacks (a document can be modified
+    // with an empty history, e.g. right after setContent)
+    setStatusChanged(StatusChange::ModifyChanged);
     // no reparse here: the shared document keeps its own states consistent;
     // the view only rebuilds its fold ranges from them
     rescanCodeBlocks();
@@ -7089,28 +7100,29 @@ int QSynEdit::maxScrollHeight() const
 
 bool QSynEdit::modified() const
 {
-    return mModified;
+    return mDocument->modified();
 }
 
 void QSynEdit::setModified(bool value, bool skipUndo)
 {
-    if (value) {
+    if (value && mDocument->modified()) {
+        // already modified: keep the old per-view side effects that don't
+        // touch the document flag (timestamp + StatusChange::Modified)
         mLastModifyTime = QDateTime::currentDateTime();
         setStatusChanged(StatusChange::Modified);
     }
-    if (value != mModified) {
-        mModified = value;
+    // the modified flag lives in the shared document; it emits
+    // modifiedChanged, which updates every view's UI
+    mDocument->setModified(value, skipUndo);
+}
 
-        if (!skipUndo) {
-            if (value) {
-                mUndoList->clear();
-                mRedoList->clear();
-            } else {
-                mUndoList->setInitialState();
-            }
-        }
-        setStatusChanged(StatusChange::ModifyChanged);
+void QSynEdit::onDocumentModifiedChanged()
+{
+    if (mDocument->modified()) {
+        mLastModifyTime = QDateTime::currentDateTime();
+        setStatusChanged(StatusChange::Modified);
     }
+    setStatusChanged(StatusChange::ModifyChanged);
 }
 
 int QSynEdit::gutterWidth() const

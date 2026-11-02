@@ -59,7 +59,7 @@ EditorSnippetWidget::EditorSnippetWidget(ColorManager *colorManager,const QStrin
             mUpdatingCode = true;
             ui->editCode->setEnabled(true);
             PCodeSnippet snippet = mModel.snippets()[index.row()];
-            ui->editCode->setContent(snippet->code);
+            ui->editCode->loadContent(snippet->code);
             mUpdatingCode = false;
         }
     });
@@ -100,9 +100,9 @@ EditorSnippetWidget::~EditorSnippetWidget()
 void EditorSnippetWidget::doLoad()
 {
     mModel.updateSnippets(pMainWindow->codeSnippetManager()->snippets());
-    ui->editCppFileTemplate->setContent(pMainWindow->codeSnippetManager()->newCppFileTemplate());
-    ui->editCFileTemplate->setContent(pMainWindow->codeSnippetManager()->newCFileTemplate());
-    ui->editGASFileTemplate->setContent(pMainWindow->codeSnippetManager()->newGASFileTemplate());
+    ui->editCppFileTemplate->loadContent(pMainWindow->codeSnippetManager()->newCppFileTemplate());
+    ui->editCFileTemplate->loadContent(pMainWindow->codeSnippetManager()->newCFileTemplate());
+    ui->editGASFileTemplate->loadContent(pMainWindow->codeSnippetManager()->newGASFileTemplate());
 }
 
 void EditorSnippetWidget::doSave()

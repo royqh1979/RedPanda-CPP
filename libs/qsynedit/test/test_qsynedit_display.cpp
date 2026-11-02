@@ -66,7 +66,7 @@ void TestQSyneditDisplay::init()
 
 void TestQSyneditDisplay::test_line_row_roundtrip()
 {
-    mEdit->setContent(makeLines(20));
+    mEdit->loadContent(makeLines(20));
     for (int line = 0; line < mEdit->lineCount(); line++) {
         QCOMPARE(mEdit->rowToLine(mEdit->lineToRow(line)), line);
         if (line + 1 < mEdit->lineCount())
@@ -76,7 +76,7 @@ void TestQSyneditDisplay::test_line_row_roundtrip()
 
 void TestQSyneditDisplay::test_line_row_roundtrip_with_fold()
 {
-    mEdit->setContent(makeFoldableLines());
+    mEdit->loadContent(makeFoldableLines());
     QVERIFY(mEdit->collapse(2, 4));
     // visible lines keep the roundtrip; folding must not change
     // the relative order of visible rows
@@ -94,7 +94,7 @@ void TestQSyneditDisplay::test_display_buffer_roundtrip()
     QStringList lines = makeLines(10);
     lines[3] = "\tindented with tab";
     lines[5] = "";
-    mEdit->setContent(lines);
+    mEdit->loadContent(lines);
     for (const CharPos &p : {CharPos{0, 0}, CharPos{5, 1}, CharPos{17, 2},
                              CharPos{0, 3}, CharPos{3, 3}, CharPos{17, 3},
                              CharPos{0, 5}, CharPos{0, 9}, CharPos{18, 9}}) {
@@ -104,7 +104,7 @@ void TestQSyneditDisplay::test_display_buffer_roundtrip()
 
 void TestQSyneditDisplay::test_display_buffer_roundtrip_with_fold()
 {
-    mEdit->setContent(makeFoldableLines());
+    mEdit->loadContent(makeFoldableLines());
     QVERIFY(mEdit->collapse(2, 4));
     for (const CharPos &p : {CharPos{0, 0}, CharPos{5, 1}, CharPos{7, 2},
                              CharPos{0, 5}, CharPos{1, 6}, CharPos{1, 9}}) {
@@ -114,7 +114,7 @@ void TestQSyneditDisplay::test_display_buffer_roundtrip_with_fold()
 
 void TestQSyneditDisplay::test_page_up_down()
 {
-    mEdit->setContent(makeLines(50));
+    mEdit->loadContent(makeLines(50));
     int linesInWindow = mEdit->linesInWindow();
     QVERIFY(linesInWindow > 0 && linesInWindow < 50);
 
@@ -134,7 +134,7 @@ void TestQSyneditDisplay::test_page_up_down()
 
 void TestQSyneditDisplay::test_page_top_bottom()
 {
-    mEdit->setContent(makeLines(50));
+    mEdit->loadContent(makeLines(50));
     mEdit->setCaretPos(CharPos{0, 10});
 
     mEdit->processCommand(EditCommand::PageTop);
@@ -146,7 +146,7 @@ void TestQSyneditDisplay::test_page_top_bottom()
 
 void TestQSyneditDisplay::test_file_start_end()
 {
-    mEdit->setContent(makeLines(50));
+    mEdit->loadContent(makeLines(50));
     mEdit->processCommand(EditCommand::FileEnd);
     QCOMPARE(mEdit->caretPos().line, mEdit->lineCount() - 1);
     mEdit->processCommand(EditCommand::FileStart);
@@ -155,7 +155,7 @@ void TestQSyneditDisplay::test_file_start_end()
 
 void TestQSyneditDisplay::test_scroll_top_pos()
 {
-    mEdit->setContent(makeLines(50));
+    mEdit->loadContent(makeLines(50));
     int value = 3 * mEdit->textHeight();
     mEdit->setTopPos(value);
     QCOMPARE(mEdit->topPos(), value);
@@ -163,7 +163,7 @@ void TestQSyneditDisplay::test_scroll_top_pos()
 
 void TestQSyneditDisplay::test_ensure_caret_visible()
 {
-    mEdit->setContent(makeLines(50));
+    mEdit->loadContent(makeLines(50));
     mEdit->setTopPos(0);
     mEdit->setCaretPosCentered(CharPos{0, 49});
     int caretPixelY = mEdit->displayCoordToPixels(mEdit->displayXY()).y();
@@ -173,7 +173,7 @@ void TestQSyneditDisplay::test_ensure_caret_visible()
 
 void TestQSyneditDisplay::test_mouse_positioning()
 {
-    mEdit->setContent(makeLines(10));
+    mEdit->loadContent(makeLines(10));
     int x = mEdit->gutterWidth() + 2 + mEdit->charWidth() * 2;
     int y = mEdit->textHeight() + 2;
     CharPos pos = mEdit->displayToBufferPos(mEdit->pixelsToGlyphPos(x, y));
@@ -182,7 +182,7 @@ void TestQSyneditDisplay::test_mouse_positioning()
 
 void TestQSyneditDisplay::test_mouse_positioning_with_fold()
 {
-    mEdit->setContent(makeFoldableLines());
+    mEdit->loadContent(makeFoldableLines());
     QVERIFY(mEdit->collapse(2, 4));
     // locate the row showing buffer line 5, click into it,
     // and verify it maps back to line 5

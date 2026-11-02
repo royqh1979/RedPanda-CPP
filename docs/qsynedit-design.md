@@ -211,6 +211,14 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   同一份栈；undo/redo 由触发视图发起，块级 caret/选区快照套用到触发视图（分析文档
   2.3 的语义）；`Document::undoRedoStateChanged` 让全部视图同步 modified；
   新编辑使 redo 栈失效的清理由 Document 自己完成。
+- **modified 标志归 Document 持有（共享）**：`Document::modified()` 是唯一权威
+  （"内容是否不同于已保存状态"），`setModified` 经任一视图设置都会通过
+  `Document::modifiedChanged` 通知全部视图刷新 UI（标题 [*] 等）。视图侧
+  `QSynEdit::setModified` 只做委托；`StatusChange::Modified` 的逐视图通知保留
+  旧语义（每次编辑都发，不只是跳变）。**`setDocument` 挂接时不得用 undo 栈
+  重算文档的 modified 标志**（文档可以在空 undo 历史下处于 modified 状态）。
+  `loadContent`（原 `setContent`，载入式整文档重置、不可撤销、不标 modified）
+  与 `loadFromFile` 同族；编辑式替换走 `replaceAll`/`Editor::replaceContent`。
 - **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly、
   字体/字号（字体度量已完全视图化：GlyphCalculator 独立成
   `glyphcalculator.h/.cpp` 归视图持有，LineMetrics 缓存按行 seq 键控；
@@ -454,6 +462,8 @@ caret 已是终态。
   （含编辑行之外的状态收敛尾部）；批次内到达时延迟到折叠重扫后应用（见 6.1
   顺序约束 2）。
 - `undoRedoStateChanged()`：undo/redo 执行后发出，全部视图同步 modified 状态。
+- `modifiedChanged()`：文档的 modified 标志实际跳变时发出（任一视图
+  setModified，或 undo/redo 到达/离开保存点）；视图据此刷新标题 [*] 等 UI。
 
 **UndoList / Gutter → QSynEdit（上行通知）：**
 

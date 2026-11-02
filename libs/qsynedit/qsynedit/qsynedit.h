@@ -450,8 +450,12 @@ public:
     void setDocument(const PDocument &document);
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
-    void setContent(const QString& text);
-    void setContent(const QStringList& text);
+    // load-style full reset: replaces the whole document content, resets
+    // the view state and clears the undo history (NOT an undoable edit,
+    // and does not mark the document modified). For Editor::replaceContent-
+    // style edits use replaceAll instead.
+    void loadContent(const QString& text);
+    void loadContent(const QStringList& text);
 
     QString selText() const;
     QStringList selContent() const;
@@ -608,6 +612,7 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatusForUndoRedo();
+    void onDocumentModifiedChanged();
     void uncollapse(const PCodeBlock &foldRange);
     void collapse(const PCodeBlock &foldRange);
     void processCodeBlocksOnLinesInserted(int line, int count);
@@ -823,7 +828,6 @@ private:
     EditCaretType  mInsertCaret;
     QPoint mCaretOffset;
     EditKeyStrokes mKeyStrokes;
-    bool mModified;
     QDateTime mLastModifyTime;
     double mLineSpacingFactor;
     SelectionMode mActiveSelectionMode; //mode of the active selection

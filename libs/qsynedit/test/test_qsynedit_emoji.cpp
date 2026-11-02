@@ -263,7 +263,7 @@ void TestQSyneditEmoji::test_input_chars_at_file_begin_end_overwrite_mode()
                           "0🌴1🌳2🌵3🌸🌹👩‍🎨",
                           "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬cde"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_A);
     QTest::keyPress(mEdit.get(), Qt::Key_B);
@@ -513,7 +513,7 @@ void TestQSyneditEmoji::test_delete_chars_in_file()
                           "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬"
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretPos(CharPos{21,3});
     clearSignalDatas();
@@ -691,7 +691,7 @@ void TestQSyneditEmoji::test_delete_prev_chars_in_file()
                           "🙈🙉🙊🧑‍🔬👨‍🔬👩‍🔬"
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretPos(CharPos{28,3});
     clearSignalDatas();

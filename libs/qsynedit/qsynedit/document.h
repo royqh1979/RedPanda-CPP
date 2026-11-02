@@ -330,6 +330,18 @@ public:
     PRedoList redoList() const;
 
     /**
+     * @brief the modified flag is a document-level property (like the
+     * undo/redo stacks): it tells whether the shared content differs from
+     * its saved state. Views read it and forward UI notifications; any view
+     * may set it (e.g. on save), which updates every attached view.
+     * With skipUndo=false, setting true clears the undo/redo stacks and
+     * setting false marks the undo list's current position as the save
+     * point (same semantics as the old per-view QSynEdit::setModified).
+     */
+    bool modified() const;
+    void setModified(bool value, bool skipUndo=false);
+
+    /**
      * @brief the document's own syntaxer: a bare instance (no color scheme
      * applied) used solely for the syntax-state cascade. It is the single
      * writer of per-line PSyntaxState when multiple views share the document.
@@ -464,6 +476,12 @@ signals:
      */
     void undoRedoStateChanged();
     /**
+     * @brief emitted when the document's modified flag has actually changed
+     * (by whichever view set it, including via undo/redo reaching/leaving
+     * the save point)
+     */
+    void modifiedChanged();
+    /**
      * @brief emitted after the document's syntaxer has been replaced and the
      * whole document reparsed with it. Views attached to this document must
      * adopt the new language (createInstance() from syntaxer()) and refresh.
@@ -515,6 +533,7 @@ private:
     PUndoList mUndoList;
     PRedoList mRedoList;
     PSyntaxer mSyntaxer;
+    bool mModified = false;
 
     mutable QRecursiveMutex mMutex;
 };

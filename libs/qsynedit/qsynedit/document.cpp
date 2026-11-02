@@ -64,6 +64,27 @@ PRedoList Document::redoList() const
     return mRedoList;
 }
 
+bool Document::modified() const
+{
+    return mModified;
+}
+
+void Document::setModified(bool value, bool skipUndo)
+{
+    if (value == mModified)
+        return;
+    mModified = value;
+    if (!skipUndo) {
+        if (value) {
+            mUndoList->clear();
+            mRedoList->clear();
+        } else {
+            mUndoList->setInitialState();
+        }
+    }
+    emit modifiedChanged();
+}
+
 PSyntaxer Document::createSyntaxerInstance() const
 {
     QMutexLocker locker(&mMutex);

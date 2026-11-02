@@ -979,7 +979,7 @@ void TestQSyneditCpp::test_set_content_qstring()
 
     clearSignalDatas();
     QByteArray encoding;
-    mEdit->setContent("123\nabc\n456");
+    mEdit->loadContent("123\nabc\n456");
     QCOMPARE(mEdit->content(),QStringList({"123","abc","456"}));
     QCOMPARE(mInsertStartLines, QList<int>({0}));
     QCOMPARE(mInsertLineCounts, QList<int>({3}));
@@ -1008,7 +1008,7 @@ void TestQSyneditCpp::test_set_content_qstringlist()
     QVERIFY(mEdit->modified());
 
     clearSignalDatas();
-    mEdit->setContent({"123","456","789"});
+    mEdit->loadContent({"123","456","789"});
     QCOMPARE(mEdit->content(),QStringList({"123","456","789"}));
     QCOMPARE(mInsertStartLines, QList<int>({0}));
     QCOMPARE(mInsertLineCounts, QList<int>({3}));
@@ -1491,7 +1491,7 @@ void TestQSyneditCpp::test_input_char_when_select_all()
                           "#",
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretPos(mEdit->fileEnd());
     mEdit->selectAll();
     clearSignalDatas();
@@ -1528,7 +1528,7 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_A);
     QTest::keyPress(mEdit.get(), Qt::Key_B);
@@ -1700,7 +1700,7 @@ void TestQSyneditCpp::test_input_chars_at_file_begin_end_overwrite_mode()
                           " return 0   ",
                           "cd"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     clearSignalDatas();
     QTest::keyPress(mEdit.get(), Qt::Key_A);
     QTest::keyPress(mEdit.get(), Qt::Key_B);
@@ -1951,7 +1951,7 @@ void QSynedit::TestQSyneditCpp::test_input_chars_in_file()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),3);
     QVERIFY(mEdit->hasCodeBlock(0,5));
     QCOMPARE(mEdit->subBlockCounts(0,5),1);
@@ -2153,7 +2153,7 @@ void TestQSyneditCpp::test_input_char_at_end_of_first_line_of_collapsed_block()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),3);
     QVERIFY(mEdit->hasCodeBlock(0,5));
     QCOMPARE(mEdit->subBlockCounts(0,5),1);
@@ -2479,7 +2479,7 @@ void TestQSyneditCpp::test_input_string_in_overwrite_mode()
                           "王五孙六"
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     clearSignalDatas();
     mEdit->processCommand(EditCommand::ImeStr, "张三");
     mEdit->processCommand(EditCommand::ImeStr, "李四");
@@ -2643,7 +2643,7 @@ void TestQSyneditCpp::test_input_input_chars_undo()
         "0abc1efg234",
     };
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{1,0});
     QTest::keyPress(mEdit.get(),'a');
     QTest::keyPress(mEdit.get(),'b');
@@ -2963,7 +2963,7 @@ void TestQSyneditCpp::test_block_indent()
                           "\t return 0;",
                           "\t}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretPos(mEdit->fileEnd());
     mEdit->selectAll();
     clearSignalDatas();
@@ -3062,7 +3062,7 @@ void TestQSyneditCpp::test_block_unindent()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretPos(mEdit->fileEnd());
     mEdit->selectAll();
     clearSignalDatas();
@@ -3267,7 +3267,7 @@ void TestQSyneditCpp::test_replace_line_at_file_begin_end()
         "\treturn 0;",
         "lalalala"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(), 3);
 
     mEdit->setCaretAndSelection(CharPos{1,8},CharPos{0,8},CharPos{1,8});
@@ -3463,7 +3463,7 @@ void QSynedit::TestQSyneditCpp::test_delete_chars_in_file()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),3);
     QVERIFY(mEdit->hasCodeBlock(0,5));
     QVERIFY(mEdit->hasCodeBlock(2,4));
@@ -3820,7 +3820,7 @@ void QSynedit::TestQSyneditCpp::test_delete_chars_at_file_begin_end()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),1);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     clearSignalDatas();
@@ -3971,7 +3971,7 @@ void TestQSyneditCpp::test_delete_chars_undo()
         "01234",
     };
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{1,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
@@ -4004,7 +4004,7 @@ void TestQSyneditCpp::test_delete_chars_undo2()
         "0234",
     };
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{1,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
@@ -4079,7 +4079,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -4352,7 +4352,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block2()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -4520,7 +4520,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block3()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -4697,7 +4697,7 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
                           " return 0;",
                           ""
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),1);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     clearSignalDatas();
@@ -4917,7 +4917,7 @@ void TestQSyneditCpp::test_delete_prev_chars_undo()
         "01234",
     };
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{4,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
@@ -4993,7 +4993,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -5266,7 +5266,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block2()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -5434,7 +5434,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block3()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     QVERIFY(mEdit->hasCodeBlock(5,11));
@@ -5590,7 +5590,7 @@ void TestQSyneditCpp::test_delete_and_backspace_chars_undo()
         "0234",
     };
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{4,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
@@ -5727,7 +5727,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
                          "urn 0;"
                       });
     clearContent();
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),0);
     mEdit->setCaretPos(CharPos{3,0});
     clearSignalDatas();
@@ -6015,7 +6015,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
     QVERIFY(mEdit->hasCodeBlock(3,8));
@@ -6270,7 +6270,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block2()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
     QVERIFY(mEdit->hasCodeBlock(3,8));
@@ -6423,7 +6423,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block3()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
     QVERIFY(mEdit->hasCodeBlock(3,8));
@@ -6689,7 +6689,7 @@ void TestQSyneditCpp::test_if_else_indent()
                           "\treturn 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),0);
 
     mEdit->setCaretPos(CharPos{12,0});
@@ -6873,7 +6873,7 @@ void TestQSyneditCpp::test_delete_current_line()
                           " return 0;",
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),1);
     QVERIFY(mEdit->hasCodeBlock(1,3));
 
@@ -7143,7 +7143,7 @@ void TestQSyneditCpp::test_duplicate_current_line()
                           "}"
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     QCOMPARE(mEdit->codeBlockCount(),1);
     QVERIFY(mEdit->hasCodeBlock(1,3));
     mEdit->setCaretPos(CharPos{1,1});
@@ -7336,7 +7336,7 @@ void TestQSyneditCpp::test_duplicate_selection()
                           "}"
                       });
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{1,0}, CharPos{1,0},CharPos{8,0});
     clearSignalDatas();
     mEdit->processCommand(EditCommand::Duplicate);
@@ -7512,7 +7512,7 @@ void TestQSyneditCpp::test_delete_while_select_all()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretPos(CharPos{3,2});
     clearSignalDatas();
@@ -7617,7 +7617,7 @@ void TestQSyneditCpp::test_delete_selection_in_line()
                           "}",
                           "int xxx;"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretAndSelection(CharPos({10,0}),CharPos({0,0}),CharPos({10,0}));
     clearSignalDatas();
@@ -7729,7 +7729,7 @@ void TestQSyneditCpp::test_backspace_while_select_all()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretPos(CharPos{3,2});
     clearSignalDatas();
@@ -7826,7 +7826,7 @@ void TestQSyneditCpp::test_input_char_while_select_all()
                           " return 0;",
                           "}"
                       });
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     mEdit->setCaretPos(CharPos{3,2});
     clearSignalDatas();
@@ -7957,7 +7957,7 @@ void TestQSyneditCpp::test_toggle_comment_at_file_begin()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     //comment at doc begin and no selection
     mEdit->setCaretPos(CharPos{0,0});
@@ -8157,7 +8157,7 @@ void TestQSyneditCpp::test_toggle_comment_at_file_end()
         "//}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretPos(CharPos{1,11});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -8351,7 +8351,7 @@ void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_begin()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{0,2},CharPos{9,0},CharPos{0,2});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -8539,7 +8539,7 @@ void TestQSyneditCpp::test_toggle_comment_select_line_begin_to_line_end()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{5,1},CharPos{0,1},CharPos{5,1});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -8721,7 +8721,7 @@ void TestQSyneditCpp::test_toggle_comment_select_line_begin_to_line_begin()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{0,2},CharPos{0,1},CharPos{0,2});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -8903,7 +8903,7 @@ void TestQSyneditCpp::test_toggle_comment_select_line_end_to_line_end()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{5,1},CharPos{9,0},CharPos{5,1});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -9102,7 +9102,7 @@ void TestQSyneditCpp::test_toggle_comment_select_multiple_lines()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{2,4},CharPos{1,1},CharPos{2,4});
     clearSignalDatas();
     mEdit->toggleComment();
@@ -9422,7 +9422,7 @@ void TestQSyneditCpp::test_move_up_current_line_at_file_begin()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     clearSignalDatas();
     mEdit->processCommand(EditCommand::MoveSelUp);
     QVERIFY(!mEdit->canUndo());
@@ -9459,7 +9459,7 @@ void TestQSyneditCpp::test_move_up_current_line_at_file_end()
         "}",
         "\treturn 0;",
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretPos(mEdit->fileEnd());
     clearSignalDatas();
     mEdit->processCommand(EditCommand::MoveSelUp);
@@ -9574,7 +9574,7 @@ void TestQSyneditCpp::test_move_up_select_line_end_to_line_begin()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
@@ -9715,7 +9715,7 @@ void TestQSyneditCpp::test_move_up_select_line_begin_to_line_end()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{1,2},CharPos{0,1},CharPos{1,2});
     clearSignalDatas();
     mEdit->moveSelUp();
@@ -9833,7 +9833,7 @@ void TestQSyneditCpp::test_move_up_select_line_begin_to_line_begin()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{0,3},CharPos{0,1},CharPos{0,3});
     clearSignalDatas();
     mEdit->moveSelUp();
@@ -9951,7 +9951,7 @@ void TestQSyneditCpp::test_move_up_select_line_end_to_line_end()
         "\treturn 0;",
         "}"
     };
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
     mEdit->setCaretAndSelection(CharPos{1,2},CharPos{9,0},CharPos{1,2});
     clearSignalDatas();
     mEdit->moveSelUp();
@@ -10073,7 +10073,7 @@ void TestQSyneditCpp::test_move_up_after_collapsed_block()
     };
 
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
@@ -10269,7 +10269,7 @@ void TestQSyneditCpp::test_move_down_select_line_end_to_line_begin()
         "}"
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
@@ -10421,7 +10421,7 @@ void TestQSyneditCpp::test_move_down_select_line_end_to_line_begin2()
         "\treturn 0;",
     };
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
@@ -10572,7 +10572,7 @@ void TestQSyneditCpp::test_move_down_before_collapsed_block()
     };
 
 
-    mEdit->setContent(text1);
+    mEdit->loadContent(text1);
 
     QCOMPARE(mEdit->codeBlockCount(),4);
     QVERIFY(mEdit->hasCodeBlock(0,2));
@@ -10762,7 +10762,7 @@ void TestQSyneditCpp::test_copy_paste_rawstring()
         "}"
     });
     QSynEdit edit;
-    edit.setContent(text);
+    edit.loadContent(text);
     QCOMPARE(edit.content(), text);
     edit.selectAll();
     edit.copyToClipboard();
@@ -10804,7 +10804,7 @@ void TestQSyneditCpp::test_copy_paste_ending_with_backslash()
         "}"
     });
     QSynEdit edit;
-    edit.setContent(text);
+    edit.loadContent(text);
     QCOMPARE(edit.content(), text);
     edit.selectAll();
     edit.copyToClipboard();
@@ -10836,7 +10836,7 @@ void TestQSyneditCpp::test_cut_selection()
         "}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
     mEdit->cutToClipboard();
     QCOMPARE(mEdit->content(), textCut);
@@ -10873,7 +10873,7 @@ void TestQSyneditCpp::test_cut_current_line_without_selection()
         "}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{2,1});
     clearSignalDatas();
     mEdit->cutToClipboard();
@@ -10913,7 +10913,7 @@ void TestQSyneditCpp::test_paste_replaces_selection()
         "}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setOptions(mEdit->getOptions() & ~EditorOptions(EditorOption::AutoIndent));
     QApplication::clipboard()->setText("1");
     mEdit->setCaretAndSelection(CharPos{10,1}, CharPos{4,1}, CharPos{10,1});
@@ -10950,7 +10950,7 @@ void TestQSyneditCpp::test_grouped_editing_undo_redo()
         "y}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{12,0});
     mEdit->beginEditing();
     QTest::keyPress(mEdit.get(),'x');
@@ -10988,7 +10988,7 @@ void TestQSyneditCpp::test_nested_grouped_editing()
         "int main() {xyz"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{12,0});
     QVERIFY(!mEdit->editing());
     mEdit->beginEditing();
@@ -11021,7 +11021,7 @@ void TestQSyneditCpp::test_grouped_editing_keeps_selection_mode()
         "klmno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     mEdit->beginEditing();
@@ -11038,7 +11038,7 @@ void TestQSyneditCpp::test_column_select_content()
         "klmno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QVERIFY(mEdit->hasSelContent());
@@ -11069,7 +11069,7 @@ void TestQSyneditCpp::test_column_input_char()
         "kxno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),'x');
@@ -11113,7 +11113,7 @@ void TestQSyneditCpp::test_column_input_at_column_cursor()
         "kxlmno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),'x');
@@ -11145,7 +11145,7 @@ void TestQSyneditCpp::test_column_backspace()
         "kno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),Qt::Key_Backspace);
@@ -11183,7 +11183,7 @@ void TestQSyneditCpp::test_column_cut()
         "kno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     mEdit->cutToClipboard();
@@ -11219,7 +11219,7 @@ void TestQSyneditCpp::test_column_mode_alt_selection()
         "klmno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos(CharPos{1,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Down,Qt::AltModifier|Qt::ShiftModifier);
     QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Column);
@@ -11250,7 +11250,7 @@ void TestQSyneditCpp::test_column_delete_char()
         "kno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
@@ -11291,7 +11291,7 @@ void TestQSyneditCpp::test_column_overwrite_input()
         "kxno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setInsertMode(false);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
@@ -11328,7 +11328,7 @@ void TestQSyneditCpp::test_column_overwrite_at_column_cursor()
         "kxmno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setInsertMode(false);
     mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
@@ -11363,7 +11363,7 @@ void TestQSyneditCpp::test_column_overwrite_at_eol()
         "klxno"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setInsertMode(false);
     mEdit->setCaretAndSelection(CharPos{2,2}, CharPos{2,0}, CharPos{2,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
@@ -11386,7 +11386,7 @@ void TestQSyneditCpp::test_column_overwrite_at_eol()
 void TestQSyneditCpp::test_column_select_content_cjk()
 {
     clearContent();
-    mEdit->setContent({"abcde","ab中文de","klmno"});
+    mEdit->loadContent({"abcde","ab中文de","klmno"});
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
     // select ch1..ch3 on the ASCII lines: the band is x = [1,3) cells
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
@@ -11402,7 +11402,7 @@ void TestQSyneditCpp::test_column_delete_cjk()
     QStringList text({"abcde","ab中文de","klmno"});
     QStringList textDeleted({"ade","a中文de","kno"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
     // band x=[1,3): on line 1 only 'b' is removed; 中[2,4) is spared by the left snap
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
@@ -11446,7 +11446,7 @@ void TestQSyneditCpp::test_column_delete_tab_snap()
     // default tabSize is 4
     QStringList text({"abcde","a\tbcde","klmno"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
     // line 1 layout: a[0,1) \t[1,4) b[4,5) c[5,6) d[6,7) e[7,8)
     // band x=[1,4): the right edge is exactly the start of 'b', only the tab is removed
@@ -11491,7 +11491,7 @@ void TestQSyneditCpp::test_column_has_content_cjk_layout()
 {
     // the content check only examines the begin/end lines' display x (design doc 8.1)
     clearContent();
-    mEdit->setContent({"abcde","中lmno"});
+    mEdit->loadContent({"abcde","中lmno"});
     mEdit->setOptions(mDefaultOptions | QSynedit::EditorOption::ForceMonospace);
     // same ch on both lines, but 中 is 2 cells wide:
     // begin x = 1 cell, end x = 2 cells -> the band has content
@@ -11517,7 +11517,7 @@ void TestQSyneditCpp::test_column_delete_prop_font()
     });
     QStringList text({"abcde","fghij","klmno"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QTest::keyPress(mEdit.get(),Qt::Key_Delete);
@@ -11554,7 +11554,7 @@ void TestQSyneditCpp::test_column_paste_single_line()
     QStringList text({"abcde","fghij","klmno"});
     QStringList textPasted({"aXde","fXij","kXno"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QApplication::clipboard()->setText("X");
@@ -11589,7 +11589,7 @@ void TestQSyneditCpp::test_column_paste_multi_line()
     QStringList text({"abcde","fghij","klmno"});
     QStringList textPasted({"a11de","f22ij","k33no"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QApplication::clipboard()->setText("11\n22\n33");
@@ -11632,7 +11632,7 @@ void TestQSyneditCpp::test_column_paste_multi_line_unequal()
     QStringList text({"abcde","fghij","klmno"});
     QStringList textPasted({"a1de","f22ij","k333no"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{3,2}, CharPos{1,0}, CharPos{3,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QApplication::clipboard()->setText("1\n22\n333");
@@ -11658,7 +11658,7 @@ void TestQSyneditCpp::test_column_paste_short_line()
     QStringList text({"abcde","fg","klmno"});
     QStringList textPasted({"abcX","fg X","klmX"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{5,2}, CharPos{3,0}, CharPos{5,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QApplication::clipboard()->setText("X");
@@ -11685,7 +11685,7 @@ void TestQSyneditCpp::test_column_paste_at_column_cursor()
     QStringList text({"abcde","fghij","klmno"});
     QStringList textPasted({"aXbcde","fXghij","kXlmno"});
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretAndSelection(CharPos{1,2}, CharPos{1,0}, CharPos{1,2});
     mEdit->setActiveSelectionMode(SelectionMode::Column);
     QApplication::clipboard()->setText("X");
@@ -11716,7 +11716,7 @@ void TestQSyneditCpp::test_overwrite_input_with_selection()
         "}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setInsertMode(false);
     mEdit->setCaretAndSelection(CharPos{8,0}, CharPos{4,0}, CharPos{8,0});
     QTest::keyPress(mEdit.get(),'x');
@@ -11753,7 +11753,7 @@ void TestQSyneditCpp::test_no_auto_indent_break_line()
         "}"
     });
     clearContent();
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setOptions(mEdit->getOptions() & ~EditorOptions(EditorOption::AutoIndent));
     mEdit->setCaretPos(CharPos{12,0});
     QTest::keyPress(mEdit.get(),Qt::Key_Return);
@@ -11792,7 +11792,7 @@ void TestQSyneditCpp::test_setseltext_and_indent()
         "\t{}x=10;",
         "}",
     });
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos({2,2});
     mEdit->setSelText("{}");
     QCOMPARE(mEdit->content(), text1);
@@ -11823,7 +11823,7 @@ void TestQSyneditCpp::test_setseltext_and_indent2()
         "\t}x=10;",
         "}",
     });
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos({2,2});
     mEdit->setSelText("{\ntest\n}");
     QCOMPARE(mEdit->content(), text1);
@@ -11854,7 +11854,7 @@ void TestQSyneditCpp::test_setseltext_and_indent3_line_comment()
         "\tint yyy;",
         "}",
     });
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos({1,2});
     mEdit->setSelText("// test");
     QCOMPARE(mEdit->content(), text1);
@@ -11993,7 +11993,7 @@ void TestQSyneditCpp::test_auto_indent_for_brace_after_closing_parenthesis()
         "\t{",
         "}",
     });
-    mEdit->setContent(text);
+    mEdit->loadContent(text);
     mEdit->setCaretPos({0,1});
     QTest::keyPress(mEdit.get(),'{');
     QCOMPARE(mEdit->content(),text1);
@@ -12078,7 +12078,7 @@ void TestQSyneditCpp::test_auto_indent_for_if_else_3()
 
 void TestQSyneditCpp::test_shared_document_basics()
 {
-    mEdit->setContent({"int main() {", "    return 0;", "}"});
+    mEdit->loadContent({"int main() {", "    return 0;", "}"});
     auto edit2 = std::make_shared<QSynEdit>();
     edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
     edit2->setDocument(mEdit->document());
@@ -12130,7 +12130,7 @@ void TestQSyneditCpp::test_shared_document_basics()
 
 void TestQSyneditCpp::test_shared_document_fold_shift()
 {
-    mEdit->setContent({"void f() {", "}", "int main() {", "    return 0;", "}"});
+    mEdit->loadContent({"void f() {", "}", "int main() {", "    return 0;", "}"});
     auto edit2 = std::make_shared<QSynEdit>();
     edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
     edit2->setDocument(mEdit->document());
@@ -12156,7 +12156,7 @@ void TestQSyneditCpp::test_shared_document_fold_shift()
 
 void TestQSyneditCpp::test_shared_document_syntaxer()
 {
-    mEdit->setContent({"int main() {", "    return 0;", "}"});
+    mEdit->loadContent({"int main() {", "    return 0;", "}"});
     // the document owns a bare syntaxer instance: the single writer of the
     // shared per-line syntax states
     QCOMPARE(mEdit->document()->syntaxerLanguage(), ProgrammingLanguage::CPP);
@@ -12191,7 +12191,7 @@ void TestQSyneditCpp::test_shared_document_syntaxer()
 
 void TestQSyneditCpp::test_shared_document_caret_shift()
 {
-    mEdit->setContent({"int a;", "int b;", "int c;", "int d;", "int e;"});
+    mEdit->loadContent({"int a;", "int b;", "int c;", "int d;", "int e;"});
     auto edit2 = std::make_shared<QSynEdit>();
     edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
     edit2->setDocument(mEdit->document());
@@ -12249,7 +12249,7 @@ void TestQSyneditCpp::test_shared_document_close_first_view()
 {
     auto edit1 = std::make_shared<QSynEdit>();
     edit1->setSyntaxer(std::make_shared<CppSyntaxer>());
-    edit1->setContent({"int main() {", "    return 0;", "}"});
+    edit1->loadContent({"int main() {", "    return 0;", "}"});
     auto edit2 = std::make_shared<QSynEdit>();
     edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
     edit2->setDocument(edit1->document());
@@ -12272,5 +12272,58 @@ void TestQSyneditCpp::test_shared_document_close_first_view()
     QCOMPARE(edit2->lineCount(), 4);
     edit2->undo();
     QCOMPARE(edit2->lineCount(), 3);
+}
+
+void TestQSyneditCpp::test_shared_document_modified_sync()
+{
+    // the fixture editor is shared across the suite: establish a clean
+    // save point first
+    mEdit->setModified(false);
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+    QVERIFY(!mEdit->modified());
+    QVERIFY(!edit2->modified());
+
+    // an edit in one view marks the document modified in every view
+    // (loadContent itself is a load-style reset and stays unmodified)
+    mEdit->loadContent(QStringList{"int main() {}"});
+    QVERIFY(!mEdit->modified());
+    QTest::keyPress(mEdit.get(), 'x');
+    QVERIFY(mEdit->modified());
+    QVERIFY(edit2->modified());
+
+    // a view attached while the document is modified shows it, too
+    auto edit3 = std::make_shared<QSynEdit>();
+    edit3->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit3->setDocument(mEdit->document());
+    QVERIFY(edit3->modified());
+
+    // saving from either view clears the modified flag in every view
+    edit2->setModified(false);
+    QVERIFY(!mEdit->modified());
+    QVERIFY(!edit2->modified());
+    QVERIFY(!edit3->modified());
+
+    // undo/redo across the save point re-marks/unmarks every view
+    // (loadContent is not undoable, so make a real edit first; use Enter
+    // here so this edit is not merged with the previous 'x' into one
+    // group-undo block)
+    QTest::keyPress(mEdit.get(), Qt::Key_Enter);
+    QVERIFY(mEdit->modified());
+    QVERIFY(edit2->modified());
+    QVERIFY(edit3->modified());
+    mEdit->undo();
+    QVERIFY(!mEdit->modified());
+    QVERIFY(!edit2->modified());
+    QVERIFY(!edit3->modified());
+    mEdit->redo();
+    QVERIFY(mEdit->modified());
+    QVERIFY(edit2->modified());
+    QVERIFY(edit3->modified());
+    mEdit->undo();
+    QVERIFY(!mEdit->modified());
+    QVERIFY(!edit2->modified());
+    QVERIFY(!edit3->modified());
 }
 }

@@ -2032,11 +2032,6 @@ bool Editor::functionTooltipVisible() const
     return mFunctionTooltip && mFunctionTooltip->isVisible();
 }
 
-void Editor::loadContent(const QString& filename)
-{
-
-}
-
 bool Editor::isBraceChar(QChar ch) const
 {
     switch( ch.unicode()) {

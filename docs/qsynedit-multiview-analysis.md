@@ -269,8 +269,9 @@ N 个听众时才是正当的。
 5. **行级通知粒度**：按倾向实施 B 完全体——`contentChanged(DocumentChangeSet)`
    在最外层 `endUpdate` 聚合发射一次，只含有序事实、同类相邻才合并并带 DEBUG 断言；
    原语信号 `changing/changed` 保留为批次边界。
-6. **modified/save point**：随 undo 栈共享文档级状态，各视图的 modified 标志
-   经 `undoRedoStateChanged` 同步。
+6. **modified/save point**：随 undo 栈共享文档级状态；modified 标志本身也收归
+   Document 持有（唯一权威，`modifiedChanged` 通知各视图刷新 UI），不再使用
+   逐视图缓存。
 
 分析之外的增量：
 

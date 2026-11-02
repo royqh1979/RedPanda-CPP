@@ -325,7 +325,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     editor.setFileType(fileType);
     if (mMainWindow->editorManager()->getContentFromOpenedEditor(
                 filename,buffer)){
-        editor.setContent(buffer);
+        editor.loadContent(buffer);
     } else if (!fileExists(filename)){
         return parentItem;
     } else {

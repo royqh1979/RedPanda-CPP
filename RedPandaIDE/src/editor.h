@@ -378,7 +378,6 @@ private:
     bool completionPopupVisible() const;
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;
-    void loadContent(const QString& filename);
     bool isBraceChar(QChar ch) const;
     bool shouldOpenInReadonly();
     QChar getCurrentChar();

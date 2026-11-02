@@ -177,6 +177,7 @@ private slots:
     void test_shared_document_syntaxer();
     void test_shared_document_caret_shift();
     void test_shared_document_close_first_view();
+    void test_shared_document_modified_sync();
 };
 
 }
