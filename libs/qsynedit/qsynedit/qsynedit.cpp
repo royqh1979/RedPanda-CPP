@@ -167,7 +167,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     setFont(mFontDummy);
     setScrollBars(ScrollStyle::Both);
-    reparseDocument();
+    // no reparseDocument() here: the document reparses itself on birth,
+    // load and edits
 }
 
 int QSynEdit::lineCount() const
@@ -286,10 +287,10 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
         lineText = mDocument->getLine(lineIdx);
         chIdx = pos.ch;
         if ((chIdx >= 0) && (chIdx < lineText.length())) {
-            // clone from the document's syntaxer (fetched under the document
+            // clone from the document's syntaxer (created under the document
             // lock): this function is also called from the compiler thread
             // via the WORDXY macro, so it must not touch the view's mSyntaxer
-            PSyntaxer syntaxer = mDocument->syntaxer()->createInstance();
+            PSyntaxer syntaxer = mDocument->createSyntaxerInstance();
             startParseLine(syntaxer.get(), lineIdx, lineText);
             while (!syntaxer->eol()) {
                 start = syntaxer->getTokenPos();
@@ -973,7 +974,6 @@ void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding,
     beginEditing();
     resetEditState();
     mDocument->loadFromFile(filename, encoding, realEncoding);
-    reparseDocument();
     endEditing();
 }
 
@@ -982,7 +982,6 @@ void QSynEdit::setContent(const QString &text)
     beginEditing();
     resetEditState();
     mDocument->setText(text);
-    reparseDocument();
     endEditing();
 }
 
@@ -991,7 +990,6 @@ void QSynEdit::setContent(const QStringList &text)
     beginEditing();
     resetEditState();
     mDocument->setContents(text);
-    reparseDocument();
     endEditing();
 }
 
@@ -2315,7 +2313,6 @@ void QSynEdit::doClearAll()
     beginEditing();
     resetEditState();
     mDocument->clear();
-    reparseDocument();
     endEditing();
 }
 
@@ -3358,15 +3355,6 @@ void QSynEdit::onDocumentLinesReparsed(int startLine, int endLine)
     } else {
         invalidateLines(startLine, endLine);
     }
-}
-
-void QSynEdit::reparseDocument()
-{
-    mDocument->reparseAll();
-    // invalidate after the fold rescan: invalidateLines() maps lines to rows
-    // through the fold mapping, so it must run on the rescanned state
-    rescanCodeBlocks();
-    invalidateLines(0,mDocument->count());
 }
 
 void QSynEdit::uncollapse(const PCodeBlock &foldRange)
@@ -4991,12 +4979,11 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
 
 void QSynEdit::onDocumentSyntaxerChanged()
 {
-    PSyntaxer docSyntaxer = mDocument->syntaxer();
-    if (mSyntaxer->language() != docSyntaxer->language()) {
+    if (mSyntaxer->language() != mDocument->syntaxerLanguage()) {
         // the language was changed by another view sharing this document:
         // adopt it with a default-configured instance; reapplying the color
         // scheme is the application side's business
-        mSyntaxer = docSyntaxer->createInstance();
+        mSyntaxer = mDocument->createSyntaxerInstance();
         recalcCharExtent();
         mDocument->invalidateAllNonTempLineWidth();
     }
@@ -5045,14 +5032,16 @@ void QSynEdit::setDocument(const PDocument &document)
     // the language is a document-level property: adopt the shared document's
     // syntaxer (with default attributes; the color scheme is view-side and
     // reapplied by the application)
-    if (mSyntaxer->language() != mDocument->syntaxer()->language()) {
-        mSyntaxer = mDocument->syntaxer()->createInstance();
+    if (mSyntaxer->language() != mDocument->syntaxerLanguage()) {
+        mSyntaxer = mDocument->createSyntaxerInstance();
         recalcCharExtent();
     }
     mPendingReparseInvalidateStart = -1;
     mPendingReparseInvalidateEnd = -1;
     updateModifiedStatusForUndoRedo();
-    reparseDocument();
+    // no reparse here: the shared document keeps its own states consistent;
+    // the view only rebuilds its fold ranges from them
+    rescanCodeBlocks();
     onGutterChanged();
     updateVScrollbar();
     invalidate();

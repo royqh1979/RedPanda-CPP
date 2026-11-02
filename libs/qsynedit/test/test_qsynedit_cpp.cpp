@@ -12158,7 +12158,7 @@ void TestQSyneditCpp::test_shared_document_syntaxer()
     mEdit->setContent({"int main() {", "    return 0;", "}"});
     // the document owns a bare syntaxer instance: the single writer of the
     // shared per-line syntax states
-    QCOMPARE(mEdit->document()->syntaxer()->language(), ProgrammingLanguage::CPP);
+    QCOMPARE(mEdit->document()->syntaxerLanguage(), ProgrammingLanguage::CPP);
     QCOMPARE(mEdit->document()->braceLevel(0), 1);
     QCOMPARE(mEdit->document()->braceLevel(2), 0);
 
@@ -12180,7 +12180,7 @@ void TestQSyneditCpp::test_shared_document_syntaxer()
     // other view; the shared states are recomputed with the new language
     edit2->setSyntaxer(std::make_shared<TextSyntaxer>());
     QCOMPARE(edit2->syntaxer()->language(), ProgrammingLanguage::Textfile);
-    QCOMPARE(mEdit->document()->syntaxer()->language(), ProgrammingLanguage::Textfile);
+    QCOMPARE(mEdit->document()->syntaxerLanguage(), ProgrammingLanguage::Textfile);
     QCOMPARE(mEdit->syntaxer()->language(), ProgrammingLanguage::Textfile);
     QCOMPARE(mEdit->document()->braceLevel(1), 0);
 

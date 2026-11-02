@@ -517,10 +517,19 @@ public:
      * applied) used solely for the syntax-state cascade. It is the single
      * writer of per-line PSyntaxState when multiple views share the document.
      *
-     * It's thread safe (the pointer is returned under the document lock, so
-     * background threads may clone it via createInstance()).
+     * The instance itself is never exposed. The only external accesses are
+     * the two below, both under the document lock:
      */
-    PSyntaxer syntaxer() const;
+    /**
+     * @brief a fresh clone of the document's syntaxer (default-configured;
+     * thread-local scan state). The only way outsiders may obtain parsing
+     * capability — e.g. the compiler-thread WORDXY path clones from here.
+     */
+    PSyntaxer createSyntaxerInstance() const;
+    /**
+     * @brief the document's language (a value, not the instance)
+     */
+    ProgrammingLanguage syntaxerLanguage() const;
     /**
      * @brief replace the document's syntaxer, reparse the whole document and
      * emit syntaxerChanged(). GUI thread only. Color schemes are a view-side

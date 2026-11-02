@@ -276,13 +276,19 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
   - **`putLine` 内容不变也重解析**：重解析的职责不只是解析新文本，还是"从本行起修复
     可能过期的语法状态"——`doDeleteText` 的协议就是删行（`parseToEnd=false`）后紧跟
     `setLine(..., true)` 收敛被平移行的状态，而那些行的文本可能没变。
-  - **前一行状态未知（null）时从头解析**：批量载入路径（`setText`/`setContents`/
-    `loadFromFile`）经内部 `addItem`/`insertItem` 不经原语、不重解析；此后首个原语
-    的 reparse 发现前行为 null 时回退为从第 0 行解析（`SyntaxState::equals` 对 null
-    安全；注意各 syntaxer 的 `setState` 会解引用/向下转型，绝不能收 null）。
-  - `Document::syntaxer()` 加锁返回，
-  后台线程（编译器线程 WORDXY 路径，`qsynedit.cpp` `getTokenAttr`）只能从这里取指针、
-  再 `createInstance()` 出线程局部的克隆来扫描，**不得触碰任何长效实例的扫描状态**。
+  - `Document` 的 syntaxer **实例不对外暴露**：外部只有两个加锁接口——
+    `createSyntaxerInstance()`（返回默认配置的克隆，线程局部扫描状态；编译线程
+    WORDXY 路径 `getTokenAttr` 经此克隆）和 `syntaxerLanguage()`（返回语言值）。
+    外界拿不到实例本身，无从触碰它的扫描状态。
+  - **文档始终自洽**：构造函数末尾 `reparseAll()`（空文档出生即有状态）；
+    `setText`/`setContents`/`loadFromFile` 在批次结束前内建 `reparseAll()`
+    （它们走内部 `addItem`/`insertItem`，不经编辑原语）；`clear()` 保证最后一行
+    被重解析。因此 `QSynEdit::reparseDocument` 已删除——它的文档侧部分就是
+    `reparseAll`，视图侧部分（折叠重扫/重绘）由 `contentChanged`/`linesReparsed`
+    信号驱动，`setDocument` 挂接时只需 `rescanCodeBlocks()`。
+  - 前一行状态未知（null）时从头解析：`equals` 对 null 安全；各 syntaxer 的
+    `setState` 会解引用/向下转型（如 `CppSyntaxer::setState` 的
+    `dynamic_pointer_cast`），绝不能收 null。
 - **每个 QSynEdit 持有自己的 syntaxer 实例**（`mSyntaxer`，IDE 已应用配色方案），供绘制
   （`painter.cpp` 逐行扫描取 token 与颜色）、编辑决策（自动缩进的 `startParseLine` 扫描）、
   元信息（注释符号、`isIdentChar`、`foldString` 等无状态读）使用。两个视图可对同一文档

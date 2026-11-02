@@ -59,6 +59,8 @@ Document::Document(const QFont& font, QObject *parent):
             mRedoList->clear();
     });
     ensureHasLine();
+    // a fresh document is born self-consistent: states are never null
+    reparseAll();
 }
 
 PUndoList Document::undoList() const
@@ -71,10 +73,16 @@ PRedoList Document::redoList() const
     return mRedoList;
 }
 
-PSyntaxer Document::syntaxer() const
+PSyntaxer Document::createSyntaxerInstance() const
 {
     QMutexLocker locker(&mMutex);
-    return mSyntaxer;
+    return mSyntaxer->createInstance();
+}
+
+ProgrammingLanguage Document::syntaxerLanguage() const
+{
+    QMutexLocker locker(&mMutex);
+    return mSyntaxer->language();
 }
 
 void Document::setSyntaxer(const PSyntaxer &syntaxer)
@@ -372,6 +380,9 @@ void Document::setText(const QString &text)
         mIndexOfLongestLine = -1;
     }
     ensureHasLine();
+    // the bulk-load path bypasses the edit primitives, so it reparses
+    // explicitly: after setText the document is always fully parsed
+    reparseAll();
 }
 
 void Document::setContents(const QStringList &text)
@@ -386,6 +397,9 @@ void Document::setContents(const QStringList &text)
         mIndexOfLongestLine = -1;
     }
     ensureHasLine();
+    // the bulk-load path bypasses the edit primitives, so it reparses
+    // explicitly: after setContents the document is always fully parsed
+    reparseAll();
     endUpdate();
 }
 
@@ -526,8 +540,13 @@ void Document::clear()
     // deleting everything and inserting a fresh one
     if (mLines.count() > 1)
         deleteLines(0, mLines.count()-1, false);
-    if (!mLines[0]->lineText().isEmpty())
+    if (!mLines[0]->lineText().isEmpty()) {
         putLine(0, "", true);
+    } else {
+        // the kept line's state may be stale (it was parsed in its old
+        // position); reparse it so the cleared document is self-consistent
+        reparseLines(0, 1, true);
+    }
     endUpdate();
 }
 
@@ -765,6 +784,9 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     internalClear();
     auto action = finally([this]{
         ensureHasLine();
+        // the bulk-load path bypasses the edit primitives, so it reparses
+        // explicitly: after loadFromFile the document is always fully parsed
+        reparseAll();
         endUpdate();
     });
     //test for utf8 / utf 8 bom

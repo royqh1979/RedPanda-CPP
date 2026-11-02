@@ -428,7 +428,6 @@ public:
     int selCount() const;
 
     QStringList getContent(CharPos startPos, CharPos endPos, SelectionMode mode) const;
-    void reparseDocument();
 
     QString lineBreak() const;
 
