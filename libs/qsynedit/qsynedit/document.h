@@ -501,6 +501,24 @@ public:
     PUndoList undoList() const;
     PRedoList redoList() const;
 
+    /**
+     * @brief the document's own syntaxer: a bare instance (no color scheme
+     * applied) used solely for the syntax-state cascade. It is the single
+     * writer of per-line PSyntaxState when multiple views share the document.
+     *
+     * It's thread safe (the pointer is returned under the document lock, so
+     * background threads may clone it via createInstance()).
+     */
+    PSyntaxer syntaxer() const;
+    /**
+     * @brief replace the document's syntaxer, reparse the whole document and
+     * emit syntaxerChanged(). GUI thread only. Color schemes are a view-side
+     * concern and are NOT propagated (views keep their own configured
+     * instances; non-initiating views adopt the new language with default
+     * attributes).
+     */
+    void setSyntaxer(const PSyntaxer &syntaxer);
+
     int addLine(const QString& s);
     void addLines(const QStringList& strings);
 
@@ -654,6 +672,12 @@ signals:
      * re-sync their modified status
      */
     void undoRedoStateChanged();
+    /**
+     * @brief emitted after the document's syntaxer has been replaced and the
+     * whole document reparsed with it. Views attached to this document must
+     * adopt the new language (createInstance() from syntaxer()) and refresh.
+     */
+    void syntaxerChanged();
 protected:
     QString getTextStr() const;
     void insertItem(int line, const QString& s);
@@ -663,6 +687,9 @@ private:
     void ensureHasLine();
     void invalidateAllLineWidth();
     void recordChange(DocumentChangeKind kind, int line, int count);
+    // reparse every line with mSyntaxer and store the resulting states;
+    // caller must hold mMutex (it is recursive)
+    void reparseAll();
 public:
     /**
      * @brief emit undoRedoStateChanged(); called by the view that performed
@@ -699,6 +726,7 @@ private:
 
     PUndoList mUndoList;
     PRedoList mRedoList;
+    PSyntaxer mSyntaxer;
 
     int mSetLineWidthLockCount;
     bool mMaxLineChangedInSetLinesWidth;

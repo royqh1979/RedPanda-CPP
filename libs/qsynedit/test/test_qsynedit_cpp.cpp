@@ -8,6 +8,7 @@
 #include "qsynedit/qsynedit.h"
 #include "qsynedit/document.h"
 #include "qsynedit/syntaxer/cpp.h"
+#include "qsynedit/syntaxer/textfile.h"
 #include "qsynedit/formatter/cppformatter.h"
 
 namespace QSynedit {
@@ -12150,6 +12151,41 @@ void TestQSyneditCpp::test_shared_document_fold_shift()
     QVERIFY(edit2->isCollapsed(1,3));
     QVERIFY(edit2->foldHidesLine(2));
     QVERIFY(!mEdit->foldHidesLine(2));
+}
+
+void TestQSyneditCpp::test_shared_document_syntaxer()
+{
+    mEdit->setContent({"int main() {", "    return 0;", "}"});
+    // the document owns a bare syntaxer instance: the single writer of the
+    // shared per-line syntax states
+    QCOMPARE(mEdit->document()->syntaxer()->language(), ProgrammingLanguage::CPP);
+    QCOMPARE(mEdit->document()->braceLevel(0), 1);
+    QCOMPARE(mEdit->document()->braceLevel(2), 0);
+
+    // a view attaching to a shared document adopts its language
+    auto edit2 = std::make_shared<QSynEdit>();
+    QCOMPARE(edit2->syntaxer()->language(), ProgrammingLanguage::Textfile);
+    edit2->setDocument(mEdit->document());
+    QCOMPARE(edit2->syntaxer()->language(), ProgrammingLanguage::CPP);
+    QCOMPARE(edit2->document()->braceLevel(0), 1);
+
+    // editing from view 2: the cascade runs on the document's instance and
+    // the shared states stay correct
+    edit2->setCaretPos(CharPos{0,0});
+    QTest::keyPress(edit2.get(), Qt::Key_Enter);
+    QCOMPARE(edit2->content(), QStringList({"", "int main() {", "    return 0;", "}"}));
+    QCOMPARE(mEdit->document()->braceLevel(1), 1);
+
+    // changing the language from one view propagates to the document and the
+    // other view; the shared states are recomputed with the new language
+    edit2->setSyntaxer(std::make_shared<TextSyntaxer>());
+    QCOMPARE(edit2->syntaxer()->language(), ProgrammingLanguage::Textfile);
+    QCOMPARE(mEdit->document()->syntaxer()->language(), ProgrammingLanguage::Textfile);
+    QCOMPARE(mEdit->syntaxer()->language(), ProgrammingLanguage::Textfile);
+    QCOMPARE(mEdit->document()->braceLevel(1), 0);
+
+    // restore the fixture state
+    mEdit->setSyntaxer(std::make_shared<CppSyntaxer>());
 }
 
 }

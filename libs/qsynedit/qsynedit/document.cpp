@@ -16,6 +16,7 @@
  */
 #include "document.h"
 #include "qt_utils/utils.h"
+#include "syntaxer/textfile.h"
 #include <QDataStream>
 #include <QFile>
 #include <QTextStream>
@@ -48,6 +49,7 @@ Document::Document(const QFont& font, QObject *parent):
         std::placeholders::_3);
     mUndoList = std::make_shared<UndoList>();
     mRedoList = std::make_shared<RedoList>();
+    mSyntaxer = std::make_shared<TextSyntaxer>();
     // adding a new change invalidates the redo history; this is a
     // document-level concern (the stacks are shared by all views)
     connect(mUndoList.get(), &UndoList::addedUndo, this, [this](){
@@ -67,6 +69,35 @@ PUndoList Document::undoList() const
 PRedoList Document::redoList() const
 {
     return mRedoList;
+}
+
+PSyntaxer Document::syntaxer() const
+{
+    QMutexLocker locker(&mMutex);
+    return mSyntaxer;
+}
+
+void Document::setSyntaxer(const PSyntaxer &syntaxer)
+{
+    Q_ASSERT(syntaxer);
+    if (!syntaxer)
+        return;
+    {
+        QMutexLocker locker(&mMutex);
+        mSyntaxer = syntaxer;
+        reparseAll();
+    }
+    emit syntaxerChanged();
+}
+
+void Document::reparseAll()
+{
+    mSyntaxer->resetState();
+    for (int i = 0; i < mLines.size(); i++) {
+        mSyntaxer->setLine(i, mLines[i]->lineText(), mLines[i]->lineSeq());
+        mSyntaxer->nextToEol();
+        mLines[i]->setSyntaxState(mSyntaxer->getState());
+    }
 }
 
 void Document::notifyUndoRedoStateChanged()
@@ -360,7 +391,8 @@ bool Document::inUpdate() const
 void Document::recordChange(DocumentChangeKind kind, int line, int count)
 {
     // sanity checks against the post-mutation state
-    Q_ASSERT(line >= 0);
+    Q_ASSERT(line >= 0);    
+#ifdef QT_DEBUG
     switch (kind) {
     case DocumentChangeKind::Insert:
     case DocumentChangeKind::SetLine:
@@ -375,6 +407,7 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
         Q_ASSERT(line < mLines.count() && count >= 0 && count < mLines.count());
         break;
     }
+#endif
     // Only same-kind, adjacent entries coalesce. No cross-kind merging or
     // cancellation: the sequence must faithfully mirror what the primitives
     // did, so consumers can replay it naively.

@@ -711,6 +711,7 @@ private slots:
     void onLinesChanged();
     void onLinesChanging();
     void onDocumentContentChanged(const DocumentChangeSet &changes);
+    void onDocumentSyntaxerChanged();
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();

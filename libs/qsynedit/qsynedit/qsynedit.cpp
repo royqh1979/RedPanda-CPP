@@ -76,6 +76,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
             this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
+    connect(mDocument.get(), &Document::syntaxerChanged,
+            this, &QSynEdit::onDocumentSyntaxerChanged);
 
     mGutterWidth = 0;
 
@@ -282,7 +284,10 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
         lineText = mDocument->getLine(lineIdx);
         chIdx = pos.ch;
         if ((chIdx >= 0) && (chIdx < lineText.length())) {
-            PSyntaxer syntaxer = mSyntaxer->createInstance();
+            // clone from the document's syntaxer (fetched under the document
+            // lock): this function is also called from the compiler thread
+            // via the WORDXY macro, so it must not touch the view's mSyntaxer
+            PSyntaxer syntaxer = mDocument->syntaxer()->createInstance();
             startParseLine(syntaxer.get(), lineIdx, lineText);
             while (!syntaxer->eol()) {
                 start = syntaxer->getTokenPos();
@@ -3345,16 +3350,19 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool toDocumentEnd)
         return startLine;
     }
 
+    // the syntax-state cascade runs on the document's own (bare) syntaxer,
+    // so the shared states have a single writer no matter which view edits
+    PSyntaxer syntaxer = mDocument->syntaxer();
     if (startLine == 0) {
-        mSyntaxer->resetState();
+        syntaxer->resetState();
     } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(startLine-1));
+        syntaxer->setState(mDocument->getSyntaxState(startLine-1));
     }
     int line = startLine;
     do {
-        mSyntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
-        mSyntaxer->nextToEol();
-        state = mSyntaxer->getState();
+        syntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
+        syntaxer->nextToEol();
+        state = syntaxer->getState();
         if (line >= endLine && state->equals(mDocument->getSyntaxState(line)) ) {
             break;
         }
@@ -3380,11 +3388,12 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool toDocumentEnd)
 
 void QSynEdit::reparseDocument()
 {
-    mSyntaxer->resetState();
+    PSyntaxer syntaxer = mDocument->syntaxer();
+    syntaxer->resetState();
     for (int i =0;i<mDocument->count();i++) {
-        mSyntaxer->setLine(i, mDocument->getLine(i), mDocument->getLineSeq(i));
-        mSyntaxer->nextToEol();
-        mDocument->setSyntaxState(i, mSyntaxer->getState());
+        syntaxer->setLine(i, mDocument->getLine(i), mDocument->getLineSeq(i));
+        syntaxer->nextToEol();
+        mDocument->setSyntaxState(i, syntaxer->getState());
     }
 #ifdef QSYNEDIT_TEST
     emit linesReparesd(0, mDocument->count());
@@ -5005,11 +5014,26 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
     mSyntaxer = syntaxer;
     if (oldSyntaxer ->language() != syntaxer->language()) {
         recalcCharExtent();
-        mDocument->beginUpdate();
-        reparseDocument();
-        mDocument->endUpdate();
+        // the document keeps its own bare instance as the single writer of
+        // the shared syntax states; it reparses and notifies the other views
+        mDocument->setSyntaxer(syntaxer->createInstance());
     }
     mDocument->invalidateAllNonTempLineWidth();
+    invalidate();
+}
+
+void QSynEdit::onDocumentSyntaxerChanged()
+{
+    PSyntaxer docSyntaxer = mDocument->syntaxer();
+    if (mSyntaxer->language() != docSyntaxer->language()) {
+        // the language was changed by another view sharing this document:
+        // adopt it with a default-configured instance; reapplying the color
+        // scheme is the application side's business
+        mSyntaxer = docSyntaxer->createInstance();
+        recalcCharExtent();
+        mDocument->invalidateAllNonTempLineWidth();
+    }
+    rescanCodeBlocks();
     invalidate();
 }
 
@@ -5037,6 +5061,8 @@ void QSynEdit::setDocument(const PDocument &document)
             this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::undoRedoStateChanged,
             this, &QSynEdit::updateModifiedStatusForUndoRedo);
+    connect(mDocument.get(), &Document::syntaxerChanged,
+            this, &QSynEdit::onDocumentSyntaxerChanged);
     connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
     // reset per-view state; the caret/scroll reset must not be recorded
     // into the shared undo stacks
@@ -5047,6 +5073,13 @@ void QSynEdit::setDocument(const PDocument &document)
     setCaretPos(fileBegin());
     mCodeBlocks.clear();
     mUndoing = oldUndoing;
+    // the language is a document-level property: adopt the shared document's
+    // syntaxer (with default attributes; the color scheme is view-side and
+    // reapplied by the application)
+    if (mSyntaxer->language() != mDocument->syntaxer()->language()) {
+        mSyntaxer = mDocument->syntaxer()->createInstance();
+        recalcCharExtent();
+    }
     updateModifiedStatusForUndoRedo();
     reparseDocument();
     onGutterChanged();
@@ -5606,13 +5639,13 @@ int QSynEdit::searchReplace(const QString &searchText, const QString &replaceWit
 void QSynEdit::properSetLine(int line, const QString &lineText, bool parseToEnd)
 {
     mDocument->putLine(line,lineText);
-    reparseLines(line, line + 1, parseToEnd && mSyntaxer->needsLineState());
+    reparseLines(line, line + 1, parseToEnd && mDocument->syntaxer()->needsLineState());
 }
 
 void QSynEdit::properInsertLine(int line, const QString &lineText, bool parseToEnd)
 {
     mDocument->insertLine(line, lineText);
-    reparseLines(line,line+1, parseToEnd && mSyntaxer->needsLineState());
+    reparseLines(line,line+1, parseToEnd && mDocument->syntaxer()->needsLineState());
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
@@ -5623,7 +5656,7 @@ void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
     // Unlike properInsertLine(s)/properSetLine/properMoveLine, deletion has no
     // new lines to parse: with a line-local syntaxer the shifted lines' states
     // stay valid, so the reparse can be skipped entirely.
-    if (parseToEnd && mSyntaxer->needsLineState())
+    if (parseToEnd && mDocument->syntaxer()->needsLineState())
         reparseLines(line, line + count, true);
 }
 
@@ -5632,7 +5665,7 @@ void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
     if (count<=0)
         return;
     mDocument->insertLines(line, count);
-    reparseLines(line,line+count, parseToEnd && mSyntaxer->needsLineState());
+    reparseLines(line,line+count, parseToEnd && mDocument->syntaxer()->needsLineState());
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
@@ -5642,7 +5675,7 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     mDocument->moveLine(from, to);
     int minLine = std::min(from,to);
     int maxLine = std::max(from,to);
-    reparseLines(minLine, maxLine+1, parseToEnd && mSyntaxer->needsLineState());
+    reparseLines(minLine, maxLine+1, parseToEnd && mDocument->syntaxer()->needsLineState());
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)

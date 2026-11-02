@@ -138,7 +138,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 2. **语法分析结果**：每行 `PSyntaxState` 的存取（`getSyntaxState`/`setSyntaxState`），以及其字段的访问器——`parenthesisLevel`/`bracketLevel`/`braceLevel`/`blockLevel`/`blockStarted`/`blockEnded` 全部直接读 `syntaxState()` 的字段（`document.cpp:52-131`）。注意语法状态不只服务高亮：`shouldInsertAfterCurrentLine`（`qsynedit.cpp:1411`）用它做编辑决策，因此它是"模型+编辑"共享的数据。
 3. **绘制缓存**：字形分段（`mGlyphStartCharList`，**与字体无关**）、字形像素位置与行宽（`mGlyphStartPositionList`/`mWidth`/`mIsTempWidth`，**与字体有关**）、`GlyphCalculator`（持有 `QFontMetrics`、tabSize、forceMonospace，`document.h:205`）、最长行跟踪（`mIndexOfLongestLine` 与 `maxLineWidthChanged` 信号）。`Document` 构造函数因此依赖 `QFont`（`document.h:294`）。
 4. **文件 I/O 与编码**：`loadFromFile`/`saveToFile`、UTF-16/32 BOM 处理（`loadUTF16BOMFile` 等，`document.cpp:525-567`）、编码探测（`tryLoadFileByEncoding`）、换行风格（`NewlineType`/`lineBreak`）、`appendNewLineAtEOF`。
-5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责（后台解析线程会读语法状态）。
+5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责。线程访问约定（多视图共享后同样成立）：
+   - **文本内容/语法状态**：后台线程会读文档，现有两条路径：(a) CppParser 解析线程经 `EditorManager::getContentFromOpenedEditor`（`editormanager.cpp:901`，由 `CppFileParserThread` 触发）读全文；(b) 编译器线程构建命令行时取 `WORDXY` 宏（`compiler.cpp:466` → `macroVariables` → `wordAtCursor` → `tokenAt` → `getTokenAttr`，`qsynedit.cpp:285`），后者**克隆局部 syntaxer 扫描**、只经锁读 Document。因此文档读写都必须过 `mMutex`，且 syntaxer 指针本身的读取也要加锁（`setSyntaxer` 在 GUI 线程写）；
+   - **UndoList/RedoList 自身无锁**：约定只在 GUI 线程访问（编辑、undo/redo 均由用户操作/快捷键触发，事件循环天然串行化）。多视图共享不产生竞争——两个视图不可能"同时"编辑，所有操作在 GUI 线程排队执行；后台线程不得触碰 undo/redo 栈；
+   - **信号连接**：Document/UndoList 的信号只允许直接连接到 GUI 线程对象；跨线程 queued 连接的槽不得再回写文档（不得在持锁状态下引入跨线程重入）。
 6. **变更通知**：`changed`/`changing`/`maxLineWidthChanged` 信号。
 
 撤销/重做的栈归 Document 持有（多视图共享，见 2.5）；视图经 `QSynEdit::mUndoList`/`mRedoList`
@@ -189,18 +192,23 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 - **视图侧维护由 `Document::contentChanged` 驱动**（见第 6 章）：任何视图发起的编辑，
   所有挂接视图各自完成折叠平移/重扫、滚动条修正与重绘。语法状态共享（同一语法器
   类型下结果一致），折叠扫描只读共享状态，安全。
+- **语法器归属（已实现，见第 4 章）**：Document 持有裸 syntaxer 实例，是共享
+  SyntaxState 的唯一写入者；视图各自持有带配色的实例供绘制/编辑决策；
+  `Document::syntaxerChanged` 驱动非发起视图同步语言。
 - **undo/redo 栈归 Document 持有（共享）**：视图经 `mUndoList`/`mRedoList` 别名访问
   同一份栈；undo/redo 由触发视图发起，块级 caret/选区快照套用到触发视图（分析文档
   2.3 的语义）；`Document::undoRedoStateChanged` 让全部视图同步 modified；
   新编辑使 redo 栈失效的清理由 Document 自己完成。
-- **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly。
+- **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly、
+  配色方案（两个视图可对同一文档用不同配色）。
 - **已知限制（后续阶段解除）**：
   - 非发起视图的 caret 目前**不随编辑平移**（只在越界时由其它路径钳制）；
     marker 式平移待做；
   - Document 持有字体与行宽度量缓存——共享文档的视图必须用同一字体；
-  - 语法器实例每视图一个，多视图下重复解析同一文本（结果一致但浪费）。
+  - 非发起视图在语言切换后得到默认配色实例，配色重应用是应用侧的职责
+    （IDE 多视图接线时处理）。
 - 单元测试：`test_shared_document_basics`（含跨视图 undo/redo 两轮往返）/
-  `test_shared_document_fold_shift`。
+  `test_shared_document_fold_shift`/`test_shared_document_syntaxer`。
 
 ## 3. 坐标体系
 
@@ -248,7 +256,41 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 - 修正 3.3 中的错误/过时注释；
 - 中期：引入强类型坐标（`CharIndex`/`BufferLine`/`DisplayRow`/像素类型）；gutter 行号换算收敛到单侧。
 
-## 4. 语法高亮（待补）
+## 4. 语法高亮
+
+### 4.1 Syntaxer 归属（多视图设计）
+
+**核心拆分：语言是文档的属性，配色是视图的属性。**
+
+- **Document 持有一个裸 syntaxer 实例**（`Document::mSyntaxer`，默认构造、不应用配色），
+  职责只有一个：编辑级联中重算每行 `PSyntaxState`——多视图共享文档时它是这些共享状态的
+  **唯一写入者**（视图的 chokepoint `properSetLine` 等经 `mDocument->syntaxer()` 取用它，
+  `QSynEdit::reparseLines`/`reparseDocument` 同样用它）。`Document::syntaxer()` 加锁返回，
+  后台线程（编译器线程 WORDXY 路径，`qsynedit.cpp` `getTokenAttr`）只能从这里取指针、
+  再 `createInstance()` 出线程局部的克隆来扫描，**不得触碰任何长效实例的扫描状态**。
+- **每个 QSynEdit 持有自己的 syntaxer 实例**（`mSyntaxer`，IDE 已应用配色方案），供绘制
+  （`painter.cpp` 逐行扫描取 token 与颜色）、编辑决策（自动缩进的 `startParseLine` 扫描）、
+  元信息（注释符号、`isIdentChar`、`foldString` 等无状态读）使用。两个视图可对同一文档
+  用不同配色——配色**不做**文档级同步。
+- **C 类一次性扫描**（`getTokenAttr`/`getTokenBorders`/`getWordAtPosition` 等）用
+  `createInstance()` 的默认新实例，用完即弃——这些路径只要 token 文本和位置，不需要颜色；
+  `createInstance` 因此保持"默认构造"语义，不做真克隆（真克隆会引入 attribute 跨实例
+  共享/拷贝的复杂性与开销，绘制热路径上不可接受）。
+- **语言切换**：`QSynEdit::setSyntaxer` 装视图实例的同时，把 `createInstance()` 出的
+  裸实例交给 `Document::setSyntaxer`；文档全量重解析（`reparseAll`）后发
+  `syntaxerChanged`；非发起视图在槽 `onDocumentSyntaxerChanged` 中换自己的实例
+  （默认配色，配色重应用是应用侧职责）、重扫折叠、重绘。
+- `setDocument` 挂接共享文档时视图采用文档的语言（同上，默认配色实例）。
+- 已验证的语义前提：`SyntaxState`（括号/块层级）的计算不依赖配色与 `customTypeKeywords`
+  （后者只影响 token 分类），故裸实例算出的状态与带配色实例一致。
+
+### 4.2 可重入性约束
+
+Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重入。因此：
+
+- 绘制（含扫描中途回调应用层的 `onPreparePaintHighlightToken`）只用视图私有实例；
+- 级联重算只用文档实例；两者扫描状态互不干扰；
+- 后台线程只允许用临时克隆。
 
 ## 5. 代码折叠（待补）
 
@@ -298,6 +340,15 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 历史教训：`onLinesChanged` 曾在 `changed` 槽里对列选区做重吸附，编辑中间态下
 光标仍是旧值、行可能已删短，导致坐标断言崩溃。
 
+**编辑的串行性与禁重入**：所有编辑在 GUI 线程事件循环中串行执行——一个编辑操作
+从 `beginEditing` 到 `endEditing` 在同一事件处理内同步跑完，多视图共享文档不产生
+"同时编辑"（物理上不可能）。真正的风险是**嵌套编辑**：编辑中途发出的同步信号
+（`contentChanged` 等）的槽若回写文档，嵌套编辑会被 update/block 计数器并进外层
+批次，undo 分组与 ChangeSet 语义被搅浑（不崩溃，但语义错误且难查）。因此约定：
+**任何视图或外部组件的槽都不得回写文档**（现有槽已审计：视图侧槽只做平移/重扫/
+滚动条/重绘，IDE 侧 `statusChanged` 等只更新 UI 状态）。此风险单视图时代同样存在
+（外部槽也能回写），多视图只是挂接的槽变多，机制未变。
+
 ### 6.2 信号清单与用途
 
 **Document → 视图（上行通知，听众 = 挂接该文档的所有视图）：**
@@ -311,6 +362,9 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
   不再是逐原语 N 次。不做跨组件一致性恢复（见 6.1 铁律 2）。
 - `maxLineWidthChanged()`：行宽重算后发出，用于更新水平滚动条
   （依赖字体度量，多视图归属待度量拆分时处理）。
+- `syntaxerChanged()`：文档语法器更换且全量重解析完成后发出；非发起视图据此
+  换自己的语法器实例（默认配色）、重扫折叠、重绘（见 4.1）。
+- `undoRedoStateChanged()`：undo/redo 执行后发出，全部视图同步 modified 状态。
 
 **UndoList / Gutter → QSynEdit（上行通知）：**
 
