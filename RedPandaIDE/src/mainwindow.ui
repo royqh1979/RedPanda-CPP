@@ -347,6 +347,7 @@
     <addaction name="actionTool_Window_Bars"/>
     <addaction name="menuTool_Windows"/>
     <addaction name="actionStatus_Bar"/>
+    <addaction name="actionWord_Wrap"/>
     <addaction name="separator"/>
     <addaction name="actionToggle_Explorer_Panel"/>
     <addaction name="actionToggle_Messages_Panel"/>
@@ -2756,6 +2757,14 @@
    </property>
    <property name="text">
     <string>Status Bar</string>
+   </property>
+  </action>
+  <action name="actionWord_Wrap">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Word Wrap</string>
    </property>
   </action>
   <action name="actionProject">

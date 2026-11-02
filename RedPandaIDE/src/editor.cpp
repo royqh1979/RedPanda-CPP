@@ -5345,6 +5345,7 @@ void Editor::applySettings()
     options.setFlag(QSynedit::EditorOption::ShowTrailingSpaces, mEditorSettings->showTrailingSpaces());
     options.setFlag(QSynedit::EditorOption::ShowInnerSpaces, mEditorSettings->showInnerSpaces());
     options.setFlag(QSynedit::EditorOption::ShowLineBreaks, mEditorSettings->showLineBreaks());
+    options.setFlag(QSynedit::EditorOption::WordWrap, mEditorSettings->wordWrap());
 
     options.setFlag(QSynedit::EditorOption::AutoIndent,mEditorSettings->autoIndent());
     options.setFlag(QSynedit::EditorOption::TabsToSpaces,mEditorSettings->tabToSpaces());

@@ -676,6 +676,7 @@ private slots:
     void on_actionTool_Window_Bars_triggered();
 
     void on_actionStatus_Bar_triggered();
+    void on_actionWord_Wrap_triggered(bool checked);
 
     void on_actionProject_triggered();
 

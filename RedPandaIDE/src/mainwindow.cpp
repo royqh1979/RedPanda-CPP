@@ -1180,6 +1180,7 @@ void MainWindow::applyUISettings()
     ui->tabMessages->setVisible(settings.showToolWindowBars());
     ui->actionStatus_Bar->setChecked(settings.showStatusBar());
     ui->statusbar->setVisible(settings.showStatusBar());
+    ui->actionWord_Wrap->setChecked(pSettings->editor().wordWrap());
 
     ui->actionProject->setChecked(settings.showProject());
     showHideInfosTab(ui->tabProject,settings.showProject());
@@ -9321,6 +9322,12 @@ void MainWindow::on_actionTool_Window_Bars_triggered()
     ui->tabExplorer->setVisible(state);
     ui->tabMessages->setVisible(state);
     ui->actionTool_Window_Bars->setChecked(state);
+}
+
+void MainWindow::on_actionWord_Wrap_triggered(bool checked)
+{
+    pSettings->editor().setWordWrap(checked);
+    mEditorManager->applySettings();
 }
 
 void MainWindow::on_actionStatus_Bar_triggered()

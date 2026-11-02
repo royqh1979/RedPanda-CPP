@@ -508,6 +508,16 @@ void EditorSettings::setShowLineBreaks(bool newShowLineBreaks)
     mShowLineBreaks = newShowLineBreaks;
 }
 
+bool EditorSettings::wordWrap() const
+{
+    return mWordWrap;
+}
+
+void EditorSettings::setWordWrap(bool value)
+{
+    mWordWrap = value;
+}
+
 bool EditorSettings::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -954,6 +964,7 @@ void EditorSettings::doSave()
     saveValue("show_trailing_spaces", mShowTrailingSpaces);
     saveValue("show_inner_spaces", mShowInnerSpaces);
     saveValue("show_line_breaks", mShowLineBreaks);
+    saveValue("word_wrap", mWordWrap);
 
     //gutter
     saveValue("gutter_visible", mGutterVisible);
@@ -1103,6 +1114,7 @@ void EditorSettings::doLoad()
     mShowTrailingSpaces = boolValue("show_trailing_spaces", false);
     mShowInnerSpaces = boolValue("show_inner_spaces", false);
     mShowLineBreaks = boolValue("show_line_breaks", false);
+    mWordWrap = boolValue("word_wrap", false);
 
     //gutter
     mGutterVisible = boolValue("gutter_visible",true);

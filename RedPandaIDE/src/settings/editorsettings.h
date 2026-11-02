@@ -271,6 +271,9 @@ public:
     bool showLineBreaks() const;
     void setShowLineBreaks(bool newShowLineBreaks);
 
+    bool wordWrap() const;
+    void setWordWrap(bool value);
+
     bool showInnerSpaces() const;
     void setShowInnerSpaces(bool newShowMiddleSpaces);
 
@@ -359,6 +362,7 @@ private:
     bool mShowTrailingSpaces;
     bool mShowInnerSpaces;
     bool mShowLineBreaks;
+    bool mWordWrap;
 
     //gutter
     bool mGutterVisible;
