@@ -584,7 +584,7 @@ void TestDocument::test_insert_line()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLine(0,"int p;");
+    mDoc->insertLine(0,"int p;", true);
 
     QCOMPARE(mDoc->count(),3);
     QCOMPARE(mDoc->content(),
@@ -601,7 +601,7 @@ void TestDocument::test_insert_line1()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLine(1,"int p;");
+    mDoc->insertLine(1,"int p;", true);
 
     QCOMPARE(mDoc->count(),3);
     QCOMPARE(mDoc->content(),
@@ -618,7 +618,7 @@ void TestDocument::test_insert_line2()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLine(2,"int p;");
+    mDoc->insertLine(2,"int p;", true);
 
     QCOMPARE(mDoc->count(),3);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -634,7 +634,7 @@ void TestDocument::test_insert_lines()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLines(0,2);
+    mDoc->insertLines(0,2, true);
 
     QCOMPARE(mDoc->count(),4);
     QCOMPARE(mDoc->getLine(0),"");
@@ -651,7 +651,7 @@ void TestDocument::test_insert_lines1()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLines(1,2);
+    mDoc->insertLines(1,2, true);
 
     QCOMPARE(mDoc->count(),4);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -668,7 +668,7 @@ void TestDocument::test_insert_lines2()
     mDoc->setContents({"int x1;","int y1;"});
 
     initSignalTest();
-    mDoc->insertLines(2,2);
+    mDoc->insertLines(2,2, true);
 
     QCOMPARE(mDoc->count(),4);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -685,7 +685,7 @@ void TestDocument::test_delete_line()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLine(0);
+    mDoc->deleteLine(0, true);
 
     QCOMPARE(mDoc->count(),2);
     QCOMPARE(mDoc->getLine(0),"int y1;");
@@ -700,7 +700,7 @@ void TestDocument::test_delete_line1()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLine(1);
+    mDoc->deleteLine(1, true);
 
     QCOMPARE(mDoc->count(),2);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -715,7 +715,7 @@ void TestDocument::test_delete_line2()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLine(2);
+    mDoc->deleteLine(2, true);
 
     QCOMPARE(mDoc->count(),2);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -730,7 +730,7 @@ void TestDocument::test_delete_lines()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLines(0,2);
+    mDoc->deleteLines(0,2, true);
 
     QCOMPARE(mDoc->count(),1);
     QCOMPARE(mDoc->getLine(0),"int z1;");
@@ -744,7 +744,7 @@ void TestDocument::test_delete_lines1()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLines(1,2);
+    mDoc->deleteLines(1,2, true);
 
     QCOMPARE(mDoc->count(),1);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -758,7 +758,7 @@ void TestDocument::test_delete_all()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->deleteLines(0,3);
+    mDoc->deleteLines(0,3, true);
 
     QCOMPARE(mDoc->count(),1);
     QCOMPARE(mDoc->getLine(0),"");
@@ -774,7 +774,7 @@ void TestDocument::test_put_line()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->putLine(0,"test");
+    mDoc->putLine(0,"test", true);
 
     QCOMPARE(mDoc->count(),3);
     QCOMPARE(mDoc->getLine(0),"test");
@@ -790,7 +790,7 @@ void TestDocument::test_put_line1()
     mDoc->setContents({"int x1;","int y1;","int z1;"});
 
     initSignalTest();
-    mDoc->putLine(2,"test");
+    mDoc->putLine(2,"test", true);
 
     QCOMPARE(mDoc->count(),3);
     QCOMPARE(mDoc->getLine(0),"int x1;");
@@ -805,7 +805,7 @@ void TestDocument::test_move_line_to1()
     mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
 
     initSignalTest();
-    mDoc->moveLine(2,4);
+    mDoc->moveLine(2,4, true);
 
     QCOMPARE(mDoc->count(),5);
     QCOMPARE(mDoc->content(),
@@ -823,7 +823,7 @@ void TestDocument::test_move_line_to2()
     mDoc->setContents({"int a;","int b;","int c;","int d;","int e;"});
 
     initSignalTest();
-    mDoc->moveLine(4,2);
+    mDoc->moveLine(4,2, true);
 
     QCOMPARE(mDoc->count(),5);
     QCOMPARE(mDoc->content(),
@@ -897,12 +897,12 @@ void TestDocument::test_content_changed()
 
     // putLine with unchanged text: not recorded
     batches.clear();
-    mDoc->putLine(0, "");
+    mDoc->putLine(0, "", true);
     QCOMPARE(batches.count(), 0);
 
     // putLine with changed text: SetLine
     batches.clear();
-    mDoc->putLine(0, "hello");
+    mDoc->putLine(0, "hello", true);
     QCOMPARE(batches.count(), 1);
     QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::SetLine, 0, 1));
 
@@ -910,8 +910,8 @@ void TestDocument::test_content_changed()
     mDoc->setText("a\nb\nc\nd");
     batches.clear();
     mDoc->beginUpdate();
-    mDoc->deleteLine(1);
-    mDoc->deleteLine(1);
+    mDoc->deleteLine(1, true);
+    mDoc->deleteLine(1, true);
     mDoc->endUpdate();
     QCOMPARE(batches.count(), 1);
     QCOMPARE(batches[0].count(), 1);
@@ -920,8 +920,8 @@ void TestDocument::test_content_changed()
     // no cross-kind merging: insert then delete stay separate entries
     batches.clear();
     mDoc->beginUpdate();
-    mDoc->insertLine(0, "new");
-    mDoc->deleteLine(0);
+    mDoc->insertLine(0, "new", true);
+    mDoc->deleteLine(0, true);
     mDoc->endUpdate();
     QCOMPARE(batches.count(), 1);
     QCOMPARE(batches[0].count(), 2);
@@ -930,7 +930,7 @@ void TestDocument::test_content_changed()
 
     // Move entry: line=from, count=to
     batches.clear();
-    mDoc->moveLine(0, 1);
+    mDoc->moveLine(0, 1, true);
     QCOMPARE(batches.count(), 1);
     QVERIFY(checkEntry(batches[0][0], DocumentChangeKind::Move, 0, 1));
 }
@@ -943,25 +943,30 @@ void TestDocument::test_reparse()
     mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
     QCOMPARE(reparseSpy.count(), 1);
 
-    // content changes alone do not reparse; the document reparses on demand
-    // and the states are correct without any view attached
-    mDoc->setContents({"int main() {", "    return 0;", "}"});
+    // the edit primitives reparse synchronously: the document manages its
+    // syntax states without any view attached
     reparseSpy.clear();
-    int end = mDoc->reparseLines(0, 1, true);
-    // parsing continues past endLine until the states converge (the early
-    // stop line is an optimization detail, only the states are contractual)
-    QVERIFY(end>=2);
+    mDoc->putLine(0, "int main() {", false);
     QCOMPARE(mDoc->braceLevel(0), 1);
-    QCOMPARE(mDoc->braceLevel(1), 1);
-    QCOMPARE(mDoc->braceLevel(2), 0);
     QCOMPARE(reparseSpy.count(), 1);
     QCOMPARE(reparseSpy.takeFirst().at(0).toInt(), 0);
 
-    // without parseToEnd the reparse stops at endLine
-    mDoc->putLine(0, "void f() {}");
     reparseSpy.clear();
-    end = mDoc->reparseLines(0, 1, false);
-    QCOMPARE(end, 1);
+    mDoc->insertLine(1, "}", false);
+    QCOMPARE(mDoc->braceLevel(1), 0);
+    QCOMPARE(reparseSpy.count(), 1);
+    QCOMPARE(reparseSpy.takeFirst().at(0).toInt(), 1);
+
+    // an unchanged putLine still reparses (and emits): its job is also to
+    // repair syntax states from this line onward, which may be stale after
+    // earlier edits even when this line's text is unchanged
+    reparseSpy.clear();
+    mDoc->putLine(1, "}", false);
+    QCOMPARE(reparseSpy.count(), 1);
+
+    // parseToEnd: editing line 0 reparses forward until the states converge
+    reparseSpy.clear();
+    mDoc->putLine(0, "void f() {}", true);
     QCOMPARE(mDoc->braceLevel(0), 0);
     QCOMPARE(reparseSpy.count(), 1);
 }

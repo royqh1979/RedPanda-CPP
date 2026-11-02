@@ -484,7 +484,18 @@ public:
      */
     QStringList content() const;
 
-    void putLine(int index, const QString& s);
+    /**
+     * @brief replace the text of a line. Reparses the line (and, when
+     * parseToEnd is set and the syntaxer needs line states, the following
+     * lines until the states converge). The reparse runs even when the text
+     * is unchanged: its purpose is also to repair syntax states from this
+     * line onward, which may be stale after earlier edits (see the
+     * doDeleteText delete+setLine protocol).
+     * @param parseToEnd declares the syntax-state invalidation scope of this
+     * edit: pass false only when the edit cannot invalidate the following
+     * lines' states
+     */
+    void putLine(int index, const QString& s, bool parseToEnd);
 
     void beginUpdate();
     void endUpdate();
@@ -520,16 +531,6 @@ public:
     void setSyntaxer(const PSyntaxer &syntaxer);
 
     /**
-     * @brief reparse lines [startLine, endLine) with the document's syntaxer
-     * and store the resulting syntax states; when parseToEnd is set and the
-     * syntaxer needs line states, parsing continues past endLine until the
-     * states converge. Must be called synchronously from the edit path:
-     * editing decisions (auto indent) read the states of just-edited lines
-     * within the same batch. Emits linesReparsed with the actually parsed
-     * range. Returns the line where parsing stopped (exclusive).
-     */
-    int reparseLines(int startLine, int endLine, bool parseToEnd);
-    /**
      * @brief unconditionally reparse the whole document (no early stop on
      * state convergence) and emit linesReparsed(0, count())
      */
@@ -540,11 +541,17 @@ public:
 
     int getTextLength() const;
     void clear();
-    void deleteLine(int index);
-    void deleteLines(int index, int numLines);
-    void moveLine(int from, int to);
-    void insertLine(int index, const QString& s);
-    void insertLines(int index, int numLines);
+    // The edit primitives below reparse the affected lines synchronously
+    // (before endUpdate). parseToEnd declares the syntax-state invalidation
+    // scope of the edit; it has no default on purpose: callers must state the
+    // assumption explicitly. For deleteLine(s) the reparse only runs when
+    // parseToEnd is set (deletion alone keeps the shifted lines' states valid
+    // for line-local syntaxers).
+    void deleteLine(int index, bool parseToEnd);
+    void deleteLines(int index, int numLines, bool parseToEnd);
+    void moveLine(int from, int to, bool parseToEnd);
+    void insertLine(int index, const QString& s, bool parseToEnd);
+    void insertLines(int index, int numLines, bool parseToEnd);
 
     PDocumentLine findLineBySeq(size_t lineSeq) const;
 
@@ -712,6 +719,12 @@ private:
     void ensureHasLine();
     void invalidateAllLineWidth();
     void recordChange(DocumentChangeKind kind, int line, int count);
+    // reparse lines [startLine, endLine) with mSyntaxer and store the states;
+    // when parseToEnd is set and the syntaxer needs line states, parsing
+    // continues past endLine until the states converge. Emits linesReparsed
+    // with the actually parsed range; returns the stop line (exclusive).
+    // Only called by the edit primitives, synchronously and under mMutex.
+    int reparseLines(int startLine, int endLine, bool parseToEnd);
 public:
     /**
      * @brief emit undoRedoStateChanged(); called by the view that performed

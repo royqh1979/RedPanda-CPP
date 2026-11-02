@@ -118,8 +118,13 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
 
     if (startLine == 0) {
         mSyntaxer->resetState();
+    } else if (PSyntaxState prevState = getSyntaxState(startLine-1)) {
+        mSyntaxer->setState(prevState);
     } else {
-        mSyntaxer->setState(getSyntaxState(startLine-1));
+        // the predecessor's state is unknown (e.g. content filled via the
+        // bulk-load path, which does not reparse): parse from the start
+        mSyntaxer->resetState();
+        startLine = 0;
     }
     int line = startLine;
     do {
@@ -520,13 +525,13 @@ void Document::clear()
     // keep the last line as the remaining empty line instead of
     // deleting everything and inserting a fresh one
     if (mLines.count() > 1)
-        deleteLines(0, mLines.count()-1);
+        deleteLines(0, mLines.count()-1, false);
     if (!mLines[0]->lineText().isEmpty())
-        putLine(0, "");
+        putLine(0, "", true);
     endUpdate();
 }
 
-void Document::deleteLines(int index, int numLines)
+void Document::deleteLines(int index, int numLines, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(numLines>0);
@@ -550,10 +555,12 @@ void Document::deleteLines(int index, int numLines)
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     recordChange(DocumentChangeKind::Delete, index, numLines);
     ensureHasLine();
+    if (parseToEnd)
+        reparseLines(index, index+numLines, true);
     endUpdate();
 }
 
-void Document::moveLine(int from, int to)
+void Document::moveLine(int from, int to, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(from >= 0 && from < mLines.count());
@@ -577,19 +584,21 @@ void Document::moveLine(int from, int to)
             ++mIndexOfLongestLine;
         }
     }
+    reparseLines(std::min(from,to), std::max(from,to)+1, parseToEnd);
     endUpdate();
 }
 
-void Document::insertLine(int index, const QString &s)
+void Document::insertLine(int index, const QString &s, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index<=mLines.count());
     beginUpdate();
     insertItem(index, s);
+    reparseLines(index, index+1, parseToEnd);
     endUpdate();
 }
 
-void Document::deleteLine(int index)
+void Document::deleteLine(int index, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index<mLines.count());
@@ -603,6 +612,8 @@ void Document::deleteLine(int index)
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     recordChange(DocumentChangeKind::Delete, index, 1);
     ensureHasLine();
+    if (parseToEnd)
+        reparseLines(index, index+1, true);
     endUpdate();
 }
 
@@ -620,34 +631,33 @@ QString Document::getTextStr() const
     return result;
 }
 
-void Document::putLine(int index, const QString &s) {
+void Document::putLine(int index, const QString &s, bool parseToEnd) {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index < mLines.count());
-    if (index == mLines.count()) {
-        addLine(s);
-    } else {
-        beginUpdate();
-        if (mLines[index]->lineText() != s) {
-            mLines[index]->setLineText(s);
-            if (mIndexOfLongestLine == index) {
-                // width is invalidated, so we must recalculate longest line
-                mIndexOfLongestLine = -1;
-            }
-            recordChange(DocumentChangeKind::SetLine, index, 1);
+    beginUpdate();
+    if (mLines[index]->lineText() != s) {
+        mLines[index]->setLineText(s);
+        if (mIndexOfLongestLine == index) {
+            // width is invalidated, so we must recalculate longest line
+            mIndexOfLongestLine = -1;
         }
-        endUpdate();
+        recordChange(DocumentChangeKind::SetLine, index, 1);
     }
+    // the reparse is NOT skipped for unchanged text: its job is not (only) to
+    // parse the new text, but to repair potentially stale syntax states from
+    // this line onward (e.g. doDeleteText deletes lines with parseToEnd=false
+    // and relies on the following setLine(..., true) to reconverge the states
+    // of the shifted lines, whose text may be unchanged)
+    reparseLines(index, index+1, parseToEnd);
+    endUpdate();
 }
 
-void Document::insertLines(int index, int numLines)
+void Document::insertLines(int index, int numLines, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index<=mLines.count());
     Q_ASSERT(numLines>0);
     beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
     PDocumentLine line;
     mLines.insert(index,numLines,line);
     for (int i=index;i<index+numLines;i++) {
@@ -657,6 +667,8 @@ void Document::insertLines(int index, int numLines)
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     mIndexOfLongestLine = -1;
     recordChange(DocumentChangeKind::Insert, index, numLines);
+    reparseLines(index, index+numLines, parseToEnd);
+    endUpdate();
 }
 
 bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {

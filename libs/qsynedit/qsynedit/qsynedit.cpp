@@ -5609,44 +5609,33 @@ int QSynEdit::searchReplace(const QString &searchText, const QString &replaceWit
 
 void QSynEdit::properSetLine(int line, const QString &lineText, bool parseToEnd)
 {
-    mDocument->putLine(line,lineText);
-    mDocument->reparseLines(line, line + 1, parseToEnd);
+    mDocument->putLine(line, lineText, parseToEnd);
 }
 
 void QSynEdit::properInsertLine(int line, const QString &lineText, bool parseToEnd)
 {
-    mDocument->insertLine(line, lineText);
-    mDocument->reparseLines(line,line+1, parseToEnd);
+    mDocument->insertLine(line, lineText, parseToEnd);
 }
 
 void QSynEdit::properDeleteLines(int line, int count, bool parseToEnd)
 {
     if (count<=0)
         return;
-    mDocument->deleteLines(line, count);
-    // Unlike properInsertLine(s)/properSetLine/properMoveLine, deletion has no
-    // new lines to parse: with a line-local syntaxer the shifted lines' states
-    // stay valid, so the reparse can be skipped entirely.
-    if (parseToEnd)
-        mDocument->reparseLines(line, line + count, true);
+    mDocument->deleteLines(line, count, parseToEnd);
 }
 
 void QSynEdit::properInsertLines(int line, int count, bool parseToEnd)
 {
     if (count<=0)
         return;
-    mDocument->insertLines(line, count);
-    mDocument->reparseLines(line,line+count, parseToEnd);
+    mDocument->insertLines(line, count, parseToEnd);
 }
 
 void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
 {
     if (from==to)
         return;
-    mDocument->moveLine(from, to);
-    int minLine = std::min(from,to);
-    int maxLine = std::max(from,to);
-    mDocument->reparseLines(minLine, maxLine+1, parseToEnd);
+    mDocument->moveLine(from, to, parseToEnd);
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -6992,6 +6981,14 @@ void QSynEdit::onLinesChanged()
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))
         mGutter.autoSizeDigitCount(mDocument->count());
     setTopPos(mTopPos);
+    // a batch without content changes never emits contentChanged (e.g. a
+    // putLine whose text is unchanged still reparses); flush any deferred
+    // reparse repaint here, where the fold mapping is consistent
+    if (mPendingReparseInvalidateStart >= 0) {
+        invalidateLines(mPendingReparseInvalidateStart, mPendingReparseInvalidateEnd);
+        mPendingReparseInvalidateStart = -1;
+        mPendingReparseInvalidateEnd = -1;
+    }
     endInternalChanges();
 }
 

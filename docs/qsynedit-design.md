@@ -264,12 +264,23 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 - **Document 持有一个裸 syntaxer 实例**（`Document::mSyntaxer`，默认构造、不应用配色），
   职责只有一个：编辑级联中重算每行 `PSyntaxState`——多视图共享文档时它是这些共享状态的
-  **唯一写入者**。重解析函数也归 Document 所有：`Document::reparseLines(startLine,
-  endLine, parseToEnd)`（`parseToEnd` 内部与 `needsLineState()` 相与；解析至状态收敛，
-  返回停止行）与 `Document::reparseAll()`（无条件全量，供 `setSyntaxer` 与
-  `QSynEdit::reparseDocument` 使用）；视图的 chokepoint（`properSetLine` 等）在编辑原语
-  之后**同步**调用它们。完成后发射 `linesReparsed(startLine, endLine)` 驱动视图重绘
-  （见 6.1/6.2）。`Document::syntaxer()` 加锁返回，
+  **唯一写入者**。**重解析已下沉为编辑原语的内建步骤**：`putLine`/`insertLine(s)`/
+  `deleteLine(s)`/`moveLine` 都带**无默认值的 `parseToEnd` 参数**（它声明的是本次编辑的
+  语法状态失效范围，属于正确性假设，必须显式；默认 true 会掩盖级联语义并埋下 O(n²)
+  陷阱，默认 false 则是不安全默认），在 `endUpdate` 前、持锁状态下调用私有的
+  `reparseLines(startLine, endLine, parseToEnd)`（`parseToEnd` 内部与
+  `needsLineState()` 相与；解析至状态收敛）。视图的 chokepoint（`properSetLine` 等）
+  只是透传。`reparseAll()` 保持公共（无条件全量，供 `setSyntaxer` 与
+  `QSynEdit::reparseDocument` 使用）。完成后发射 `linesReparsed(startLine, endLine)`
+  驱动视图重绘（见 6.1/6.2）。
+  - **`putLine` 内容不变也重解析**：重解析的职责不只是解析新文本，还是"从本行起修复
+    可能过期的语法状态"——`doDeleteText` 的协议就是删行（`parseToEnd=false`）后紧跟
+    `setLine(..., true)` 收敛被平移行的状态，而那些行的文本可能没变。
+  - **前一行状态未知（null）时从头解析**：批量载入路径（`setText`/`setContents`/
+    `loadFromFile`）经内部 `addItem`/`insertItem` 不经原语、不重解析；此后首个原语
+    的 reparse 发现前行为 null 时回退为从第 0 行解析（`SyntaxState::equals` 对 null
+    安全；注意各 syntaxer 的 `setState` 会解引用/向下转型，绝不能收 null）。
+  - `Document::syntaxer()` 加锁返回，
   后台线程（编译器线程 WORDXY 路径，`qsynedit.cpp` `getTokenAttr`）只能从这里取指针、
   再 `createInstance()` 出线程局部的克隆来扫描，**不得触碰任何长效实例的扫描状态**。
 - **每个 QSynEdit 持有自己的 syntaxer 实例**（`mSyntaxer`，IDE 已应用配色方案），供绘制
@@ -304,8 +315,11 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 
 修改内容后的处理分两层：
 
-- **文档内部级联**（undo 记录、语法状态级联重算）由四个 chokepoint 直接调用完成：
-  `properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`；
+- **文档内部级联**：语法状态重解析由 Document 的编辑原语内建完成
+  （`putLine`/`insertLine(s)`/`deleteLine(s)`/`moveLine` 带显式 `parseToEnd`，
+  见 4.1）；undo 记录由视图的 `addChangeToUndo` 完成；视图的 chokepoint
+  `properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`
+  只是原语的透传包装；
 - **视图侧维护**（折叠映射平移、滚动条修正、重绘、对外结构信号转发）由
   `Document::contentChanged(DocumentChangeSet)` 信号驱动，QSynEdit 在槽
   `onDocumentContentChanged`（`qsynedit.cpp`）中完成。多视图下每个视图各自挂接、
@@ -325,15 +339,17 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 1. **重解析必须与编辑同步交错**（不能 defer 到 `endUpdate`）：批次内后续编辑决策
    要读刚编辑行的语法状态——Enter 换行（`doInsertNewLine`）在 `properSetLine`/
    `properInsertLine` 后立即用该行新状态算下一行的自动缩进；undo 的
-   MergeWithNext/PrevLine 重放同构。所以 chokepoint 内同步调
-   `Document::reparseLines`。
+   MergeWithNext/PrevLine 重放同构。所以重解析在编辑原语内部、`endUpdate` 之前
+   同步完成。
 2. **重绘必须在折叠重扫之后**：`invalidateLines` 经 `lineToRow()` 依赖折叠映射。
    因此 `linesReparsed` 在批次内到达时，视图只记录区间
    （`mPendingReparseInvalidateStart/End`），重绘延迟到 `onDocumentContentChanged`
    中 `rescanCodeBlocks` 之后统一执行；Insert/Delete 的 `invalidateFrom→INT_MAX`
    全覆盖天然吞并重解析尾部的 pending 区间，纯 SetLine 批次行号稳定、区间准确。
-   非批次的 `linesReparsed`（`setSyntaxer`/`reparseDocument`）立即重绘。
-   Qt 的 `update()` 自动合并，多次 invalidate 无性能问题。
+   无内容变化的批次不发 `contentChanged`，pending 区间由 `onLinesChanged`
+   （`changed` 信号）兜底 flush。非批次的 `linesReparsed`（`setSyntaxer`/
+   `reparseDocument`）立即重绘。Qt 的 `update()` 自动合并，多次 invalidate
+   无性能问题。
 
 **ChangeSet 累积规则**（`Document::recordChange`，`document.cpp`）：
 
@@ -383,8 +399,8 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
   （依赖字体度量，多视图归属待度量拆分时处理）。
 - `syntaxerChanged()`：文档语法器更换且全量重解析完成后发出；非发起视图据此
   换自己的语法器实例（默认配色）、重扫折叠、重绘（见 4.1）。
-- `linesReparsed(startLine, endLine)`：`reparseLines`/`reparseAll` 更新语法状态后
-  同步发出，endLine 排他、`INT_MAX` 表示到文档末尾。视图用它重绘重解析范围
+- `linesReparsed(startLine, endLine)`：编辑原语内建的重解析（或 `reparseAll`）更新
+  语法状态后同步发出，endLine 排他、`INT_MAX` 表示到文档末尾。视图用它重绘重解析范围
   （含编辑行之外的状态收敛尾部）；批次内到达时延迟到折叠重扫后应用（见 6.1
   顺序约束 2）。
 - `undoRedoStateChanged()`：undo/redo 执行后发出，全部视图同步 modified 状态。
