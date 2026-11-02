@@ -1,6 +1,7 @@
 Red Panda C++ Version 3.6
 
   - fix: Column mode doesn't work.
+  - enhancement: Split the editor to two View.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.
