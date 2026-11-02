@@ -16,7 +16,9 @@
  */
 #include "qsynedit.h"
 #include "document.h"
+#include "wraplayoutjob.h"
 #include "syntaxer/syntaxer.h"
+#include <QThreadPool>
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
@@ -181,12 +183,19 @@ int QSynEdit::lineCount() const
 int QSynEdit::displayLineCount() const
 {
     if (mOptions.testFlag(EditorOption::WordWrap)) {
+        // lower bound while the background job is still filling the cache:
+        // computed lines count exactly, uncomputed lines count as 1 segment
         int total = 0;
         int count = mDocument->count();
         for (int l=0;l<count;l++) {
-            if (lineVisibleForWrap(l))
-                total += wrapSegmentCount(l);
+            if (!lineVisibleForWrap(l))
+                continue;
+            size_t seq = mDocument->getLineSeq(l);
+            auto it = mWrapLayouts.constFind(seq);
+            total += (it != mWrapLayouts.constEnd()) ? it->segmentStartChars.count() : 1;
         }
+        if (!mWrapAllComputed)
+            scheduleWrapLayoutJob();
         return total;
     }
     // returns the count of display rows (rows are 0-based internally,
@@ -272,17 +281,70 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
     return mWrapLayouts.insert(seq, layout).value();
 }
 
-QFont QSynEdit::fontForTokenAttribute(PTokenAttribute attr) const
+QSynEdit::~QSynEdit()
 {
-    QFont result = font();
-    if (attr) {
-        FontStyles style = attr->styles();
-        result.setBold(style & FontStyle::fsBold);
-        result.setItalic(style & FontStyle::fsItalic);
-        result.setStrikeOut(style & FontStyle::fsStrikeOut);
-        result.setUnderline(style & FontStyle::fsUnderline);
+    // cancel-and-join: no worker may outlive the view, so no result can
+    // ever be posted to a destroyed view
+    QMutexLocker locker(&mWrapJobState->mutex);
+    mWrapJobState->viewDead = true;
+    while (mWrapJobState->jobsInFlight > 0)
+        mWrapJobState->jobsDone.wait(&mWrapJobState->mutex);
+}
+
+void QSynEdit::scheduleWrapLayoutJob() const
+{
+    if (!mOptions.testFlag(EditorOption::WordWrap) || mWrapAllComputed)
+        return;
+    qRegisterMetaType<WrapLayoutBatch>();
+    QMutexLocker locker(&mWrapJobState->mutex);
+    // cancel a queued-but-not-started stale job; a running one aborts via
+    // the generation check in its loop
+    if (mWrapJobState->pendingJob) {
+        WrapLayoutJob *pending = mWrapJobState->pendingJob;
+        mWrapJobState->pendingJob = nullptr;
+        if (QThreadPool::globalInstance()->tryTake(pending)) {
+            mWrapJobState->jobsInFlight--;
+            mWrapJobState->jobsDone.wakeAll();
+            delete pending;
+        }
     }
-    return result;
+    if (mWrapJobState->latestGeneration == mWrapGeneration && mWrapJobState->jobsInFlight > 0)
+        return;
+    mWrapJobState->latestGeneration = mWrapGeneration;
+    mWrapJobState->jobsInFlight++;
+    WrapLayoutJob *job = new WrapLayoutJob(
+                mDocument, mWrapGeneration, mWrapContentVersion,
+                font(), mGlyphCalculator, wrapWidth(), mWrapJobState);
+    mWrapJobState->pendingJob = job;
+    connect(job, &WrapLayoutJob::layoutsReady,
+            this, &QSynEdit::onWrapLayoutBatch, Qt::QueuedConnection);
+    QThreadPool::globalInstance()->start(job);
+}
+
+void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
+{
+    // the view is the only writer of the layout cache: every validity
+    // check is applied here, so a stale batch can never corrupt it
+    if (batch.generation != mWrapGeneration || batch.document != mDocument)
+        return;
+    for (auto it = batch.layouts.constBegin(); it != batch.layouts.constEnd(); ++it) {
+        size_t seq = it.key();
+        auto dirty = mWrapDirtySeqs.constFind(seq);
+        if (dirty != mWrapDirtySeqs.constEnd() && dirty.value() >= batch.contentVersion)
+            continue;  // the line was edited after the job started: stale
+        if (!mWrapLayouts.contains(seq))
+            mWrapLayouts.insert(seq, it.value());
+        if (dirty != mWrapDirtySeqs.constEnd())
+            mWrapDirtySeqs.erase(dirty);
+    }
+    if (batch.finished) {
+        mWrapAllComputed = mWrapDirtySeqs.isEmpty();
+        updateVScrollbar();
+        if (!mWrapAllComputed)
+            scheduleWrapLayoutJob();
+    } else {
+        updateVScrollbar();
+    }
 }
 
 static bool isWrapBreakableGlyph(const QString &glyph)
@@ -300,36 +362,63 @@ WrapLayout QSynEdit::computeWrapLayout(int line) const
     result.segmentStartXs.append(0);
     if (!mOptions.testFlag(EditorOption::WordWrap))
         return result;
-    QString text = mDocument->getLine(line);
-    int width = wrapWidth();
-    if (text.isEmpty() || width <= 0)
+    return computeWrapLayoutForLine(mDocument, line, mSyntaxer.get(), mGlyphCalculator, font(), wrapWidth());
+}
+
+static void startParseLineForDocument(Syntaxer *syntaxer, const PDocument &document, int line, const QString &text)
+{
+    if (line == 0)
+        syntaxer->resetState();
+    else
+        syntaxer->setState(document->getSyntaxState(line-1));
+    syntaxer->setLine(line, text, document->getLineSeq(line));
+}
+
+WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
+                                    Syntaxer *syntaxer,
+                                    const GlyphCalculator &glyphCalculator,
+                                    const QFont &baseFont, int wrapWidth)
+{
+    WrapLayout result;
+    result.segmentStartChars.append(0);
+    result.segmentStartXs.append(0);
+    QString text = document->getLine(line);
+    if (text.isEmpty() || wrapWidth <= 0)
         return result;
     // short-line fast path: no styled token scan needed
-    if (mGlyphCalculator.stringWidth(text, 0) <= width)
+    if (glyphCalculator.stringWidth(text, 0) <= wrapWidth)
         return result;
     // exact per-token styled measurement (same font logic as the painter)
-    QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line);
-    startParseLine(mSyntaxer.get(), line, text);
+    QList<int> glyphStartCharList = document->getGlyphStartCharList(line);
+    startParseLineForDocument(syntaxer, document, line, text);
     int x = 0;
     int segStart = 0;
     int breakChar = -1;  // preferred break point (char after a breakable glyph)
     int breakX = 0;
-    while (!mSyntaxer->eol()) {
-        QString token = mSyntaxer->getToken();
+    while (!syntaxer->eol()) {
+        QString token = syntaxer->getToken();
         if (token.isEmpty()) {
-            mSyntaxer->next();
+            syntaxer->next();
             continue;
         }
-        int tokenStart = mSyntaxer->getTokenPos();
+        int tokenStart = syntaxer->getTokenPos();
         int tokenEnd = tokenStart + token.length();
-        QFontMetrics fm(fontForTokenAttribute(mSyntaxer->getTokenAttribute()));
+        QFont tokenFont = baseFont;
+        if (PTokenAttribute attr = syntaxer->getTokenAttribute()) {
+            FontStyles style = attr->styles();
+            tokenFont.setBold(style & FontStyle::fsBold);
+            tokenFont.setItalic(style & FontStyle::fsItalic);
+            tokenFont.setStrikeOut(style & FontStyle::fsStrikeOut);
+            tokenFont.setUnderline(style & FontStyle::fsUnderline);
+        }
+        QFontMetrics fm(tokenFont);
         int startGlyph = searchForSegmentIdx(glyphStartCharList, text.length(), tokenStart);
         int endGlyph = searchForSegmentIdx(glyphStartCharList, text.length(), tokenEnd);
         for (int i=startGlyph;i<endGlyph;i++) {
             int glyphEnd = (i+1<glyphStartCharList.count()) ? glyphStartCharList[i+1] : text.length();
             QString glyph = text.mid(glyphStartCharList[i], glyphEnd-glyphStartCharList[i]);
-            int gw = mGlyphCalculator.glyphWidth(glyph, x, fm, mGlyphCalculator.forceMonospace());
-            if (x + gw > width && x > 0) {
+            int gw = glyphCalculator.glyphWidth(glyph, x, fm, glyphCalculator.forceMonospace());
+            if (x + gw > wrapWidth && x > 0) {
                 int newStart, newX;
                 if (breakChar > segStart) {
                     newStart = breakChar;
@@ -350,7 +439,7 @@ WrapLayout QSynEdit::computeWrapLayout(int line) const
                 breakX = x;
             }
         }
-        mSyntaxer->next();
+        syntaxer->next();
     }
     return result;
 }
@@ -1117,6 +1206,9 @@ void QSynEdit::invalidateAllLineMetrics()
 {
     mLineMetrics.clear();
     mWrapLayouts.clear();
+    mWrapGeneration++;
+    mWrapDirtySeqs.clear();
+    mWrapAllComputed = false;
     mMaxLineWidthSeq = 0;
 }
 
@@ -7425,6 +7517,8 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
                     mMaxLineWidthSeq = 0;
                 mLineMetrics.remove(seq);
                 mWrapLayouts.remove(seq);
+                mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
+                mWrapAllComputed = false;
             }
             break;
         }

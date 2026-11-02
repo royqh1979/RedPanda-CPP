@@ -1,0 +1,63 @@
+/*
+ * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+#ifndef QSYNEDIT_WRAPLAYOUTJOB_H
+#define QSYNEDIT_WRAPLAYOUTJOB_H
+
+#include <QPointer>
+#include <QRunnable>
+#include "qsynedit.h"
+
+namespace QSynedit {
+
+// standalone wrap-layout computation (used by QSynEdit::computeWrapLayout
+// for on-demand work and by WrapLayoutJob for background work). All inputs
+// are thread-local: the document is only read through its locked accessors,
+// the syntaxer is a per-thread clone, fonts/metrics are value copies.
+WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
+                                    Syntaxer *syntaxer,
+                                    const GlyphCalculator &glyphCalculator,
+                                    const QFont &baseFont, int wrapWidth);
+
+// background whole-document wrap-layout computation. Result batches are
+// delivered by the layoutsReady signal (queued to the view); the view is
+// the ONLY writer of the layout cache. Discipline: every batch is a fresh
+// container, emitted once and never touched again (post-and-forget).
+class WrapLayoutJob : public QObject, public QRunnable
+{
+    Q_OBJECT
+public:
+    WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
+                  const QFont &baseFont, const GlyphCalculator &glyphCalculator,
+                  int wrapWidth, const PWrapJobSharedState &sharedState);
+    void run() override;
+signals:
+    void layoutsReady(const QSynedit::WrapLayoutBatch &batch);
+private:
+    void postBatch(bool finished);
+    PDocument mDocument;
+    int mGeneration;
+    int mContentVersion;
+    QFont mBaseFont;
+    GlyphCalculator mGlyphCalculator;
+    int mWrapWidth;
+    PWrapJobSharedState mSharedState;
+    QHash<size_t, WrapLayout> mLayouts;
+};
+
+}
+
+#endif // QSYNEDIT_WRAPLAYOUTJOB_H

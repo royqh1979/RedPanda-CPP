@@ -309,6 +309,47 @@ undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误�
 
 ## 4. 语法高亮
 
+### 4.0 自动换行（Word Wrap）与后台布局计算
+
+`EditorOption::WordWrap` 开启后，超出视口文本区宽度的行折成多个显示段，
+显示 row 从"行"升级为"(行, 段)"。折行宽度 = 视口宽 - gutter 宽 - 2；
+折行点用逐 token 样式字体精算（与 painter 同一测量路径，不用基础字体近似），
+glyph 不拆，空格/tab/标点处优先折行，CJK 任意位置。短行粗筛（行宽不超宽则
+段数恒 1，不做逐 token 扫描）。水平滚动禁用，Home/End 作用于段首尾。
+折行是**视图属性**，多视图各自独立。
+
+**布局与缓存**：`WrapLayout`（段起始 char 列表 + 段起始绝对像素 x）按行 seq
+缓存于 `QSynEdit::mWrapLayouts`，失效规则与 `mLineMetrics` 相同：
+`invalidateAllLineMetrics()` 全量失效（字体/宽度/gutter/setDocument/选项变化），
+`onDocumentContentChanged` 的 SetLine 分支单行失效。`displayLineCount()` =
+可见行总段数（折叠隐藏整行全部段）。
+
+**后台补全与同步**（大文件不阻塞 GUI）：
+- 可见行的布局由 GUI 同步按需计算；`WrapLayoutJob`（`wraplayoutjob.h/.cpp`，
+  `QObject + QRunnable`）在 `QThreadPool` 中补算全文档，经 `layoutsReady`
+  信号分批（256 行/批）投递给 `QSynEdit::onWrapLayoutBatch`。
+- **缓存只能 GUI 线程写**，worker 只读副本：Document 锁内取文本/glyph 分段、
+  `createInstance()` 克隆 syntaxer、值对象的 GlyphCalculator/font。
+- **代际失效**：`mWrapGeneration` 在 `invalidateAllLineMetrics()` 时 +1；
+  `WrapLayoutBatch.generation` 不一致整批丢弃，worker 循环内检查
+  `latestGeneration` 提前中止。
+- **单行过期**：`mWrapContentVersion` 与 `mWrapDirtySeqs` 记录 SetLine 的行，
+  批次中"任务启动后被编辑的行"被跳过（其它行照收），由后续任务或 GUI 补算。
+- **投递纪律（post-and-forget）**：每批新容器，`emit` 后立即 `clear()`，
+  worker 投递后绝不再访问该容器（Qt 容器非线程安全，纪律比"传值"重要）。
+- **视图退出用 cancel-and-join**：`WrapJobSharedState`（qsynedit.h）持有
+  `viewDead/jobsInFlight/jobsDone`。`~QSynEdit` 置 `viewDead` 后等待全部
+  worker 退出；计数递减和唤醒只在 worker 的 `run()` 末尾做（唤醒源不依赖
+  被等待方，否则死锁）。
+- **调度**：`QSynEdit::scheduleWrapLayoutJob` 只拒绝同代际重复调度；
+  排队未启动的旧任务用 `QThreadPool::tryTake` 取消，正在跑的靠代际检查中止。
+- **滚动范围渐进精确**：`displayLineCount()` 在后台未完成时用"已算行精确 +
+  未算行按 1 段"的下界估计，回填后逐步修正。
+- 生命周期：`QPointer` 在对象销毁时自动置空，worker 可据此知道视图已销毁
+  （queued 事件也会被 Qt 在对象销毁时丢弃）。
+
+## 4.1 Syntaxer 归属（多视图设计）
+
 ### 4.1 Syntaxer 归属（多视图设计）
 
 **核心拆分：语言是文档的属性，配色是视图的属性。**

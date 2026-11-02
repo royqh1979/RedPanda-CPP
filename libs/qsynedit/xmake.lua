@@ -38,6 +38,7 @@ target("qsynedit")
         "qsynedit/document",
         "qsynedit/gutter",
         "qsynedit/qsynedit",
+        "qsynedit/wraplayoutjob",
         -- searcher
         "qsynedit/searcher/baseseacher",
         "qsynedit/searcher/basicsearcher",

@@ -26,6 +26,7 @@
 #include <QElapsedTimer>
 #include <QWidget>
 #include <QFile>
+#include <QWaitCondition>
 #include "gutter.h"
 #include "codefolding.h"
 #include "document.h"
@@ -128,6 +129,31 @@ struct WrapLayout {
     QList<int> segmentStartXs;      // parallel to segmentStartChars
 };
 
+// a batch of background-computed wrap layouts, posted to the view by a
+// WrapLayoutJob. contentVersion lets the view reject results for lines
+// that were edited after the job started.
+struct WrapLayoutBatch {
+    int generation = 0;
+    int contentVersion = 0;
+    PDocument document;
+    QHash<size_t, WrapLayout> layouts;
+    bool finished = false;
+};
+
+class WrapLayoutJob;
+// shared between the view and its in-flight WrapLayoutJobs: the view's
+// destructor sets viewDead (cancel) and then waits on jobsDone for the
+// workers to exit (cancel-and-join), so no worker ever outlives the view
+struct WrapJobSharedState {
+    QMutex mutex;
+    QWaitCondition jobsDone;
+    bool viewDead = false;
+    int jobsInFlight = 0;
+    int latestGeneration = -1;
+    WrapLayoutJob *pendingJob = nullptr;
+};
+using PWrapJobSharedState = std::shared_ptr<WrapJobSharedState>;
+
 
 class QSynEdit;
 using PSynEdit = std::shared_ptr<QSynEdit>;
@@ -156,6 +182,7 @@ public:
         NonSpaceChar
     };
     explicit QSynEdit(QWidget* parent=nullptr);
+    ~QSynEdit() override;
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;
 
@@ -650,7 +677,8 @@ private:
     // word-wrap layout computation (view-side, lazily cached per line seq)
     WrapLayout computeWrapLayout(int line) const;
     bool lineVisibleForWrap(int line) const;
-    QFont fontForTokenAttribute(PTokenAttribute attr) const;
+    void scheduleWrapLayoutJob() const;
+    Q_INVOKABLE void onWrapLayoutBatch(const WrapLayoutBatch &batch);
     void noteMaxLineWidthDirty();
     void recomputeMaxLineWidthAndNotify();
     void beginSetLineMetrics();
@@ -812,6 +840,16 @@ private:
     // per-line word-wrap layouts, keyed by line seq (same lifecycle rules
     // as mLineMetrics). Invalidated with invalidateAllLineMetrics().
     mutable QHash<size_t, WrapLayout> mWrapLayouts;
+    // shared with in-flight WrapLayoutJobs: the destructor marks the view
+    // dead, serialized with the jobs' result posting
+    PWrapJobSharedState mWrapJobState = std::make_shared<WrapJobSharedState>();
+    // background wrap-layout computation: generation invalidates whole
+    // batches (font/width/gutter changes); contentVersion rejects results
+    // for lines edited after a job started
+    int mWrapGeneration = 0;
+    int mWrapContentVersion = 0;
+    QHash<size_t, int> mWrapDirtySeqs;
+    bool mWrapAllComputed = false;
     mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
     int mSetLineMetricsLockCount = 0;
     bool mMaxLineWidthDirtyInBatch = false;
@@ -936,4 +974,5 @@ protected:
 }
 
 Q_DECLARE_METATYPE(QSynedit::StatusChanges);
+Q_DECLARE_METATYPE(QSynedit::WrapLayoutBatch);
 #endif // QSYNEDIT_H

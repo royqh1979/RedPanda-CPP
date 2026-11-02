@@ -33,6 +33,7 @@ set(QSYNEDIT_MOC_CLASSES
     qsynedit/document
     qsynedit/gutter
     qsynedit/qsynedit
+    qsynedit/wraplayoutjob
     # searcher
     qsynedit/searcher/baseseacher
     qsynedit/searcher/basicsearcher
