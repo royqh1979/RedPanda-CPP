@@ -198,6 +198,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 - **`QSynEdit::setDocument(PDocument)`**：视图可挂接到（共享的）文档；挂接时复位
   视图态（caret/选区到文档头、滚动归零、折叠重建、modified 从共享 undo 状态同步），
   undo/redo 历史随文档继承。`document()` 返回非 const `PDocument` 以便共享。
+  **生命周期铁律：Document 不以任何视图为 QObject parent**，由 shared_ptr 管理
+  生命周期——否则删除第一个视图时 Qt 父子机制会把共享文档一并删除，其余视图
+  悬垂（`test_shared_document_close_first_view` 回归测试）。
 - **视图侧维护由 `Document::contentChanged` 驱动**（见第 6 章）：任何视图发起的编辑，
   所有挂接视图各自完成折叠平移/重扫、滚动条修正与重绘。语法状态共享（同一语法器
   类型下结果一致），折叠扫描只读共享状态，安全。

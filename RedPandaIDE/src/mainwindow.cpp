@@ -5384,6 +5384,7 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     menu.addAction(ui->actionOpen_Terminal);
     menu.addAction(ui->actionLocate_in_Files_View);
     menu.addSeparator();
+    menu.addAction(ui->actionSplit_View);
     menu.addAction(ui->actionMove_To_Other_View);
     menu.addSeparator();
     menu.addAction(ui->actionFile_Properties);

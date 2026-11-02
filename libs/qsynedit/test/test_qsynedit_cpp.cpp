@@ -12245,5 +12245,32 @@ void TestQSyneditCpp::test_shared_document_caret_shift()
     QCOMPARE(edit2->selEnd(), CharPos(2,1));
 }
 
-}
+void TestQSyneditCpp::test_shared_document_close_first_view()
+{
+    auto edit1 = std::make_shared<QSynEdit>();
+    edit1->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit1->setContent({"int main() {", "    return 0;", "}"});
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(edit1->document());
+    PDocument doc = edit1->document();
+    // the document's lifetime is shared_ptr-managed, not QObject-parented
+    // to a view: destroying the first view must not destroy the document
+    QVERIFY(doc->parent() == nullptr);
 
+    edit1.reset();
+    QCOMPARE(edit2->content(), (QStringList{"int main() {", "    return 0;", "}"}));
+
+    // the surviving view still edits, with the shared undo/redo history
+    edit2->setCaretPos(CharPos{0,0});
+    QTest::keyPress(edit2.get(), Qt::Key_Enter);
+    QCOMPARE(edit2->lineCount(), 4);
+    QCOMPARE(doc->count(), 4);
+    edit2->undo();
+    QCOMPARE(edit2->lineCount(), 3);
+    edit2->redo();
+    QCOMPARE(edit2->lineCount(), 4);
+    edit2->undo();
+    QCOMPARE(edit2->lineCount(), 3);
+}
+}

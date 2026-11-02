@@ -62,7 +62,10 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mPaintLock = 0;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    mDocument = std::make_shared<Document>(this);
+    // the document's lifetime is managed by shared_ptr, NOT by QObject
+    // parentship: when several views share it, deleting the first view
+    // must not delete the document out from under the others
+    mDocument = std::make_shared<Document>();
 
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
