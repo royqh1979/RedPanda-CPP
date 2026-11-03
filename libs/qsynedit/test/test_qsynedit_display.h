@@ -28,6 +28,10 @@ private slots:
     void test_wordwrap_mouse();
     void test_wordwrap_fold();
     void test_wordwrap_batch_stale_rejection();
+    void test_wordwrap_segment_coord_conversions();
+    void test_advance_retreat_line_segment();
+    void test_advance_retreat_with_fold();
+    void test_advance_anchor_row();
 };
 
 }

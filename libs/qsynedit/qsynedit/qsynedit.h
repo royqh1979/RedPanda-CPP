@@ -268,6 +268,19 @@ public:
     int wrapSegmentOfChar(int line, int ch) const;
     int wrapSegmentEndChar(int line, int segment) const;
     const WrapLayout &wrapLayout(int line) const;
+    // (line, char) <-> (line, segment, segment-relative pixel x):
+    // per-line conversions, no global-row computation
+    void charToSegmentCoord(int line, int ch, int &segment, int &x) const;
+    int segmentCoordToChar(int line, int segment, int x) const;
+    // segment stepping for anchor-incremental navigation. Boundary contract:
+    // inputs are clamped to valid ranges first; the single-step functions
+    // return false at the document start/end and leave the position at the
+    // clamped boundary segment; hidden (folded) lines are skipped
+    bool advanceLineSegment(int &line, int &segment) const;
+    bool retreatLineSegment(int &line, int &segment) const;
+    // multi-step advance (negative delta retreats); returns the signed
+    // number of rows actually moved (less than requested at the boundaries)
+    int advanceAnchorRow(int &line, int &segment, int delta) const;
     int foldRowToLine(int row) const;
     int foldLineToRow(int line) const;
     void setDefaultKeystrokes();

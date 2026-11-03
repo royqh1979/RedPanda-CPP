@@ -417,4 +417,245 @@ void TestQSyneditDisplay::test_wordwrap_batch_stale_rejection()
     mEdit->onWrapLayoutBatch(later);
     QVERIFY(mEdit->mWrapLayouts.contains(editedSeq));
 }
+
+void TestQSyneditDisplay::test_wordwrap_segment_coord_conversions()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    int segments = layout.segmentStartChars.count();
+    QVERIFY(segments > 1);
+    int lineLen = mEdit->lineText(1).length();
+
+    // (line, char) -> (segment, x) -> char roundtrips on every line
+    // (roundtrip target is the glyph start: a char inside a multi-char
+    // glyph maps to the glyph's start)
+    for (int line = 0; line < mEdit->lineCount(); line++) {
+        int len = mEdit->lineText(line).length();
+        for (int ch : {0, 1, len/2, len-1, len}) {
+            if (ch < 0 || ch > len)
+                continue;
+            int seg, x;
+            mEdit->charToSegmentCoord(line, ch, seg, x);
+            QCOMPARE(seg, mEdit->wrapSegmentOfChar(line, ch));
+            QVERIFY(x >= 0);
+            QCOMPARE(mEdit->segmentCoordToChar(line, seg, x),
+                     mEdit->document()->charToGlyphStartChar(line, ch));
+        }
+    }
+    // segment starts map to x == 0; the last char of a segment stays within
+    // the segment's pixel width
+    for (int seg = 0; seg < segments; seg++) {
+        int foundSeg, x;
+        mEdit->charToSegmentCoord(1, layout.segmentStartChars[seg], foundSeg, x);
+        QCOMPARE(foundSeg, seg);
+        QCOMPARE(x, 0);
+        if (seg+1 < segments) {
+            int segWidth = layout.segmentStartXs[seg+1] - layout.segmentStartXs[seg];
+            int lastChar = layout.segmentStartChars[seg+1] - 1;
+            mEdit->charToSegmentCoord(1, lastChar, foundSeg, x);
+            QCOMPARE(foundSeg, seg);
+            QVERIFY(x < segWidth);
+        }
+    }
+    // out-of-range segment / x are clamped
+    QCOMPARE(mEdit->segmentCoordToChar(1, 0, 0), 0);
+    QCOMPARE(mEdit->segmentCoordToChar(1, segments-1, layout.totalWidth), lineLen);
+    QCOMPARE(mEdit->segmentCoordToChar(1, segments+10, 0), layout.segmentStartChars.last());
+
+    // without wrap everything lives in segment 0 and the roundtrip holds
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+    int seg, x;
+    mEdit->charToSegmentCoord(1, 10, seg, x);
+    QCOMPARE(seg, 0);
+    QCOMPARE(mEdit->segmentCoordToChar(1, seg, x), 10);
+}
+
+void TestQSyneditDisplay::test_advance_retreat_line_segment()
+{
+    // no wrap: one segment per line
+    mEdit->loadContent(makeLines(5));
+    int line = 0, seg = 0;
+    for (int i = 1; i < 5; i++) {
+        QVERIFY(mEdit->advanceLineSegment(line, seg));
+        QCOMPARE(line, i);
+        QCOMPARE(seg, 0);
+    }
+    // at the document end: false, position unchanged
+    QVERIFY(!mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 4);
+    QCOMPARE(seg, 0);
+    for (int i = 3; i >= 0; i--) {
+        QVERIFY(mEdit->retreatLineSegment(line, seg));
+        QCOMPARE(line, i);
+        QCOMPARE(seg, 0);
+    }
+    QVERIFY(!mEdit->retreatLineSegment(line, seg));
+    QCOMPARE(line, 0);
+    QCOMPARE(seg, 0);
+
+    // wrap: the walk visits every segment exactly once, in global-row order
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    int longSegments = mEdit->wrapSegmentCount(1);
+    QVERIFY(longSegments > 1);
+
+    line = 0; seg = 0;
+    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 0);
+    int steps = 0;
+    while (mEdit->advanceLineSegment(line, seg)) {
+        steps++;
+        QCOMPARE(mEdit->lineSegmentToRow(line, seg), steps);
+    }
+    QCOMPARE(steps+1, mEdit->displayLineCount());
+    QCOMPARE(line, 2);
+    QCOMPARE(seg, 0);
+    // walking back visits the same positions in reverse
+    while (mEdit->retreatLineSegment(line, seg)) {
+        steps--;
+        QCOMPARE(mEdit->lineSegmentToRow(line, seg), steps);
+    }
+    QCOMPARE(steps, 0);
+    QCOMPARE(line, 0);
+    QCOMPARE(seg, 0);
+
+    // crossing the wrapped line step by step
+    line = 0; seg = 0;
+    QVERIFY(mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 1);
+    QCOMPARE(seg, 0);
+    for (int i = 1; i < longSegments; i++) {
+        QVERIFY(mEdit->advanceLineSegment(line, seg));
+        QCOMPARE(line, 1);
+        QCOMPARE(seg, i);
+    }
+    QVERIFY(mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 2);
+    QCOMPARE(seg, 0);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_advance_retreat_with_fold()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(2, 4));
+    // visible lines: 0,1,2,5,6,7,8,9
+    int line = 1, seg = 0;
+    QVERIFY(mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 2);
+    // advance skips the hidden lines 3..4
+    QVERIFY(mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 5);
+    QCOMPARE(seg, 0);
+    QVERIFY(mEdit->retreatLineSegment(line, seg));
+    QCOMPARE(line, 2);
+    QCOMPARE(seg, 0);
+
+    // starting from a hidden line: advance lands on the next visible line,
+    // retreat on the previous one (its last segment)
+    line = 3; seg = 0;
+    QVERIFY(mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 5);
+    QCOMPARE(seg, 0);
+    line = 4; seg = 0;
+    QVERIFY(mEdit->retreatLineSegment(line, seg));
+    QCOMPARE(line, 2);
+    QCOMPARE(seg, mEdit->wrapSegmentCount(2)-1);
+
+    // a hidden line with no visible line below snaps back to the last
+    // visible segment and reports failure
+    QVERIFY(mEdit->collapse(7, 9));
+    line = 8; seg = 0;
+    QVERIFY(!mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 7);
+    QCOMPARE(seg, mEdit->wrapSegmentCount(7)-1);
+
+    // fold + wrap: the full walk still matches the global row mapping
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    int a = 1;",
+        "    if (a) {",
+        "        a = 2;",
+        "    }",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    QVERIFY(mEdit->collapse(3, 5));
+    line = 0; seg = 0;
+    int steps = 0;
+    while (mEdit->advanceLineSegment(line, seg)) {
+        steps++;
+        QCOMPARE(mEdit->lineSegmentToRow(line, seg), steps);
+    }
+    QCOMPARE(steps+1, mEdit->displayLineCount());
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_advance_anchor_row()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    // displayLineCount() reads the layout cache only, so force the long
+    // line's layout first (background jobs don't run in tests)
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    int totalRows = mEdit->displayLineCount();
+    QVERIFY(totalRows > 3);
+
+    // multi-step advance matches the global row mapping
+    int line = 0, seg = 0;
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 2), 2);
+    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 2);
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -1), -1);
+    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 1);
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 0), 0);
+    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 1);
+
+    // deltas past the boundaries stop there and report the actual movement
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, totalRows+100), totalRows-2);
+    QCOMPARE(mEdit->lineSegmentToRow(line, seg), totalRows-1);
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -1), -1);
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -totalRows-100), -(totalRows-2));
+    QCOMPARE(line, 0);
+    QCOMPARE(seg, 0);
+
+    // out-of-range inputs are clamped before stepping
+    line = -5; seg = 3;
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 1), 1);
+    QCOMPARE(line, 1);
+    QCOMPARE(seg, 0);
+    line = 100; seg = 0;
+    QVERIFY(!mEdit->advanceLineSegment(line, seg));
+    QCOMPARE(line, 2);
+    QCOMPARE(seg, 0);
+    line = 0; seg = 99;
+    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 1), 1);
+    QCOMPARE(line, 1);
+    QCOMPARE(seg, 0);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
 }

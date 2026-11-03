@@ -279,6 +279,95 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
     return mWrapLayouts.insert(seq, layout).value();
 }
 
+void QSynEdit::charToSegmentCoord(int line, int ch, int &segment, int &x) const
+{
+    const WrapLayout &layout = wrapLayout(line);
+    segment = wrapSegmentOfChar(line, ch);
+    // use the layout's own styled glyph positions: no dependence on the
+    // painter's (possibly base-font) metrics
+    int glyphIdx = mDocument->charToGlyphIndex(line, ch);
+    int absX = (glyphIdx < layout.glyphStartXList.count())
+            ? layout.glyphStartXList[glyphIdx] : layout.totalWidth;
+    x = absX - layout.segmentStartXs[segment];
+}
+
+int QSynEdit::segmentCoordToChar(int line, int segment, int x) const
+{
+    const WrapLayout &layout = wrapLayout(line);
+    segment = minMax(segment, 0, layout.segmentStartChars.count()-1);
+    int absX = x + layout.segmentStartXs[segment];
+    // same styled measurement as the layout, so the caret roundtrip is
+    // exact even before the painter has run
+    int glyphIdx = searchForSegmentIdx(layout.glyphStartXList, layout.totalWidth, absX);
+    return mDocument->glyphStartChar(line, glyphIdx);
+}
+
+bool QSynEdit::advanceLineSegment(int &line, int &segment) const
+{
+    int count = mDocument->count();
+    if (count <= 0)
+        return false;
+    line = minMax(line, 0, count-1);
+    if (lineVisibleForWrap(line)) {
+        segment = minMax(segment, 0, wrapSegmentCount(line)-1);
+        if (segment+1 < wrapSegmentCount(line)) {
+            segment++;
+            return true;
+        }
+    }
+    for (int l=line+1; l<count; l++) {
+        if (!lineVisibleForWrap(l))
+            continue;
+        line = l;
+        segment = 0;
+        return true;
+    }
+    // no visible segment below: keep the position at the last visible
+    // segment (a hidden line always has its visible fold start above)
+    while (!lineVisibleForWrap(line))
+        line--;
+    segment = wrapSegmentCount(line)-1;
+    return false;
+}
+
+bool QSynEdit::retreatLineSegment(int &line, int &segment) const
+{
+    int count = mDocument->count();
+    if (count <= 0)
+        return false;
+    line = minMax(line, 0, count-1);
+    if (lineVisibleForWrap(line)) {
+        segment = minMax(segment, 0, wrapSegmentCount(line)-1);
+        if (segment > 0) {
+            segment--;
+            return true;
+        }
+    }
+    for (int l=line-1; l>=0; l--) {
+        if (!lineVisibleForWrap(l))
+            continue;
+        line = l;
+        segment = wrapSegmentCount(l)-1;
+        return true;
+    }
+    // no visible segment above: keep the position at the first visible
+    // segment (line 0 is always visible)
+    while (!lineVisibleForWrap(line))
+        line++;
+    segment = 0;
+    return false;
+}
+
+int QSynEdit::advanceAnchorRow(int &line, int &segment, int delta) const
+{
+    int moved = 0;
+    while (moved < delta && advanceLineSegment(line, segment))
+        moved++;
+    while (moved > delta && retreatLineSegment(line, segment))
+        moved--;
+    return moved;
+}
+
 QSynEdit::~QSynEdit()
 {
     // cancel-and-join: no worker may outlive the view, so no result can
@@ -923,14 +1012,8 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
     // Account for tabs and charColumns
     if (p.line<mDocument->count()) {
         if (mOptions.testFlag(EditorOption::WordWrap)) {
-            const WrapLayout &layout = wrapLayout(p.line);
-            int segment = wrapSegmentOfChar(p.line, p.ch);
-            // use the layout's own styled glyph positions: no dependence on
-            // the painter's (possibly base-font) metrics
-            int glyphIdx = mDocument->charToGlyphIndex(p.line, p.ch);
-            int absX = (glyphIdx < layout.glyphStartXList.count())
-                    ? layout.glyphStartXList[glyphIdx] : layout.totalWidth;
-            result.x = absX - layout.segmentStartXs[segment];
+            int segment;
+            charToSegmentCoord(p.line, p.ch, segment, result.x);
             result.row = lineSegmentToRow(p.line, segment);
         } else {
             result.x = charToGlyphLeft(p.line,p.ch);
@@ -954,14 +1037,8 @@ CharPos QSynEdit::displayToBufferPos(const DisplayCoord &p) const
         int line, segment;
         rowToLineSegment(p.row, line, segment);
         result.line = line;
-        if (line < mDocument->count()) {
-            const WrapLayout &layout = wrapLayout(line);
-            int absX = p.x + layout.segmentStartXs[segment];
-            // same styled measurement as the layout, so the caret roundtrip
-            // is exact even before the painter has run
-            int glyphIdx = searchForSegmentIdx(layout.glyphStartXList, layout.totalWidth, absX);
-            result.ch = mDocument->glyphStartChar(line, glyphIdx);
-        }
+        if (line < mDocument->count())
+            result.ch = segmentCoordToChar(line, segment, p.x);
         return result;
     }
     // Account for code folding
