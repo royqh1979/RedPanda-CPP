@@ -52,6 +52,12 @@ paint 开头由 `mTopPos` 算锚点一次，之后 `advanceLineSegment` 逐段�
 
 每行 1 段，同一套模型（segment 恒 0），像素平滑滚动保留。
 
+## 待逐项审计（实现前的必读项）
+
+- **DisplayCoord 使用点逐条检查**（qsynedit.cpp/h、painter.cpp、IDE editor.cpp/mainwindow.cpp/project.cpp）：row 现在语义变化（窗口 row vs 全局 row），每处都要确认用对。
+- **lineToRow/rowToLine 使用点逐条检查**：约 44 处。特别注意 `invalidateLine`/`invalidateLines` 用 lineToRow 算屏幕刷新区域——这些**不需要全局转换**（用锚点相对 row 即可），且目前**没考虑 wrap**（行高按单段算，折行后刷新区域会缺）。
+- 审计时区分三类：显示位置换算（caret/鼠标/选区）、刷新区域计算（invalidate*）、滚动条范围（displayLineCount）。
+
 ## 实现批次
 
 1. qsynedit.h/cpp：锚点成员 + advance/retreat/advanceAnchorRow/scrollToRow/anchorRowForLineSegment/globalRowForLineSegment。
