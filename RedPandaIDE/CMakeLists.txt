@@ -5,6 +5,8 @@ add_executable(RedPandaIDE WIN32)
 
 target_qt_plain_cpp(RedPandaIDE
     src/autolinkmanager
+    src/widgets/terminal/terminalwidget
+    src/widgets/terminal/terminalprocess
     src/colorscheme
     src/customfileiconprovider
     src/projectoptions
