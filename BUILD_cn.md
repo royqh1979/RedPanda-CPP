@@ -129,6 +129,15 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
    ```
 2. 通过 Qt.io 安装器、aqtinstall 安装 Qt 6.11+。
 
+用 aqtinstall 安装 Qt（适合脚本化，无需图形界面）：
+
+```zsh
+python3 -m pip install --user aqtinstall
+aqt install-qt mac desktop 6.11.0 clang_64 -m qtbase qtsvg qttools qttranslations
+```
+
+安装位置默认为 `~/Qt/6.11.0/macos`。Qt 6 的 `GuiPrivate` 头文件已包含在 `qtbase` 中，无需单独安装。
+
 构建：
 ```zsh
 ./packages/macos/build.sh --qt-dir ~/Qt/6.11.0/macos
@@ -137,6 +146,25 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
 参数：
 - `-c`、`--clean`：清理目录后再构建。
 - `--qt-dir <dir>`：Qt 库目录。
+
+产物为 `dist/RedPandaIDE-<版本号>.tar.xz`，版本号取自 `version.json`；解压后得到 `RedPandaIDE.app`。
+
+首次运行：
+
+从网络下载的 App 会被 Gatekeeper 打上隔离标记，双击时提示「Apple 无法检查其是否包含恶意软件」。任选一种方式放行：
+
+- 在访达中右键点击 App，选择「打开」，再在弹窗中确认；
+- 或直接移除隔离属性：
+  ```zsh
+  xattr -dr com.apple.quarantine /path/to/RedPandaIDE.app
+  ```
+
+此外，Red Panda C++ 在 macOS 上调用系统 `clang` 作为编译器，运行前必须已安装 Xcode 命令行工具。
+
+常见问题：
+
+- **提示 `Could not find a package configuration file provided by "Qt6"`**：`--qt-dir` 应指向包含 `bin/qmake` 的那一层（例如 `~/Qt/6.11.0/macos`），而不是它的子目录。
+- **产物只有单一架构**：打包脚本按 `uname -m` 决定 `CMAKE_OSX_ARCHITECTURES`，因此在 Apple Silicon 上只产出 arm64。如需通用二进制，请在 Intel 与 Apple Silicon 上分别构建，或手动指定 `-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"`。
 
 ## 手动构建命令
 
