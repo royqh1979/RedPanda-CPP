@@ -73,8 +73,12 @@ function fn_package() {
   cmake --install "$_BUILD_DIR"
 
   macdeployqt "$_PKG_DIR/RedPandaIDE.app"
-  tar -C "$_PKG_DIR" -cJf dist/RedPandaIDE-$APP_VERSION.tar.xz RedPandaIDE.app
+
+  # Sign the bundle before archiving, so that the tarball contains the signed app.
   codesign --force --deep --sign "-" "$_PKG_DIR/RedPandaIDE.app"
+  codesign --verify --deep --strict "$_PKG_DIR/RedPandaIDE.app"
+
+  tar -C "$_PKG_DIR" -cJf dist/RedPandaIDE-$APP_VERSION.tar.xz RedPandaIDE.app
 }
 
 fn_check_qt_install
