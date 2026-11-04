@@ -368,6 +368,89 @@ int QSynEdit::advanceAnchorRow(int &line, int &segment, int delta) const
     return moved;
 }
 
+int QSynEdit::anchorRowForLineSegment(int line, int segment) const
+{
+    int l = mTopLine;
+    int s = mTopSegment;
+    int rows = 0;
+    if (line > l || (line == l && segment > s)) {
+        while ((l != line || s != segment) && advanceLineSegment(l, s))
+            rows++;
+    } else {
+        while ((l != line || s != segment) && retreatLineSegment(l, s))
+            rows--;
+    }
+    // a visible position is always reached; stopping earlier means the
+    // caller passed a hidden or out-of-range position
+    Q_ASSERT(l == line && s == segment);
+    return rows;
+}
+
+void QSynEdit::scrollToRow(int globalRow)
+{
+    setTopPos(std::max(globalRow, 0) * mTextHeight);
+}
+
+void QSynEdit::syncAnchorToTopPos(int oldTopPos)
+{
+    if (mTextHeight <= 0)
+        return;
+    if (mDocument->count() <= 0 || mTopPos == 0) {
+        mTopLine = 0;
+        mTopSegment = 0;
+        return;
+    }
+    int newTopRow = mTopPos / mTextHeight;
+    if (mWrapAllComputed && mTopPos == maxScrollHeight()) {        // exact bottom of the scroll range: anchor at the document end
+        // (minus the window tail when not scrolling past eof); the global
+        // mapping is only allowed here and in adjustTopPosToAnchor
+        int l = mDocument->count()-1;
+        while (l > 0 && !lineVisibleForWrap(l))
+            l--;
+        mTopLine = l;
+        mTopSegment = wrapSegmentCount(l)-1;
+        advanceAnchorRow(mTopLine, mTopSegment,
+                         newTopRow - (displayLineCount()-1));
+        return;
+    }
+    int delta = newTopRow - oldTopPos / mTextHeight;
+    if (delta == 0)
+        return;
+    advanceAnchorRow(mTopLine, mTopSegment, delta);
+    // a short walk means the anchor already sits at the document
+    // boundary, which is the correct result for the clamped position
+}
+
+void QSynEdit::adjustTopPosToAnchor()
+{
+    if (mDocument->count() <= 0 || mTextHeight <= 0) {
+        mTopLine = 0;
+        mTopSegment = 0;
+        setTopPos(0);
+        return;
+    }
+    // keep the content at the viewport top stable: preserve the anchor
+    // (clamped into the new mapping's valid range) and re-derive the
+    // pixel offset from it
+    mTopLine = minMax(mTopLine, 0, mDocument->count()-1);
+    mTopSegment = minMax(mTopSegment, 0, wrapSegmentCount(mTopLine)-1);
+    int line = mTopLine;
+    int segment = mTopSegment;
+    int newTopPos = lineSegmentToRow(line, segment) * mTextHeight;
+    setTopPos(newTopPos);
+    if (mTopPos == newTopPos) {
+        // no clamping: the incremental anchor walk inside setTopPos is
+        // meaningless across a mapping change; the anchor was already at
+        // the wanted position
+        mTopLine = line;
+        mTopSegment = segment;
+    } else {
+        // clamped to the scroll range: take the anchor the global
+        // mapping gives for the clamped offset
+        rowToLineSegment(mTopPos / mTextHeight, mTopLine, mTopSegment);
+    }
+}
+
 QSynEdit::~QSynEdit()
 {
     // cancel-and-join: no worker may outlive the view, so no result can
@@ -382,6 +465,12 @@ void QSynEdit::scheduleWrapLayoutJob() const
 {
     if (mWrapAllComputed)
         return;
+    if (mDocument->count() <= 0) {
+        // nothing to compute: skip the worker thread entirely (also keeps
+        // tests free of event-loop waits)
+        mWrapAllComputed = true;
+        return;
+    }
     qRegisterMetaType<WrapLayoutBatch>();
     QMutexLocker locker(&mWrapJobState->mutex);
     // only deduplicate same-generation jobs: a stale worker aborts on its
@@ -3840,7 +3929,6 @@ void QSynEdit::updateCaret()
 
 void QSynEdit::recalcCharExtent()
 {
-    int currentTopRow = mTopPos / mTextHeight;
     int currentLeftCol = mLeftPos / mCharWidth;
 
     FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
@@ -3898,10 +3986,9 @@ void QSynEdit::recalcCharExtent()
     mTextHeight *= mLineSpacingFactor;
 
     onSizeOrFontChanged();
-    int newTopPos =  currentTopRow * mTextHeight;
-    setTopPos(newTopPos);
-    if (newTopPos!=mTopPos)
-        mTopPos = newTopPos;
+    // font metrics changed the glyph widths and thus the whole line->row
+    // mapping: keep the content at the viewport top stable
+    adjustTopPosToAnchor();
     setLeftPos(currentLeftCol * mCharWidth);
 }
 
@@ -4385,7 +4472,9 @@ void QSynEdit::onHScrolled(int value)
 
 void QSynEdit::onVScrolled(int value)
 {
+    int oldTopPos = mTopPos;
     mTopPos = value;
+    syncAnchorToTopPos(oldTopPos);
     invalidate();
 }
 
@@ -4684,6 +4773,10 @@ void QSynEdit::setOptions(const EditorOptions &value)
         setScrollBars(mScrollBars);
         mGlyphCalculator.setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace));
         invalidateAllLineMetrics();
+        if (wordWrapChanged)
+            // every line's segment count changed; keep the content at
+            // the viewport top stable
+            adjustTopPosToAnchor();
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretPos(caretPos());
@@ -5611,6 +5704,8 @@ void QSynEdit::setDocument(const PDocument &document)
     bool oldUndoing = mUndoing;
     mUndoing = true;
     mTopPos = 0;
+    mTopLine = 0;
+    mTopSegment = 0;
     mLeftPos = 0;
     setCaretPos(fileBegin());
     mCodeBlocks.clear();
@@ -7932,9 +8027,14 @@ void QSynEdit::setLeftPos(int value)
         if (maxLineWidth()<0)
             mLeftPos = value;
         setStatusChanged(StatusChange::LeftPos);
-        if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyHorizontal)
+        if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyHorizontal) {
+            // the scrollbar maximum is a lower-bound estimate while the
+            // line width computation is incomplete: never let it clamp
+            // the new value back down
+            if (value > horizontalScrollBar()->maximum())
+                horizontalScrollBar()->setMaximum(value);
             horizontalScrollBar()->setValue(value);
-        else {
+        } else {
             if (maxLineWidth()>0) {
                 mLeftPos = std::max(value, 0);
                 mLeftPos = std::min(mLeftPos, maxScrollWidth());
@@ -7960,8 +8060,16 @@ void QSynEdit::setTopPos(int value)
     value = std::max(value, 0);
     if (value != mTopPos) {
         setStatusChanged(StatusChange::TopPos);
+        int oldTopPos = mTopPos;
         mTopPos = value;
+        syncAnchorToTopPos(oldTopPos);
         if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyVertical) {
+            // the scrollbar maximum is a lower-bound estimate while the
+            // background layout is incomplete: never let it clamp the new
+            // value back down (the exact maximum is fixed once the
+            // computation finishes)
+            if (value > verticalScrollBar()->maximum())
+                verticalScrollBar()->setMaximum(value);
             verticalScrollBar()->setValue(value);
         } else {
             invalidate();

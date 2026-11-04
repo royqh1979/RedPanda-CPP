@@ -658,4 +658,184 @@ void TestQSyneditDisplay::test_advance_anchor_row()
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
 }
+
+void TestQSyneditDisplay::test_toppos_anchor_sync()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    return 0;",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    int h = mEdit->textHeight();
+
+    // no wrap: the anchor is (topRow, 0)
+    for (int row : {0, 1, 2, 3, 1, 0}) {
+        mEdit->setTopPos(row * h);
+        QCOMPARE(mEdit->mTopLine, row);
+        QCOMPARE(mEdit->mTopSegment, 0);
+    }
+    // a sub-row pixel offset keeps the same anchor
+    mEdit->setTopPos(2 * h + h / 2);
+    QCOMPARE(mEdit->mTopLine, 2);
+    QCOMPARE(mEdit->mTopSegment, 0);
+
+    // wrap: the anchor must always match the global mapping of the top row
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    int totalRows = mEdit->displayLineCount();
+    QVERIFY(totalRows > 4);
+    // small steps down, then one big jump up
+    for (int row = 0; row < totalRows; row++) {
+        mEdit->setTopPos(row * h);
+        int line, seg;
+        mEdit->rowToLineSegment(row, line, seg);
+        QCOMPARE(mEdit->mTopLine, line);
+        QCOMPARE(mEdit->mTopSegment, seg);
+    }
+    mEdit->setTopPos(h);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    // past the end: clamps to the last visible segment
+    mEdit->setTopPos((totalRows + 100) * h);
+    QCOMPARE(mEdit->mTopLine, 3);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    // scrollbar-driven scrolling keeps the same invariant
+    mEdit->onVScrolled(2 * h);
+    int line, seg;
+    mEdit->rowToLineSegment(2, line, seg);
+    QCOMPARE(mEdit->mTopLine, line);
+    QCOMPARE(mEdit->mTopSegment, seg);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_scroll_to_row()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    return 0;",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    // the scrollbar maximum is only refreshed when background wrap layout
+    // batches arrive (onWrapLayoutBatch -> updateVScrollbar), so wait for
+    // the job to finish; otherwise it stays at the 1-segment-per-line
+    // lower bound and setTopPos is clamped back down by the scrollbar
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    int totalRows = mEdit->displayLineCount();
+    int h = mEdit->textHeight();
+
+    mEdit->scrollToRow(2);
+    QCOMPARE(mEdit->topPos(), 2 * h);
+    int line, seg;
+    mEdit->rowToLineSegment(2, line, seg);
+    QCOMPARE(mEdit->mTopLine, line);
+    QCOMPARE(mEdit->mTopSegment, seg);
+
+    mEdit->scrollToRow(-3);
+    QCOMPARE(mEdit->topPos(), 0);
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopSegment, 0);
+
+    mEdit->scrollToRow(totalRows + 100);
+    QCOMPARE(mEdit->topPos(), (totalRows - 1) * h);
+    QCOMPARE(mEdit->mTopLine, 3);
+    QCOMPARE(mEdit->mTopSegment, 0);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_wrap_toggle_preserves_anchor()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    return 0;",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    int h = mEdit->textHeight();
+    mEdit->setTopPos(2 * h);
+    QCOMPARE(mEdit->mTopLine, 2);
+
+    // wrap on: the top line stays, the pixel offset follows its new row
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    QCOMPARE(mEdit->mTopLine, 2);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), mEdit->lineSegmentToRow(2, 0) * h);
+
+    // an anchor inside the wrapped line clamps its segment on wrap-off
+    mEdit->setTopPos(mEdit->lineSegmentToRow(1, 1) * h);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, 1);
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), h);
+
+    // and back on: the top line still survives the roundtrip
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), h);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_anchor_row_for_line_segment()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    return 0;",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
+    int totalRows = mEdit->displayLineCount();
+    int h = mEdit->textHeight();
+
+    // anchor at row 1 (the first segment of the wrapped line)
+    mEdit->setTopPos(h);
+    QCOMPARE(mEdit->anchorRowForLineSegment(1, 0), 0);
+    // every visible position maps to its global row minus the top row
+    for (int row = 0; row < totalRows; row++) {
+        int line, seg;
+        mEdit->rowToLineSegment(row, line, seg);
+        QCOMPARE(mEdit->anchorRowForLineSegment(line, seg), row - 1);
+    }
+    // moving the anchor moves all relative rows
+    mEdit->setTopPos(0);
+    for (int row = 0; row < totalRows; row++) {
+        int line, seg;
+        mEdit->rowToLineSegment(row, line, seg);
+        QCOMPARE(mEdit->anchorRowForLineSegment(line, seg), row);
+    }
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
 }

@@ -281,6 +281,13 @@ public:
     // multi-step advance (negative delta retreats); returns the signed
     // number of rows actually moved (less than requested at the boundaries)
     int advanceAnchorRow(int &line, int &segment, int delta) const;
+    // window row of (line, segment) relative to the anchor (negative when
+    // above the viewport top); walks from the anchor, so O(|distance|).
+    // (line, segment) must denote a visible segment
+    int anchorRowForLineSegment(int line, int segment) const;
+    // scroll so that global display row globalRow becomes the top row
+    // (line-aligned); clamped at 0 and at the maximum scroll position
+    void scrollToRow(int globalRow);
     int foldRowToLine(int row) const;
     int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
@@ -645,6 +652,15 @@ protected:
     void setStatusChanged(StatusChanges changes);
 
 private:
+    // advance the anchor (mTopLine/mTopSegment) so that it matches the
+    // top row implied by mTopPos; called after every mTopPos change.
+    // oldTopPos is the pixel offset before the change
+    void syncAnchorToTopPos(int oldTopPos);
+    // for rare events that rebuild the whole line->row mapping (word wrap
+    // toggle, font metrics change): keep the content at the viewport top
+    // stable by preserving the anchor (clamping it into the new mapping's
+    // valid range) and re-deriving mTopPos from it
+    void adjustTopPosToAnchor();
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
     void computeCaret();
@@ -857,7 +873,7 @@ private:
     int mWrapGeneration = 0;
     int mWrapContentVersion = 0;
     QHash<size_t, int> mWrapDirtySeqs;
-    bool mWrapAllComputed = false;
+    mutable bool mWrapAllComputed = false;
     mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
     int mSetLineMetricsLockCount = 0;
     bool mMaxLineWidthDirtyInBatch = false;
@@ -875,6 +891,12 @@ private:
     ScrollStyle mScrollBars;
     int mTextHeight;
     int mTopPos;
+    // anchor: the visible (line, segment) at the viewport's top row
+    // (global display row mTopPos/mTextHeight); kept consistent with
+    // mTopPos via syncAnchorToTopPos, so painting/scrolling can advance
+    // incrementally instead of mapping global rows from scratch
+    int mTopLine = 0;
+    int mTopSegment = 0;
     PSyntaxer mSyntaxer;
     // reparse ranges reported by Document::linesReparsed while a document
     // batch is in flight; the repaint is deferred to onDocumentContentChanged

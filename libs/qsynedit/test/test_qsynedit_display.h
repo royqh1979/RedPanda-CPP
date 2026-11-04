@@ -32,6 +32,10 @@ private slots:
     void test_advance_retreat_line_segment();
     void test_advance_retreat_with_fold();
     void test_advance_anchor_row();
+    void test_toppos_anchor_sync();
+    void test_scroll_to_row();
+    void test_wrap_toggle_preserves_anchor();
+    void test_anchor_row_for_line_segment();
 };
 
 }
