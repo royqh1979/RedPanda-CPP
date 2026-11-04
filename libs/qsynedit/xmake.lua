@@ -14,6 +14,7 @@ target("qsynedit")
         "qsynedit/keystrokes.cpp",
         "qsynedit/miscprocs.cpp",
         "qsynedit/painter.cpp",
+        "qsynedit/rowindex.cpp",
         "qsynedit/types.cpp",
         -- exporter
         "qsynedit/exporter/exporter.cpp",

@@ -9,6 +9,7 @@ set(QSYNEDIT_QT_PLAIN_CPP
     qsynedit/keystrokes
     qsynedit/miscprocs
     qsynedit/painter
+    qsynedit/rowindex
     qsynedit/types
     # exporter
     qsynedit/exporter/exporter
@@ -117,6 +118,7 @@ target_moc_classes(test-qsynedit
     test/test_qsynedit_display
     test/test_qsynedit_emoji
     test/test_qsynedit_infra
+    test/test_rowindex
     test/test_utils)
 
 target_include_directories(test-qsynedit PRIVATE

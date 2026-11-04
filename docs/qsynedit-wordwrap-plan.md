@@ -118,6 +118,7 @@
 
 ## 已知问题与决策记录
 
+- **RowIndex 懒标记的陈旧性约定**：`lines`/`totalSegs` 在所有节点上始终精确；`hiddenSegs`/叶标志在带 tag 节点的**子树内部**可能陈旧。含 tag 的节点其子树一定均匀（tag⇒uniform；split/merge/setSegCount/setHidden 在下钻前一律 push），因此 next/prevVisible 可在均匀子树整跳；前缀查询与 row 下降必须**继承祖先 tag 下传**（tag1 ⇒ 隐藏和=段数和，tag2 ⇒ 隐藏贡献为 0），且**外层（祖先）tag 优先**——能在已有 tag 之下再产生的 tag 必是先打的，后打的操作下钻时已 push。
 - **wrap 切换后滚动条上限窗口期**：由"max 不钳新值"规则解决（设值不再被钳丢）；另有语义约定：**后台分段计算就绪时，不主动恢复旧滚动位置**（窗口期内用户自己的操作优先，就绪后也不把位置拉回旧值）。
 - **RowIndex 内存**：~48B/行/视图（treap 节点）。多视图各自建树（wrap 宽度/字体/折叠都是 per-view）。大文件若成问题，打包 B-tree 节点作为后续优化。
 - **测试环境注意**：wrap 相关测试开 wrap 后要 `QTRY_VERIFY(mWrapAllComputed)` 等后台布局算完，否则滚动条上限停在"每行 1 段"的下界估计。

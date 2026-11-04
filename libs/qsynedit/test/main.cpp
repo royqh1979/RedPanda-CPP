@@ -8,6 +8,7 @@
 #include "test_qsynedit_emoji.h"
 #include "test_qsynedit_cpp_search_replace.h"
 #include "test_qsynedit_infra.h"
+#include "test_rowindex.h"
 #include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
@@ -23,6 +24,11 @@ int main(int argc, char *argv[]) {
     //CharPos Test
     {
         QSynedit::TestCharPos tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+    //RowIndex Test
+    {
+        QSynedit::TestRowIndex tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
     {
