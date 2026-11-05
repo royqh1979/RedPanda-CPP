@@ -20,6 +20,7 @@
 #include <QStringList>
 #include <QMutex>
 #include <QVector>
+#include <atomic>
 #include <memory>
 #include <QFile>
 #include "miscprocs.h"
@@ -321,6 +322,13 @@ public:
      * (beginUpdate/endUpdate not balanced yet)
      */
     bool inUpdate() const;
+    /**
+     * @brief content version: atomically incremented on the first
+     * recordChange of each update batch. Background wrap-layout workers
+     * snapshot it at schedule time and abort early once it changes (or
+     * while inUpdate() is true), since their results would be stale.
+     */
+    int contentVersion() const;
 
     /**
      * @brief the undo/redo histories are owned by the document and shared
@@ -533,7 +541,11 @@ private:
 
     NewlineType mNewlineType;
     bool mAppendNewLineAtEOF;
-    int mUpdateCount;
+    // atomic: also read by background wrap-layout workers
+    std::atomic<int> mUpdateCount;
+    // bumped on the first recordChange of each batch; atomic for the same
+    // reason as mUpdateCount
+    std::atomic<int> mContentVersion{0};
     DocumentChangeSet mPendingChanges;
     bool mFoldStateDirty = false;
     // max reparse stabilization line over the current update batch

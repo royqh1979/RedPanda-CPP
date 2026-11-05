@@ -49,9 +49,15 @@ signals:
     void layoutsReady(const QSynedit::WrapLayoutBatch &batch);
 private:
     void postBatch(bool finished);
+    // post the early-abort control signal: no layouts are delivered (they
+    // could be stale); the view reschedules with fresh inputs
+    void postAborted();
     PDocument mDocument;
     int mGeneration;
     int mContentVersion;
+    // the document's content version at construction (= schedule) time;
+    // the run loop aborts early once the document is modified
+    int mStartVersion;
     QFont mBaseFont;
     GlyphCalculator mGlyphCalculator;
     int mWrapWidth;

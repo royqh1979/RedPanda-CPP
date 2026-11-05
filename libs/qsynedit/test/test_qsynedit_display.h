@@ -38,6 +38,7 @@ private slots:
     void test_anchor_row_for_line_segment();
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();
+    void test_wrap_job_early_abort();
 };
 
 }

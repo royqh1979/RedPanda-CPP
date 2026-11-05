@@ -98,6 +98,7 @@ private slots:
 
     void test_fold_state_dirty();
     void test_edit_operations_are_batched();
+    void test_content_version();
 
     void initSignalTest();
     void onChanged();

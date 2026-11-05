@@ -73,7 +73,7 @@
 - **空文档不进线程**：`scheduleWrapLayoutJob` 在文档为空时直接同步返回（`mWrapAllComputed` 立即就绪，测试无需等事件循环）。（已实现）
 - **schedule 与 topPos 更新无顺序约束**（2026-11 分析定稿）：job 的快照输入只有 generation/contentVersion/font/glyphCalculator/wrapWidth/wrap 标志，不读视口位置；topPos/锚点更新走 `wrapLayout` 主线程同步兜底，与 worker 只共享 `mWrapLayouts`（视图是唯一写者，worker 批结果经 generation/contentVersion/dirty-seq 校验后合并）。Roy 曾担心"先设 topPos 会被旧滚动条 max 钳回"——已由 `setTopPos` 的"max 不钳新值"规则覆盖（`value > maximum` 时先抬 max 再 setValue），与 schedule 顺序无关。现有两种顺序（`setOptions` 先 schedule 后 `adjustTopPosToAnchor`；`recalcCharExtent` 经 `onSizeOrFontChanged`→`adjustTopPosToAnchor`）均正确。
 - 树随编辑同步更新（`onDocumentContentChanged` 里与现有 fold 平移同处），worker 批次只做 `setSegCount` 点更新，不做结构变更。
-- **worker 早停（设计定稿，待实现）**：`Document` 增加原子内容版本号 `mContentVersion`（批次内首次 `recordChange` 时自增）；worker 启动时快照 `startVersion`，逐行循环的既有中止条件（`viewDead`、generation 失配）之外增加 `mDocument->inUpdate() || mDocument->contentVersion() != startVersion`——文档一旦开始更新，worker 最多再算一行即退出且不投递。正确性本就有 seq/dirty 校验兜底（过期批次被 `onWrapLayoutBatch` 丢弃），早停纯粹省 CPU 并消除 mid-update 计算窗口。配套的纵深防御已实现：`getSyntaxState` 对未解析行返回空 state、`CppSyntaxer::setState` 对空 state 回退 `resetState()`。
+- **worker 早停（已实现）**：`Document` 持有原子内容版本号 `mContentVersion`（批次内首次 `recordChange` 时自增；`mUpdateCount` 同为原子，供 worker 线程安全读 `inUpdate()`）；worker 构造（=schedule）时快照 `startVersion`，逐行循环的既有中止条件（`viewDead`、generation 失配）之外增加 `mDocument->inUpdate() || mDocument->contentVersion() != startVersion`——文档一旦开始更新，worker 最多再算一行即退出，**不投递任何布局结果**。**重调度链（实现时补全）**：中止的 worker 改为投递一个空布局的 `aborted` 批次（纯控制信号，不含数据，不可能过期）；`onWrapLayoutBatch` 收到后重新 `scheduleWrapLayoutJob()`——否则编辑后无人重启 sweep，后台计算永久停摆（此前 finished 批次的重调度是唯一链）。互斥锁时序保证无竞争：aborted 批次在共享锁内投递、`jobsInFlight--` 之后才由 GUI 处理，schedule 的去重检查看到的必是已递减的值。稳态打字（无 job 在飞）行为不变：不触发后台 sweep，编辑行走 lazy 计算。正确性本就有 seq/dirty 校验兜底（过期批次被 `onWrapLayoutBatch` 丢弃），早停纯粹省 CPU 并消除 mid-update 计算窗口。配套的纵深防御已实现：`getSyntaxState` 对未解析行返回空 state、`CppSyntaxer::setState` 对空 state 回退 `resetState()`。
 
 ### 无 wrap 模式
 
@@ -125,6 +125,7 @@
 
 - **RowIndex 懒标记的陈旧性约定**：`lines`/`totalSegs` 在所有节点上始终精确；`hiddenSegs`/叶标志在带 tag 节点的**子树内部**可能陈旧。含 tag 的节点其子树一定均匀（tag⇒uniform；split/merge/setSegCount/setHidden 在下钻前一律 push），因此 next/prevVisible 可在均匀子树整跳；前缀查询与 row 下降必须**继承祖先 tag 下传**（tag1 ⇒ 隐藏和=段数和，tag2 ⇒ 隐藏贡献为 0），且**外层（祖先）tag 优先**——能在已有 tag 之下再产生的 tag 必是先打的，后打的操作下钻时已 push。
 - **wrap 切换后滚动条上限窗口期**：由"max 不钳新值"规则解决（设值不再被钳丢）；另有语义约定：**后台分段计算就绪时，不主动恢复旧滚动位置**（窗口期内用户自己的操作优先，就绪后也不把位置拉回旧值）。
+- **就绪后 mTopPos 精化（Roy 新想法，2026-11 记录在案，待实现/讨论）**：后台布局计算完成（`mWrapAllComputed` 转真）时，用当前锚点 `(mTopLine, mTopSegment)` 经树查询精确行号 + `mTopPos % mTextHeight` 的余数重算 `mTopPos`，然后更新滚动条（消除窗口期内 max 与 value 的累计误差）。视图不需要重绘——锚点内容未变，只有像素偏移的量化误差被修正；实现选项：paintEvent 检测"仅滚动条数值精化"跳过重绘，或直接重贴之前的 cached image；若两者都太复杂，重绘一遍也可接受（非高频事件）。待批 C 时一并定夺。
 - **RowIndex 内存**：~48B/行/视图（treap 节点）。多视图各自建树（wrap 宽度/字体/折叠都是 per-view）。大文件若成问题，打包 B-tree 节点作为后续优化。
 - **测试环境注意**：wrap 相关测试开 wrap 后要 `QTRY_VERIFY(mWrapAllComputed)` 等后台布局算完，否则滚动条上限停在"每行 1 段"的下界估计。
 - 下划线不作断词点（`_` 是单词成分）已有测试约定；测试用等宽字体保证字形宽度确定。

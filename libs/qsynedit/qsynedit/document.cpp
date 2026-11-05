@@ -450,6 +450,11 @@ bool Document::inUpdate() const
     return mUpdateCount > 0;
 }
 
+int Document::contentVersion() const
+{
+    return mContentVersion.load();
+}
+
 void Document::recordChange(DocumentChangeKind kind, int line, int count)
 {
     // sanity checks against the post-mutation state
@@ -470,6 +475,10 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
         break;
     }
 #endif
+    // first change of the batch: bump the content version so background
+    // wrap-layout workers notice the modification and abort early
+    if (mPendingChanges.isEmpty())
+        mContentVersion.fetch_add(1);
     // Only same-kind, adjacent entries coalesce. No cross-kind merging or
     // cancellation: the sequence must faithfully mirror what the primitives
     // did, so consumers can replay it naively.

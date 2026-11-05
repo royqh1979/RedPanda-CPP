@@ -140,6 +140,9 @@ struct WrapLayoutBatch {
     PDocument document;
     QHash<size_t, WrapLayout> layouts;
     bool finished = false;
+    // the job aborted early because the document was modified mid-computation:
+    // a pure control signal (no layouts delivered), the view must reschedule
+    bool aborted = false;
 };
 
 class WrapLayoutJob;
@@ -152,6 +155,10 @@ struct WrapJobSharedState {
     bool viewDead = false;
     int jobsInFlight = 0;
     int latestGeneration = -1;
+    // document contentVersion at the last schedule: a job started before a
+    // content change is doomed to abort early, so a new schedule must not be
+    // deduplicated against it
+    int latestContentVersion = -1;
 };
 using PWrapJobSharedState = std::shared_ptr<WrapJobSharedState>;
 

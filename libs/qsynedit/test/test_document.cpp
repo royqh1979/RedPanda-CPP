@@ -1117,6 +1117,31 @@ void TestDocument::test_edit_operations_are_batched()
     QVERIFY(!mDoc->inUpdate());
 }
 
+void TestDocument::test_content_version()
+{
+    // the content version is bumped once per batch that changes content;
+    // background wrap-layout workers use it to abort stale computations
+    int v0 = mDoc->contentVersion();
+    mDoc->setText("line0\nline1\nline2\nline3");
+    QCOMPARE(mDoc->contentVersion(), v0 + 1);
+
+    mDoc->putLine(0, "changed", false);
+    QCOMPARE(mDoc->contentVersion(), v0 + 2);
+
+    // several edits inside one outer batch bump it only once
+    mDoc->beginUpdate();
+    mDoc->insertLine(1, "a", false);
+    mDoc->putLine(2, "b", false);
+    mDoc->deleteLine(3, false);
+    mDoc->endUpdate();
+    QCOMPARE(mDoc->contentVersion(), v0 + 3);
+
+    // a batch without content changes does not bump it
+    mDoc->beginUpdate();
+    mDoc->endUpdate();
+    QCOMPARE(mDoc->contentVersion(), v0 + 3);
+}
+
 
 void TestDocument::initSignalTest()
 {

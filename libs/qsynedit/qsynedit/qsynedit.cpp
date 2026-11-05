@@ -485,12 +485,18 @@ void QSynEdit::scheduleWrapLayoutJob() const
         return;
     }
     qRegisterMetaType<WrapLayoutBatch>();
+    int docContentVersion = mDocument->contentVersion();
     QMutexLocker locker(&mWrapJobState->mutex);
-    // only deduplicate same-generation jobs: a stale worker aborts on its
-    // own via the generation check in its loop
-    if (mWrapJobState->latestGeneration == mWrapGeneration && mWrapJobState->jobsInFlight > 0)
+    // deduplicate only a job started for the SAME document state: a job
+    // scheduled before a content change aborts early on its own (see the
+    // inUpdate/contentVersion check in WrapLayoutJob::run), so a schedule
+    // after the change must not be lost
+    if (mWrapJobState->latestGeneration == mWrapGeneration
+            && mWrapJobState->latestContentVersion == docContentVersion
+            && mWrapJobState->jobsInFlight > 0)
         return;
     mWrapJobState->latestGeneration = mWrapGeneration;
+    mWrapJobState->latestContentVersion = docContentVersion;
     mWrapJobState->jobsInFlight++;
     WrapLayoutJob *job = new WrapLayoutJob(
                 mDocument, mWrapGeneration, mWrapContentVersion,
@@ -507,6 +513,14 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
     // check is applied here, so a stale batch can never corrupt it
     if (batch.generation != mWrapGeneration || batch.document != mDocument)
         return;
+    if (batch.aborted) {
+        // the job quit early because the content changed mid-computation:
+        // it delivered nothing, so restart the sweep with fresh inputs
+        // (otherwise nobody would — the finished-batch reschedule is the
+        // only other trigger)
+        scheduleWrapLayoutJob();
+        return;
+    }
     for (auto it = batch.layouts.constBegin(); it != batch.layouts.constEnd(); ++it) {
         size_t seq = it.key();
         auto dirty = mWrapDirtySeqs.constFind(seq);

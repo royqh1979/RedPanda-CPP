@@ -26,6 +26,7 @@ WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int cont
     mDocument(document),
     mGeneration(generation),
     mContentVersion(contentVersion),
+    mStartVersion(document->contentVersion()),
     mBaseFont(baseFont),
     mGlyphCalculator(glyphCalculator),
     mWrapWidth(wrapWidth),
@@ -38,11 +39,20 @@ void WrapLayoutJob::run()
 {
     PSyntaxer syntaxer = mDocument->createSyntaxerInstance();
     int count = mDocument->count();
+    bool contentStale = false;
     for (int line=0; line<count; line++) {
         {
             QMutexLocker locker(&mSharedState->mutex);
             if (mSharedState->viewDead || mGeneration != mSharedState->latestGeneration)
                 break;
+        }
+        // early stop: the document is being (or has been) modified since
+        // this job was scheduled; whatever we computed so far is delivered
+        // through the normal batches, but finishing now would wrongly mark
+        // the whole document as computed
+        if (mDocument->inUpdate() || mDocument->contentVersion() != mStartVersion) {
+            contentStale = true;
+            break;
         }
         size_t seq = mDocument->getLineSeq(line);
         WrapLayout layout = computeWrapLayoutForLine(
@@ -55,8 +65,12 @@ void WrapLayoutJob::run()
     }
     {
         QMutexLocker locker(&mSharedState->mutex);
-        if (!mSharedState->viewDead && mGeneration == mSharedState->latestGeneration)
-            postBatch(true);
+        if (!mSharedState->viewDead && mGeneration == mSharedState->latestGeneration) {
+            if (contentStale)
+                postAborted();
+            else
+                postBatch(true);
+        }
         // notify the view (which may be waiting in its destructor) that this
         // job has exited
         mSharedState->jobsInFlight--;
@@ -78,6 +92,18 @@ void WrapLayoutJob::postBatch(bool finished)
     // post-and-forget: this job never reads/writes mLayouts again after
     // posting; the connection owns its own copy now
     mLayouts.clear();
+}
+
+void WrapLayoutJob::postAborted()
+{
+    if (mSharedState->viewDead || mGeneration != mSharedState->latestGeneration)
+        return;
+    WrapLayoutBatch batch;
+    batch.generation = mGeneration;
+    batch.contentVersion = mContentVersion;
+    batch.document = mDocument;
+    batch.aborted = true;
+    emit layoutsReady(batch);
 }
 
 }

@@ -7,6 +7,7 @@
 #include "qsynedit/document.h"
 #include "qsynedit/syntaxer/cpp.h"
 #include "qsynedit/formatter/cppformatter.h"
+#include "qsynedit/wraplayoutjob.h"
 
 namespace QSynedit {
 
@@ -1043,6 +1044,62 @@ void TestQSyneditDisplay::test_fold_shift_maintenance()
     mEdit->document()->moveLine(9, 0, true);
     expectRanges({{0, 11, false}, {1, 3, false}, {4, 6, true}, {7, 9, false}},
                  "move up keeps collapsed state");
+}
+
+}
+
+namespace QSynedit {
+
+void TestQSyneditDisplay::test_wrap_job_early_abort()
+{
+    // a WrapLayoutJob must abort early (posting only an aborted control
+    // signal, never stale layouts) when the document is being or has been
+    // modified since the job was scheduled
+    mEdit->loadContent(makeLines(20));
+    auto runJob = [&](std::function<void()> beforeRun) {
+        PWrapJobSharedState state = std::make_shared<WrapJobSharedState>();
+        state->latestGeneration = 1;
+        state->jobsInFlight = 1;
+        WrapLayoutJob job(mEdit->document(), 1, 0,
+                          mEdit->font(), mEdit->mGlyphCalculator,
+                          mEdit->wrapWidth(), true, state);
+        QList<WrapLayoutBatch> batches;
+        connect(&job, &WrapLayoutJob::layoutsReady, mEdit.get(),
+                [&](const WrapLayoutBatch &batch) {
+            batches.append(batch);
+        });
+        beforeRun();
+        job.run();
+        return std::make_pair(batches, state->jobsInFlight);
+    };
+
+    // aborted while the document is inside an update batch
+    auto [batches1, inFlight1] = runJob([&]{
+        mEdit->document()->beginUpdate();
+    });
+    mEdit->document()->endUpdate();
+    QCOMPARE(inFlight1, 0);
+    QCOMPARE(batches1.count(), 1);
+    QVERIFY(batches1[0].aborted);
+    QVERIFY(batches1[0].layouts.isEmpty());
+    QVERIFY(!batches1[0].finished);
+
+    // aborted when the content version changed after scheduling
+    auto [batches2, inFlight2] = runJob([&]{
+        mEdit->document()->putLine(0, "changed", true);
+    });
+    QCOMPARE(inFlight2, 0);
+    QCOMPARE(batches2.count(), 1);
+    QVERIFY(batches2[0].aborted);
+    QVERIFY(batches2[0].layouts.isEmpty());
+
+    // an untouched document is computed completely and finishes normally
+    auto [batches3, inFlight3] = runJob([]{});
+    QCOMPARE(inFlight3, 0);
+    QCOMPARE(batches3.count(), 1);
+    QVERIFY(!batches3[0].aborted);
+    QVERIFY(batches3[0].finished);
+    QCOMPARE(batches3[0].layouts.count(), 20);
 }
 
 }
