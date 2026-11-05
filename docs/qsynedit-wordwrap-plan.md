@@ -29,10 +29,13 @@
 
 实现：v1 用 implicit treap（约 200 行，正确性靠**随机操作序列 vs QVector 暴力参考实现的对拍测试**保证）。内存 ~48B/行/视图，记录在案；若大文件内存成为问题，后续可打包成 B-tree 节点（~4-8B/行开销）作为第二级优化。
 
-### 折叠可见性：不落 per-line 存储，由树/区间表派生
+### 折叠可见性：不落 per-line 存储，由树派生
 
-- **wrap 模式**：`hidden` 在 RowIndex 内（区间懒标记），可见性谓词 = 树点查询。
-- **无 wrap 模式**（所有行 segs≡1，无需 N 级段数结构）：用**有效折叠区间表**（有序、每项带"之前累计隐藏行数"前缀值）。谓词二分 O(log C)，row 映射 = line − 前缀和 O(log C)，折叠区跳跃 O(log C)。同步点 = `rescanCodeBlocks` 末尾重建（它本来就每编辑批次 O(N) 全扫重建 mCodeBlocks，追加 O(F) 是噪音）+ collapse/uncollapse 切换处。C≪N，无 N 级状态。
+`hidden` 在 RowIndex 内（区间懒标记），两种模式统一：**无 wrap 模式就是"所有行 segs≡1"的平凡情形，不再使用独立的数据结构**。可见性谓词 = 树点查询；row 映射 = 树前缀和；折叠区跳跃 O(log N)（整跳隐藏子树）。
+
+曾考虑为无 wrap 模式单独维护"有效折叠区间表"（C 级，省内存），最终否决：分开的唯一收益是内存（~48B/行/视图），而代价是两套隐藏前缀语义实现、两条同步路径、两套测试面（易漂移的平行机制），且内存问题本就由第二级优化（B-tree 打包叶子）解决。统一后映射函数不再按模式分叉。
+
+折叠同步点：`rescanCodeBlocks` 末尾 + collapse/uncollapse/collapseAll 切换处，调用 `syncFoldVisibility()`——**整体重建式**：树上一个根级 unhide 全清（O(log N)）+ 对每个有效折叠区间（`collapsed && !parentCollapsed()`，互不重叠）`setHidden(fromLine+1, toLine, true)`（O(C log N)）。幂等、事实驱动，无需增量维护或差异比对。
 
 ### 权威量与派生量：锚点语义保留，懒推导替代增量维护
 
@@ -52,7 +55,7 @@
 
 ### 滚动条规则
 
-- 像素制（现状）：value = mTopPos，max = maxScrollHeight() = `visibleSegCount()*mTextHeight`（wrap 模式；无 wrap 模式由区间表算可见行数），singleStep = mTextHeight，pageStep = mLinesInWindow*mTextHeight。
+- 像素制（现状）：value = mTopPos，max = maxScrollHeight() = `visibleSegCount()*mTextHeight`，singleStep = mTextHeight，pageStep = mLinesInWindow*mTextHeight。
 - **未就绪期间 max 不得钳住新值**：设值若大于当前 max，先调大 max 再设值（max 的估计值是下界：未精化行按 1 段计）。水平滚动条同理。此规则源自批 1 发现的"旧 max 钳回"bug。
 - 布局未就绪期间用户的滚动操作优先；**后台分段计算就绪后，不主动恢复旧滚动位置**。本方案下这条自动成立：就绪只改变计数精化，锚点不动。
 
@@ -73,7 +76,7 @@
 
 ### 无 wrap 模式
 
-每行 1 段，走有效折叠区间表分支（见上），不建 RowIndex。像素平滑滚动保留。wrap 切换时建/弃树。
+每行 1 段（segment 恒 0），与 wrap 模式共用同一 RowIndex（segs 恒 1）——不建独立结构。像素平滑滚动保留。
 
 ### 水平方向
 
@@ -99,9 +102,10 @@
 **折叠可见性表示的比选（flags vs 区间表/树）：**
 
 - 讨论中淘汰的论点（避免走回头路）：①"flags 有同步点/漂移风险"——不成立，flags 可随 rescanCodeBlocks 同趟整体重建，同步点与派生查询相同；②"flags 每次编辑 O(N) 重算"——不成立，可增量平移 + rescan 后只补差异。
-- 有效结论：row 映射需要隐藏行数前缀和，前缀和要廉价活过编辑（折叠/展开隐藏 k 行的区间后所有后缀 ±k）就必须游程压缩为"每个有效折叠区间一条"——flags 的映射半边必然收敛到区间表；区间表/树单结构同时回答谓词与映射，并支持折叠区 O(log N) 跳跃，flags 跨折叠区只能逐行走步。
+- 有效结论：row 映射需要隐藏行数前缀和，前缀和要廉价活过编辑（折叠/展开隐藏 k 行的区间后所有后缀 ±k）就必须游程压缩为"每个有效折叠区间一条"——flags 的映射半边必然收敛到区间形态；带双和的段数前缀树单结构同时回答谓词与映射，并支持折叠区 O(log N) 跳跃，flags 跨折叠区只能逐行走步。
 - Fenwick 树出局：不支持下标插删（编辑插删行要 O(N) 移位）。
-- 若 profile 证明谓词热点，可从区间表/树再派生 flags 做局部备忘，不破坏架构。
+- 若 profile 证明谓词热点，可从树再派生 flags 做局部备忘，不破坏架构。
+- 后续决定（2026-11）：两模式统一用树，**否决**为无 wrap 模式单独建区间表（唯一收益是内存，代价是两套平行机制；内存由 B-tree 打包解决）。
 
 ## 全局映射 API 的新定位
 
@@ -111,7 +115,7 @@
 
 1. **批 1（已完成，部分将被替代）**：段内换算 `charToSegmentCoord`/`segmentCoordToChar`、窗口内走步 `advanceLineSegment`/`retreatLineSegment`/`advanceAnchorRow`、`anchorRowForLineSegment`——**保留**（窗口内用途）。`syncAnchorToTopPos` 增量走步与两个定锚例外、`adjustTopPosToAnchor` 双路径——**将在批 C 删除/重写**。`setTopPos`/`setLeftPos` "max 不钳新值"、空文档直接就绪——保留。
 2. **批 A：RowIndex 段数前缀树**。implicit treap：双和增广 + 非重叠懒标记 hide/unhide + 点更新 + 插删 + 前缀查询 + kth 可见段下降 + next/prevVisibleLine 跳跃。随机对拍测试（vs QVector 暴力参考）。
-3. **批 B：映射函数树化**。wrap 模式 `displayLineCount`/`lineSegmentToRow`/`rowToLineSegment`/`lineVisibleForWrap` 走树；无 wrap 模式建有效折叠区间表；折叠 toggle/rescan 对接 `setHidden`；删除 `foldLineToRow`/`foldRowToLine` 线性扫描。编辑时树随 `onDocumentContentChanged` 同步。
+3. **批 B：映射函数树化**。`displayLineCount`/`lineSegmentToRow`/`rowToLineSegment`/`lineVisibleForWrap` 统一走树（无 wrap 模式 = segs 恒 1 的平凡情形）；折叠 toggle/rescan 对接 `syncFoldVisibility()`（整体重建式：根级 unhide + 有效区间 setHidden）；删除 `foldLineToRow`/`foldRowToLine` 线性扫描。编辑时树随 `onDocumentContentChanged` 同步（Insert/Delete 结构插删、Move 搬行、SetLine 强制同步重布局后点更新）。
 4. **批 C：锚点懒推导改造**。`setTopPos`/滚动条入口走树查询；编辑/折叠/批次事件统一"锚点平移或不动 + mTopPos 树重算"；锚点删除带钳制、折叠吸附；`adjustTopPosToAnchor` 简化（保持锚点 + 段号钳 + 重算）；删除批 1 的走步同步与估计机制。
 5. **批 D：绘制/caret/翻页/鼠标/invalidate**。窗口相对化 + 树查询；DisplayCoord 审计与测试全覆盖（含 IDE 侧）。
 6. **批 E：收尾**。IDE 侧确认（滚动保存/恢复沿用现有像素 API）；demo 目检（滚动平滑、翻页、折叠、大文件无卡顿）；全量验证。
