@@ -425,48 +425,57 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 ### 5.2 块列表的维护机制（现状）
 
 折叠结构派生自语法状态：每行 `SyntaxState` 存有 `blockLevel`（嵌套深度）和
-`blockStarted`/`blockEnded`/`blockEndedLastLine`（本行开/闭块数）。
-维护分两步（都在 `onDocumentContentChanged`）：
+`blockStarted`/`blockEnded`（本行开/闭块数）。维护分两步（都在
+`onDocumentContentChanged`）：
 
 1. **增量平移**：`processCodeBlocksOnLinesInserted`/`processFoldsOnLinesDeleted`/
-   `processFoldsOnLineMoved` 按 changeSet 平移块行号；插入行落入已折叠块、删除/
-   移动波及块边界时自动展开受影响块。
-2. **全量重扫**：`rescanCodeBlocks` → `internalScanCodeBlocks` 遍历全部行
-   （O(N)）从语法状态重建块配对；重建后用 `CodeBlockRangeKey{from,to}`
-   （`QMap` 键）把 collapsed 状态回贴到等价新块。
+  `processFoldsOnLineMoved` 按 changeSet 平移块行号；插入行落入已折叠块、删除/
+  移动波及块边界时自动展开受影响块。**注意**：`processFoldsOnLinesDeleted` 只移除
+  开块在删除带内的块（开块被删则块消失）；闭块行在删除带内的块**保持打开**
+  （否则局部重扫丢失其初始栈）。
+2. **局部重扫**（`partialScanCodeBlocks(fromLine, reparseToLine)`）：从首个编辑行
+  起、以"严格包含该行的旧块链"为初始栈向前扫——编辑行之前的 delta 未被本批次
+  改变，所以它与全量重扫从该行继续**同构**；扫到**冻结线** `reparseToLine`
+  （语法状态可证明不再变化的行）即停，然后只做**对位修补**：老块（身份保留）
+  回挂被剪掉的区域内子块，重建块收养旧对位块的 toLine/collapsed/L 后子块
+  （改 parent + 挂 subBlocks）。`rescanCodeBlocks()` ≡ `partialScanCodeBlocks(0,
+  count)`（无链块自然退化为全扫）。collapsed 状态在闭块时按
+  `CodeBlockRangeKey{from,to}` 回贴（范围未变→保留，变了→自动展开）。
 
-### 5.3 foldStateDirty：跳过无意义重扫
+**未闭合块（unfinished）**：不再摘除，按"开放到文件尾"保留（`unfinished=true`、
+`toLine=count-1`）——后续编辑补上 `}` 时折叠自然复活（日常"敲 `{` → 敲 `}`"
+序列下"未闭合→恢复"不再丢失块对象）。`codeBlockCount` 因此计入未闭合块。
 
-全量重扫（O(N)×视图数）绝大多数时候是浪费——函数体内打字不改变任何行的
-花括号计数。因此 `contentChanged` 带第二个参数 **`foldStateDirty`**（批次级
-元数据，随通知投递而非带外状态）：
+### 5.3 foldStateDirty 与 reparseToLine：何时扫、扫到哪
 
-- **累积**（Document 内，outermost `beginUpdate` 清零，批次内累加）：
-  - `reparseLines` 覆盖行状态前比较新旧 state 的**块增量字段**
-    （`sameCodeBlockDeltas`）。注意只比 `blockStarted/blockEnded/
-    blockEndedLastLine`——这三个是**行文本的固有属性**，行号平移不会让其失效；
-    刻意**不比 `blockLevel`**（位置相关，会被前一批次留下的未收敛状态
-    在修复性重解析时误报）；
-  - `deleteLine`/`deleteLines`/`moveLine` 可能不重解析（`parseToEnd=false`），
-    改为检查被删/被移动行**已存状态**的增量字段（`lineHasCodeBlockDelta`，
-    未解析的行保守按有增量处理）；
-  - 插入行的增量由紧随其后对插入行的重解析捕获（旧状态为空 ⇒ 只看新状态
-    增量）；`reparseAll` 整体置脏。
-- **消费**：`onDocumentContentChanged` 中 `foldStateDirty==false` 时跳过
-  `rescanCodeBlocks`（块已被平移步骤维护，天然正确），只补 gutter 重绘；
-  为真时照常全量重扫。`setDocument`（视图挂接共享文档）等路径仍显式调
-  `rescanCodeBlocks`，不依赖标志。
-- **配对变化的完备性论证**：配对要变，本批次必有某行的花括号计数变化
-  （文本改动经重解析比较捕获）或有带增量的行被插入/删除/移动（结构检查
-  捕获）；blockLevel 变化只能是这些变化的下游结果，已由同一批次上报。
+`contentChanged` 携带两个批次级元数据（随通知投递，非带外状态）：
+
+- **`foldStateDirty`**：本批次是否可能改变了块配对。为假则跳过重扫（日常打字
+  占绝大多数）。累积规则：`reparseLines` 覆盖行状态前比较新旧 state 的
+  `blockStarted/blockEnded`（**行文本固有属性**，刻意不比位置相关的
+  `blockLevel`，否则前一批次未收敛状态的修复性重解析会误报）；`deleteLine`/
+  `deleteLines`/`moveLine`（可能不重解析）改为检查被删/被移动行**已存状态**的
+  增量（`lineHasCodeBlockDelta`，未解析行保守按有增量）；插入行由紧随的重解析
+  捕获（旧状态为空 ⇒ 只看新状态增量）；`reparseAll` 整体置脏。
+- **`reparseToLine`**（冻结线）：语法状态可证明不再变化的行。收敛的重解析
+  （`reparseLines` 提前相等停下，或已到 EOF）按 **line+1** 累积（含该行已验证
+  最终）；`parseToEnd=false` 仅跑到范围末的按 **line** 累积（该行**未验证**）。
+  局部重扫以此为停止界；`onDocumentContentChanged` 含 DEBUG 断言
+  `!foldStateDirty || reparseToLine >= 0`（收敛契约：脏批次必有重解析）。
+
+**词法上下文注意**：`blockStarted/blockEnded` 是行文本固有属性，但**块注释/跨行
+字符串会改变下面文本未动行的有效花括号数**（敲入未闭合 `/*` 会把下面行的花括号
+吞并）。因此"越过编辑行"不等于"配对影响已尽"——冻结线（`reparseToLine`）才是
+安全界（见 `test_code_block_delta_lexical_context` 验证的行为：注释内花括号不计
+数、字符串/字符字面量内花括号不计数、同行 `{}` 相抵、`}{` 产生 1 ended +
+1 started）。
+
+**配对变化的完备性论证**：配对要变，本批次必有某行的花括号计数变化（文本改动经
+重解析比较捕获）或有带增量的行被插入/删除/移动（结构检查捕获）；`blockLevel`
+变化只能是这些变化的下游结果，已由同一批次上报。
 
 ### 5.4 后续优化方向（记录在案，未做）
 
-- **局部重扫**：fold 真脏时从受影响行起扫，以旧块重建 parent 栈，新旧开块
-  栈按 fromLine 身份对齐即停；未受影响块按对象保留（collapsed 自然幸存）。
-  正确性边界：state 收敛 ≠ 配对收敛（反例：`{` 从 10 挪到 20，100 行的 `}`
-  配对改变但本行 state 不变），resync 必须比开块栈身份，不能停在 state
-  收敛线；退化情形 = 现状全扫。
 - **Scintilla 模型**：不维护块列表，折叠结构按 per-line level 序列按需推导；
   fold 结构上移到 Document（多视图共享结构、视图仅存 collapsed 集合）。
   性价比低，不主动做。

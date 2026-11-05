@@ -73,6 +73,7 @@
 - **空文档不进线程**：`scheduleWrapLayoutJob` 在文档为空时直接同步返回（`mWrapAllComputed` 立即就绪，测试无需等事件循环）。（已实现）
 - **顺序约束：先 schedule，再更新 topPos**（映射重建类操作里）。*待 Roy 澄清动机：目前理解是 job 快照 generation/内容版本在先、主线程再强制同步布局，靠 seq/version 校验天然安全；若动机是 worker 按视口位置排优先级，则"先 schedule"会让 job 拿到旧视口位置。*
 - 树随编辑同步更新（`onDocumentContentChanged` 里与现有 fold 平移同处），worker 批次只做 `setSegCount` 点更新，不做结构变更。
+- **worker 早停（设计定稿，待实现）**：`Document` 增加原子内容版本号 `mContentVersion`（批次内首次 `recordChange` 时自增）；worker 启动时快照 `startVersion`，逐行循环的既有中止条件（`viewDead`、generation 失配）之外增加 `mDocument->inUpdate() || mDocument->contentVersion() != startVersion`——文档一旦开始更新，worker 最多再算一行即退出且不投递。正确性本就有 seq/dirty 校验兜底（过期批次被 `onWrapLayoutBatch` 丢弃），早停纯粹省 CPU 并消除 mid-update 计算窗口。配套的纵深防御已实现：`getSyntaxState` 对未解析行返回空 state、`CppSyntaxer::setState` 对空 state 回退 `resetState()`。
 
 ### 无 wrap 模式
 

@@ -855,7 +855,6 @@ static QString dumpFoldRanges(const QList<std::tuple<int,int,bool>> &ranges)
 
 void TestQSyneditDisplay::test_partial_fold_rescan()
 {
-    return; // TEMP bisect
     // the edit-driven partial rescan must produce the same fold list
     // (from,to,collapsed) as a full rescan
     QStringList lines;

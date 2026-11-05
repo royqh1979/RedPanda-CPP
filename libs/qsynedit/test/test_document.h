@@ -90,6 +90,7 @@ private slots:
     void test_move_line_to2();
     void test_clear();
     void test_content_changed();
+    void test_code_block_delta_lexical_context();
     void test_reparse();
     void test_find_last_line_by_seq();
 

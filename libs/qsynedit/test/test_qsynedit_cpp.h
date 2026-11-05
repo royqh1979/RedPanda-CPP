@@ -169,6 +169,7 @@ private slots:
     void test_auto_indent_for_parenthesis();
     void test_auto_indent_for_brace_after_closing_parenthesis();
     void test_auto_indent_for_if_else();
+    void test_edit_operations_are_batched();
     void test_auto_indent_for_if_else_2();
     void test_auto_indent_for_if_else_3();
 

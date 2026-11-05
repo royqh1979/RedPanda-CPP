@@ -1181,3 +1181,50 @@ void TestDocumentHelpers::test_searchForSegmentIdx()
 }
 
 }
+
+namespace QSynedit {
+void TestDocument::test_code_block_delta_lexical_context()
+{
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+
+    // braces inside block comments don't count
+    mDoc->setText("/* { */\nint main() {\n/* {\n*/\n}");
+    QCOMPARE(mDoc->blockStarted(0), 0);
+    QCOMPARE(mDoc->blockEnded(0), 0);
+    QCOMPARE(mDoc->blockStarted(1), 1);
+    QCOMPARE(mDoc->blockStarted(2), 0);
+    QCOMPARE(mDoc->blockEnded(4), 1);
+
+    // line comment doesn't affect the next line
+    mDoc->setText("// {\nint x;");
+    QCOMPARE(mDoc->blockStarted(0), 0);
+    QCOMPARE(mDoc->blockStarted(1), 0);
+
+    // braces in string/char literals don't count
+    mDoc->setText("const char *s = \"{\";\nchar c = '}';");
+    QCOMPARE(mDoc->blockStarted(0), 0);
+    QCOMPARE(mDoc->blockEnded(0), 0);
+    QCOMPARE(mDoc->blockStarted(1), 0);
+    QCOMPARE(mDoc->blockEnded(1), 0);
+
+    // same-line {} cancels out; }{ yields one ended plus one started
+    mDoc->setText("int main() {}\n}{");
+    QCOMPARE(mDoc->blockStarted(0), 0);
+    QCOMPARE(mDoc->blockEnded(0), 0);
+    QCOMPARE(mDoc->blockStarted(1), 1);
+    QCOMPARE(mDoc->blockEnded(1), 1);
+
+    // an unclosed block comment swallows the braces below...
+    mDoc->setText("int a;\nvoid f() {\n    x++;\n}");
+    QCOMPARE(mDoc->blockStarted(1), 1);
+    mDoc->insertLine(1, "/*", true);
+    QCOMPARE(mDoc->blockStarted(2), 0); // swallowed by the comment
+    QCOMPARE(mDoc->blockStarted(1), 0); // "/*" itself has no brace
+    QCOMPARE(mDoc->blockEnded(4), 0);   // "}" is inside the comment too
+    // ...and completing the comment makes them count again
+    mDoc->insertLine(2, "*/", true);
+    QCOMPARE(mDoc->blockStarted(3), 1);
+    QCOMPARE(mDoc->blockEnded(5), 1);
+}
+
+}

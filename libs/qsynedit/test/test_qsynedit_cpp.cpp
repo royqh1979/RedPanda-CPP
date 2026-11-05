@@ -12327,3 +12327,75 @@ void TestQSyneditCpp::test_shared_document_modified_sync()
     QVERIFY(!edit3->modified());
 }
 }
+
+namespace QSynedit {
+void TestQSyneditCpp::test_edit_operations_are_batched()
+{
+    // batch contract: every view-level edit operation must run inside
+    // exactly one begin/endEditing batch: contentChanged fires once, the
+    // document is quiescent afterwards, and a fold-dirty batch always
+    // carried out a reparse (reparseToLine >= 0)
+    int contentChangedCount = 0;
+    bool lastDirty = false;
+    int lastReparseToLine = -2;
+    connect(mEdit->document().get(), &Document::contentChanged, mEdit.get(),
+            [&](const DocumentChangeSet &, bool dirty, int reparseToLine) {
+        contentChangedCount++;
+        lastDirty = dirty;
+        lastReparseToLine = reparseToLine;
+    });
+    auto verifyOp = [&](const char *name, const std::function<void()> &op) {
+        contentChangedCount = 0;
+        lastDirty = false;
+        lastReparseToLine = -2;
+        op();
+        QVERIFY2(contentChangedCount == 1, name);
+        QVERIFY2(!mEdit->document()->inUpdate(), name);
+        QVERIFY2(!lastDirty || lastReparseToLine >= 0, name);
+    };
+
+    mEdit->loadContent({
+        "int main() {",
+        "    int x = 1;",
+        "    if (x) {",
+        "        x++;",
+        "    }",
+        "    return 0;",
+        "}",
+    });
+
+    verifyOp("input char", [&]{
+        mEdit->setCaretPos(CharPos{8, 1});
+        QTest::keyPress(mEdit.get(), 'a');
+    });
+    verifyOp("break line", [&]{
+        mEdit->setCaretPos(CharPos{8, 1});
+        QTest::keyPress(mEdit.get(), Qt::Key_Enter);
+    });
+    verifyOp("delete char", [&]{
+        QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    });
+    verifyOp("delete line", [&]{
+        mEdit->processCommand(EditCommand::DeleteLine);
+    });
+    verifyOp("move sel up", [&]{
+        mEdit->processCommand(EditCommand::MoveSelUp);
+    });
+    verifyOp("move sel down", [&]{
+        mEdit->processCommand(EditCommand::MoveSelDown);
+    });
+    verifyOp("duplicate", [&]{
+        mEdit->processCommand(EditCommand::Duplicate);
+    });
+    verifyOp("undo", [&]{
+        mEdit->undo();
+    });
+    verifyOp("redo", [&]{
+        mEdit->redo();
+    });
+    verifyOp("load content", [&]{
+        mEdit->loadContent({"int x;", "int y;"});
+    });
+}
+
+}
