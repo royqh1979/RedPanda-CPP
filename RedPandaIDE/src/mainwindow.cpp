@@ -32,6 +32,8 @@
 #include <QMimeData>
 #include <QScreen>
 #include <QStyleFactory>
+#include <QPainter>
+#include <QStyleOption>
 #include <QTcpSocket>
 #include <QTemporaryFile>
 #include <QTextBlock>
@@ -1071,6 +1073,47 @@ void MainWindow::updateFileTypeActions(const Editor* e)
 
 }
 
+namespace {
+
+class MoLoFusionStyle final : public DarkFusionStyle {
+public:
+    void drawPrimitive(PrimitiveElement element, const QStyleOption *option,
+                       QPainter *painter, const QWidget *widget) const override
+    {
+        if (element != PE_IndicatorCheckBox || !(option->state & State_Enabled)) {
+            DarkFusionStyle::drawPrimitive(element, option, painter, widget);
+            return;
+        }
+
+        const bool checked = option->state.testFlag(State_On);
+        const bool mixed = option->state.testFlag(State_NoChange);
+        const bool focused = option->state.testFlag(State_HasFocus)
+                             && option->state.testFlag(State_KeyboardFocusChange);
+        const QColor border(QStringLiteral("#a2aab6"));
+        const QRectF box = QRectF(option->rect).adjusted(1, 1, -1, -1);
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(QPen(focused ? Qt::white : border, focused ? 2 : 1.5));
+        painter->setBrush(checked || mixed ? QColor(QStringLiteral("#252525")) : option->palette.base().color());
+        painter->drawRoundedRect(box, 2, 2);
+
+        if (checked || mixed) {
+            painter->setPen(QPen(Qt::white, 2, Qt::SolidLine,
+                                 Qt::RoundCap, Qt::RoundJoin));
+            const auto point = [&box](qreal x, qreal y) {
+                return box.topLeft() + QPointF(x * box.width(), y * box.height());
+            };
+            if (mixed)
+                painter->drawLine(point(0.25, 0.50), point(0.75, 0.50));
+            else
+                painter->drawPolyline(QPolygonF{point(0.23, 0.50), point(0.43, 0.70), point(0.77, 0.30)});
+        }
+        painter->restore();
+    }
+};
+
+} // namespace
+
 void MainWindow::applySettings()
 {
     ThemeManager themeManager;
@@ -1092,7 +1135,9 @@ void MainWindow::applySettings()
     }
 #endif
     const QString& style = appTheme->style();
-    if (style == "RedPandaDarkFusion")
+    if (style == "RedPandaDarkFusion" && pSettings->environment().theme() == "molo")
+        QApplication::setStyle(new MoLoFusionStyle());
+    else if (style == "RedPandaDarkFusion")
         QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
     else if (style == "RedPandaLightFusion")
         QApplication::setStyle(new LightFusionStyle());//app takes the onwership
