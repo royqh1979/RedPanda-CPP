@@ -91,6 +91,7 @@ InstType "$(StrInstTypeSafe)"    ;3
 
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "Italian"
 
 ####################################################################
 # Silently uninstall previous version
@@ -126,6 +127,21 @@ Section "$(SectionMainName)" SectionMain
   File "NEWS.md"
   File "README.md"
   File "qt.conf"
+
+  ; Keep the installation default separate from the user's settings and first-run state.
+writeLanguage:
+  ClearErrors
+  ${If} $LANGUAGE == ${LANG_ITALIAN}
+    WriteINIStr "$INSTDIR\install-language.ini" "Environment" "language" "it_IT"
+  ${ElseIf} $LANGUAGE == ${LANG_SIMPCHINESE}
+    WriteINIStr "$INSTDIR\install-language.ini" "Environment" "language" "zh_CN"
+  ${Else}
+    WriteINIStr "$INSTDIR\install-language.ini" "Environment" "language" "en"
+  ${EndIf}
+  IfErrors 0 languageWritten
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(MessageWriteLanguageFailed)" /SD IDCANCEL IDRETRY writeLanguage
+  Abort
+languageWritten:
   !ifdef HAVE_OPENCONSOLE
     File "OpenConsole.exe"
   !endif
@@ -356,6 +372,7 @@ SectionEnd
 # Functions, utilities
 
 Function .onInit
+  StrCpy $LANGUAGE ${LANG_ENGLISH}
   !insertmacro MULTIUSER_INIT
   !insertmacro MUI_LANGDLL_DISPLAY
   !insertmacro DetectOsArch
@@ -490,6 +507,7 @@ Section "Uninstall"
   Delete "$INSTDIR\LICENSE"
   Delete "$INSTDIR\README.md"
   Delete "$INSTDIR\qt.conf"
+  Delete "$INSTDIR\install-language.ini"
   Delete "$INSTDIR\OpenConsole.exe"
   Delete "$INSTDIR\compiler_hint.lua"
   Delete "$INSTDIR\VC_redist.x86.exe"
