@@ -71,7 +71,7 @@
 
 - 估计→精化原则不变：未精化行按 1 段计入树，`mWrapAllComputed` 就绪后全部精确。
 - **空文档不进线程**：`scheduleWrapLayoutJob` 在文档为空时直接同步返回（`mWrapAllComputed` 立即就绪，测试无需等事件循环）。（已实现）
-- **顺序约束：先 schedule，再更新 topPos**（映射重建类操作里）。*待 Roy 澄清动机：目前理解是 job 快照 generation/内容版本在先、主线程再强制同步布局，靠 seq/version 校验天然安全；若动机是 worker 按视口位置排优先级，则"先 schedule"会让 job 拿到旧视口位置。*
+- **schedule 与 topPos 更新无顺序约束**（2026-11 分析定稿）：job 的快照输入只有 generation/contentVersion/font/glyphCalculator/wrapWidth/wrap 标志，不读视口位置；topPos/锚点更新走 `wrapLayout` 主线程同步兜底，与 worker 只共享 `mWrapLayouts`（视图是唯一写者，worker 批结果经 generation/contentVersion/dirty-seq 校验后合并）。Roy 曾担心"先设 topPos 会被旧滚动条 max 钳回"——已由 `setTopPos` 的"max 不钳新值"规则覆盖（`value > maximum` 时先抬 max 再 setValue），与 schedule 顺序无关。现有两种顺序（`setOptions` 先 schedule 后 `adjustTopPosToAnchor`；`recalcCharExtent` 经 `onSizeOrFontChanged`→`adjustTopPosToAnchor`）均正确。
 - 树随编辑同步更新（`onDocumentContentChanged` 里与现有 fold 平移同处），worker 批次只做 `setSegCount` 点更新，不做结构变更。
 - **worker 早停（设计定稿，待实现）**：`Document` 增加原子内容版本号 `mContentVersion`（批次内首次 `recordChange` 时自增）；worker 启动时快照 `startVersion`，逐行循环的既有中止条件（`viewDead`、generation 失配）之外增加 `mDocument->inUpdate() || mDocument->contentVersion() != startVersion`——文档一旦开始更新，worker 最多再算一行即退出且不投递。正确性本就有 seq/dirty 校验兜底（过期批次被 `onWrapLayoutBatch` 丢弃），早停纯粹省 CPU 并消除 mid-update 计算窗口。配套的纵深防御已实现：`getSyntaxState` 对未解析行返回空 state、`CppSyntaxer::setState` 对空 state 回退 `resetState()`。
 

@@ -1034,6 +1034,15 @@ void TestQSyneditDisplay::test_fold_shift_maintenance()
     QList<std::tuple<int,int,bool>> partial = mEdit->foldRangesForTest();
     mEdit->fullRescanCodeBlocksForTest();
     QCOMPARE(mEdit->foldRangesForTest(), partial);
+
+    // move a line up past a collapsed block: the block shifts down and
+    // KEEPS its collapsed state (regression: the from > to branch was
+    // dead code duplicating the from < to condition)
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->moveLine(9, 0, true);
+    expectRanges({{0, 11, false}, {1, 3, false}, {4, 6, true}, {7, 9, false}},
+                 "move up keeps collapsed state");
 }
 
 }

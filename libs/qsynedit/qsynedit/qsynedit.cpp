@@ -4247,7 +4247,7 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
                 block->toLine = to;
             } else if (from < block->toLine && block->toLine <= to)
                 block->toLine -= 1;
-        } else if (to > from) {
+        } else if (from > to) {
             if (block->fromLine == from) {
                 block->fromLine = to;
             } else if (to <= block->fromLine && block->fromLine < from)
