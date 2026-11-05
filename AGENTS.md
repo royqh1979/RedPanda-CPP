@@ -36,7 +36,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
 
 ## 构建
 
@@ -84,6 +84,39 @@ CI（`.github/workflows/unit.yml`）在 Ubuntu + Qt 5 上运行的正是上述�
 - `addon/gen.sh` 的输出已提交（运行后 `git diff --exit-code` 必须干净）。
 - `libs/lua/lua/` 与上游 Lua v5.4.6 完全一致。
 
+## Windows 本机构建与测试（开发机）
+
+以下为本机（Windows + Git Bash）的既定做法，新会话直接照用：
+
+- 工具链：编译器 `d:/qt/mingw64`；Qt 用 `d:/qt/qt5-debug-64`（Qt 5.15 调试版）。clangd 在 `d:/tools/` 下，代码导航时可用。
+- 构建目录放内存虚拟盘 `R:`（减少固态硬盘损耗；**重启后 R: 内容清空，需重新配置构建**）：
+
+```sh
+mkdir -p /r/build-redpanda-qt5-debug && cd /r/build-redpanda-qt5-debug
+PATH="/d/qt/mingw64/bin:$PATH" cmake -G "MinGW Makefiles" \
+  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/d/qt/qt5-debug-64 \
+  -DFORCE_QT5=ON -DQSYNEDIT_BUILD_MULTIVIEW_DEMO=ON \
+  /e/workspaces/contributes/RedPanda-CPP
+```
+
+- **运行 test-qsynedit 必须经过 gdb**：在本机 Git Bash 里直接运行 `test-qsynedit.exe` 会无任何输出直接退出。做法：
+
+```sh
+cd /r/build-redpanda-qt5-debug/libs/qsynedit
+PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
+  timeout 90 gdb -batch -ex run --args ./test-qsynedit.exe
+```
+
+- **崩溃时取栈**：`gdb -batch -ex run -ex bt --args ./test-qsynedit.exe [参数]`（`-ex` 顺序必须是先 run 后 bt；对非主线程的崩溃，停止后用 `-ex "thread apply all bt"` 打印所有线程）。注意栈地址异常（如数据指针为野值）通常意味着更早前已发生堆/栈破坏，崩溃只是案发点，应向前追查写坏内存的代码，而不是只修崩溃处。
+
+- **测试中 connect 的 lambda 不得既捕获局部变量、又以长命对象（如 `mEdit.get()`）作 context**：测试函数返回后连接仍然存活，死 lambda 会在之后每次信号触发时往已释放的栈地址写数据，造成堆/栈破坏——崩溃点往往远在肇事代码之后、且看似随机（真实案例见提交 `63e90e30`）。正确做法：以一个随测试函数销毁的局部 `QObject` 作 context（连接随之自动断开），或在测试结束前显式 `disconnect`。
+
+- **按测试类筛选**：test-qsynedit 支持 `--suite=类名`（如 `--suite=TestDocument`）只跑指定测试类，不带参数则跑全部。其它测试程序（`test-editor`、`test-cppparser`）尚未支持此参数，修改它们时应照此补上。
+- **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
+
+- 剪贴板相关测试（列模式 paste/cut/copy-paste 等）偶发失败，多为外部程序（QQ、百度网盘等）抢占剪贴板所致，与代码无关；先重跑或排查占用程序，不要据此改代码。
+- 仓库文件多为 CRLF 行尾；用 Python 等脚本批量替换时先转 LF 再匹配，否则可能匹配失败。
+
 打包工作流：`.github/workflows/build.yml`（发行版包）、`build-app.yml`（独立应用）、`feature-matrix.yml`、`winget.yml`。
 
 ## 代码风格与约定
@@ -108,6 +141,7 @@ CI（`.github/workflows/unit.yml`）在 Ubuntu + Qt 5 上运行的正是上述�
 
 ## 给 Agent 的备注
 
+- **代码注释和 git 提交信息一律使用英文**（设计文档语言随已有文档）。
 - 大的计划性改动（多批次重构/新功能）**必须在独立分支上进行**，不要直接在 master 上工作。
 - 分支合并回 master 前**必须先询问用户**，得到确认后再合并；不得擅自 push。
 - `BUILD.md`（以及 `BUILD_cn.md`/`BUILD_ru.md`）是权威的构建参考——在自创构建步骤之前请先参考它。
