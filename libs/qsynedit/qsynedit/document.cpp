@@ -119,7 +119,27 @@ void Document::reparseAll()
         mSyntaxer->nextToEol();
         mLines[i]->setSyntaxState(mSyntaxer->getState());
     }
+    // wholesale reparse: the block pairing must be rebuilt
+    mFoldStateDirty = true;
     emit linesReparsed(0, mLines.size());
+}
+
+// code-block pairing deltas of two syntax states: blockStarted/blockEnded/
+// blockEndedLastLine are properties of the line's own text and never go
+// stale when lines shift (unlike blockLevel, which is position-dependent
+// and would false-positive when a later batch merely repairs stale
+// states). A null old state means a brand-new line, which changes the
+// pairing only if it opens or closes a block itself
+static bool sameCodeBlockDeltas(const PSyntaxState &oldState, const PSyntaxState &newState)
+{
+    if (!oldState) {
+        return !(newState->blockStarted
+                 || newState->blockEnded
+                 || newState->blockEndedLastLine);
+    }
+    return oldState->blockStarted == newState->blockStarted
+            && oldState->blockEnded == newState->blockEnded
+            && oldState->blockEndedLastLine == newState->blockEndedLastLine;
 }
 
 int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
@@ -151,14 +171,26 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
         mSyntaxer->setLine(line, getLine(line), getLineSeq(line));
         mSyntaxer->nextToEol();
         PSyntaxState state = mSyntaxer->getState();
-        if (line >= endLine && state->equals(getSyntaxState(line)) ) {
+        PSyntaxState oldState = getSyntaxState(line);
+        if (line >= endLine && state->equals(oldState) ) {
             break;
         }
+        if (!mFoldStateDirty && !sameCodeBlockDeltas(oldState, state))
+            mFoldStateDirty = true;
         setSyntaxState(line, state);
         line++;
     } while (line < maxLine);
     emit linesReparsed(startLine, line);
     return line;
+}
+
+bool Document::lineHasCodeBlockDelta(int line) const
+{
+    PSyntaxState state = mLines[line]->syntaxState();
+    if (!state)
+        // unknown: conservative
+        return true;
+    return state->blockStarted || state->blockEnded || state->blockEndedLastLine;
 }
 
 void Document::notifyUndoRedoStateChanged()
@@ -382,6 +414,7 @@ QStringList Document::content() const
 void Document::beginUpdate()
 {
     if (mUpdateCount == 0) {
+        mFoldStateDirty = false;
         emit changing();
     }
     mUpdateCount++;
@@ -395,7 +428,7 @@ void Document::endUpdate()
         if (!mPendingChanges.isEmpty()) {
             DocumentChangeSet changes;
             changes.swap(mPendingChanges);
-            emit contentChanged(changes);
+            emit contentChanged(changes, mFoldStateDirty);
         }
         emit changed();
     }
@@ -524,6 +557,8 @@ void Document::deleteLines(int index, int numLines, bool parseToEnd)
     }
     for (int i=0;i<numLines;i++) {
         mLineSeqIndice.remove(mLines[index+i]->lineSeq());
+        if (!mFoldStateDirty && lineHasCodeBlockDelta(index+i))
+            mFoldStateDirty = true;
     }
     mLines.remove(index,numLines);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
@@ -540,6 +575,8 @@ void Document::moveLine(int from, int to, bool parseToEnd)
     Q_ASSERT(from >= 0 && from < mLines.count());
     Q_ASSERT(to >= 0 && to < mLines.count());
     beginUpdate();
+    if (!mFoldStateDirty && lineHasCodeBlockDelta(from))
+        mFoldStateDirty = true;
     PDocumentLine temp = mLines[from];
     mLines.remove(from);
     mLines.insert(to, temp);
@@ -564,6 +601,8 @@ void Document::deleteLine(int index, bool parseToEnd)
     QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index<mLines.count());
     beginUpdate();
+    if (!mFoldStateDirty && lineHasCodeBlockDelta(index))
+        mFoldStateDirty = true;
     mLineSeqIndice.remove(mLines[index]->lineSeq());
     mLines.removeAt(index);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());

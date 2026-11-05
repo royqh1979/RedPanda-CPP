@@ -414,7 +414,62 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 - 级联重算只用文档实例；两者扫描状态互不干扰；
 - 后台线程只允许用临时克隆。
 
-## 5. 代码折叠（待补）
+## 5. 代码折叠
+
+### 5.1 术语与命名约定
+
+- **CodeBlock**：折叠结构单元（`codefolding.h`，含 `fromLine`/`toLine`/`collapsed`/`parent`/`subBlocks`）。视图侧列表为 `mCodeBlocks`（per-view，多视图各自折叠）。
+- **foldState**：折叠相关的状态/标志命名（如 `foldStateDirty`）；特性开关沿用 `useCodeFolding`。
+- 两者不混用：结构单元一律 CodeBlock，状态/特性一律 fold。
+
+### 5.2 块列表的维护机制（现状）
+
+折叠结构派生自语法状态：每行 `SyntaxState` 存有 `blockLevel`（嵌套深度）和
+`blockStarted`/`blockEnded`/`blockEndedLastLine`（本行开/闭块数）。
+维护分两步（都在 `onDocumentContentChanged`）：
+
+1. **增量平移**：`processCodeBlocksOnLinesInserted`/`processFoldsOnLinesDeleted`/
+   `processFoldsOnLineMoved` 按 changeSet 平移块行号；插入行落入已折叠块、删除/
+   移动波及块边界时自动展开受影响块。
+2. **全量重扫**：`rescanCodeBlocks` → `internalScanCodeBlocks` 遍历全部行
+   （O(N)）从语法状态重建块配对；重建后用 `CodeBlockRangeKey{from,to}`
+   （`QMap` 键）把 collapsed 状态回贴到等价新块。
+
+### 5.3 foldStateDirty：跳过无意义重扫
+
+全量重扫（O(N)×视图数）绝大多数时候是浪费——函数体内打字不改变任何行的
+花括号计数。因此 `contentChanged` 带第二个参数 **`foldStateDirty`**（批次级
+元数据，随通知投递而非带外状态）：
+
+- **累积**（Document 内，outermost `beginUpdate` 清零，批次内累加）：
+  - `reparseLines` 覆盖行状态前比较新旧 state 的**块增量字段**
+    （`sameCodeBlockDeltas`）。注意只比 `blockStarted/blockEnded/
+    blockEndedLastLine`——这三个是**行文本的固有属性**，行号平移不会让其失效；
+    刻意**不比 `blockLevel`**（位置相关，会被前一批次留下的未收敛状态
+    在修复性重解析时误报）；
+  - `deleteLine`/`deleteLines`/`moveLine` 可能不重解析（`parseToEnd=false`），
+    改为检查被删/被移动行**已存状态**的增量字段（`lineHasCodeBlockDelta`，
+    未解析的行保守按有增量处理）；
+  - 插入行的增量由紧随其后对插入行的重解析捕获（旧状态为空 ⇒ 只看新状态
+    增量）；`reparseAll` 整体置脏。
+- **消费**：`onDocumentContentChanged` 中 `foldStateDirty==false` 时跳过
+  `rescanCodeBlocks`（块已被平移步骤维护，天然正确），只补 gutter 重绘；
+  为真时照常全量重扫。`setDocument`（视图挂接共享文档）等路径仍显式调
+  `rescanCodeBlocks`，不依赖标志。
+- **配对变化的完备性论证**：配对要变，本批次必有某行的花括号计数变化
+  （文本改动经重解析比较捕获）或有带增量的行被插入/删除/移动（结构检查
+  捕获）；blockLevel 变化只能是这些变化的下游结果，已由同一批次上报。
+
+### 5.4 后续优化方向（记录在案，未做）
+
+- **局部重扫**：fold 真脏时从受影响行起扫，以旧块重建 parent 栈，新旧开块
+  栈按 fromLine 身份对齐即停；未受影响块按对象保留（collapsed 自然幸存）。
+  正确性边界：state 收敛 ≠ 配对收敛（反例：`{` 从 10 挪到 20，100 行的 `}`
+  配对改变但本行 state 不变），resync 必须比开块栈身份，不能停在 state
+  收敛线；退化情形 = 现状全扫。
+- **Scintilla 模型**：不维护块列表，折叠结构按 per-line level 序列按需推导；
+  fold 结构上移到 Document（多视图共享结构、视图仅存 collapsed 集合）。
+  性价比低，不主动做。
 
 ## 6. 信号机制
 
@@ -428,9 +483,22 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
   `properSetLine` / `properInsertLine(s)` / `properDeleteLines` / `properMoveLine`
   只是原语的透传包装；
 - **视图侧维护**（折叠映射平移、滚动条修正、重绘、对外结构信号转发）由
-  `Document::contentChanged(DocumentChangeSet)` 信号驱动，QSynEdit 在槽
-  `onDocumentContentChanged`（`qsynedit.cpp`）中完成。多视图下每个视图各自挂接、
-  各自维护（见 `qsynedit-multiview-analysis.md`）。
+  `Document::contentChanged(DocumentChangeSet, bool foldStateDirty)` 信号驱动，
+  QSynEdit 在槽 `onDocumentContentChanged`（`qsynedit.cpp`）中完成。多视图下
+  每个视图各自挂接、各自维护（见 `qsynedit-multiview-analysis.md`）。
+  `foldStateDirty` 是批次级元数据（见 5.3），不是带外状态。
+
+**批次契约（对外编辑操作）**：Document 所有会改内容的公开操作必须在
+`beginUpdate/endUpdate` 批次内执行——`setText`/`setContents`/`putLine`/
+`addLine`/`addLines`/`clear`/`deleteLine`/`deleteLines`/`moveLine`/
+`insertLine`/`insertLines`/`loadFromFile`。受保护的原语（`insertItem`/
+`addItem`/`internalClear`）自身也成对包裹，因此公开操作可自由嵌套组合
+（`clear` 组合 `deleteLines`+`putLine` 等）；嵌套计数下只有最外层批次发
+`changing`/`contentChanged`/`changed`（由 `test_edit_operations_are_batched`
+逐一验证）。`setSyntaxState` 只改语法状态不改内容，不在此列。
+批次结束语义的消费方：`contentChanged`（视图的全部编辑后维护，含
+foldStateDirty 的交付）、`changed`（`onLinesChanged`）、undo 记录的边界
+（`addChangeToUndo` 在视图编辑路径按操作记录）。
 
 **批次与发射时机**：`QSynEdit::beginEditing/endEditing` 同时包裹
 `Document::beginUpdate/endUpdate`（两者都计数嵌套），文档批次边界 == 编辑操作边界。

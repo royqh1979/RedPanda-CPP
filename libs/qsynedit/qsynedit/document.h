@@ -468,7 +468,7 @@ signals:
      * idempotent, fact-driven maintenance; cross-component consistency
      * repair (e.g. re-snapping the selection to the caret) is forbidden.
      */
-    void contentChanged(const DocumentChangeSet &changes);
+    void contentChanged(const DocumentChangeSet &changes, bool foldStateDirty);
     /**
      * @brief emitted after an undo/redo operation has been performed on the
      * shared stacks (by whichever view triggered it), so all views can
@@ -519,6 +519,13 @@ public:
     int charToGlyphIndex(const QString& str, const QList<int> &glyphStartCharList, int charPos) const;
     QList<int> getGlyphStartPositionList(int line);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
+    /**
+     * @brief whether the stored syntax state of `line` carries
+     * code-block pairing deltas (blockStarted/blockEnded/
+     * blockEndedLastLine). Unparsed lines (null state) are treated
+     * conservatively as carrying deltas.
+     */
+    bool lineHasCodeBlockDelta(int line) const;
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
 private:
@@ -529,6 +536,7 @@ private:
     bool mAppendNewLineAtEOF;
     int mUpdateCount;
     DocumentChangeSet mPendingChanges;
+    bool mFoldStateDirty = false;
 
     PUndoList mUndoList;
     PRedoList mRedoList;

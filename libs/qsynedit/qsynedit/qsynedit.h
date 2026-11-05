@@ -832,7 +832,7 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onDocumentContentChanged(const DocumentChangeSet &changes);
+    void onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty);
     void onDocumentSyntaxerChanged();
     void onDocumentLinesReparsed(int startLine, int endLine);
     //void onRedoAdded();

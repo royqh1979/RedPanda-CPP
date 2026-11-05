@@ -858,7 +858,7 @@ void TestDocument::test_content_changed()
 {
     QList<DocumentChangeSet> batches;
     connect(mDoc.get(), &Document::contentChanged, this,
-            [&batches](const DocumentChangeSet &changes){
+            [&batches](const DocumentChangeSet &changes, bool){
         batches.append(changes);
     });
     auto checkEntry = [](const DocumentChange &change, DocumentChangeKind kind,
@@ -996,6 +996,127 @@ void TestDocument::test_crash_on_debian_amd_64()
     QCOMPARE(mDoc->getLine(0), "#include <iostream>");
     QCOMPARE(mDoc->charToGlyphIndex(0, 0),0);
 }
+
+void TestDocument::test_fold_state_dirty()
+{
+    // foldStateDirty is delivered as a contentChanged parameter
+    bool foldStateDirty = false;
+    connect(mDoc.get(), &Document::contentChanged, this,
+            [&](const DocumentChangeSet &, bool dirty){
+        foldStateDirty = dirty;
+    });
+
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+    mDoc->setText("int main() {\n    int x = 1;\n}\n");
+    // reparseAll is wholesale: always dirty
+    QVERIFY(foldStateDirty);
+
+    // an edit that cannot change the block pairing leaves the flag clear
+    mDoc->putLine(1, "    int x = 2;", false);
+    QVERIFY(!foldStateDirty);
+
+    // inserting a plain line: still clear
+    mDoc->insertLine(2, "    int y = 3;", false);
+    QVERIFY(!foldStateDirty);
+
+    // inserting a line that opens a block: dirty (its fresh state carries
+    // a blockStarted delta)
+    mDoc->insertLine(2, "    if (x) {", false);
+    QVERIFY(foldStateDirty);
+
+    // editing inside the new block without touching braces: clear again
+    mDoc->putLine(3, "    int z = 4;", false);
+    QVERIFY(!foldStateDirty);
+
+    // deleting a plain line without reparse: clear
+    mDoc->deleteLine(1, false);
+    QVERIFY(!foldStateDirty);
+
+    // deleting a line that opens a block without reparse: dirty via the
+    // deleted line's stored state
+    mDoc->deleteLine(1, false); // deletes "    if (x) {"
+    QVERIFY(foldStateDirty);
+
+    // replacing a brace line via putLine: dirty
+    mDoc->putLine(2, "    int w = 5;", false); // replaces "}"
+    QVERIFY(foldStateDirty);
+
+    // moving a plain line among plain lines: clear
+    mDoc->setText("int main() {\n    int a;\n    int b;\n    int c;\n}\n");
+    mDoc->moveLine(1, 2, false); // moves "    int a;" after "    int b;"
+    QVERIFY(!foldStateDirty);
+
+    // moving a brace line: dirty via the moved line's stored state
+    mDoc->moveLine(0, 1, false); // moves "int main() {"
+    QVERIFY(foldStateDirty);
+}
+
+void TestDocument::test_edit_operations_are_batched()
+{
+    // contract: every public content edit operation runs inside exactly
+    // one update batch: changing() once, contentChanged() once (with the
+    // change set), changed() once, and inUpdate() is false afterwards
+    int changingCount = 0;
+    int contentChangedCount = 0;
+    int changedCount = 0;
+    connect(mDoc.get(), &Document::changing, this, [&]{
+        changingCount++;
+    });
+    connect(mDoc.get(), &Document::contentChanged, this,
+            [&](const DocumentChangeSet &changes, bool){
+        contentChangedCount++;
+        QVERIFY(!changes.isEmpty());
+    });
+    connect(mDoc.get(), &Document::changed, this, [&]{
+        changedCount++;
+    });
+
+    QString fixture = writeFixture("batch_fixture.txt", "line0\nline1\nline2\nline3\n");
+    auto verify = [&](const char *name, const auto &op) {
+        mDoc->setText("line0\nline1\nline2\nline3");
+        changingCount = 0;
+        contentChangedCount = 0;
+        changedCount = 0;
+        op();
+        QVERIFY2(changingCount == 1, name);
+        QVERIFY2(contentChangedCount == 1, name);
+        QVERIFY2(changedCount == 1, name);
+        QVERIFY2(!mDoc->inUpdate(), name);
+    };
+
+    verify("setText", [&]{ mDoc->setText("a\nb"); });
+    verify("setContents", [&]{ mDoc->setContents({"a", "b"}); });
+    verify("putLine", [&]{ mDoc->putLine(0, "changed", false); });
+    verify("addLine", [&]{ mDoc->addLine("new"); });
+    verify("addLines", [&]{ mDoc->addLines({"a", "b"}); });
+    verify("insertLine", [&]{ mDoc->insertLine(1, "ins", false); });
+    verify("insertLines", [&]{ mDoc->insertLines(1, 2, false); });
+    verify("deleteLine", [&]{ mDoc->deleteLine(1, false); });
+    verify("deleteLines", [&]{ mDoc->deleteLines(1, 2, false); });
+    verify("moveLine", [&]{ mDoc->moveLine(0, 2, false); });
+    verify("clear", [&]{ mDoc->clear(); });
+    verify("loadFromFile", [&]{
+        QByteArray encoding;
+        mDoc->loadFromFile(fixture, ENCODING_AUTO_DETECT, encoding);
+    });
+
+    // an explicit outer batch coalesces several operations into one
+    // notification round
+    mDoc->setText("line0\nline1\nline2\nline3");
+    changingCount = 0;
+    contentChangedCount = 0;
+    changedCount = 0;
+    mDoc->beginUpdate();
+    mDoc->insertLine(1, "a", false);
+    mDoc->putLine(2, "b", false);
+    mDoc->deleteLine(3, false);
+    mDoc->endUpdate();
+    QCOMPARE(changingCount, 1);
+    QCOMPARE(contentChangedCount, 1);
+    QCOMPARE(changedCount, 1);
+    QVERIFY(!mDoc->inUpdate());
+}
+
 
 void TestDocument::initSignalTest()
 {

@@ -48,6 +48,19 @@
 #define UPDATE_VERTICAL_SCROLLBAR_EVENT ((QEvent::Type)(QEvent::User+2))
 
 namespace QSynedit {
+
+// key for preserving the collapsed flag across a fold-block rescan:
+// matches blocks by their (fromLine, toLine) range without string
+// formatting
+struct CodeBlockRangeKey {
+    int from;
+    int to;
+};
+
+inline bool operator<(const CodeBlockRangeKey &a, const CodeBlockRangeKey &b)
+{
+    return a.from < b.from || (a.from == b.from && a.to < b.to);
+}
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mEditingCount{0},
     mDropped{false},
@@ -4243,10 +4256,10 @@ void QSynEdit::rescanCodeBlocks()
     beginInternalChanges();
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mCodeBlocks.count() > 0) {
-        QMap<QString,PCodeBlock> rangeIndexes;
+        QMap<CodeBlockRangeKey,PCodeBlock> rangeIndexes;
         foreach(const PCodeBlock& block, mCodeBlocks) {
             if (block->collapsed)
-                rangeIndexes.insert(QString("%1-%2").arg(block->fromLine).arg(block->toLine),block);
+                rangeIndexes.insert({block->fromLine, block->toLine},block);
         }
 
         // Add folds to a separate list
@@ -4254,7 +4267,7 @@ void QSynEdit::rescanCodeBlocks()
 
         // Combine new with old folds, preserve parent order
         foreach(const PCodeBlock &tempBlock, mCodeBlocks) {
-            PCodeBlock b2=rangeIndexes.value(QString("%1-%2").arg(tempBlock->fromLine).arg(tempBlock->toLine),
+            PCodeBlock b2=rangeIndexes.value({tempBlock->fromLine, tempBlock->toLine},
                                   PCodeBlock());
             if (b2) {
                 tempBlock->collapsed=true;
@@ -7664,7 +7677,7 @@ CharPos shiftPosByChange(const CharPos &pos, const DocumentChange &change)
 }
 }
 
-void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
+void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty)
 {
     // Structural guard: the signal is emitted at the outermost endUpdate,
     // so the document must be quiescent here (see design doc chapter 6).
@@ -7714,8 +7727,14 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes)
     // rebuild fold ranges from the (shared) syntax states: incremental
     // shifts above only track line numbers, they don't notice blocks
     // appearing/disappearing. Every view needs this, not just the one
-    // that initiated the edit.
-    rescanCodeBlocks();
+    // that initiated the edit. Skip it entirely when the batch proved
+    // no fold-relevant syntax state changed (the common typing case).
+    if (foldStateDirty)
+        rescanCodeBlocks();
+    else
+        // rescanCodeBlocks() normally repaints the gutter; keep that
+        // behavior for shifted line numbers
+        invalidateGutter();
     if (mEditingCount == 0) {
         // this view did not initiate the edit (the initiator is inside
         // endEditing with mEditingCount>0 and its caret/selection are

@@ -95,6 +95,9 @@ private slots:
 
     void test_crash_on_debian_amd_64();
 
+    void test_fold_state_dirty();
+    void test_edit_operations_are_batched();
+
     void initSignalTest();
     void onChanged();
 };
