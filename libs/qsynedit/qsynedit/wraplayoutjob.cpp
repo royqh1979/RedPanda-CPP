@@ -58,6 +58,7 @@ void WrapLayoutJob::run()
         WrapLayout layout = computeWrapLayoutForLine(
                     mDocument, line, syntaxer.get(), mGlyphCalculator, mBaseFont, mWrapWidth, mWordWrap);
         mLayouts.insert(seq, layout);
+        mLines.insert(seq, line);
         if (mLayouts.count() >= 256) {
             QMutexLocker locker(&mSharedState->mutex);
             postBatch(false);
@@ -87,11 +88,13 @@ void WrapLayoutJob::postBatch(bool finished)
     batch.contentVersion = mContentVersion;
     batch.document = mDocument;
     batch.layouts = mLayouts;
+    batch.lines = mLines;
     batch.finished = finished;
     emit layoutsReady(batch);
     // post-and-forget: this job never reads/writes mLayouts again after
     // posting; the connection owns its own copy now
     mLayouts.clear();
+    mLines.clear();
 }
 
 void WrapLayoutJob::postAborted()

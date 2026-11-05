@@ -31,6 +31,7 @@
 #include "codefolding.h"
 #include "document.h"
 #include "glyphcalculator.h"
+#include "rowindex.h"
 #include "types.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
@@ -139,6 +140,9 @@ struct WrapLayoutBatch {
     int contentVersion = 0;
     PDocument document;
     QHash<size_t, WrapLayout> layouts;
+    // seq -> line index at compute time (validated against the seq when
+    // applied, since lines may have shifted since)
+    QHash<size_t, int> lines;
     bool finished = false;
     // the job aborted early because the document was modified mid-computation:
     // a pure control signal (no layouts delivered), the view must reschedule
@@ -295,8 +299,6 @@ public:
     // scroll so that global display row globalRow becomes the top row
     // (line-aligned); clamped at 0 and at the maximum scroll position
     void scrollToRow(int globalRow);
-    int foldRowToLine(int row) const;
-    int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
     void invalidateLine(int line);
@@ -716,6 +718,10 @@ private:
      * patches the links of the frozen blocks below (see design doc 5.x).
      */
     void partialScanCodeBlocks(int fromLine, int reparseToLine);
+    // rebuild the row index's hidden flags from the fold ranges: unhide all,
+    // then hide the effective collapsed ranges (top-level collapsed blocks
+    // never overlap; the fold start line itself stays visible)
+    void syncFoldVisibility();
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
@@ -884,6 +890,13 @@ private:
     // SetLine invalidates the line's entry). See design doc 2.1 item 3.
     GlyphCalculator mGlyphCalculator{QFont("monospace")};
     mutable QHash<size_t, WrapLayout> mWrapLayouts;
+    // per-view row index: line/seg <-> global row mapping and fold
+    // visibility. Holds the same cache-or-1 segment estimates as
+    // mWrapLayouts (point-updated whenever a layout is computed or
+    // accepted); hidden flags mirror the effective collapsed fold ranges.
+    // All mapping queries are O(log N) tree operations; see
+    // docs/qsynedit-wordwrap-plan.md (batch B).
+    mutable RowIndex mRowIndex;
     // shared with in-flight WrapLayoutJobs: the destructor marks the view
     // dead, serialized with the jobs' result posting
     PWrapJobSharedState mWrapJobState = std::make_shared<WrapJobSharedState>();

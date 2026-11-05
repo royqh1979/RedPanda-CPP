@@ -155,6 +155,21 @@ void setSegCountRec(RowIndexNode *n, int line, int segs)
     recalc(n);
 }
 
+// every leaf gets `segs`; hidden flags stay, so hiddenSegs is rebuilt
+// bottom-up. A pending lazy tag overrides the (stale) own-flag math:
+// tagged subtrees are uniform by invariant.
+void resetSegCountsRec(RowIndexNode *n, int segs)
+{
+    if (n->left)
+        resetSegCountsRec(n->left, segs);
+    if (n->right)
+        resetSegCountsRec(n->right, segs);
+    n->segs = segs;
+    recalc(n);
+    if (n->tag)
+        n->hiddenSegs = (n->tag == 1) ? n->totalSegs : 0;
+}
+
 // node covers the absolute line range [base, base + n->lines)
 void setHiddenRec(RowIndexNode *n, int base, int from, int to, char tag)
 {
@@ -359,6 +374,13 @@ void RowIndex::setSegCount(int line, int n)
     Q_ASSERT(line >= 0 && line < count());
     Q_ASSERT(n >= 1);
     setSegCountRec(mRoot, line, n);
+}
+
+void RowIndex::resetSegCounts(int n)
+{
+    Q_ASSERT(n >= 1);
+    if (mRoot)
+        resetSegCountsRec(mRoot, n);
 }
 
 bool RowIndex::isHidden(int line) const

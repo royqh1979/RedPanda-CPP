@@ -65,6 +65,10 @@ public:
     int segCount(int line) const;
     // n must be >= 1
     void setSegCount(int line, int n);
+    // bulk reset of every line's segment count (e.g. back to the
+    // cache-or-1 estimate after the layout cache is invalidated);
+    // hidden flags and lazy tags are preserved. O(N), no allocation.
+    void resetSegCounts(int n = 1);
 
     bool isHidden(int line) const;
     // inclusive line range

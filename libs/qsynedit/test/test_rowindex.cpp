@@ -245,6 +245,36 @@ void TestRowIndex::test_set_seg_count()
     QCOMPARE(tree.totalSegCount(), 5);
 }
 
+void TestRowIndex::test_reset_seg_counts()
+{
+    RowIndex tree;
+    tree.reset(6);
+    tree.setSegCount(1, 4);
+    tree.setSegCount(3, 2);
+    tree.setSegCount(4, 5);
+    tree.setHidden(3, 4, true);
+    QCOMPARE(tree.totalSegCount(), 14);
+    QCOMPARE(tree.visibleSegCount(), 14 - 7);
+    tree.resetSegCounts();
+    QCOMPARE(tree.totalSegCount(), 6);
+    QCOMPARE(tree.visibleSegCount(), 4);
+    QCOMPARE(tree.segCount(1), 1);
+    QCOMPARE(tree.segCount(3), 1);
+    // hidden flags survive the reset
+    QVERIFY(tree.isHidden(3));
+    QVERIFY(tree.isHidden(4));
+    QVERIFY(!tree.isHidden(2));
+    QCOMPARE(tree.hiddenSegsBefore(5), 2);
+    // and queries keep working afterwards
+    int line, seg;
+    tree.lineSegAtVisibleRow(3, line, seg);
+    QCOMPARE(line, 5);
+    QCOMPARE(seg, 0);
+    tree.resetSegCounts(3);
+    QCOMPARE(tree.totalSegCount(), 18);
+    QCOMPARE(tree.visibleSegCount(), 12);
+}
+
 void TestRowIndex::test_hidden_basic()
 {
     RowIndex tree;

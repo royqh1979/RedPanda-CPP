@@ -396,7 +396,9 @@ void TestQSyneditDisplay::test_wordwrap_batch_stale_rejection()
     QVERIFY(mEdit->mWrapLayouts.contains(mEdit->document()->getLineSeq(1)));
 
     // after an edit, a result computed BEFORE the edit is rejected for that
-    // line, while other lines are still accepted
+    // line, while other lines are still accepted. (Since batch B the edit
+    // itself relayouts the edited line synchronously, so rejection shows
+    // as the stale batch not overwriting that fresh layout.)
     size_t editedSeq = mEdit->document()->getLineSeq(1);
     size_t otherSeq = mEdit->document()->getLineSeq(2);
     mEdit->mWrapLayouts.remove(editedSeq);
@@ -407,8 +409,15 @@ void TestQSyneditDisplay::test_wordwrap_batch_stale_rejection()
     early.finished = false;
     mEdit->setCaretPos(CharPos{0,1});
     QTest::keyPress(mEdit.get(), 'x');
+    // the edit synchronously relayout the edited line
+    QVERIFY(mEdit->mWrapLayouts.contains(editedSeq));
+    WrapLayout freshLayout = mEdit->mWrapLayouts.value(editedSeq);
     mEdit->onWrapLayoutBatch(early);
-    QVERIFY(!mEdit->mWrapLayouts.contains(editedSeq));
+    // the stale batch must not overwrite it
+    QCOMPARE(mEdit->mWrapLayouts.value(editedSeq).segmentStartChars,
+             freshLayout.segmentStartChars);
+    QCOMPARE(mEdit->mWrapLayouts.value(editedSeq).totalWidth,
+             freshLayout.totalWidth);
     QVERIFY(mEdit->mWrapLayouts.contains(otherSeq));
 
     // a batch computed AFTER the edit is accepted for the edited line

@@ -64,6 +64,9 @@ private:
     bool mWordWrap;
     PWrapJobSharedState mSharedState;
     QHash<size_t, WrapLayout> mLayouts;
+    // seq -> line index at compute time, delivered alongside mLayouts so
+    // the view can point-update its row index
+    QHash<size_t, int> mLines;
 };
 
 }

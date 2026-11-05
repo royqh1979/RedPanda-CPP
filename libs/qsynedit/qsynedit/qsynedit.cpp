@@ -80,6 +80,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     // parentship: when several views share it, deleting the first view
     // must not delete the document out from under the others
     mDocument = std::make_shared<Document>();
+    mRowIndex.reset(mDocument->count());
 
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
@@ -195,23 +196,9 @@ int QSynEdit::lineCount() const
 
 int QSynEdit::displayLineCount() const
 {
-    if (mOptions.testFlag(EditorOption::WordWrap)) {
-        // lower bound while the background job is still filling the cache:
-        // computed lines count exactly, uncomputed lines count as 1 segment
-        int total = 0;
-        int count = mDocument->count();
-        for (int l=0;l<count;l++) {
-            if (!lineVisibleForWrap(l))
-                continue;
-            size_t seq = mDocument->getLineSeq(l);
-            auto it = mWrapLayouts.constFind(seq);
-            total += (it != mWrapLayouts.constEnd()) ? it->segmentStartChars.count() : 1;
-        }
-        return total;
-    }
-    // returns the count of display rows (rows are 0-based internally,
-    // so the last row index is lineToRow(count-1))
-    return lineToRow(mDocument->count()-1)+1;
+    // O(1): root sum of the row index. Uncomputed lines count as 1
+    // segment until the background layout refines them (lower bound)
+    return mRowIndex.visibleSegCount();
 }
 
 int QSynEdit::wrapWidth() const
@@ -221,45 +208,22 @@ int QSynEdit::wrapWidth() const
 
 bool QSynEdit::lineVisibleForWrap(int line) const
 {
-    if (!useCodeFolding() || line == 0)
+    // clamp against the TREE's count, not the document's: mid-batch the
+    // document is already edited but the row index only catches up in the
+    // contentChanged slot
+    if (line <= 0 || line >= mRowIndex.count())
         return true;
-    return foldLineToRow(line) > foldLineToRow(line-1);
+    return !mRowIndex.isHidden(line);
 }
 
 void QSynEdit::rowToLineSegment(int row, int &line, int &segment) const
 {
-    if (!mOptions.testFlag(EditorOption::WordWrap)) {
-        line = rowToLine(row);
-        segment = 0;
-        return;
-    }
-    int acc = 0;
-    int count = mDocument->count();
-    for (int l=0;l<count;l++) {
-        if (!lineVisibleForWrap(l))
-            continue;
-        int c = wrapSegmentCount(l);
-        if (row < acc + c) {
-            line = l;
-            segment = row - acc;
-            return;
-        }
-        acc += c;
-    }
-    line = count-1;
-    segment = wrapSegmentCount(line)-1;
+    mRowIndex.lineSegAtVisibleRow(row, line, segment);
 }
 
 int QSynEdit::lineSegmentToRow(int line, int segment) const
 {
-    if (!mOptions.testFlag(EditorOption::WordWrap))
-        return lineToRow(line);
-    int row = 0;
-    for (int l=0;l<line;l++) {
-        if (lineVisibleForWrap(l))
-            row += wrapSegmentCount(l);
-    }
-    return row + segment;
+    return mRowIndex.visibleSegsBefore(line) + segment;
 }
 
 int QSynEdit::wrapSegmentCount(int line) const
@@ -289,7 +253,14 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
     if (it != mWrapLayouts.constEnd())
         return it.value();
     WrapLayout layout = computeWrapLayout(line);
-    return mWrapLayouts.insert(seq, layout).value();
+    auto inserted = mWrapLayouts.insert(seq, layout);
+    // keep the row index's estimate in sync with the exact layout. Guard:
+    // mid-batch this may compute a line the index does not have yet (it is
+    // only synced in the contentChanged slot, which restores such cached
+    // counts for the inserted lines)
+    if (line < mRowIndex.count())
+        mRowIndex.setSegCount(line, layout.segmentStartChars.count());
+    return inserted.value();
 }
 
 void QSynEdit::charToSegmentCoord(int line, int ch, int &segment, int &x) const
@@ -328,10 +299,10 @@ bool QSynEdit::advanceLineSegment(int &line, int &segment) const
             return true;
         }
     }
-    for (int l=line+1; l<count; l++) {
-        if (!lineVisibleForWrap(l))
-            continue;
-        line = l;
+    // skip folded regions whole instead of stepping through them
+    int next = mRowIndex.nextVisibleLine(line);
+    if (next >= 0) {
+        line = next;
         segment = 0;
         return true;
     }
@@ -356,11 +327,11 @@ bool QSynEdit::retreatLineSegment(int &line, int &segment) const
             return true;
         }
     }
-    for (int l=line-1; l>=0; l--) {
-        if (!lineVisibleForWrap(l))
-            continue;
-        line = l;
-        segment = wrapSegmentCount(l)-1;
+    // skip folded regions whole instead of stepping through them
+    int prev = mRowIndex.prevVisibleLine(line);
+    if (prev >= 0) {
+        line = prev;
+        segment = wrapSegmentCount(prev)-1;
         return true;
     }
     // no visible segment above: keep the position at the first visible
@@ -449,7 +420,16 @@ void QSynEdit::adjustTopPosToAnchor()
     mTopSegment = minMax(mTopSegment, 0, wrapSegmentCount(mTopLine)-1);
     int line = mTopLine;
     int segment = mTopSegment;
-    int newTopPos = lineSegmentToRow(line, segment) * mTextHeight;
+    // the anchor's row must be EXACT right now (the viewport content must
+    // not jump), so compute the preceding lines' layouts synchronously
+    // instead of using the row index's cache-or-1 estimates (batch C
+    // revisits this anchor derivation)
+    int row = 0;
+    for (int l = 0; l < line; l++) {
+        if (lineVisibleForWrap(l))
+            row += wrapSegmentCount(l);
+    }
+    int newTopPos = (row + segment) * mTextHeight;
     setTopPos(newTopPos);
     if (mTopPos == newTopPos) {
         // no clamping: the incremental anchor walk inside setTopPos is
@@ -530,6 +510,13 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
             mWrapLayouts.insert(seq, it.value());
         if (dirty != mWrapDirtySeqs.constEnd())
             mWrapDirtySeqs.erase(dirty);
+        // point-update the row index with the refined segment count; the
+        // line index the worker recorded is validated against the seq
+        // (lines may have shifted since the batch was computed)
+        int line = batch.lines.value(seq, -1);
+        if (line >= 0 && line < mDocument->count()
+                && mDocument->getLineSeq(line) == seq)
+            mRowIndex.setSegCount(line, it->segmentStartChars.count());
     }
     if (batch.finished) {
         mWrapAllComputed = mWrapDirtySeqs.isEmpty();
@@ -1390,6 +1377,9 @@ void QSynEdit::invalidateAllLineMetrics()
     mWrapDirtySeqs.clear();
     mWrapAllComputed = false;
     mMaxLineWidthSeq = 0;
+    // every cached layout is gone: the row index falls back to the
+    // 1-segment estimate for all lines (hidden flags are kept)
+    mRowIndex.resetSegCounts();
     // eager: recompute in the background on every full invalidation
     scheduleWrapLayoutJob();
 }
@@ -1471,61 +1461,16 @@ int QSynEdit::getLineIndent(const QString &lineText) const
 
 int QSynEdit::rowToLine(int row) const
 {
-    if (mOptions.testFlag(EditorOption::WordWrap)) {
-        int line, segment;
-        rowToLineSegment(row, line, segment);
-        return line;
-    }
-    int line;
-    if (useCodeFolding())
-        line = foldRowToLine(row);
-    else
-        line = row;
-    if (line<0)
-        line = 0;
-    if (line>=mDocument->count())
-        line = mDocument->count()-1;
+    int line, segment;
+    mRowIndex.lineSegAtVisibleRow(row, line, segment);
     return line;
 }
 
 int QSynEdit::lineToRow(int line) const
 {
-    if (mOptions.testFlag(EditorOption::WordWrap))
-        return lineSegmentToRow(line, 0);
-    if (useCodeFolding())
-        return foldLineToRow(line);
-    else
-        return line;
+    return mRowIndex.visibleSegsBefore(line);
 }
 
-int QSynEdit::foldRowToLine(int row) const
-{
-    int resultLine = row;
-    for (int i=0;i<mCodeBlocks.count();i++) {
-        PCodeBlock range = mCodeBlocks[i];
-        if (range->collapsed && !range->parentCollapsed() && range->fromLine < resultLine) {
-            resultLine += range->linesCollapsed();
-        }
-    }
-    return resultLine;
-}
-
-int QSynEdit::foldLineToRow(int line) const
-{
-    int resultRow = line;
-    for (int i=mCodeBlocks.count()-1;i>=0;i--) {
-        PCodeBlock range =mCodeBlocks[i];
-        if (range->collapsed && !range->parentCollapsed()) {
-            // Line is found after fold
-            if (range->toLine < line)
-                resultRow -= range->linesCollapsed();
-            // Inside fold
-            else if (range->fromLine < line && line <= range->toLine)
-                resultRow -= line - range->fromLine;
-        }
-    }
-    return resultRow;
-}
 
 void QSynEdit::setDefaultKeystrokes()
 {
@@ -4058,6 +4003,7 @@ void QSynEdit::uncollapse(const PCodeBlock &foldRange)
 {
     beginInternalChanges();
     foldRange->collapsed = false;
+    syncFoldVisibility();
 
     // Redraw the collapsed line
     invalidateLines(foldRange->fromLine, INT_MAX);
@@ -4074,6 +4020,7 @@ void QSynEdit::collapse(const PCodeBlock &foldRange)
 {
     beginInternalChanges();
     foldRange->collapsed = true;
+    syncFoldVisibility();
 
     // Extract caret from fold
     if ((mCaretLine > foldRange->fromLine) && (mCaretLine <= foldRange->toLine)) {
@@ -4289,10 +4236,30 @@ void QSynEdit::rescanCodeBlocks()
     partialScanCodeBlocks(0, mDocument->count());
 }
 
-void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
+void QSynEdit::syncFoldVisibility()
 {
+    // rebuild the row index's hidden flags from the fold ranges: unhide
+    // everything, then hide the effective collapsed ranges (the fold start
+    // line itself stays visible)
+    int count = mDocument->count();
+    if (count > 0)
+        mRowIndex.setHidden(0, count - 1, false);
     if (!useCodeFolding())
         return;
+    foreach (const PCodeBlock &block, mCodeBlocks) {
+        if (block->collapsed && !block->parentCollapsed()
+                && block->toLine > block->fromLine)
+            mRowIndex.setHidden(block->fromLine + 1, block->toLine, true);
+    }
+}
+
+void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
+{
+    if (!useCodeFolding()) {
+        // folding off: nothing may stay hidden in the row index
+        syncFoldVisibility();
+        return;
+    }
 
     beginInternalChanges();
     // snapshot of the (already shift-maintained) block list
@@ -4440,6 +4407,8 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
 #ifdef QSYNEDIT_TEST
     emit foldsRescaned();
 #endif
+    // the fold structure changed: rebuild the row index's hidden flags
+    syncFoldVisibility();
     invalidateGutter();
     endInternalChanges();
 }
@@ -5717,6 +5686,8 @@ void QSynEdit::setUseCodeFolding(bool value)
 {
     if (mUseCodeFolding!=value) {
         mUseCodeFolding = value;
+        // toggling folding off must unhide everything in the row index
+        syncFoldVisibility();
     }
 }
 
@@ -5813,6 +5784,9 @@ void QSynEdit::setDocument(const PDocument &document)
     disconnect(mDocument.get(), nullptr, this, nullptr);
     disconnect(mUndoList.get(), nullptr, this, nullptr);
     mDocument = document;
+    // the row index mirrors the new document's structure; the fold
+    // visibility is synced by the rescan below
+    mRowIndex.reset(document->count());
     // the undo/redo stacks are owned by the document; the view re-points
     // its aliases and inherits the shared history as-is
     mUndoList = mDocument->undoList();
@@ -7813,6 +7787,17 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
         switch (change.kind) {
         case DocumentChangeKind::Insert:
             processCodeBlocksOnLinesInserted(change.line, change.count);
+            // the row index mirrors the document's structure (new lines
+            // get the 1-segment estimate and are visible)
+            mRowIndex.insertLines(change.line, change.count);
+            // layouts computed mid-batch (before the index caught up) are
+            // already cached: restore their exact segment counts without
+            // forcing computation of the rest
+            for (int i = change.line; i < change.line + change.count; i++) {
+                auto it = mWrapLayouts.constFind(mDocument->getLineSeq(i));
+                if (it != mWrapLayouts.constEnd())
+                    mRowIndex.setSegCount(i, it->segmentStartChars.count());
+            }
             emit linesInserted(change.line, change.count);
             scrollbarChanged = true;
             if (invalidateFrom < 0 || change.line < invalidateFrom)
@@ -7820,6 +7805,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             break;
         case DocumentChangeKind::Delete:
             processFoldsOnLinesDeleted(change.line, change.count);
+            mRowIndex.eraseLines(change.line, change.count);
             emit linesDeleted(change.line, change.count);
             scrollbarChanged = true;
             if (invalidateFrom < 0 || change.line < invalidateFrom)
@@ -7830,6 +7816,12 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             break;
         case DocumentChangeKind::Move:
             processFoldsOnLineMoved(change.line, change.count);
+            // Move = erase + insert in the row index; the moved line's
+            // layout survives (its seq is unchanged), so restore its exact
+            // segment count from the cache right away
+            mRowIndex.eraseLines(change.line, 1);
+            mRowIndex.insertLines(change.count, 1);
+            mRowIndex.setSegCount(change.count, wrapSegmentCount(change.count));
             emit lineMoved(change.line, change.count);
             scrollbarChanged = true;
             changeFrom = std::min(change.line, change.count);
@@ -7845,6 +7837,10 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
                 mWrapLayouts.remove(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;
+                // force an immediate synchronous relayout of the edited
+                // line and point-update the row index with its exact
+                // segment count
+                mRowIndex.setSegCount(i, wrapSegmentCount(i));
             }
             break;
         }
