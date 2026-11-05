@@ -358,6 +358,12 @@ public:
     bool hasCodeBlock(int fromLine, int toLine) const; // for testing
     int subBlockCounts(int fromLine, int toLine) const;
     bool isCollapsed(int fromLine, int toLine) const;
+    // (fromLine, toLine, collapsed) snapshot of the whole fold list, for
+    // differential tests of partialScanCodeBlocks()
+    QList<std::tuple<int,int,bool>> foldRangesForTest() const;
+    // full (non-incremental) fold rescan, as the reference for
+    // partialScanCodeBlocks()
+    void fullRescanCodeBlocksForTest() { rescanCodeBlocks(); }
 #endif
     PCodeBlock foldHidesLine(int line);
     void setSelLength(int len);
@@ -695,6 +701,14 @@ private:
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);
     void rescanCodeBlocks(); // rescan for folds
+    /**
+     * @brief local variant of rescanCodeBlocks(): rebuilds the code-block
+     * pairing only from the edited region start `fromLine` up to the
+     * reparse stabilization line `reparseToLine`, reusing the old blocks
+     * before it (isomorphic to a full scan that stopped early), then
+     * patches the links of the frozen blocks below (see design doc 5.x).
+     */
+    void partialScanCodeBlocks(int fromLine, int reparseToLine);
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
@@ -710,7 +724,6 @@ private:
     void recomputeMaxLineWidthAndNotify();
     void beginSetLineMetrics();
     void endSetLineMetrics();
-    void internalScanCodeBlocks();
     PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeBlock foldAroundLine(int line);
@@ -832,7 +845,7 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty);
+    void onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine);
     void onDocumentSyntaxerChanged();
     void onDocumentLinesReparsed(int startLine, int endLine);
     //void onRedoAdded();

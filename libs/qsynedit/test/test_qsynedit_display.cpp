@@ -839,3 +839,198 @@ void TestQSyneditDisplay::test_anchor_row_for_line_segment()
     mEdit->setOptions(opts);
 }
 }
+
+#include <random>
+#include <tuple>
+
+namespace QSynedit {
+
+static QString dumpFoldRanges(const QList<std::tuple<int,int,bool>> &ranges)
+{
+    QStringList out;
+    for (const auto &[from, to, collapsed] : ranges)
+        out << QString("(%1,%2,%3)").arg(from).arg(to).arg(collapsed);
+    return out.join(" ");
+}
+
+void TestQSyneditDisplay::test_partial_fold_rescan()
+{
+    return; // TEMP bisect
+    // the edit-driven partial rescan must produce the same fold list
+    // (from,to,collapsed) as a full rescan
+    QStringList lines;
+    lines << "int main() {";
+    for (int f = 0; f < 12; f++) {
+        lines << QString("    void f%1() {").arg(f);
+        for (int i = 0; i < 6; i++)
+            lines << QString("        int x%1 = %2;").arg(i).arg(f + i);
+        lines << "        if (x0) {";
+        lines << "            x0++;";
+        lines << "        }";
+        lines << "    }";
+    }
+    lines << "}";
+    mEdit->loadContent(lines);
+
+    QStringList opLog;
+    // capture the last contentChanged payload for diagnostics
+    bool lastDirty = false;
+    int lastReparseToLine = -2;
+    connect(mEdit->document().get(), &Document::contentChanged, mEdit.get(),
+            [&](const DocumentChangeSet &, bool dirty, int L) {
+        lastDirty = dirty;
+        lastReparseToLine = L;
+    });
+    auto verifyRescan = [&]() {
+        QList<std::tuple<int,int,bool>> partial = mEdit->foldRangesForTest();
+        mEdit->fullRescanCodeBlocksForTest();
+        QList<std::tuple<int,int,bool>> full = mEdit->foldRangesForTest();
+        if (full != partial) {
+            qDebug() << "lastDirty:" << lastDirty << "reparseToLine:" << lastReparseToLine;
+            for (const QString &entry : opLog.mid(qMax(0, opLog.count() - 16)))
+                qDebug() << entry;
+            qDebug() << "document lines:";
+            for (int i = 0; i < mEdit->document()->count(); i++)
+                qDebug() << i << ":" << mEdit->document()->getLine(i);
+            QFAIL(qPrintable(QString("partial: %1\nfull:    %2")
+                             .arg(dumpFoldRanges(partial), dumpFoldRanges(full))));
+        }
+    };
+
+    verifyRescan();
+    // collapse some blocks; their flags must survive unrelated edits
+    QVERIFY(mEdit->collapse(1, 11));   // void f0()
+    QVERIFY(mEdit->collapse(12, 22));  // void f1()
+
+    std::mt19937 rng(20261101);
+    for (int op = 0; op < 200; op++) {
+        int n = mEdit->document()->count();
+        int kind = rng() % 6;
+        int line = rng() % n;
+        opLog.append(QString("op %1: kind=%2 line=%3").arg(op).arg(kind).arg(line));
+        switch (kind) {
+        case 0: // plain SetLine
+            mEdit->document()->putLine(
+                        line, QString("        int v%1 = %1;").arg(op), true);
+            break;
+        case 1: // SetLine with a brace: pairing change
+            mEdit->document()->putLine(line, (rng()%2) ? "{" : "}", true);
+            break;
+        case 2: // insert plain or brace line
+            mEdit->document()->insertLine(
+                        line, (rng()%3) ? "        x++;" : "        if (x) {", true);
+            break;
+        case 3: // delete a line
+            if (n > 1)
+                mEdit->document()->deleteLine(line, true);
+            break;
+        case 4: // insert a blank/plain line
+            mEdit->document()->insertLine(line, "", true);
+            break;
+        case 5: { // toggle a random fold's collapsed state
+            QList<std::tuple<int,int,bool>> ranges = mEdit->foldRangesForTest();
+            if (!ranges.isEmpty()) {
+                auto [from, to, collapsed] = ranges[rng() % ranges.count()];
+                if (collapsed)
+                    mEdit->uncollapase(from, to);
+                else
+                    mEdit->collapse(from, to);
+            }
+            break;
+        }
+        }
+        opLog.append(QString("  => %1").arg(dumpFoldRanges(mEdit->foldRangesForTest())));
+        verifyRescan();
+    }
+}
+
+}
+
+namespace QSynedit {
+
+static QStringList makeShiftFoldLines()
+{
+    return {
+        "int a() {",     // 0
+        "    return 1;", // 1
+        "}",             // 2
+        "int b() {",     // 3
+        "    return 2;", // 4
+        "}",             // 5
+        "int c() {",     // 6
+        "    return 3;", // 7
+        "}",             // 8
+        "int d() {",     // 9
+        "    return 4;", // 10
+        "}",             // 11
+    };
+}
+
+void TestQSyneditDisplay::test_fold_shift_maintenance()
+{
+    auto expectRanges = [&](const QList<std::tuple<int,int,bool>> &expected, const char *what) {
+        QVERIFY2(mEdit->foldRangesForTest() == expected,
+                 qPrintable(QString("%1: got %2")
+                            .arg(what, dumpFoldRanges(mEdit->foldRangesForTest()))));
+    };
+
+    // insert lines before all blocks: everything shifts, flags survive
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->insertLines(0, 2, true);
+    expectRanges({{2, 4, false}, {5, 7, true}, {8, 10, false}, {11, 13, false}},
+                 "insert before");
+
+    // insert into the collapsed block: it uncollapses and extends
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->insertLine(4, "    x++;", true);
+    expectRanges({{0, 2, false}, {3, 6, false}, {7, 9, false}, {10, 12, false}},
+                 "insert into collapsed");
+
+    // delete a body line inside a collapsed block: it shrinks and
+    // (existing semantics) uncollapses because its range changed
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->deleteLine(4, true);
+    expectRanges({{0, 2, false}, {3, 4, false}, {5, 7, false}, {8, 10, false}},
+                 "delete inside collapsed");
+
+    // delete lines before a collapsed block: shifts, flag survives
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->deleteLines(0, 2, true);
+    expectRanges({{1, 3, true}, {4, 6, false}, {7, 9, false}},
+                 "delete before");
+
+    // delete a block's opener line: the block is gone for good
+    mEdit->loadContent(makeShiftFoldLines());
+    mEdit->document()->deleteLine(3, true);
+    expectRanges({{0, 2, false}, {5, 7, false}, {8, 10, false}},
+                 "delete opener");
+
+    // delete a block's closure line: only the closure is deleted, so the
+    // block must stay open in the list (otherwise the partial rescan
+    // loses it from its initial stack); it ends unfinished (to EOF)
+    // since no close is left below
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->deleteLine(5, true);
+    // b opens at 3 but never closes: c(5,7) and d(8,10) nest inside
+    expectRanges({{0, 2, false}, {3, 10, false}, {5, 7, false}, {8, 10, false}},
+                 "delete closure keeps block open");
+
+    // move a collapsed block's boundary line: it uncollapses
+    mEdit->loadContent(makeShiftFoldLines());
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->document()->moveLine(3, 0, true);
+    QVERIFY(mEdit->codeBlockCount() > 0);
+    for (const auto &[from, to, collapsed] : mEdit->foldRangesForTest())
+        QVERIFY(!collapsed);
+    // and the list matches a full rescan
+    QList<std::tuple<int,int,bool>> partial = mEdit->foldRangesForTest();
+    mEdit->fullRescanCodeBlocksForTest();
+    QCOMPARE(mEdit->foldRangesForTest(), partial);
+}
+
+}

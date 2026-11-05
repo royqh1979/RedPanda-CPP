@@ -175,7 +175,6 @@ bool SyntaxState::equals(const std::shared_ptr<SyntaxState> &s2) const
             && (blockLevel == s2->blockLevel) // needed by block folding
             && (blockStarted == s2->blockStarted)  // needed by block folding
             && (blockEnded == s2->blockEnded)    // needed by block folding;
-            && (blockEndedLastLine == s2->blockEndedLastLine) //needed by block folding;
             && (braceLevel == s2->braceLevel) // current braces embedding level (needed by rainbow color)
             && (bracketLevel == s2->bracketLevel) // current brackets embedding level (needed by rainbow color)
             && (parenthesisLevel == s2->parenthesisLevel) // current parenthesis embedding level (needed by rainbow color)
@@ -203,7 +202,6 @@ SyntaxState::SyntaxState():
     blockLevel{0},
     blockStarted{0},
     blockEnded{0},
-    blockEndedLastLine{0},
     braceLevel{0},
     bracketLevel{0},
     parenthesisLevel{0},

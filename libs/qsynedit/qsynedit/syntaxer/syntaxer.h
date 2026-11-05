@@ -50,7 +50,6 @@ struct SyntaxState {
     int blockLevel; // needed by block folding
     int blockStarted;  // needed by block folding
     int blockEnded;    // needed by block folding;
-    int blockEndedLastLine; //needed by block folding;
     int braceLevel; // current braces embedding level (needed by rainbow color)
     int bracketLevel; // current brackets embedding level (needed by rainbow color)
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)

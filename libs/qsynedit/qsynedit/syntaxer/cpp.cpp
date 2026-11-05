@@ -1739,7 +1739,6 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mRun = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
 
     mRange.hasTrailingSpaces = false;
     mLastKeyword="";
@@ -1796,6 +1795,11 @@ bool CppSyntaxer::isKeyword(const QString &word)
 void CppSyntaxer::setState(const PSyntaxState& rangeState)
 {
     std::shared_ptr<CppSyntaxState> cppState = std::dynamic_pointer_cast<CppSyntaxState>(rangeState);
+    if (!cppState) {
+        // no usable predecessor state (e.g. line never parsed): start over
+        resetState();
+        return;
+    }
     mRange = *cppState;
     // current line's left / right parenthesis count should be reset before parsing each line
 }
@@ -1809,7 +1813,6 @@ void CppSyntaxer::resetState()
     mRange.blockLevel = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;

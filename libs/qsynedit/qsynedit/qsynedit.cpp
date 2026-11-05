@@ -564,7 +564,9 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
     QString text = document->getLine(line);
     if (text.isEmpty() || wrapWidth <= 0)
         return result;
-    QList<int> glyphStartCharList = document->getGlyphStartCharList(line);
+    // snapshot-consistent with the parsed text: if the line was edited in
+    // between, the list is computed for the text we parse, not the newer one
+    QList<int> glyphStartCharList = document->getGlyphStartCharList(line, text);
     // exact per-token styled measurement (same font logic as the painter):
     // every layout is exact, there is no base-font estimate path
     startParseLineForDocument(syntaxer, document, line, text);
@@ -1344,7 +1346,7 @@ int QSynEdit::charToGlyphStartX(int line, int charPos) const
     if (line<0 || line>=mDocument->count())
         return 0;
     QString lineText = mDocument->getLine(line);
-    QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line);
+    QList<int> glyphStartCharList = mDocument->getGlyphStartCharList(line, lineText);
     int glyphIdx = searchForSegmentIdx(glyphStartCharList, lineText.length(), charPos);
     return glyphStartX(line, glyphIdx);
 }
@@ -3085,7 +3087,7 @@ void QSynEdit::doBreakLine()
                  )) {
             indentSpaces = calcIndentSpaces(mCaretLine+1, "" , mOptions.testFlag(EditorOption::AutoIndent));
             indentSpacesForRightLineText = genSpaces(indentSpaces);
-            properInsertLine(mCaretLine+1, indentSpacesForRightLineText ,false);
+            properInsertLine(mCaretLine+1, indentSpacesForRightLineText ,true);
             addChangeToUndo(ChangeReason::LineBreak, caretPos(), caretPos(), QStringList(),
                     SelectionMode::Normal);
         }
@@ -3096,7 +3098,7 @@ void QSynEdit::doBreakLine()
             indentSpaces = calcIndentSpaces(mCaretLine+1, "" , mOptions.testFlag(EditorOption::AutoIndent)
                                                                    && notInComment);
             indentSpacesForRightLineText = genSpaces(indentSpaces);
-            properInsertLine(mCaretLine+1, indentSpacesForRightLineText, false);
+            properInsertLine(mCaretLine+1, indentSpacesForRightLineText, true);
             addChangeToUndo(ChangeReason::LineBreak, caretPos(), caretPos(), QStringList(),
                     SelectionMode::Normal);
         }
@@ -4129,6 +4131,15 @@ int QSynEdit::codeBlockCount() const
     return mCodeBlocks.count();
 }
 
+QList<std::tuple<int,int,bool>> QSynEdit::foldRangesForTest() const
+{
+    QList<std::tuple<int,int,bool>> result;
+    foreach (const PCodeBlock &block, mCodeBlocks) {
+        result.append({block->fromLine, block->toLine, block->collapsed});
+    }
+    return result;
+}
+
 bool QSynEdit::hasCodeBlock(int fromLine, int toLine) const
 {
     foreach(const PCodeBlock &block, mCodeBlocks) {
@@ -4156,6 +4167,9 @@ void QSynEdit::processCodeBlocksOnLinesInserted(int line, int count)
                 collapseChanged = true;
                 block->collapsed = false;
             }
+        } else if (block->unfinished) {
+            // open to the end of file: stay open as the file grows
+            block->toLine = mDocument->count() - 1;
         }
     }
     if (collapseChanged) {
@@ -4178,10 +4192,17 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
         PCodeBlock block = mCodeBlocks[i];
         if (block->fromLine >= line
                 && block->fromLine < line+count)  {
+            // the opener is deleted: the block is gone for good
             mCodeBlocks.remove(i);
         } else if (block->toLine >= line
                    && block->toLine < line+count) {
-            mCodeBlocks.remove(i);
+            // only the closure is deleted: the block is still open and
+            // must stay in the list (the rescan assigns its new toLine),
+            // otherwise the partial scan loses it from its initial stack
+            if (block->collapsed) { // its range will change: uncollapse it
+                collapseChanged = true;
+                block->collapsed = false;
+            }
         } else if (block->fromLine >= line + count) { // Move after affected area
             block->move(-count);
         } else if (block->toLine >= line + count) {
@@ -4250,81 +4271,163 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
 
 void QSynEdit::rescanCodeBlocks()
 {
-    if (!useCodeFolding())
-        return;
-
-    beginInternalChanges();
-    // Did we leave any collapsed folds and are we viewing a code file?
-    if (mCodeBlocks.count() > 0) {
-        QMap<CodeBlockRangeKey,PCodeBlock> rangeIndexes;
-        foreach(const PCodeBlock& block, mCodeBlocks) {
-            if (block->collapsed)
-                rangeIndexes.insert({block->fromLine, block->toLine},block);
-        }
-
-        // Add folds to a separate list
-        internalScanCodeBlocks();
-
-        // Combine new with old folds, preserve parent order
-        foreach(const PCodeBlock &tempBlock, mCodeBlocks) {
-            PCodeBlock b2=rangeIndexes.value({tempBlock->fromLine, tempBlock->toLine},
-                                  PCodeBlock());
-            if (b2) {
-                tempBlock->collapsed=true;
-            }
-        }
-    } else {
-        // We ended up with no folds after deleting, just pass standard data...
-        internalScanCodeBlocks();
-    }
-#ifdef QSYNEDIT_TEST
-    emit foldsRescaned();
-#endif
-    invalidateGutter();
-    endInternalChanges();
+    // a full rescan is just the partial scan over the whole document
+    partialScanCodeBlocks(0, mDocument->count());
 }
 
-void QSynEdit::internalScanCodeBlocks()
+void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
 {
     if (!useCodeFolding())
         return;
 
-    mCodeBlocks.clear();
-    PCodeBlock parent;
-    int line = 0;
-    while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
-        // If there is a collapsed fold over here, skip it
-        // Find an opening character on this line
-        int blockEnded=mDocument->blockEnded(line);
-        int blockStarted=mDocument->blockStarted(line);
-        if (blockEnded>0) {
-            for (int i=0; i<blockEnded;i++) {
+    beginInternalChanges();
+    // snapshot of the (already shift-maintained) block list
+    QVector<PCodeBlock> oldBlocks = mCodeBlocks;
+    // chain blocks: old blocks strictly containing the scan start,
+    // outermost first (oldBlocks is sorted by fromLine)
+    QVector<PCodeBlock> stack;
+    foreach (const PCodeBlock &block, oldBlocks) {
+        if (block->fromLine < fromLine
+                && (block->toLine >= fromLine || block->unfinished))
+            stack.append(block);
+    }
+    // collapsed blocks are re-matched by range when the scan closes a block
+    QMap<CodeBlockRangeKey, PCodeBlock> collapsedBlocks;
+    foreach (const PCodeBlock &block, oldBlocks) {
+        if (block->collapsed)
+            collapsedBlocks.insert({block->fromLine, block->toLine}, block);
+    }
+    // kept blocks before the scan start: identity, flags and subtrees are
+    // all preserved (their children lie entirely before the start too)
+    QVector<PCodeBlock> newBlocks;
+    foreach (const PCodeBlock &block, oldBlocks) {
+        if (block->fromLine < fromLine)
+            newBlocks.append(block);
+    }
+    // chain blocks keep their children before the start; children inside
+    // the scan region are rebuilt by the scan
+    for (const PCodeBlock &block : stack) {
+        QVector<PCodeBlock> keptChildren;
+        foreach (const PCodeBlock &child, block->subBlocks) {
+            if (child->fromLine < fromLine)
+                keptChildren.append(child);
+        }
+        block->subBlocks = keptChildren;
+    }
+    // freeze line: syntax states at/after it are provably unchanged
+    int L = std::min(std::max(reparseToLine, fromLine), mDocument->count());
+    // old open stack at the freeze line, for the positional fixup after
+    // the scan stops (pre-scan values: chain blocks' toLines are only
+    // assigned when the scan closes them, so blocks still open at L keep
+    // their old toLine)
+    QVector<PCodeBlock> oldStackAtL;
+    if (L < mDocument->count()) {
+        foreach (const PCodeBlock &block, oldBlocks) {
+            if (block->fromLine < L
+                    && (block->toLine >= L || block->unfinished))
+                oldStackAtL.append(block);
+        }
+    }
+
+    PCodeBlock parent = stack.isEmpty() ? PCodeBlock() : stack.last();
+    int count = mDocument->count();
+    int line = fromLine;
+    // isomorphic to the full scan from this point on: same initial stack,
+    // same deltas ahead
+    while (line < count && line < L) {
+        int ended = mDocument->blockEnded(line);
+        int started = mDocument->blockStarted(line);
+        if (ended > 0) {
+            for (int i=0; i<ended; i++) {
                 if (!parent)
                     break;
-                if (blockStarted>0)
-                    parent->toLine = line - 1;
-                else
-                    parent->toLine = line;
+                parent->toLine = (started>0) ? line-1 : line;
+                parent->unfinished = false;
+                // collapsed preservation: restore the flag only when the
+                // rebuilt range matches a previously collapsed block
+                parent->collapsed = collapsedBlocks.contains(
+                            {parent->fromLine, parent->toLine});
                 parent = parent->parent.lock();
             }
         }
-        if (blockStarted>0) {
-            for (int i=0; i<blockStarted;i++) {
+        if (started > 0) {
+            for (int i=0; i<started; i++) {
                 PCodeBlock newBlock = std::make_shared<CodeBlock>(parent,line,line);
-                if (parent != nullptr) {
+                if (parent) {
                     parent->subBlocks.append(newBlock);
                 }
-                mCodeBlocks.append(newBlock);
+                newBlocks.append(newBlock);
                 parent = newBlock;
             }
         }
         line++;
     }
-    //remove all unfinished folds
-    while (parent != nullptr) {
-        mCodeBlocks.removeAll(parent);
-        parent = parent->parent.lock();
+    if (line == count) {
+        // ran out of document: the still-open blocks stay open to the end
+        // of file (a later edit can complete them and revive the fold)
+        while (parent != nullptr) {
+            parent->unfinished = true;
+            parent->toLine = count - 1;
+            parent->collapsed = collapsedBlocks.contains(
+                        {parent->fromLine, parent->toLine});
+            parent = parent->parent.lock();
+        }
+    } else {
+        // stopped at the freeze line: the old and new open stacks have
+        // equal depth, except that the old stack may additionally hold
+        // chain blocks the scan already closed early (their closure brace
+        // at L is an extra close in the new pairing)
+        QVector<PCodeBlock> newStack;
+        for (PCodeBlock p = parent; p; p = p->parent.lock())
+            newStack.prepend(p);
+        Q_ASSERT(newStack.count() <= oldStackAtL.count());
+        int matched = std::min(newStack.count(), oldStackAtL.count());
+        for (int i = 0; i < matched; i++) {
+            const PCodeBlock &oldB = oldStackAtL[i];
+            const PCodeBlock &newB = newStack[i];
+            if (oldB == newB) {
+                // identity-preserved chain block: re-append the children
+                // the region surgery removed (their parent links were
+                // never touched)
+                foreach (const PCodeBlock &child, oldB->subBlocks) {
+                    if (child->fromLine >= L)
+                        newB->subBlocks.append(child);
+                }
+            } else {
+                // rebuilt block: it closes at the same line as its old
+                // counterpart (deltas below L are frozen)
+                newB->toLine = oldB->toLine;
+                newB->unfinished = oldB->unfinished;
+                newB->collapsed = collapsedBlocks.contains(
+                            {newB->fromLine, newB->toLine});
+                // adopt the old counterpart's children below the freeze line
+                foreach (const PCodeBlock &child, oldB->subBlocks) {
+                    if (child->fromLine >= L) {
+                        child->parent = newB;
+                        newB->subBlocks.append(child);
+                    }
+                }
+            }
+        }
+#ifdef QT_DEBUG
+        // remaining old entries must be chain blocks the scan already
+        // closed early (toLine was reassigned below L)
+        for (int i = matched; i < oldStackAtL.count(); i++)
+            Q_ASSERT(oldStackAtL[i]->toLine < L || oldStackAtL[i]->unfinished);
+#endif
     }
+    // frozen blocks at/below the freeze line are appended wholesale;
+    // their ranges and parent links are intact
+    foreach (const PCodeBlock &block, oldBlocks) {
+        if (block->fromLine >= L)
+            newBlocks.append(block);
+    }
+    mCodeBlocks = newBlocks;
+#ifdef QSYNEDIT_TEST
+    emit foldsRescaned();
+#endif
+    invalidateGutter();
+    endInternalChanges();
 }
 
 PCodeBlock QSynEdit::foldStartAtLine(int line) const
@@ -7677,15 +7780,22 @@ CharPos shiftPosByChange(const CharPos &pos, const DocumentChange &change)
 }
 }
 
-void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty)
+void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine)
 {
     // Structural guard: the signal is emitted at the outermost endUpdate,
     // so the document must be quiescent here (see design doc chapter 6).
     Q_ASSERT(!mDocument->inUpdate());
+    // Convergence contract: a fold-dirty batch must have reparsed (see
+    // design doc chapter 5)
+    Q_ASSERT(!foldStateDirty || reparseToLine >= 0);
     // Only idempotent, fact-driven maintenance is allowed in this slot.
     bool scrollbarChanged = false;
     int invalidateFrom = -1;
+    // first edited line in post-edit coordinates: the scan start of the
+    // local fold rescan (only used when foldStateDirty is set)
+    int dirtyFrom = INT_MAX;
     for (const DocumentChange &change : changes) {
+        int changeFrom = change.line;
         switch (change.kind) {
         case DocumentChangeKind::Insert:
             processCodeBlocksOnLinesInserted(change.line, change.count);
@@ -7708,6 +7818,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             processFoldsOnLineMoved(change.line, change.count);
             emit lineMoved(change.line, change.count);
             scrollbarChanged = true;
+            changeFrom = std::min(change.line, change.count);
             break;
         case DocumentChangeKind::SetLine:
             // repaint of content-changed lines is driven by the deferred
@@ -7723,14 +7834,17 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             }
             break;
         }
+        dirtyFrom = std::min(dirtyFrom, changeFrom);
     }
     // rebuild fold ranges from the (shared) syntax states: incremental
     // shifts above only track line numbers, they don't notice blocks
     // appearing/disappearing. Every view needs this, not just the one
     // that initiated the edit. Skip it entirely when the batch proved
-    // no fold-relevant syntax state changed (the common typing case).
+    // no fold-relevant syntax state changed (the common typing case);
+    // otherwise rescan locally from the edited region to the reparse
+    // stabilization line.
     if (foldStateDirty)
-        rescanCodeBlocks();
+        partialScanCodeBlocks(dirtyFrom, reparseToLine);
     else
         // rescanCodeBlocks() normally repaints the gutter; keep that
         // behavior for shifted line numbers

@@ -468,7 +468,7 @@ signals:
      * idempotent, fact-driven maintenance; cross-component consistency
      * repair (e.g. re-snapping the selection to the caret) is forbidden.
      */
-    void contentChanged(const DocumentChangeSet &changes, bool foldStateDirty);
+    void contentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine);
     /**
      * @brief emitted after an undo/redo operation has been performed on the
      * shared stacks (by whichever view triggered it), so all views can
@@ -521,9 +521,8 @@ public:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     /**
      * @brief whether the stored syntax state of `line` carries
-     * code-block pairing deltas (blockStarted/blockEnded/
-     * blockEndedLastLine). Unparsed lines (null state) are treated
-     * conservatively as carrying deltas.
+     * code-block pairing deltas (blockStarted/blockEnded). Unparsed
+     * lines (null state) are treated conservatively as carrying deltas.
      */
     bool lineHasCodeBlockDelta(int line) const;
     void loadUTF16BOMFile(QFile& file);
@@ -537,6 +536,9 @@ private:
     int mUpdateCount;
     DocumentChangeSet mPendingChanges;
     bool mFoldStateDirty = false;
+    // max reparse stabilization line over the current update batch
+    // (see design doc 5.3); -1 when no reparse ran in the batch
+    int mReparseToLine = -1;
 
     PUndoList mUndoList;
     PRedoList mRedoList;

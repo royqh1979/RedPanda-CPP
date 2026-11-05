@@ -121,25 +121,24 @@ void Document::reparseAll()
     }
     // wholesale reparse: the block pairing must be rebuilt
     mFoldStateDirty = true;
+    mReparseToLine = mLines.size();
     emit linesReparsed(0, mLines.size());
 }
 
-// code-block pairing deltas of two syntax states: blockStarted/blockEnded/
-// blockEndedLastLine are properties of the line's own text and never go
-// stale when lines shift (unlike blockLevel, which is position-dependent
-// and would false-positive when a later batch merely repairs stale
-// states). A null old state means a brand-new line, which changes the
-// pairing only if it opens or closes a block itself
+// code-block pairing deltas of two syntax states: blockStarted/blockEnded
+// are properties of the line's own text and never go stale when lines
+// shift (unlike blockLevel, which is position-dependent and would
+// false-positive when a later batch merely repairs stale states). A null
+// old state means a brand-new line, which changes the pairing only if it
+// opens or closes a block itself
 static bool sameCodeBlockDeltas(const PSyntaxState &oldState, const PSyntaxState &newState)
 {
     if (!oldState) {
         return !(newState->blockStarted
-                 || newState->blockEnded
-                 || newState->blockEndedLastLine);
+                 || newState->blockEnded);
     }
     return oldState->blockStarted == newState->blockStarted
-            && oldState->blockEnded == newState->blockEnded
-            && oldState->blockEndedLastLine == newState->blockEndedLastLine;
+            && oldState->blockEnded == newState->blockEnded;
 }
 
 int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
@@ -180,6 +179,12 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
         setSyntaxState(line, state);
         line++;
     } while (line < maxLine);
+    // `line` is the stabilization line. When the reparse converged there
+    // (verified equal, or reached the document end), states through it are
+    // final; when it only ran to the requested range end (parseToEnd=false
+    // without convergence), states below it are unverified.
+    bool converged = (line < maxLine) || (line == (int)mLines.size());
+    mReparseToLine = std::max(mReparseToLine, converged ? line + 1 : line);
     emit linesReparsed(startLine, line);
     return line;
 }
@@ -190,7 +195,7 @@ bool Document::lineHasCodeBlockDelta(int line) const
     if (!state)
         // unknown: conservative
         return true;
-    return state->blockStarted || state->blockEnded || state->blockEndedLastLine;
+    return state->blockStarted || state->blockEnded;
 }
 
 void Document::notifyUndoRedoStateChanged()
@@ -275,7 +280,12 @@ PSyntaxState Document::getSyntaxState(int line) const
     // Crash Prevention
     if (line<0 || line>=count())
         return std::make_shared<SyntaxState>();
-    return mLines[line]->syntaxState();
+    PSyntaxState state = mLines[line]->syntaxState();
+    if (!state)
+        // not parsed yet (e.g. freshly inserted line): hand out an empty
+        // state instead of nullptr so callers never have to null-check
+        return std::make_shared<SyntaxState>();
+    return state;
 }
 
 void Document::insertItem(int line, const QString &s)
@@ -415,6 +425,7 @@ void Document::beginUpdate()
 {
     if (mUpdateCount == 0) {
         mFoldStateDirty = false;
+        mReparseToLine = -1;
         emit changing();
     }
     mUpdateCount++;
@@ -428,7 +439,7 @@ void Document::endUpdate()
         if (!mPendingChanges.isEmpty()) {
             DocumentChangeSet changes;
             changes.swap(mPendingChanges);
-            emit contentChanged(changes, mFoldStateDirty);
+            emit contentChanged(changes, mFoldStateDirty, mReparseToLine);
         }
         emit changed();
     }
@@ -1041,6 +1052,7 @@ void Document::ensureHasLine()
 
 QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
 {
+    QMutexLocker locker(&mMutex);
     if (line<0 || line>=count() || mLines[line]->lineText()!=lineText)
         return calcGlyphStartCharList(lineText);
     return mLines[line]->glyphStartCharList();
@@ -1048,6 +1060,7 @@ QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
 
 QList<int> Document::getGlyphStartCharList(int line)
 {
+    QMutexLocker locker(&mMutex);
     if (line<0 || line>=count())
         return QList<int>();
     return mLines[line]->glyphStartCharList();

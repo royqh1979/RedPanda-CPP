@@ -45,9 +45,10 @@ public:
     CodeBlock(const CodeBlock&)=delete;
     CodeBlock& operator=(const CodeBlock&)=delete;
     int fromLine; // Beginning line
-    int toLine; // End line
+    int toLine; // End line (count-1 while unfinished)
     QVector<PCodeBlock> subBlocks; // Sub fold ranges
     bool collapsed; // Is collapsed?
+    bool unfinished = false; // Opened but not closed yet (kept open to EOF)
     std::weak_ptr<CodeBlock> parent;
     int linesCollapsed() const { return collapsed?(toLine - fromLine):0; }
     bool parentCollapsed() const;

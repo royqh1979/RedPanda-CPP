@@ -1145,7 +1145,6 @@ void LuaSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mRun = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
     next();
@@ -1162,7 +1161,6 @@ void LuaSyntaxer::setState(const PSyntaxState& syntaxState)
     // current line's left / right parenthesis count should be reset before parsing each line
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
 }
@@ -1176,7 +1174,6 @@ void LuaSyntaxer::resetState()
     mRange.blockLevel = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;

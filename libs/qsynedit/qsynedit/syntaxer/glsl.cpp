@@ -1365,7 +1365,6 @@ void GLSLSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSe
     mRun = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
     next();
@@ -1393,7 +1392,6 @@ void GLSLSyntaxer::resetState()
     mRange.blockLevel = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
