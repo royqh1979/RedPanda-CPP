@@ -12338,7 +12338,11 @@ void TestQSyneditCpp::test_edit_operations_are_batched()
     int contentChangedCount = 0;
     bool lastDirty = false;
     int lastReparseToLine = -2;
-    connect(mEdit->document().get(), &Document::contentChanged, mEdit.get(),
+    // a dedicated context object: the connection dies with the test.
+    // (mEdit outlives it; a dead lambda would keep writing to these
+    // stack variables on every later contentChanged and corrupt memory)
+    QObject connContext;
+    connect(mEdit->document().get(), &Document::contentChanged, &connContext,
             [&](const DocumentChangeSet &, bool dirty, int reparseToLine) {
         contentChangedCount++;
         lastDirty = dirty;

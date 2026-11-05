@@ -875,7 +875,11 @@ void TestQSyneditDisplay::test_partial_fold_rescan()
     // capture the last contentChanged payload for diagnostics
     bool lastDirty = false;
     int lastReparseToLine = -2;
-    connect(mEdit->document().get(), &Document::contentChanged, mEdit.get(),
+    // a dedicated context object: the connection dies with the test.
+    // (mEdit outlives it; a dead lambda would keep writing to these
+    // stack variables on every later contentChanged and corrupt memory)
+    QObject connContext;
+    connect(mEdit->document().get(), &Document::contentChanged, &connContext,
             [&](const DocumentChangeSet &, bool dirty, int L) {
         lastDirty = dirty;
         lastReparseToLine = L;
