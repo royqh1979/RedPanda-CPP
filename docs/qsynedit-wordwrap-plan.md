@@ -48,9 +48,9 @@
 ### 事件处理规则
 
 1. **滚动**（`setTopPos`/滚动条入口）：value 钳到 `[0, maxScrollHeight()]`；`row = value/mTextHeight`、`sub = value%mTextHeight`；`(line, seg) = lineSegAtVisibleRow(min(row, visibleSegCount()-1))`。O(log N) 精确查询，**无走步、无"走不满"边界约定、无直接定锚例外**（row=0 与文档尾由下降/钳制自然得到）。
-2. **内容编辑**：锚点按 marker 语义平移（O(1) 行号算术，与 caret 的 `shiftPosByChange` 同约定：Insert(line,count) 且 line ≤ mTopLine → mTopLine += count；锚点落在删除带内 → 钳到 change.line、段号归 0；SetLine 不动行号）；树同步 `insertLines`/`eraseLines`/`setSegCount`；最后 `mTopPos` 重算。**行为变化（相对 master）：视口顶部内容稳定，master 保持 row 序号。**
-3. **折叠/展开**：树 `setHidden` 区间更新；锚点行被折进隐藏区时经 `nextVisibleLine`/`prevVisibleLine` 重新吸附（吸附到 fold 起始行）；`mTopPos` 重算。
-4. **映射重建**（wrap 切换 / 字体变化 / resize）：保持锚点，段号钳进新映射有效范围（查布局缓存 O(1)），`mTopPos` 重算。原 `adjustTopPosToAnchor` 的"未被钳时恢复原值、被钳才回退 rowToLineSegment"双路径整体删除。
+2. **内容编辑**：锚点按 marker 语义平移（O(1) 行号算术，与 caret 的 `shiftPosByChange` 同约定：Insert(line,count) 且 line ≤ mTopLine → mTopLine += count；锚点落在删除带内 → 钳到 change.line、段号归 0；SetLine 不动行号，但**锚点行被 SetLine 缩短时段号钳进新段数范围**）；树同步 `insertLines`/`eraseLines`/`setSegCount`；最后 `mTopPos` 重算。**行为变化（相对 master）：视口顶部内容稳定，master 保持 row 序号。**
+3. **折叠/展开**：树 `setHidden` 区间更新；锚点行被折进隐藏区时经 `nextVisibleLine`/`prevVisibleLine` 重新吸附（吸附到 fold 起始行，**段号保留并钳进该行段数**，不归零）；`mTopPos` 重算。
+4. **映射重建**（wrap 切换 / 字体变化 / resize）：保持锚点，段号钳进新映射有效范围（查布局缓存 O(1)），**亚像素余数清零**（行高变化后旧余数单位失效；映射重建本就是视觉断点，吸附到段边界），`mTopPos` 重算。原 `adjustTopPosToAnchor` 的"未被钳时恢复原值、被钳才回退 rowToLineSegment"双路径整体删除。
 5. **后台批次到达**：树点更新各精化行；`mWrapAllComputed` 语义不变（dirty 集合判空）；`mTopPos` 重算（锚点不动，滚动条值微调）；更新滚动条上限。
 
 ### 滚动条规则
@@ -117,7 +117,7 @@
 1. **批 1（已完成，部分将被替代）**：段内换算 `charToSegmentCoord`/`segmentCoordToChar`、窗口内走步 `advanceLineSegment`/`retreatLineSegment`/`advanceAnchorRow`、`anchorRowForLineSegment`——**保留**（窗口内用途）。`syncAnchorToTopPos` 增量走步与两个定锚例外、`adjustTopPosToAnchor` 双路径——**将在批 C 删除/重写**。`setTopPos`/`setLeftPos` "max 不钳新值"、空文档直接就绪——保留。
 2. **批 A：RowIndex 段数前缀树**。implicit treap：双和增广 + 非重叠懒标记 hide/unhide + 点更新 + 插删 + 前缀查询 + kth 可见段下降 + next/prevVisibleLine 跳跃。随机对拍测试（vs QVector 暴力参考）。
 3. **批 B：映射函数树化（已完成）**。`displayLineCount`/`lineSegmentToRow`/`rowToLineSegment`/`lineVisibleForWrap`/`lineToRow`/`rowToLine` 统一走树（无 wrap 模式 = segs 恒 1 的平凡情形）；折叠 toggle/rescan/`setUseCodeFolding` 对接 `syncFoldVisibility()`（整体重建式：根级 unhide + 有效区间 setHidden，范围 = `(fromLine, toLine]`）；`foldLineToRow`/`foldRowToLine` 线性扫描已删除；`advance`/`retreatLineSegment` 折叠区跳跃改用树的 `next`/`prevVisibleLine`。编辑时树随 `onDocumentContentChanged` 同步（Insert/Delete 结构插删、Move 搬行后从缓存恢复段数、SetLine 强制同步重布局后点更新）；`wrapLayout` 同步兜底计算与 worker 批次（携带 seq→计算时行号，应用时 `getLineSeq(line)==seq` 校验）做点更新；`invalidateAllLineMetrics` 用 `resetSegCounts()` 整体回估计。实现要点：①批次进行中树未同步（文档已变），查询端一律按**树的** count 钳制（`lineVisibleForWrap`、`wrapLayout` 守卫；前缀/下降查询自带钳制），Insert 同步从缓存恢复批次中提前算出的段数；②`adjustTopPosToAnchor` 的锚点行号必须立即精确（视口内容不能跳），暂用同步走步强制计算锚点之前各行而非树估计——批 C 重写锚点推导时再统一；③SetLine 强制同步重布局改变了过期拒绝的可见语义：被编辑行在编辑时即刻重新入缓存，过期批次表现为"不覆盖新布局"（测试已相应更新）。
-4. **批 C：锚点懒推导改造**。`setTopPos`/滚动条入口走树查询；编辑/折叠/批次事件统一"锚点平移或不动 + mTopPos 树重算"；锚点删除带钳制、折叠吸附；`adjustTopPosToAnchor` 简化（保持锚点 + 段号钳 + 重算）；删除批 1 的走步同步与估计机制。
+4. **批 C：锚点懒推导改造**。`setTopPos`/滚动条入口走树查询；编辑/折叠/批次事件统一"锚点平移或不动 + mTopPos 树重算"；批次到达时树点更新与 mTopPos 重算成对（防漂移论证与零重绘守卫见"已知问题与决策记录"）；锚点删除带钳制、折叠吸附；`adjustTopPosToAnchor` 简化（保持锚点 + 段号钳 + 重算）；删除批 1 的走步同步与估计机制。
 5. **批 D：绘制/caret/翻页/鼠标/invalidate**。窗口相对化 + 树查询；DisplayCoord 审计与测试全覆盖（含 IDE 侧）。
 6. **批 E：收尾**。IDE 侧确认（滚动保存/恢复沿用现有像素 API）；demo 目检（滚动平滑、翻页、折叠、大文件无卡顿）；全量验证。
 
@@ -125,7 +125,10 @@
 
 - **RowIndex 懒标记的陈旧性约定**：`lines`/`totalSegs` 在所有节点上始终精确；`hiddenSegs`/叶标志在带 tag 节点的**子树内部**可能陈旧。含 tag 的节点其子树一定均匀（tag⇒uniform；split/merge/setSegCount/setHidden 在下钻前一律 push），因此 next/prevVisible 可在均匀子树整跳；前缀查询与 row 下降必须**继承祖先 tag 下传**（tag1 ⇒ 隐藏和=段数和，tag2 ⇒ 隐藏贡献为 0），且**外层（祖先）tag 优先**——能在已有 tag 之下再产生的 tag 必是先打的，后打的操作下钻时已 push。
 - **wrap 切换后滚动条上限窗口期**：由"max 不钳新值"规则解决（设值不再被钳丢）；另有语义约定：**后台分段计算就绪时，不主动恢复旧滚动位置**（窗口期内用户自己的操作优先，就绪后也不把位置拉回旧值）。
-- **就绪后 mTopPos 精化（Roy 新想法，2026-11 记录在案，待实现/讨论）**：后台布局计算完成（`mWrapAllComputed` 转真）时，用当前锚点 `(mTopLine, mTopSegment)` 经树查询精确行号 + `mTopPos % mTextHeight` 的余数重算 `mTopPos`，然后更新滚动条（消除窗口期内 max 与 value 的累计误差）。视图不需要重绘——锚点内容未变，只有像素偏移的量化误差被修正；实现选项：paintEvent 检测"仅滚动条数值精化"跳过重绘，或直接重贴之前的 cached image；若两者都太复杂，重绘一遍也可接受（非高频事件）。待批 C 时一并定夺。
+- **后台批次到达时 mTopPos 随树重算（2026-11 已定，方案一）**：Roy 提出的"就绪时按锚点精化 mTopPos"想法经分析落实为更一般的规则——**树的点更新与 mTopPos 重算必须成对发生，否则内容漂移**：批次精化了锚点上方行的段数后，`paintEvent` 的 `firstRow = mTopPos / mTextHeight` 拿旧像素值查已精化的树会落到锚点之前的行，视口内容在扫描期间向上漂移。因此每个批次到达都做：树点更新 → 锚点不动，按 `mTopPos = (prefixVisibleSegs(mTopLine) + mTopSegment) * mTextHeight + (mTopPos % mTextHeight)` 重算 → 更新滚动条。就绪翻转无特殊逻辑（只是最后一个批次）。**不需要重绘**：重算后 `firstRow` 精确落回锚点、亚像素余数保留，前后两帧像素逐点相同，唯一变化是滚动条 value/max。
+- **程序性滚动条同步一律用 QSignalBlocker，onVScrolled 无守卫（2026-11 批 C 复查修正）**：最初设想在 `onVScrolled` 加 `mTopPos == value` 相等守卫来免重绘——有洞：`setTopPos` 自己不调 `invalidate()`，依赖 `setValue`→`onVScrolled`→`invalidate()`，守卫会吞掉这次重绘。定稿：`setTopPos`/`doUpdateVScrollbar`/批次路径的程序性 `setValue` 一律 `QSignalBlocker` 阻断，各自显式负责重绘；`onVScrolled` 只服务用户滚动（mTopPos = value → 树查询推锚点 → invalidate）。
+- **max 收缩路径的显式钳制（批 C 复查补充）**：block 信号后，Qt"setMaximum < value 时自动钳 value"的机制被吞，`mTopPos` 可能残留越界。`doUpdateVScrollbar` 显式处理：`mTopPos > maxScrollHeight()` → 钳 mTopPos + 树回推锚点 + 重绘（内容下滑填尾，同 master 语义）。**钳制不变式**：批次路径（精化只增段数）可证 `newTopPos ≤ max`（锚点行号增量 ≤ 总量增量），放 `Q_ASSERT` 验证；编辑路径锚点下方行 SetLine 缩短时 max 可缩、锚点行号不变，**可能越界**，故统一由重算 helper 钳制，断言只放批次路径。
+- **undo 的 LeftTop 记录像素值**：`addLeftTopToUndo` 存的是 `mTopPos` 像素，估计期保存、精化后恢复（或反之）语义有窗口期漂移——记录在案，不改（低概率、无正确性风险）。
 - **RowIndex 内存**：~48B/行/视图（treap 节点）。多视图各自建树（wrap 宽度/字体/折叠都是 per-view）。大文件若成问题，打包 B-tree 节点作为后续优化。
 - **测试环境注意**：wrap 相关测试开 wrap 后要 `QTRY_VERIFY(mWrapAllComputed)` 等后台布局算完，否则滚动条上限停在"每行 1 段"的下界估计。
 - 下划线不作断词点（`_` 是单词成分）已有测试约定；测试用等宽字体保证字形宽度确定。
