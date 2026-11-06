@@ -676,48 +676,6 @@ void TestQSyneditDisplay::test_toppos_anchor_sync()
     mEdit->setOptions(opts);
 }
 
-void TestQSyneditDisplay::test_scroll_to_row()
-{
-    mEdit->loadContent(QStringList{
-        "int main() {",
-        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
-        "    return 0;",
-        "}"});
-    QSynedit::EditorOptions opts = mEdit->getOptions();
-    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
-    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
-    mEdit->setOptions(opts);
-    // the scrollbar maximum is only refreshed when background wrap layout
-    // batches arrive (onWrapLayoutBatch -> updateVScrollbar), so wait for
-    // the job to finish; otherwise it stays at the 1-segment-per-line
-    // lower bound and setTopPos is clamped back down by the scrollbar
-    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
-    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
-    int totalRows = mEdit->displayLineCount();
-    int h = mEdit->textHeight();
-
-    mEdit->scrollToRow(2);
-    QCOMPARE(mEdit->topPos(), 2 * h);
-    int line, seg;
-    mEdit->rowToLineSegment(2, line, seg);
-    QCOMPARE(mEdit->mTopLine, line);
-    QCOMPARE(mEdit->mTopSegment, seg);
-
-    mEdit->scrollToRow(-3);
-    QCOMPARE(mEdit->topPos(), 0);
-    QCOMPARE(mEdit->mTopLine, 0);
-    QCOMPARE(mEdit->mTopSegment, 0);
-
-    mEdit->scrollToRow(totalRows + 100);
-    QCOMPARE(mEdit->topPos(), (totalRows - 1) * h);
-    QCOMPARE(mEdit->mTopLine, 3);
-    QCOMPARE(mEdit->mTopSegment, 0);
-
-    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
-    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
-    mEdit->setOptions(opts);
-}
-
 void TestQSyneditDisplay::test_wrap_toggle_preserves_anchor()
 {
     mEdit->loadContent(QStringList{

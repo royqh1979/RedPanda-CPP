@@ -293,9 +293,6 @@ public:
     // above the viewport top); walks from the anchor, so O(|distance|).
     // (line, segment) must denote a visible segment
     int anchorRowForLineSegment(int line, int segment) const;
-    // scroll so that global display row globalRow becomes the top row
-    // (line-aligned); clamped at 0 and at the maximum scroll position
-    void scrollToRow(int globalRow);
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
     void invalidateLine(int line);

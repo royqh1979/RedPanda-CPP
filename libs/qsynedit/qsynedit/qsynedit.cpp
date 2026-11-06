@@ -382,11 +382,6 @@ int QSynEdit::anchorRowForLineSegment(int line, int segment) const
     return rows;
 }
 
-void QSynEdit::scrollToRow(int globalRow)
-{
-    setTopPos(std::max(globalRow, 0) * mTextHeight);
-}
-
 void QSynEdit::deriveAnchorFromTopPos()
 {
     if (mDocument->count() <= 0 || mTextHeight <= 0 || displayLineCount() <= 0) {
