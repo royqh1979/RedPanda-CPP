@@ -114,6 +114,94 @@ void TestQSyneditDisplay::test_display_buffer_roundtrip_with_fold()
     }
 }
 
+void TestQSyneditDisplay::test_mouse_press_moves_caret()
+{
+    mEdit->loadContent(makeLines(10));
+    int x = mEdit->gutterWidth() + 2 + mEdit->charWidth() * 2;
+    int y = mEdit->textHeight() + 2;
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(x, y));
+    QCOMPARE(mEdit->caretPos(), CharPos(2, 1));
+    QCOMPARE(mEdit->mActiveSelectionMode, SelectionMode::Normal);
+}
+
+void TestQSyneditDisplay::test_mouse_press_moves_caret_wrap()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    // click into the second segment of the wrapped line
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    QVERIFY(layout.segmentStartChars.count() > 1);
+    int start = layout.segmentStartChars[1];
+    QPoint pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{start, 1}));
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      pt + QPoint(0, 2));
+    QCOMPARE(mEdit->caretPos(), CharPos(start, 1));
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_mouse_press_moves_caret_fold()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(2, 4));
+    // click into the row showing buffer line 5 (directly below the fold)
+    QPoint pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{4, 5}));
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      pt + QPoint(0, 2));
+    QCOMPARE(mEdit->caretPos(), CharPos(4, 5));
+    mEdit->unCollpaseAll();
+}
+
+void TestQSyneditDisplay::test_mouse_double_click_selects_word()
+{
+    mEdit->loadContent(QStringList{"int main() {"});
+    // double-click on "main" (chars 4..7), driving the double click
+    // manually (press/release/dblclick/release) like Qt delivers it
+    QPoint pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{5, 0}))
+            + QPoint(0, 2);
+    QTest::mousePress(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QTest::mouseEvent(QTest::MouseDClick, mEdit->viewport(), Qt::LeftButton,
+                      Qt::NoModifier, pt);
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QCOMPARE(mEdit->selBegin(), CharPos(4, 0));
+    QCOMPARE(mEdit->selEnd(), CharPos(8, 0));
+    QCOMPARE(mEdit->selText(), QString("main"));
+}
+
+void TestQSyneditDisplay::test_mouse_alt_press_column_mode()
+{
+    mEdit->loadContent(makeLines(5));
+    QPoint pt(mEdit->gutterWidth() + 4, mEdit->textHeight() + 2);
+    QTest::mousePress(mEdit->viewport(), Qt::LeftButton, Qt::AltModifier, pt);
+    QCOMPARE(mEdit->mActiveSelectionMode, SelectionMode::Column);
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::AltModifier, pt);
+    // a plain press switches back to normal mode
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QCOMPARE(mEdit->mActiveSelectionMode, SelectionMode::Normal);
+}
+
+void TestQSyneditDisplay::test_gutter_click_toggles_fold()
+{
+    mEdit->loadContent(makeFoldableLines());
+    // the fold button of the block starting at line 2
+    int h = mEdit->textHeight();
+    int x = mEdit->gutterWidth() - mEdit->gutter().rightOffset() + 2;
+    int y = 2 * h + 2;
+    QVERIFY(mEdit->lineToRow(5) == 5);  // not folded yet
+    QTest::mousePress(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(x, y));
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(x, y));
+    // lines 3..4 hidden: line 5 now directly follows line 2
+    QCOMPARE(mEdit->lineToRow(5), mEdit->lineToRow(2) + 1);
+    mEdit->unCollpaseAll();
+}
+
 void TestQSyneditDisplay::test_page_up_down()
 {
     mEdit->loadContent(makeLines(50));

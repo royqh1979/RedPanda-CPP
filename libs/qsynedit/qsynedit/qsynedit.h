@@ -687,7 +687,7 @@ private:
     void adjustTopPosToAnchor();
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    void computeCaret();
+    void computeCaret(const QPoint &point);
     void computeScroll(bool isDragging);
     void selCurrentToken();
     void selTokenAt(const CharPos &pos);

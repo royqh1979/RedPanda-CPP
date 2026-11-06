@@ -22,6 +22,12 @@ private slots:
     void test_ensure_caret_visible();
     void test_mouse_positioning();
     void test_mouse_positioning_with_fold();
+    void test_mouse_press_moves_caret();
+    void test_mouse_press_moves_caret_wrap();
+    void test_mouse_press_moves_caret_fold();
+    void test_mouse_double_click_selects_word();
+    void test_mouse_alt_press_column_mode();
+    void test_gutter_click_toggles_fold();
     void test_wordwrap_basics();
     void test_wordwrap_caret_display();
     void test_wordwrap_vertical_movement();

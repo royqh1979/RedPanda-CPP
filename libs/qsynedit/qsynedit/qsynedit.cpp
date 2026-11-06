@@ -3124,12 +3124,10 @@ QRect QSynEdit::calculateInputCaretRect() const
                  mTextHeight);
 }
 
-void QSynEdit::computeCaret()
+void QSynEdit::computeCaret(const QPoint &point)
 {
-    QPoint mousePos = QCursor::pos();
-    mousePos = mapFromGlobal(mousePos);
-    int x=mousePos.x();
-    int y=mousePos.y();
+    int x=point.x();
+    int y=point.y();
 
     VisualPos caretNearestPos = pixelsToNearestGlyphPos(x, y);
     caretNearestPos.row = minMax(caretNearestPos.row, 0, displayLineCount()-1);
@@ -7303,7 +7301,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
                   || ! selAvail())) {
             invalidateSelection();
             //mBlockEnd=mBlockBegin;
-            computeCaret();
+            computeCaret(event->pos());
         }else {
             return;
         }
@@ -7313,7 +7311,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             wasSel = true;
             mMouseDownPos = event->pos();
         }
-        computeCaret();
+        computeCaret(event->pos());
         mStateFlags.setFlag(StateFlag::WaitForDragging,false);
         if (wasSel && mOptions.testFlag(EditorOption::DragDropEditing) && (x >= mGutterWidth + 2)
                 && (mActiveSelectionMode == SelectionMode::Normal) && inSelection(displayToBufferPos(pixelsToGlyphPos(x, y))) ) {
@@ -7355,7 +7353,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 
     if (mStateFlags.testFlag(StateFlag::WaitForDragging) &&
             !mStateFlags.testFlag(StateFlag::DblClicked)) {
-        computeCaret();
+        computeCaret(event->pos());
         if (! (event->modifiers() & Qt::ShiftModifier))
             internalSetSelBegin(caretPos());
         internalSetSelEnd(caretPos());
