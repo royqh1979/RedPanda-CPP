@@ -368,11 +368,13 @@ GlyphIndex=glyph 序号。
   未算行按 1 段"的下界估计，回填后逐步修正。
 - **绘制的水平裁剪是两段正交集的交集**（painter）：`QSynEditPainter::mLeft/mRight`
   是**可见区域**（构造时由 paintEvent 的裁剪矩形 + `mLeftPos` 水平滚动算出，
-  全程不变）；`mRow.segmentStartX/mRow.segmentEndX` 是**当前 wrap 段界**（每行
-  重设，无 wrap 时恒 `[0, INT_MAX]`）。token/选区裁剪一律用交集
-  （`mRow.tokenClipLeft/mRow.tokenClipRight`）：wrap 下段界更紧、无 wrap 下
-  可见区域（含水平滚动）生效。曾把段界覆写进 `mLeft/mRight`，导致无 wrap
-  水平滚动后内容不可见——两个概念不得混用。
+  全程不变，**控件/段内相对坐标**）；`RowPaintContext.segmentStartX/segmentEndX`
+  是**当前 wrap 段界**（每行重设，无 wrap 时恒 `[0, INT_MAX]`，**行绝对
+  坐标**）。两个坐标系不同：求交前可见区域要先平移 `+segmentStartX`。
+  token/选区裁剪一律用这个交集（`tokenClipLeft/tokenClipRight`）：
+  wrap 下段界更紧、无 wrap 下可见区域（含水平滚动）生效。两个历史 bug
+  都是混了这两个概念/坐标系：段界覆写进 `mLeft/mRight` 导致无 wrap 水平
+  滚动后内容不可见；求交漏掉平移导致 wrap 第 2 段起内容不绘制。
 - 生命周期：`QPointer` 在对象销毁时自动置空，worker 可据此知道视图已销毁
   （queued 事件也会被 Qt 在对象销毁时丢弃）。
 

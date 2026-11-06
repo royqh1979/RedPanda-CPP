@@ -1025,6 +1025,22 @@ void QSynEditPainter::paintLines()
         ctx.rowSelEnd = 0;
         ctx.isRowEndSelected = false;
 
+        // Segment bounds and the token/selection clip for this row (the
+        // selection block below already needs them). mLeft..mRight are the
+        // visible region in WIDGET x (segment-relative under word wrap);
+        // shift them into the line-absolute glyph-x frame of the segment
+        // bounds before intersecting. Without word wrap segmentStartX is 0
+        // and the visible region (carrying mLeftPos) rules; with word wrap
+        // mLeftPos is 0 and the segment bounds are the tighter side.
+        const WrapLayout &wrap = mEdit->wrapLayout(line);
+        ctx.segmentStartX = wrap.segmentStartXs[segment];
+        if (segment+1 < wrap.segmentStartChars.count())
+            ctx.segmentEndX = wrap.segmentStartXs[segment+1]-1;
+        else
+            ctx.segmentEndX = INT_MAX;
+        ctx.tokenClipLeft = std::max(mLeft + ctx.segmentStartX, ctx.segmentStartX);
+        ctx.tokenClipRight = std::min(mRight + ctx.segmentStartX, ctx.segmentEndX);
+
         // Does the selection intersect the visible area?
         if (anySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
@@ -1090,13 +1106,6 @@ void QSynEditPainter::paintLines()
         // back into the cache.
         QList<int> glyphStartPositionsList;
         bool recomputeGlyphPositions = lineTextChanged;
-        // token/selection clipping for this row: the intersection of the
-        // visible region (mLeft..mRight, which carries the horizontal
-        // scroll offset) and this wrap segment's bounds. The two are
-        // orthogonal: without word wrap the single segment spans the whole
-        // line and the visible region rules; with word wrap mLeftPos is 0
-        // and the segment bounds are the tighter side
-        const WrapLayout &wrap = mEdit->wrapLayout(line);
         if (recomputeGlyphPositions) {
             // same length, values recomputed while scanning tokens
             glyphStartPositionsList = glyphStartCharList;
@@ -1104,13 +1113,6 @@ void QSynEditPainter::paintLines()
             glyphStartPositionsList = wrap.glyphStartXList;
             ctx.lineWidth = wrap.totalWidth;
         }
-        ctx.segmentStartX = wrap.segmentStartXs[segment];
-        if (segment+1 < wrap.segmentStartChars.count())
-            ctx.segmentEndX = wrap.segmentStartXs[segment+1]-1;
-        else
-            ctx.segmentEndX = INT_MAX;
-        ctx.tokenClipLeft = std::max(mLeft, ctx.segmentStartX);
-        ctx.tokenClipRight = std::min(mRight, ctx.segmentEndX);
         bool isLastSegment = (segment+1 == wrap.segmentStartChars.count());
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last

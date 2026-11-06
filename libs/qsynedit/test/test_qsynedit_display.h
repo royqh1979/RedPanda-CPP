@@ -43,6 +43,7 @@ private slots:
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();
     void test_horizontal_scroll_painting();
+    void test_wordwrap_paints_all_segments();
 };
 
 }

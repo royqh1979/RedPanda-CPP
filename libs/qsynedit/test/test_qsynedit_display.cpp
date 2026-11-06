@@ -1209,4 +1209,31 @@ void TestQSyneditDisplay::test_horizontal_scroll_painting()
     QVERIFY(countTextRowColors() >= 2);
 }
 
+void TestQSyneditDisplay::test_wordwrap_paints_all_segments()
+{
+    // regression: the token clip bounds are in the line-absolute frame (the
+    // widget-space visible region shifted by the segment start); mixing the
+    // frames painted segment 1 and left segments 2+ blank
+    mEdit->loadContent(QStringList() << QString(500, 'x'));
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    QVERIFY(mEdit->wrapSegmentCount(0) > 2);
+
+    QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+    int h = mEdit->textHeight();
+    for (int row = 1; row <= 2; row++) {
+        QSet<QRgb> colors;
+        int y = row * h + h / 2;
+        for (int x = mEdit->gutterWidth() + 2; x < mEdit->viewport()->width() - 2; x++)
+            colors.insert(image.pixel(x, y));
+        QVERIFY2(colors.count() >= 2,
+                 qPrintable(QString("wrap segment at row %1 not painted").arg(row)));
+    }
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
 }
