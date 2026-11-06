@@ -297,28 +297,35 @@ void QSynEditPainter::computeSelectionInfo()
         // Don't care if the selection is not visible.
         anySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
         if (anySelection) {
-            // Transform the selection from text space into screen space
-            mSelStart.row = mEdit->lineSegmentToRow(selStart.line,
-                                                    mEdit->wrapSegmentOfChar(selStart.line, selStart.ch));
-            mSelEnd.row = mEdit->lineSegmentToRow(selEnd.line,
-                                                  mEdit->wrapSegmentOfChar(selEnd.line, selEnd.ch));
+            // Transform the selection from text space into canvas space:
+            // row is the global display row, x is segment-relative (canvas
+            // x); the selection block shifts it back to line-absolute with
+            // the row's segmentStartX when clipping
+            int startSegment = mEdit->wrapSegmentOfChar(selStart.line, selStart.ch);
+            int endSegment = mEdit->wrapSegmentOfChar(selEnd.line, selEnd.ch);
+            mSelStart.row = mEdit->lineSegmentToRow(selStart.line, startSegment);
+            mSelEnd.row = mEdit->lineSegmentToRow(selEnd.line, endSegment);
+            int startSegX = mEdit->wrapLayout(selStart.line).segmentStartXs[startSegment];
+            int endSegX = mEdit->wrapLayout(selEnd.line).segmentStartXs[endSegment];
             if (mEdit->mInputPreeditString.length() > 0
                     && selStart.line == mEdit->mCaretLine) {
                 QString lineTextWithPreedit = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelStart.x = mEdit->charToGlyphLeft(selStart.line, lineTextWithPreedit,selStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(selStart.line, lineTextWithPreedit,selStart.ch)
+                        - startSegX;
             } else {
-                mSelStart.x = mEdit->charToGlyphLeft(selStart.line,selStart.ch);
+                mSelStart.x = mEdit->charToGlyphLeft(selStart.line,selStart.ch) - startSegX;
             }
             if (mEdit->mInputPreeditString.length() > 0
                     && selEnd.line == mEdit->mCaretLine) {
                 QString lineTextWithPreedit = mEdit->lineText().left(mEdit->mCaretCh)
                         + mEdit->mInputPreeditString
                         + mEdit->lineText().mid(mEdit->mCaretCh);
-                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, lineTextWithPreedit,selEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, lineTextWithPreedit,selEnd.ch)
+                        - endSegX;
             } else {
-                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, selEnd.ch);
+                mSelEnd.x = mEdit->charToGlyphLeft(selEnd.line, selEnd.ch) - endSegX;
             }
             // In the column selection mode sort the begin and end of the selection,
             // this makes the painting code simpler.

@@ -263,6 +263,7 @@ target_moc_classes(test-editor
     src/codesnippetsmanager
     #test
     test/test_editor_base
+    test/test_editor_display
     test/test_editor_symbol_completion
 )
 target_include_directories(test-editor PRIVATE

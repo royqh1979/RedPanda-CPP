@@ -124,7 +124,9 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &Gutter::changed, this, &QSynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
-    this->setCursor(Qt::CursorShape::IBeamCursor);
+    // the I-beam belongs to the text area (viewport) only; setting it on the
+    // frame would leak it to the scrollbars (they inherit the parent cursor)
+    viewport()->setCursor(Qt::CursorShape::IBeamCursor);
     mInserting = true;
     mLineSpacingFactor = 1.0;
 
@@ -7085,18 +7087,18 @@ void QSynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribu
 void QSynEdit::updateMouseCursor(){
     QPoint p = mapFromGlobal(cursor().pos());
     if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
-        setCursor(Qt::ArrowCursor);
+        viewport()->setCursor(Qt::ArrowCursor);
     } else if (p.x() > mGutterWidth) {
         CharPos pos;
         if (pointToCharLine(p,pos)) {
             if (inSelection(pos)) {
-                setCursor(Qt::ArrowCursor);
+                viewport()->setCursor(Qt::ArrowCursor);
                 return;
             }
         }
-        setCursor(Qt::IBeamCursor);
+        viewport()->setCursor(Qt::IBeamCursor);
     } else {
-        setCursor(Qt::PointingHandCursor);
+        viewport()->setCursor(Qt::PointingHandCursor);
     }
 }
 

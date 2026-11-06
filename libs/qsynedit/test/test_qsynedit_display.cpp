@@ -202,6 +202,78 @@ void TestQSyneditDisplay::test_gutter_click_toggles_fold()
     mEdit->unCollpaseAll();
 }
 
+void TestQSyneditDisplay::test_gutter_fold_button_paints()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+    int h = mEdit->textHeight();
+    // the fold button square of the block starting at line 2
+    int x0 = mEdit->gutterWidth() - mEdit->gutter().rightOffset();
+    int y0 = 2 * h;
+    QSet<QRgb> colors;
+    for (int x = x0; x < x0 + mEdit->gutter().rightOffset() - 2; x++)
+        for (int y = y0 + 2; y < y0 + h - 2; y++)
+            colors.insert(image.pixel(x, y));
+    QVERIFY(colors.count() >= 2);
+
+    // same with word wrap on
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+    colors.clear();
+    for (int x = x0; x < x0 + mEdit->gutter().rightOffset() - 2; x++)
+        for (int y = y0 + 2; y < y0 + h - 2; y++)
+            colors.insert(image.pixel(x, y));
+    QVERIFY(colors.count() >= 2);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_wrap_selection_paints_on_start_segment()
+{
+    // regression: the selection's VisualPos.x is segment-relative (canvas
+    // x); computeSelectionInfo used line-absolute x, which double-shifted
+    // the start/end comparisons and dropped the highlight on the
+    // selection's start segment when it wasn't the line's first
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    const WrapLayout &layout = mEdit->wrapLayout(1);
+    QVERIFY(layout.segmentStartChars.count() > 1);
+
+    // select from mid segment 1 of line 1 into line 2
+    int start = layout.segmentStartChars[1] + 2;
+    mEdit->setCaretAndSelection(CharPos{5, 2}, CharPos{start, 1}, CharPos{5, 2});
+
+    QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+    int h = mEdit->textHeight();
+    int row = mEdit->lineSegmentToRow(1, 1);
+    int y = row * h + h / 2;
+    // the selection runs to the row's end: the right third must contain
+    // highlight-background pixels
+    QRgb highlight = mEdit->palette().color(QPalette::Highlight).rgb();
+    int x0 = mEdit->gutterWidth() + 2 + mEdit->viewport()->width() / 2;
+    bool found = false;
+    for (int x = x0; x < mEdit->viewport()->width() - 2; x++) {
+        if (image.pixel(x, y) == highlight) {
+            found = true;
+            break;
+        }
+    }
+    QVERIFY(found);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
 void TestQSyneditDisplay::test_page_up_down()
 {
     mEdit->loadContent(makeLines(50));
