@@ -47,16 +47,50 @@ class QSynEdit;
 class QSynEditPainter
 {
     struct SynTokenAccu {
-        int width;
-        int left;
-        int startGlyph;
-        int endGlyph;
+        int width = 0;
+        int left = 0;
+        int startGlyph = 0;
+        int endGlyph = 0;
 //        QString s;
         QColor foreground;
         QColor background;
-        FontStyles style;
+        FontStyles style = FontStyle::fsNone;
         QFont font;
-        bool showSpecialGlyphs;
+        bool showSpecialGlyphs = false;
+    };
+
+    // per-row scratch state, created as a local in paintLines' row loop and
+    // passed down by reference; grouping it here keeps the painter's
+    // per-paint configuration (the members far below) untouched during the
+    // row loop
+    struct RowPaintContext {
+        // bounds of the wrap segment being painted (absolute glyph x);
+        // [0, INT_MAX] when word wrap is off (the single segment spans the
+        // whole line)
+        int segmentStartX = 0;
+        int segmentEndX = INT_MAX;
+        // token/selection clipping: the intersection of the visible region
+        // (mLeft..mRight) and the wrap segment bounds. With word wrap the
+        // segment bounds are the tighter side; without it the visible
+        // region rules (horizontal scrolling)
+        int tokenClipLeft = 0;
+        int tokenClipRight = INT_MAX;
+        // info about normal and selected text and background colors
+        bool isSpecialLine = false;
+        bool isCurrentLine = false;
+        bool isRowEndSelected = false;
+        QColor foreground, background;
+        QColor selectionForeground, selectionBackground;
+        QColor specialLineForeground, specialLineBackground;
+        // selection of the current row
+        int rowSelStart = 0, rowSelEnd = 0;
+        bool hasSelectionInRow = false;
+        int lineWidth = 0;
+        // painting the background and the text
+        QRect rcRow, rcToken;
+        QList<TokenTextInfo> tokens;
+        QList<TokenBackgroundInfo> tokenBackgrounds;
+        SynTokenAccu tokenAccu;
     };
 
 public:
@@ -71,12 +105,13 @@ public:
     void paintGutter(const QRect& clip);
 
 private:
-    QColor colEditorBG();
+    QColor lineBackgroundColor(bool isCurrentLine);
     void computeSelectionInfo();
-    void getDrawingColors(bool selected, QColor& foreground , QColor& background);
-    int fixXValue(int xpos);
-    void paintLine();
+    void getDrawingColors(const RowPaintContext &row, bool selected, QColor& foreground , QColor& background);
+    int lineXToWidgetX(int segmentStartX, int xpos);
+    void flushRowTokens(RowPaintContext &row);
     void paintToken(
+            RowPaintContext &row,
             const QString& lineText,
             const QList<int> &glyphStartCharList,
             const QList<int> &glyphStartXList,
@@ -88,8 +123,9 @@ private:
             QColor background,
             const QFont& font, bool showGlyphs
             );
-    void paintEditAreas(const EditingAreaList& areaList);
-    void paintHighlightToken(const QString& lineText,
+    void paintEditAreas(RowPaintContext &row, const EditingAreaList& areaList);
+    void paintHighlightToken(RowPaintContext &row,
+                             const QString& lineText,
                              const QList<int> &glyphStartCharList,
                              const QList<int> &glyphStartPositionsList,
                              bool fillToEOL);
@@ -97,6 +133,7 @@ private:
     // line (IME preedit), so glyph x positions are computed while scanning
     // instead of read from the layout cache (and never written back)
     void addHighlightToken(
+            RowPaintContext &row,
             const QString& lineText,
             const QString& token, int tokenLeft,
             int line, PTokenAttribute p_Attri, bool showGlyphs,
@@ -127,47 +164,14 @@ private:
     DisplayCoord mSelEnd; // end of selected area
     int mFirstLine, mLastLine;
 
+    // per-row scratch state lives in RowPaintContext (defined above): a
+    // local in paintLines' row loop, passed down by reference
     QRect mClip;
     // visible horizontal region in absolute glyph x (set once by
     // paintEvent from the clip rect and mLeftPos; the horizontal scroll
     // offset lives here). Never overwritten per row.
     int mFirstRow, mLastRow, mLeft, mRight;
-
-    // per-row scratch state, reset/updated as paintLines walks the visible
-    // rows; grouping it here keeps the per-paint configuration above
-    // untouched during the row loop
-    struct RowPaintContext {
-        // bounds of the wrap segment being painted (absolute glyph x);
-        // [0, INT_MAX] when word wrap is off (the single segment spans the
-        // whole line)
-        int segmentStartX = 0;
-        int segmentEndX = INT_MAX;
-        // token/selection clipping: the intersection of the visible region
-        // (mLeft..mRight) and the wrap segment bounds. With word wrap the
-        // segment bounds are the tighter side; without it the visible
-        // region rules (horizontal scrolling)
-        int tokenClipLeft = 0;
-        int tokenClipRight = INT_MAX;
-        // info about normal and selected text and background colors
-        bool isSpecialLine = false;
-        bool isCurrentLine = false;
-        bool isLineEndSelected = false;
-        QColor foreground, background;
-        QColor selectionForeground, selectionBackground;
-        QColor specialLineForeground, specialLineBackground;
-        // selection of the current row
-        int lineSelStart = 0, lineSelEnd = 0;
-        bool hasSelectionInLine = false;
-        int lineWidth = 0;
-        // painting the background and the text
-        QRect rcLine, rcToken;
-        QList<TokenTextInfo> lineTokens;
-        QList<TokenBackgroundInfo> lineTokenBackgrounds;
-        SynTokenAccu tokenAccu;
-    };
-    RowPaintContext mRow;
 };
-
 }
 
 #endif // PAINTER_H

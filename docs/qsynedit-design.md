@@ -368,9 +368,11 @@ GlyphIndex=glyph 序号。
   （queued 事件也会被 Qt 在对象销毁时丢弃）。
 
 **painter 状态组织（已实现）**：`QSynEditPainter` 是每次 paintEvent 构造的
-临时对象；成员分两组——构造时设定、行循环中只读的配置（`mLeft/mRight/mClip/
-mSelStart/mSelEnd` 等），和集中在 `RowPaintContext mRow` 里的逐行暂态
-（段界、clip 交集、行选区、颜色、`rcLine/rcToken`、token 累积器等）。
+临时对象；成员只保留构造时设定、行循环中只读的配置（`mLeft/mRight/mClip/
+mSelStart/mSelEnd` 等）。逐行暂态（段界、clip 交集、行选区、颜色、
+`rcRow/rcToken`、token 累积器等）集中在 `RowPaintContext`，作为局部变量
+在 paintLines 的行循环中创建、按引用传给下游方法；只取一两个字段的小方法
+（`lineXToWidgetX`/`lineBackgroundColor`）直接传字段值。
 painter 经 `const Document *mDocument` 只读访问文档（编译期强制），
 不再持有 document 的写路径。
 
