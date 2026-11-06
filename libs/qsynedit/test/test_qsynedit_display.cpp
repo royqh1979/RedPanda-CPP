@@ -323,6 +323,22 @@ void TestQSyneditDisplay::test_scroll_top_pos()
     QCOMPARE(mEdit->topPos(), value);
 }
 
+void TestQSyneditDisplay::test_scrollbar_drag_is_pixel_smooth()
+{
+    // thumb drags report pixel positions: the top offset must keep the
+    // sub-row remainder (content shifts by single pixels)
+    mEdit->loadContent(makeLines(50));
+    int h = mEdit->textHeight();
+    QScrollBar *vsb = mEdit->verticalScrollBar();
+    vsb->setValue(10 * h + h / 2);
+    QCOMPARE(mEdit->topPos(), 10 * h + h / 2);
+    QCOMPARE(mEdit->mTopLine, 10);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    // the painted first row is shifted up by exactly the remainder
+    QCOMPARE(mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{0, 10})).y(),
+             -(h / 2));
+}
+
 void TestQSyneditDisplay::test_ensure_caret_visible()
 {
     mEdit->loadContent(makeLines(50));

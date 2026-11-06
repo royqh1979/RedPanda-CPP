@@ -19,6 +19,7 @@ private slots:
     void test_page_top_bottom();
     void test_file_start_end();
     void test_scroll_top_pos();
+    void test_scrollbar_drag_is_pixel_smooth();
     void test_ensure_caret_visible();
     void test_mouse_positioning();
     void test_mouse_positioning_with_fold();
