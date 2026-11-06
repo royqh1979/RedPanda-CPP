@@ -4283,28 +4283,28 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="699"/>
+        <location filename="qsynedit/document.cpp" line="758"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>Невозможно открыть файл &apos;%1&apos; для чтения!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="739"/>
-        <location filename="qsynedit/document.cpp" line="862"/>
+        <location filename="qsynedit/document.cpp" line="798"/>
+        <location filename="qsynedit/document.cpp" line="921"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
         <translation>Невозможно загрузить кодек &apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="758"/>
+        <location filename="qsynedit/document.cpp" line="817"/>
         <source>&apos;%1&apos; is a binaray File!</source>
         <translation>&apos;%1&apos; это двоичный файл!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="865"/>
+        <location filename="qsynedit/document.cpp" line="924"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>Невозможно открыть файл &apos;%1&apos; для сохранения!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="886"/>
+        <location filename="qsynedit/document.cpp" line="945"/>
         <source>Data not correctly writed to file &apos;%1&apos;.</source>
         <translation>Запись данных в файл &apos;%1&apos; произведена некорректно.</translation>
     </message>
