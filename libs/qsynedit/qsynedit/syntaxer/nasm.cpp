@@ -97,7 +97,9 @@ QSet<QString> NASMSyntaxer::keywords() const
 
 PSyntaxer NASMSyntaxer::createInstance() const
 {
-    return std::make_shared<NASMSyntaxer>();
+    auto result = std::make_shared<NASMSyntaxer>();
+    copySettingsTo(result.get());
+    return result;
 }
 
 }

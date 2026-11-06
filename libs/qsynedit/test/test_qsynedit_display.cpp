@@ -379,22 +379,40 @@ void TestQSyneditDisplay::test_paging_wrap_before_ready()
     // no wait for the sweep: everything below the window is an estimate
 
     int windowRows = mEdit->linesInWindow();
-    int prevLine = 0;
+    int prevLine = 0, prevSegment = 0;
     for (int i = 0; i < 5; i++) {
         mEdit->processCommand(EditCommand::PageDown);
-        QVERIFY(mEdit->caretLine() > prevLine);
-        prevLine = mEdit->caretLine();
-        // the caret must end up fully visible
+        // a line may wrap into more segments than a window holds rows, so
+        // strict advance is checked in (line, segment) space, not by line
         int segment, x;
         mEdit->charToSegmentCoord(mEdit->caretLine(), mEdit->caretCh(), segment, x);
+        QVERIFY(mEdit->caretLine() > prevLine
+                || (mEdit->caretLine() == prevLine && segment > prevSegment));
+        prevLine = mEdit->caretLine();
+        prevSegment = segment;
+        // the caret must end up fully visible
         int row = mEdit->windowRowOfLineSegment(mEdit->caretLine(), segment);
         QVERIFY(row >= 0 && row < windowRows);
     }
     // and back up
     for (int i = 0; i < 5; i++) {
         mEdit->processCommand(EditCommand::PageUp);
-        QVERIFY(mEdit->caretLine() < prevLine);
+        int segment, x;
+        mEdit->charToSegmentCoord(mEdit->caretLine(), mEdit->caretCh(), segment, x);
+        QVERIFY(mEdit->caretLine() < prevLine
+                || (mEdit->caretLine() == prevLine && segment < prevSegment));
         prevLine = mEdit->caretLine();
+        prevSegment = segment;
+    }
+    // estimates may shift mid-test (the sweep completes in the background),
+    // so down/up counts need not cancel exactly; paging up to a standstill
+    // must converge on the very start
+    for (int i = 0; i < 10 && (prevLine > 0 || prevSegment > 0); i++) {
+        mEdit->processCommand(EditCommand::PageUp);
+        int segment, x;
+        mEdit->charToSegmentCoord(mEdit->caretLine(), mEdit->caretCh(), segment, x);
+        prevLine = mEdit->caretLine();
+        prevSegment = segment;
     }
     QCOMPARE(mEdit->caretLine(), 0);
 
@@ -426,13 +444,17 @@ void TestQSyneditDisplay::test_page_up_down()
 void TestQSyneditDisplay::test_page_top_bottom()
 {
     mEdit->loadContent(makeLines(50));
-    mEdit->setCaretPos(CharPos{0, 10});
+    int windowRows = mEdit->linesInWindow();
+    QVERIFY(windowRows > 0 && windowRows < 50);
+    // start with the caret inside the window: setting it must not scroll,
+    // so the top stays at line 0 regardless of the environment's metrics
+    mEdit->setCaretPos(CharPos{0, windowRows / 2});
 
     mEdit->processCommand(EditCommand::PageTop);
     QCOMPARE(mEdit->caretPos().line, 0);
 
     mEdit->processCommand(EditCommand::PageBottom);
-    QCOMPARE(mEdit->caretPos().line, mEdit->linesInWindow() - 1);
+    QCOMPARE(mEdit->caretPos().line, windowRows - 1);
 }
 
 void TestQSyneditDisplay::test_file_start_end()
@@ -577,15 +599,22 @@ void TestQSyneditDisplay::test_wordwrap_caret_display()
     }
 
     // Home/End operate on the wrap segment, not the buffer line.
-    // EnhanceEndKey first goes after the last non-blank of the segment
-    // (char 43 = 'z'), then to the segment end (char 45)
+    // EnhanceEndKey first goes after the last non-blank of the segment,
+    // then to the segment end; both targets are derived from the layout
+    // so the test does not depend on the environment's font metrics
     mEdit->setCaretPos(CharPos{layout.segmentStartChars[1]+2, 1});
     mEdit->processCommand(QSynedit::EditCommand::LineStart);
     QCOMPARE(mEdit->caretCh(), layout.segmentStartChars[1]);
+    int segEnd = mEdit->wrapSegmentEndChar(1, 1);
+    QString text = mEdit->lineText(1);
+    int lastNonBlank = segEnd - 1;
+    while (lastNonBlank >= layout.segmentStartChars[1]
+           && (text[lastNonBlank] == ' ' || text[lastNonBlank] == '\t'))
+        lastNonBlank--;
     mEdit->processCommand(QSynedit::EditCommand::LineEnd);
-    QCOMPARE(mEdit->caretCh(), 44);
+    QCOMPARE(mEdit->caretCh(), lastNonBlank + 1);
     mEdit->processCommand(QSynedit::EditCommand::LineEnd);
-    QCOMPARE(mEdit->caretCh(), mEdit->wrapSegmentEndChar(1, 1));
+    QCOMPARE(mEdit->caretCh(), segEnd);
 }
 
 void TestQSyneditDisplay::test_wordwrap_vertical_movement()
@@ -1410,6 +1439,7 @@ void TestQSyneditDisplay::test_wrap_job_early_abort()
         state->latestGeneration = 1;
         state->jobsInFlight = 1;
         WrapLayoutJob job(mEdit->document(), 1, 0,
+                          mEdit->syntaxer()->createInstance(),
                           mEdit->font(), mEdit->mGlyphCalculator,
                           mEdit->wrapWidth(), true, state);
         QList<WrapLayoutBatch> batches;

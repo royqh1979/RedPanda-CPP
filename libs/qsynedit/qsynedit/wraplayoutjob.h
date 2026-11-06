@@ -42,6 +42,7 @@ class WrapLayoutJob : public QObject, public QRunnable
     Q_OBJECT
 public:
     WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
+                  PSyntaxer syntaxer,
                   const QFont &baseFont, const GlyphCalculator &glyphCalculator,
                   int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState);
     void run() override;
@@ -53,6 +54,9 @@ private:
     // could be stale); the view reschedules with fresh inputs
     void postAborted();
     PDocument mDocument;
+    // the view's syntaxer, cloned at schedule time (carries the color
+    // scheme's attribute styles, which affect glyph widths)
+    PSyntaxer mSyntaxer;
     int mGeneration;
     int mContentVersion;
     // the document's content version at construction (= schedule) time;

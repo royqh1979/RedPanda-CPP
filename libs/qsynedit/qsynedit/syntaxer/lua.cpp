@@ -1006,7 +1006,11 @@ bool LuaSyntaxer::needsLineState() const
 
 PSyntaxer LuaSyntaxer::createInstance() const
 {
-    return std::make_shared<LuaSyntaxer>();
+    auto result = std::make_shared<LuaSyntaxer>();
+    copySettingsTo(result.get());
+    result->mUseXMakeLibs = mUseXMakeLibs;
+    result->mCustomTypeKeywords = mCustomTypeKeywords;
+    return result;
 }
 
 const QSet<QString> &LuaSyntaxer::customTypeKeywords() const

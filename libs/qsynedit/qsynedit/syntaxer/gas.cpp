@@ -127,7 +127,10 @@ void GASSyntaxer::setSyntaxMode(SyntaxMode newSyntaxMode)
 
 PSyntaxer GASSyntaxer::createInstance() const
 {
-    return std::make_shared<GASSyntaxer>();
+    auto result = std::make_shared<GASSyntaxer>();
+    copySettingsTo(result.get());
+    result->mPrefixRegisterNames = mPrefixRegisterNames;
+    return result;
 }
 
 bool GASSyntaxer::prefixRegisterNames() const

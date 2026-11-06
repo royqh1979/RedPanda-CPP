@@ -1451,6 +1451,8 @@ bool GLSLSyntaxer::needsLineState() const
 
 PSyntaxer GLSLSyntaxer::createInstance() const
 {
-    return std::make_shared<GLSLSyntaxer>();
+    auto result = std::make_shared<GLSLSyntaxer>();
+    copySettingsTo(result.get());
+    return result;
 }
 }

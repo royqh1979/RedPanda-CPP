@@ -165,7 +165,9 @@ bool TextSyntaxer::needsLineState() const
 
 PSyntaxer TextSyntaxer::createInstance() const
 {
-    return std::make_shared<TextSyntaxer>();
+    auto result = std::make_shared<TextSyntaxer>();
+    copySettingsTo(result.get());
+    return result;
 }
 
 }

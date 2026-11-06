@@ -217,4 +217,16 @@ bool IndentInfo::operator==(const IndentInfo &i2) const
     return type==i2.type && lineSeq==i2.lineSeq && keyword == i2.keyword;
 }
 
+void Syntaxer::copySettingsTo(Syntaxer *target) const
+{
+    // copy values into the target's own attribute objects, so the target's
+    // member pointers stay valid and nothing is shared across instances
+    for (auto it = mAttributes.constBegin(); it != mAttributes.constEnd(); ++it) {
+        PTokenAttribute targetAttr = target->mAttributes.value(it.key());
+        if (targetAttr)
+            targetAttr->copyFrom(*it.value());
+    }
+    target->mWordBreakChars = mWordBreakChars;
+}
+
 }

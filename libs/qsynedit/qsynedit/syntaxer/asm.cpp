@@ -95,7 +95,9 @@ const PTokenAttribute &ASMSyntaxer::octAttribute() const
 
 PSyntaxer ASMSyntaxer::createInstance() const
 {
-    return std::make_shared<ASMSyntaxer>();
+    auto result = std::make_shared<ASMSyntaxer>();
+    copySettingsTo(result.get());
+    return result;
 }
 
 const PTokenAttribute &ASMSyntaxer::hexAttribute() const

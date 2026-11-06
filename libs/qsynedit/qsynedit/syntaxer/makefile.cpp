@@ -705,7 +705,9 @@ bool MakefileSyntaxer::needsLineState() const
 
 PSyntaxer MakefileSyntaxer::createInstance() const
 {
-    return std::make_shared<MakefileSyntaxer>();
+    auto result = std::make_shared<MakefileSyntaxer>();
+    copySettingsTo(result.get());
+    return result;
 }
 
 }

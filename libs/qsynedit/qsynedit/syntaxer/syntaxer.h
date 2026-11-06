@@ -97,6 +97,15 @@ public:
         }
     }
 
+    // copy the color/style values from another attribute of the same name
+    // (used when cloning a syntaxer: the clone's own attribute objects
+    // receive the source's values, so nothing is shared across threads)
+    void copyFrom(const TokenAttribute &other) {
+        mForeground = other.mForeground;
+        mBackground = other.mBackground;
+        mStyles = other.mStyles;
+    }
+
     const QColor &foreground() const { return mForeground; }
     void setForeground(const QColor &color) { mForeground = color; }
 
@@ -174,6 +183,9 @@ public:
     virtual bool supportFolding() const = 0;
     virtual bool needsLineState() const = 0;
 
+    // a fresh instance of the same language with ALL configuration copied
+    // (attribute color/style values, word-break chars, subclass options);
+    // transient parse state is not copied
     virtual std::shared_ptr<Syntaxer> createInstance() const = 0;
 
 
@@ -188,6 +200,9 @@ protected:
     void addAttribute(PTokenAttribute attribute) { mAttributes[attribute->name()]=attribute; }
     void clearAttributes() { mAttributes.clear(); }
     virtual int attributesCount() const { return mAttributes.size(); }
+    // copy attribute values + word-break chars into the target's own
+    // attribute objects (nothing is shared); for subclasses' createInstance
+    void copySettingsTo(Syntaxer *target) const;
 
 private:
     QMap<QString,PTokenAttribute> mAttributes;

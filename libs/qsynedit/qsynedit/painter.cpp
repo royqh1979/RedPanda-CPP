@@ -796,7 +796,7 @@ void QSynEditPainter::addHighlightToken(
 //        Background = colEditorBG(ctx.isCurrentLine);
 //    }
 
-    mEdit->onPreparePaintHighlightToken(line,mEdit->mSyntaxer->getTokenPos(),
+    mEdit->onPreparePaintHighlightToken(line, tokenStartChar,
         token,attr,style,foreground,background);
 
     if (!background.isValid() ) {

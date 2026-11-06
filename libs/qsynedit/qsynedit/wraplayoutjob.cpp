@@ -21,9 +21,11 @@
 namespace QSynedit {
 
 WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
+                             PSyntaxer syntaxer,
                              const QFont &baseFont, const GlyphCalculator &glyphCalculator,
                              int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState):
     mDocument(document),
+    mSyntaxer(syntaxer),
     mGeneration(generation),
     mContentVersion(contentVersion),
     mStartVersion(document->contentVersion()),
@@ -37,7 +39,7 @@ WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int cont
 
 void WrapLayoutJob::run()
 {
-    PSyntaxer syntaxer = mDocument->createSyntaxerInstance();
+    PSyntaxer syntaxer = mSyntaxer;
     int count = mDocument->count();
     bool contentStale = false;
     for (int line=0; line<count; line++) {

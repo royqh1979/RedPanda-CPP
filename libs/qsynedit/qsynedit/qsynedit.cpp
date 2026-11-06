@@ -478,6 +478,9 @@ void QSynEdit::scheduleWrapLayoutJob() const
     mWrapJobState->jobsInFlight++;
     WrapLayoutJob *job = new WrapLayoutJob(
                 mDocument, mWrapGeneration, mWrapContentVersion,
+                // clone of the view's syntaxer with the scheme's attribute
+                // styles (they affect glyph widths)
+                mSyntaxer->createInstance(),
                 font(), mGlyphCalculator, wrapWidth(),
                 mOptions.testFlag(EditorOption::WordWrap), mWrapJobState);
     connect(job, &WrapLayoutJob::layoutsReady,

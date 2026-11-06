@@ -1481,7 +1481,11 @@ void CppSyntaxer::setHandleLastBackSlash(bool newHandleLastBackSlash)
 
 PSyntaxer CppSyntaxer::createInstance() const
 {
-    return std::make_shared<CppSyntaxer>();
+    auto result = std::make_shared<CppSyntaxer>();
+    copySettingsTo(result.get());
+    result->mCustomTypeKeywords = mCustomTypeKeywords;
+    result->mHandleLastBackSlash = mHandleLastBackSlash;
+    return result;
 }
 
 const QSet<QString> &CppSyntaxer::customTypeKeywords() const
