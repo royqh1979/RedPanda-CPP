@@ -1063,7 +1063,7 @@ void QSynEdit::invalidateGutterLines(int startLine, int endLine)
  * @return
  */
 
-DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
+VisualPos QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
 {
     int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
     int row = yposToRow(y);
@@ -1083,10 +1083,10 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
         else
             xpos = glyphStartX(line, glyphIndex);
     }
-    return DisplayCoord{xpos - segStartX, row};
+    return VisualPos{xpos - segStartX, row};
 }
 
-DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
+VisualPos QSynEdit::pixelsToGlyphPos(int x, int y) const
 {
     int xpos = std::max(0, leftPos() + x - mGutterWidth - 2);
     int row = yposToRow(y);
@@ -1102,10 +1102,10 @@ DisplayCoord QSynEdit::pixelsToGlyphPos(int x, int y) const
         int glyphIndex = xposToGlyphIndex(line, xpos);
         xpos = glyphStartX(line, glyphIndex);
     }
-    return DisplayCoord{xpos - segStartX, row};
+    return VisualPos{xpos - segStartX, row};
 }
 
-QPoint QSynEdit::displayCoordToPixels(const DisplayCoord &coord) const
+QPoint QSynEdit::displayCoordToPixels(const VisualPos &coord) const
 {
     QPoint result;
     result.setX(coord.x + textOffset());
@@ -1119,10 +1119,10 @@ QPoint QSynEdit::displayCoordToPixels(const DisplayCoord &coord) const
  * @param p
  * @return
  */
-DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
+VisualPos QSynEdit::bufferToDisplayPos(const CharPos &p) const
 {
     Q_ASSERT(validInDoc(p));
-    DisplayCoord result {p.ch,p.line};
+    VisualPos result {p.ch,p.line};
     if (p.line<0)
         return result;
     // Account for tabs and charColumns
@@ -1144,7 +1144,7 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const CharPos &p) const
  * @param p
  * @return
  */
-CharPos QSynEdit::displayToBufferPos(const DisplayCoord &p) const
+CharPos QSynEdit::displayToBufferPos(const VisualPos &p) const
 {
     CharPos result{p.x,p.row};
     if (p.row<0)
@@ -1519,8 +1519,8 @@ bool QSynEdit::hasSelContent() const
         return true;
     if (mSelectionBegin.line == mSelectionEnd.line)
         return true; // same line and begin != end, so chars differ
-    DisplayCoord coordBegin = bufferToDisplayPos(mSelectionBegin);
-    DisplayCoord coordEnd = bufferToDisplayPos(mSelectionEnd);
+    VisualPos coordBegin = bufferToDisplayPos(mSelectionBegin);
+    VisualPos coordEnd = bufferToDisplayPos(mSelectionEnd);
     return coordBegin.x != coordEnd.x;
 }
 
@@ -2270,7 +2270,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     if (!buttons.testFlag(Qt::LeftButton))
         return;
     QPoint mousePos;
-    DisplayCoord coord;
+    VisualPos coord;
 
     mousePos = QCursor::pos();
     mousePos = mapFromGlobal(mousePos);
@@ -3075,7 +3075,7 @@ bool QSynEdit::canDoBlockIndent() const
 
 QRect QSynEdit::calculateCaretRect() const
 {
-    DisplayCoord coord = displayXY();
+    VisualPos coord = displayXY();
     if (!mInputPreeditString.isEmpty()) {
         QString lineTextWithPreedit = lineText().left(mCaretCh)
                 + mInputPreeditString
@@ -3112,7 +3112,7 @@ QRect QSynEdit::calculateCaretRect() const
 
 QRect QSynEdit::calculateInputCaretRect() const
 {
-    DisplayCoord coord = displayXY();
+    VisualPos coord = displayXY();
     QPoint caretPos = displayCoordToPixels(coord);
     int caretWidth=mCharWidth;
     if (mCaretLine >= 0 && mCaretLine < mDocument->count()
@@ -3131,7 +3131,7 @@ void QSynEdit::computeCaret()
     int x=mousePos.x();
     int y=mousePos.y();
 
-    DisplayCoord caretNearestPos = pixelsToNearestGlyphPos(x, y);
+    VisualPos caretNearestPos = pixelsToNearestGlyphPos(x, y);
     caretNearestPos.row = minMax(caretNearestPos.row, 0, displayLineCount()-1);
     setCaretDisplayXY(caretNearestPos, false);
 }
@@ -3737,7 +3737,7 @@ void QSynEdit::scrollWindow(int dx, int dy)
     verticalScrollBar()->setValue(ny);
 }
 
-void QSynEdit::setCaretDisplayXY(const DisplayCoord &pos, bool ensureCaretVisible)
+void QSynEdit::setCaretDisplayXY(const VisualPos &pos, bool ensureCaretVisible)
 {
     beginInternalChanges();
     internalSetCaretPos(displayToBufferPos(pos), ensureCaretVisible);
@@ -5907,8 +5907,8 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 
 void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 {
-    DisplayCoord originCoord = displayXY();
-    DisplayCoord dstCoord = originCoord;
+    VisualPos originCoord = displayXY();
+    VisualPos dstCoord = originCoord;
     if (!isSelection && selAvail()) {
         if (deltaY<0)
             dstCoord = bufferToDisplayPos(selBegin());
@@ -7104,7 +7104,7 @@ void QSynEdit::updateMouseCursor(){
 
 bool QSynEdit::isCaretVisible()
 {
-    DisplayCoord caret = displayXY();
+    VisualPos caret = displayXY();
     if (caret.row < yposToRow(0))
         return false;
     if (caret.row >= yposToRow(clientHeight()) )

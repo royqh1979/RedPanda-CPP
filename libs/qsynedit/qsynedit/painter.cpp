@@ -1050,7 +1050,7 @@ void QSynEditPainter::paintLines()
             ctx.rowSelEnd = ctx.tokenClipRight + 1;
             if ((mEdit->mActiveSelectionMode == SelectionMode::Column) ||
                     ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && (row == mSelStart.row)) ) {
-                // DisplayCoord.x is segment-relative under word wrap:
+                // VisualPos.x is segment-relative under word wrap:
                 // bring it into the absolute glyph-x frame of the clip
                 // bounds (a no-op without word wrap)
                 int xpos = mSelStart.x + ctx.segmentStartX;

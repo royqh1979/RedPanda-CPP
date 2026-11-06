@@ -61,11 +61,8 @@
 
 ### 绘制 / 光标 / 鼠标
 
-- 绘制从锚点逐段窗口内走步 O(W)（批 1 的 `advanceLineSegment`/`retreatLineSegment` helper 保留此用途；隐藏行跳过改用树的可见性查询/跳跃）。`y = row*mTextHeight - (mTopPos % mTextHeight)`。gutter 行号/折叠按钮只画首段，折叠竖线逐段画。
-- `moveCaretVert`/PageUp/Down：窗口内段走步推进（现状 helper 够用，caret 移动距离小）。
-- `ensureCaretVisible`：caret 的窗口 row = 锚点与 caret 间的可见段差（近距离走步 O(|距离|)；远距离经树两次前缀查询 O(log N)）。
-- 鼠标命中：`y → 窗口 row → (line, seg, x)`：窗口内走步或 `lineSegAtVisibleRow(anchorRow + windowRow)` O(log N)。
-- `DisplayCoord{x, row}`：`x` 为段内像素 x；`row` 为窗口 row（0 = 锚点）。所有鼠标相关操作逐一人工审查（含 RedPandaIDE 侧），返回/接受 DisplayCoord 的方法单元测试全覆盖（按下定位、拖拽选区、双击选词、三击选行、悬停、拖放编辑、列模式 Alt+拖拽等）。
+- **现状（批 D 取消窗口相对化后）**：绘制/光标/鼠标路径统一用全局 row + 树查询（O(log N) 足够快）。painter 逐 row `rowToLineSegment`；`moveCaretVert`/PageUp/Down 在全局 row 上加减；`ensureCaretVisible` 树前缀查询；鼠标命中 `y → 全局 row → (line, seg, x)`。
+- `VisualPos{x, row}`（原 DisplayCoord）：**文档大画布坐标**——`x` 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），`row` 全局显示行（含窗口外）。所有鼠标相关操作逐一人工审查（含 RedPandaIDE 侧），返回/接受 VisualPos 的方法单元测试全覆盖（按下定位、拖拽选区、双击选词、三击选行、悬停、拖放编辑、列模式 Alt+拖拽等）。
 
 ### 后台布局计算
 
@@ -118,8 +115,8 @@
 2. **批 A：RowIndex 段数前缀树**。implicit treap：双和增广 + 非重叠懒标记 hide/unhide + 点更新 + 插删 + 前缀查询 + kth 可见段下降 + next/prevVisibleLine 跳跃。随机对拍测试（vs QVector 暴力参考）。
 3. **批 B：映射函数树化（已完成）**。`displayLineCount`/`lineSegmentToRow`/`rowToLineSegment`/`lineVisibleForWrap`/`lineToRow`/`rowToLine` 统一走树（无 wrap 模式 = segs 恒 1 的平凡情形）；折叠 toggle/rescan/`setUseCodeFolding` 对接 `syncFoldVisibility()`（整体重建式：根级 unhide + 有效区间 setHidden，范围 = `(fromLine, toLine]`）；`foldLineToRow`/`foldRowToLine` 线性扫描已删除；`advance`/`retreatLineSegment` 折叠区跳跃改用树的 `next`/`prevVisibleLine`。编辑时树随 `onDocumentContentChanged` 同步（Insert/Delete 结构插删、Move 搬行后从缓存恢复段数、SetLine 强制同步重布局后点更新）；`wrapLayout` 同步兜底计算与 worker 批次（携带 seq→计算时行号，应用时 `getLineSeq(line)==seq` 校验）做点更新；`invalidateAllLineMetrics` 用 `resetSegCounts()` 整体回估计。实现要点：①批次进行中树未同步（文档已变），查询端一律按**树的** count 钳制（`lineVisibleForWrap`、`wrapLayout` 守卫；前缀/下降查询自带钳制），Insert 同步从缓存恢复批次中提前算出的段数；②`adjustTopPosToAnchor` 的锚点行号必须立即精确（视口内容不能跳），暂用同步走步强制计算锚点之前各行而非树估计——批 C 重写锚点推导时再统一；③SetLine 强制同步重布局改变了过期拒绝的可见语义：被编辑行在编辑时即刻重新入缓存，过期批次表现为"不覆盖新布局"（测试已相应更新）。
 4. **批 C：锚点懒推导改造（已完成）**。`setTopPos`/`onVScrolled` 走树查询推锚点（`deriveAnchorFromTopPos`）；编辑/折叠/批次事件统一"锚点平移或不动 + `recalcTopPosFromAnchor` 树重算"；批次到达时树点更新与 mTopPos 重算成对（防漂移论证见"已知问题与决策记录"）；锚点删除带钳制（`shiftAnchorByChange`，镜像 `shiftPosByChange` 约定）、折叠吸附（`syncFoldVisibility` 末尾统一做）；`adjustTopPosToAnchor` 简化为"钳锚点 + 清零余数 + setTopPos"；`syncAnchorToTopPos`/`advanceAnchorRow` 已删除。实现要点：①程序性滚动条同步一律 `QSignalBlocker`，`onVScrolled` 只服务用户滚动；②`doUpdateVScrollbar` 显式处理 max 收缩（block 信号会吞掉 Qt 的自动钳制）；③**`resetEditState`（loadContent/doClearAll/setDocument）置 `mAnchorResetPending`**——整文档替换不是编辑，锚点不得被其变更集 marker 平移（否则载入即滚到底部）；④批次路径放"重算不超 max"的 `Q_ASSERT`（证明见决策记录），编辑路径由重算 helper 统一钳制。新增测试：`test_edit_shifts_anchor_marker_style`（含滚动条用户路径）、`test_setline_clamps_anchor_segment`、`test_collapse_adsorbs_anchor`、`test_wrap_batch_recomputes_toppos`。注意：collapse 会在折叠后 `ensureCaretVisible`——caret 不在折叠区但不可见时视口仍会被拉向 caret，吸附语义只在 caret 可见时成立（测试已按此设计）。⑤**对外滚动定位 API 改为锚点制**：新增 `topLine()`/`topSegment()`/`setTopLineSegment(line, seg)`（越界钳制、折叠行吸附到 fold 起始行）；`setTopPos`/`topPos` 降为**私有**像素级入口（滚动条/平滑滚动/undo LeftTop 用）。动机：像素是派生量，sweep 未就绪时按估计映射反推的 (line,seg) 是错的且会被锚点语义固化——跨会话持久化必须存锚点。IDE 侧布局保存/恢复（mainwindow/project/editor 的 replaceContent/searchinfiledialog 等）已全部改存 line+segment，不做旧配置兼容（缺 key 按 0）。
-5. **批 D：绘制/caret/翻页/鼠标/invalidate**。窗口相对化 + 树查询；DisplayCoord 审计与测试全覆盖（含 IDE 侧）。
-6. **批 E：收尾**。IDE 侧确认（滚动保存/恢复沿用现有像素 API）；demo 目检（滚动平滑、翻页、折叠、大文件无卡顿）；全量验证。
+5. **批 D（已缩水为 D'，2026-11 定）**：窗口相对化整体**取消**——其动机（全局映射太贵）已被批 B 的树消除（O(log N) 查询可在任意路径使用），现状语义自洽、测试全过，切换只有回归风险没有收益。保留项：**VisualPos（原 DisplayCoord，Roy 改名）与鼠标路径的审计 + 测试补齐**。语义定稿：VisualPos 是**文档大画布**坐标——x 为画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），row 为全局显示行（含窗口外）；`types.h` 注释已按此写明。
+6. **批 E：收尾**。IDE 侧确认（滚动保存/恢复已改锚点制 `topLine`/`topSegment`/`setTopLineSegment`）；demo 目检（滚动平滑、翻页、折叠、大文件无卡顿）；全量验证。
 
 ## 已知问题与决策记录
 

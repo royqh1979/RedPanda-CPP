@@ -210,7 +210,7 @@ public:
      * @brief displayX
      * @return
      */
-    DisplayCoord displayXY() const {
+    VisualPos displayXY() const {
         return bufferToDisplayPos(caretPos());
     }
     int displayX() const {
@@ -237,11 +237,11 @@ public:
         return std::max(0, (y + mTopPos) / mTextHeight);
     }
 
-    DisplayCoord pixelsToNearestGlyphPos(int x, int y) const;
-    DisplayCoord pixelsToGlyphPos(int x, int y) const;
-    QPoint displayCoordToPixels(const DisplayCoord& coord) const;
-    DisplayCoord bufferToDisplayPos(const CharPos& p) const;
-    CharPos displayToBufferPos(const DisplayCoord& p) const;
+    VisualPos pixelsToNearestGlyphPos(int x, int y) const;
+    VisualPos pixelsToGlyphPos(int x, int y) const;
+    QPoint displayCoordToPixels(const VisualPos& coord) const;
+    VisualPos bufferToDisplayPos(const CharPos& p) const;
+    CharPos displayToBufferPos(const VisualPos& p) const;
 
     int leftSpaces(const QString& lineText) const;
     QString genSpaces(int charCount) const;
@@ -699,7 +699,7 @@ private:
     void updateLastCaretX();
     void ensureCaretVisible(bool forceToMiddle=false);
     void scrollWindow(int dx,int dy);
-    void setCaretDisplayXY(const DisplayCoord& pos, bool ensureCaretVisible = true);
+    void setCaretDisplayXY(const VisualPos& pos, bool ensureCaretVisible = true);
     void internalSetSelBegin(const CharPos &value);
     void internalSetSelEnd(const CharPos &value);
     void internalSetCaretPos(CharPos value, bool ensureVisible = true);

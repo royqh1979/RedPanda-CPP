@@ -128,7 +128,12 @@ QDataStream &operator>>(QDataStream &in, CharPos &data);
 
 QDebug operator<<(QDebug dbg, const CharPos& data);
 
-struct DisplayCoord {
+// position on the document's display canvas (the whole document as one
+// big image): x is the canvas-absolute pixel x — per-row (segment-relative)
+// under word wrap, line-absolute without it; row is the global display row
+// across all visible segments (folding hides rows; includes rows scrolled
+// off above the viewport)
+struct VisualPos {
     int x;   // glyph x position in pixels, 0-based
     int row; // display row, 0-based
 };

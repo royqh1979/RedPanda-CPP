@@ -160,8 +160,8 @@ private:
     int rightEdge;
     // selection info
     bool anySelection; // any selection visible?
-    DisplayCoord mSelStart; // start of selected area
-    DisplayCoord mSelEnd; // end of selected area
+    VisualPos mSelStart; // start of selected area
+    VisualPos mSelEnd; // end of selected area
     int mFirstLine, mLastLine;
 
     // per-row scratch state lives in RowPaintContext (defined above): a

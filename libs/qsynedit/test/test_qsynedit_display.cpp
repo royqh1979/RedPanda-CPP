@@ -255,12 +255,12 @@ void TestQSyneditDisplay::test_wordwrap_caret_display()
     for (int seg=0; seg<layout.segmentStartChars.count(); seg++) {
         int start = layout.segmentStartChars[seg];
         mEdit->setCaretPos(CharPos{start, 1});
-        DisplayCoord coord = mEdit->displayXY();
+        VisualPos coord = mEdit->displayXY();
         QCOMPARE(coord.x, 0);
         QCOMPARE(coord.row, mEdit->lineSegmentToRow(1, seg));
         int end = mEdit->wrapSegmentEndChar(1, seg);
         mEdit->setCaretPos(CharPos{end, 1});
-        DisplayCoord endCoord = mEdit->displayXY();
+        VisualPos endCoord = mEdit->displayXY();
         // a segment end that is also the next segment's start belongs to
         // the next segment's row; only the line end stays on the same row
         if (seg+1 < layout.segmentStartChars.count())
