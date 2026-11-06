@@ -366,6 +366,28 @@ bool QSynEdit::retreatLineSegment(int &line, int &segment) const
     return false;
 }
 
+int QSynEdit::windowRowOfLineSegment(int line, int segment) const
+{
+    // walk from the anchor; capped just past the window so positions
+    // outside it need no repaint and the caller can tell which side
+    // they are on from the sign
+    int cap = mLinesInWindow + 2;
+    int l = mTopLine, s = mTopSegment;
+    int row = 0;
+    if (line > l || (line == l && segment > s)) {
+        while ((l != line || s != segment) && row < cap && advanceLineSegment(l, s))
+            row++;
+        if (l != line || s != segment)
+            return cap;  // below the window (or a hidden position)
+        return row;
+    }
+    while ((l != line || s != segment) && row > -cap && retreatLineSegment(l, s))
+        row--;
+    if (l != line || s != segment)
+        return -cap;  // above the window (or a hidden position)
+    return row;
+}
+
 void QSynEdit::deriveAnchorFromTopPos()
 {
     if (mDocument->count() <= 0 || mTextHeight <= 0 || displayLineCount() <= 0) {
@@ -1034,18 +1056,20 @@ void QSynEdit::invalidateGutterLines(int startLine, int endLine)
         // find the visible lines first
         if (endLine < startLine)
             std::swap(endLine, startLine);
-        int firstRow = lineToRow(startLine);
+        int firstRow = windowRowOfLineSegment(startLine, 0);
         int endRow;
         if (endLine <= mDocument->count())
-            endRow = lineToRow(endLine-1);
+            endRow = windowRowOfLineSegment(endLine-1, wrapSegmentCount(endLine-1)-1);
         else
-            endRow = mDocument->count() + mLinesInWindow + 2;
+            endRow = mLinesInWindow + 2;
         // any line visible?
-        int firstLineTop = std::max(firstRow*mTextHeight, mTopPos);
-        int lastLineBottom = std::min((endRow+1)*mTextHeight, mTopPos+clientHeight());
-        rcInval = {0, firstLineTop - mTopPos,
-                   mGutterWidth, lastLineBottom - firstLineTop};
-        invalidateRect(rcInval);
+        int firstLineTop = std::max(firstRow*mTextHeight - (mTopPos % mTextHeight), 0);
+        int lastLineBottom = std::min((endRow+1)*mTextHeight - (mTopPos % mTextHeight), clientHeight());
+        if (lastLineBottom > firstLineTop) {
+            rcInval = {0, firstLineTop,
+                       mGutterWidth, lastLineBottom - firstLineTop};
+            invalidateRect(rcInval);
+        }
     }
 }
 
@@ -1437,18 +1461,18 @@ void QSynEdit::setExtraKeystrokes()
 
 void QSynEdit::invalidateLine(int line)
 {
-    QRect rcInval;
     if (line<0 || (line>=mDocument->count() &&
                    line!=0) || !isVisible())
         return;
 
-    // invalidate text area of this line (all of its wrap segments)
-    int row = lineToRow(line);
-    if (row >= yposToRow(0) && row <= yposToRow(clientHeight())) {
-        rcInval = { mGutterWidth,
-                    mTextHeight * row - mTopPos,
-                    clientWidth(),
-                    mTextHeight * wrapSegmentCount(line)};
+    // invalidate text area of this line (all of its wrap segments);
+    // the window row is walked from the anchor: exact under any mapping
+    // state, and lines outside the window need no repaint
+    int row = windowRowOfLineSegment(line, 0);
+    int y = row * mTextHeight - (mTopPos % mTextHeight);
+    int height = mTextHeight * wrapSegmentCount(line);
+    if (y + height >= 0 && y < clientHeight()) {
+        QRect rcInval = { mGutterWidth, y, clientWidth(), height };
         invalidateRect(rcInval);
     }
 }
@@ -1465,24 +1489,29 @@ void QSynEdit::invalidateLines(int startLine, int endLine)
         startLine = std::max(startLine, 0);
         endLine = std::max(endLine, 0);
 
-        int firstRow = lineToRow(startLine);
+        // window rows walked from the anchor (exact under any mapping
+        // state), capped outside the window
+        int firstRow = windowRowOfLineSegment(startLine, 0);
         int lastRow;
         if (endLine>= mDocument->count())
-            lastRow = lineToRow(mDocument->count() + mLinesInWindow + 2); // paint empty space beyond last line
+            lastRow = mLinesInWindow + 2; // paint empty space beyond last line
         else
-            lastRow = lineSegmentToRow(endLine-1, wrapSegmentCount(endLine-1)-1);
+            lastRow = windowRowOfLineSegment(endLine-1, wrapSegmentCount(endLine-1)-1);
 
-        int firstLineTop = std::max(firstRow*mTextHeight, mTopPos);
-        int lastLineBottom = std::min((lastRow+1)*mTextHeight, mTopPos+clientHeight());
+        int firstLineTop = std::max(firstRow*mTextHeight - (mTopPos % mTextHeight), 0);
+        int lastLineBottom = std::min((lastRow+1)*mTextHeight - (mTopPos % mTextHeight),
+                                      clientHeight());
 
         // qDebug()<<firstLineTop<<lastLineBottom<<firstLine<<lastLine;
         // any line visible?
-        QRect rcInval = {
-            clientLeft()+mGutterWidth,
-            firstLineTop - mTopPos,
-            clientWidth(), lastLineBottom - firstLineTop
-        };
-        invalidateRect(rcInval);
+        if (lastLineBottom > firstLineTop) {
+            QRect rcInval = {
+                clientLeft()+mGutterWidth,
+                firstLineTop,
+                clientWidth(), lastLineBottom - firstLineTop
+            };
+            invalidateRect(rcInval);
+        }
         // qDebug()<<rcInval;
     }
 }
@@ -3684,21 +3713,33 @@ void QSynEdit::updateLastCaretX()
 
 void QSynEdit::ensureCaretVisible(bool forceToMiddle)
 {
-    // Make sure Y is visible
-    int caretRow = displayY();
+    // Make sure Y is visible. The caret's window row is walked from the
+    // anchor: exact under any mapping state, no global-row arithmetic
+    int segment, x;
+    charToSegmentCoord(mCaretLine, mCaretCh, segment, x);
+    int caretRow = windowRowOfLineSegment(mCaretLine, segment);
     if (forceToMiddle) {
-        if (caretRow * mTextHeight < mTopPos
-                ||
-                (caretRow+1) * mTextHeight > mTopPos + clientHeight() )
-            setTopPos( (caretRow - (mLinesInWindow - 1) / 2) * mTextHeight);
+        if (caretRow < 0 || caretRow >= mLinesInWindow) {
+            // anchor = the caret's segment retreated by half a window
+            int l = mCaretLine, s = segment;
+            for (int i = 0; i < (mLinesInWindow - 1) / 2; i++)
+                if (!retreatLineSegment(l, s))
+                    break;
+            setTopLineSegment(l, s);
+        }
     } else {
-        if (caretRow * mTextHeight < mTopPos)
-            setTopPos(caretRow * mTextHeight);
-        else if ((caretRow+1) * mTextHeight > mTopPos + clientHeight() ) {
-            int value = calcLineAlignedTopPos((caretRow+1) * mTextHeight - clientHeight(), true);
-            setTopPos(value);
-        } else
-            setTopPos(mTopPos);
+        if (caretRow < 0) {
+            // above the window: the caret's segment becomes the top
+            setTopLineSegment(mCaretLine, segment);
+        } else if (caretRow >= mLinesInWindow) {
+            // below the window: anchor = the caret's segment retreated by a
+            // window minus one (caret lands on the last full row)
+            int l = mCaretLine, s = segment;
+            for (int i = 0; i < mLinesInWindow - 1; i++)
+                if (!retreatLineSegment(l, s))
+                    break;
+            setTopLineSegment(l, s);
+        }
     }
     // Make sure X is visible
     if (maxLineWidth()<0) {
@@ -5873,10 +5914,8 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
             }
-            int row = lineToRow(dstPos.line);
-            row--;
-            int line = rowToLine(row);
-            if (line!=dstPos.line && line>=0) {
+            int line = mRowIndex.prevVisibleLine(dstPos.line);
+            if (line>=0 && line!=dstPos.line) {
                 dstPos.line = line;
                 dstPos.ch = getDisplayStringAtLine(dstPos.line).length();
             }
@@ -5885,10 +5924,8 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
             }
-            int row = lineToRow(dstPos.line);
-            row++;
-            int line = rowToLine(row);
-            if (line!=dstPos.line && line<=mDocument->count()) {
+            int line = mRowIndex.nextVisibleLine(dstPos.line);
+            if (line>=0) {
                 dstPos.line = line;
                 dstPos.ch = 0;
             }
@@ -5909,25 +5946,23 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 {
     VisualPos originCoord = displayXY();
-    VisualPos dstCoord = originCoord;
-    if (!isSelection && selAvail()) {
-        if (deltaY<0)
-            dstCoord = bufferToDisplayPos(selBegin());
-        else
-            dstCoord = bufferToDisplayPos(selEnd());
-    }
-    dstCoord.row+=deltaY;
+    // when collapsing a selection, the vertical move starts from its edge
+    CharPos startPos = caretPos();
+    if (!isSelection && selAvail())
+        startPos = (deltaY<0) ? selBegin() : selEnd();
 
-    if (deltaY >= 0) {
-        dstCoord.row = std::min(dstCoord.row, displayLineCount()-1);
-    } else {
-        dstCoord.row = std::max(dstCoord.row, 0);
-    }
+    // walk segment by segment from the start position: exact at any sweep
+    // state (each crossed line's layout is computed on demand) and
+    // independent of the global row mapping
+    int line = startPos.line;
+    int segment, x;
+    charToSegmentCoord(line, startPos.ch, segment, x);
+    int steps = 0;
+    while (steps < deltaY && advanceLineSegment(line, segment))
+        steps++;
+    while (steps > deltaY && retreatLineSegment(line, segment))
+        steps--;
 
-    if (originCoord.row != dstCoord.row) {
-        if (mOptions.testFlag(EditorOption::KeepCaretX))
-            dstCoord.x = mLastCaretX;
-    }
     if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
             setActiveSelectionMode(SelectionMode::Column);
@@ -5936,14 +5971,18 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     }
 
     CharPos dstPos;
-    if (dstCoord.row == originCoord.row && isSelection && deltaY!=0) {
-        if (dstCoord.row==0 && mDocument->count()>1) {
+    if (steps == 0 && isSelection && deltaY != 0) {
+        // at the document boundary with an active selection: select to the
+        // file begin/end (legacy behavior)
+        if (deltaY < 0)
             dstPos = fileBegin();
-        } else {
+        else
             dstPos = fileEnd();
-        }
-    } else
-        dstPos = displayToBufferPos(dstCoord);
+    } else {
+        if (steps != 0 && mOptions.testFlag(EditorOption::KeepCaretX))
+            x = mLastCaretX;
+        dstPos = CharPos{segmentCoordToChar(line, segment, x), line};
+    }
 
     if (mActiveSelectionMode==SelectionMode::Column) {
         int w=lineWidth(dstPos.line);
@@ -6868,20 +6907,35 @@ void QSynEdit::processCommand(EditCommand command, QVariant commandData,QVariant
             counter = -counter;
         }
         beginInternalChanges();
-        int gap = lineToRow(caretLine()) * mTextHeight - topPos();
+        // keep the caret's window row across the page scroll
+        int caretSegment, caretX;
+        charToSegmentCoord(mCaretLine, mCaretCh, caretSegment, caretX);
+        int caretWindowRow = windowRowOfLineSegment(mCaretLine, caretSegment);
         moveCaretVert(counter, command == EditCommand::SelPageUp || command == EditCommand::SelPageDown);
-        setTopPos(lineToRow(caretLine()) * mTextHeight - gap);
+        // anchor = the new caret position retreated by its old window row
+        charToSegmentCoord(mCaretLine, mCaretCh, caretSegment, caretX);
+        int l = mCaretLine, s = caretSegment;
+        for (int i = 0; i < caretWindowRow; i++)
+            if (!retreatLineSegment(l, s))
+                break;
+        setTopLineSegment(l, s);
         endInternalChanges();
         break;
     }
     case EditCommand::PageTop:
-    case EditCommand::SelPageTop:
-        moveCaretVert(yposToRow(0)-lineToRow(mCaretLine), command == EditCommand::SelPageTop);
+    case EditCommand::SelPageTop: {
+        int segment, x;
+        charToSegmentCoord(mCaretLine, mCaretCh, segment, x);
+        moveCaretVert(-windowRowOfLineSegment(mCaretLine, segment), command == EditCommand::SelPageTop);
         break;
+    }
     case EditCommand::PageBottom:
-    case EditCommand::SelPageBottom:
-        moveCaretVert(yposToRow(0) + mLinesInWindow-1-lineToRow(mCaretLine), command == EditCommand::SelPageBottom);
+    case EditCommand::SelPageBottom: {
+        int segment, x;
+        charToSegmentCoord(mCaretLine, mCaretCh, segment, x);
+        moveCaretVert(mLinesInWindow-1-windowRowOfLineSegment(mCaretLine, segment), command == EditCommand::SelPageBottom);
         break;
+    }
     case EditCommand::FileStart:
     case EditCommand::SelFileStart:
         doGotoEditorStart(command == EditCommand::SelFileStart);
@@ -7106,9 +7160,10 @@ void QSynEdit::updateMouseCursor(){
 bool QSynEdit::isCaretVisible()
 {
     VisualPos caret = displayXY();
-    if (caret.row < yposToRow(0))
-        return false;
-    if (caret.row >= yposToRow(clientHeight()) )
+    int segment, x;
+    charToSegmentCoord(mCaretLine, mCaretCh, segment, x);
+    int row = windowRowOfLineSegment(mCaretLine, segment);
+    if (row < 0 || row > mLinesInWindow)
         return false;
     if (caret.x < mLeftPos)
         return false;

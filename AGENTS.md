@@ -116,6 +116,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 
 - 剪贴板相关测试（列模式 paste/cut/copy-paste 等）偶发失败，多为外部程序（QQ、百度网盘等）抢占剪贴板所致，与代码无关；先重跑或排查占用程序，不要据此改代码。
 - 仓库文件多为 CRLF 行尾；用 Python 等脚本批量替换时先转 LF 再匹配，否则可能匹配失败。
+- **Edit 工具插入新函数的陷阱（已踩 6 次）**：`old_string` 若以"下一个函数的签名行"结尾而 `new_string` 不含它，该函数头会被吞掉。插入新函数时，`old_string` 应以目标函数**完整结尾的 `}`** 为止，或在 `new_string` 中原样保留被锚住的后续行；改完立刻 grep 确认相邻函数头完好。
 
 打包工作流：`.github/workflows/build.yml`（发行版包）、`build-app.yml`（独立应用）、`feature-matrix.yml`、`winget.yml`。
 

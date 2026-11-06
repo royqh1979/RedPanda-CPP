@@ -323,14 +323,14 @@ void QSynEditPainter::computeSelectionInfo()
         // Don't care if the selection is not visible.
         anySelection = (selEnd.line >= mFirstLine) && (selStart.line <= mLastLine);
         if (anySelection) {
-            // Transform the selection from text space into canvas space:
-            // row is the global display row, x is segment-relative (canvas
-            // x); the selection block shifts it back to line-absolute with
-            // the row's segmentStartX when clipping
+            // selection endpoints stay in (line, segment) space: the row
+            // loop compares them directly, no global-row conversion
             int startSegment = mEdit->wrapSegmentOfChar(selStart.line, selStart.ch);
             int endSegment = mEdit->wrapSegmentOfChar(selEnd.line, selEnd.ch);
-            mSelStart.row = mEdit->lineSegmentToRow(selStart.line, startSegment);
-            mSelEnd.row = mEdit->lineSegmentToRow(selEnd.line, endSegment);
+            mSelStart.line = selStart.line;
+            mSelStart.segment = startSegment;
+            mSelEnd.line = selEnd.line;
+            mSelEnd.segment = endSegment;
             int startSegX = mEdit->wrapLayout(selStart.line).segmentStartXs[startSegment];
             int endSegX = mEdit->wrapLayout(selEnd.line).segmentStartXs[endSegment];
             if (mEdit->mInputPreeditString.length() > 0
@@ -965,8 +965,10 @@ void QSynEditPainter::paintFoldAttributes()
         foreach(const PCodeBlock& block, mEdit->mCodeBlocks) {
             if (block->collapsed && !block->parentCollapsed() &&
                     (block->fromLine <= mLastLine) && (block->fromLine >= mFirstLine) ) {
-                // Get starting and end points
-                int y = (mEdit->lineToRow(block->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
+                // Get starting and end points; the window row is walked
+                // from the anchor (exact under any mapping state)
+                int y = (mEdit->windowRowOfLineSegment(block->fromLine, 0) + 1) * mEdit->mTextHeight
+                        - (mEdit->mTopPos % mEdit->mTextHeight) - 1;
                 mPainter->drawLine(mClip.left(),y, mClip.right(),y);
             }
         }
@@ -1077,15 +1079,22 @@ void QSynEditPainter::paintLines()
         ctx.tokenClipLeft = std::max(mLeft + ctx.segmentStartX, ctx.segmentStartX);
         ctx.tokenClipRight = std::min(mRight + ctx.segmentStartX, ctx.segmentEndX);
 
-        // Does the selection intersect the visible area?
-        if (anySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
+        // Does the selection intersect this row? Compared in (line,
+        // segment) space - no global-row conversion anywhere
+        bool onOrAfterSelStart = (line > mSelStart.line)
+                || (line == mSelStart.line && segment >= mSelStart.segment);
+        bool onOrBeforeSelEnd = (line < mSelEnd.line)
+                || (line == mSelEnd.line && segment <= mSelEnd.segment);
+        bool atSelStart = (line == mSelStart.line && segment == mSelStart.segment);
+        bool atSelEnd = (line == mSelEnd.line && segment == mSelEnd.segment);
+        if (anySelection && onOrAfterSelStart && onOrBeforeSelEnd) {
             // Default to a fully selected line. This is correct for the smLine
             // selection mode and a good start for the smNormal mode.
             ctx.hasSelectionInRow = true;
             ctx.rowSelStart = ctx.tokenClipLeft;
             ctx.rowSelEnd = ctx.tokenClipRight + 1;
             if ((mEdit->mActiveSelectionMode == SelectionMode::Column) ||
-                    ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && (row == mSelStart.row)) ) {
+                    ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && atSelStart) ) {
                 // VisualPos.x is segment-relative under word wrap:
                 // bring it into the absolute glyph-x frame of the clip
                 // bounds (a no-op without word wrap)
@@ -1099,7 +1108,7 @@ void QSynEditPainter::paintLines()
                 }
             }
             if ( (mEdit->mActiveSelectionMode == SelectionMode::Column) ||
-                 ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && (row == mSelEnd.row)) ) {
+                 ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && atSelEnd) ) {
                 int xpos = mSelEnd.x + ctx.segmentStartX;
                 if (xpos < ctx.tokenClipLeft) {
                     ctx.rowSelStart = 0;
@@ -1110,7 +1119,8 @@ void QSynEditPainter::paintLines()
                 }
             }
             if (mEdit->mActiveSelectionMode == SelectionMode::Normal) {
-                ctx.isRowEndSelected = (row>=mSelStart.row && row < mSelEnd.row);
+                ctx.isRowEndSelected = onOrAfterSelStart && !atSelEnd
+                        && onOrBeforeSelEnd;
             }
         } //endif anySelection
 

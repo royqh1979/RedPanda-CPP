@@ -163,8 +163,14 @@ private:
     int rightEdge;
     // selection info
     bool anySelection; // any selection visible?
-    VisualPos mSelStart; // start of selected area
-    VisualPos mSelEnd; // end of selected area
+    // selection endpoints: (line, segment) + segment-relative (canvas) x
+    struct SelectionEndpoint {
+        int line = 0;
+        int segment = 0;
+        int x = 0;
+    };
+    SelectionEndpoint mSelStart; // start of selected area
+    SelectionEndpoint mSelEnd; // end of selected area
     int mFirstLine, mLastLine;
 
     // per-row scratch state lives in RowPaintContext (defined above): a

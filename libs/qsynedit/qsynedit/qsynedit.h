@@ -677,6 +677,11 @@ private:
     // sub-pixel offset; clamps to the scroll range and re-derives the
     // anchor if clamped
     void recalcTopPosFromAnchor();
+    // window row of (line, segment) relative to the anchor, walked from it
+    // (exact under any mapping state, no row-index query). Capped at
+    // ±(mLinesInWindow+2): positions outside the window need no repaint,
+    // and the cap's sign tells which side they're on
+    int windowRowOfLineSegment(int line, int segment) const;
     // for rare events that rebuild the whole line->row mapping (word wrap
     // toggle, font metrics change): keep the content at the viewport top
     // stable by preserving the anchor (clamping it into the new mapping's

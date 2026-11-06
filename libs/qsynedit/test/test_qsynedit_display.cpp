@@ -363,6 +363,46 @@ void TestQSyneditDisplay::test_wrap_mapping_reset_keeps_anchor()
     mEdit->setOptions(opts);
 }
 
+void TestQSyneditDisplay::test_paging_wrap_before_ready()
+{
+    // caret vertical movement walks segment by segment from the caret and
+    // computes crossed lines' layouts on demand: correct landings even
+    // while the background sweep is still running
+    QStringList lines;
+    for (int i = 0; i < 100; i++)
+        lines << QString("line %1 ").arg(i) + QString(200, 'x');
+    mEdit->loadContent(lines);
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    // no wait for the sweep: everything below the window is an estimate
+
+    int windowRows = mEdit->linesInWindow();
+    int prevLine = 0;
+    for (int i = 0; i < 5; i++) {
+        mEdit->processCommand(EditCommand::PageDown);
+        QVERIFY(mEdit->caretLine() > prevLine);
+        prevLine = mEdit->caretLine();
+        // the caret must end up fully visible
+        int segment, x;
+        mEdit->charToSegmentCoord(mEdit->caretLine(), mEdit->caretCh(), segment, x);
+        int row = mEdit->windowRowOfLineSegment(mEdit->caretLine(), segment);
+        QVERIFY(row >= 0 && row < windowRows);
+    }
+    // and back up
+    for (int i = 0; i < 5; i++) {
+        mEdit->processCommand(EditCommand::PageUp);
+        QVERIFY(mEdit->caretLine() < prevLine);
+        prevLine = mEdit->caretLine();
+    }
+    QCOMPARE(mEdit->caretLine(), 0);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
 void TestQSyneditDisplay::test_page_up_down()
 {
     mEdit->loadContent(makeLines(50));
