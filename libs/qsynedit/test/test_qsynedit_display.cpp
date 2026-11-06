@@ -1111,4 +1111,31 @@ void TestQSyneditDisplay::test_wrap_job_early_abort()
     QCOMPARE(batches3[0].layouts.count(), 20);
 }
 
+void TestQSyneditDisplay::test_horizontal_scroll_painting()
+{
+    // regression: the painter's token clip bounds must stay the visible
+    // region (which carries mLeftPos), not the wrap segment bounds;
+    // otherwise scrolling right without word wrap painted nothing
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+    // the caret stays on line 0: its row gets the active-line background,
+    // so scan the second row instead
+    mEdit->loadContent(QStringList() << "" << QString(500, 'x'));
+
+    auto countTextRowColors = [&]() {
+        QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+        int y = mEdit->textHeight() + mEdit->textHeight() / 2;
+        QSet<QRgb> colors;
+        for (int x = mEdit->gutterWidth() + 2; x < mEdit->viewport()->width() - 2; x++)
+            colors.insert(image.pixel(x, y));
+        return colors.count();
+    };
+    // glyphs visible before scrolling...
+    QVERIFY(countTextRowColors() >= 2);
+    // ...and after scrolling right past the window width
+    mEdit->setLeftPos(200 * mEdit->charWidth());
+    QVERIFY(countTextRowColors() >= 2);
+}
+
 }

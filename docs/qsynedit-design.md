@@ -354,8 +354,20 @@ GlyphIndex=glyph 序号。
   旧任务靠代际检查自行中止（不做过期任务的显式取消，收益小、生命周期风险大）。
 - **滚动范围渐进精确**：`displayLineCount()` 在后台未完成时用"已算行精确 +
   未算行按 1 段"的下界估计，回填后逐步修正。
+- **绘制的水平裁剪是两段正交集的交集**（painter）：`QSynEditPainter::mLeft/mRight`
+  是**可见区域**（构造时由 paintEvent 的裁剪矩形 + `mLeftPos` 水平滚动算出，
+  全程不变）；`mSegmentStartX/mSegmentEndX` 是**当前 wrap 段界**（每行重设，
+  无 wrap 时恒 `[0, INT_MAX]`）。token/选区裁剪一律用交集
+  （`mTokenClipLeft/mTokenClipRight`）：wrap 下段界更紧、无 wrap 下可见区域
+  （含水平滚动）生效。曾把段界覆写进 `mLeft/mRight`，导致无 wrap 水平滚动后
+  内容不可见——两个概念不得混用。
 - 生命周期：`QPointer` 在对象销毁时自动置空，worker 可据此知道视图已销毁
   （queued 事件也会被 Qt 在对象销毁时丢弃）。
+
+**painter 后续重构（记录在案，未做）**：`QSynEditPainter` 的惯用法是"每次
+paintEvent 构造临时对象 + 每行改一堆成员"（`mRcLine`、`mTokenAccu`、段界、
+clip 边界等）；若要收敛可变成员，正确做法是抽 `RowPaintContext` 结构体
+（line/segment/段界/clip/rcLine）整体传参，而不是给既有长参数列表继续加参。
 
 ## 4.1 Syntaxer 归属（多视图设计）
 

@@ -133,10 +133,21 @@ private:
     QList<TokenBackgroundInfo> mLineTokenBackgrounds;
 
     QRect mClip;
+    // visible horizontal region in absolute glyph x (set once by
+    // paintEvent from the clip rect and mLeftPos; the horizontal scroll
+    // offset lives here). Never overwritten per row.
     int mFirstRow, mLastRow, mLeft, mRight;
-    // start x of the wrap segment being painted (0 when word wrap is off
-    // or on the first segment)
+    // bounds of the wrap segment being painted (absolute glyph x);
+    // [0, INT_MAX] when word wrap is off (the single segment spans the
+    // whole line)
     int mSegmentStartX = 0;
+    int mSegmentEndX = INT_MAX;
+    // per-row token/selection clipping: the intersection of the visible
+    // region (mLeft..mRight) and the wrap segment bounds. With word wrap
+    // the segment bounds are the tighter side; without it the visible
+    // region rules (horizontal scrolling)
+    int mTokenClipLeft = 0;
+    int mTokenClipRight = INT_MAX;
     SynTokenAccu mTokenAccu;
 };
 

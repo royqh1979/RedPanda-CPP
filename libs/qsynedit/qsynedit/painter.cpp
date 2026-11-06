@@ -20,6 +20,7 @@
 #include "constants.h"
 #include "syntaxer/syntaxer.h"
 #include <cmath>
+#include <climits>
 #include <QDebug>
 
 namespace QSynedit {
@@ -596,8 +597,8 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
     int colStart, colEnd, colSelStart, colSelEnd;
     bool unselBefore, hasSelected, unselAfter;
     // Compute some helper variables.
-    colStart = std::max(mLeft, mTokenAccu.left);
-    colEnd = std::min(mRight, mTokenAccu.left + mTokenAccu.width);
+    colStart = std::max(mTokenClipLeft, mTokenAccu.left);
+    colEnd = std::min(mTokenClipRight, mTokenAccu.left + mTokenAccu.width);
     if (mHasSelectionInLine) {
         unselBefore = (colStart < mLineSelStart);
         hasSelected = (colStart < mLineSelEnd) && (colEnd >= mLineSelStart);
@@ -734,7 +735,7 @@ void QSynEditPainter::addHighlightToken(
             tokenRight += gWidth;
         }
         tokenWidth = tokenRight-tokenLeft;
-        if (tokenRight<mLeft) {
+        if (tokenRight<mTokenClipLeft) {
             return;
         }
     }
@@ -817,7 +818,7 @@ void QSynEditPainter::addHighlightToken(
     }
 
     // Only accumulate tokens if it's visible.
-    if (tokenLeft < mRight && tokenRight>mLeft) {
+    if (tokenLeft < mTokenClipRight && tokenRight > mTokenClipLeft) {
         if (canAppend) {
             mTokenAccu.width += tokenWidth;
             Q_ASSERT(startGlyph == mTokenAccu.endGlyph);
@@ -854,9 +855,13 @@ void QSynEditPainter::paintFoldAttributes()
 
         // Now loop through all the lines. The indices are valid for Lines.
         for (int row = mFirstRow; row<=mLastRow;row++) {
-            int line = mEdit->rowToLine(row);
+            int line, segment;
+            mEdit->rowToLineSegment(row, line, segment);
             if (line >= mEdit->mDocument->count())
                 break;
+            // indent guides are segment-relative: resolve this row's own
+            // segment start (0 without word wrap)
+            int segmentStartX = mEdit->wrapLayout(line).segmentStartXs[segment];
             int x;
             // Set vertical coord
             int y = row * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
@@ -867,7 +872,7 @@ void QSynEditPainter::paintFoldAttributes()
             int indentLevel = 0 ;
             int tabSteps = 0;
             while (tabSteps < lineIndent) {
-                x = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
+                x = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - segmentStartX - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
                 if (mEdit->mCodeFolding.rainbowIndentGuides) {
@@ -886,9 +891,9 @@ void QSynEditPainter::paintFoldAttributes()
                 if (mEdit->mCodeFolding.fillIndents) {
                     int x1;
                     if (tabSteps>lineIndent)
-                        x1 = lineIndent * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
+                        x1 = lineIndent * mEdit->spaceWidth() + mEdit->textOffset() - segmentStartX - 1;
                     else
-                        x1 = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - mSegmentStartX - 1;
+                        x1 = tabSteps * mEdit->spaceWidth() + mEdit->textOffset() - segmentStartX - 1;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(x,y,x1,y);
@@ -1027,27 +1032,30 @@ void QSynEditPainter::paintLines()
             // Default to a fully selected line. This is correct for the smLine
             // selection mode and a good start for the smNormal mode.
             mHasSelectionInLine = true;
-            mLineSelStart = mLeft;
-            mLineSelEnd = mRight + 1;
+            mLineSelStart = mTokenClipLeft;
+            mLineSelEnd = mTokenClipRight + 1;
             if ((mEdit->mActiveSelectionMode == SelectionMode::Column) ||
                     ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && (row == mSelStart.row)) ) {
-                int xpos = mSelStart.x;
-                if (xpos > mRight) {
+                // DisplayCoord.x is segment-relative under word wrap:
+                // bring it into the absolute glyph-x frame of the clip
+                // bounds (a no-op without word wrap)
+                int xpos = mSelStart.x + mSegmentStartX;
+                if (xpos > mTokenClipRight) {
                     mLineSelStart = 0;
                     mLineSelEnd = 0;
                     mHasSelectionInLine = false;
-                } else if (xpos > mLeft) {
+                } else if (xpos > mTokenClipLeft) {
                     mLineSelStart = xpos;
                 }
             }
             if ( (mEdit->mActiveSelectionMode == SelectionMode::Column) ||
                  ((mEdit->mActiveSelectionMode == SelectionMode::Normal) && (row == mSelEnd.row)) ) {
-                int xpos = mSelEnd.x;
-                if (xpos < mLeft) {
+                int xpos = mSelEnd.x + mSegmentStartX;
+                if (xpos < mTokenClipLeft) {
                     mLineSelStart = 0;
                     mLineSelEnd = 0;
                     mHasSelectionInLine = false;
-                } else if (xpos < mRight) {
+                } else if (xpos < mTokenClipRight) {
                     mLineSelEnd = xpos;
                 }
             }
@@ -1088,14 +1096,20 @@ void QSynEditPainter::paintLines()
             glyphStartPositionsList = mEdit->glyphStartXList(line);
             mCurrentLineWidth = mEdit->lineWidth(line);
         }
-        // clip token scanning/drawing to this wrap segment (absolute glyph x)
+        // token/selection clipping for this row: the intersection of the
+        // visible region (mLeft..mRight, which carries the horizontal
+        // scroll offset) and this wrap segment's bounds. The two are
+        // orthogonal: without word wrap the single segment spans the whole
+        // line and the visible region rules; with word wrap mLeftPos is 0
+        // and the segment bounds are the tighter side
         const WrapLayout &wrap = mEdit->wrapLayout(line);
         mSegmentStartX = wrap.segmentStartXs[segment];
-        mLeft = mSegmentStartX;
         if (segment+1 < wrap.segmentStartChars.count())
-            mRight = wrap.segmentStartXs[segment+1]-1;
+            mSegmentEndX = wrap.segmentStartXs[segment+1]-1;
         else
-            mRight = mSegmentStartX + mEdit->wrapWidth() + 1;
+            mSegmentEndX = INT_MAX;
+        mTokenClipLeft = std::max(mLeft, mSegmentStartX);
+        mTokenClipRight = std::min(mRight, mSegmentEndX);
         bool isLastSegment = (segment+1 == wrap.segmentStartChars.count());
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
@@ -1178,7 +1192,7 @@ void QSynEditPainter::paintLines()
             tokenLeft+=tokenWidth;
             //We don't need to calculate line width,
             //So we just quit if already out of the right edge of the editor
-            if (lineWidthValid && (tokenLeft>mRight))
+            if (lineWidthValid && (tokenLeft>mTokenClipRight))
                     break;
             // Let the highlighter scan the next token.
             mEdit->mSyntaxer->next();
@@ -1187,7 +1201,7 @@ void QSynEditPainter::paintLines()
             mEdit->setLineMetrics(line, tokenLeft, glyphStartPositionsList);
         // line-end decorations (fold string, line break glyph) belong to the
         // line's LAST wrap segment only
-        if (isLastSegment && tokenLeft<mRight) {
+        if (isLastSegment && tokenLeft<mTokenClipRight) {
             QString addOnStr;
 
             // Paint folding
