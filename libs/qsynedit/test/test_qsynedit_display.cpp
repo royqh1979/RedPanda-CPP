@@ -1481,6 +1481,31 @@ void TestQSyneditDisplay::test_wrap_job_early_abort()
     QCOMPARE(batches3[0].layouts.count(), 20);
 }
 
+void TestQSyneditDisplay::test_enter_first_line_keeps_top()
+{
+    clearContent();
+    mEdit->loadContent(QStringList{""});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    QTest::keyClicks(mEdit.get(), "abc");
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopPos, 0);
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->caretPos(), CharPos(0,1));
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopPos, 0);
+    QTest::keyClicks(mEdit.get(), "def");
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopPos, 0);
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->caretPos(), CharPos(0,2));
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopPos, 0);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
 void TestQSyneditDisplay::test_horizontal_scroll_painting()
 {
     // regression: the painter's token clip bounds must stay the visible

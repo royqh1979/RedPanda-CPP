@@ -797,7 +797,7 @@ private:
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
 
-    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const;
+    bool shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const;
     bool shouldDeleteNextLine(int line, const QString &currentLineText, const QString &nextLineText) const;
     void calcEffectiveFromToLine(const CharPos &beginPos, const CharPos &endPos, int &fromLine, int &toLine);
 
@@ -1023,6 +1023,7 @@ private:
     bool mDragging;
 
 friend class QSynEditPainter;
+friend class TestQSyneditCpp;
 friend class TestQSyneditDisplay;
 
 // QWidget interface

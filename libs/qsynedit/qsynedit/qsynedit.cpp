@@ -2036,15 +2036,12 @@ void QSynEdit::doShrinkSelection(const CharPos &pos)
     //todo
 }
 
-bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2, bool undoingItem) const
+bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText, const QString &newLineText2) const
 {
-    if (undoingItem) {
-        if (line+1>=mDocument->count()-1) //undoing
-            return false;
-    } else {
-        if (line+1>=mDocument->count())
-            return false;
-    }
+    // the split order decides which half keeps the line's identity (seq):
+    // fold blocks and marks track lines by seq, so the half carrying block
+    // tokens must stay on the original line object. If the left half has no
+    // block delta the tokens are in the right half -> insert before.
     if (newLineText2.trimmed().isEmpty())
         return true;
     PSyntaxState oldState = mDocument->getSyntaxState(line);
@@ -3004,7 +3001,7 @@ void QSynEdit::doBreakLine()
         QString indentSpacesForLeftLineText = genSpaces(indentSpaces);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
-    bool insertAfter = shouldInsertAfterCurrentLine(mCaretLine, leftLineText, rightLineText, false);
+    bool insertAfter = shouldInsertAfterCurrentLine(mCaretLine, leftLineText, rightLineText);
     if (insertAfter)
         properSetLine(mCaretLine, leftLineText, false);
     else
@@ -3716,31 +3713,41 @@ void QSynEdit::updateLastCaretX()
 
 void QSynEdit::ensureCaretVisible(bool forceToMiddle)
 {
-    // Make sure Y is visible. The caret's window row is walked from the
-    // anchor: exact under any mapping state, no global-row arithmetic
+    // Make sure Y is visible. Visibility is judged by RETREATING from the
+    // caret toward the anchor instead of walking forward from it: mid-batch
+    // the row index does not know just-inserted lines yet, so a forward walk
+    // can fail to reach the caret and misjudge it as below the window.
+    // Retreating from the caret only crosses lines at or below it, which the
+    // index already covers (prevVisibleLine clamps out-of-range lines).
     int segment, x;
     charToSegmentCoord(mCaretLine, mCaretCh, segment, x);
-    int caretRow = windowRowOfLineSegment(mCaretLine, segment);
+    // above the window: the anchor is always a visible position, so a plain
+    // (line, segment) comparison is exact
+    bool caretAbove = (mCaretLine < mTopLine)
+            || (mCaretLine == mTopLine && segment < mTopSegment);
+    int l = mCaretLine, s = segment;
+    int steps = 0;
+    while (steps < mLinesInWindow - 1
+           && (l != mTopLine || s != mTopSegment)
+           && retreatLineSegment(l, s))
+        steps++;
+    bool caretVisible = !caretAbove && l == mTopLine && s == mTopSegment;
     if (forceToMiddle) {
-        if (caretRow < 0 || caretRow >= mLinesInWindow) {
+        if (!caretVisible) {
             // anchor = the caret's segment retreated by half a window
-            int l = mCaretLine, s = segment;
+            int l2 = mCaretLine, s2 = segment;
             for (int i = 0; i < (mLinesInWindow - 1) / 2; i++)
-                if (!retreatLineSegment(l, s))
+                if (!retreatLineSegment(l2, s2))
                     break;
-            setTopLineSegment(l, s);
+            setTopLineSegment(l2, s2);
         }
     } else {
-        if (caretRow < 0) {
+        if (caretAbove) {
             // above the window: the caret's segment becomes the top
             setTopLineSegment(mCaretLine, segment);
-        } else if (caretRow >= mLinesInWindow) {
-            // below the window: anchor = the caret's segment retreated by a
+        } else if (!caretVisible) {
+            // below the window: (l, s) is the caret's segment retreated by a
             // window minus one (caret lands on the last full row)
-            int l = mCaretLine, s = segment;
-            for (int i = 0; i < mLinesInWindow - 1; i++)
-                if (!retreatLineSegment(l, s))
-                    break;
             setTopLineSegment(l, s);
         }
     }
@@ -5113,7 +5120,7 @@ void QSynEdit::doUndoItem()
             QString rightStr = tempStr.mid(startPos.ch);
             QStringList helper({"",""});
             beginEditing();
-            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr, false)) {
+            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr)) {
                 properSetLine(startPos.line, leftStr, false);
                 properInsertLine(startPos.line+1, rightStr, true);
             } else {
@@ -5138,7 +5145,7 @@ void QSynEdit::doUndoItem()
             QString rightStr = tempStr.mid(startPos.ch);
             QStringList helper({"",""});
             beginEditing();
-            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr, false)) {
+            if (shouldInsertAfterCurrentLine(startPos.line, leftStr, rightStr)) {
                 properSetLine(startPos.line, leftStr, false);
                 properInsertLine(startPos.line+1, rightStr, true);
             } else {
@@ -5166,8 +5173,7 @@ void QSynEdit::doUndoItem()
             doInsertText(startPos,item->changeText(),item->changeSelMode(),
                          startPos.line,
                          endPos.line);
-            if (item->changeReason() == ChangeReason::DeleteChar
-                    || item->changeReason() == ChangeReason::MergeWithNextLine)
+            if (item->changeReason() == ChangeReason::DeleteChar)
                 setCaretPos(item->changeStartPos());
             else
                 setCaretPos(item->changeEndPos());
@@ -5212,7 +5218,7 @@ void QSynEdit::doUndoItem()
             CharPos pos = item->changeStartPos();
             QString tmpStr = mDocument->getLine(pos.line);
 
-            if (shouldInsertAfterCurrentLine(pos.line,tmpStr,s,true)) {
+            if (shouldInsertAfterCurrentLine(pos.line,tmpStr,s)) {
                 properDeleteLine(pos.line+1, false);
             } else {
                 properDeleteLine(pos.line, false);

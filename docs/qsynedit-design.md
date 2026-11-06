@@ -50,7 +50,7 @@
 
 - **变更编号分配**：`mNextChangeNumber` 递增分配，`beginBlock` 时取号（`document.cpp:1488`）；编号是 undo/redo 分组归并的唯一依据；
 - **嵌套分组块**：`beginBlock`/`endBlock` 用 `mBlockLock` 计数支持嵌套；块开始时记录"变更前"光标快照，块结束且栈非空时记录"变更后"快照并发出 `addedUndo` 信号（`document.cpp:1449`）；
-- **`addedUndo` 信号**：驱动 UI 更新"可撤销"状态；发射条件依赖块状态和 `mLastRestoredItemChangeNumber` 去重（`document.cpp:1380-1390`）；
+- **`addedUndo` 信号**：驱动 UI 更新"可撤销"状态。发射契约（`test_undo_added_signal` 验证）：每个非空块结束时由 `endBlock` 恰好发射一次（GroupBreak 项不额外发射）；undo 不发射；**redo 经 `restoreChange` 每恢复一个块发射一次**（undo 栈增长，UI 必须刷新），按 `mLastRestoredItemChangeNumber` 对同块多项去重（`document.cpp:1380-1390`）；
 - **保存点追踪**：`mInitialChangeNumber`/`initialState()`/`setInitialState()`，用于"文档未修改"判定（`document.cpp:1544`）；
 - **`insideRedo` 标志**：标记当前处于 redo 过程中（见 1.5）；
 - **`maxUndoActions`/`mFullUndoImposible`**：声明了深度限制，但裁剪逻辑未实现（半成品，见 1.7）。
@@ -122,11 +122,11 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 可做的收敛仅限于**存储层**：两个类重复的"栈 + caret/selection info 两张映射"可提取为内部共享组件（如 `ChangeStack`），公共接口与上述语义保持不变。
 
-### 1.7 已知疑点（记录待讨论，未改动行为）
+### 1.7 已知疑点（2026-11 已全部查实并清理）
 
-- `UndoList::addChange` 中 `Q_ASSERT(inBlock())` 与紧随的 `if (reason != GroupBreak && !inBlock())` 分支自相矛盾（`document.cpp:1342-1350`）——release 下后者为死分支，说明逻辑经历过演化；
-- `maxUndoActions`/`mFullUndoImposible`：有接口和标志，未见裁剪实现，是半成品；
-- `doUndoItem` 的 `Delete*` 分支中判断了 `ChangeReason::MergeWithNextLine`（`qsynedit.cpp:4400-4401`），但该分支按 switch 不可能到达（MergeWithNextLine 有独立分支），疑为历史遗留。
+- ~~`maxUndoActions`/`mFullUndoImposible`~~：**已删除**。是 SynEdit 传承的废弃半成品（只有声明没有实现，标志从未被置真）。设计决定：undo 历史**不设上限**——上限命中的代价（无法继续撤销）是实打实的不便，而现代机器上编辑记录占满内存的可能性微乎其微（Roy 定）。
+- ~~`UndoList::addChange` 的 `Q_ASSERT(inBlock())` 与紧随的 `if (!inBlock())` 分支矛盾~~：查实**不变式真实成立**——所有 `addChange` 调用点都在 `beginEditing`/`endEditing` 开启的块内（undo/redo 期间 `mUndoing` 抑制 `beginBlock`，但也同步抑制 `addChangeToUndo`/`addGroupUndoBreak`，不会块外调用）；`addedUndo` 统一由 `endBlock` 发射一次（见 1.2 发射契约）。**已删除** `addChange`/`addColumnDeleteChange` 中的 `!inBlock()` 死分支，断言保留。
+- ~~`doUndoItem` 的 `Delete*` 分支判断 `ChangeReason::MergeWithNextLine`~~：确认**不可达**（`MergeWithNextLine` 有独立 case，其 caret 处理 `setCaretPos(changeStartPos)` 与该死分支的意图一致）——是拆出独立分支时的残留，**已删除**；caret 恢复行为由 `test_delete_undo_caret_position` 锁定。
 
 ## 2. 文档模型
 
@@ -476,6 +476,17 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 `toLine=count-1`）——后续编辑补上 `}` 时折叠自然复活（日常"敲 `{` → 敲 `}`"
 序列下"未闭合→恢复"不再丢失块对象）。`codeBlockCount` 因此计入未闭合块。
 
+**断行/合并的拆行顺序（insert-before vs insert-after）是必需的**：
+`shouldInsertAfterCurrentLine` 的语法检查（左半截有无 block 增量）决定哪一半
+留在原行对象上——折叠的增量平移与 collapsed 回贴都建立在"块首行身份（行对象
+延续）不被无端打断"之上。若拆开块的另一半去了新行对象，局部重扫会把块当成
+新块，collapsed 状态丢失（`test_break_lines_with_collapsed_block` /
+`test_merge_with_*_with_collapsed_block` 锁定此行为）。曾存在"末行一律
+insert-before"的早退（0 基迁移期的防御性绕过，80170a75），它压过了"右半截为空
+→ insert-after"的正常规则：在末行按回车时产生 `Insert@锚点行`，被
+`shiftAnchorByChange` 误判为"锚点上方插入"而下推视口（ScrollPastEof 下可见症状：
+窗口首行后移一行）。已删除该早退，语法检查在全行范围生效。
+
 ### 5.3 foldStateDirty 与 reparseToLine：何时扫、扫到哪
 
 `contentChanged` 携带两个批次级元数据（随通知投递，非带外状态）：
@@ -490,8 +501,13 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 - **`reparseToLine`**（冻结线）：语法状态可证明不再变化的行。收敛的重解析
   （`reparseLines` 提前相等停下，或已到 EOF）按 **line+1** 累积（含该行已验证
   最终）；`parseToEnd=false` 仅跑到范围末的按 **line** 累积（该行**未验证**）。
-  局部重扫以此为停止界；`onDocumentContentChanged` 含 DEBUG 断言
+  局部重扫以此为停止界；`onDocumentContentChanged`（视图侧）含 DEBUG 断言
   `!foldStateDirty || reparseToLine >= 0`（收敛契约：脏批次必有重解析）。
+  注意该契约是**视图编辑级**的：QSynEdit 的编辑路径保证同批次内有重解析
+  （如 doDeleteText 先 parseToEnd=false 删行、随后 setLine(...,true) 收敛），
+  但 Document 原语直驱可以合法产生"脏而无重解析"的批次（如单独的
+  `deleteLine(..., false)`）——所以断言只能放在视图侧，不能放在
+  `Document::endUpdate`（已在 test_fold_state_dirty 验证过会误伤）。
 
 **词法上下文注意**：`blockStarted/blockEnded` 是行文本固有属性，但**块注释/跨行
 字符串会改变下面文本未动行的有效花括号数**（敲入未闭合 `/*` 会把下面行的花括号

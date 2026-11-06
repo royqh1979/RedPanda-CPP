@@ -683,15 +683,11 @@ public:
     bool canUndo();
     int itemCount();
 
-    int maxUndoActions() const;
-    void setMaxUndoActions(int maxUndoActions);
     bool initialState();
     void setInitialState();
 
     bool insideRedo() const;
     void setInsideRedo(bool insideRedo);
-
-    bool fullUndoImposible() const;
 
 signals:
     void addedUndo();
@@ -704,7 +700,6 @@ protected:
     int mBlockLock;
     size_t mLastPoppedItemChangeNumber;
     size_t mLastRestoredItemChangeNumber;
-    bool mFullUndoImposible;
     QVector<PUndoItem> mItems;
     size_t mNextChangeNumber;
     size_t mInitialChangeNumber;

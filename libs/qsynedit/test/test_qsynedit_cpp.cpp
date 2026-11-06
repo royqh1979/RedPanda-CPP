@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QApplication>
 #include <QClipboard>
+#include <QSignalSpy>
 
 #include "test_qsynedit_cpp.h"
 #include "test_utils.h"
@@ -4754,7 +4755,7 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
     QCOMPARE(mEdit->caretPos(),CharPos(0,3));
     QCOMPARE(mEdit->selBegin(),CharPos(0,3));
     QCOMPARE(mEdit->selEnd(),CharPos(0,3));
-    QCOMPARE(mInsertStartLines, QList<int>{2});
+    QCOMPARE(mInsertStartLines, QList<int>{3});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -4870,7 +4871,7 @@ void QSynedit::TestQSyneditCpp::test_delete_prev_chars_at_file_begin_end()
     QCOMPARE(mEdit->caretPos(),CharPos(0,3));
     QCOMPARE(mEdit->selBegin(),CharPos(0,3));
     QCOMPARE(mEdit->selEnd(),CharPos(0,3));
-    QCOMPARE(mInsertStartLines, QList<int>{2});
+    QCOMPARE(mInsertStartLines, QList<int>{3});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -5607,6 +5608,97 @@ void TestQSyneditCpp::test_delete_and_backspace_chars_undo()
     QCOMPARE(mEdit->content(),text);
 }
 
+void TestQSyneditCpp::test_delete_undo_caret_position()
+{
+    // the undo of every delete variant restores the caret to its pre-edit
+    // position (and redo to the post-edit one); this pins the observable
+    // contract behind doUndoItem's Delete* caret branches
+    QStringList text{"abcde"};
+
+    // DeleteChar (Delete key): the caret stays over the gap
+    clearContent();
+    mEdit->loadContent(text);
+    mEdit->setCaretPos(CharPos{1,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), QStringList{"acde"});
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{"acde"});
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+
+    // DeletePreviousChar (Backspace): undo puts the caret back behind the
+    // restored char
+    clearContent();
+    mEdit->loadContent(text);
+    mEdit->setCaretPos(CharPos{2,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(), QStringList{"acde"});
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{"acde"});
+    QCOMPARE(mEdit->caretPos(), CharPos(1,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), text);
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+
+    // MergeWithNextLine (Delete at end of line): undo splits the lines back
+    // and returns the caret to the merge point
+    clearContent();
+    mEdit->loadContent(QStringList{"ab","cd"});
+    mEdit->setCaretPos(CharPos{2,0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->content(), QStringList{"abcd"});
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList({"ab","cd"}));
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{"abcd"});
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList({"ab","cd"}));
+    QCOMPARE(mEdit->caretPos(), CharPos(2,0));
+}
+
+void TestQSyneditCpp::test_undo_added_signal()
+{
+    // contract: exactly one addedUndo emission per completed non-empty edit
+    // block; GroupBreak markers (inserted when the char class changes) never
+    // emit on their own; undo emits nothing, redo emits once per restored
+    // block (the undo stack grew back)
+    clearContent();
+    mEdit->loadContent(QStringList{""});
+    QSignalSpy spy(mEdit->mUndoList.get(), &UndoList::addedUndo);
+    QVERIFY(spy.isValid());
+
+    QTest::keyPress(mEdit.get(), Qt::Key_A);
+    QCOMPARE(spy.count(), 1);
+    QTest::keyPress(mEdit.get(), Qt::Key_B);
+    QCOMPARE(spy.count(), 2);
+    // word -> space transition inserts a GroupBreak item: the emission count
+    // must still grow by exactly one per block
+    QTest::keyPress(mEdit.get(), Qt::Key_Space);
+    QCOMPARE(spy.count(), 3);
+    QTest::keyPress(mEdit.get(), Qt::Key_C);
+    QCOMPARE(spy.count(), 4);
+
+    mEdit->undo();
+    QCOMPARE(spy.count(), 4);
+    // redo restores the block onto the undo stack: exactly one emission per
+    // restored block (restoreChange dedups multiple items of one block)
+    mEdit->redo();
+    QCOMPARE(spy.count(), 5);
+}
+
 void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
 {
     clearContent();
@@ -5615,7 +5707,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretPos(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{0});
+    QCOMPARE(mInsertStartLines, QList<int>{1});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -5636,7 +5728,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->selEnd(),CharPos(0,0));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
-    QCOMPARE(mDeleteStartLines, QList<int>{0});
+    QCOMPARE(mDeleteStartLines, QList<int>{1});
     QCOMPARE(mDeleteLineCounts, QList<int>{1});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
@@ -5656,7 +5748,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->caretPos(),CharPos(0,1));
     QCOMPARE(mEdit->selBegin(),CharPos(0,1));
     QCOMPARE(mEdit->selEnd(),CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>{0});
+    QCOMPARE(mInsertStartLines, QList<int>{1});
     QCOMPARE(mInsertLineCounts, QList<int>{1});
     QCOMPARE(mDeleteStartLines, QList<int>{});
     QCOMPARE(mDeleteLineCounts, QList<int>{});
@@ -5679,7 +5771,7 @@ void QSynedit::TestQSyneditCpp::test_break_line_in_empty_file()
     QCOMPARE(mEdit->selEnd(),CharPos(0,0));
     QCOMPARE(mInsertStartLines, QList<int>{});
     QCOMPARE(mInsertLineCounts, QList<int>{});
-    QCOMPARE(mDeleteStartLines, QList<int>{0});
+    QCOMPARE(mDeleteStartLines, QList<int>{1});
     QCOMPARE(mDeleteLineCounts, QList<int>{1});
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,

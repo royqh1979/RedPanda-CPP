@@ -89,6 +89,8 @@ private slots:
     void test_merge_with_prev_line_with_collapsed_block3();
 
     void test_delete_and_backspace_chars_undo();
+    void test_delete_undo_caret_position();
+    void test_undo_added_signal();
 
     void test_break_line_in_empty_file();
     void test_break_lines();

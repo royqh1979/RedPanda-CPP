@@ -439,6 +439,12 @@ void Document::endUpdate()
         if (!mPendingChanges.isEmpty()) {
             DocumentChangeSet changes;
             changes.swap(mPendingChanges);
+            // NOTE: no "dirty implies reparsed" assert here: the convergence
+            // contract holds at the VIEW-edit level (QSynEdit edit paths
+            // always reparse within the batch; asserted in
+            // onDocumentContentChanged). Directly driven primitives may
+            // legitimately emit dirty-without-reparse batches (e.g. a lone
+            // deleteLine with parseToEnd=false).
             emit contentChanged(changes, mFoldStateDirty, mReparseToLine);
         }
         emit changed();
@@ -1137,7 +1143,6 @@ UndoList::UndoList():QObject()
 
     mBlockChangeNumber=0;
     mBlockLock=0;
-    mFullUndoImposible=false;
     mLastPoppedItemChangeNumber=0;
     mInitialChangeNumber = 0;
     mLastRestoredItemChangeNumber=0;
@@ -1147,16 +1152,14 @@ PUndoItem UndoList::addChange(ChangeReason reason, const CharPos &startPos,
                                 const CharPos &endPos, const QStringList& changeText,
                                 SelectionMode selMode)
 {
+    // every change is recorded inside a beginBlock/endBlock pair; the
+    // addedUndo signal is emitted once per non-empty block by endBlock
     Q_ASSERT(inBlock());
     PUndoItem  newItem = std::make_shared<UndoItem>(
                 reason,
                 selMode,startPos,endPos,changeText,
                 mBlockChangeNumber);
     mItems.append(newItem);
-
-    if (reason!=ChangeReason::GroupBreak && !inBlock()) {
-        emit addedUndo();
-    }
     return newItem;
 }
 
@@ -1169,9 +1172,6 @@ PUndoItem UndoList::addColumnDeleteChange(const CharPos &startPos, const CharPos
                 SelectionMode::Column, startPos, endPos, changeText,
                 mBlockChangeNumber, perLineLeftChars);
     mItems.append(newItem);
-    if (!inBlock()) {
-        emit addedUndo();
-    }
     return newItem;
 }
 
@@ -1228,7 +1228,6 @@ void UndoList::beginBlock(const CharPos &caret, const CharPos &selBegin, const C
 void UndoList::clear()
 {
     mItems.clear();
-    mFullUndoImposible = false;
     mInitialChangeNumber=0;
     mLastPoppedItemChangeNumber=0;
     mLastRestoredItemChangeNumber=0;
@@ -1365,11 +1364,6 @@ bool UndoList::insideRedo() const
 void UndoList::setInsideRedo(bool insideRedo)
 {
     mInsideRedo = insideRedo;
-}
-
-bool UndoList::fullUndoImposible() const
-{
-    return mFullUndoImposible;
 }
 
 SelectionMode UndoItem::changeSelMode() const

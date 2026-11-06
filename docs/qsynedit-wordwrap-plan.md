@@ -62,6 +62,7 @@
 ### 绘制 / 光标 / 鼠标
 
 - **走步优先原则（2026-11 定稿，回到批 1 的原始决定）**：凡逐位置推进的路径（绘制各循环、caret 垂直移动/翻页、PageUp/Down 的 gap 保持、invalidate 系列、isCaretVisible、ensureCaretVisible、折叠标记线）都从锚点 `advance/retreatLineSegment` 走步或 `windowRowOfLineSegment`（带窗口封顶）计算——**走步沿途强制逐行精算，任何后台进度下都精确**；树查询（O(log N)）只留给一次性定位（鼠标命中、锚点↔像素换算、滚动条范围）。此前"树查询便宜故可替代走步"的分析只算了性能账，漏了估计期映射是暂定值这一正确性维度（Roy 纠正）。
+- **例外：ensureCaretVisible 改为从 caret 侧 retreat 判可见（2026-11，Roy 定）**：批次内视图的 RowIndex 尚未追上刚插入的行（行数要等 `contentChanged` 才更新），从锚点向 caret 前进（advance）会因 `nextVisibleLine` 不认识新行而失败，把 caret 误判为"窗口下方"而错误滚动（实测：末行回车时 caret 落到新行 → 误判 → retreat 撞文档头 → 视口被错误拉回顶部，反而掩盖了当时的锚点平移 bug）。retreat 从 caret 向锚点走，只经过索引已覆盖的行（`prevVisibleLine` 对越界行自动钳到索引末尾），批次内外都精确。"在窗口上方"用 (line, segment) 与锚点的字典序直接比较（锚点恒为可见位置）。注意：isCaretVisible 目前无调用者（死方法），未改。
 - `VisualPos{x, row}`（原 DisplayCoord）：**文档大画布坐标**——`x` 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），`row` 全局显示行（含窗口外）。所有鼠标相关操作逐一人工审查（含 RedPandaIDE 侧），返回/接受 VisualPos 的方法单元测试全覆盖（按下定位、拖拽选区、双击选词、三击选行、悬停、拖放编辑、列模式 Alt+拖拽等）。
 - **鼠标路径测试边界（批 D' 审计结论）**：点击定位/双击选词/Alt 进列模式/gutter 折叠钮已有事件级测试（QTest 合成事件）。**拖拽选区与拖放编辑无法 headless 覆盖**：它们由 20ms 滚动定时器驱动（`computeScroll`→`doMouseScroll`）且读真实光标 `QCursor::pos()`，合成事件无法注入位置——这两条路径由坐标层 roundtrip 测试（pixelsToGlyphPos/displayToBufferPos）+ demo 目检兜底。为此 `computeCaret` 已改为吃事件坐标（`computeCaret(const QPoint&)`）而非重读真实光标，点击类路径全部可测。
 - painter 的选区比较在 (line, segment) 空间进行（`SelectionEndpoint`），不做全局 row 换算。

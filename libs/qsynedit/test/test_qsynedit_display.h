@@ -53,6 +53,7 @@ private slots:
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();
+    void test_enter_first_line_keeps_top();
     void test_horizontal_scroll_painting();
     void test_wordwrap_paints_all_segments();
     void test_wordwrap_boundary_token_painting();
