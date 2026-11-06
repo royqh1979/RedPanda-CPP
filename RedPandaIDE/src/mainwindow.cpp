@@ -3686,21 +3686,25 @@ void MainWindow::loadLastOpens()
         mEditorManager->updateEditorBookmarks();
         mEditorManager->updateEditorBreakpoints();
     }
+    // Restore the active tab before selecting the visible editors to parse.
+    // Focus events may arrive after startup, so bind Structure here.
+    if (!focusedEditor)
+        focusedEditor = mEditorManager->getEditor();
+    if (focusedEditor) {
+        mEditorManager->activeEditor(focusedEditor, true);
+        updateClassBrowserForEditor(focusedEditor);
+    }
     Editor *e = mEditorManager->getEditor(-1, mEditorManager->leftPageWidget());
     if (e)
         e->reparseIfNeeded();
     e = mEditorManager->getEditor(-1, mEditorManager->rightPageWidget());
     if (e)
         e->reparseIfNeeded();
-    if (!focusedEditor) {
-        focusedEditor = mEditorManager->getEditor();
-    }
     if (focusedEditor) {
-        updateEditorActions();
-        updateForEncodingInfo(mEditorManager->getEditor());
+        updateEditorActions(focusedEditor);
+        updateForEncodingInfo(focusedEditor);
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
-        mEditorManager->activeEditor(focusedEditor,true);
     }
 }
 
