@@ -1043,42 +1043,6 @@ void TestQSyneditDisplay::test_set_top_line_segment()
     mEdit->setOptions(opts);
 }
 
-void TestQSyneditDisplay::test_anchor_row_for_line_segment()
-{
-    mEdit->loadContent(QStringList{
-        "int main() {",
-        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
-        "    return 0;",
-        "}"});
-    QSynedit::EditorOptions opts = mEdit->getOptions();
-    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
-    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
-    mEdit->setOptions(opts);
-    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
-    int totalRows = mEdit->displayLineCount();
-    int h = mEdit->textHeight();
-
-    // anchor at row 1 (the first segment of the wrapped line)
-    mEdit->setTopPos(h);
-    QCOMPARE(mEdit->anchorRowForLineSegment(1, 0), 0);
-    // every visible position maps to its global row minus the top row
-    for (int row = 0; row < totalRows; row++) {
-        int line, seg;
-        mEdit->rowToLineSegment(row, line, seg);
-        QCOMPARE(mEdit->anchorRowForLineSegment(line, seg), row - 1);
-    }
-    // moving the anchor moves all relative rows
-    mEdit->setTopPos(0);
-    for (int row = 0; row < totalRows; row++) {
-        int line, seg;
-        mEdit->rowToLineSegment(row, line, seg);
-        QCOMPARE(mEdit->anchorRowForLineSegment(line, seg), row);
-    }
-
-    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
-    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
-    mEdit->setOptions(opts);
-}
 }
 
 #include <random>

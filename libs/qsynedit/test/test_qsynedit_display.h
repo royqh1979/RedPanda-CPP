@@ -46,7 +46,6 @@ private slots:
     void test_collapse_adsorbs_anchor();
     void test_wrap_batch_recomputes_toppos();
     void test_set_top_line_segment();
-    void test_anchor_row_for_line_segment();
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();

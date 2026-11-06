@@ -366,24 +366,6 @@ bool QSynEdit::retreatLineSegment(int &line, int &segment) const
     return false;
 }
 
-int QSynEdit::anchorRowForLineSegment(int line, int segment) const
-{
-    int l = mTopLine;
-    int s = mTopSegment;
-    int rows = 0;
-    if (line > l || (line == l && segment > s)) {
-        while ((l != line || s != segment) && advanceLineSegment(l, s))
-            rows++;
-    } else {
-        while ((l != line || s != segment) && retreatLineSegment(l, s))
-            rows--;
-    }
-    // a visible position is always reached; stopping earlier means the
-    // caller passed a hidden or out-of-range position
-    Q_ASSERT(l == line && s == segment);
-    return rows;
-}
-
 void QSynEdit::deriveAnchorFromTopPos()
 {
     if (mDocument->count() <= 0 || mTextHeight <= 0 || displayLineCount() <= 0) {

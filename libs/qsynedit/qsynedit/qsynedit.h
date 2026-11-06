@@ -283,16 +283,13 @@ public:
     // per-line conversions, no global-row computation
     void charToSegmentCoord(int line, int ch, int &segment, int &x) const;
     int segmentCoordToChar(int line, int segment, int x) const;
-    // segment stepping for window-relative navigation. Boundary contract:
-    // inputs are clamped to valid ranges first; the single-step functions
-    // return false at the document start/end and leave the position at the
-    // clamped boundary segment; hidden (folded) lines are skipped
+    // segment stepping for window-relative navigation (used by the
+    // painter's row loops). Boundary contract: inputs are clamped to valid
+    // ranges first; the functions return false at the document start/end
+    // and leave the position at the clamped boundary segment; hidden
+    // (folded) lines are skipped
     bool advanceLineSegment(int &line, int &segment) const;
     bool retreatLineSegment(int &line, int &segment) const;
-    // window row of (line, segment) relative to the anchor (negative when
-    // above the viewport top); walks from the anchor, so O(|distance|).
-    // (line, segment) must denote a visible segment
-    int anchorRowForLineSegment(int line, int segment) const;
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
     void invalidateLine(int line);

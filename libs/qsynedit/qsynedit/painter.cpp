@@ -125,14 +125,15 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         // draw each line if it is not hidden by a fold
         CharPos selectionStart = mEdit->selBegin();
         CharPos selectionEnd = mEdit->selEnd();
+        // resolve the first row once, then walk segment by segment (one
+        // tree query per paint instead of one per row)
+        int line, segment;
+        mEdit->rowToLineSegment(mFirstRow, line, segment);
         for (int row = mFirstRow; row <= mLastRow; row++) {
-            int line, segment;
-            mEdit->rowToLineSegment(row, line, segment);
             // line numbers are only drawn on a line's first wrap segment
-            if (segment != 0)
-                continue;
-            if ((line >= mDocument->count()) && (mDocument->count() > 0 ))
-                break;
+            if (segment == 0) {
+                if ((line >= mDocument->count()) && (mDocument->count() > 0 ))
+                    break;
             if (mEdit->mGutter.activeLineTextColor().isValid()) {
                 if (
                         (mEdit->mCaretLine==line)     ||
@@ -160,19 +161,26 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                         rcLine.bottom() - (mEdit->mTextHeight - int(textRect.height())) / 2 - mPainter->fontMetrics().descent(),
                         s
                         );
+            }
+            if (row < mLastRow && !mEdit->advanceLineSegment(line, segment))
+                break;
         }
     }
 
     // Draw the folding lines and squares
     if (mEdit->useCodeFolding()) {
       int lineWidth = std::max(0.0,std::ceil(mEdit->font().pixelSize() / 15));
+      // resolve the last row once, then walk back segment by segment
+      int line, segment;
+      mEdit->rowToLineSegment(mLastRow, line, segment);
       for (int row = mLastRow; row>= mFirstRow; row--) {
-          int line, segment;
-          mEdit->rowToLineSegment(row, line, segment);
           // fold vertical lines are drawn on EVERY wrap segment (continuous
           // across the fold); only the +/- button is first-segment-only
-          if ((line >= mDocument->count()) && (mDocument->count() != 0))
-            continue;
+          if ((line >= mDocument->count()) && (mDocument->count() != 0)) {
+              if (row > mFirstRow && !mEdit->retreatLineSegment(line, segment))
+                  break;
+              continue;
+          }
 
         // Form a rectangle for the square the user can click on
           rcFold.setLeft(mEdit->mGutterWidth - mEdit->mGutter.rightOffset());
@@ -232,18 +240,25 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                                   centerX, rcFold.bottom() - lineWidth * 2 );
             }
         }
+        if (row > mFirstRow && !mEdit->retreatLineSegment(line, segment))
+            break;
       }
     }
 
-    for (int row = mFirstRow; row <= mLastRow; row++) {
+    // resolve the first row once, then walk segment by segment
+    {
         int line, segment;
-        mEdit->rowToLineSegment(row, line, segment);
-        // gutter marks (breakpoints/bookmarks) only on a line's first segment
-        if (segment != 0)
-            continue;
-        if ((line >= mDocument->count()) && (mDocument->count() != 0))
-            break;
-        mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->yposToRow(0)) * mEdit->mTextHeight);
+        mEdit->rowToLineSegment(mFirstRow, line, segment);
+        for (int row = mFirstRow; row <= mLastRow; row++) {
+            // gutter marks (breakpoints/bookmarks) only on a line's first segment
+            if (segment == 0) {
+                if ((line >= mDocument->count()) && (mDocument->count() != 0))
+                    break;
+                mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->yposToRow(0)) * mEdit->mTextHeight);
+            }
+            if (row < mLastRow && !mEdit->advanceLineSegment(line, segment))
+                break;
+        }
     }
 }
 
@@ -868,9 +883,9 @@ void QSynEditPainter::paintFoldAttributes()
         QPen oldPen = mPainter->pen();
 
         // Now loop through all the lines. The indices are valid for Lines.
+        int line, segment;
+        mEdit->rowToLineSegment(mFirstRow, line, segment);
         for (int row = mFirstRow; row<=mLastRow;row++) {
-            int line, segment;
-            mEdit->rowToLineSegment(row, line, segment);
             if (line >= mDocument->count())
                 break;
             // indent guides are segment-relative: resolve this row's own
@@ -924,6 +939,8 @@ void QSynEditPainter::paintFoldAttributes()
                     mPainter->drawLine(x,y,x,y+mEdit->mTextHeight);
                 }
             }
+            if (row < mLastRow && !mEdit->advanceLineSegment(line, segment))
+                break;
         }
         mPainter->setPen(oldPen);
     }
@@ -989,11 +1006,13 @@ void QSynEditPainter::paintLines()
     // Now loop through all the lines. The indices are valid for Lines.
     CharPos selectionBegin = mEdit->selBegin();
     CharPos selectionEnd= mEdit->selEnd();
+    // resolve the first row once, then walk segment by segment (one tree
+    // query per paint instead of one per row)
+    int line, segment;
+    mEdit->rowToLineSegment(mFirstRow, line, segment);
     for (int row = mFirstRow; row<=mLastRow; row++) {
         RowPaintContext ctx;
         ctx.rcRow = mClip;
-        int line, segment;
-        mEdit->rowToLineSegment(row, line, segment);
         bool lineTextChanged = false;
         if (line >= mDocument->count() && mDocument->count() != 0)
             break;
@@ -1302,6 +1321,8 @@ void QSynEditPainter::paintLines()
             mPainter->drawLine(rightEdge, ctx.rcRow.top(),rightEdge,ctx.rcRow.bottom()+1);
         }
         ctx.isCurrentLine = false;
+        if (row < mLastRow && !mEdit->advanceLineSegment(line, segment))
+            break;
     }
 }
 }
