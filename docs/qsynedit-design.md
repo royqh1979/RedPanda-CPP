@@ -335,6 +335,10 @@ GlyphIndex=glyph 序号。
 没有基础字体粗估路径（isTemp 已删除）——所有布局都按样式字体精算，
 可见行/编辑行同步算、其余行后台补算，不存在"估算值可不可用"的窗口。
 无换行模式只复用其位置/宽度（段数恒为 1）。
+**滚动定位的对外 API 是锚点制**：`topLine()`/`topSegment()`/
+`setTopLineSegment(line, seg)`（越界钳制、折叠行吸附 fold 起始行）；
+`setTopPos`/`topPos` 是私有像素级入口（滚动条、平滑滚动、undo 用）。
+跨会话持久化滚动位置必须存锚点，不存像素。
 
 **后台补全与同步**（大文件不阻塞 GUI）：
 - 可见行的布局由 GUI 同步按需计算；`WrapLayoutJob`（`wraplayoutjob.h/.cpp`，

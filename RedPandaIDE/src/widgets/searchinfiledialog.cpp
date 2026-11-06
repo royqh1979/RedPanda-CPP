@@ -403,7 +403,8 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
     QSynedit::CharPos caretBackup = e->caretPos();
     QSynedit::CharPos blockBeginBackup = e->selBegin();
     QSynedit::CharPos blockEndBackup = e->selEnd();
-    int topPosBackup = e->topPos();
+    int topLineBackup = e->topLine();
+    int topSegmentBackup = e->topSegment();
     int leftPosBackup = e->leftPos();
 
     PSearchResultTreeItem parentItem = std::make_shared<SearchResultTreeItem>();
@@ -427,7 +428,7 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
 
     // restore
     e->setCaretPos(caretBackup);
-    e->setTopPos(topPosBackup);
+    e->setTopLineSegment(topLineBackup, topSegmentBackup);
     e->setLeftPos(leftPosBackup);
     e->setActiveSelectionMode(QSynedit::SelectionMode::Normal);
     e->setCaretAndSelection(

@@ -8232,6 +8232,40 @@ int QSynEdit::topPos() const
     return mTopPos;
 }
 
+int QSynEdit::topLine() const
+{
+    return mTopLine;
+}
+
+int QSynEdit::topSegment() const
+{
+    return mTopSegment;
+}
+
+void QSynEdit::setTopLineSegment(int line, int segment)
+{
+    if (mDocument->count() <= 0) {
+        mTopLine = 0;
+        mTopSegment = 0;
+        setTopPos(0);
+        return;
+    }
+    line = minMax(line, 0, mDocument->count()-1);
+    // a folded-away line has no display position: snap to the fold start
+    // (the nearest visible line above; line 0 is never hidden)
+    if (line < mRowIndex.count() && mRowIndex.isHidden(line)) {
+        int prev = mRowIndex.prevVisibleLine(line);
+        line = std::max(prev, 0);
+    }
+    segment = minMax(segment, 0, wrapSegmentCount(line)-1);
+    mTopLine = line;
+    mTopSegment = segment;
+    // setTopPos clamps, re-derives the (same) anchor, syncs the scrollbar
+    // and repaints. Under the estimate mapping the pixel value converges
+    // around the fixed anchor as background refinement lands
+    setTopPos(lineSegmentToRow(mTopLine, mTopSegment) * mTextHeight);
+}
+
 void QSynEdit::setTopPos(int value)
 {
     value = std::min(value,maxScrollHeight());

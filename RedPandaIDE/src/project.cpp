@@ -428,7 +428,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
             //editor->setInProject(true);
             editor->setCaretLine(layout->caretY);
             editor->setCaretCh(layout->caretX);
-            editor->setTopPos(layout->top);
+            editor->setTopLineSegment(layout->topLine, layout->topSegment);
             editor->setLeftPos(layout->left);
             mEditorManager->activeEditor(editor,true);
             return editor;
@@ -659,7 +659,8 @@ void Project::saveLayout()
             jsonLayout["filename"]=unit->fileName();
             jsonLayout["caretX"]=editor->caretCh();
             jsonLayout["caretY"]=editor->caretLine();
-            jsonLayout["top"]=editor->topPos();
+            jsonLayout["topLine"]=editor->topLine();
+            jsonLayout["topSegment"]=editor->topSegment();
             jsonLayout["left"]=editor->leftPos();
             jsonLayout["isOpen"]=true;
             jsonLayout["focused"]=(editor==e);
@@ -675,7 +676,8 @@ void Project::saveLayout()
                 jsonLayout["filename"]=unit->fileName();
                 jsonLayout["caretX"]=oldLayout->caretX;
                 jsonLayout["caretY"]=oldLayout->caretY;
-                jsonLayout["top"]=oldLayout->top;
+                jsonLayout["topLine"]=oldLayout->topLine;
+                jsonLayout["topSegment"]=oldLayout->topSegment;
                 jsonLayout["left"]=oldLayout->left;
                 jsonLayout["isOpen"]=false;
                 jsonLayout["focused"]=false;
@@ -1944,7 +1946,8 @@ QHash<QString, PProjectEditorLayout> Project::loadLayout()
         if (mUnits.contains(unitFilename)) {
             PProjectEditorLayout editorLayout = std::make_shared<ProjectEditorLayout>();
             editorLayout->filename=unitFilename;
-            editorLayout->top=jsonLayout["top"].toInt();
+            editorLayout->topLine=jsonLayout["topLine"].toInt();
+            editorLayout->topSegment=jsonLayout["topSegment"].toInt();
             editorLayout->left=jsonLayout["left"].toInt();
             editorLayout->caretX=jsonLayout["caretX"].toInt();
             editorLayout->caretY=jsonLayout["caretY"].toInt();
@@ -2138,7 +2141,7 @@ void Project::loadUnitLayout(Editor *e)
     if (layout) {
         e->setCaretLine(layout->caretY);
         e->setCaretCh(layout->caretX);
-        e->setTopPos(layout->top);
+        e->setTopLineSegment(layout->topLine, layout->topSegment);
         e->setLeftPos(layout->left);
     }
 }

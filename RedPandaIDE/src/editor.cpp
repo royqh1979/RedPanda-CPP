@@ -5190,7 +5190,8 @@ void Editor::reformat(bool doReparse)
 
 void Editor::replaceContent(const QString &newContent, bool doReparse)
 {
-    int oldTopPos = topPos();
+    int oldTopLine = topLine();
+    int oldTopSegment = topSegment();
     CharPos mOldCaret = caretPos();
 
     beginEditing();
@@ -5200,7 +5201,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
     setOptions(newOptions);
     replaceAll(newContent);
     setCaretPos(ensureCharPosValid(mOldCaret));
-    setTopPos(oldTopPos);
+    setTopLineSegment(oldTopLine, oldTopSegment);
     setOptions(oldOptions);
     endEditing();
 

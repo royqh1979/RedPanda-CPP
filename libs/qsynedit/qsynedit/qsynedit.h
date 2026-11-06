@@ -464,8 +464,15 @@ public:
     bool isCaretVisible();
 
     // setter && getters
-    int topPos() const;
-    void setTopPos(int value);
+    // the anchor: (line, segment) of the content at the viewport top.
+    // This is the authoritative top-of-view state; use it for semantic
+    // positioning and persistence (pixel offsets are derived from it and
+    // are only stable within a session's mapping state)
+    int topLine() const;
+    int topSegment() const;
+    // scroll so that (line, segment) becomes the top row; out-of-range
+    // values are clamped, a folded-away line snaps to its fold start
+    void setTopLineSegment(int line, int segment);
 
     int linesInWindow() const;
 
@@ -664,6 +671,10 @@ protected:
     void setStatusChanged(StatusChanges changes);
 
 private:
+    // pixel-level scroll entry: internal use (scrollbar, smooth scrolling,
+    // undo LeftTop). Semantic positioning goes through setTopLineSegment
+    int topPos() const;
+    void setTopPos(int value);
     // derive the anchor (mTopLine/mTopSegment) from mTopPos via the row
     // index; called after every mTopPos change that did not come from the
     // anchor itself

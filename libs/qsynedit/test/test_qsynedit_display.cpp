@@ -891,6 +891,40 @@ void TestQSyneditDisplay::test_wrap_batch_recomputes_toppos()
     mEdit->setOptions(opts);
 }
 
+void TestQSyneditDisplay::test_set_top_line_segment()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    int h = mEdit->textHeight();
+
+    mEdit->setTopLineSegment(5, 0);
+    QCOMPARE(mEdit->mTopLine, 5);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 5 * h);
+
+    // out-of-range values clamp
+    mEdit->setTopLineSegment(-3, 0);
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->topPos(), 0);
+    mEdit->setTopLineSegment(100, 7);
+    QCOMPARE(mEdit->mTopLine, mEdit->lineCount()-1);
+    QCOMPARE(mEdit->mTopSegment, 0);
+
+    // a folded-away line snaps to the fold start
+    mEdit->setTopLineSegment(0, 0);
+    QVERIFY(mEdit->collapse(2, 4));
+    mEdit->setTopLineSegment(3, 0);
+    QCOMPARE(mEdit->mTopLine, 2);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 2 * h);
+    mEdit->unCollpaseAll();
+
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
 void TestQSyneditDisplay::test_anchor_row_for_line_segment()
 {
     mEdit->loadContent(QStringList{

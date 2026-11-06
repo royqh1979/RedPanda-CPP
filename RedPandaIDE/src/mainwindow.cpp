@@ -3531,7 +3531,8 @@ bool MainWindow::saveLastOpens()
       fileObj["focused"] = editor->hasFocus();
       fileObj["caretX"] = editor->caretCh();
       fileObj["caretY"] = editor->caretLine();
-      fileObj["top"] = editor->topPos();
+      fileObj["topLine"] = editor->topLine();
+      fileObj["topSegment"] = editor->topSegment();
       fileObj["left"] = editor->leftPos();
       fileObj["fileType"] =  fileTypeToName(editor->fileType());
       fileObj["encodingOption"] = QLatin1String(editor->editorEncoding());
@@ -3653,8 +3654,9 @@ void MainWindow::loadLastOpens()
         }
         pos = editor->ensureCharPosValid(pos);
         editor->setCaretPos(pos);
-        editor->setTopPos(
-                    fileObj["top"].toInt(1)
+        editor->setTopLineSegment(
+                    fileObj["topLine"].toInt(0),
+                    fileObj["topSegment"].toInt(0)
                     );
         editor->setLeftPos(
                     fileObj["left"].toInt(1)
@@ -5656,11 +5658,12 @@ void MainWindow::onFileChanged(const QString &path)
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::No) == QMessageBox::Yes) {
                 try {
-                    int top = e->topPos();
+                    int topLine = e->topLine();
+                    int topSegment = e->topSegment();
                     QSynedit::CharPos caretPos = e->caretPos();
                     e->loadFile();
                     mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,caretPos.line});
-                    e->setTopPos(top);
+                    e->setTopLineSegment(topLine, topSegment);
                 } catch(FileError err) {
                     QMessageBox::critical(this,tr("Error"),err.reason());
                 }
