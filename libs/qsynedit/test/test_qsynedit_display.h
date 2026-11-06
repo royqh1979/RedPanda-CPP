@@ -31,10 +31,13 @@ private slots:
     void test_wordwrap_segment_coord_conversions();
     void test_advance_retreat_line_segment();
     void test_advance_retreat_with_fold();
-    void test_advance_anchor_row();
     void test_toppos_anchor_sync();
     void test_scroll_to_row();
     void test_wrap_toggle_preserves_anchor();
+    void test_edit_shifts_anchor_marker_style();
+    void test_setline_clamps_anchor_segment();
+    void test_collapse_adsorbs_anchor();
+    void test_wrap_batch_recomputes_toppos();
     void test_anchor_row_for_line_segment();
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();

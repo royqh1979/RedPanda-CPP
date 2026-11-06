@@ -1,5 +1,6 @@
 #include <QTest>
 #include <QCoreApplication>
+#include <QScrollBar>
 
 #include "test_qsynedit_display.h"
 #include "test_utils.h"
@@ -619,56 +620,6 @@ void TestQSyneditDisplay::test_advance_retreat_with_fold()
     mEdit->setOptions(opts);
 }
 
-void TestQSyneditDisplay::test_advance_anchor_row()
-{
-    mEdit->loadContent(QStringList{
-        "int main() {",
-        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
-        "}"});
-    QSynedit::EditorOptions opts = mEdit->getOptions();
-    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
-    mEdit->setOptions(opts);
-    // displayLineCount() reads the layout cache only, so force the long
-    // line's layout first (background jobs don't run in tests)
-    QVERIFY(mEdit->wrapSegmentCount(1) > 1);
-    int totalRows = mEdit->displayLineCount();
-    QVERIFY(totalRows > 3);
-
-    // multi-step advance matches the global row mapping
-    int line = 0, seg = 0;
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 2), 2);
-    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 2);
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -1), -1);
-    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 1);
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 0), 0);
-    QCOMPARE(mEdit->lineSegmentToRow(line, seg), 1);
-
-    // deltas past the boundaries stop there and report the actual movement
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, totalRows+100), totalRows-2);
-    QCOMPARE(mEdit->lineSegmentToRow(line, seg), totalRows-1);
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -1), -1);
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, -totalRows-100), -(totalRows-2));
-    QCOMPARE(line, 0);
-    QCOMPARE(seg, 0);
-
-    // out-of-range inputs are clamped before stepping
-    line = -5; seg = 3;
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 1), 1);
-    QCOMPARE(line, 1);
-    QCOMPARE(seg, 0);
-    line = 100; seg = 0;
-    QVERIFY(!mEdit->advanceLineSegment(line, seg));
-    QCOMPARE(line, 2);
-    QCOMPARE(seg, 0);
-    line = 0; seg = 99;
-    QCOMPARE(mEdit->advanceAnchorRow(line, seg, 1), 1);
-    QCOMPARE(line, 1);
-    QCOMPARE(seg, 0);
-
-    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
-    mEdit->setOptions(opts);
-}
-
 void TestQSyneditDisplay::test_toppos_anchor_sync()
 {
     mEdit->loadContent(QStringList{
@@ -809,6 +760,134 @@ void TestQSyneditDisplay::test_wrap_toggle_preserves_anchor()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_edit_shifts_anchor_marker_style()
+{
+    // edits through the document (as another view of it would) shift the
+    // anchor marker-style: the content at the viewport top stays put
+    mEdit->loadContent(makeLines(50));
+    int h = mEdit->textHeight();
+    mEdit->setTopPos(30 * h);
+    QCOMPARE(mEdit->mTopLine, 30);
+
+    // insert above the anchor: the anchor follows its content
+    mEdit->document()->insertLines(5, 3, false);
+    QCOMPARE(mEdit->mTopLine, 33);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 33 * h);
+    // the scrollbar tracks the derived pixel offset
+    QCOMPARE(mEdit->verticalScrollBar()->value(), 33 * h);
+
+    // delete above the anchor: the anchor moves back up
+    mEdit->document()->deleteLines(5, 3, false);
+    QCOMPARE(mEdit->mTopLine, 30);
+    QCOMPARE(mEdit->topPos(), 30 * h);
+
+    // delete a band containing the anchor: clamp to the band start
+    mEdit->document()->deleteLines(28, 5, false);
+    QCOMPARE(mEdit->mTopLine, 28);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 28 * h);
+
+    // a user scroll drives the same derivation through onVScrolled
+    mEdit->verticalScrollBar()->setValue(2 * h);
+    QCOMPARE(mEdit->topPos(), 2 * h);
+    QCOMPARE(mEdit->mTopLine, 2);
+    QCOMPARE(mEdit->mTopSegment, 0);
+}
+
+void TestQSyneditDisplay::test_setline_clamps_anchor_segment()
+{
+    mEdit->loadContent(QStringList{
+        "int main() {",
+        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        "    return 0;",
+        "}"});
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    int segs = mEdit->wrapSegmentCount(1);
+    QVERIFY(segs > 2);
+    int h = mEdit->textHeight();
+
+    // anchor on a later segment of the wrapped line
+    mEdit->setTopPos(mEdit->lineSegmentToRow(1, segs-1) * h);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, segs-1);
+
+    // shortening the anchor line clamps the anchor segment
+    mEdit->document()->putLine(1, "    // short", false);
+    QCOMPARE(mEdit->mTopLine, 1);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), h);
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_collapse_adsorbs_anchor()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    int h = mEdit->textHeight();
+    // anchor inside the soon-to-be-collapsed block (2..4); the caret sits
+    // below the fold and stays visible, so collapse does not scroll to it
+    mEdit->setCaretPos(CharPos{0, 8});
+    mEdit->setTopPos(3 * h);
+    QCOMPARE(mEdit->mTopLine, 3);
+    QVERIFY(mEdit->collapse(2, 4));
+    // re-adsorbed to the fold start (the nearest visible line above)
+    QCOMPARE(mEdit->mTopLine, 2);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 2 * h);
+
+    // uncollapsing keeps the anchor (nothing was hidden by it)
+    mEdit->unCollpaseAll();
+    QCOMPARE(mEdit->mTopLine, 2);
+
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_wrap_batch_recomputes_toppos()
+{
+    // background refinement must keep the anchor and re-derive the pixel
+    // offset from it (no content drift, scrollbar value converges)
+    QStringList lines;
+    for (int i = 0; i < 10; i++)
+        lines << QString("long line %1: ").arg(i) + QString(300, 'x');
+    lines << makeLines(40);
+    mEdit->loadContent(lines);
+    int h = mEdit->textHeight();
+
+    // anchor placed without word wrap (the mapping is trivially exact)
+    mEdit->setTopPos(30 * h);
+    QCOMPARE(mEdit->mTopLine, 30);
+    QCOMPARE(mEdit->mTopSegment, 0);
+
+    // enabling wrap rebuilds the mapping but preserves the anchor...
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    mEdit->setOptions(opts);
+    QCOMPARE(mEdit->mTopLine, 30);
+
+    // ...and the background sweep must not move it either: the batch path
+    // re-derives the pixel offset from the anchor (its no-clamp assertion
+    // holds in debug builds) and syncs the scrollbar value
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 5000);
+    QCOMPARE(mEdit->mTopLine, 30);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), mEdit->lineSegmentToRow(30, 0) * h);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), mEdit->topPos());
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
 }
 

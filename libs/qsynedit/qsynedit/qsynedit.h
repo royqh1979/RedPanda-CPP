@@ -283,15 +283,12 @@ public:
     // per-line conversions, no global-row computation
     void charToSegmentCoord(int line, int ch, int &segment, int &x) const;
     int segmentCoordToChar(int line, int segment, int x) const;
-    // segment stepping for anchor-incremental navigation. Boundary contract:
+    // segment stepping for window-relative navigation. Boundary contract:
     // inputs are clamped to valid ranges first; the single-step functions
     // return false at the document start/end and leave the position at the
     // clamped boundary segment; hidden (folded) lines are skipped
     bool advanceLineSegment(int &line, int &segment) const;
     bool retreatLineSegment(int &line, int &segment) const;
-    // multi-step advance (negative delta retreats); returns the signed
-    // number of rows actually moved (less than requested at the boundaries)
-    int advanceAnchorRow(int &line, int &segment, int delta) const;
     // window row of (line, segment) relative to the anchor (negative when
     // above the viewport top); walks from the anchor, so O(|distance|).
     // (line, segment) must denote a visible segment
@@ -667,10 +664,14 @@ protected:
     void setStatusChanged(StatusChanges changes);
 
 private:
-    // advance the anchor (mTopLine/mTopSegment) so that it matches the
-    // top row implied by mTopPos; called after every mTopPos change.
-    // oldTopPos is the pixel offset before the change
-    void syncAnchorToTopPos(int oldTopPos);
+    // derive the anchor (mTopLine/mTopSegment) from mTopPos via the row
+    // index; called after every mTopPos change that did not come from the
+    // anchor itself
+    void deriveAnchorFromTopPos();
+    // recompute mTopPos from the anchor via the row index, keeping the
+    // sub-pixel offset; clamps to the scroll range and re-derives the
+    // anchor if clamped
+    void recalcTopPosFromAnchor();
     // for rare events that rebuild the whole line->row mapping (word wrap
     // toggle, font metrics change): keep the content at the viewport top
     // stable by preserving the anchor (clamping it into the new mapping's
@@ -725,6 +726,9 @@ private:
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
+    // marker-style anchor shift (mirrors shiftPosByChange) for one document
+    // change; called for EVERY view from onDocumentContentChanged
+    void shiftAnchorByChange(const DocumentChange &change);
     void invalidateAllLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
     // word-wrap layout computation (view-side, lazily cached per line seq)
@@ -928,12 +932,16 @@ private:
     ScrollStyle mScrollBars;
     int mTextHeight;
     int mTopPos;
-    // anchor: the visible (line, segment) at the viewport's top row
-    // (global display row mTopPos/mTextHeight); kept consistent with
-    // mTopPos via syncAnchorToTopPos, so painting/scrolling can advance
-    // incrementally instead of mapping global rows from scratch
+    // anchor: the visible (line, segment) at the viewport's top row.
+    // The anchor is the authoritative top state; mTopPos is a derived
+    // pixel cache re-computed from it via the row index (see
+    // docs/qsynedit-wordwrap-plan.md)
     int mTopLine = 0;
     int mTopSegment = 0;
+    // set by resetEditState: the pending content replacement (load/clear)
+    // is not an edit, so onDocumentContentChanged must not marker-shift
+    // the anchor for its change set
+    bool mAnchorResetPending = false;
     PSyntaxer mSyntaxer;
     // reparse ranges reported by Document::linesReparsed while a document
     // batch is in flight; the repaint is deferred to onDocumentContentChanged
