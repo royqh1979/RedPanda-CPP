@@ -46,7 +46,7 @@ EditorManager::EditorManager(QTabWidget* leftPageWidget,
 
 Editor* EditorManager::newEditor(const QString& filename, const QByteArray& encoding,
                               FileType fileType, const QString& contextFile,
-                              bool inProject, bool newFile,
+                              bool newFile,
                               QTabWidget* page) {
     QTabWidget * parentPageControl = nullptr;
     if (page == nullptr)
@@ -79,6 +79,8 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
                                      pMainWindow));
     e->setGetCppParserFunc(std::bind(&EditorManager::createParserForEditor,
                                      this, std::placeholders::_1));
+    e->setInProjectQueryFunc(std::bind(&EditorManager::isProjectFile,
+                                       this, std::placeholders::_1));
 #ifdef ENABLE_SDCC
     e->setGetCompilerTypeForEditorFunc(std::bind(
                                            &EditorManager::getCompilerTypeForEditor,
@@ -89,7 +91,6 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->applySettings();
     e->setEditorEncoding(encoding);
     e->setFilename(filename);
-    e->setInProject(inProject, false);
     e->setFileType(fileType, false);
     e->setContextFile(contextFile, false);
     if (!newFile) {
@@ -287,6 +288,14 @@ Editor* EditorManager::peerOf(const Editor *editor) const
     return nullptr;
 }
 
+bool EditorManager::isProjectFile(const Editor *e) const
+{
+    if (!e || !findPageControlForEditor(const_cast<Editor*>(e)))
+        return false;
+    auto project = pMainWindow->project();
+    return project && project->inProject(e->filename());
+}
+
 Editor* EditorManager::splitEditor(Editor *editor)
 {
     if (!editor || peerOf(editor))
@@ -297,7 +306,7 @@ Editor* EditorManager::splitEditor(Editor *editor)
             ? mRightPageWidget : mLeftPageWidget;
     Editor *e = newEditor(editor->filename(), editor->editorEncoding(),
                           editor->fileType(), editor->contextFile(),
-                          editor->inProject(), true, targetPage);
+                          true, targetPage);
     e->setIsNew(editor->isNew());
     e->setWordWrap(editor->wordWrap());
     // attach to the shared document instead of loading the file again:
@@ -695,8 +704,6 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
         if (fileExists(pMainWindow->project()->directory())) {
             PProjectUnit unit = pMainWindow->project()->findUnit(editor);
             pMainWindow->project()->closeUnit(unit);
-        } else {
-            editor->setInProject(false,false);
         }
     } else {
         editor->setCppParser(nullptr);

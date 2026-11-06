@@ -116,7 +116,6 @@ Project::~Project()
     foreach (const PProjectUnit& unit, mUnits) {
         Editor * editor = unitEditor(unit);
         if (editor) {
-            editor->setInProject(false,false);
             if (fileExists(directory()))
                 mEditorManager->forceCloseEditor(editor);
         }
@@ -398,7 +397,7 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
 
-        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), true, false);
+        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), false);
         loadUnitLayout(editor);
         mEditorManager->activeEditor(editor,true);
         return editor;
@@ -423,9 +422,8 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
         encoding = unit->encoding();
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
-        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), true, false);
+        editor = mEditorManager->newEditor(unit->fileName(), encoding, FileType::None, QString(), false);
         if (editor) {
-            //editor->setInProject(true);
             editor->setCaretLine(layout->caretY);
             editor->setCaretCh(layout->caretX);
             if (layout->wordWrap >= 0)
@@ -535,7 +533,6 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
     if (doClose) {
         Editor* editor = unitEditor(unit);
         if (editor) {
-            editor->setInProject(false,false);
             mEditorManager->closeEditor(editor);
         }
     }
@@ -833,11 +830,11 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 {
     if (!unit) {
         if (editor)
-            editor->setInProject(false);
+            editor->refreshProjectMembership();
         return;
     }
     if (editor) {
-        editor->setInProject(true);
+        editor->refreshProjectMembership();
         if (unit->encoding()==ENCODING_PROJECT) {
             if (editor->editorEncoding()!=mOptions.encoding)
                 unit->setEncoding(editor->editorEncoding());
@@ -992,7 +989,6 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                                 unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
                                 FileType::None,
                                 QString(),
-                                true,
                                 false);
                     lastNewEditor = editor;
                 }
@@ -1011,7 +1007,6 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                             unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
                             FileType::None,
                             QString(),
-                            true,
                             true);
 
                 if (templateUnit->overwrite || !fileExists(unit->fileName()) ) {

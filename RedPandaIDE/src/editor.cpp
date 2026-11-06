@@ -114,7 +114,6 @@ Editor::Editor(QWidget *parent):
     mEditorEncoding = ENCODING_UTF8;
     mFileEncoding = ENCODING_ASCII;
     mIsNew = true;
-    mInProject = false;
     mCodeCompletionEnabled = false;
 
     mCodeSnippetsManager = nullptr;
@@ -499,7 +498,10 @@ const QString& Editor::filename() const noexcept{
     return mFilename;
 }
 bool Editor::inProject() const noexcept{
-    return mInProject;
+    // derived, never stored: project membership is a property of the FILE;
+    // the query is injected by EditorManager at creation, so unmanaged
+    // editors (tests) are never in-project
+    return mInProjectQueryFunc && mInProjectQueryFunc(this);
 }
 
 bool Editor::isNew() const noexcept {
@@ -4493,6 +4495,11 @@ void Editor::setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc)
     mGetCppParserFunc = newGetCppParserFunc;
 }
 
+void Editor::setInProjectQueryFunc(const InProjectQueryFunc &newInProjectQueryFunc)
+{
+    mInProjectQueryFunc = newInProjectQueryFunc;
+}
+
 bool Editor::codeCompletionEnabled() const
 {
     return mCodeCompletionEnabled;
@@ -4725,15 +4732,16 @@ void Editor::setStatementColors(const std::shared_ptr<QHash<StatementKind, std::
     mStatementColors = newStatementColors;
 }
 
-void Editor::setInProject(bool newInProject, bool parse)
+void Editor::refreshProjectMembership()
 {
-    if (mInProject == newInProject)
-        return;
-    mInProject = newInProject;
-    if (parse) {
-        setCppParser();
+    // membership is derived (see inProject()); only the parser switch and
+    // the reparse are real side effects. Reparse only when the parser
+    // actually switched - association calls that change nothing (e.g.
+    // clicking an already-associated unit) must not churn.
+    PCppParser oldParser = mParser;
+    setCppParser();
+    if (mParser != oldParser)
         reparse();
-    }
 }
 
 void Editor::gotoDeclaration(const CharPos &pos)

@@ -63,6 +63,9 @@ using EvalTipReadyCallback = std::function<void (Editor *)>;
 using GetCompilerTypeForEditorFunc = std::function<CompilerType (const Editor *)>;
 using GetReformatterFunc = std::function<std::unique_ptr<BaseReformatter>(Editor *)>;
 using GetCppParserFunc = std::function<PCppParser (Editor *)>;
+// answers "is this editor's file in the current project"; injected by
+// EditorManager at creation - unset means never in-project (tests)
+using InProjectQueryFunc = std::function<bool (const Editor *)>;
 
 class Editor : public QSynedit::QSynEdit
 {
@@ -266,8 +269,10 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
-    void setInProject(bool newInProject, bool parse = true);
-
+    // re-evaluate the parser after the file's project membership changed
+    // (project opened/closed, unit added/removed); membership itself is
+    // derived on demand - see inProject()
+    void refreshProjectMembership();
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
     void setStatementColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newStatementColors);
 
@@ -460,7 +465,6 @@ private:
     QString mFilename;
     //QTabWidget* mParentPageControl;
     bool mIsNew;
-    bool mInProject;
     // per-editor word wrap (initialized from the global default at
     // setEditorSettings; toggled per editor via the View menu)
     bool mWordWrap = false;
@@ -529,6 +533,7 @@ private:
     GetReformatterFunc mGetReformatterFunc;
     GetMacroVarsFunc mGetMacroVarsFunc;
     GetCppParserFunc mGetCppParserFunc;
+    InProjectQueryFunc mInProjectQueryFunc;
 #ifdef ENABLE_SDCC
     GetCompilerTypeForEditorFunc mGetCompilerTypeForEditorFunc;
 #endif
@@ -554,6 +559,8 @@ public:
 
     const GetCppParserFunc &getCppParserFunc() const;
     void setGetCppParserFunc(const GetCppParserFunc &newGetCppParserFunc);
+
+    void setInProjectQueryFunc(const InProjectQueryFunc &newInProjectQueryFunc);
 
     ColorManager *colorManager() const;
     void setColorManager(ColorManager *newColorManager);

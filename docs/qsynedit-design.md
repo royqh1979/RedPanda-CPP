@@ -239,11 +239,19 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
     （IDE 多视图接线时处理）；
   - caret 平移不处理"caret 落在本视图折叠隐藏行上"的既有边界情形
     （单视图时代同样存在）。
-  - **拆分视图与项目布局（记录待议，2026-11）**：`Project` 按 unit（文件名）
-    记录对应 Editor 的布局（`ProjectEditorLayout`：caret/top/left 等，
-    `Project::unitEditor`/`loadUnitLayout`），是"一文件一视图"假设。
-    拆分后一文件有两个视图，该对应关系如何处理（存哪个视图的布局、
-    恢复时恢复到哪个视图、第二视图的布局是否也要持久化）尚未设计。
+  - **拆分视图与项目布局（已定稿，2026-11）**：拆分视图的布局持久化不做
+    （Roy：左右视图保存不重要）；布局仍按"左面板优先视图"保存，重启后
+    只恢复单视图，属已知取舍。
+  - **inProject 派生化（已定稿并实现，2026-11）**："文件是否属于当前项目"
+    是文件属性，不再存 per-view 标志（`Editor::mInProject`/`setInProject`
+    已删除）。`Editor::inProject()` 改为查询注入的回调——
+    `EditorManager::newEditor` 创建时注入 `isProjectFile`（editor 在面板中
+    且 `project->inProject(filename)`），未注入者（测试、非管理 editor）恒为
+    false；peers 由同一 filename 派生，结构性一致。成员关系转移的副作用
+    （切 parser + reparse）由转移点显式调 `Editor::refreshProjectMembership()`
+    （仅 parser 实际切换时才 reparse）。关闭途中/析构中的 unmark 调用全部
+    删除（派生后无必要）。`EditorManager::newEditor` 的 `inProject` 参数随之
+    删除。
 - **IDE 侧拆分视图（RedPandaIDE）**：Window 主菜单与编辑器正文右键菜单的
   Split View 项调用 `EditorManager::splitEditor`——在另一面板新建 Editor 并
   `setDocument` 挂接共享文档（不重读磁盘）；`peerOf` 按 `document()` 在另一

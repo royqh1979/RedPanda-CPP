@@ -1892,7 +1892,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
             encoding=mProject->options().encoding;
         editor = mEditorManager->newEditor(filename,encoding,
                                         fileType, contextFile,
-                                        inProject, false, nullptr);
+                                        false, nullptr);
 
         if (activate) {
             mEditorManager->activeEditor(editor,true);
@@ -3653,7 +3653,7 @@ void MainWindow::loadLastOpens()
         }
         if (inProject && encoding==ENCODING_PROJECT)
             encoding=mProject->options().encoding;
-        Editor * editor = mEditorManager->newEditor(editorFilename, encoding, fileType, contextFile, inProject,false,page);
+        Editor * editor = mEditorManager->newEditor(editorFilename, encoding, fileType, contextFile, false,page);
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
         }
@@ -3759,7 +3759,7 @@ void MainWindow::newEditor(const QString& suffix)
         Editor * editor=mEditorManager->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
                                                FileType::None, QString(),
-                                               false,true);
+                                               true);
         mEditorManager->activeEditor(editor,true);
         //updateForEncodingInfo();
     }  catch (FileError e) {

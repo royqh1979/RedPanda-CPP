@@ -44,10 +44,14 @@ public:
 
     Editor* newEditor(const QString& filename, const QByteArray& encoding,
                       FileType fileType, const QString& contextFile,
-                     bool inProject, bool newFile,
+                     bool newFile,
                      QTabWidget* page=nullptr);
 
     Editor* getEditor(int index=-1, QTabWidget* tabsWidget=nullptr) const;
+
+    // true if the editor is managed (currently in a panel) and its file
+    // belongs to the open project; injected into Editor::inProject
+    bool isProjectFile(const Editor *e) const;
 
     bool closeEditor(Editor* editor, bool transferFocus=true, bool force=false);
 
