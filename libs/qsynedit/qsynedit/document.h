@@ -451,8 +451,8 @@ public:
      *
      * It's thread safe.
      */
-    QList<int> getGlyphStartCharList(int line, const QString &lineText);
-    QList<int> getGlyphStartCharList(int line);
+    QList<int> getGlyphStartCharList(int line, const QString &lineText) const;
+    QList<int> getGlyphStartCharList(int line) const;
 
     bool getAppendNewLineAtEOF() const;
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
@@ -463,7 +463,7 @@ public:
     bool empty() const;
 
 #ifdef QSYNEDIT_TEST
-    QList<int> getGlyphStartCharListForTest(int line);
+    QList<int> getGlyphStartCharListForTest(int line) const;
 #endif
 
 signals:

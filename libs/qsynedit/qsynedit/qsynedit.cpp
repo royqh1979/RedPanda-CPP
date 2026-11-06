@@ -260,7 +260,29 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
     // counts for the inserted lines)
     if (line < mRowIndex.count())
         mRowIndex.setSegCount(line, layout.segmentStartChars.count());
+    noteLineWidthKnown(seq, layout.totalWidth);
     return inserted.value();
+}
+
+void QSynEdit::noteLineWidthKnown(size_t seq, int width) const
+{
+    // longest-line bookkeeping for the horizontal scrollbar range. Only
+    // identity changes and growth are tracked here: maxLineWidth() reads
+    // the cache entry's live width, and the shrink side is covered by the
+    // removal paths resetting mMaxLineWidthSeq. Adoption from an incomplete
+    // cache may underestimate; recompute when the sweep finishes.
+    if (mMaxLineWidthSeq == 0 || mMaxLineWidthSeq == seq) {
+        mMaxLineWidthSeq = seq;
+        mMaxLineWidthMaybeStale = mMaxLineWidthMaybeStale
+                || mWrapLayouts.count() < mDocument->count();
+        noteMaxLineWidthDirty();
+        return;
+    }
+    auto maxIt = mWrapLayouts.constFind(mMaxLineWidthSeq);
+    if (maxIt == mWrapLayouts.constEnd() || maxIt->totalWidth < width) {
+        mMaxLineWidthSeq = seq;
+        noteMaxLineWidthDirty();
+    }
 }
 
 void QSynEdit::charToSegmentCoord(int line, int ch, int &segment, int &x) const
@@ -506,8 +528,10 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
         auto dirty = mWrapDirtySeqs.constFind(seq);
         if (dirty != mWrapDirtySeqs.constEnd() && dirty.value() >= batch.contentVersion)
             continue;  // the line was edited after the job started: stale
-        if (!mWrapLayouts.contains(seq))
+        if (!mWrapLayouts.contains(seq)) {
             mWrapLayouts.insert(seq, it.value());
+            noteLineWidthKnown(seq, it->totalWidth);
+        }
         if (dirty != mWrapDirtySeqs.constEnd())
             mWrapDirtySeqs.erase(dirty);
         // point-update the row index with the refined segment count; the
@@ -521,8 +545,13 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
     if (batch.finished) {
         mWrapAllComputed = mWrapDirtySeqs.isEmpty();
         updateVScrollbar();
-        if (!mWrapAllComputed)
+        if (!mWrapAllComputed) {
             scheduleWrapLayoutJob();
+        } else if (mMaxLineWidthMaybeStale) {
+            // the max line width may have been adopted from an incomplete
+            // cache; recompute it now that every layout is known
+            recomputeMaxLineWidthAndNotify();
+        }
     } else {
         updateVScrollbar();
     }
@@ -1236,37 +1265,6 @@ int QSynEdit::stringWidth(const QString &lineText, int left) const
     return mGlyphCalculator.stringWidth(lineText, left);
 }
 
-void QSynEdit::setLineMetrics(int line, int width, const QList<int> &glyphStartXList)
-{
-    // called by the painter with exact (styled) metrics
-    if (line<0 || line>=mDocument->count())
-        return;
-    size_t seq = mDocument->getLineSeq(line);
-    WrapLayout &layout = mWrapLayouts[seq];
-    int oldWidth = layout.totalWidth;
-    layout.totalWidth = width;
-    layout.glyphStartXList = glyphStartXList;
-    if (mMaxLineWidthSeq == 0) {
-        mMaxLineWidthSeq = seq;
-        noteMaxLineWidthDirty();
-    } else if (mMaxLineWidthSeq == seq) {
-        if (oldWidth > width) {
-            mMaxLineWidthSeq = 0;
-            noteMaxLineWidthDirty();
-        } else if (oldWidth < width) {
-            noteMaxLineWidthDirty();
-        }
-    } else {
-        auto it = mWrapLayouts.constFind(mMaxLineWidthSeq);
-        if (it != mWrapLayouts.constEnd() && it->totalWidth < width) {
-            mMaxLineWidthSeq = seq;
-            noteMaxLineWidthDirty();
-        }
-    }
-    Q_ASSERT(glyphStartXList.length()
-             == mDocument->getGlyphStartCharList(line).length());
-}
-
 int QSynEdit::lineWidth(int line) const
 {
     if (line>=0 && line < mDocument->count())
@@ -1281,14 +1279,6 @@ int QSynEdit::lineWidth(int line, const QString &newText) const
     if (mDocument->getLine(line)==newText)
         return wrapLayout(line).totalWidth;
     return mGlyphCalculator.stringWidth(newText,0);
-}
-
-bool QSynEdit::lineWidthValid(int line) const
-{
-    if (line<0 || line>=mDocument->count())
-        return false;
-    auto it = mWrapLayouts.constFind(mDocument->getLineSeq(line));
-    return it != mWrapLayouts.constEnd() && it->totalWidth >= 0;
 }
 
 int QSynEdit::maxLineWidth() const
@@ -1399,18 +1389,15 @@ void QSynEdit::compactLineMetrics()
     }
 }
 
-void QSynEdit::noteMaxLineWidthDirty()
+void QSynEdit::noteMaxLineWidthDirty() const
 {
-    if (mSetLineMetricsLockCount>0) {
-        mMaxLineWidthDirtyInBatch = true;
-    } else {
-        invalidate(); // repaint first, to update line widths
-        updateHScrollBarLater();
-    }
+    updateHScrollBarLater();
 }
 
 void QSynEdit::recomputeMaxLineWidthAndNotify()
 {
+    // the layout cache is complete when this runs (a finished sweep), so
+    // this is a pure cache read
     int maxWidth = -1;
     size_t maxSeq = 0;
     for (int i=0;i<mDocument->count();i++) {
@@ -1420,25 +1407,11 @@ void QSynEdit::recomputeMaxLineWidthAndNotify()
             maxSeq = mDocument->getLineSeq(i);
         }
     }
+    mMaxLineWidthMaybeStale = false;
     if (maxSeq != 0) {
         mMaxLineWidthSeq = maxSeq;
-        invalidate(); // repaint first, to update line widths
         updateHScrollBarLater();
     }
-}
-
-void QSynEdit::beginSetLineMetrics()
-{
-    if (mSetLineMetricsLockCount == 0)
-        mMaxLineWidthDirtyInBatch = false;
-    mSetLineMetricsLockCount++;
-}
-
-void QSynEdit::endSetLineMetrics()
-{
-    mSetLineMetricsLockCount--;
-    if (mSetLineMetricsLockCount == 0 && mMaxLineWidthDirtyInBatch)
-        recomputeMaxLineWidthAndNotify();
 }
 
 int QSynEdit::getLineIndent(const QString &lineText) const
@@ -2438,10 +2411,12 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     return s;
 }
 
-void QSynEdit::updateHScrollBarLater()
+void QSynEdit::updateHScrollBarLater() const
 {
     QEvent * event = new QEvent(UPDATE_HORIZONTAL_SCROLLBAR_EVENT);
-    qApp->postEvent(this,event);
+    // posting an event does not modify the object; this method is const so
+    // that const cache-filling paths (wrapLayout) can request the refresh
+    qApp->postEvent(const_cast<QSynEdit*>(this),event);
 }
 
 void QSynEdit::doDeletePrevChar()

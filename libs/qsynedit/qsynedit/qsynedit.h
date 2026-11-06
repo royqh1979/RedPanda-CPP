@@ -255,9 +255,9 @@ public:
     // font-dependent line metrics (this view's font; cached per line):
     int lineWidth(int line) const;
     int lineWidth(int line, const QString &newText) const;
-    bool lineWidthValid(int line) const;
     // -1: the longest line is unknown (metrics incomplete, e.g. right after
-    // a font change; re-established during the next paint pass)
+    // a font change; re-established once the background layout sweep
+    // finishes)
     int maxLineWidth() const;
     QList<int> glyphStartXList(int line) const;
     int glyphStartX(int line, int glyphIdx) const;
@@ -725,7 +725,6 @@ private:
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
-    void setLineMetrics(int line, int width, const QList<int> &glyphStartXList);
     void invalidateAllLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
     // word-wrap layout computation (view-side, lazily cached per line seq)
@@ -733,10 +732,14 @@ private:
     bool lineVisibleForWrap(int line) const;
     void scheduleWrapLayoutJob() const;
     Q_INVOKABLE void onWrapLayoutBatch(const WrapLayoutBatch &batch);
-    void noteMaxLineWidthDirty();
+    // request a horizontal scrollbar range refresh (the longest-line width
+    // changed); event-posted so it is safe from const cache-filling paths
+    void noteMaxLineWidthDirty() const;
+    // longest-line bookkeeping for a freshly computed/accepted layout
+    void noteLineWidthKnown(size_t seq, int width) const;
+    // recompute the longest line from the (complete) layout cache; called
+    // when a background sweep finishes with a possibly underestimated max
     void recomputeMaxLineWidthAndNotify();
-    void beginSetLineMetrics();
-    void endSetLineMetrics();
     PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeBlock foldAroundLine(int line);
@@ -853,7 +856,7 @@ private:
     void addChangeToUndo(ChangeReason reason, const CharPos& start, const CharPos& end,
                  const QStringList& changeText, SelectionMode selMode);
 private slots:
-    void updateHScrollBarLater();
+    void updateHScrollBarLater() const;
     void onBookMarkOptionsChanged();
     void onGutterChanged();
     void onLinesChanged();
@@ -908,8 +911,9 @@ private:
     QHash<size_t, int> mWrapDirtySeqs;
     mutable bool mWrapAllComputed = false;
     mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
-    int mSetLineMetricsLockCount = 0;
-    bool mMaxLineWidthDirtyInBatch = false;
+    // set when the max was adopted from a partial (still computing) cache:
+    // recompute from the complete cache once the sweep finishes
+    mutable bool mMaxLineWidthMaybeStale = false;
     bool mMouseMoved;
     QPoint mMouseOrigin;
 

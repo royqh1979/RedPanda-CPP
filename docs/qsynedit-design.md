@@ -139,10 +139,13 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 3. **字形分段**（`mGlyphStartCharList`，**与字体无关**，留在 `DocumentLine`；
    分段工具函数与 `GlyphCalculator` 同在 `glyphcalculator.h/.cpp`）。
    字形像素位置与行宽（**与字体有关**）已完全移到视图侧：QSynEdit 持有
-   `GlyphCalculator`（视图字体）与按行 seq 键控的 `LineMetrics` 缓存
-   （`mLineMetrics`），绘制时由 painter 用逐 token 样式字体精确计算并写回
-   （`setLineMetrics`），未绘制行按需用基础字体惰性估算（`isTemp` 标记）；
-   最长行跟踪（`mMaxLineWidthSeq`）与水平滚动条联动也在视图侧。
+   `GlyphCalculator`（视图字体）与按行 seq 键控的 `WrapLayout` 缓存
+   （`mWrapLayouts`），由 `wrapLayout()` 按需同步精算或后台 worker 补算；
+   painter 只为含 IME preedit 的行现算位置（preedit 文本不属于文档行，
+   结果只供当次绘制与输入法光标定位缓存，**不写回**布局缓存）。
+   最长行跟踪（`mMaxLineWidthSeq`）在缓存写入点簿记
+   （`noteLineWidthKnown`），从未就绪的部分缓存采纳可能低估，
+   后台 sweep 就绪时经 `recomputeMaxLineWidthAndNotify` 校正。
    失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、惰性压缩；
    Move 的 seq 随行走、缓存自然有效。**Document 不再持有字体/字号/tabSize
    等任何度量状态**（构造函数不再接收 `QFont`），也不再提供像素 API。
@@ -356,18 +359,20 @@ GlyphIndex=glyph 序号。
   未算行按 1 段"的下界估计，回填后逐步修正。
 - **绘制的水平裁剪是两段正交集的交集**（painter）：`QSynEditPainter::mLeft/mRight`
   是**可见区域**（构造时由 paintEvent 的裁剪矩形 + `mLeftPos` 水平滚动算出，
-  全程不变）；`mSegmentStartX/mSegmentEndX` 是**当前 wrap 段界**（每行重设，
-  无 wrap 时恒 `[0, INT_MAX]`）。token/选区裁剪一律用交集
-  （`mTokenClipLeft/mTokenClipRight`）：wrap 下段界更紧、无 wrap 下可见区域
-  （含水平滚动）生效。曾把段界覆写进 `mLeft/mRight`，导致无 wrap 水平滚动后
-  内容不可见——两个概念不得混用。
+  全程不变）；`mRow.segmentStartX/mRow.segmentEndX` 是**当前 wrap 段界**（每行
+  重设，无 wrap 时恒 `[0, INT_MAX]`）。token/选区裁剪一律用交集
+  （`mRow.tokenClipLeft/mRow.tokenClipRight`）：wrap 下段界更紧、无 wrap 下
+  可见区域（含水平滚动）生效。曾把段界覆写进 `mLeft/mRight`，导致无 wrap
+  水平滚动后内容不可见——两个概念不得混用。
 - 生命周期：`QPointer` 在对象销毁时自动置空，worker 可据此知道视图已销毁
   （queued 事件也会被 Qt 在对象销毁时丢弃）。
 
-**painter 后续重构（记录在案，未做）**：`QSynEditPainter` 的惯用法是"每次
-paintEvent 构造临时对象 + 每行改一堆成员"（`mRcLine`、`mTokenAccu`、段界、
-clip 边界等）；若要收敛可变成员，正确做法是抽 `RowPaintContext` 结构体
-（line/segment/段界/clip/rcLine）整体传参，而不是给既有长参数列表继续加参。
+**painter 状态组织（已实现）**：`QSynEditPainter` 是每次 paintEvent 构造的
+临时对象；成员分两组——构造时设定、行循环中只读的配置（`mLeft/mRight/mClip/
+mSelStart/mSelEnd` 等），和集中在 `RowPaintContext mRow` 里的逐行暂态
+（段界、clip 交集、行选区、颜色、`rcLine/rcToken`、token 累积器等）。
+painter 经 `const Document *mDocument` 只读访问文档（编译期强制），
+不再持有 document 的写路径。
 
 ## 4.1 Syntaxer 归属（多视图设计）
 

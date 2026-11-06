@@ -20,6 +20,7 @@
 #include <QColor>
 #include <QPainter>
 #include <QString>
+#include <climits>
 #include "types.h"
 
 namespace QSynedit {
@@ -38,6 +39,7 @@ struct TokenBackgroundInfo {
 
 
 class Syntaxer;
+class Document;
 using PSyntaxer = std::shared_ptr<Syntaxer>;
 class TokenAttribute;
 using PTokenAttribute = std::shared_ptr<TokenAttribute>;
@@ -91,6 +93,9 @@ private:
                              const QList<int> &glyphStartCharList,
                              const QList<int> &glyphStartPositionsList,
                              bool fillToEOL);
+    // recomputeGlyphPositions: the painted text differs from the document
+    // line (IME preedit), so glyph x positions are computed while scanning
+    // instead of read from the layout cache (and never written back)
     void addHighlightToken(
             const QString& lineText,
             const QString& token, int tokenLeft,
@@ -98,7 +103,7 @@ private:
             const QList<int> &glyphStartCharList,
             int tokenStartChar,
             int tokenEndChar,
-            bool calcGlyphPosition,
+            bool recomputeGlyphPositions,
             QList<int> &glyphStartXList,
             int &tokenWidth
             );
@@ -111,44 +116,56 @@ private:
 private:
     QSynEdit* mEdit;
     QPainter* mPainter;
+    // read-only view of the document: the painter never edits, so only
+    // const access is allowed (compile-enforced)
+    const Document *mDocument;
     bool doRightEdge; // right edge
     int rightEdge;
     // selection info
     bool anySelection; // any selection visible?
     DisplayCoord mSelStart; // start of selected area
     DisplayCoord mSelEnd; // end of selected area
-    // info about normal and selected text and background colors
-    bool mIsSpecialLine, mIsCurrentLine, mIsLineEndSelected;
-    QColor mForeground, mBackground;
-    QColor mSelectionForeground, mSelectionBackground;
-    QColor mSpecialLineForeground, mSpecialLineBackground;
-    // info about selection of the current line
-    int mLineSelStart, mLineSelEnd;
-    bool mHasSelectionInLine;
-    int mCurrentLineWidth;
-    // painting the background and the text
-    QRect mRcLine, mRcToken;
     int mFirstLine, mLastLine;
-    QList<TokenTextInfo> mLineTokens;
-    QList<TokenBackgroundInfo> mLineTokenBackgrounds;
 
     QRect mClip;
     // visible horizontal region in absolute glyph x (set once by
     // paintEvent from the clip rect and mLeftPos; the horizontal scroll
     // offset lives here). Never overwritten per row.
     int mFirstRow, mLastRow, mLeft, mRight;
-    // bounds of the wrap segment being painted (absolute glyph x);
-    // [0, INT_MAX] when word wrap is off (the single segment spans the
-    // whole line)
-    int mSegmentStartX = 0;
-    int mSegmentEndX = INT_MAX;
-    // per-row token/selection clipping: the intersection of the visible
-    // region (mLeft..mRight) and the wrap segment bounds. With word wrap
-    // the segment bounds are the tighter side; without it the visible
-    // region rules (horizontal scrolling)
-    int mTokenClipLeft = 0;
-    int mTokenClipRight = INT_MAX;
-    SynTokenAccu mTokenAccu;
+
+    // per-row scratch state, reset/updated as paintLines walks the visible
+    // rows; grouping it here keeps the per-paint configuration above
+    // untouched during the row loop
+    struct RowPaintContext {
+        // bounds of the wrap segment being painted (absolute glyph x);
+        // [0, INT_MAX] when word wrap is off (the single segment spans the
+        // whole line)
+        int segmentStartX = 0;
+        int segmentEndX = INT_MAX;
+        // token/selection clipping: the intersection of the visible region
+        // (mLeft..mRight) and the wrap segment bounds. With word wrap the
+        // segment bounds are the tighter side; without it the visible
+        // region rules (horizontal scrolling)
+        int tokenClipLeft = 0;
+        int tokenClipRight = INT_MAX;
+        // info about normal and selected text and background colors
+        bool isSpecialLine = false;
+        bool isCurrentLine = false;
+        bool isLineEndSelected = false;
+        QColor foreground, background;
+        QColor selectionForeground, selectionBackground;
+        QColor specialLineForeground, specialLineBackground;
+        // selection of the current row
+        int lineSelStart = 0, lineSelEnd = 0;
+        bool hasSelectionInLine = false;
+        int lineWidth = 0;
+        // painting the background and the text
+        QRect rcLine, rcToken;
+        QList<TokenTextInfo> lineTokens;
+        QList<TokenBackgroundInfo> lineTokenBackgrounds;
+        SynTokenAccu tokenAccu;
+    };
+    RowPaintContext mRow;
 };
 
 }

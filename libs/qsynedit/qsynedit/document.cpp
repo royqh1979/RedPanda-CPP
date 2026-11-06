@@ -744,7 +744,7 @@ PDocumentLine Document::findLineBySeq(size_t lineSeq) const
 }
 
 #ifdef QSYNEDIT_TEST
-QList<int> Document::getGlyphStartCharListForTest(int line)
+QList<int> Document::getGlyphStartCharListForTest(int line) const
 {
     QMutexLocker locker(&mMutex);
     return mLines[line]->glyphStartCharList();;
@@ -1059,7 +1059,7 @@ void Document::ensureHasLine()
         insertItem(0,"");
 }
 
-QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
+QList<int> Document::getGlyphStartCharList(int line, const QString &lineText) const
 {
     QMutexLocker locker(&mMutex);
     if (line<0 || line>=count() || mLines[line]->lineText()!=lineText)
@@ -1067,7 +1067,7 @@ QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
     return mLines[line]->glyphStartCharList();
 }
 
-QList<int> Document::getGlyphStartCharList(int line)
+QList<int> Document::getGlyphStartCharList(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line<0 || line>=count())
