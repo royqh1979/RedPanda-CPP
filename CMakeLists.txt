@@ -118,6 +118,26 @@ if (APP_VERSION_PRE_RELEASE)
     set(REDPANDA_VERSION "${REDPANDA_VERSION}-${APP_VERSION_PRE_RELEASE}")
 endif()
 
+# re-run configure when the version sources change, so the embedded Windows
+# version info (git commit count included) stays current
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/version.json")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git/HEAD")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/.git/HEAD")
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/.git/HEAD" GIT_HEAD_CONTENT)
+    string(STRIP "${GIT_HEAD_CONTENT}" GIT_HEAD_CONTENT)
+    if(GIT_HEAD_CONTENT MATCHES "^ref: (.+)$"
+            AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git/${CMAKE_MATCH_1}")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+            "${CMAKE_CURRENT_SOURCE_DIR}/.git/${CMAKE_MATCH_1}")
+    endif()
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git/packed-refs")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+            "${CMAKE_CURRENT_SOURCE_DIR}/.git/packed-refs")
+    endif()
+endif()
+
 if (UNIX AND NOT APPLE)
     set(XDG ON)
 else()

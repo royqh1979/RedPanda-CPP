@@ -564,6 +564,17 @@ target_embed_resources(RedPandaIDE
 if(WIN32)
     target_sources(RedPandaIDE PRIVATE
         resources/windows_icon.rc)
+
+    # version info shown in the exe's file properties (pure numeric version,
+    # pre-release tags are not included); regenerated when version.json or
+    # the git HEAD changes
+    if(NOT APP_VERSION_BUILD)
+        set(APP_VERSION_BUILD 0)
+    endif()
+    configure_file(resources/windows_version.rc.in
+        ${CMAKE_CURRENT_BINARY_DIR}/windows_version.rc @ONLY)
+    target_sources(RedPandaIDE PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/windows_version.rc)
 elseif(MACOS)
     set(app_icon ../platform/macos/RedPandaIDE.icns)
     set_source_files_properties(${app_icon}
