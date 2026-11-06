@@ -47,7 +47,7 @@ void TodoParser::parseFile(const QString &filename,bool isForProject)
         return;
     }
     mThread = new TodoThread(filename);
-    connect(mThread,&QThread::finished,
+    connect(mThread,&QThread::finished, this,
             [this] {
         QMutexLocker threadLocker(&mMutex);
         if (mThread) {
@@ -79,7 +79,7 @@ void TodoParser::parseFiles(const QStringList &files)
         return;
     }
     mThread = new TodoThread(files);
-    connect(mThread,&QThread::finished,
+    connect(mThread,&QThread::finished, this,
             [this] {
         QMutexLocker threadLocker(&mMutex);
         if (mThread) {

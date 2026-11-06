@@ -126,7 +126,7 @@ void ExecutableRunner::run()
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
     connect(
-                &process, &QProcess::errorOccurred,
+                &process, &QProcess::errorOccurred, &process,
                 [&errorOccurred](){
         errorOccurred= true;
     });

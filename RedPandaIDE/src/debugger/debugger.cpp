@@ -1278,7 +1278,7 @@ void DebugTarget::run()
     });
 #endif
 
-    connect(&process, &QProcess::errorOccurred,
+    connect(&process, &QProcess::errorOccurred, &process,
                     [&](){
                         mErrorOccured= true;
                     });

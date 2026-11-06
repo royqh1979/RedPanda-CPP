@@ -90,7 +90,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         process.setReadChannel(QProcess::StandardOutput);
     }
     process.connect(
-                &process, &QProcess::errorOccurred,
+                &process, &QProcess::errorOccurred, &process,
                 [&](){
         errorOccurred= true;
     });

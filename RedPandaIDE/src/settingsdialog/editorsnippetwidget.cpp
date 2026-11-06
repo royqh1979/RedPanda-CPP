@@ -38,7 +38,7 @@ EditorSnippetWidget::EditorSnippetWidget(ColorManager *colorManager,const QStrin
     QItemSelectionModel* m=ui->tblSnippets->selectionModel();
     ui->tblSnippets->setModel(&mModel);
     delete m;
-    connect(ui->editCode, &Editor::changed,
+    connect(ui->editCode, &Editor::changed, this,
             [this] {
         if (mUpdatingCode)
             return;
@@ -49,7 +49,7 @@ EditorSnippetWidget::EditorSnippetWidget(ColorManager *colorManager,const QStrin
         snippet->code = ui->editCode->text();
         setSettingsChanged();
     });
-    connect(ui->tblSnippets->selectionModel(), &QItemSelectionModel::currentChanged,
+    connect(ui->tblSnippets->selectionModel(), &QItemSelectionModel::currentChanged, this,
             [this] {
         QModelIndex index = ui->tblSnippets->currentIndex();
         if (!index.isValid()) {

@@ -1604,7 +1604,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             QString filename = record->filename;
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentFiles);
-            connect(action, &QAction::triggered, [filename,this](bool){
+            connect(action, &QAction::triggered, this, [filename,this](bool){
                 openFile(filename);
             });
             mMenuRecentFiles->addAction(action);
@@ -1612,7 +1612,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         mMenuRecentFiles->addSeparator();
         //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentFiles);
-        connect(action, &QAction::triggered, [this](bool){
+        connect(action, &QAction::triggered, this, [this](bool){
             mVisitHistoryManager->clearFiles();
         });
         mMenuRecentFiles->addAction(action);
@@ -1626,7 +1626,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             QString filename = record->filename;
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentProjects);
-            connect(action, &QAction::triggered, [filename,this](bool){
+            connect(action, &QAction::triggered, this, [filename,this](bool){
                 openProject(filename);
             });
             mMenuRecentProjects->addAction(action);
@@ -1634,7 +1634,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
         mMenuRecentProjects->addSeparator();
         //menu takes the ownership
         QAction *action = new QAction(tr("Clear History"),mMenuRecentProjects);
-        connect(action, &QAction::triggered, [this](bool){
+        connect(action, &QAction::triggered, this, [this](bool){
             mVisitHistoryManager->clearProjects();
         });
         mMenuRecentProjects->addAction(action);
@@ -3705,7 +3705,7 @@ void MainWindow::updateTools()
         QList<QAction*> actions;
         foreach (const PToolItem& item, mToolsManager->tools()) {
             QAction* action = createGlobalAction(item->title,"tool-"+item->id, tr("Tools"));
-            connect(action, &QAction::triggered,
+            connect(action, &QAction::triggered, this,
                     [item,this] (){
                 executeTool(item);
             });
@@ -3844,7 +3844,7 @@ void MainWindow::buildEncodingMenu()
         menuLang->setTitle(langName);
         menuCharsets->addMenu(menuLang);
         //QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
-        connect(menuLang,&QMenu::aboutToShow,
+        connect(menuLang,&QMenu::aboutToShow, this,
                 [langName,menuLang,this]() {
             menuLang->clear();
             Editor* editor = mEditorManager->getEditor();
@@ -3854,7 +3854,7 @@ void MainWindow::buildEncodingMenu()
                 action->setCheckable(true);
                 if (editor)
                     action->setChecked(info->name == editor->editorEncoding());
-                connect(action, &QAction::triggered,
+                connect(action, &QAction::triggered, this,
                         [info,this](){
                     Editor * activeEditor = mEditorManager->getEditor();
                     if (activeEditor == nullptr)
@@ -3888,7 +3888,7 @@ void MainWindow::buildEncodingMenu()
     foreach(const PCharsetInfo& charset, charsetsForLocale) {
         QAction * action = new QAction(
                     tr("Convert to %1").arg(QString(charset->name)));
-        connect(action, &QAction::triggered,
+        connect(action, &QAction::triggered, this,
                 [charset,this](){
             Editor * editor = mEditorManager->getEditor();
             if (editor == nullptr)
@@ -4389,7 +4389,7 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
             action->setActionGroup(actionGroup);
             menuSetAnswer->addAction(action);
         }
-        connect(actionGroup, &QActionGroup::triggered,
+        connect(actionGroup, &QActionGroup::triggered, this,
                 [problem,this](QAction* action) {
             if (action->text().compare(problem->answerProgram(), PATH_SENSITIVITY)
                     !=0)
@@ -4401,7 +4401,7 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
             }
         });
         QAction * action = new QAction(tr("select other file..."),menuSetAnswer);
-        connect(action, &QAction::triggered,
+        connect(action, &QAction::triggered, this,
                 [problem,this](){
             QString filename = QFileDialog::getOpenFileName(
                         this,
@@ -4673,7 +4673,7 @@ void MainWindow::onShowInsertCodeSnippetMenu()
                 mMenuInsertCodeSnippet->addSeparator();
         }
         QAction * action = mMenuInsertCodeSnippet->addAction(snippet->caption);
-        connect(action, &QAction::triggered,
+        connect(action, &QAction::triggered, this,
                 [snippet,this](){
             Editor * editor = mEditorManager->getEditor();
             if (editor) {
@@ -8097,7 +8097,7 @@ void MainWindow::backupMenuForEditor(QMenu *menu, QList<QAction *> &backup)
         backup.append(action);
     }
     menu->clear();
-    connect(menu,&QMenu::aboutToShow,
+    connect(menu,&QMenu::aboutToShow, menu,
             [menu, backup] {
         foreach (QAction* action, backup) {
             if (action->isSeparator()) {
@@ -8107,7 +8107,7 @@ void MainWindow::backupMenuForEditor(QMenu *menu, QList<QAction *> &backup)
             }
         }
     });
-    connect(menu,&QMenu::aboutToHide,
+    connect(menu,&QMenu::aboutToHide, menu,
             [menu] {
         menu->clear();
     });

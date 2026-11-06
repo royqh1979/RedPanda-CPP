@@ -130,6 +130,10 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 - 注释与文档使用英文；新写的注释和文档也请使用英文。
 - 设计文档（`docs/architecture.md`、`docs/qsynedit-design.md`）只描述**现状与约定**，以代码为准；具体修改记录（改名、bug 修复等）写入 git 提交信息，不放进设计文档。提交信息使用英文。
 - 特性代码用 `ENABLE_LUA_ADDON`、`ENABLE_SDCC`、`ENABLE_VCS` 宏做条件编译——相应的 `#include` 也要加保护。
+- **lambda/functor 槽的寿命不变式：连接的寿命必须 ≤ 它捕获的每个对象的寿命**。落实为两条机械规则：
+  1. `connect()`/`QTimer::singleShot()` 等以 lambda 作槽时必须传入 QObject context 对象（context 析构即断开连接），它约束按值捕获的 `this`/裸指针。无 context 的连接只随 sender 存亡，sender 可能比捕获的对象长寿——案例：todoparser 的 `connect(mThread, finished, [this]{...})`，TodoParser 先析构则 `this` 悬空。
+  2. connected lambda 不得用 `&` 引用捕获局部变量——context 保护不了比它早死的栈对象（真实崩溃案例见提交 `63e90e30`：测试 lambda 以长命的 `mEdit.get()` 为 context、引用捕获局部变量，函数返回后信号触发写已释放栈地址）。确需写回局部变量时，用一个在函数开头声明的局部 `QObject` 作 context（作用域结束时断开，与局部变量同生共死）。
+  残余注意：按值捕获的裸指针不在两条规则覆盖内，要求指针指向的对象明显比 context 长寿；优先捕获值类型或 shared_ptr。
 - Lua 插件 API 用 Teal 标注类型；API 定义位于 `addon/defs/*.d.tl`，文档见 `docs/addon.md`。插件 API 的版本规则很严格——修改接口前请先阅读 `docs/addon.md`。
 
 ## 安全注意事项

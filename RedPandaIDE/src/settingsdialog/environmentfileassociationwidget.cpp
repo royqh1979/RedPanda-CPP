@@ -40,7 +40,7 @@ EnvironmentFileAssociationWidget::EnvironmentFileAssociationWidget(const QString
     QItemSelectionModel* m = ui->lstFileTypes->selectionModel();
     ui->lstFileTypes->setModel(&mModel);
     delete m;
-    connect(&mModel, &FileAssociationModel::associationChanged,
+    connect(&mModel, &FileAssociationModel::associationChanged, this,
             [this](){
         setSettingsChanged();
     });

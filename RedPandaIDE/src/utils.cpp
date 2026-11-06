@@ -46,16 +46,16 @@ ProcessOutput runAndGetOutput(const QString &cmd, const QString& workingDir, con
         process.setProcessChannelMode(QProcess::MergedChannels);
     process.setReadChannel(QProcess::StandardOutput);
     process.setWorkingDirectory(workingDir);
-    process.connect(&process,&QProcess::readyReadStandardOutput,
+    QObject::connect(&process,&QProcess::readyReadStandardOutput, &process,
                     [&](){
         standardOutput.append(process.readAllStandardOutput());
     });
     if (separateStderr)
-        process.connect(&process, &QProcess::readyReadStandardError,
+        QObject::connect(&process, &QProcess::readyReadStandardError, &process,
                         [&]() {
                             standardError.append(process.readAllStandardError());
                         });
-    process.connect(&process, &QProcess::errorOccurred,
+    QObject::connect(&process, &QProcess::errorOccurred, &process,
                     [&](){
                         errorOccurred= true;
                     });
@@ -97,14 +97,14 @@ void executeFile(const QString &fileName, const QStringList &params, const QStri
                 fileName,
                 params,
                 workingDir);
-    runner->connect(runner, &QThread::finished,
+    runner->connect(runner, &QThread::finished, runner,
                     [runner,tempFile](){
         if (!tempFile.isEmpty()) {
             QFile::remove(tempFile);
         }
         runner->deleteLater();
     });
-    runner->connect(runner, &Runner::runErrorOccurred,
+    runner->connect(runner, &Runner::runErrorOccurred, runner,
             [](const QString&){
         //todo
     });

@@ -46,7 +46,10 @@ void DAPDebuggerClient::run()
 
     mProcess->setWorkingDirectory(workingDir);
 
-    connect(mProcess.get(), &QProcess::errorOccurred,
+    // scope-bound context: disconnects when this function returns, before
+    // the captured local goes out of scope
+    QObject connGuard;
+    connect(mProcess.get(), &QProcess::errorOccurred, &connGuard,
                     [&](){
                         errorOccured= true;
                     });
