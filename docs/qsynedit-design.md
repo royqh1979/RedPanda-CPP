@@ -25,9 +25,9 @@
 
 ### 1.1 数据结构
 
-**`UndoItem`**（`document.h:700`）——一次变更的记录，**immutable**（构造后只读）：
+**`UndoItem`**（`document.h`）——一次变更的记录，**immutable**（构造后只读）：
 
-- `changeReason`（`ChangeReason`，`document.h:669`）：变更类型，决定 undo/redo 的逆操作方式；
+- `changeReason`（`ChangeReason`，`document.h`）：变更类型，决定 undo/redo 的逆操作方式；
 - `changeStartPos` / `changeEndPos`（`CharPos`）：变更区间；
 - `changeText`（`QStringList`）：变更相关文本（含义随 reason 而变）；
 - `changeNumber`：分组编号，同一次逻辑操作（块）内的多个变更共享同一编号；
@@ -42,22 +42,22 @@
   （`perLineLeftChars`，与 `changeText` 平行）记入 item；undo 按记录逐行精确回插，
   redo 仍在恢复后的文档上按带重放（该路径本就精确）。
 
-**`CaretAndSelectionInfo`**（`document.h:690`）——光标与选区快照，按 `changeNumber` 成对（变更前/变更后）保存。
+**`CaretAndSelectionInfo`**（`document.h`）——光标与选区快照，按 `changeNumber` 成对（变更前/变更后）保存。
 
 ### 1.2 UndoList 的职责
 
-`UndoList`（`document.h:755`，实现 `document.cpp:1325-1565`）不只是栈，还承担：
+`UndoList`（`document.h`，实现 `document.cpp`）不只是栈，还承担：
 
-- **变更编号分配**：`mNextChangeNumber` 递增分配，`beginBlock` 时取号（`document.cpp:1488`）；编号是 undo/redo 分组归并的唯一依据；
-- **嵌套分组块**：`beginBlock`/`endBlock` 用 `mBlockLock` 计数支持嵌套；块开始时记录"变更前"光标快照，块结束且栈非空时记录"变更后"快照并发出 `addedUndo` 信号（`document.cpp:1449`）；
-- **`addedUndo` 信号**：驱动 UI 更新"可撤销"状态。发射契约（`test_undo_added_signal` 验证）：每个非空块结束时由 `endBlock` 恰好发射一次（GroupBreak 项不额外发射）；undo 不发射；**redo 经 `restoreChange` 每恢复一个块发射一次**（undo 栈增长，UI 必须刷新），按 `mLastRestoredItemChangeNumber` 对同块多项去重（`document.cpp:1380-1390`）；
-- **保存点追踪**：`mInitialChangeNumber`/`initialState()`/`setInitialState()`，用于"文档未修改"判定（`document.cpp:1544`）；
+- **变更编号分配**：`mNextChangeNumber` 递增分配，`beginBlock` 时取号（`document.cpp`）；编号是 undo/redo 分组归并的唯一依据；
+- **嵌套分组块**：`beginBlock`/`endBlock` 用 `mBlockLock` 计数支持嵌套；块开始时记录"变更前"光标快照，块结束且栈非空时记录"变更后"快照并发出 `addedUndo` 信号（`document.cpp`）；
+- **`addedUndo` 信号**：驱动 UI 更新"可撤销"状态。发射契约（`test_undo_added_signal` 验证）：每个非空块结束时由 `endBlock` 恰好发射一次（GroupBreak 项不额外发射）；undo 不发射；**redo 经 `restoreChange` 每恢复一个块发射一次**（undo 栈增长，UI 必须刷新），按 `mLastRestoredItemChangeNumber` 对同块多项去重（`document.cpp`）；
+- **保存点追踪**：`mInitialChangeNumber`/`initialState()`/`setInitialState()`，用于"文档未修改"判定（`document.cpp`）；
 - **`insideRedo` 标志**：标记当前处于 redo 过程中（见 1.5）；
 - **`maxUndoActions`/`mFullUndoImposible`**：声明了深度限制，但裁剪逻辑未实现（半成品，见 1.7）。
 
 ### 1.3 RedoList 的职责
 
-`RedoList`（`document.h:822`，实现 `document.cpp:1630-1722`）是**被动**的：
+`RedoList`（`document.h`，实现 `document.cpp`）是**被动**的：
 
 - 一个变更项栈（peek/pop/clear/lastChangeReason）；
 - 按 `changeNumber` 存取 caret/selection 快照（`mCaretInfoBeforeChange`/`mCaretInfoAfterChange`）。
@@ -66,20 +66,20 @@
 
 ### 1.4 协作流程
 
-1. **编辑时**：`QSynEdit::beginEditing`/`endEditing`（`qsynedit.cpp:1751,1763`）包装编辑操作，内部调 `mUndoList->beginBlock/endBlock`；各编辑命令经 `addChangeToUndo`（`qsynedit.cpp:326`）记录 `UndoItem`。
-2. **undo 时**（`doUndo`，`qsynedit.cpp:4163`）：先弹出连续的 `GroupBreak` 项搬入 redo 栈；然后按 `changeNumber` 归并执行（同编号视为一次逻辑操作；`GroupUndo` 选项开启时还会归并相邻同类型变更）；每个 `doUndoItem` 把 redo 所需数据 push 进 `mRedoList`；结束后把 caret/selection 快照从 undo 侧搬到 redo 侧，并按"变更前"快照恢复光标与选区。
-3. **redo 时**（`doRedo`，`qsynedit.cpp:4483`）：镜像过程——`GroupBreak` 搬回 undo 栈（`restoreChange`），按编号归并执行 `doRedoItem`，快照搬回 undo 侧，按"变更后"快照恢复光标与选区。
+1. **编辑时**：`QSynEdit::beginEditing`/`endEditing`（`qsynedit.cpp`）包装编辑操作，内部调 `mUndoList->beginBlock/endBlock`；各编辑命令经 `addChangeToUndo`（`qsynedit.cpp`）记录 `UndoItem`。
+2. **undo 时**（`doUndo`，`qsynedit.cpp`）：先弹出连续的 `GroupBreak` 项搬入 redo 栈；然后按 `changeNumber` 归并执行（同编号视为一次逻辑操作；`GroupUndo` 选项开启时还会归并相邻同类型变更）；每个 `doUndoItem` 把 redo 所需数据 push 进 `mRedoList`；结束后把 caret/selection 快照从 undo 侧搬到 redo 侧，并按"变更前"快照恢复光标与选区。
+3. **redo 时**（`doRedo`，`qsynedit.cpp`）：镜像过程——`GroupBreak` 搬回 undo 栈（`restoreChange`），按编号归并执行 `doRedoItem`，快照搬回 undo 侧，按"变更后"快照恢复光标与选区。
 4. **新编辑发生时**：redo 栈清空。
 
 ### 1.5 编辑操作的三种实现类型
 
-`doUndoItem`（`qsynedit.cpp:4225`）和 `doRedoItem`（`qsynedit.cpp:4545`）各有一个按 `ChangeReason` 的 switch，每个分支手写逆逻辑。按 redo 的实现策略分三类：
+`doUndoItem`（`qsynedit.cpp`）和 `doRedoItem`（`qsynedit.cpp`）各有一个按 `ChangeReason` 的 switch，每个分支手写逆逻辑。按 redo 的实现策略分三类：
 
 **A 类：数据回放型（undo/redo 对称）**
 
 | 操作 | undo | redo |
 |---|---|---|
-| `Input` | 共享 `doUndoRedoInput`（`qsynedit.cpp:1721`）：用存储的旧文本逆向替换，被替换文本存进 redo 项 | 同一 helper，方向相反 |
+| `Input` | 共享 `doUndoRedoInput`（`qsynedit.cpp`）：用存储的旧文本逆向替换，被替换文本存进 redo 项 | 同一 helper，方向相反 |
 | `Insert` | 删除区间，删掉的文本存进 redo 项 | `doInsertText` 回放存储文本 |
 | `Delete`/`DeleteChar`/`DeletePreviousChar` | `doInsertText` 回插存储文本 | `doDeleteText(start,end)` |
 | `ReplaceLine` | 换回旧行文本（undo 时把当前行文本存进 redo 项） | 换回另一份 |
@@ -89,8 +89,8 @@
 **A 类变体：`ColumnDelete`（undo 数据回放 + redo 命令重放）**
 
 - undo：按 `ColumnDeleteUndoItem::perLineLeftChars` 逐行精确回插删除文本
-  （`qsynedit.cpp:4414-4435`），item 经 `addRedo(PUndoItem)` **原样**入 redo 栈；
-- redo：重放 `doDeleteText` 按列带重新删除（`qsynedit.cpp:4686-4692`，恢复后的文档上
+  （`qsynedit.cpp`），item 经 `addRedo(PUndoItem)` **原样**入 redo 栈；
+- redo：重放 `doDeleteText` 按列带重新删除（`qsynedit.cpp`，恢复后的文档上
   该路径本就精确），item 经 `restoreChange(PUndoItem)` 原样搬回 undo 栈。
 
 item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因此对整个 undo/redo
@@ -98,21 +98,21 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 **B 类：命令重跑型（redo 不是回放数据，而是重跑编辑命令本身）**
 
-- `LineBreak` → redo 重跑 `doBreakLine()`（`qsynedit.cpp:4699`）
+- `LineBreak` → redo 重跑 `doBreakLine()`（`qsynedit.cpp`）
 - `MergeWithNextLine`/`MergeWithPrevLine` → redo 重跑 `doMergeWithNextLine()`/`doMergeWithPrevLine()`
 - `DuplicateLine` → redo 重跑 `doDuplicateCurrentLine()`
 
 这些 redo **完全不用存储的文本**，其正确性依赖：
 
 1. 相同文档状态下命令执行的确定性；
-2. `mUndoing`/`mUndoList->setInsideRedo` 标志对重复记录的抑制——重跑会走正常编辑路径，靠 `qsynedit.cpp:324` 等十余处 `if (!mUndoing)` 避免再次入栈；
-3. undo 侧拆分行时的 `shouldInsertAfterCurrentLine`（`qsynedit.cpp:1411`）依赖**语法解析状态**（`calcSyntaxStateAtLine`）——undo 的结果受解析器状态影响。
+2. `mUndoing`/`mUndoList->setInsideRedo` 标志对重复记录的抑制——重跑会走正常编辑路径，靠 `qsynedit.cpp` 等十余处 `if (!mUndoing)` 避免再次入栈；
+3. undo 侧拆分行时的 `shouldInsertAfterCurrentLine`（`qsynedit.cpp`）依赖**语法解析状态**（`calcSyntaxStateAtLine`）——undo 的结果受解析器状态影响。
 
 **C 类：状态项（单项数据不自完备）**
 
-`Caret`/`Selection`/`LeftTop`：undo 时存进 redo 的是原 item 数据而非当前状态；`doRedoItem` 的 Caret/Selection 分支未做恢复（代码中相关行被注释，`qsynedit.cpp:4571,4597`）；`LeftTop` 的 undo/redo 分支设置的是同一个值。单项层面 redo 不完备，正确性靠块级 caret/selection 快照兜底（`doUndo`/`doRedo` 末尾的块级恢复）。
+`Caret`/`Selection`/`LeftTop`：undo 时存进 redo 的是原 item 数据而非当前状态；`doRedoItem` 的 Caret/Selection 分支未做恢复（代码中相关行被注释，`qsynedit.cpp`）；`LeftTop` 的 undo/redo 分支设置的是同一个值。单项层面 redo 不完备，正确性靠块级 caret/selection 快照兜底（`doUndo`/`doRedo` 末尾的块级恢复）。
 
-> 注：`LeftTop` 项把滚动像素偏移（`leftPos()`/`topPos()`，均为像素值）存入 `changeStartPos` 的 `ch/line` 字段（`qsynedit.cpp:4252-4266`）。这是**有意复用**——`UndoItem` 只有 `CharPos` 可承载位置信息，undo/redo 两侧约定一致、信息能完整往返；属风格问题而非误用。`CharPos` 字段含义随 `ChangeReason` 而变的多义性详见 3.4。
+> 注：`LeftTop` 项把滚动像素偏移（`leftPos()`/`topPos()`，均为像素值）存入 `changeStartPos` 的 `ch/line` 字段（`qsynedit.cpp`）。这是**有意复用**——`UndoItem` 只有 `CharPos` 可承载位置信息，undo/redo 两侧约定一致、信息能完整往返；属风格问题而非误用。`CharPos` 字段含义随 `ChangeReason` 而变的多义性详见 3.4。
 
 ### 1.6 为什么不能合并 UndoList/RedoList
 
@@ -132,10 +132,10 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 ### 2.1 Document 的职责清单（现状审计）
 
-`Document`（`document.h:290`，实现 `document.cpp`）实际承担 **6 项职责**：
+`Document`（`document.h`，实现 `document.cpp`）实际承担 **6 项职责**：
 
-1. **文本内容**：行存储与编辑（`insertLine`/`deleteLines`/`moveLine`/`putLine`/`setText`/`setContents` 等）、空文档不变式（`ensureHasLine`，`document.cpp:1100`）、行序号（`lineSeq`/`findLineBySeq`/`mLineSeqIndice`）、批量更新（`beginUpdate`/`endUpdate`）。
-2. **语法分析结果**：每行 `PSyntaxState` 的存取（`getSyntaxState`/`setSyntaxState`），以及其字段的访问器——`parenthesisLevel`/`bracketLevel`/`braceLevel`/`blockLevel`/`blockStarted`/`blockEnded` 全部直接读 `syntaxState()` 的字段（`document.cpp:52-131`）。注意语法状态不只服务高亮：`shouldInsertAfterCurrentLine`（`qsynedit.cpp:1411`）用它做编辑决策，因此它是"模型+编辑"共享的数据。
+1. **文本内容**：行存储与编辑（`insertLine`/`deleteLines`/`moveLine`/`putLine`/`setText`/`setContents` 等）、空文档不变式（`ensureHasLine`，`document.cpp`）、行序号（`lineSeq`/`findLineBySeq`/`mLineSeqIndice`）、批量更新（`beginUpdate`/`endUpdate`）。
+2. **语法分析结果**：每行 `PSyntaxState` 的存取（`getSyntaxState`/`setSyntaxState`），以及其字段的访问器——`parenthesisLevel`/`bracketLevel`/`braceLevel`/`blockLevel`/`blockStarted`/`blockEnded` 全部直接读 `syntaxState()` 的字段（`document.cpp`）。注意语法状态不只服务高亮：`shouldInsertAfterCurrentLine`（`qsynedit.cpp`）用它做编辑决策，因此它是"模型+编辑"共享的数据。
 3. **字形分段**（`mGlyphStartCharList`，**与字体无关**，留在 `DocumentLine`；
    分段工具函数与 `GlyphCalculator` 同在 `glyphcalculator.h/.cpp`）。
    字形像素位置与行宽（**与字体有关**）已完全移到视图侧：QSynEdit 持有
@@ -149,9 +149,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
    失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、惰性压缩；
    Move 的 seq 随行走、缓存自然有效。**Document 不再持有字体/字号/tabSize
    等任何度量状态**（构造函数不再接收 `QFont`），也不再提供像素 API。
-4. **文件 I/O 与编码**：`loadFromFile`/`saveToFile`、UTF-16/32 BOM 处理（`loadUTF16BOMFile` 等，`document.cpp:525-567`）、编码探测（`tryLoadFileByEncoding`）、换行风格（`NewlineType`/`lineBreak`）、`appendNewLineAtEOF`。
+4. **文件 I/O 与编码**：`loadFromFile`/`saveToFile`、UTF-16/32 BOM 处理（`loadUTF16BOMFile` 等，`document.cpp`）、编码探测（`tryLoadFileByEncoding`）、换行风格（`NewlineType`/`lineBreak`）、`appendNewLineAtEOF`。
 5. **线程同步**：`QRecursiveMutex mMutex` 横切保护上述全部职责。线程访问约定（多视图共享后同样成立）：
-   - **文本内容/语法状态**：后台线程会读文档，现有两条路径：(a) CppParser 解析线程经 `EditorManager::getContentFromOpenedEditor`（`editormanager.cpp:901`，由 `CppFileParserThread` 触发）读全文；(b) 编译器线程构建命令行时取 `WORDXY` 宏（`compiler.cpp:466` → `macroVariables` → `wordAtCursor` → `tokenAt` → `getTokenAttr`，`qsynedit.cpp:285`），后者**克隆局部 syntaxer 扫描**、只经锁读 Document。因此文档读写都必须过 `mMutex`，且 syntaxer 指针本身的读取也要加锁（`setSyntaxer` 在 GUI 线程写）；
+   - **文本内容/语法状态**：后台线程会读文档，现有两条路径：(a) CppParser 解析线程经 `EditorManager::getContentFromOpenedEditor`（`editormanager.cpp`，由 `CppFileParserThread` 触发）读全文；(b) 编译器线程构建命令行时取 `WORDXY` 宏（`compiler.cpp` → `macroVariables` → `wordAtCursor` → `tokenAt` → `getTokenAttr`，`qsynedit.cpp`），后者**克隆局部 syntaxer 扫描**、只经锁读 Document。因此文档读写都必须过 `mMutex`，且 syntaxer 指针本身的读取也要加锁（`setSyntaxer` 在 GUI 线程写）；
    - **UndoList/RedoList 自身无锁**：约定只在 GUI 线程访问（编辑、undo/redo 均由用户操作/快捷键触发，事件循环天然串行化）。多视图共享不产生竞争——两个视图不可能"同时"编辑，所有操作在 GUI 线程排队执行；后台线程不得触碰 undo/redo 栈；
    - **信号连接**：Document/UndoList 的信号只允许直接连接到 GUI 线程对象；跨线程 queued 连接的槽不得再回写文档（不得在持锁状态下引入跨线程重入）。
 6. **变更通知**：`changed`/`changing`/`contentChanged`/`linesReparsed`/`syntaxerChanged`/`undoRedoStateChanged` 信号（见 6.2）。
@@ -185,7 +185,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 - 为此测试**自带两个机器生成的确定性字体**（`libs/qsynedit/test/fonts/`，由 `gen_test_font.py` 用 fonttools 生成，CMake 复制到测试工作目录）：
   - `qsynedit-test-mono.ttf`：等宽，ASCII 半角 512 单位、CJK/emoji 全角 1024 单位（恒 2×半角）、ZWJ 序列零宽；
   - `qsynedit-test-prop.ttf`：非等宽，宽度按码位确定性生成，用于覆盖 `forceMonospace=false` 的渲染路径；
-  - `installTestFonts()`（`test_utils.cpp:75-85`）懒安装注入；`defaultMonoFont()`（`test_utils.cpp:87-91`）返回 `"QSynedit Test Mono"`，`testProportionalFont()`（`test_utils.cpp:93-97`）返回 `"QSynedit Test Prop"`；`TestQSyneditInfra::test_fonts` 验证字体真实安装，字体缺失时尽早失败；
+  - `installTestFonts()`（`test_utils.cpp`）懒安装注入；`defaultMonoFont()`（`test_utils.cpp`）返回 `"QSynedit Test Mono"`，`testProportionalFont()`（`test_utils.cpp`）返回 `"QSynedit Test Prop"`；`TestQSyneditInfra::test_fonts` 验证字体真实安装，字体缺失时尽早失败；
 - 即使自带字体，跨平台字体引擎取整仍可能有 ±1 像素差异，宽度断言应尽量运行时现算期望值，不写死像素；
 - **运行方式**：Windows 桌面环境跑测试**不要**设 `QT_QPA_PLATFORM=offscreen`（offscreen 仅用于 Linux 无头 CI）；运行前需将 Qt bin 与 mingw64/bin 加入 `PATH`。
 
@@ -283,13 +283,13 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 | 坐标 | 载体 | 基数 | 说明 |
 |---|---|---|---|
-| 缓冲区字符位置 | `CharPos{ch, line}`（`types.h:75`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
-| 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp:489`） |
-| 显示位置 | `VisualPos{x, row}`（`types.h:131`） | 均 **0 基** | 文档大画布坐标：x 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），row 全局显示行（含窗口外）；`displayLineCount()` 返回**行数**而非末行索引 |
+| 缓冲区字符位置 | `CharPos{ch, line}`（`types.h`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
+| 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp`） |
+| 显示位置 | `VisualPos{x, row}`（`types.h`） | 均 **0 基** | 文档大画布坐标：x 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），row 全局显示行（含窗口外）；`displayLineCount()` 返回**行数**而非末行索引 |
 | 滚动偏移 | `leftPos()`/`topPos()` | 像素 | `topPos`/`setTopPos` 为私有像素级入口（滚动条/平滑滚动/undo 用）；对外语义定位用锚点 API（`topLine()`/`topSegment()`/`setTopLineSegment()`） |
-| Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp:148` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp:113`）——换算分散在两侧，自洽但易误解 |
-| 解析器行号 | token 的 `line` 等 | **0 基** | `Syntaxer::setLine` 直接接收 0 基缓冲区行号（`syntaxer/cpp.cpp:1734`；调用点如 `qsynedit.cpp:5032`），与 `CharPos.line` 一致，跨模块传递无需换算 |
-| 导出回调 | `Exporter::FormatTokenHandler(line, ch)` | 均 **0 基** | line 为缓冲区行号，ch 为 token 首字符索引（`exporter/exporter.h:41`） |
+| Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp`）——换算分散在两侧，自洽但易误解 |
+| 解析器行号 | token 的 `line` 等 | **0 基** | `Syntaxer::setLine` 直接接收 0 基缓冲区行号（`syntaxer/cpp.cpp`；调用点如 `qsynedit.cpp`），与 `CharPos.line` 一致，跨模块传递无需换算 |
+| 导出回调 | `Exporter::FormatTokenHandler(line, ch)` | 均 **0 基** | line 为缓冲区行号，ch 为 token 首字符索引（`exporter/exporter.h`） |
 
 转换路径：`bufferToDisplayPos`/`displayToBufferPos`（折叠/折行映射 + char↔像素换算）、`lineToRow`/`rowToLine`/`lineSegmentToRow`/`rowToLineSegment`（0 基，统一经 RowIndex 树 O(log N)，无 wrap 无折叠时 `line==row`）、`yposToRow`（像素→0 基显示行）。
 
@@ -303,9 +303,9 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 ### 3.3 已知不一致（确认的问题）
 
-- `document.h:545` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp:965-983`）——注释错误；`document.h:581` 的 `@param column (starting from 1)` 是同一类错误；
-- `charToGlyphIndex` 的文档注释（`document.h:570`）仍写参数名 `charIdx`，声明实参已统一为 `charPos`（`document.h:573`）——注释滞后；
-- `RedPandaIDE/src/editor.cpp:2405` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
+- `document.h` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp`）——注释错误；`document.h` 的 `@param column (starting from 1)` 是同一类错误；
+- `charToGlyphIndex` 的文档注释（`document.h`）仍写参数名 `charIdx`，声明实参已统一为 `charPos`（`document.h`）——注释滞后；
+- `RedPandaIDE/src/editor.cpp` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
 
 ### 3.4 CharPos 的多义使用（有意复用，非误用）
 
@@ -314,7 +314,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 - 编辑类项（A/B 类）：缓冲区变更区间 `[changeStartPos, changeEndPos)`；
 - `Caret` 项：光标位置；
 - `Selection` 项：选区起止；
-- `LeftTop` 项：**滚动像素偏移**（`ch`←`leftPos()`、`line`←`topPos()`，均为像素，`qsynedit.cpp:4252-4266`）。
+- `LeftTop` 项：**滚动像素偏移**（`ch`←`leftPos()`、`line`←`topPos()`，均为像素，`qsynedit.cpp`）。
 
 undo/redo 两侧约定一致、信息完整往返，故属风格问题而非误用；但 C 类项的正确性另需块级快照兜底（见 1.5）。改进方向是拆分类型（如独立 `ScrollPos`）或加注释，而非改行为。
 

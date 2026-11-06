@@ -29,7 +29,7 @@
 
 | 数据 | 问题 |
 |---|---|
-| `QFont`（构造函数依赖，`document.h:294`） | 字体是视图属性：两个视图可用不同字体/缩放 |
+| `QFont`（构造函数依赖，`document.h`） | 字体是视图属性：两个视图可用不同字体/缩放 |
 | `GlyphCalculator`、字形像素位置、行宽、`mIndexOfLongestLine`、`maxLineWidthChanged` 信号 | 全部依赖字体度量 → 依赖视图。放文档里，多视图下哪个视图的宽度是真的？ |
 | （字形分段 `mGlyphStartCharList` 与字体无关，可留） | — |
 
@@ -40,14 +40,14 @@
 
 | 数据 | 现状 | 问题 |
 |---|---|---|
-| `mUndoList`/`mRedoList`（`qsynedit.h:751-752`） | 每视图持有 | 见第 2 节，焦点问题 |
-| `mModified`（`qsynedit.h:758`） | 由本视图 `UndoList::initialState()` 驱动（`qsynedit.cpp:3330`） | 跟随 undo 归属 |
-| `mSyntaxer` 实例与解析驱动（`qsynedit.h:738`，同步解析，无后台线程） | 每视图各持一个解析器，结果写进共享 `Document` | 两视图重复解析同一文本、竞争写同一语法状态槽（`mMutex` 只保证不崩，不保证不浪费） |
+| `mUndoList`/`mRedoList`（`qsynedit.h`） | 每视图持有 | 见第 2 节，焦点问题 |
+| `mModified`（`qsynedit.h`） | 由本视图 `UndoList::initialState()` 驱动（`qsynedit.cpp`） | 跟随 undo 归属 |
+| `mSyntaxer` 实例与解析驱动（`qsynedit.h`，同步解析，无后台线程） | 每视图各持一个解析器，结果写进共享 `Document` | 两视图重复解析同一文本、竞争写同一语法状态槽（`mMutex` 只保证不崩，不保证不浪费） |
 
 ### 1.4 在 QSynEdit 里、确实属于视图的
 
 caret、selection、滚动位置、gutter 配置与宽度、折叠状态（`mCodeBlocks` 及各块的
-collapsed 标志，`qsynedit.h:712`）、字体。这些留在视图 ✓。
+collapsed 标志，`qsynedit.h`）、字体。这些留在视图 ✓。
 
 ## 2. Undo/Redo：共享还是独立
 
