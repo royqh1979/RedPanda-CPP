@@ -438,3 +438,31 @@ void TestCppSyntaxer::test_ansi_c_comments()
                                      "*/"
                                  }));
 }
+
+void TestCppSyntaxer::test_create_instance_copies_settings()
+{
+    // createInstance copies ALL configuration: attribute color/style values
+    // and subclass options; the clone owns its attribute objects, so later
+    // changes on either side do not leak across (they are used from
+    // different threads)
+    mSyntaxer.keywordAttribute()->setForeground(QColor(1, 2, 3));
+    mSyntaxer.keywordAttribute()->setBackground(QColor(4, 5, 6));
+    mSyntaxer.keywordAttribute()->setStyles(
+                QSynedit::FontStyle::fsBold | QSynedit::FontStyle::fsItalic);
+    mSyntaxer.setCustomTypeKeywords(QSet<QString>{"foo", "bar"});
+    mSyntaxer.setHandleLastBackSlash(false);
+
+    auto clone = std::dynamic_pointer_cast<CppSyntaxer>(mSyntaxer.createInstance());
+    QVERIFY(clone);
+    QCOMPARE(clone->keywordAttribute()->foreground(), QColor(1, 2, 3));
+    QCOMPARE(clone->keywordAttribute()->background(), QColor(4, 5, 6));
+    QVERIFY(clone->keywordAttribute()->styles()
+            == (QSynedit::FontStyle::fsBold | QSynedit::FontStyle::fsItalic));
+    QVERIFY(clone->customTypeKeywords() == QSet<QString>({"foo", "bar"}));
+    QVERIFY(!clone->handleLastBackSlash());
+
+    // the clone's attribute objects are its own
+    QVERIFY(clone->keywordAttribute() != mSyntaxer.keywordAttribute());
+    clone->keywordAttribute()->setForeground(QColor(7, 8, 9));
+    QCOMPARE(mSyntaxer.keywordAttribute()->foreground(), QColor(1, 2, 3));
+}

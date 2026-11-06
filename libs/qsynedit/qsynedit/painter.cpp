@@ -1016,6 +1016,18 @@ void QSynEditPainter::paintLines()
     PCodeBlock foldRange;
 //    PTokenAttribute preeditAttr;
 
+    // Continuation-scan state: a line is scanned ONCE and the scan carries
+    // over across its wrap segments; a new line (or changed painted text -
+    // IME preedit) restarts it. The token accumulator is painted but never
+    // consumed at a row's end, so a token straddling a segment boundary
+    // (e.g. a long comment) paints its part in every segment it crosses.
+    int scanLine = -1;
+    QString scanText;
+    int scanTokenLeft = 0;
+    SynTokenAccu scanAccu;
+    QList<int> glyphStartCharList;
+    QList<int> glyphStartPositionsList;
+
     // Now loop through all the lines. The indices are valid for Lines.
     CharPos selectionBegin = mEdit->selBegin();
     CharPos selectionEnd= mEdit->selEnd();
@@ -1139,39 +1151,57 @@ void QSynEditPainter::paintLines()
 
         ctx.rcToken = ctx.rcRow;
 
-        QList<int> glyphStartCharList;
-        if (lineTextChanged) {
-            glyphStartCharList = mDocument->getGlyphStartCharList(line,lineTextWithPreedit);
-        } else {
-            glyphStartCharList = mDocument->getGlyphStartCharList(line);
-        }
         // Glyph x positions come from the layout cache (wrapLayout computes
         // cold entries synchronously). They are recomputed only when the
         // painted text differs from the document line (IME preedit); those
         // positions describe the preedit text and must never be written
         // back into the cache.
-        QList<int> glyphStartPositionsList;
         bool recomputeGlyphPositions = lineTextChanged;
-        if (recomputeGlyphPositions) {
-            // same length, values recomputed while scanning tokens
-            glyphStartPositionsList = glyphStartCharList;
-        } else {
-            glyphStartPositionsList = wrap.glyphStartXList;
+        if (!recomputeGlyphPositions)
             ctx.lineWidth = wrap.totalWidth;
-        }
         bool isLastSegment = (segment+1 == wrap.segmentStartChars.count());
-        // Initialize highlighter with line text and range info. It is
-        // necessary because we probably did not scan to the end of the last
-        // line - the internal highlighter range might be wrong.
-        mEdit->startParseLine(mEdit->mSyntaxer.get(), line, lineTextWithPreedit);
+        if (line != scanLine || lineTextWithPreedit != scanText) {
+            // (re)start the scan: a new line, or the painted text changed.
+            // The layout fetch above is the last syntaxer use before the
+            // scan: nothing between here and the token loop may touch
+            // mSyntaxer, or the carried scan state would be clobbered.
+            scanLine = line;
+            scanText = lineTextWithPreedit;
+            if (lineTextChanged) {
+                glyphStartCharList = mDocument->getGlyphStartCharList(line,lineTextWithPreedit);
+            } else {
+                glyphStartCharList = mDocument->getGlyphStartCharList(line);
+            }
+            if (recomputeGlyphPositions) {
+                // same length, values recomputed while scanning tokens
+                glyphStartPositionsList = glyphStartCharList;
+            } else {
+                glyphStartPositionsList = wrap.glyphStartXList;
+            }
+            // Initialize highlighter with line text and range info. It is
+            // necessary because we probably did not scan to the end of the
+            // last line - the internal highlighter range might be wrong.
+            mEdit->startParseLine(mEdit->mSyntaxer.get(), line, lineTextWithPreedit);
+            scanAccu.width = 0;
+            scanTokenLeft = 0;
+        }
+        // resume the carried scan; the accumulator may still hold a token
+        // painted (clipped) at the previous segment - it straddles the
+        // boundary and paints its remainder here
+        ctx.tokenAccu = scanAccu;
+        tokenLeft = scanTokenLeft;
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
         // is ignored as well.
-        ctx.tokenAccu.width = 0;
-        tokenLeft = 0;
-        // Test first whether anything of this token is visible.
         while (!mEdit->mSyntaxer->eol()) {
+            // Stop BEFORE consuming a token that starts past this row's
+            // right clip edge: the next wrap segment resumes the scan
+            // exactly at it. (Preedit lines compute glyph positions as
+            // they go and must scan to the end - the input method cache
+            // needs the whole line.)
+            if (!recomputeGlyphPositions && tokenLeft >= ctx.tokenClipRight)
+                break;
             token = mEdit->mSyntaxer->getToken();
             if (token.isEmpty())  {
                 mEdit->mSyntaxer->next();
@@ -1240,12 +1270,6 @@ void QSynEditPainter::paintLines()
                         glyphStartPositionsList,
                         tokenWidth);
             tokenLeft+=tokenWidth;
-            // glyph positions come from the cache for unchanged lines: stop
-            // scanning once past the right clip edge. Preedit lines compute
-            // positions as they go and must scan to the end (the input
-            // method cache needs the whole line).
-            if (!recomputeGlyphPositions && (tokenLeft>ctx.tokenClipRight))
-                    break;
             // Let the highlighter scan the next token.
             mEdit->mSyntaxer->next();
         }
@@ -1293,6 +1317,11 @@ void QSynEditPainter::paintLines()
         // Draw anything that's left in the TokenAccu record. Fill to the end
         // of the invalid area with the correct colors.
         paintHighlightToken(ctx, lineTextWithPreedit, glyphStartCharList, glyphStartPositionsList, true);
+        // carry the scan to the line's next wrap segment: painting did not
+        // consume the accumulator, so a token straddling the boundary is
+        // painted again (clipped) from its start on the next segment
+        scanAccu = ctx.tokenAccu;
+        scanTokenLeft = tokenLeft;
 
         //Paint editingAreaBorders
         foreach (const PEditingArea& area, areaList) {

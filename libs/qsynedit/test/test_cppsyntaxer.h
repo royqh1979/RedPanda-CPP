@@ -29,6 +29,8 @@ private slots:
 
     void test_cpp_style_comments();
     void test_ansi_c_comments();
+
+    void test_create_instance_copies_settings();
 private:
     QSynedit::CppSyntaxer mSyntaxer;
 
