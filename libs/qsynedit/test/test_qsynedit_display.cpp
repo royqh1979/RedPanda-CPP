@@ -1481,6 +1481,22 @@ void TestQSyneditDisplay::test_wrap_job_early_abort()
     QCOMPARE(batches3[0].layouts.count(), 20);
 }
 
+void TestQSyneditDisplay::test_layout_with_zero_wrap_width()
+{
+    // regression: layouts computed before the widget has a valid width
+    // (load time) must still carry real glyph positions - glyph x is
+    // width-independent and the painter always needs them. A width-0 layout
+    // with an empty glyph list poisoned the cache and painted blank lines
+    // until the next full metrics invalidation (e.g. a syntaxer switch).
+    mEdit->loadContent(QStringList() << "hello world");
+    WrapLayout layout = computeWrapLayoutForLine(
+                mEdit->document(), 0, mEdit->mSyntaxer.get(),
+                mEdit->mGlyphCalculator, mEdit->font(), 0, false);
+    QCOMPARE(layout.glyphStartXList.count(),
+             mEdit->document()->getGlyphStartCharList(0).count());
+    QVERIFY(layout.totalWidth > 0);
+}
+
 void TestQSyneditDisplay::test_enter_first_line_keeps_top()
 {
     clearContent();

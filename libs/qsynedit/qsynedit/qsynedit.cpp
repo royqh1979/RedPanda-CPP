@@ -592,8 +592,13 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
     result.segmentStartChars.append(0);
     result.segmentStartXs.append(0);
     QString text = document->getLine(line);
-    if (text.isEmpty() || wrapWidth <= 0)
+    if (text.isEmpty())
         return result;
+    // NOTE: a non-positive wrapWidth (widget not sized yet at load time)
+    // must NOT skip the glyph position computation: glyph x positions are
+    // width-independent and the painter always needs them. With no valid
+    // width the segment structure is just the single-segment estimate;
+    // a later resize re-invalidates when word wrap is on.
     // snapshot-consistent with the parsed text: if the line was edited in
     // between, the list is computed for the text we parse, not the newer one
     QList<int> glyphStartCharList = document->getGlyphStartCharList(line, text);
@@ -629,7 +634,7 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
             QString glyph = text.mid(glyphStartCharList[i], glyphEnd-glyphStartCharList[i]);
             result.glyphStartXList.append(x);
             int gw = glyphCalculator.glyphWidth(glyph, x, fm, glyphCalculator.forceMonospace());
-            if (wordWrap && x - segStartX + gw > wrapWidth && x - segStartX > 0) {
+            if (wordWrap && wrapWidth > 0 && x - segStartX + gw > wrapWidth && x - segStartX > 0) {
                 int newStart, newX;
                 if (breakChar > segStart) {
                     newStart = breakChar;
