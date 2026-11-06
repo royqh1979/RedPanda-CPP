@@ -107,6 +107,7 @@ void EnvironmentAppearanceWidget::init()
         ui->cbTheme->addItem(appTheme->categoryIcon() + " " + appTheme->displayName(), appTheme->name());
     }
     ui->cbLanguage->addItem(tr("English"),"en");
+    ui->cbLanguage->addItem(tr("Italian"),"it_IT");
     ui->cbLanguage->addItem(tr("Portuguese"),"pt_BR");
     ui->cbLanguage->addItem(tr("Simplified Chinese"),"zh_CN");
     ui->cbLanguage->addItem(tr("Traditional Chinese"),"zh_TW");

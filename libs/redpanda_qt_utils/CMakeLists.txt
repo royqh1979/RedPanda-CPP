@@ -6,6 +6,7 @@ target_moc_classes(redpanda_qt_utils qt_utils/charsetinfo)
 
 target_embed_translations(redpanda_qt_utils
     TS_FILES
+        qt_utils_it_IT.ts
         qt_utils_ru_RU.ts
         qt_utils_zh_CN.ts)
 
