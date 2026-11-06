@@ -1,6 +1,9 @@
 #include <QTest>
 #include <QCoreApplication>
 #include <QScrollBar>
+#include <QMimeData>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 
 #include "test_qsynedit_display.h"
 #include "test_utils.h"
@@ -271,6 +274,92 @@ void TestQSyneditDisplay::test_wrap_selection_paints_on_start_segment()
     QVERIFY(found);
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_dnd_drop_path()
+{
+    // the drop path's edit dance: dragEnter adds a scratch line at the end,
+    // drop inserts the text, deletes the original (Move) and the scratch
+    // line, and restores caret/scroll. Wrap mode + a background sweep in
+    // flight must not interfere.
+    QStringList lines;
+    for (int i = 0; i < 200; i++)
+        lines << QString("line %1 ").arg(i) + QString(200, 'x');
+    mEdit->loadContent(lines);
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+
+    // select a word in the middle of the document
+    mEdit->setCaretAndSelection(CharPos{10, 100}, CharPos{5, 100}, CharPos{10, 100});
+    QVERIFY(mEdit->selAvail());
+    QString selected = mEdit->selText();
+
+    QMimeData mime;
+    mime.setText(selected);
+    QDragEnterEvent enterEvent(QPoint(100, 100), Qt::MoveAction, &mime,
+                               Qt::LeftButton, Qt::NoModifier);
+    mEdit->dragEnterEvent(&enterEvent);
+    QVERIFY(mEdit->mDragging);
+    QCOMPARE(mEdit->lineCount(), 201);  // the scratch line
+
+    // let background batches arrive mid-drag
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 30000);
+
+    // drop at line 50
+    QPoint pt = mEdit->displayCoordToPixels(mEdit->bufferToDisplayPos(CharPos{3, 50}))
+            + QPoint(0, 2);
+    QDropEvent dropEvent(pt, Qt::MoveAction, &mime, Qt::LeftButton, Qt::NoModifier);
+    mEdit->dropEvent(&dropEvent);
+    QVERIFY(!mEdit->mDragging);
+
+    // content: the word moved from line 100 to line 50
+    QCOMPARE(mEdit->lineCount(), 200);
+    QVERIFY(mEdit->lineText(50).contains(selected));
+    QVERIFY(!mEdit->lineText(100).contains(selected));
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
+    mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_wrap_mapping_reset_keeps_anchor()
+{
+    // regression: a mapping reset (resize/font/wrap toggle) during the
+    // estimate window must not lose the anchor or leave stale content
+    // painted — the pixel offset is re-derived from the anchor under the
+    // estimate mapping, and the scrollbar estimate never pulls the view back
+    QStringList lines;
+    for (int i = 0; i < 200; i++)
+        lines << QString("line %1 ").arg(i) + QString(200, 'x');
+    mEdit->loadContent(lines);
+    QSynedit::EditorOptions opts = mEdit->getOptions();
+    opts.setFlag(QSynedit::EditorOption::WordWrap, true);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, true);
+    mEdit->setOptions(opts);
+    QTRY_VERIFY_WITH_TIMEOUT(mEdit->mWrapAllComputed, 30000);
+    mEdit->setTopLineSegment(50, 0);
+    QCOMPARE(mEdit->mTopLine, 50);
+
+    int h = mEdit->textHeight();
+    // grab() forces a resize on the never-shown widget, which resets the
+    // mapping mid-estimate; the anchor and the painted content must survive
+    QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
+    QCOMPARE(mEdit->mTopLine, 50);
+    QCOMPARE(mEdit->topPos(), mEdit->lineSegmentToRow(50, 0) * h);
+    for (int row = 0; row <= 3; row++) {
+        QSet<QRgb> colors;
+        int y = row * h + h / 2;
+        for (int x = mEdit->gutterWidth() + 2; x < mEdit->viewport()->width() - 2; x++)
+            colors.insert(image.pixel(x, y));
+        QVERIFY2(colors.count() >= 2,
+                 qPrintable(QString("row %1 blank after mapping reset").arg(row)));
+    }
+
+    opts.setFlag(QSynedit::EditorOption::WordWrap, false);
+    opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
     mEdit->setOptions(opts);
 }
 

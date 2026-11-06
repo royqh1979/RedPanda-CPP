@@ -149,6 +149,9 @@ private:
     void getRainbowColorAttr(int level, PTokenAttribute &attr);
     void getBraceColorAttr(int level, PTokenAttribute &attr);
     void paintLines();
+    // resolve the (line, segment) of a display row by walking from the
+    // anchor; never touches the row index
+    void seekFromAnchor(int row, int &line, int &segment) const;
 
 private:
     QSynEdit* mEdit;

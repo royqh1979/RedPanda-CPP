@@ -31,6 +31,8 @@ private slots:
     void test_gutter_click_toggles_fold();
     void test_gutter_fold_button_paints();
     void test_wrap_selection_paints_on_start_segment();
+    void test_dnd_drop_path();
+    void test_wrap_mapping_reset_keeps_anchor();
     void test_wordwrap_basics();
     void test_wordwrap_caret_display();
     void test_wordwrap_vertical_movement();

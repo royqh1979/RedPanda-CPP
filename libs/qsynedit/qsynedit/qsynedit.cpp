@@ -509,6 +509,15 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
         mTopPos = newTopPos;
     }
     if (batch.finished) {
+        // drop dirty entries of lines that no longer exist (their content
+        // can never be recomputed, e.g. edits followed by a wholesale
+        // reload or by deleting the edited lines)
+        for (auto it = mWrapDirtySeqs.begin(); it != mWrapDirtySeqs.end();) {
+            if (!mDocument->findLineBySeq(it.key()))
+                it = mWrapDirtySeqs.erase(it);
+            else
+                ++it;
+        }
         mWrapAllComputed = mWrapDirtySeqs.isEmpty();
         updateVScrollbar();
         if (!mWrapAllComputed) {
@@ -1336,6 +1345,11 @@ void QSynEdit::invalidateAllLineMetrics()
     // every cached layout is gone: the row index falls back to the
     // 1-segment estimate for all lines (hidden flags are kept)
     mRowIndex.resetSegCounts();
+    // re-sync mTopPos with the fresh (estimate) mapping: the anchor is
+    // authoritative, so the pixel offset must be re-derived from it —
+    // otherwise painting maps the stale pixel value through the reset tree
+    // and shows the wrong content until the next sweep completes
+    recalcTopPosFromAnchor();
     // eager: recompute in the background on every full invalidation
     scheduleWrapLayoutJob();
 }
@@ -3830,10 +3844,15 @@ void QSynEdit::doUpdateVScrollbar()
     int minValue = 0;
     int maxValue = maxScrollHeight();
     int pageStep = mLinesInWindow * mTextHeight;
-    if (mTopPos > maxValue) {
-        // the scroll range shrank (content deleted, window grew, ...):
-        // with the valueChanged signal blocked below, Qt's implicit
-        // clamping is swallowed, so clamp and re-derive the anchor here
+    if (!mWrapAllComputed) {
+        // while the background layout is incomplete the count is a lower
+        // bound that *drops* on mapping resets (resize, font, wrap toggle);
+        // never let the estimate clamp the view position back
+        maxValue = std::max(maxValue, mTopPos);
+    } else if (mTopPos > maxValue) {
+        // exact range shrank (content deleted, window grew, ...): with the
+        // valueChanged signal blocked below, Qt's implicit clamping is
+        // swallowed, so clamp and re-derive the anchor here
         mTopPos = std::max(maxValue, 0);
         deriveAnchorFromTopPos();
         invalidate();
@@ -7853,6 +7872,11 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
     }
     mPendingReparseInvalidateStart = -1;
     mPendingReparseInvalidateEnd = -1;
+    // never leave the sweep stalled: edits mark the state not-ready, so
+    // make sure a job is (re)scheduled — otherwise an aborted/missed job
+    // would leave the layout cache permanently incomplete
+    if (!mWrapAllComputed)
+        scheduleWrapLayoutJob();
 }
 
 void QSynEdit::shiftAnchorByChange(const DocumentChange &change)

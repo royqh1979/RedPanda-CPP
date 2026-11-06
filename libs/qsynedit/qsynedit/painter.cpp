@@ -40,8 +40,9 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
 {
     mPainter->fillRect(clip, mEdit->mBackgroundColor);
     mClip = clip;
-    mFirstLine = mEdit->rowToLine(mFirstRow);
-    mLastLine = mEdit->rowToLine(mLastRow);
+    int dummySegment;
+    seekFromAnchor(mFirstRow, mFirstLine, dummySegment);
+    seekFromAnchor(mLastRow, mLastLine, dummySegment);
     // If the right edge is visible and in the invalid area, prepare to paint it.
     // Do this first to realize the pen when getting the dc variable.
     doRightEdge = false;
@@ -90,6 +91,20 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
     paintFoldAttributes();
 }
 
+void QSynEditPainter::seekFromAnchor(int row, int &line, int &segment) const
+{
+    // the anchor sits at global row mTopPos/mTextHeight; walk from it.
+    // Every crossed line's layout is computed on demand by the stepping
+    // helpers, so this is exact even mid-sweep
+    line = mEdit->mTopLine;
+    segment = mEdit->mTopSegment;
+    int steps = row - mEdit->mTopPos / mEdit->mTextHeight;
+    while (steps > 0 && mEdit->advanceLineSegment(line, segment))
+        steps--;
+    while (steps < 0 && mEdit->retreatLineSegment(line, segment))
+        steps++;
+}
+
 void QSynEditPainter::paintGutter(const QRect& clip)
 {
     QRectF rcLine, rcFold;
@@ -125,10 +140,9 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         // draw each line if it is not hidden by a fold
         CharPos selectionStart = mEdit->selBegin();
         CharPos selectionEnd = mEdit->selEnd();
-        // resolve the first row once, then walk segment by segment (one
-        // tree query per paint instead of one per row)
+        // walk from the anchor: no row-index queries in the paint loop
         int line, segment;
-        mEdit->rowToLineSegment(mFirstRow, line, segment);
+        seekFromAnchor(mFirstRow, line, segment);
         for (int row = mFirstRow; row <= mLastRow; row++) {
             // line numbers are only drawn on a line's first wrap segment
             if (segment == 0) {
@@ -170,17 +184,13 @@ void QSynEditPainter::paintGutter(const QRect& clip)
     // Draw the folding lines and squares
     if (mEdit->useCodeFolding()) {
       int lineWidth = std::max(0.0,std::ceil(mEdit->font().pixelSize() / 15));
-      // resolve the last row once, then walk back segment by segment
+      // walk from the anchor: no row-index queries in the paint loop
       int line, segment;
-      mEdit->rowToLineSegment(mLastRow, line, segment);
+      seekFromAnchor(mLastRow, line, segment);
       for (int row = mLastRow; row>= mFirstRow; row--) {
           // fold vertical lines are drawn on EVERY wrap segment (continuous
           // across the fold); only the +/- button is first-segment-only
-          if ((line >= mDocument->count()) && (mDocument->count() != 0)) {
-              if (row > mFirstRow && !mEdit->retreatLineSegment(line, segment))
-                  break;
-              continue;
-          }
+          if (line < mDocument->count() || mDocument->count() == 0) {
 
         // Form a rectangle for the square the user can click on
           rcFold.setLeft(mEdit->mGutterWidth - mEdit->mGutter.rightOffset());
@@ -240,15 +250,16 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                                   centerX, rcFold.bottom() - lineWidth * 2 );
             }
         }
-        if (row > mFirstRow && !mEdit->retreatLineSegment(line, segment))
-            break;
+          }
+          if (row > mFirstRow && !mEdit->retreatLineSegment(line, segment))
+              break;
       }
     }
 
-    // resolve the first row once, then walk segment by segment
+    // walk from the anchor: no row-index queries in the paint loop
     {
         int line, segment;
-        mEdit->rowToLineSegment(mFirstRow, line, segment);
+        seekFromAnchor(mFirstRow, line, segment);
         for (int row = mFirstRow; row <= mLastRow; row++) {
             // gutter marks (breakpoints/bookmarks) only on a line's first segment
             if (segment == 0) {
@@ -884,7 +895,7 @@ void QSynEditPainter::paintFoldAttributes()
 
         // Now loop through all the lines. The indices are valid for Lines.
         int line, segment;
-        mEdit->rowToLineSegment(mFirstRow, line, segment);
+        seekFromAnchor(mFirstRow, line, segment);
         for (int row = mFirstRow; row<=mLastRow;row++) {
             if (line >= mDocument->count())
                 break;
@@ -1006,10 +1017,9 @@ void QSynEditPainter::paintLines()
     // Now loop through all the lines. The indices are valid for Lines.
     CharPos selectionBegin = mEdit->selBegin();
     CharPos selectionEnd= mEdit->selEnd();
-    // resolve the first row once, then walk segment by segment (one tree
-    // query per paint instead of one per row)
+    // walk from the anchor: no row-index queries in the paint loop
     int line, segment;
-    mEdit->rowToLineSegment(mFirstRow, line, segment);
+    seekFromAnchor(mFirstRow, line, segment);
     for (int row = mFirstRow; row<=mLastRow; row++) {
         RowPaintContext ctx;
         ctx.rcRow = mClip;
