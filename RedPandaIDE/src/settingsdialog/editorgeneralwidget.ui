@@ -313,6 +313,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkWordWrap">
+        <property name="text">
+         <string>Word wrap by default (for newly opened editors)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QWidget" name="widget_6" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <property name="leftMargin">
@@ -578,6 +585,7 @@
   <tabstop>chkScrollPastEOL</tabstop>
   <tabstop>chkScrollPastEOF</tabstop>
   <tabstop>chkScrollHalfPage</tabstop>
+  <tabstop>chkWordWrap</tabstop>
   <tabstop>spinMouseWheelScrollSpeed</tabstop>
   <tabstop>spinMouseSelectionScrollSpeed</tabstop>
   <tabstop>grpRightEdge</tabstop>

@@ -47,7 +47,22 @@ static int indexOf(const QList<PVisitRecord> &list, const QString& filename) {
 
 bool VisitHistoryManager::addFile(const QString &filename)
 {
-    return doAdd(mFiles,filename,mMaxFileCount);
+    PVisitRecord record = std::make_shared<VisitRecord>();
+    record->filename = filename;
+    return doAdd(mFiles,record,mMaxFileCount);
+}
+
+bool VisitHistoryManager::addFile(const VisitRecord &record)
+{
+    return doAdd(mFiles,std::make_shared<VisitRecord>(record),mMaxFileCount);
+}
+
+PVisitRecord VisitHistoryManager::findFile(const QString &filename) const
+{
+    int index = indexOf(mFiles,filename);
+    if (index>=0)
+        return mFiles[index];
+    return nullptr;
 }
 
 void VisitHistoryManager::removeFile(const QString &filename)
@@ -57,7 +72,9 @@ void VisitHistoryManager::removeFile(const QString &filename)
 
 bool VisitHistoryManager::addProject(const QString &filename)
 {
-    return doAdd(mProjects,filename,mMaxProjectCount);
+    PVisitRecord record = std::make_shared<VisitRecord>();
+    record->filename = filename;
+    return doAdd(mProjects,record,mMaxProjectCount);
 }
 
 void VisitHistoryManager::removeProject(const QString &filename)
@@ -125,6 +142,12 @@ QList<PVisitRecord> VisitHistoryManager::fromJson(const QJsonArray &array, qint6
             PVisitRecord record = std::make_shared<VisitRecord>();
             record->timestamp = timestamp;
             record->filename = recordObj["filename"].toString();
+            record->caretX = recordObj["caretX"].toInt();
+            record->caretY = recordObj["caretY"].toInt();
+            record->topLine = recordObj["topLine"].toInt();
+            record->topSegment = recordObj["topSegment"].toInt();
+            record->left = recordObj["left"].toInt();
+            record->wordWrap = recordObj["wordWrap"].toBool();
             records.append(record);
         }
     }
@@ -153,24 +176,28 @@ QJsonArray VisitHistoryManager::toJson(const QList<PVisitRecord> &list)
         QJsonObject recordObj;
         recordObj["filename"]=record->filename;
         recordObj["timestamp"]=QString("%1").arg(record->timestamp);
+        recordObj["caretX"]=record->caretX;
+        recordObj["caretY"]=record->caretY;
+        recordObj["topLine"]=record->topLine;
+        recordObj["topSegment"]=record->topSegment;
+        recordObj["left"]=record->left;
+        recordObj["wordWrap"]=record->wordWrap;
         array.append(recordObj);
     }
     return array;
 }
 
-bool VisitHistoryManager::doAdd(QList<PVisitRecord> &list, const QString &filename, int maxCount)
+bool VisitHistoryManager::doAdd(QList<PVisitRecord> &list, PVisitRecord record, int maxCount)
 {
-    if (!QFile(filename).exists())
+    if (!QFile(record->filename).exists())
         return false;
-    int index = indexOf(list,filename);
+    int index = indexOf(list,record->filename);
     if (index>=0) {
         list.removeAt(index);
     }
     if (list.size()>=maxCount) {
         list.pop_back();
     }
-    PVisitRecord record = std::make_shared<VisitRecord>();
-    record->filename = filename;
     record->timestamp = QDateTime::currentMSecsSinceEpoch();
     list.push_front(record);
     save();

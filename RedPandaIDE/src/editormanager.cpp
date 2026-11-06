@@ -299,6 +299,7 @@ Editor* EditorManager::splitEditor(Editor *editor)
                           editor->fileType(), editor->contextFile(),
                           editor->inProject(), true, targetPage);
     e->setIsNew(editor->isNew());
+    e->setWordWrap(editor->wordWrap());
     // attach to the shared document instead of loading the file again:
     // unsaved modifications, undo/redo history and syntax states carry over
     e->setDocument(editor->document());
@@ -699,8 +700,20 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
         }
     } else {
         editor->setCppParser(nullptr);
-        if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
-            pMainWindow->rebuildOpenedFileHisotryMenu();
+        if (!editor->isNew()) {
+            // record the editor layout so reopening from the recent-files
+            // menu restores caret/scroll/wrap state
+            VisitRecord record;
+            record.filename = editor->filename();
+            record.caretX = editor->caretCh();
+            record.caretY = editor->caretLine();
+            record.topLine = editor->topLine();
+            record.topSegment = editor->topSegment();
+            record.left = editor->leftPos();
+            record.wordWrap = editor->wordWrap();
+            if (pMainWindow->visitHistoryManager()->addFile(record)) {
+                pMainWindow->rebuildOpenedFileHisotryMenu();
+            }
         }
         if (!peerOf(editor))
             editor->clearBreakpoints();

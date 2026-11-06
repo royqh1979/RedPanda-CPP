@@ -428,6 +428,8 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
             //editor->setInProject(true);
             editor->setCaretLine(layout->caretY);
             editor->setCaretCh(layout->caretX);
+            if (layout->wordWrap >= 0)
+                editor->setWordWrap(layout->wordWrap != 0);
             editor->setTopLineSegment(layout->topLine, layout->topSegment);
             editor->setLeftPos(layout->left);
             mEditorManager->activeEditor(editor,true);
@@ -661,6 +663,7 @@ void Project::saveLayout()
             jsonLayout["caretY"]=editor->caretLine();
             jsonLayout["topLine"]=editor->topLine();
             jsonLayout["topSegment"]=editor->topSegment();
+            jsonLayout["wordWrap"]=editor->wordWrap();
             jsonLayout["left"]=editor->leftPos();
             jsonLayout["isOpen"]=true;
             jsonLayout["focused"]=(editor==e);
@@ -678,6 +681,8 @@ void Project::saveLayout()
                 jsonLayout["caretY"]=oldLayout->caretY;
                 jsonLayout["topLine"]=oldLayout->topLine;
                 jsonLayout["topSegment"]=oldLayout->topSegment;
+                if (oldLayout->wordWrap >= 0)
+                    jsonLayout["wordWrap"]= (oldLayout->wordWrap != 0);
                 jsonLayout["left"]=oldLayout->left;
                 jsonLayout["isOpen"]=false;
                 jsonLayout["focused"]=false;
@@ -1948,6 +1953,8 @@ QHash<QString, PProjectEditorLayout> Project::loadLayout()
             editorLayout->filename=unitFilename;
             editorLayout->topLine=jsonLayout["topLine"].toInt();
             editorLayout->topSegment=jsonLayout["topSegment"].toInt();
+            editorLayout->wordWrap=jsonLayout.contains("wordWrap")
+                    ? (int)jsonLayout["wordWrap"].toBool() : -1;
             editorLayout->left=jsonLayout["left"].toInt();
             editorLayout->caretX=jsonLayout["caretX"].toInt();
             editorLayout->caretY=jsonLayout["caretY"].toInt();
@@ -2141,6 +2148,8 @@ void Project::loadUnitLayout(Editor *e)
     if (layout) {
         e->setCaretLine(layout->caretY);
         e->setCaretCh(layout->caretX);
+        if (layout->wordWrap >= 0)
+            e->setWordWrap(layout->wordWrap != 0);
         e->setTopLineSegment(layout->topLine, layout->topSegment);
         e->setLeftPos(layout->left);
     }

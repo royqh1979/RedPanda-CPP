@@ -330,6 +330,11 @@ public:
 
     void setEditorSettings(const EditorSettings *newEditorSettings);
 
+    // word wrap is a per-editor state (the global setting is only the
+    // default for newly created editors)
+    bool wordWrap() const;
+    void setWordWrap(bool value);
+
     void setCodeCompletionSettings(const CodeCompletionSettings *newCodeCompletionSettings);
 #ifdef ENABLE_SDCC
     const GetCompilerTypeForEditorFunc &getCompilerTypeForEditorFunc() const;
@@ -456,6 +461,9 @@ private:
     //QTabWidget* mParentPageControl;
     bool mIsNew;
     bool mInProject;
+    // per-editor word wrap (initialized from the global default at
+    // setEditorSettings; toggled per editor via the View menu)
+    bool mWordWrap = false;
 
     bool mCodeCompletionEnabled;
 

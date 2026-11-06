@@ -69,6 +69,8 @@ struct ProjectEditorLayout {
     int caretX;
     int caretY;
     int order;
+    // -1 = not recorded (layouts saved by older versions)
+    int wordWrap = -1;
     bool isFocused;
     bool isOpen;
 };

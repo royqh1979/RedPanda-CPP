@@ -619,6 +619,8 @@ void MainWindow::updateEditorActions(const Editor *e)
 {
     if (mQuitting)
         return;
+    // the wrap toggle tracks the current editor's own state
+    ui->actionWord_Wrap->setChecked(e ? e->wordWrap() : pSettings->editor().wordWrap());
     ui->menuCode->menuAction()->setVisible(mEditorManager->pageCount()>0);
     ui->menuEdit->menuAction()->setVisible(mEditorManager->pageCount()>0);
     ui->menuSelection->menuAction()->setVisible(mEditorManager->pageCount()>0);
@@ -1605,7 +1607,18 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentFiles);
             connect(action, &QAction::triggered, this, [filename,this](bool){
-                openFile(filename);
+                Editor *editor = openFile(filename);
+                if (!editor)
+                    return;
+                // restore the layout captured when the file was closed
+                PVisitRecord record = mVisitHistoryManager->findFile(filename);
+                if (record) {
+                    editor->setWordWrap(record->wordWrap);
+                    editor->setCaretPos(editor->ensureCharPosValid(
+                                            QSynedit::CharPos{record->caretX, record->caretY}));
+                    editor->setTopLineSegment(record->topLine, record->topSegment);
+                    editor->setLeftPos(record->left);
+                }
             });
             mMenuRecentFiles->addAction(action);
         }
@@ -3534,6 +3547,7 @@ bool MainWindow::saveLastOpens()
       fileObj["topLine"] = editor->topLine();
       fileObj["topSegment"] = editor->topSegment();
       fileObj["left"] = editor->leftPos();
+      fileObj["wordWrap"] = editor->wordWrap();
       fileObj["fileType"] =  fileTypeToName(editor->fileType());
       fileObj["encodingOption"] = QLatin1String(editor->editorEncoding());
       fileObj["contextFile"] = editor->contextFile();
@@ -3654,6 +3668,8 @@ void MainWindow::loadLastOpens()
         }
         pos = editor->ensureCharPosValid(pos);
         editor->setCaretPos(pos);
+        if (fileObj.contains("wordWrap"))
+            editor->setWordWrap(fileObj["wordWrap"].toBool());
         editor->setTopLineSegment(
                     fileObj["topLine"].toInt(0),
                     fileObj["topSegment"].toInt(0)
@@ -5877,6 +5893,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             settings.setShrinkExplorerTabs(ui->tabExplorer->isShrinked());
             settings.setShrinkMessagesTabs(ui->tabMessages->isShrinked());
             settings.save();
+
+            // editor settings can change at runtime outside the options
+            // dialog (e.g. per-editor defaults), persist them on exit too
+            pSettings->editor().save();
 
             if (pSettings->sync()!=QSettings::NoError) {
                 QMessageBox::warning(nullptr,
@@ -9329,8 +9349,11 @@ void MainWindow::on_actionTool_Window_Bars_triggered()
 
 void MainWindow::on_actionWord_Wrap_triggered(bool checked)
 {
-    pSettings->editor().setWordWrap(checked);
-    mEditorManager->applySettings();
+    // word wrap is a per-editor state; the global setting (options dialog)
+    // is only the default for newly created editors
+    Editor *e = mEditorManager->getEditor();
+    if (e)
+        e->setWordWrap(checked);
 }
 
 void MainWindow::on_actionStatus_Bar_triggered()

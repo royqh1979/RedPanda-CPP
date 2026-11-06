@@ -52,7 +52,8 @@ static QSynedit::EditCaretType getCaretTypeIndex(QComboBox* combo) {
 }
 void EditorGeneralWidget::doLoad()
 {
-    pSettings->editor().load();
+    // NOTE: never reload the settings object from disk here — it holds the
+    // live runtime values, reloading would clobber unsaved changes
     //indents
     ui->chkAutoIndent->setChecked(pSettings->editor().autoIndent());
     ui->chkTabToSpaces->setChecked(pSettings->editor().tabToSpaces());
@@ -75,6 +76,7 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollPastEOF->setChecked(pSettings->editor().scrollPastEof());
     ui->chkScrollPastEOL->setChecked(pSettings->editor().scrollPastEol());
     ui->chkScrollHalfPage->setChecked(pSettings->editor().halfPageScroll());
+    ui->chkWordWrap->setChecked(pSettings->editor().wordWrap());
     ui->spinMouseWheelScrollSpeed->setValue(pSettings->editor().mouseWheelScrollSpeed());
     ui->spinMouseSelectionScrollSpeed->setValue(pSettings->editor().mouseSelectionScrollSpeed());
 
@@ -110,6 +112,7 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setScrollPastEof(ui->chkScrollPastEOF->isChecked());
     pSettings->editor().setScrollPastEol(ui->chkScrollPastEOL->isChecked());
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
+    pSettings->editor().setWordWrap(ui->chkWordWrap->isChecked());
     pSettings->editor().setMouseWheelScrollSpeed(ui->spinMouseWheelScrollSpeed->value());
     pSettings->editor().setMouseSelectionScrollSpeed(ui->spinMouseSelectionScrollSpeed->value());
     //right margin line;

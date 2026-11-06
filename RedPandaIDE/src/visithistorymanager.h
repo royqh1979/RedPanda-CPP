@@ -9,6 +9,13 @@
 struct VisitRecord {
     QString filename;
     qint64 timestamp;
+    // last known editor layout (captured when the file was closed)
+    int caretX = 0;
+    int caretY = 0;
+    int topLine = 0;
+    int topSegment = 0;
+    int left = 0;
+    bool wordWrap = false;
 };
 
 using PVisitRecord = std::shared_ptr<VisitRecord>;
@@ -31,6 +38,8 @@ public:
     void clearFiles();
     void clearProjects();
     bool addFile(const QString& filename);
+    bool addFile(const VisitRecord& record);
+    PVisitRecord findFile(const QString& filename) const;
     void removeFile(const QString& filename);
     bool addProject(const QString& filename);
     void removeProject(const QString& filename);
@@ -41,7 +50,7 @@ private:
     QList<PVisitRecord> fromJson(const QJsonArray &array, qint64 criteriaTime);
     void mergeRead(QList<PVisitRecord>& target, const QList<PVisitRecord>& readed);
     QJsonArray toJson(const QList<PVisitRecord>& list);
-    bool doAdd(QList<PVisitRecord> &list, const QString& filename, int maxCount);
+    bool doAdd(QList<PVisitRecord> &list, PVisitRecord record, int maxCount);
     void doRemove(QList<PVisitRecord> &list, const QString& filename);
 private:
     QList<PVisitRecord> mFiles;

@@ -4538,6 +4538,23 @@ void Editor::setCodeCompletionSettings(const CodeCompletionSettings *newCodeComp
 void Editor::setEditorSettings(const EditorSettings *newEditorSettings)
 {
     mEditorSettings = newEditorSettings;
+    // the global setting is only the default for newly created editors
+    mWordWrap = newEditorSettings->wordWrap();
+}
+
+bool Editor::wordWrap() const
+{
+    return mWordWrap;
+}
+
+void Editor::setWordWrap(bool value)
+{
+    if (mWordWrap == value)
+        return;
+    mWordWrap = value;
+    QSynedit::EditorOptions options = getOptions();
+    options.setFlag(QSynedit::EditorOption::WordWrap, value);
+    setOptions(options);
 }
 
 const CanShowEvalTipFunc &Editor::canShowEvalTipFunc() const
@@ -5346,7 +5363,8 @@ void Editor::applySettings()
     options.setFlag(QSynedit::EditorOption::ShowTrailingSpaces, mEditorSettings->showTrailingSpaces());
     options.setFlag(QSynedit::EditorOption::ShowInnerSpaces, mEditorSettings->showInnerSpaces());
     options.setFlag(QSynedit::EditorOption::ShowLineBreaks, mEditorSettings->showLineBreaks());
-    options.setFlag(QSynedit::EditorOption::WordWrap, mEditorSettings->wordWrap());
+    // per-editor state, not the global default
+    options.setFlag(QSynedit::EditorOption::WordWrap, mWordWrap);
 
     options.setFlag(QSynedit::EditorOption::AutoIndent,mEditorSettings->autoIndent());
     options.setFlag(QSynedit::EditorOption::TabsToSpaces,mEditorSettings->tabToSpaces());
