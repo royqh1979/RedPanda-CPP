@@ -1277,6 +1277,18 @@ bool CppPreprocessor::supportCPP23() const
     return mSupportCPP23;
 }
 
+// Whitespace before '#' is allowed: a line whose first non-blank
+// character is '#' is a preprocessor directive line.
+static bool isDirectiveLine(const QString& line)
+{
+    for (const QChar& ch : line) {
+        if (ch == ' ' || ch == '\t')
+            continue;
+        return ch == '#';
+    }
+    return false;
+}
+
 void CppPreprocessor::preprocessBuffer()
 {
     while (mIncludeStack.count() > 0) {
@@ -1287,12 +1299,14 @@ void CppPreprocessor::preprocessBuffer()
                 return;
             }
             s = getNextPreprocessor();
-            if (s.startsWith('#')) {
+            if (isDirectiveLine(s)) {
                 QString command;
                 command.reserve(s.length());
                 QString tokens;
                 tokens.reserve(s.length());
                 auto it=s.constBegin();
+                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
+                    ++it; // skip leading spaces;
                 ++it; // skip  '#'
                 while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
                     ++it; // skip spaces;
@@ -1328,7 +1342,7 @@ void CppPreprocessor::skipToPreprocessor()
 {
     int bufferCount = mBuffer.count();
 // Increment until a line begins with a #
-    while ((mIndex < bufferCount) && !mBuffer[mIndex].startsWith('#')) {
+    while ((mIndex < bufferCount) && !isDirectiveLine(mBuffer[mIndex])) {
         if (getCurrentBranch()==BranchResult::isTrue) { // if not skipping, expand current macros
             int startIndex = mIndex;
             QString expanded = expandMacros(mBuffer[mIndex],true);
