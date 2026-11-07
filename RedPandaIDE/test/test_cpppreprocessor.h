@@ -72,6 +72,9 @@ private slots:
     void test_elifdef_elifndef_unsupported();
     void test_elifdef_cpp23_detection();
     void test_conditional1_resource();
+    // group E: directives (single-file)
+    void test_undef_local();
+    void test_leading_space_directive();
 private:
     static QStringList filterIncludes(const QStringList& text);
     // Run the full preprocess pipeline over in-memory content

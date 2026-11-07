@@ -953,6 +953,38 @@ void TestCppPreprocessor::test_elifdef_elifndef_unsupported()
                  "",
                  "int e;"}));
 }
+void TestCppPreprocessor::test_undef_local()
+{
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {
+                 "#define X 1",
+                 "#undef X",
+                 "int after;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "#define X 1",
+                 "#undef X",
+                 "int after;"}));
+    QVERIFY(!p.getDefine("X"));
+}
+
+void TestCppPreprocessor::test_leading_space_directive()
+{
+    // PINNED (suspect, phase 0.5 review): only lines whose very first
+    // character is '#' are treated as directives; the C standard allows
+    // whitespace before '#'. Here the line goes through macro expansion
+    // as ordinary text and the define never happens.
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {
+                 "  #define X 1",
+                 "int after;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "  #define X 1",
+                 "int after;"}));
+    QVERIFY(!p.getDefine("X"));
+}
+
 void TestCppPreprocessor::test_conditional1_resource()
 {
     // The resource file documents the expected #elifdef/#elifndef
