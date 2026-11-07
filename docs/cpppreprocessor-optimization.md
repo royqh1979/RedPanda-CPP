@@ -1,6 +1,6 @@
 # CppPreprocessor 优化计划（正确性优先）
 
-> 状态：进行中（分支 `parser-preprocess-opt`）。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
+> 状态：阶段 0（测试集完善）已完成——123 个测试全绿，含 2 个 XFAIL（重放缓存缺陷，见"阶段 0.5"）；后续阶段进行中（分支 `parser-preprocess-opt`）。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
 
 ## 背景
 
@@ -159,13 +159,24 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 
 ### 阶段 0.5 — 测试中暴露问题的定性与修复
 
-逐个定性（bug / 已知限制），bug 修复独立提交、先于一切优化。候选清单（先由测试钉住再定）：
+逐个定性（bug / 已知限制），bug 修复独立提交、先于一切优化。
 
-- **重放缓存安全化（确认的正确性修复，两项）**：环境依赖检测；重放的 mtime 校验（见上文"缓存的正确性分析"）；
-- `#elifdef/#elifndef` 低版本 `__cplusplus` 下 handler 空转的语义（含死代码 `calcUnsupportedElseBranchResult`）；
-- 行首空白 `#` 不识别；
-- `MAX_DEFINE_EXPAND_DEPTH` 死常量（递归防护是否足够）；
-- `#` 字符串化的转义处理；`#if` 字符常量；模板尖括号内逗号拆参数。
+**阶段 0 已确认的发现**（均有钉住测试，测试名见括号）：
+
+1. **重放缓存不安全（两个 XFAIL）**：
+   - 环境依赖头文件：分支条件引用包含点环境宏时，重放给出首次包含环境的结果（`test_replay_env_dependent`）——修复方案见上文"缓存的正确性分析"（环境依赖检测）；
+   - 外部修改已扫描头文件后仍重放旧 defines（`test_replay_external_modification`）——修复方案：重放前 mtime 校验。
+2. **raw string 支持失效**（`test_raw_string_*`、`test_raw_string_pipeline_canary`）：`replaceCommentsBySpaceChar` 的关闭判定要求文本以 `)` + delimiter 结尾，但 delimiter 被错误地塞入了开引号（且自定义 delimiter 字符从未被记录），导致 raw string 状态**永不终止**并跨行泄漏；后果链：raw string 之后的注释不被剥离 → `expandMacros`（不懂注释）会把注释里的宏名展开。
+3. **C++23 特性检测失效**（`test_elifdef_cpp23_detection`）：`addDefineByParts` 用 `QString::toLong` 整体转换 `__cplusplus` 的值，真实的带 `L` 后缀值（`202302L`）必然转换失败 → `#elifdef/#elifndef` 在实践中永远走降级空转路径（`conditional1.cpp` 的 legacy golden 即此行为）；表达式求值路径（`evalNumber`）能正确处理后缀，两条路径不一致。另有死代码 `calcUnsupportedElseBranchResult`。
+4. **分支可见性映射 off-by-one**（`test_nested_branches`）：`removeCurrentBranch` 用 `mIndex` 而 `setCurrentBranch` 用 `mIndex+1` 记录可见性恢复点，导致假分支最后一个内容行被标为可见（`result()` 内容正确，仅编辑器置灰用的 branch map 错）。
+5. **`__has_include` 语义偏差**（`test_has_include`）：返回的是"根文件是否已包含该文件"（`fileInfo->including()`），而非"文件是否存在"。
+6. **`#` 字符串化不转义**（`test_stringize_escaping`）：参数内的 `"`、`\` 不转义，产生病态字符串字面量；且参数列表内的引号会破坏参数括号匹配的朴素字符串状态机，导致宏完全不展开。
+7. **`tokenizeValue` 吞空格**（`test_empty_varargs`）：`#` 前的空格 token 被 `#` token 覆盖丢弃，展开结果少一个空格。
+8. **模板尖括号内逗号拆分宏参数**（`test_args_comma_in_template_angle`）：不跟踪 `<>` 层级，多余参数被静默丢弃（非标准偏差）。
+9. **行首空白后的 `#` 不识别为指令**（`test_leading_space_directive`）：C 标准允许 `#` 前有空白。
+10. **`#if` 不支持字符常量**（`test_char_constant_in_if`）。
+11. **未定义标识符在 `#if` 中不按标准替换为 0**（`test_if_undefined_identifier`）：保留原名导致求值失败按 false 处理；`UNDEFINED == 0` 应为 true 实得 false。
+12. **`MAX_DEFINE_EXPAND_DEPTH` 死常量**：递归防护实际只靠 ignore 集合（`test_mutual_recursion_function_macros` 钉住防护有效）。
 
 ### 阶段 1 — 结构重构（仅限 preprocessor 内部，有阶段 0 测试保护）
 
