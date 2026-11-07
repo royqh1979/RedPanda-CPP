@@ -155,8 +155,12 @@ void TestCppPreprocessor::test_replace_macros_in_constant_expression_2()
     preprocessor.addHardDefineByLine("#define EXAMPLE(n)  EXAMPLE_ EMPTY()(n-1) (n)");
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("EXAMPLE(5)"),
              "EXAMPLE_ ()(5-1) (5)");
+    // NOTE: the unified pp-token engine produces a single space before
+    // the last argument (the old standalone conditioning expander used
+    // to produce a double space; the plain expandMacros path always
+    // produced a single one - see test_macro_replace_2).
     QCOMPARE(preprocessor.expandMacrosInConditioningExpression("SCAN(EXAMPLE(5))"),
-             "EXAMPLE_ ()(5-1-1) (5-1)  (5)");
+             "EXAMPLE_ ()(5-1-1) (5-1) (5)");
 }
 
 void TestCppPreprocessor::test_evaluate_constant_expression_1()
@@ -890,6 +894,15 @@ void TestCppPreprocessor::test_and_or_keywords()
     QCOMPARE(p.evaluateIf("1 and 0"), false);
     QCOMPARE(p.evaluateIf("0 or 1"), true);
     QCOMPARE(p.evaluateIf("0 or 0"), false);
+    // the full set of C++ alternative tokens (iso646 keywords)
+    QCOMPARE(p.evaluateIf("not 0"), true);
+    QCOMPARE(p.evaluateIf("not 1"), false);
+    QCOMPARE(p.evaluateIf("(3 bitand 1) == 1"), true);
+    QCOMPARE(p.evaluateIf("(2 bitor 1) == 3"), true);
+    QCOMPARE(p.evaluateIf("compl 0 == -1"), true);
+    QCOMPARE(p.evaluateIf("(3 xor 1) == 2"), true);
+    QCOMPARE(p.evaluateIf("1 not_eq 0"), true);
+    QCOMPARE(p.evaluateIf("not defined(SOMETHING)"), true);
 }
 
 void TestCppPreprocessor::test_char_constant_in_if()

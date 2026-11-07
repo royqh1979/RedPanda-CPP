@@ -78,9 +78,17 @@ int PpExpander::expandLine(PpTokenizer &input, QString &outText)
         PpToken token = nextToken();
         if (token.kind == PpTokenKind::EndOfInput)
             break;
-        if (token.kind == PpTokenKind::EndOfLine)
-            // line boundary from the input (frames never carry EOLs)
+        if (token.kind == PpTokenKind::EndOfLine) {
+            // line boundary: emit any whitespace the boundary carries
+            // (whitespace-only lines and trailing whitespace)
+            if (!token.whitespaceBefore.isEmpty()) {
+                PpToken ws;
+                ws.kind = PpTokenKind::Punct;
+                ws.whitespaceBefore = token.whitespaceBefore;
+                out.append(ws);
+            }
             break;
+        }
         linesConsumed += processToken(token, out, pendingWhitespace);
     }
     if (!pendingWhitespace.isEmpty()) {
@@ -113,6 +121,14 @@ QVector<PpToken> PpExpander::expandTokens(const QVector<PpToken> &tokens)
             break;
         processToken(token, result, pendingWhitespace);
     }
+    if (!pendingWhitespace.isEmpty()) {
+        // an expansion ending with an empty macro leaves its
+        // whitespace behind
+        PpToken ws;
+        ws.kind = PpTokenKind::Punct;
+        ws.whitespaceBefore = pendingWhitespace;
+        result.append(ws);
+    }
     mPopFloor = savedFloor;
     mInput = savedInput;
     return result;
@@ -135,10 +151,18 @@ int PpExpander::processToken(const PpToken &token,
             handleHasInclude(out, token.whitespaceBefore);
             return 0;
         }
-        if (token.text == QLatin1String("and")
-                || token.text == QLatin1String("or")) {
+        // C++ alternative tokens (iso646 keywords)
+        static const QHash<QString, QString> altTokens = {
+            {"and", "&&"}, {"and_eq", "&="}, {"bitand", "&"},
+            {"bitor", "|"}, {"compl", "~"}, {"not", "!"},
+            {"not_eq", "!="}, {"or", "||"}, {"or_eq", "|="},
+            {"xor", "^"}, {"xor_eq", "^="},
+        };
+        auto altIt = altTokens.constFind(token.text);
+        if (altIt != altTokens.constEnd()) {
             PpToken t = token;
-            t.text = (token.text == QLatin1String("and")) ? "&&" : "||";
+            t.kind = PpTokenKind::Punct;
+            t.text = altIt.value();
             out.append(withPendingWs(t, pendingWhitespace));
             return 0;
         }
@@ -164,15 +188,31 @@ int PpExpander::processToken(const PpToken &token,
             }
             return 0;
         }
-        // function-like macro: must be followed by '(' to expand
-        PpToken next = nextToken();
+        // function-like macro: must be followed by '(' to expand;
+        // whitespace (including newlines) may precede the parenthesis
+        int peekEols = 0;
+        QVector<PpToken> peeked;
+        PpToken next;
+        while (true) {
+            next = nextToken();
+            if (next.kind == PpTokenKind::EndOfLine) {
+                peekEols++;
+                peeked.append(next);
+                continue;
+            }
+            peeked.append(next);
+            break;
+        }
         if (next.kind == PpTokenKind::Punct && next.text == "(") {
             return expandFunctionLike(next, token, define, out,
-                                      pendingWhitespace);
+                                      pendingWhitespace)
+                    + peekEols;
         }
-        // not an invocation: emit the name and push the token back
+        // not an invocation: emit the name and push the peeked tokens
+        // back; an EndOfLine among them terminates this logical line
+        // and the rest is reprocessed by the caller as ordinary lines
         out.append(withPendingWs(token, pendingWhitespace));
-        mFrames.append(Frame{{next}, 0, QString()});
+        mFrames.append(Frame{peeked, 0, QString()});
         return 0;
     }
     if (mConditionMode && !define) {

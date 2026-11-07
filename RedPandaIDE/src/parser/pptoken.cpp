@@ -38,11 +38,14 @@ PpToken PpTokenizer::next()
         const QString& line = (*mLines)[mLine];
         if (mCol >= line.length()) {
             // end of the physical line; a raw string state survives the
-            // boundary and continues on the next line
+            // boundary and continues on the next line. Whitespace is
+            // carried by the boundary token (whitespace-only lines and
+            // trailing whitespace must survive).
             mLine++;
             mCol = 0;
+            PpToken token = makeSimple(PpTokenKind::EndOfLine, QString());
             mWhitespace.clear();
-            return makeSimple(PpTokenKind::EndOfLine, QString());
+            return token;
         }
         if (mState == State::Raw) {
             // raw string content: consume verbatim up to the closing

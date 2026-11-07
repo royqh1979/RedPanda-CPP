@@ -155,11 +155,10 @@ private:
     void preprocessBuffer();
     void skipToPreprocessor();
     QString getNextPreprocessor();
+    // Expand one logical line of the buffer with the pp-token engine;
+    // returns the number of physical lines consumed.
+    int expandLineWithEngine(const QStringList& buffer, int startLine, QString& out);
 
-    QString expandMacros(QString text, bool handleBuffer);
-    QString expandMacros(QString text, bool handleBuffer, const QSet<QString>& macrosToBeIgnored);
-    QString expandMacros(QString text, const QSet<QString>& macrosToBeIgnored) const;
-    QString expandMacro(QString &text, const PDefine &define, int &i, bool handleBuffer, const QSet<QString> &macrosToBeIgnored, QSet<QString> &macrosUsed);
 
     void handleDefine(const QString& tokens);
     void handleUndefine(const QString& tokens);
@@ -195,7 +194,6 @@ private:
             return BranchResult::isTrue;
     }
     BranchResult calcElseBranchResult(BranchResult oldResult);
-    BranchResult calcUnsupportedElseBranchResult(BranchResult oldResult);
     bool sameResultWithCurrentBranch(BranchResult value) {
         return (getCurrentBranch()==BranchResult::isTrue && value == BranchResult::isTrue)
                 || (getCurrentBranch()!=BranchResult::isTrue && value != BranchResult::isTrue);
@@ -232,8 +230,6 @@ private:
     // defines reproduces the same branch outcomes at any include point.
     bool isEnvironmentIndependent(const PParsedFileInfo& fileInfo) const;
 
-    void parseArgs(PDefine define);
-    static QString escapeStringizedArg(const QString& arg);
 
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
@@ -245,27 +241,9 @@ private:
     }
 
     /*
-     * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
-     */
-    static  bool isIdentChar(const QChar& ch) {
-        return (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
-                ch.isLetter()
-                || (ch>='0' && ch<='9'));
-    }
-
-    /*
-     * '\r','\n'
-     */
-    static  bool isLineChar(const QChar& ch) { return ch=='\r' || ch == '\n'; }
-    /*
      *  '\t' ' '
      */
     static  bool isSpaceChar(const QChar& ch) { return ch == ' ' || ch == '\t'; }
-
-    /*
-     * 'A'..'Z', 'a'..'z', '_'
-     */
-    static  bool isMacroIdentStartChar(const QChar& ch) { return ch.isLetter() || ch == '_'; }
 
     /*
      * '0'..'9'
