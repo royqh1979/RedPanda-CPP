@@ -45,6 +45,19 @@ private slots:
     void test_raw_string_after_identifier();
     void test_macro_not_expanded_in_string();
     void test_raw_string_pipeline_canary();
+    // group C: macro expansion edges
+    void test_stringize_with_spaces();
+    void test_stringize_escaping();
+    void test_token_paste_edges();
+    void test_args_comma_in_parens();
+    void test_args_comma_in_template_angle();
+    void test_empty_args();
+    void test_empty_varargs();
+    void test_chain_rescan_object_to_function();
+    void test_mutual_recursion_function_macros();
+    void test_redefine_overwrites();
+    void test_empty_body_macro();
+    void test_macro_word_boundaries();
 private:
     static QStringList filterIncludes(const QStringList& text);
     // Run the full preprocess pipeline over in-memory content
