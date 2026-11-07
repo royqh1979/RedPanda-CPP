@@ -569,15 +569,15 @@ void TestCppPreprocessor::test_stringize_with_spaces()
 
 void TestCppPreprocessor::test_stringize_escaping()
 {
-    // PINNED (suspect, phase 0.5 review), two distinct issues:
-    // - a quote inside the argument list breaks the naive string tracking
-    //   of the argument scan, so the macro is left completely unexpanded;
-    // - backslashes inside the argument are not escaped when stringizing,
-    //   producing an ill-formed string literal.
+    // The stringize operator escapes backslashes and quotes in the
+    // argument's spelling. An unterminated quote in the argument list is
+    // ill-formed input (real compilers reject it); the macro is then
+    // deliberately left unexpanded.
     CppPreprocessor p;
     p.addHardDefineByLine("#define S(x) #x");
     QCOMPARE(p.expandMacros("S(a\"b)"), "S(a\"b)");
-    QCOMPARE(p.expandMacros("S(a\\b)"), "\"a\\b\"");
+    QCOMPARE(p.expandMacros("S(a\\b)"), "\"a\\\\b\"");
+    QCOMPARE(p.expandMacros("S(\"q\")"), "\"\\\"q\\\"\"");
 }
 
 void TestCppPreprocessor::test_token_paste_edges()

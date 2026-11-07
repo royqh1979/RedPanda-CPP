@@ -225,6 +225,7 @@ private:
     void invalidDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);
+    static QString escapeStringizedArg(const QString& arg);
 
     /*
      * '_','a'..'z','A'..'Z','0'..'9'

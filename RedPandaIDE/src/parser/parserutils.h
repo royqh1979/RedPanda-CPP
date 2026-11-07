@@ -57,6 +57,7 @@ struct Define {
     bool hardCoded;// if true, don't free memory (points to hard defines)
     QList<bool> argUsed;
     QList<bool> argNotExpand;
+    QList<bool> argStringized; // args used with the '#' (stringize) operator
     int varArgIndex;
     QString formatValue; // format template to format values
 };

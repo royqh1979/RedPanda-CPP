@@ -999,6 +999,7 @@ void CppPreprocessor::parseArgs(PDefine define)
         argList[i]=argList[i].trimmed();
         define->argUsed.append(false);
         define->argNotExpand.append(false);
+        define->argStringized.append(false);
     }
     QList<PDefineArgToken> tokens = tokenizeValue(define->value);
 
@@ -1019,6 +1020,7 @@ void CppPreprocessor::parseArgs(PDefine define)
                 if (lastTokenType == DefineArgTokenType::Sharp) {
                     formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
                     define->argNotExpand[index] = true;
+                    define->argStringized[index] = true;
                     break;
                 } else {
                     if (lastTokenType == DefineArgTokenType::DSharp) {
@@ -1673,12 +1675,18 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
                      && argIdx >= define->varArgIndex ) {
                     if (!define->argNotExpand[define->varArgIndex])
                         argValue = expandMacros(argValue,macrosToBeIgnored);
-                    varArgs.append(argValue.trimmed());
+                    argValue = argValue.trimmed();
+                    if (define->argStringized.value(define->varArgIndex,false))
+                        argValue = escapeStringizedArg(argValue);
+                    varArgs.append(argValue);
                 } else if (argIdx<define->argUsed.length()
-                            && define->argUsed[argIdx]) {                    
+                            && define->argUsed[argIdx]) {
                     if (!define->argNotExpand[argIdx])
                         argValue = expandMacros(argValue,macrosToBeIgnored);
-                    result=result.arg(argValue.trimmed());
+                    argValue = argValue.trimmed();
+                    if (define->argStringized.value(argIdx,false))
+                        argValue = escapeStringizedArg(argValue);
+                    result=result.arg(argValue);
                 }
             }
             if (!varArgs.isEmpty() && define->varArgIndex != -1) {
@@ -1688,6 +1696,20 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
     }
     result.replace("%%","%");
 
+    return result;
+}
+
+QString CppPreprocessor::escapeStringizedArg(const QString &arg)
+{
+    // The stringize operator '#' escapes backslashes and quotes in the
+    // argument's spelling before wrapping it in quotes.
+    QString result;
+    result.reserve(arg.length());
+    for (const QChar& ch : arg) {
+        if (ch == '\\' || ch == '"')
+            result += '\\';
+        result += ch;
+    }
     return result;
 }
 
