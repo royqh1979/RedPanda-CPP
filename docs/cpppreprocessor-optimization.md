@@ -66,10 +66,18 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 
 注意：**共享宏表架构**（所有文件一个 `mDefines`）本身已是 per-TU 语义的近似——有 guard 的文件在重扫路径下也会因 guard 宏已定义而跳过文件体，结果同样是"第一次展开的产物"。所以重放的大部分"错误"是架构近似而非缓存引入；重放真正额外引入的错误是上面的环境依赖分支场景。
 
-**安全化方案（属正确性修复，阶段 0.5）：**
+**安全化方案（已按最终实现修订，替代阶段 0.5 的布尔判定初版）：**
 
-1. **环境依赖检测**：分支求值时（`handleIf`/`handleIfdef`/`evaluateIf` 等处）顺手记录该文件条件引用的宏名集合；判定 ⊆ {hard defines（session 内不变）} ∪ {本文件自定义宏（含 guard 宏特判，`mFileIncludeOnceToken` 机制已识别）} → 环境无关才允许重放，否则每次包含重扫。保守原则：拿不准判敏感（漏判=错误缓存，多判=多扫一次）。现实中绝大多数头文件的条件只依赖 `__cplusplus`、编译器预定义宏、自己的 guard——环境敏感的是少数，性能损失小。
+1. **快照式重放校验**：分支求值时（`handleIf`/`handleIfdef`/`evaluateIf` 等处）记录每个条件引用在**求值时刻**的宏状态快照（宏名 → 定义签名或"未定义"标记，`ParsedFileInfo::conditionSnapshot`）。重包含时逐个比对当前宏状态：**全部一致才重放**（分支结果必然相同），任一不一致才重扫。
+   - **求值时刻由本文件提供的引用直接豁免**（`define->filename == 当前文件`）——覆盖 libstdc++ 常见的 define-use-undef 特性宏（定义-使用-文件末尾 `#undef`）；这类宏的"定义/未定义"两种状态都是文件每次扫描自己制造的，与环境无关（初版误判它们导致 libstdc++ 头文件被全量重扫）。
+   - **守卫宏经"文件自定义宏"豁免**（`mFileDefines` 机制，覆盖"求值时未定义、扫描中自定义"的守卫模式）。
+   - **带 include 保护的文件（guard / `#pragma once`，记录在 `ParsedFileInfo::includeProtected`）一律重放**：守卫使重包含天然幂等，对它们做失效重扫只会删掉守卫宏、错误地全量重发内容（这正是 stdc++.h 崩溃链的关键一环）。
+   - 跨运行重放错误的**充要条件**因此精确为：无保护文件 + 其条件引用的外部宏状态在新包含点发生了变化。libstdc++ 的配置宏（由其它头文件提供、session 内稳定）全部命中重放；MinGW 的 `__need_wchar_t`、`_mingw_print_push/pop.h` 等真实环境依赖模式仍会正确触发重扫。
 2. **重放的 mtime 校验**：重放前 stat 一次，mtime/size 变了 → `removeScannedFile` + 重扫（解决外部修改/git pull 后解析过期）。
+
+**循环包含语义（已按"贴近编译器实际行为"修订）**：guard/`#pragma once` 文件在环上重进是 no-op（直接跳过，与编译器等价）；**无守卫文件在环上按编译器行为重进重扫**（每次内容可能因环境不同而不同），总嵌套深度到上限（默认 200，对齐 GCC，可 `setMaxIncludeNestingDepth` 调整）才跳过兜底；Boost 式深度受限迭代靠分支求值自然收敛，到不了上限。栈上的文件正在扫描，任何失效/重扫操作不得触碰（不变式）。
+
+**`fileOnlyIncludeOnce` 选项已移除**（证明无用的兼容期遗留）：所有文件都是可重复包含候选；guard/pragma once 经检测移出 could-repeat 集。
 
 ### 3. include 解析结果缓存（新增，"名字→路径"映射）——与文件内容无关，存在性校验即可
 
