@@ -18,7 +18,6 @@ private slots:
     void test_structured_bindings();
 protected:
     std::shared_ptr<CppParser> mParser;
-    void probe_stdcpp();
 };
 
 #endif

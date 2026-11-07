@@ -44,6 +44,7 @@ private slots:
     // group G: replay correctness
     void test_replay_env_dependent();
     void test_replay_env_independent();
+    void test_replay_config_macro_stable();
     void test_replay_unguarded_cross_reparse();
     void test_replay_external_modification();
 private:

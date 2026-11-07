@@ -1,6 +1,4 @@
 #include <QTest>
-#include <QDir>
-#include <QTemporaryFile>
 #include "src/parser/cppparser.h"
 #include "test_cppparser.h"
 
@@ -386,27 +384,3 @@ void TestCppParser::test_structured_bindings()
     QCOMPARE(statement->args,"");
 }
 
-void TestCppParser::probe_stdcpp()
-{
-    auto parser = std::make_shared<CppParser>();
-    parser->addHardDefineByLine("#define __cplusplus 201703L");
-    parser->addHardDefineByLine("#define __GNUC__ 8");
-    parser->addHardDefineByLine("#define __GNUC_MINOR__ 1");
-    parser->addHardDefineByLine("#define _WIN32 1");
-    parser->addHardDefineByLine("#define __WIN64 1");
-    parser->addHardDefineByLine("#define __x86_64__ 1");
-    parser->addIncludePath("D:/qt/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++");
-    parser->addIncludePath("D:/qt/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32");
-    parser->addIncludePath("D:/qt/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/backward");
-    parser->addIncludePath("D:/qt/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include");
-    parser->addIncludePath("D:/qt/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include-fixed");
-    parser->addIncludePath("D:/qt/mingw64/x86_64-w64-mingw32/include");
-    QTemporaryFile f(QDir::tempPath()+"/probeXXXXXX.cpp");
-    QVERIFY(f.open());
-    f.write("#include <bits/stdc++.h>\nint main(){ std::vector<int> v; return 0; }\n");
-    f.flush();
-    CppParser::parseFileBlocking(parser, f.fileName(), false, f.fileName(), false, false);
-    PStatement st = parser->findStatement("std::vector");
-    qDebug("std::vector statement: %p", (void*)st.get());
-    QVERIFY(st);
-}

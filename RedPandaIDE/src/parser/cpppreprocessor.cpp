@@ -322,6 +322,9 @@ void CppPreprocessor::handleDefine(const QString &tokens)
         if (name == mFileIncludeOnceToken) {
             mFileIncludeOnceToken = "";
             mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
+            // the guard makes re-includes idempotent; remember it so
+            // later replay/invalidation decisions can rely on it
+            mCurrentFileInfo->setIncludeProtected(true);
             //qDebug()<<"- "<<mIncludeStack.back()->fileName;
         }
         // Add to the list
@@ -435,19 +438,45 @@ void CppPreprocessor::handleIf(const QString &tokens)
 
 void CppPreprocessor::recordConditionRef(const QString &name) const
 {
-    if (!mIncludeStack.isEmpty())
-        mIncludeStack.back()->conditionRefs.insert(name);
+    if (mIncludeStack.isEmpty())
+        return;
+    PDefine define = getDefine(name);
+    if (define && define->filename == mIncludeStack.back()->fileName) {
+        // Self-provided at evaluation time (e.g. the define-use-undef
+        // feature macros common in libstdc++): the file produces this
+        // state on every scan by itself, no environment dependence.
+        return;
+    }
+    QString signature = signatureOfDefine(define);
+    ParsedFile& current = *mIncludeStack.back();
+    auto it = current.conditionRefs.find(name);
+    if (it == current.conditionRefs.end()) {
+        current.conditionRefs.insert(name, signature);
+    } else if (it.value() != signature) {
+        // the reference sees different states within one scan: the file
+        // can only be re-scanned at every include point
+        current.conditionSensitive = true;
+    }
 }
 
-bool CppPreprocessor::isEnvironmentIndependent(const PParsedFileInfo &fileInfo) const
+QString CppPreprocessor::signatureOfDefine(const PDefine &define)
 {
-    PDefineMap ownDefines = mFileDefines.value(fileInfo->fileName());
-    for (const QString& ref : fileInfo->conditionRefs()) {
-        if (mHardDefines.contains(ref))
-            continue;
-        if (ownDefines && ownDefines->contains(ref))
-            continue;
+    if (!define)
+        return QStringLiteral("\x02");
+    return define->args + QStringLiteral("\x01") + define->value;
+}
+
+bool CppPreprocessor::isReplaySafe(const PParsedFileInfo &fileInfo) const
+{
+    if (fileInfo->conditionSensitive())
         return false;
+    PDefineMap ownDefines = mFileDefines.value(fileInfo->fileName());
+    const QHash<QString,QString>& snapshot = fileInfo->conditionSnapshot();
+    for (auto it = snapshot.begin(); it != snapshot.end(); ++it) {
+        if (ownDefines && ownDefines->contains(it.key()))
+            continue; // self-provided (include guards etc.)
+        if (signatureOfDefine(getDefine(it.key())) != it.value())
+            return false;
     }
     return true;
 }
@@ -546,8 +575,10 @@ void CppPreprocessor::handleIncludeNext(const QString &tokens)
 
 void CppPreprocessor::handlePragma(const QString &tokens)
 {
-    if (tokens.trimmed()=="once")
+    if (tokens.trimmed()=="once") {
         mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
+        mCurrentFileInfo->setIncludeProtected(true);
+    }
 }
 
 QString CppPreprocessor::removeGCCAttributes(const QString &line)
@@ -641,15 +672,20 @@ void CppPreprocessor::openInclude(QString fileName)
                 fileInfo = std::make_shared<ParsedFileInfo>(fileName);
             }
         }
-        // A file whose conditions depend on the including environment
-        // must be re-scanned at every include point; replaying its
-        // recorded defines would reproduce the branch outcomes of the
-        // first scan's environment. (The root file is exempt: it is
+        // An UNPROTECTED file (no include guard / pragma once) whose
+        // conditions depend on the including environment must be
+        // re-scanned at every include point; replaying its recorded
+        // defines would reproduce the branch outcomes of the first
+        // scan's environment. Protected files are always replayed:
+        // their guard makes the re-include a no-op anyway, and
+        // invalidating them would drop the guard macro and wrongly
+        // re-emit the full content. (The root file is exempt: it is
         // always preprocessed from scratch anyway.)
         if (mScannedFiles.contains(fileName)
                 && !mFilesCouldRepeatInclude.contains(fileName)
                 && mIncludeStack.size()>0
-                && !isEnvironmentIndependent(fileInfo)) {
+                && !fileInfo->includeProtected()
+                && !isReplaySafe(fileInfo)) {
             removeScannedFile(fileName);
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
         }
@@ -755,9 +791,11 @@ void CppPreprocessor::closeInclude()
     if (mIncludeStack.isEmpty())
         return;
     PParsedFile lastFile = mIncludeStack.back();
-    // merge the condition references gathered during this scan
+    // merge the condition snapshot gathered during this scan
     if (!lastFile->conditionRefs.isEmpty())
-        lastFile->fileInfo->addConditionRefs(lastFile->conditionRefs);
+        lastFile->fileInfo->addConditionSnapshot(lastFile->conditionRefs);
+    if (lastFile->conditionSensitive)
+        lastFile->fileInfo->setConditionSensitive();
     if (mFilesCouldRepeatInclude.contains(lastFile->fileName))
         mFileCache.insert(lastFile->fileName, lastFile->buffer);
     mIncludeStack.pop_back();

@@ -41,7 +41,8 @@ struct ParsedFile {
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
     PParsedFileInfo fileInfo; // info of this file
-    QSet<QString> conditionRefs; // macro names referenced by evaluated conditions
+    QHash<QString,QString> conditionRefs; // condition ref -> define signature at evaluation
+    bool conditionSensitive = false; // a condition ref changed value during the scan
 };
 
 using PParsedFile = std::shared_ptr<ParsedFile>;
@@ -229,13 +230,16 @@ private:
     };
     void invalidDefinesInFile(const QString& fileName);
     // Record a macro name referenced by a condition that is actually
-    // being evaluated (used to decide whether the file's recorded
-    // defines may be safely replayed at other include points).
+    // being evaluated, together with the macro state it saw (used to
+    // decide whether the file's recorded defines may be safely replayed
+    // at other include points).
     void recordConditionRef(const QString& name) const;
-    // True if every condition reference of the file is satisfied by the
-    // hard defines or the file's own defines, so replaying its recorded
-    // defines reproduces the same branch outcomes at any include point.
-    bool isEnvironmentIndependent(const PParsedFileInfo& fileInfo) const;
+    static QString signatureOfDefine(const PDefine& define);
+    // True if replaying the file's recorded defines at the current
+    // include point reproduces the branch outcomes of its recorded
+    // scan: every condition reference still sees the same macro state
+    // (self-provided macros such as include guards are exempt).
+    bool isReplaySafe(const PParsedFileInfo& fileInfo) const;
 
 
     /*

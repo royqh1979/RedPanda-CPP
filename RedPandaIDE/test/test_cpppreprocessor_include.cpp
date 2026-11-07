@@ -631,6 +631,52 @@ void TestCppPreprocessorInclude::test_replay_env_independent()
                  "int v2b = 1;"}));
 }
 
+void TestCppPreprocessorInclude::test_replay_config_macro_stable()
+{
+    // The libstdc++ pattern: config3.h's condition references CFG_V,
+    // a macro provided by another header (cfg_provider.h). As long as
+    // the includers see the same macro state, config3.h is replayed
+    // (NOT re-scanned at every include point); only an includer that
+    // actually changes the state forces a re-scan.
+    QString dir = scenarioPath("replay");
+    CppPreprocessor p;
+    // a4.cpp: config3.h is scanned with CFG_V=1
+    p.preprocess(dir + "/a4.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/a4.cpp:-1",
+                 "#include <DIR>/cfg_provider.h:-1",
+                 "#define CFG_V 1",
+                 "#include <DIR>/a4.cpp:0",
+                 "#include <DIR>/config3.h:-1",
+                 "",
+                 "#define CFG_OUT 1",
+                 "",
+                 "",
+                 "",
+                 "#include <DIR>/a4.cpp:1",
+                 "int va = 1;"}));
+    // b4.cpp: same macro state -> replayed, no re-scan
+    p.preprocess(dir + "/b4.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/b4.cpp:-1",
+                 "",
+                 "",
+                 "int vb = 1;"}));
+    // b5.cpp: defines CFG_V differently -> state mismatch -> re-scan
+    p.preprocess(dir + "/b5.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/b5.cpp:-1",
+                 "#define CFG_V 2",
+                 "#include <DIR>/config3.h:-1",
+                 "",
+                 "",
+                 "",
+                 "#define CFG_OUT 0",
+                 "",
+                 "#include <DIR>/b5.cpp:1",
+                 "int vb5 = 0;"}));
+}
+
 void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
 {
     // PINNED: even UNGUARDED headers are replayed (not re-scanned) when

@@ -355,10 +355,20 @@ public:
     QDateTime lastModified() const { return mLastModified; }
     qint64 fileSize() const { return mSize; }
 
-    // Macro names referenced by this file's evaluated conditions;
-    // used to decide whether replaying the recorded defines is safe.
-    void addConditionRefs(const QSet<QString>& refs) { mConditionRefs.unite(refs); }
-    const QSet<QString>& conditionRefs() const { return mConditionRefs; }
+    // Snapshot of the macro state each of this file's evaluated
+    // conditions saw (name -> define signature at evaluation time),
+    // used to decide whether replaying the recorded defines at another
+    // include point reproduces the same branch outcomes.
+    void addConditionSnapshot(const QHash<QString,QString>& snapshot) { mConditionSnapshot.insert(snapshot); }
+    const QHash<QString,QString>& conditionSnapshot() const { return mConditionSnapshot; }
+    // A condition reference changed value during the scan itself;
+    // the file must always be re-scanned.
+    void setConditionSensitive() { mConditionSensitive = true; }
+    bool conditionSensitive() const { return mConditionSensitive; }
+    // Whether this file has include protection (an include guard or
+    // #pragma once), making re-includes idempotent.
+    void setIncludeProtected(bool on) { mIncludeProtected = on; }
+    bool includeProtected() const { return mIncludeProtected; }
 
     QString fileName() const { return mFileName; }
     const StatementMap& statements() const { return mStatements; }
@@ -378,7 +388,9 @@ private:
     QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
     QDateTime mLastModified;
     qint64 mSize = -1;
-    QSet<QString> mConditionRefs;
+    QHash<QString,QString> mConditionSnapshot;
+    bool mConditionSensitive = false;
+    bool mIncludeProtected = false;
 };
 
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
