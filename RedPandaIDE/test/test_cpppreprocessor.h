@@ -34,6 +34,17 @@ private slots:
     void test_backslash_in_directive_name();
     void test_backslash_in_string();
     void test_backslash_result_line_alignment();
+    // group B: strings & characters
+    void test_comment_markers_inside_string();
+    void test_escaped_quote_in_string();
+    void test_char_literals();
+    void test_quote_inside_comment();
+    void test_raw_string_basic();
+    void test_raw_string_with_comment_markers();
+    void test_raw_string_multiline();
+    void test_raw_string_after_identifier();
+    void test_macro_not_expanded_in_string();
+    void test_raw_string_pipeline_canary();
 private:
     static QStringList filterIncludes(const QStringList& text);
     // Run the full preprocess pipeline over in-memory content

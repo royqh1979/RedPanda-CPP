@@ -405,3 +405,140 @@ void TestCppPreprocessor::test_backslash_result_line_alignment()
                  "int c;"}));
     QCOMPARE(result.count(), 1 + src.count());
 }
+
+void TestCppPreprocessor::test_comment_markers_inside_string()
+{
+    // Comment markers inside string literals must not start a comment.
+    QStringList text{
+        "const char* a = \"http://example\";",
+        "const char* b = \"x/*y\";",
+        "int c; // trailing"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* a = \"http://example\";",
+                "const char* b = \"x/*y\";",
+                "int c; "}));
+}
+
+void TestCppPreprocessor::test_escaped_quote_in_string()
+{
+    // An escaped quote must not terminate the string literal.
+    QStringList text{
+        "const char* s = \"a\\\"b\"; // c",
+        "int x;"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* s = \"a\\\"b\"; ",
+                "int x;"}));
+}
+
+void TestCppPreprocessor::test_char_literals()
+{
+    QStringList text{
+        "char a = '\\'';",
+        "char b = '\\\\';",
+        "char c = '\\n';",
+        "int d = 'ab'; // x"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "char a = '\\'';",
+                "char b = '\\\\';",
+                "char c = '\\n';",
+                "int d = 'ab'; "}));
+}
+
+void TestCppPreprocessor::test_quote_inside_comment()
+{
+    // A quote inside a block comment must not start a string literal.
+    QStringList text{"/* \" */ int x; // y"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({"  int x; "}));
+}
+
+void TestCppPreprocessor::test_raw_string_basic()
+{
+    // PINNED (suspect, phase 0.5 review): raw string support in
+    // replaceCommentsBySpaceChar never terminates the raw-string state
+    // (the closing check wants ")" + delimiter where delimiter wrongly
+    // contains the opening quote), so the trailing comment survives and
+    // the state leaks into the following lines.
+    QStringList text{
+        "const char* s = R\"(x)\"; // trailing",
+        "int y; // also kept"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* s = R\"(x)\"; // trailing",
+                "int y; // also kept"}));
+}
+
+void TestCppPreprocessor::test_raw_string_with_comment_markers()
+{
+    // Comment-looking text inside a raw string is not a comment.
+    // (Passes today, though only because the raw-string state never
+    // terminates - see test_raw_string_basic.)
+    QStringList text{
+        "const char* s = R\"(a // not a comment)\";"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* s = R\"(a // not a comment)\";"}));
+}
+
+void TestCppPreprocessor::test_raw_string_multiline()
+{
+    // PINNED (suspect, phase 0.5 review): same root cause as
+    // test_raw_string_basic; the raw-string state also never resets at
+    // line boundaries, so the comment on the last line survives too.
+    QStringList text{
+        "const char* s = R\"(multi",
+        "line)\";",
+        "int z; // c"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* s = R\"(multi",
+                "line)\";",
+                "int z; // c"}));
+}
+
+void TestCppPreprocessor::test_raw_string_after_identifier()
+{
+    // PINNED (suspect, phase 0.5 review): an identifier ending with 'R'
+    // followed by a string (COLORR"(y)") is consumed as identifier +
+    // regular string, but a bare R"..." still triggers the raw-string
+    // state (which then never terminates, see test_raw_string_basic).
+    QStringList text{
+        "const char* a = R\"(x)\";",
+        "const char* b = COLORR\"(y)\"; // c"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* a = R\"(x)\";",
+                "const char* b = COLORR\"(y)\"; // c"}));
+}
+
+void TestCppPreprocessor::test_macro_not_expanded_in_string()
+{
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define X 1");
+    QCOMPARE(p.expandMacros("const char* s = \"X\";"),
+             "const char* s = \"X\";");
+    QCOMPARE(p.expandMacros("char c = 'X';"),
+             "char c = 'X';");
+    QCOMPARE(p.expandMacros("int a = X;"),
+             "int a = 1;");
+}
+
+void TestCppPreprocessor::test_raw_string_pipeline_canary()
+{
+    // PINNED (suspect, phase 0.5 review): end-to-end consequence of the
+    // raw-string bug - comments after a raw string are not stripped, and
+    // expandMacros (which knows strings but not comments) then expands
+    // macro names inside the surviving comment.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define X 1");
+    QCOMPARE(preprocessContent(p, {
+                 "const char* s = R\"(raw)\"; // X",
+                 "int a = X;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "const char* s = R\"(raw)\"; // 1",
+                 "int a = 1;"}));
+}
