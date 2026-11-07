@@ -2,6 +2,19 @@ Red Panda C++ Version 3.6
 
   - fix: Column mode doesn't work.
   - enhancement: Split the editor to two View.
+  - enhancement: Rewrite the preprocessor's macro expansion engine with a pp-token based expander.
+  - enhancement: Support __VA_OPT__ in macro definitions.
+  - enhancement: Support the GNU ", ## __VA_ARGS__" idiom (drop the comma when variadic arguments are empty).
+  - fix: Expand #if conditions with the same engine as code lines; support character constants and the full iso646 alternative token set (not only and/or), and evaluate leftover identifiers to 0 per the standard.
+  - fix: __has_include checks file existence instead of whether the file was already included.
+  - fix: #elifdef/#elifndef now work (the C++23 detection was defeated by the 'L' suffix of __cplusplus values).
+  - fix: Preprocessor directives with leading whitespace are recognized.
+  - fix: Raw strings are correctly handled while stripping comments and expanding macros.
+  - fix: The stringize operator '#' escapes quotes and backslashes in macro arguments, and whitespace before '#' is preserved.
+  - fix: Macro invocations with a mismatched argument count are left unexpanded (consistent with compilers).
+  - fix: More than 9 macro parameters and literal '%' in macro bodies are correctly expanded.
+  - fix: Branch visibility map restored one line early after #else/#elif (inactive code graying in the editor).
+  - fix: Environment-sensitive headers are re-scanned at each include point, and headers changed on disk are re-scanned, instead of replaying stale defines.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

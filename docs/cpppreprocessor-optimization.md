@@ -1,6 +1,6 @@
 # CppPreprocessor 优化计划（正确性优先）
 
-> 状态：阶段 0（测试集）与阶段 0.5（12 项定性修复）已完成；宏展开核心按 **pp-token 流式展开器**方案重写中（阶段 0.6，设计见内文，用户已批准）。分支 `parser-preprocess-opt`。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
+> 状态：阶段 0（测试集）、0.5（12 项定性修复）、**0.6（宏展开核心重写）已完成**——pp-token 引擎已全面接管预处理管线并删除旧引擎。分支 `parser-preprocess-opt`。后续：阶段 1（Session/Registry 拆分）、阶段 2（性能基线）、阶段 3（缓存等优化）未开始。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
 
 ## 背景
 
@@ -236,6 +236,18 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 4. 接入主循环（显式游标、行对齐输出）——阶段 0 全部 golden 为门禁；
 5. `#if` 求值同引擎；`#define` 参数列表 token 化切分（顺带修 `split(',')` 问题）；
 6. 兼容层 + 旧代码（expandMacros 全家、formatValue、argNotExpand、tempIngoreMacros）清理。
+
+**实现完成时的要点记录**（与设计稿的差异/补充）：
+
+- **`mPopFloor` 水位线**：帧的惰性弹出不得越过子泵自身的帧基——外层已耗尽帧仍承载着界定嵌套参数预展开作用域的蓝漆（互递归测试 hang 暴露，已入引擎注释）。
+- **Text 条目保持每 token 一条**（不合并）：合并会把宏名藏进字符串导致 rescan 无法再次展开。
+- **空白保留为精确文本**（`whitespaceBefore: QString`，含 tab），非布尔标志。
+- **可变参数完整支持**：`...`、`__VA_ARGS__`、GNU `, ## __VA_ARGS__`（空则丢逗号、非空不粘合）、`__VA_OPT__`（C++20）——旧引擎前两者半残、后两者没有。
+- **宏名与 `(` 之间允许换行**（peek 跳过 EOL 并计入消耗行；未找到则回推全部 peek 过的 token）。
+- **condition 模式全套 iso646 替代关键字**（11 个，旧实现只有 and/or）。
+- **EOL token 携带空白**：纯空白行与行尾空白不丢失。
+- **统一后行为差异（已记录并更新钉住预期）**：旧"条件展开器"在 `SCAN(EXAMPLE(5))` 场景产出双空格，普通路径产出单空格；新引擎统一为单空格。
+- **已完成清理**：expandMacros 全部旧重载、expandMacro、expandFunctionLikeMacro、parseArgs、formatValue/argUsed/argNotExpand/argStringized/varArgIndex 字段、calcUnsupportedElseBranchResult、无用字符分类静态函数均已删除；`tokenizeValue`（cppparser 宏提示用）与 `eval*` 求值家族保留。
 
 ### 阶段 1 — 结构重构（仅限 preprocessor 内部，有阶段 0 测试保护）
 
