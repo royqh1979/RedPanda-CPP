@@ -1,6 +1,6 @@
 # CppPreprocessor 优化计划（正确性优先）
 
-> 状态：阶段 0（测试集完善）已完成——123 个测试全绿，含 2 个 XFAIL（重放缓存缺陷，见"阶段 0.5"）；后续阶段进行中（分支 `parser-preprocess-opt`）。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
+> 状态：阶段 0（测试集）与阶段 0.5（12 项定性修复）已完成；宏展开核心按 **pp-token 流式展开器**方案重写中（阶段 0.6，设计见内文，用户已批准）。分支 `parser-preprocess-opt`。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
 
 ## 背景
 
@@ -178,10 +178,64 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 11. **未定义标识符在 `#if` 中不按标准替换为 0**（`test_if_undefined_identifier`）：保留原名导致求值失败按 false 处理；`UNDEFINED == 0` 应为 true 实得 false。
 12. **`MAX_DEFINE_EXPAND_DEPTH` 死常量**：递归防护实际只靠 ignore 集合（`test_mutual_recursion_function_macros` 钉住防护有效）。
 
+### 阶段 0.6 — 宏展开核心重写（pp-token 流式展开器）
+
+**动机**：宏展开实现的别扭是结构性的，补丁无法根治——`formatValue` 模板 + `QString::arg`（衍生出 9 参数上限、宏体内字面 `%` 误替换、`%%` 收尾补丁、`##` 靠占位符相邻拼接等整类问题）；普通行与 `#if` 两套展开引擎行为分叉；防自递归"蓝漆"按位置记录（每次展开整表拷贝+位置平移）；rescan 用字符串替换+回退（O(n²) 且位置簿记脆弱）；`handleBuffer` 跨行突变 `mIndex`。
+
+**总体步骤**（只换宏展开引擎，其余骨架不动）：
+
+```
+读文件（readFileToLines / 回调）
+   → ① 续行合并（不变）
+   → ② 注释剥离（不变）
+   → ③ 主扫描循环（原 preprocessBuffer，仍按行驱动——指令以行为单位）
+        ├─ 指令行：#define → parseArgs 预编译【替换列表】存入 Define（换掉 formatValue）
+        │         #undef / include / pragma 等（不变，含 guard 检测、重放、mtime、环境依赖判定）
+        │         #if/#elif → 同一个 token 展开器展开表达式 → token 流求值（引擎合一）
+        └─ 非指令行：喂给【token 展开器】，输出按行写 mResult；
+              跨行函数式宏由展开器通过显式游标超前消费，被消费行补空行（与现状逐字节一致）
+   → ④ closeInclude / 文件栈恢复（不变）
+   → mResult (QStringList)（接口不变，留给将来结构化）
+```
+
+**展开器设计**：
+
+- **PpTokenizer（拉式）**：按 token 拉动才前进。token 类型：标识符、数字、字符串、字符、raw string（可跨行）、标点（`#`/`##` 单列）、空白（只记录"前面是否有空白"标志，不发射）。raw string 状态可跨行，普通字符串/字符不跨行（与现状态机一致）。
+- **替换列表（核心数据结构，杀 formatValue）**：宏定义时一次性预编译——
+  ```cpp
+  struct ReplToken {
+      enum Kind { Text, Argument } kind;
+      QString text;        // Kind==Text: 源文本切片
+      int argIndex;        // Kind==Argument
+      bool stringize;      // 前导 #
+      bool pasteBefore;    // 前导 ##
+  };
+  // Define::replacementList: QVector<ReplToken>
+  ```
+  展开 = 单趟遍历发射；`#` 现场转义拼串；`##` 与前一发射 token 合并重 lex（合并出的新标识符经 rescan 帧可再参与展开，语义天然正确）。
+- **输入上下文栈**（rescan 与跨行）：`[文件游标 (buffer, line, col)]` 之上压"替换片段帧"。读 token 先弹栈顶帧，弹完回落游标——ISO 6.10.3.4 直译。跨行参数收集 = 游标前进（替代 handleBuffer 的 mIndex 突变，原计划"handleBuffer 显式化"并入本阶段）。
+- **蓝漆（防自递归）**：放弃位置表，改**展开帧内名字集合**——展开宏 M 时压帧 {替换序列， M}，帧存活期间 M 不可再展开（帧栈通常个位数深度，线性查即可）。
+- **参数收集**：token 级深度计数，depth-1 逗号切分；每个参数是收集序列上的区间视图（零拷贝）；`#`/`##` 用处的参数不预展开，其余用处的参数先展开（标准语义）。
+- **输出与空白还原**：Text 段保留源文本切片；参数间空白由"前面是否有空白"标志 + 防粘连检查（相邻 token 拼接会改变 lex 时补空格）决定；golden 测试逐字节验收。
+- **`#if` 求值**：条件表达式喂给同一展开器（`defined`/`__has_include` 作为 token 级运算符处理），展开后文本送现有递归求值器；条件引用记录（环境依赖判定）成为 token 扫描的副产品。
+
+**顺带解决的问题**（重写自然覆盖，不需单独补丁）：宏参数 9 上限、宏体内字面 `%` 误替换、`#define` 参数列表 `split(',')` 粗切（参数内带逗号如 `void(*)(int)` 会切错）、双引擎分叉、位置蓝漆拷贝、handleBuffer 隐式推进、`expandMacros() const` 的 `const_cast`。
+
+**兼容层（对外接口不变）**：`expandMacros(QString)`、`expandMacrosInConditioningExpression(QString)`、`evaluateIf(QString)` 保持签名，内部改走新引擎；`tokenizeValue`（cppparser 用于宏提示）独立保留。
+
+**迁移步骤（旁路实现，测试驱动切换，不一次性断代）**：
+
+1. PpTokenizer（含跨行 raw string）+ 单测；
+2. 替换列表预编译（`parseArgs` 产出 `replacementList`）+ 单测；
+3. PpExpander（上下文栈、蓝漆帧、参数收集、发射与空白还原）+ 单测（复用阶段 0 宏展开用例）；
+4. 接入主循环（显式游标、行对齐输出）——阶段 0 全部 golden 为门禁；
+5. `#if` 求值同引擎；`#define` 参数列表 token 化切分（顺带修 `split(',')` 问题）；
+6. 兼容层 + 旧代码（expandMacros 全家、formatValue、argNotExpand、tempIngoreMacros）清理。
+
 ### 阶段 1 — 结构重构（仅限 preprocessor 内部，有阶段 0 测试保护）
 
 1. **拆 Session/Registry**：`CppPreprocessor` 拆为 Registry（持久：defines/scanned/fileInfos/路径/缓存——阶段 3 缓存的归宿）与 Session（每次 preprocess 新建：include 栈/mIndex/mBuffer/分支栈/mProcessed/mFileCache）。对外接口保持不变。
-2. **`handleBuffer` 显式化**：宏展开跨行消耗的行数显式返回，替代隐式推进 `mIndex`；消除 `expandMacros() const` 的 `const_cast`。
+2. ~~**`handleBuffer` 显式化**~~：**并入阶段 0.6**（token 展开器的显式游标即此问题的落地）；消除 `expandMacros() const` 的 `const_cast`（随 0.6 兼容层解决）。
 3. 小项：`mPreprocessorHandlers` 的 QString map 查找改 switch。
 
 **推迟到 CppParser 层测试建立后（本次不做）**：
@@ -196,11 +250,10 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 
 ### 阶段 3 — 性能优化（基线驱动，逐项提交）
 
-1. `expandMacros()` 内循环重写：索引区间代替逐字符构词、reserve、`QMultiHash`→小 `QVector`、消除整表拷贝；保持 ISO 6.10.3.4 重扫语义。
-2. `expandFunctionLikeMacro()`：单次扫描替换 `%1..%9`，替代循环 `QString::arg()`。
-3. `openInclude()` 传播剪枝：祖先已 `including(fileName)` 时跳过闭包传播。
-4. include 解析结果缓存：正结果缓存 + 存在性校验（一次 `exists` stat）；负结果不缓存；路径列表变化清缓存；`removeScannedFile` 清条目。
-5. 文件内容缓存扩大：处理后行表 + mtime/size 校验，LRU 字节上限（内存有界），挂在 Registry 上。
+1. ~~`expandMacros()` 内循环重写~~、~~`expandFunctionLikeMacro()` 单次扫描替换~~：**已由阶段 0.6 的 pp-token 重写取代**（本两项删除）。
+2. `openInclude()` 传播剪枝：祖先已 `including(fileName)` 时跳过闭包传播。
+3. include 解析结果缓存：正结果缓存 + 存在性校验（一次 `exists` stat）；负结果不缓存；路径列表变化清缓存；`removeScannedFile` 清条目。
+4. 文件内容缓存扩大：处理后行表 + mtime/size 校验，LRU 字节上限（内存有界），挂在 Registry 上。
 
 ### 文档同步
 
