@@ -1458,6 +1458,25 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
     QMultiHash<int, QString> usedMacros;
     while (searchPos < line.length()) {
         QChar ch = line[searchPos];
+        // Skip over string/character literals; their content is neither
+        // expanded nor recorded as condition references.
+        if (ch=='\'' || ch=='"') {
+            QChar quote = ch;
+            newLine += ch;
+            searchPos++;
+            while (searchPos<lineLen) {
+                QChar c = line[searchPos];
+                newLine += c;
+                searchPos++;
+                if (c=='\\' && searchPos<lineLen) {
+                    newLine += line[searchPos];
+                    searchPos++;
+                } else if (c==quote) {
+                    break;
+                }
+            }
+            continue;
+        }
         // We have found an identifier. It is not a number suffix. Try to expand it
         if (isDigit(ch)) {
             int head = searchPos;
@@ -1833,6 +1852,41 @@ bool CppPreprocessor::evalTerm(const QString &expr, NumberType &result, int &pos
 {
     if (!skipSpaces(expr,pos))
         return false;
+    if (expr[pos]=='\'') {
+        // character constant, e.g. 'a', '\n', or a multi-char constant
+        pos++;
+        if (pos>=expr.length())
+            return false;
+        if (expr[pos]=='\\') {
+            pos++;
+            if (pos>=expr.length())
+                return false;
+            switch (expr[pos].unicode()) {
+            case 'n': result = '\n'; break;
+            case 't': result = '\t'; break;
+            case 'r': result = '\r'; break;
+            case '0': result = 0; break;
+            case 'a': result = '\a'; break;
+            case 'b': result = '\b'; break;
+            case 'f': result = '\f'; break;
+            case 'v': result = '\v'; break;
+            default: result = expr[pos].unicode(); break; // '\\', '\'', '"', ...
+            }
+            pos++;
+        } else {
+            result = expr[pos].unicode();
+            pos++;
+        }
+        // fold any remaining characters (multi-char constants, GCC-style)
+        while (pos<expr.length() && expr[pos]!='\'') {
+            result = (result << 8) | expr[pos].unicode();
+            pos++;
+        }
+        if (pos>=expr.length())
+            return false; // unterminated
+        pos++; // skip closing '
+        return true;
+    }
     if (expr[pos]=='(') {
         pos++;
         if (!evalExpr(expr,result,pos))

@@ -880,12 +880,16 @@ void TestCppPreprocessor::test_and_or_keywords()
 
 void TestCppPreprocessor::test_char_constant_in_if()
 {
-    // PINNED (suspect, phase 0.5 review): character constants are not
-    // supported in #if expressions (the C standard evaluates 'a' as its
-    // code point, so this should be true).
+    // Character constants in #if expressions evaluate to their code
+    // point (they were once unsupported and always evaluated false),
+    // and identifiers inside them are not macro-expanded.
     CppPreprocessor p;
-    QCOMPARE(p.evaluateIf("'a' == 97"), false);
-    QCOMPARE(p.evaluateIf("'a'"), false);
+    QCOMPARE(p.evaluateIf("'a' == 97"), true);
+    QCOMPARE(p.evaluateIf("'a'"), true);
+    QCOMPARE(p.evaluateIf("'z' != 'a'"), true);
+    QCOMPARE(p.evaluateIf("'a' == 'a'"), true);
+    QCOMPARE(p.evaluateIf("'\\n' == 10"), true);
+    QCOMPARE(p.evaluateIf("'a' == \"a\""), false);
 }
 
 void TestCppPreprocessor::test_elifdef_elifndef_supported()
