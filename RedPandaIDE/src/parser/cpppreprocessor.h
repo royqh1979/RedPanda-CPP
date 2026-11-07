@@ -21,7 +21,6 @@
 #include <QTextStream>
 #include "parserutils.h"
 
-#define MAX_DEFINE_EXPAND_DEPTH 20
 enum class DefineArgTokenType{
     Symbol,
     Identifier,
