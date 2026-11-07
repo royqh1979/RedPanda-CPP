@@ -161,3 +161,136 @@ PpToken PpTokenizer::readStringOrChar(const QString &line, QChar quote)
             : PpTokenKind::CharLiteral;
     return makeSimple(kind, line.mid(start, mCol - start));
 }
+
+static QVector<PpToken> tokenizeAll(const QString& text)
+{
+    QStringList lines{text};
+    PpTokenizer tokenizer(lines);
+    QVector<PpToken> tokens;
+    while (true) {
+        PpToken token = tokenizer.next();
+        if (token.kind == PpTokenKind::EndOfInput)
+            break;
+        if (token.kind == PpTokenKind::EndOfLine)
+            continue;
+        tokens.append(token);
+    }
+    return tokens;
+}
+
+QStringList splitMacroParams(const QString &args)
+{
+    QStringList result;
+    QVector<PpToken> tokens = tokenizeAll(args);
+    int depth = 0;
+    QString current;
+    bool hasContent = false;
+    bool sawComma = false;
+    auto flush = [&]() {
+        result.append(current.trimmed());
+        current.clear();
+        hasContent = false;
+    };
+    for (const PpToken& token : tokens) {
+        if (token.kind == PpTokenKind::Punct) {
+            if (token.text == "(" || token.text == "{"
+                    || token.text == "[") {
+                depth++;
+            } else if (token.text == ")" || token.text == "}"
+                       || token.text == "]") {
+                depth--;
+            } else if (token.text == "," && depth == 0) {
+                flush();
+                sawComma = true;
+                continue;
+            }
+        }
+        if (hasContent && token.spaceBefore)
+            current += ' ';
+        current += token.text;
+        hasContent = true;
+    }
+    if (hasContent || sawComma)
+        flush();
+    return result;
+}
+
+ReplTokenList compileReplacementList(const QString &value, const QStringList &argNames)
+{
+    ReplTokenList result;
+    QVector<PpToken> tokens = tokenizeAll(value);
+    QString pendingText;
+    bool pendingSpaceBefore = false;
+    bool pendingStringize = false;
+    bool stringizeSpaceBefore = false;
+    bool pendingPaste = false;
+    auto flushText = [&]() {
+        if (pendingText.isEmpty())
+            return;
+        ReplToken entry;
+        entry.kind = ReplToken::Kind::Text;
+        entry.text = pendingText;
+        entry.spaceBefore = pendingSpaceBefore;
+        result.append(entry);
+        pendingText.clear();
+    };
+    for (const PpToken& token : tokens) {
+        if (token.kind == PpTokenKind::Punct && token.text == "#") {
+            flushText();
+            pendingStringize = true;
+            stringizeSpaceBefore = token.spaceBefore;
+            pendingPaste = false;
+            continue;
+        }
+        if (token.kind == PpTokenKind::Punct && token.text == "##") {
+            flushText();
+            pendingPaste = true;
+            pendingStringize = false;
+            continue;
+        }
+        int argIndex = -1;
+        if (token.kind == PpTokenKind::Identifier) {
+            argIndex = argNames.indexOf(token.text);
+            if (argIndex < 0 && token.text == QLatin1String("__VA_ARGS__"))
+                argIndex = argNames.indexOf("...");
+        }
+        if (argIndex >= 0) {
+            flushText();
+            ReplToken entry;
+            entry.kind = ReplToken::Kind::Argument;
+            entry.argIndex = argIndex;
+            entry.stringize = pendingStringize;
+            entry.pasteBefore = pendingPaste;
+            // a pasted token merges with the previous output, so any
+            // whitespace before it is dropped
+            entry.spaceBefore = pendingPaste ? false
+                    : (pendingStringize ? stringizeSpaceBefore
+                                        : token.spaceBefore);
+            result.append(entry);
+        } else {
+            // plain text; a pending paste is recorded on the entry and
+            // performed at emission time (it may merge an argument's
+            // expansion with this text)
+            if (pendingPaste) {
+                flushText();
+                ReplToken entry;
+                entry.kind = ReplToken::Kind::Text;
+                entry.text = token.text;
+                entry.pasteBefore = true;
+                entry.spaceBefore = false;
+                result.append(entry);
+            } else {
+                if (pendingText.isEmpty()) {
+                    pendingSpaceBefore = token.spaceBefore;
+                } else if (token.spaceBefore) {
+                    pendingText += ' ';
+                }
+                pendingText += token.text;
+            }
+        }
+        pendingStringize = false;
+        pendingPaste = false;
+    }
+    flushText();
+    return result;
+}

@@ -22,10 +22,13 @@ private slots:
     void test_raw_string_multiline();
     void test_raw_string_ill_formed();
     void test_end_of_line_markers();
+    void test_split_macro_params();
+    void test_compile_replacement_list();
 private:
     // tokenize all input and return "kind:text" pairs for comparison
     static QStringList dumpTokens(const QStringList& lines);
     static QString dumpToken(const PpToken& token);
+    static QStringList dumpRepl(const ReplTokenList& entries);
 };
 
 #endif // TEST_PPTOKEN_H

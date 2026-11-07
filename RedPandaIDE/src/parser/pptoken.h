@@ -100,4 +100,23 @@ struct ReplToken {
 
 using ReplTokenList = QVector<ReplToken>;
 
+/*
+ * Split a macro parameter list (the text between the outer parens of a
+ * function-like macro definition) at depth-0 commas. Parentheses,
+ * braces and brackets are tracked, so parameters like void(*)(int)
+ * split correctly (angle brackets are intentionally not tracked,
+ * consistent with real compilers).
+ */
+QStringList splitMacroParams(const QString& args);
+
+/*
+ * Compile a macro body into a replacement list: parameter references
+ * become Argument entries (with stringize/pasteBefore flags from
+ * neighboring '#'/'##' tokens), everything else is merged into Text
+ * entries with original spacing preserved.
+ * argNames: parameter names in order; "__VA_ARGS__" maps to the index
+ * of a "..." entry if present.
+ */
+ReplTokenList compileReplacementList(const QString& value, const QStringList& argNames);
+
 #endif // PPTOKEN_H

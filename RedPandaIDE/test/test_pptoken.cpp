@@ -139,3 +139,73 @@ void TestPpTokenizer::test_end_of_line_markers()
              QStringList({
                  "id:a", "eol:", "eol:", "id:b", "eol:", "eof:"}));
 }
+
+QStringList TestPpTokenizer::dumpRepl(const ReplTokenList &entries)
+{
+    QStringList result;
+    for (const ReplToken& entry : entries) {
+        if (entry.kind == ReplToken::Kind::Text) {
+            result.append(QString("text%1%2:%3")
+                          .arg(entry.pasteBefore?"##":"")
+                          .arg(entry.spaceBefore?"+":"")
+                          .arg(entry.text));
+        } else {
+            result.append(QString("arg%1%2%3:%4")
+                          .arg(entry.stringize?"#":"")
+                          .arg(entry.pasteBefore?"##":"")
+                          .arg(entry.spaceBefore?"+":"")
+                          .arg(entry.argIndex));
+        }
+    }
+    return result;
+}
+
+void TestPpTokenizer::test_split_macro_params()
+{
+    QCOMPARE(splitMacroParams(""), QStringList());
+    QCOMPARE(splitMacroParams("a"), QStringList({"a"}));
+    QCOMPARE(splitMacroParams("a,b"), QStringList({"a", "b"}));
+    QCOMPARE(splitMacroParams(" a , b "), QStringList({"a", "b"}));
+    QCOMPARE(splitMacroParams("..."), QStringList({"..."}));
+    QCOMPARE(splitMacroParams("fmt, ..."), QStringList({"fmt", "..."}));
+    QCOMPARE(splitMacroParams(","), QStringList({"", ""}));
+    QCOMPARE(splitMacroParams("a, void(*b)(int)"),
+             QStringList({"a", "void(*b)(int)"}));
+}
+
+void TestPpTokenizer::test_compile_replacement_list()
+{
+    // simple substitution
+    QCOMPARE(dumpRepl(compileReplacementList("x+1", {"x"})),
+             QStringList({"arg:0", "text:+1"}));
+    // paste between two arguments
+    QCOMPARE(dumpRepl(compileReplacementList("a ## b", {"a", "b"})),
+             QStringList({"arg:0", "arg##:1"}));
+    // paste chains
+    QCOMPARE(dumpRepl(compileReplacementList("a##b ## c", {"a", "b", "c"})),
+             QStringList({"arg:0", "arg##:1", "arg##:2"}));
+    // paste between an argument and text, with spacing preserved
+    QCOMPARE(dumpRepl(compileReplacementList(
+                          "int fun_##name() { return a; }",
+                          {"name", "a"})),
+             QStringList({
+                 "text:int fun_", "arg##:0", "text:() { return",
+                 "arg+:1", "text:; }"}));
+    // stringize
+    QCOMPARE(dumpRepl(compileReplacementList("#x", {"x"})),
+             QStringList({"arg#:0"}));
+    // stringize keeps the space before '#'
+    QCOMPARE(dumpRepl(compileReplacementList("WORD #__VA_ARGS__", {"..."})),
+             QStringList({"text:WORD", "arg#+:0"}));
+    // a literal '%' in the body is preserved as-is
+    QCOMPARE(dumpRepl(compileReplacementList("100% done", {})),
+             QStringList({"text:100% done"}));
+    // more than 9 parameters work
+    QCOMPARE(dumpRepl(compileReplacementList(
+                          "p10", {"p0","p1","p2","p3","p4","p5",
+                                  "p6","p7","p8","p9","p10"})),
+             QStringList({"arg:10"}));
+    // leading paste
+    QCOMPARE(dumpRepl(compileReplacementList("##a", {"a"})),
+             QStringList({"arg##:0"}));
+}
