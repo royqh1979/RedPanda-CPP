@@ -90,6 +90,7 @@ target("RedPandaIDE")
         "src/debugger/gdbmiresultparser.cpp",
         -- parser
         "src/parser/cpppreprocessor.cpp",
+        "src/parser/pptoken.cpp",
         "src/parser/cpptokenizer.cpp",
         "src/parser/parserutils.cpp",
         -- problems
