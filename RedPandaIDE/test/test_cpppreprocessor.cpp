@@ -744,14 +744,12 @@ void TestCppPreprocessor::test_nested_branches()
     QVERIFY(fileInfo);
     QVERIFY(fileInfo->isLineVisible(3));
     QVERIFY(!fileInfo->isLineVisible(6));
-    // PINNED (suspect, phase 0.5 review): removeCurrentBranch records the
-    // visibility restore at mIndex while setCurrentBranch uses mIndex+1,
-    // so visibility comes back one line early and the last content line
-    // of a false branch (line 7 here) is reported visible even though it
-    // was preprocessed away. The result content above is correct; only
-    // the branch map (used by the editor to gray out inactive code) is
-    // off by one.
-    QVERIFY(fileInfo->isLineVisible(7));
+    QVERIFY(!fileInfo->isLineVisible(7));
+    // Regression: the visibility restore point was once recorded one
+    // line early after #else/#elif, so the last content line of a false
+    // branch was reported visible (the branch map is what the editor
+    // uses to gray out inactive code).
+    QVERIFY(fileInfo->isLineVisible(8));
     QVERIFY(fileInfo->isLineVisible(9));
     QVERIFY(fileInfo->isLineVisible(15));
 }

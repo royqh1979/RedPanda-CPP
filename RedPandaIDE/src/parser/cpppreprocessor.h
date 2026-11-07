@@ -212,7 +212,7 @@ private:
             mBranchResults.pop_back();
         }
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentFileInfo->insertBranch(mIndex,getCurrentBranch()==BranchResult::isTrue);
+            mCurrentFileInfo->insertBranch(mIndex+1,getCurrentBranch()==BranchResult::isTrue);
         }
     }
     void addDefinesInFile(const QString& fileName);
