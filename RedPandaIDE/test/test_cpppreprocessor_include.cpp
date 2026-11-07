@@ -1,7 +1,9 @@
 #include "test_cpppreprocessor_include.h"
 #include "src/parser/cpppreprocessor.h"
 #include "qt_utils/utils.h"
+#include <QFile>
 #include <QFileInfo>
+#include <QTemporaryDir>
 #include <QTest>
 
 TestCppPreprocessorInclude::TestCppPreprocessorInclude(QObject *parent):
@@ -373,4 +375,193 @@ void TestCppPreprocessorInclude::test_include_order_angle()
                  "int from_project;",
                  "#include <DIR>/main_angle.cpp:0",
                  "int after;"}));
+}
+
+void TestCppPreprocessorInclude::test_reprocess_same_instance()
+{
+    // PINNED: re-preprocessing a file that is still in the scanned set
+    // returns an EMPTY result (the root file hits the replay shortcut).
+    // Production never relies on this: CppParser always invalidates the
+    // file first (see test_reprocess_after_remove_scanned).
+    QString dir = scenarioPath("basic_include");
+    CppPreprocessor p;
+    QStringList first = runScenario(p, dir, "main.cpp", true);
+    QVERIFY(!first.isEmpty());
+    QStringList second = runScenario(p, dir, "main.cpp", true);
+    QCOMPARE(second, QStringList());
+    // defines survive the empty replay
+    QVERIFY(p.getDefine("foo") == nullptr); // foo is a function, no defines here
+}
+
+void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
+{
+    // The production reparse path invalidates the edited file only;
+    // files it includes stay scanned and are replayed (their content
+    // lines collapse to empty lines - their parser statements persist).
+    QString dir = scenarioPath("basic_include");
+    CppPreprocessor p;
+    QStringList first = runScenario(p, dir, "main.cpp", true);
+    p.removeScannedFile(dir + "/main.cpp");
+    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+                 "#include <DIR>/main.cpp:-1",
+                 "",
+                 "int main() { return foo(); }"}));
+    // Invalidating the included header as well forces a full re-scan
+    // and reproduces the original result.
+    p.removeScannedFile(dir + "/main.cpp");
+    p.removeScannedFile(dir + "/a.h");
+    QCOMPARE(runScenario(p, dir, "main.cpp", true), first);
+}
+
+void TestCppPreprocessorInclude::test_hard_define_restore()
+{
+    // A file define shadowing a hard define is removed on invalidation
+    // and the hard define is restored.
+    QString dir = scenarioPath("replay");
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define UNG_V 0");
+    p.preprocess(dir + "/a3.cpp");
+    QCOMPARE(p.getDefine("UNG_V")->value, "1");
+    p.removeScannedFile(dir + "/ung.h");
+    QCOMPARE(p.getDefine("UNG_V")->value, "0");
+}
+
+void TestCppPreprocessorInclude::test_undef_restore()
+{
+    // An external #undef (of a macro defined in another file) is
+    // recorded per file; invalidating that file restores the define.
+    QString dir = scenarioPath("undef_external");
+    CppPreprocessor p;
+    p.preprocess(dir + "/main.cpp");
+    QVERIFY(!p.getDefine("X"));
+    p.removeScannedFile(dir + "/main.cpp");
+    QCOMPARE(p.getDefine("X")->value, "1");
+}
+
+void TestCppPreprocessorInclude::test_on_get_file_stream()
+{
+    // Content provided through the callback wins over the file on disk.
+    QString dir = scenarioPath("basic_include");
+    CppPreprocessor p;
+    p.setOnGetFileStream([](const QString& name, QStringList& out){
+        if (name.endsWith("main.cpp")) {
+            out = QStringList{"int custom;"};
+            return true;
+        }
+        return false;
+    });
+    p.preprocess(dir + "/main.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/main.cpp:-1",
+                 "int custom;"}));
+    // a.h was never read: the callback content has no #include
+    QVERIFY(!p.findFileInfo(dir + "/a.h"));
+}
+
+void TestCppPreprocessorInclude::test_replay_env_dependent()
+{
+    // config.h's branch depends on the environment at the include point
+    // (USE_FAST). a.cpp defines it, b.cpp undefines it. The replay cache
+    // hands b.cpp the defines recorded under a.cpp's environment.
+    QString dir = scenarioPath("replay");
+    CppPreprocessor p;
+    p.setFileOnlyIncludeOnce(false); // parser mode
+    p.preprocess(dir + "/a.cpp");
+    QCOMPARE(p.getDefine("SPEED")->value, "100");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/a.cpp:-1",
+                 "#define USE_FAST",
+                 "#include <DIR>/config.h:-1",
+                 "",
+                 "#define SPEED 100",
+                 "",
+                 "",
+                 "",
+                 "#include <DIR>/a.cpp:1",
+                 "int speed_a = 100;"}));
+    p.preprocess(dir + "/b.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/b.cpp:-1",
+                 "#undef USE_FAST",
+                 "",
+                 "int speed_b = 100;"}));
+    // Correct semantics: with USE_FAST undefined at b.cpp's include
+    // point, re-scanning config.h would yield SPEED 1. The replay cache
+    // returns the stale 100 (pinned; fixed in phase 0.5).
+    QEXPECT_FAIL("", "replay returns stale environment-dependent defines", Continue);
+    QCOMPARE(p.getDefine("SPEED")->value, "1");
+}
+
+void TestCppPreprocessorInclude::test_replay_env_independent()
+{
+    // config2.h's condition only depends on hard defines (stable for the
+    // whole session), so replaying it is always correct.
+    QString dir = scenarioPath("replay");
+    CppPreprocessor p;
+    p.setFileOnlyIncludeOnce(false);
+    p.addHardDefineByLine("#define __cplusplus 202002L");
+    p.preprocess(dir + "/a2.cpp");
+    QCOMPARE(p.getDefine("CPP17_OK")->value, "1");
+    p.preprocess(dir + "/b2.cpp");
+    QCOMPARE(p.getDefine("CPP17_OK")->value, "1");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/b2.cpp:-1",
+                 "",
+                 "int v2b = 1;"}));
+}
+
+void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
+{
+    // PINNED: even UNGUARDED headers are replayed (not re-scanned) when
+    // a later preprocess run includes them, because the could-repeat set
+    // is per-run and starts empty.
+    QString dir = scenarioPath("replay");
+    CppPreprocessor p;
+    p.setFileOnlyIncludeOnce(false);
+    p.preprocess(dir + "/a3.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/a3.cpp:-1",
+                 "#include <DIR>/ung.h:-1",
+                 "int ung;",
+                 "#define UNG_V 1",
+                 "#include <DIR>/a3.cpp:0",
+                 "int a3;"}));
+    p.preprocess(dir + "/b3.cpp");
+    QCOMPARE(normalizedResult(p, dir), QStringList({
+                 "#include <DIR>/b3.cpp:-1",
+                 "",
+                 "int b3;"}));
+    // the replayed define is available
+    QVERIFY(p.getDefine("UNG_V"));
+}
+
+void TestCppPreprocessorInclude::test_replay_external_modification()
+{
+    // A header changed on disk (git pull, external editor) after the
+    // first scan is still replayed from the stale recorded defines.
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString& path, const QStringList& lines) {
+        QFile f(path);
+        if (!f.open(QIODevice::WriteOnly|QIODevice::Truncate))
+            return false;
+        f.write(lines.join("\n").toUtf8());
+        f.close();
+        return true;
+    };
+    QVERIFY(writeFile(tmp.filePath("h.h"), {"#define V 1", "int v1;"}));
+    QVERIFY(writeFile(tmp.filePath("a.cpp"), {"#include \"h.h\"", "int a;"}));
+    QVERIFY(writeFile(tmp.filePath("b.cpp"), {"#include \"h.h\"", "int b;"}));
+    CppPreprocessor p;
+    p.setFileOnlyIncludeOnce(false);
+    p.preprocess(tmp.filePath("a.cpp"));
+    QCOMPARE(p.getDefine("V")->value, "1");
+    QVERIFY(writeFile(tmp.filePath("h.h"),
+                    {"#define V 2", "int v2;", "int v2b;"}));
+    p.preprocess(tmp.filePath("b.cpp"));
+    // Correct semantics: the mtime change should invalidate the recorded
+    // defines and re-scan the header. The replay cache does not check
+    // (pinned; fixed in phase 0.5).
+    QEXPECT_FAIL("", "replay ignores on-disk modification of scanned files", Continue);
+    QCOMPARE(p.getDefine("V")->value, "2");
 }

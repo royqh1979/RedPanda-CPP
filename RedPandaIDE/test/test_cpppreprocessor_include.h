@@ -29,6 +29,17 @@ private slots:
     void test_ignored_directives();
     void test_include_order_quote();
     void test_include_order_angle();
+    // group F: incremental / registry behavior
+    void test_reprocess_same_instance();
+    void test_reprocess_after_remove_scanned();
+    void test_hard_define_restore();
+    void test_undef_restore();
+    void test_on_get_file_stream();
+    // group G: replay correctness
+    void test_replay_env_dependent();
+    void test_replay_env_independent();
+    void test_replay_unguarded_cross_reparse();
+    void test_replay_external_modification();
 private:
     // Absolute path of resources/preprocessor/<name>
     static QString scenarioPath(const QString& name);
