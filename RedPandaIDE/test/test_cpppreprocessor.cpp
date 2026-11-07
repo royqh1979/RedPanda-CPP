@@ -918,11 +918,9 @@ void TestCppPreprocessor::test_elifdef_elifndef_supported()
 
 void TestCppPreprocessor::test_elifdef_cpp23_detection()
 {
-    // PINNED (suspect, phase 0.5 review): the expression evaluator
-    // handles the 'L' suffix in __cplusplus correctly, but the C++23
-    // feature detection (QString::toLong on the whole value) does not,
-    // so with the real-world 'L'-suffixed value #elifdef takes the
-    // degraded no-op path even though the compiler is C++23.
+    // Regression test: real-world __cplusplus values carry an integer
+    // suffix (202302L); the C++23 detection must handle it (it once ran
+    // QString::toLong on the whole value and never detected C++23).
     CppPreprocessor p;
     p.addHardDefineByLine("#define __cplusplus 202302L");
     QCOMPARE(p.evaluateIf("__cplusplus >= 202302L"), true);
@@ -944,9 +942,9 @@ void TestCppPreprocessor::test_elifdef_cpp23_detection()
                  "",
                  "",
                  "",
+                 "int c;",
                  "",
                  "",
-                 "int d;",
                  "",
                  "int e;"}));
 }

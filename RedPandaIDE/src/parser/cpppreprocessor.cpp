@@ -103,8 +103,13 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
         mHardDefines.insert(name,define);
         mDefines.insert(name,define);
         if (name == "__cplusplus") {
+            // strip integer suffixes (U, L, UL, LL, ULL) before converting
+            QString v = value.trimmed();
+            while (v.endsWith('U') || v.endsWith('u')
+                   || v.endsWith('L') || v.endsWith('l'))
+                v.chop(1);
             bool ok;
-            int version = value.toLong(&ok);
+            long version = v.toLong(&ok);
             mSupportCPP23 = (ok && version >=202302);
         }
     } else {
