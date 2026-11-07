@@ -457,31 +457,27 @@ void TestCppPreprocessor::test_quote_inside_comment()
 
 void TestCppPreprocessor::test_raw_string_basic()
 {
-    // PINNED (suspect, phase 0.5 review): raw string support in
-    // replaceCommentsBySpaceChar never terminates the raw-string state
-    // (the closing check wants ")" + delimiter where delimiter wrongly
-    // contains the opening quote), so the trailing comment survives and
-    // the state leaks into the following lines.
+    // The raw-string state terminates at the closing )delimiter"
+    // sequence; comments after the raw string are stripped.
     QStringList text{
         "const char* s = R\"(x)\"; // trailing",
         "int y; // also kept"};
     CppPreprocessor::replaceCommentsBySpaceChar(text);
     QCOMPARE(text, QStringList({
-                "const char* s = R\"(x)\"; // trailing",
-                "int y; // also kept"}));
+                "const char* s = R\"(x)\"; ",
+                "int y; "}));
 }
 
 void TestCppPreprocessor::test_raw_string_delimiter()
 {
-    // PINNED (suspect, phase 0.5 review): the custom delimiter is never
-    // recorded either, so a delimited raw string also never terminates
-    // (see test_raw_string_basic).
+    // A custom delimiter is honored: the string only terminates at
+    // )delim", so ')' alone does not close it.
     QStringList text{
         "const char* s = R\"delim(a ) still)delim\"; // c",
         "int y;"};
     CppPreprocessor::replaceCommentsBySpaceChar(text);
     QCOMPARE(text, QStringList({
-                "const char* s = R\"delim(a ) still)delim\"; // c",
+                "const char* s = R\"delim(a ) still)delim\"; ",
                 "int y;"}));
 }
 
@@ -499,9 +495,8 @@ void TestCppPreprocessor::test_raw_string_with_comment_markers()
 
 void TestCppPreprocessor::test_raw_string_multiline()
 {
-    // PINNED (suspect, phase 0.5 review): same root cause as
-    // test_raw_string_basic; the raw-string state also never resets at
-    // line boundaries, so the comment on the last line survives too.
+    // The raw-string state spans lines and terminates at the closing
+    // sequence; comments after it are stripped.
     QStringList text{
         "const char* s = R\"(multi",
         "line)\";",
@@ -510,22 +505,21 @@ void TestCppPreprocessor::test_raw_string_multiline()
     QCOMPARE(text, QStringList({
                 "const char* s = R\"(multi",
                 "line)\";",
-                "int z; // c"}));
+                "int z; "}));
 }
 
 void TestCppPreprocessor::test_raw_string_after_identifier()
 {
-    // PINNED (suspect, phase 0.5 review): an identifier ending with 'R'
-    // followed by a string (COLORR"(y)") is consumed as identifier +
-    // regular string, but a bare R"..." still triggers the raw-string
-    // state (which then never terminates, see test_raw_string_basic).
+    // A bare R"..." starts a raw string; an 'R' inside an identifier
+    // (COLORR) does not, and the regular string after it is handled
+    // normally (its comment is stripped).
     QStringList text{
         "const char* a = R\"(x)\";",
         "const char* b = COLORR\"(y)\"; // c"};
     CppPreprocessor::replaceCommentsBySpaceChar(text);
     QCOMPARE(text, QStringList({
                 "const char* a = R\"(x)\";",
-                "const char* b = COLORR\"(y)\"; // c"}));
+                "const char* b = COLORR\"(y)\"; "}));
 }
 
 void TestCppPreprocessor::test_macro_not_expanded_in_string()
@@ -542,10 +536,9 @@ void TestCppPreprocessor::test_macro_not_expanded_in_string()
 
 void TestCppPreprocessor::test_raw_string_pipeline_canary()
 {
-    // PINNED (suspect, phase 0.5 review): end-to-end consequence of the
-    // raw-string bug - comments after a raw string are not stripped, and
-    // expandMacros (which knows strings but not comments) then expands
-    // macro names inside the surviving comment.
+    // Regression canary: comments after a raw string were once not
+    // stripped, and expandMacros (which knows strings but not comments)
+    // then expanded macro names inside the surviving comment.
     CppPreprocessor p;
     p.addHardDefineByLine("#define X 1");
     QCOMPARE(preprocessContent(p, {
@@ -553,8 +546,22 @@ void TestCppPreprocessor::test_raw_string_pipeline_canary()
                  "int a = X;"}),
              QStringList({
                  "#include /virtual/main.cpp:-1",
-                 "const char* s = R\"(raw)\"; // 1",
+                 "const char* s = R\"(raw)\"; ",
                  "int a = 1;"}));
+}
+
+void TestCppPreprocessor::test_raw_string_macro_not_expanded()
+{
+    // Macro names inside a raw string are not expanded - including
+    // delimited raw strings with embedded quotes (which once fooled the
+    // regular-string tracking in expandMacros).
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define X 1");
+    QCOMPARE(preprocessContent(p, {
+                 "const char* s = R\"delim(a \"X\" b)delim\";"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "const char* s = R\"delim(a \"X\" b)delim\";"}));
 }
 
 void TestCppPreprocessor::test_stringize_with_spaces()

@@ -46,6 +46,7 @@ private slots:
     void test_raw_string_after_identifier();
     void test_macro_not_expanded_in_string();
     void test_raw_string_pipeline_canary();
+    void test_raw_string_macro_not_expanded();
     // group C: macro expansion edges
     void test_stringize_with_spaces();
     void test_stringize_escaping();

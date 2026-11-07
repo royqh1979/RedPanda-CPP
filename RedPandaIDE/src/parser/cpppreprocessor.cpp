@@ -544,6 +544,15 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
         } else {
             ch=' ';
         }
+        if (currentType == ContentType::Other && ch=='R' && word.isEmpty()
+                && i+1<lenLine && text[i+1]=='"') {
+            // raw string literal R"delim(...)delim"
+            newLine += "R\"";
+            i += 2;
+            currentType = ContentType::RawStringPrefix;
+            delimiter = "";
+            continue;
+        }
         if (currentType == ContentType::Other && isWordChar(ch)) {
             if (word.isEmpty())
                 wordStart = i;
@@ -635,14 +644,6 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
                         break;
                     }
                     break;
-                case 'R':
-                    if (currentType == ContentType::Other && i+1<lenLine && text[i+1]=='"') {
-                        i++;
-                        newLine += text[i];
-                        currentType=ContentType::RawStringPrefix;
-                        delimiter = "";
-                    }
-                    break;
                 case '(':
                     switch(currentType) {
                     case ContentType::RawStringPrefix:
@@ -662,6 +663,10 @@ QString CppPreprocessor::expandMacros(QString text, bool handleBuffer, const QSe
                     default:
                         break;
                     }
+                    break;
+                default:
+                    if (currentType == ContentType::RawStringPrefix)
+                        delimiter += ch;
                     break;
                 }
             }
@@ -1224,9 +1229,6 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                     currentType=ContentType::RawStringPrefix;
                     delimiter = "";
                 }
-                if (currentType == ContentType::RawStringPrefix ) {
-                    delimiter += ch;
-                }
                 s+=ch;
                 break;
             case '(':
@@ -1271,6 +1273,8 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
                 }
                 break;
             default:
+                if (currentType == ContentType::RawStringPrefix)
+                    delimiter += ch;
                 s+=ch;
             }
             pos++;
