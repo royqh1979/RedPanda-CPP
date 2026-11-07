@@ -471,6 +471,20 @@ void TestCppPreprocessor::test_raw_string_basic()
                 "int y; // also kept"}));
 }
 
+void TestCppPreprocessor::test_raw_string_delimiter()
+{
+    // PINNED (suspect, phase 0.5 review): the custom delimiter is never
+    // recorded either, so a delimited raw string also never terminates
+    // (see test_raw_string_basic).
+    QStringList text{
+        "const char* s = R\"delim(a ) still)delim\"; // c",
+        "int y;"};
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({
+                "const char* s = R\"delim(a ) still)delim\"; // c",
+                "int y;"}));
+}
+
 void TestCppPreprocessor::test_raw_string_with_comment_markers()
 {
     // Comment-looking text inside a raw string is not a comment.
@@ -575,6 +589,22 @@ void TestCppPreprocessor::test_token_paste_edges()
     p.addHardDefineByLine("#define Q(a) a##");
     QCOMPARE(p.expandMacros("P(x)"), "x");
     QCOMPARE(p.expandMacros("Q(x)"), "x");
+}
+
+void TestCppPreprocessor::test_token_paste_chain()
+{
+    // Consecutive '##' operators chain the arguments together.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define CAT3(a,b,c) a##b##c");
+    QCOMPARE(p.expandMacros("CAT3(x,y,z)"), "xyz");
+}
+
+void TestCppPreprocessor::test_named_args_with_varargs()
+{
+    // Named parameters and __VA_ARGS__ can be mixed.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define LOG(fmt, ...) printf(fmt, __VA_ARGS__)");
+    QCOMPARE(p.expandMacros("LOG(\"%d\", 1)"), "printf(\"%d\", 1)");
 }
 
 void TestCppPreprocessor::test_args_comma_in_parens()

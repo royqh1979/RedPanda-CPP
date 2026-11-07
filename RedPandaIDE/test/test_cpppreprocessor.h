@@ -40,6 +40,7 @@ private slots:
     void test_char_literals();
     void test_quote_inside_comment();
     void test_raw_string_basic();
+    void test_raw_string_delimiter();
     void test_raw_string_with_comment_markers();
     void test_raw_string_multiline();
     void test_raw_string_after_identifier();
@@ -49,6 +50,8 @@ private slots:
     void test_stringize_with_spaces();
     void test_stringize_escaping();
     void test_token_paste_edges();
+    void test_token_paste_chain();
+    void test_named_args_with_varargs();
     void test_args_comma_in_parens();
     void test_args_comma_in_template_angle();
     void test_empty_args();

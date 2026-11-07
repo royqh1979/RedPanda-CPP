@@ -29,6 +29,8 @@ private slots:
     void test_ignored_directives();
     void test_include_order_quote();
     void test_include_order_angle();
+    void test_include_in_false_branch();
+    void test_has_include();
     // group F: incremental / registry behavior
     void test_reprocess_same_instance();
     void test_reprocess_after_remove_scanned();
