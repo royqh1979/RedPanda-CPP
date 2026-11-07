@@ -624,12 +624,26 @@ void TestCppPreprocessor::test_args_comma_in_parens()
 
 void TestCppPreprocessor::test_args_comma_in_template_angle()
 {
-    // PINNED (known deviation from the standard): angle brackets are not
-    // tracked when splitting macro arguments, so a comma inside template
-    // arguments splits the parameter and the extra argument is dropped.
+    // Consistent with real compilers, an invocation whose argument count
+    // does not match the parameter list is ill-formed and left
+    // unexpanded (angle brackets do not group macro arguments, so the
+    // call below has 3 arguments for 2 parameters; extra arguments were
+    // once silently dropped, producing garbage).
     CppPreprocessor p;
     p.addHardDefineByLine("#define F(a,b) a+b");
-    QCOMPARE(p.expandMacros("F(std::pair<int,int>, 3)"), "std::pair<int+int>");
+    QCOMPARE(p.expandMacros("F(std::pair<int,int>, 3)"), "F(std::pair<int,int>, 3)");
+    QCOMPARE(p.expandMacros("F(1)"), "F(1)");
+    QCOMPARE(p.expandMacros("F(1,2)"), "1+2");
+}
+
+void TestCppPreprocessor::test_zero_param_macro()
+{
+    // A zero-parameter macro invoked with empty parentheses expands;
+    // non-empty parentheses are a mismatch and stay unexpanded.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define Z() 42");
+    QCOMPARE(p.expandMacros("Z()"), "42");
+    QCOMPARE(p.expandMacros("Z(1)"), "Z(1)");
 }
 
 void TestCppPreprocessor::test_empty_args()

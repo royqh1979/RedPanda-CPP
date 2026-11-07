@@ -771,9 +771,14 @@ QString CppPreprocessor::expandMacro(QString &text, const PDefine &define, int &
             if (level==0) {
                 argEnd = i-2;
                 QString args = text.mid(argStart,argEnd-argStart+1).trimmed();
-                QString formattedValue = expandFunctionLikeMacro(define,args,macrosToBeIgnored);
-                macrosUsed.insert(define->name);
-                return formattedValue;
+                bool expandOk = true;
+                QString formattedValue = expandFunctionLikeMacro(define,args,macrosToBeIgnored,expandOk);
+                if (expandOk) {
+                    macrosUsed.insert(define->name);
+                    return formattedValue;
+                }
+                // argument count mismatch (ill-formed invocation, real
+                // compilers reject it): leave the call unexpanded
             }
         }
         mIndex = oldIndex;
@@ -1618,8 +1623,18 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                                         p++;
                                     }
                                 }
-                                insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored);
+                                bool expandOk = true;
+                                insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored, expandOk);
                                 searchPos++; //skip ')'
+                                if (!expandOk) {
+                                    // argument count mismatch (ill-formed
+                                    // invocation): keep the call unexpanded
+                                    newLine += name;
+                                    newLine += '(';
+                                    newLine += args;
+                                    newLine += ')';
+                                    continue;
+                                }
                             } else {
                                 line = "";// ill-formed
                                 break;
@@ -1696,8 +1711,9 @@ bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
     return false;
 }
 
-QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &args, const QSet<QString> &macrosToBeIgnored) const
+QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &args, const QSet<QString> &macrosToBeIgnored, bool &ok) const
 {
+    ok = true;
     // Replace function by this string
     QString result = define->formatValue;
 //    if (args.startsWith('(') && args.endsWith(')')) {
@@ -1706,6 +1722,12 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
 //    }
 
     if (define->argUsed.length()==0) {
+        // zero-parameter macro: only an empty argument list matches
+        // (real compilers reject others, e.g. Z(1) for #define Z() ...)
+        if (!args.trimmed().isEmpty()) {
+            ok = false;
+            return QString();
+        }
         result = define->formatValue;
     } else {
         QStringList argValues;
@@ -1748,20 +1770,21 @@ QString CppPreprocessor::expandFunctionLikeMacro(PDefine define, const QString &
             i++;
         }
         argValues.append(args.mid(lastSplit,i-lastSplit));
-#ifdef QT_DEBUG
-        if (
-                (define->varArgIndex==-1 && argValues.length() != define->argUsed.length())
-                || (define->varArgIndex!=-1 && argValues.length() < define->argUsed.length()-1)
-                ) {
-            qDebug()<<"*** Expand Macro error ***";
-            qDebug()<<"Macro: "<<define->name<<define->args;
-            qDebug()<<"Actual param: "<<args;
-            qDebug()<<"Params splitted: "<<argValues;
-            qDebug()<<"**********";
+        // Consistent with real compilers, the argument count must match
+        // the parameter list (variadic macros accept the named count or
+        // more); otherwise the invocation is ill-formed and left
+        // unexpanded.
+        bool countMatch;
+        if (define->varArgIndex == -1) {
+            countMatch = (argValues.length() == define->argUsed.length());
+        } else {
+            countMatch = (argValues.length() >= define->argUsed.length()-1);
         }
-#endif
-        if (argValues.length() >= define->argUsed.length()
-                && argValues.length()>0) {
+        if (!countMatch) {
+            ok = false;
+            return QString();
+        }
+        {
             QStringList varArgs;
             for (int argIdx=0;argIdx<argValues.length();argIdx++) {
                 QString argValue = argValues[argIdx];

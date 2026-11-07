@@ -55,6 +55,7 @@ private slots:
     void test_named_args_with_varargs();
     void test_args_comma_in_parens();
     void test_args_comma_in_template_angle();
+    void test_zero_param_macro();
     void test_empty_args();
     void test_empty_varargs();
     void test_chain_rescan_object_to_function();
