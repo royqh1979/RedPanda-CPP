@@ -58,6 +58,20 @@ private slots:
     void test_redefine_overwrites();
     void test_empty_body_macro();
     void test_macro_word_boundaries();
+    // group D: conditional directives
+    void test_if_undefined_identifier();
+    void test_nested_branches();
+    void test_define_in_false_branch();
+    void test_elif_chain();
+    void test_multiline_macro_call_in_true_branch();
+    void test_multiline_macro_call_in_false_branch();
+    void test_unbalanced_directives();
+    void test_and_or_keywords();
+    void test_char_constant_in_if();
+    void test_elifdef_elifndef_supported();
+    void test_elifdef_elifndef_unsupported();
+    void test_elifdef_cpp23_detection();
+    void test_conditional1_resource();
 private:
     static QStringList filterIncludes(const QStringList& text);
     // Run the full preprocess pipeline over in-memory content

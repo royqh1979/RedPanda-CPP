@@ -661,3 +661,317 @@ void TestCppPreprocessor::test_macro_word_boundaries()
     QCOMPARE(p.expandMacros("N12"), "N12");
     QCOMPARE(p.expandMacros("N N"), "12 12");
 }
+
+void TestCppPreprocessor::test_if_undefined_identifier()
+{
+    // PINNED: undefined identifiers are kept verbatim in the expression,
+    // so evaluation fails and the branch is taken as false. The C
+    // standard requires them to be replaced by 0 (so "UNDEFINED == 0"
+    // should be true).
+    CppPreprocessor p;
+    QCOMPARE(p.evaluateIf("UNDEFINED"), false);
+    QCOMPARE(p.evaluateIf("UNDEFINED == 0"), false);
+    QCOMPARE(p.evaluateIf("!defined(UNDEFINED)"), true);
+}
+
+void TestCppPreprocessor::test_nested_branches()
+{
+    CppPreprocessor p;
+    QStringList result = preprocessContent(p, {
+        "#define A 1",        // 1
+        "#if A",              // 2
+        "int l3;",            // 3
+        "#ifndef B",          // 4
+        "int l5;",            // 5
+        "#if A == 2",         // 6
+        "int l7;",            // 7
+        "#else",              // 8
+        "int l9;",            // 9
+        "#endif",             // 10
+        "int l11;",           // 11
+        "#endif",             // 12
+        "int l13;",           // 13
+        "#endif",             // 14
+        "int l15;"});         // 15
+    QCOMPARE(result, QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "#define A 1",
+                 "",
+                 "int l3;",
+                 "",
+                 "int l5;",
+                 "",
+                 "",
+                 "",
+                 "int l9;",
+                 "",
+                 "int l11;",
+                 "",
+                 "int l13;",
+                 "",
+                 "int l15;"}));
+    PParsedFileInfo fileInfo = p.findFileInfo("/virtual/main.cpp");
+    QVERIFY(fileInfo);
+    QVERIFY(fileInfo->isLineVisible(3));
+    QVERIFY(!fileInfo->isLineVisible(6));
+    // PINNED (suspect, phase 0.5 review): removeCurrentBranch records the
+    // visibility restore at mIndex while setCurrentBranch uses mIndex+1,
+    // so visibility comes back one line early and the last content line
+    // of a false branch (line 7 here) is reported visible even though it
+    // was preprocessed away. The result content above is correct; only
+    // the branch map (used by the editor to gray out inactive code) is
+    // off by one.
+    QVERIFY(fileInfo->isLineVisible(7));
+    QVERIFY(fileInfo->isLineVisible(9));
+    QVERIFY(fileInfo->isLineVisible(15));
+}
+
+void TestCppPreprocessor::test_define_in_false_branch()
+{
+    CppPreprocessor p;
+    QStringList result = preprocessContent(p, {
+        "#if 0",
+        "#define X 1",
+        "#endif",
+        "#ifdef X",
+        "int yes;",
+        "#else",
+        "int no;",
+        "#endif"});
+    QCOMPARE(result, QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "int no;",
+                 ""}));
+    QVERIFY(!p.getDefine("X"));
+}
+
+void TestCppPreprocessor::test_elif_chain()
+{
+    // Once a branch has been taken, later #elif conditions are not
+    // evaluated at all.
+    CppPreprocessor p;
+    preprocessContent(p, {
+        "#define A 1",
+        "#if A == 1",
+        "#define WIN 1",
+        "#elif A == 2",
+        "#define LOSE2 1",
+        "#elif A == 1",
+        "#define LOSE3 1",
+        "#else",
+        "#define LOSE4 1",
+        "#endif"});
+    QVERIFY(p.getDefine("WIN"));
+    QVERIFY(!p.getDefine("LOSE2"));
+    QVERIFY(!p.getDefine("LOSE3"));
+    QVERIFY(!p.getDefine("LOSE4"));
+}
+
+void TestCppPreprocessor::test_multiline_macro_call_in_true_branch()
+{
+    // A function-like macro call spanning lines consumes the following
+    // lines; the consumed lines become empty lines in the result to keep
+    // the line alignment.
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {
+                 "#define F(x) x+1",
+                 "int a = F(",
+                 "2);",
+                 "int b;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "#define F(x) x+1",
+                 "int a = 2+1;",
+                 "",
+                 "int b;"}));
+}
+
+void TestCppPreprocessor::test_multiline_macro_call_in_false_branch()
+{
+    // In a false branch no macro expansion happens, so the multi-line
+    // call does not disturb anything either.
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {
+                 "#if 0",
+                 "int a = F(",
+                 "2);",
+                 "#endif",
+                 "int b;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "int b;"}));
+}
+
+void TestCppPreprocessor::test_unbalanced_directives()
+{
+    // PINNED (robustness): unbalanced directives must not crash; an
+    // unmatched #endif is a no-op, and a stray #else at top level makes
+    // the following lines invisible.
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {
+                 "int a;",
+                 "#endif",
+                 "int b;",
+                 "#else",
+                 "int c;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "int a;",
+                 "",
+                 "int b;",
+                 "",
+                 ""}));
+}
+
+void TestCppPreprocessor::test_and_or_keywords()
+{
+    CppPreprocessor p;
+    QCOMPARE(p.evaluateIf("1 and 1"), true);
+    QCOMPARE(p.evaluateIf("1 and 0"), false);
+    QCOMPARE(p.evaluateIf("0 or 1"), true);
+    QCOMPARE(p.evaluateIf("0 or 0"), false);
+}
+
+void TestCppPreprocessor::test_char_constant_in_if()
+{
+    // PINNED (suspect, phase 0.5 review): character constants are not
+    // supported in #if expressions (the C standard evaluates 'a' as its
+    // code point, so this should be true).
+    CppPreprocessor p;
+    QCOMPARE(p.evaluateIf("'a' == 97"), false);
+    QCOMPARE(p.evaluateIf("'a'"), false);
+}
+
+void TestCppPreprocessor::test_elifdef_elifndef_supported()
+{
+    // NOTE: the C++23 detection in addDefineByParts uses
+    // QString::toLong() on the whole __cplusplus value, which fails for
+    // real-world values with the 'L' suffix (see
+    // test_elifdef_cpp23_detection). The supported path is only reached
+    // with a suffix-less value.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define __cplusplus 202302");
+    QCOMPARE(preprocessContent(p, {
+                 "#ifdef CPU",
+                 "int a;",
+                 "#elifdef GPU",
+                 "int b;",
+                 "#elifndef RAM",
+                 "int c;",
+                 "#else",
+                 "int d;",
+                 "#endif",
+                 "int e;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "int c;",
+                 "",
+                 "",
+                 "",
+                 "int e;"}));
+}
+
+void TestCppPreprocessor::test_elifdef_cpp23_detection()
+{
+    // PINNED (suspect, phase 0.5 review): the expression evaluator
+    // handles the 'L' suffix in __cplusplus correctly, but the C++23
+    // feature detection (QString::toLong on the whole value) does not,
+    // so with the real-world 'L'-suffixed value #elifdef takes the
+    // degraded no-op path even though the compiler is C++23.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define __cplusplus 202302L");
+    QCOMPARE(p.evaluateIf("__cplusplus >= 202302L"), true);
+    QCOMPARE(preprocessContent(p, {
+                 "#ifdef CPU",
+                 "int a;",
+                 "#elifdef GPU",
+                 "int b;",
+                 "#elifndef RAM",
+                 "int c;",
+                 "#else",
+                 "int d;",
+                 "#endif",
+                 "int e;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "int d;",
+                 "",
+                 "int e;"}));
+}
+
+void TestCppPreprocessor::test_elifdef_elifndef_unsupported()
+{
+    // PINNED (suspect, phase 0.5 review): when the compiler predates
+    // C++23, the #elifdef/#elifndef handlers do nothing at all - the
+    // branch stack is left untouched, so the enclosing #if branch stays
+    // in effect and a following #else matches that #if instead.
+    CppPreprocessor p;
+    p.addHardDefineByLine("#define __cplusplus 202002L");
+    QCOMPARE(preprocessContent(p, {
+                 "#ifdef CPU",
+                 "int a;",
+                 "#elifdef GPU",
+                 "int b;",
+                 "#elifndef RAM",
+                 "int c;",
+                 "#else",
+                 "int d;",
+                 "#endif",
+                 "int e;"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "int d;",
+                 "",
+                 "int e;"}));
+}
+void TestCppPreprocessor::test_conditional1_resource()
+{
+    // The resource file documents the expected #elifdef/#elifndef
+    // behavior in both modes (see the comments in conditional1.cpp);
+    // the two golden files pin the C++23-supported mode and the
+    // degraded legacy mode. The legacy mode is what real compilers
+    // currently get: the 'L'-suffixed __cplusplus value defeats the
+    // C++23 detection (see test_elifdef_cpp23_detection).
+    QFileInfo info("resources/conditional1.cpp");
+    QString absPath = info.absoluteFilePath();
+    auto run = [&](const QString& cplusplusDefine, const QString& goldenName) {
+        CppPreprocessor p;
+        p.addHardDefineByLine(cplusplusDefine);
+        p.preprocess(absPath);
+        QStringList result = p.result();
+        for (QString& line : result)
+            line.replace(absPath, "<PATH>");
+        QCOMPARE(result, readFileToLines(goldenName));
+    };
+    run("#define __cplusplus 202302", "resources/conditional1-result-cpp23.cpp");
+    run("#define __cplusplus 202002L", "resources/conditional1-result-legacy.cpp");
+}
