@@ -431,12 +431,32 @@ void CppPreprocessor::handleIf(const QString &tokens)
     }
 }
 
+void CppPreprocessor::recordConditionRef(const QString &name) const
+{
+    if (!mIncludeStack.isEmpty())
+        mIncludeStack.back()->conditionRefs.insert(name);
+}
+
+bool CppPreprocessor::isEnvironmentIndependent(const PParsedFileInfo &fileInfo) const
+{
+    PDefineMap ownDefines = mFileDefines.value(fileInfo->fileName());
+    for (const QString& ref : fileInfo->conditionRefs()) {
+        if (mHardDefines.contains(ref))
+            continue;
+        if (ownDefines && ownDefines->contains(ref))
+            continue;
+        return false;
+    }
+    return true;
+}
+
 void CppPreprocessor::handleIfdef(const QString &tokens)
 {
         if (getCurrentBranch()!=BranchResult::isTrue) {
             setCurrentBranch(BranchResult::parentIsFalse);
         } else {
             QString name = tokens.trimmed();
+            recordConditionRef(name);
             setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
 }
@@ -447,6 +467,7 @@ void CppPreprocessor::handleIfndef(const QString &tokens)
         setCurrentBranch(BranchResult::parentIsFalse);
     } else {
         QString name = tokens.trimmed();
+        recordConditionRef(name);
         if (mFileJustOpenned) {
             mFileIncludeOnceToken = name;
         }
@@ -475,6 +496,7 @@ void CppPreprocessor::handleElifdef(const QString &tokens)
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
+            recordConditionRef(name);
             setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
             setCurrentBranch(elseResult);
@@ -490,6 +512,7 @@ void CppPreprocessor::handleElifndef(const QString &tokens)
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
+            recordConditionRef(name);
             setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
             setCurrentBranch(elseResult);
@@ -832,6 +855,17 @@ void CppPreprocessor::openInclude(QString fileName)
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
         }
     }
+    // A file whose conditions depend on the including environment must
+    // be re-scanned at every include point; replaying its recorded
+    // defines would reproduce the branch outcomes of the first scan's
+    // environment.
+    if (mScannedFiles.contains(fileName)
+            && !mFilesCouldRepeatInclude.contains(fileName)
+            && mIncludeStack.size()>0
+            && !isEnvironmentIndependent(fileInfo)) {
+        removeScannedFile(fileName);
+        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+    }
     if (mIncludeStack.size()>0) {
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludeStack) {
@@ -934,6 +968,9 @@ void CppPreprocessor::closeInclude()
     if (mIncludeStack.isEmpty())
         return;
     PParsedFile lastFile = mIncludeStack.back();
+    // merge the condition references gathered during this scan
+    if (!lastFile->conditionRefs.isEmpty())
+        lastFile->fileInfo->addConditionRefs(lastFile->conditionRefs);
     if (mFilesCouldRepeatInclude.contains(lastFile->fileName))
         mFileCache.insert(lastFile->fileName, lastFile->buffer);
     mIncludeStack.pop_back();
@@ -1464,6 +1501,7 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                 }
 
                 PDefine define = getDefine(name.toString());
+                recordConditionRef(name.toString());
                 QString insertValue;
                 if (!define) {
                     insertValue = "0";
@@ -1506,6 +1544,11 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                  // We have found a regular define. Replace it by its value
                 // Does it exist in the database?
                 PDefine define = getDefine(name.toString());
+                // true/false are keywords, not environment dependencies
+                if (define
+                        || (name != QLatin1String("true")
+                            && name != QLatin1String("false")))
+                    recordConditionRef(name.toString());
                 if (!define) {
                     // Per the C++ standard, identifiers that remain after
                     // macro expansion (and defined/__has_include handling)
@@ -1542,6 +1585,20 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                             int argHead=searchPos;
                             if (skipParenthesis(line, searchPos)) {
                                 QString args = line.mid(argHead,searchPos-argHead);
+                                // Arguments of a function-like macro in a
+                                // condition may also reference environment
+                                // macros; record them conservatively.
+                                int p = 0;
+                                while (p < args.length()) {
+                                    if (isMacroIdentStartChar(args[p])) {
+                                        int head = p;
+                                        while (p < args.length() && isWordChar(args[p]))
+                                            p++;
+                                        recordConditionRef(args.mid(head, p-head));
+                                    } else {
+                                        p++;
+                                    }
+                                }
                                 insertValue = expandFunctionLikeMacro(define,args, macrosToBeIgnored);
                                 searchPos++; //skip ')'
                             } else {

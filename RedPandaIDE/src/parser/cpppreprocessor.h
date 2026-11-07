@@ -42,6 +42,7 @@ struct ParsedFile {
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
     PParsedFileInfo fileInfo; // info of this file
+    QSet<QString> conditionRefs; // macro names referenced by evaluated conditions
 };
 
 using PParsedFile = std::shared_ptr<ParsedFile>;
@@ -223,6 +224,14 @@ private:
         return mHardDefines.value(name,PDefine());
     };
     void invalidDefinesInFile(const QString& fileName);
+    // Record a macro name referenced by a condition that is actually
+    // being evaluated (used to decide whether the file's recorded
+    // defines may be safely replayed at other include points).
+    void recordConditionRef(const QString& name) const;
+    // True if every condition reference of the file is satisfied by the
+    // hard defines or the file's own defines, so replaying its recorded
+    // defines reproduces the same branch outcomes at any include point.
+    bool isEnvironmentIndependent(const PParsedFileInfo& fileInfo) const;
 
     void parseArgs(PDefine define);
     static QString escapeStringizedArg(const QString& arg);

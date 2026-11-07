@@ -356,6 +356,11 @@ public:
     QDateTime lastModified() const { return mLastModified; }
     qint64 fileSize() const { return mSize; }
 
+    // Macro names referenced by this file's evaluated conditions;
+    // used to decide whether replaying the recorded defines is safe.
+    void addConditionRefs(const QSet<QString>& refs) { mConditionRefs.unite(refs); }
+    const QSet<QString>& conditionRefs() const { return mConditionRefs; }
+
     QString fileName() const { return mFileName; }
     const StatementMap& statements() const { return mStatements; }
     const QSet<QString>& usings() const { return mUsings; }
@@ -374,6 +379,7 @@ private:
     QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
     QDateTime mLastModified;
     qint64 mSize = -1;
+    QSet<QString> mConditionRefs;
 };
 
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;

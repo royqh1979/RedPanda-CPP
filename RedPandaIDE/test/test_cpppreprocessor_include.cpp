@@ -529,15 +529,21 @@ void TestCppPreprocessorInclude::test_replay_env_dependent()
                  "#include <DIR>/a.cpp:1",
                  "int speed_a = 100;"}));
     p.preprocess(dir + "/b.cpp");
+    // config.h's conditions reference the environment macro USE_FAST, so
+    // it is environment-sensitive and re-scanned at b.cpp's include
+    // point (it was once replayed from the defines recorded under
+    // a.cpp's environment).
     QCOMPARE(normalizedResult(p, dir), QStringList({
                  "#include <DIR>/b.cpp:-1",
                  "#undef USE_FAST",
+                 "#include <DIR>/config.h:-1",
                  "",
-                 "int speed_b = 100;"}));
-    // Correct semantics: with USE_FAST undefined at b.cpp's include
-    // point, re-scanning config.h would yield SPEED 1. The replay cache
-    // returns the stale 100 (pinned; fixed in phase 0.5).
-    QEXPECT_FAIL("", "replay returns stale environment-dependent defines", Continue);
+                 "",
+                 "",
+                 "#define SPEED 1",
+                 "",
+                 "#include <DIR>/b.cpp:1",
+                 "int speed_b = 1;"}));
     QCOMPARE(p.getDefine("SPEED")->value, "1");
 }
 
