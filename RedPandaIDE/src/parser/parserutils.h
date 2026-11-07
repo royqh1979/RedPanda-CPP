@@ -23,6 +23,7 @@
 #include <QDateTime>
 #include <memory>
 #include <functional>
+#include "pptoken.h"
 
 using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 
@@ -61,6 +62,9 @@ struct Define {
     QList<bool> argStringized; // args used with the '#' (stringize) operator
     int varArgIndex;
     QString formatValue; // format template to format values
+    // fields for the pp-token expansion engine (phase 0.6)
+    QStringList paramNames; // parameter names in order ("..." for variadics)
+    ReplTokenList replacementList; // precompiled replacement list
 };
 
 using PDefine = std::shared_ptr<Define>;

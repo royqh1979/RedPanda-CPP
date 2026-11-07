@@ -22,7 +22,7 @@ QString TestPpTokenizer::dumpToken(const PpToken &token)
     }
     return QString("%1%2:%3")
             .arg(kindName)
-            .arg(token.spaceBefore?"+":"")
+            .arg(token.whitespaceBefore.isEmpty()?"":"+")
             .arg(token.text);
 }
 
@@ -144,16 +144,36 @@ QStringList TestPpTokenizer::dumpRepl(const ReplTokenList &entries)
 {
     QStringList result;
     for (const ReplToken& entry : entries) {
+        switch (entry.kind) {
+        case ReplToken::Kind::VarOptBegin:
+            result.append("voB");
+            continue;
+        case ReplToken::Kind::VarOptEnd:
+            result.append("voE");
+            continue;
+        default:
+            break;
+        }
         if (entry.kind == ReplToken::Kind::Text) {
-            result.append(QString("text%1%2:%3")
+            QString kindName;
+            switch (entry.token.kind) {
+            case PpTokenKind::Identifier: kindName = "id"; break;
+            case PpTokenKind::Number: kindName = "num"; break;
+            case PpTokenKind::StringLiteral: kindName = "str"; break;
+            case PpTokenKind::CharLiteral: kindName = "chr"; break;
+            case PpTokenKind::RawStringFragment: kindName = "raw"; break;
+            default: kindName = "pun"; break;
+            }
+            result.append(QString("%1%2%3:%4")
+                          .arg(kindName)
                           .arg(entry.pasteBefore?"##":"")
-                          .arg(entry.spaceBefore?"+":"")
-                          .arg(entry.text));
+                          .arg(entry.token.whitespaceBefore.isEmpty()?"":"+")
+                          .arg(entry.token.text));
         } else {
             result.append(QString("arg%1%2%3:%4")
                           .arg(entry.stringize?"#":"")
                           .arg(entry.pasteBefore?"##":"")
-                          .arg(entry.spaceBefore?"+":"")
+                          .arg(entry.whitespaceBefore.isEmpty()?"":"+")
                           .arg(entry.argIndex));
         }
     }
@@ -177,29 +197,31 @@ void TestPpTokenizer::test_compile_replacement_list()
 {
     // simple substitution
     QCOMPARE(dumpRepl(compileReplacementList("x+1", {"x"})),
-             QStringList({"arg:0", "text:+1"}));
+             QStringList({"arg:0", "pun:+", "num:1"}));
     // paste between two arguments
     QCOMPARE(dumpRepl(compileReplacementList("a ## b", {"a", "b"})),
              QStringList({"arg:0", "arg##:1"}));
     // paste chains
     QCOMPARE(dumpRepl(compileReplacementList("a##b ## c", {"a", "b", "c"})),
              QStringList({"arg:0", "arg##:1", "arg##:2"}));
-    // paste between an argument and text, with spacing preserved
+    // paste between an argument and text, with per-token entries so
+    // identifiers stay re-expandable during rescan
     QCOMPARE(dumpRepl(compileReplacementList(
                           "int fun_##name() { return a; }",
                           {"name", "a"})),
              QStringList({
-                 "text:int fun_", "arg##:0", "text:() { return",
-                 "arg+:1", "text:; }"}));
+                 "id:int", "id+:fun_", "arg##:0",
+                 "pun:(", "pun:)", "pun+:{", "id+:return",
+                 "arg+:1", "pun:;", "pun+:}"}));
     // stringize
     QCOMPARE(dumpRepl(compileReplacementList("#x", {"x"})),
              QStringList({"arg#:0"}));
     // stringize keeps the space before '#'
     QCOMPARE(dumpRepl(compileReplacementList("WORD #__VA_ARGS__", {"..."})),
-             QStringList({"text:WORD", "arg#+:0"}));
+             QStringList({"id:WORD", "arg#+:0"}));
     // a literal '%' in the body is preserved as-is
     QCOMPARE(dumpRepl(compileReplacementList("100% done", {})),
-             QStringList({"text:100% done"}));
+             QStringList({"num:100", "pun:%", "id+:done"}));
     // more than 9 parameters work
     QCOMPARE(dumpRepl(compileReplacementList(
                           "p10", {"p0","p1","p2","p3","p4","p5",
@@ -208,4 +230,12 @@ void TestPpTokenizer::test_compile_replacement_list()
     // leading paste
     QCOMPARE(dumpRepl(compileReplacementList("##a", {"a"})),
              QStringList({"arg##:0"}));
+    // __VA_OPT__ markers
+    QCOMPARE(dumpRepl(compileReplacementList("f() __VA_OPT__(, )", {"..."})),
+             QStringList({"id:f", "pun:(", "pun:)", "voB", "pun:,", "voE"}));
+    // __VA_OPT__ with nested parens in content
+    QCOMPARE(dumpRepl(compileReplacementList(
+                          "__VA_OPT__(call(a, b))", {"..."})),
+             QStringList({"voB", "id:call", "pun:(", "id:a", "pun:,",
+                          "id+:b", "pun:)", "voE"}));
 }

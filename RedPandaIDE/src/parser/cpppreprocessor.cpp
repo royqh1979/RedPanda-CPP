@@ -98,8 +98,14 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     define->formatValue = value;
     define->hardCoded = hardCoded;
     define->varArgIndex = -1;
-    if (!args.isEmpty())
+    if (!args.isEmpty()) {
         parseArgs(define);
+        // fields for the pp-token expansion engine (phase 0.6)
+        define->paramNames = splitMacroParams(
+                define->args.mid(1, define->args.length()-2));
+        define->replacementList = compileReplacementList(
+                define->value, define->paramNames);
+    }
     if (hardCoded) {
         mHardDefines.insert(name,define);
         mDefines.insert(name,define);

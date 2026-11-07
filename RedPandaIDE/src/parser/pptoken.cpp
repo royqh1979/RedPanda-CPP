@@ -26,7 +26,7 @@ PpToken PpTokenizer::makeSimple(PpTokenKind kind, const QString &text) const
     PpToken token;
     token.kind = kind;
     token.text = text;
-    token.spaceBefore = mSpaceBefore;
+    token.whitespaceBefore = mWhitespace;
     return token;
 }
 
@@ -41,7 +41,7 @@ PpToken PpTokenizer::next()
             // boundary and continues on the next line
             mLine++;
             mCol = 0;
-            mSpaceBefore = false;
+            mWhitespace.clear();
             return makeSimple(PpTokenKind::EndOfLine, QString());
         }
         if (mState == State::Raw) {
@@ -59,12 +59,12 @@ PpToken PpTokenizer::next()
                 mState = State::Other;
             }
             PpToken token = makeSimple(PpTokenKind::RawStringFragment, text);
-            mSpaceBefore = false;
+            mWhitespace.clear();
             return token;
         }
-        // accumulate whitespace into the space-before flag
+        // accumulate whitespace
         if (line[mCol] == ' ' || line[mCol] == '\t') {
-            mSpaceBefore = true;
+            mWhitespace += line[mCol];
             mCol++;
             continue;
         }
@@ -107,7 +107,7 @@ PpToken PpTokenizer::next()
         token = makeSimple(PpTokenKind::Punct, QString(ch));
         mCol++;
     }
-    mSpaceBefore = false;
+    mWhitespace.clear();
     return token;
 }
 
@@ -205,8 +205,8 @@ QStringList splitMacroParams(const QString &args)
                 continue;
             }
         }
-        if (hasContent && token.spaceBefore)
-            current += ' ';
+        if (hasContent)
+            current += token.whitespaceBefore;
         current += token.text;
         hasContent = true;
     }
@@ -219,34 +219,53 @@ ReplTokenList compileReplacementList(const QString &value, const QStringList &ar
 {
     ReplTokenList result;
     QVector<PpToken> tokens = tokenizeAll(value);
-    QString pendingText;
-    bool pendingSpaceBefore = false;
     bool pendingStringize = false;
-    bool stringizeSpaceBefore = false;
+    QString stringizeWhitespace;
     bool pendingPaste = false;
-    auto flushText = [&]() {
-        if (pendingText.isEmpty())
-            return;
-        ReplToken entry;
-        entry.kind = ReplToken::Kind::Text;
-        entry.text = pendingText;
-        entry.spaceBefore = pendingSpaceBefore;
-        result.append(entry);
-        pendingText.clear();
-    };
+    int varOptDepth = -1; // >= 0 while inside __VA_OPT__( ... )
     for (const PpToken& token : tokens) {
         if (token.kind == PpTokenKind::Punct && token.text == "#") {
-            flushText();
             pendingStringize = true;
-            stringizeSpaceBefore = token.spaceBefore;
+            stringizeWhitespace = token.whitespaceBefore;
             pendingPaste = false;
             continue;
         }
         if (token.kind == PpTokenKind::Punct && token.text == "##") {
-            flushText();
             pendingPaste = true;
             pendingStringize = false;
             continue;
+        }
+        // __VA_OPT__(content): emits content only when the variadic
+        // arguments are non-empty (C++20)
+        if (token.kind == PpTokenKind::Identifier
+                && token.text == QLatin1String("__VA_OPT__")) {
+            ReplToken entry;
+            entry.kind = ReplToken::Kind::VarOptBegin;
+            result.append(entry);
+            varOptDepth = 0;
+            pendingStringize = false;
+            pendingPaste = false;
+            continue;
+        }
+        if (varOptDepth >= 0 && token.kind == PpTokenKind::Punct) {
+            // inside __VA_OPT__( ... ): watch for the closing paren
+            if (token.text == "(") {
+                varOptDepth++;
+                if (varOptDepth == 1) {
+                    // the opening paren of __VA_OPT__( itself
+                    continue;
+                }
+            } else if (token.text == ")") {
+                varOptDepth--;
+                if (varOptDepth == 0) {
+                    ReplToken entry;
+                    entry.kind = ReplToken::Kind::VarOptEnd;
+                    result.append(entry);
+                    pendingStringize = false;
+                    pendingPaste = false;
+                    continue;
+                }
+            }
         }
         int argIndex = -1;
         if (token.kind == PpTokenKind::Identifier) {
@@ -255,7 +274,6 @@ ReplTokenList compileReplacementList(const QString &value, const QStringList &ar
                 argIndex = argNames.indexOf("...");
         }
         if (argIndex >= 0) {
-            flushText();
             ReplToken entry;
             entry.kind = ReplToken::Kind::Argument;
             entry.argIndex = argIndex;
@@ -263,34 +281,23 @@ ReplTokenList compileReplacementList(const QString &value, const QStringList &ar
             entry.pasteBefore = pendingPaste;
             // a pasted token merges with the previous output, so any
             // whitespace before it is dropped
-            entry.spaceBefore = pendingPaste ? false
-                    : (pendingStringize ? stringizeSpaceBefore
-                                        : token.spaceBefore);
+            entry.whitespaceBefore = pendingPaste ? QString()
+                    : (pendingStringize ? stringizeWhitespace
+                                        : token.whitespaceBefore);
             result.append(entry);
         } else {
-            // plain text; a pending paste is recorded on the entry and
-            // performed at emission time (it may merge an argument's
-            // expansion with this text)
-            if (pendingPaste) {
-                flushText();
-                ReplToken entry;
-                entry.kind = ReplToken::Kind::Text;
-                entry.text = token.text;
-                entry.pasteBefore = true;
-                entry.spaceBefore = false;
-                result.append(entry);
-            } else {
-                if (pendingText.isEmpty()) {
-                    pendingSpaceBefore = token.spaceBefore;
-                } else if (token.spaceBefore) {
-                    pendingText += ' ';
-                }
-                pendingText += token.text;
-            }
+            // every body token becomes its own Text entry, so that
+            // identifiers stay re-expandable during rescan
+            ReplToken entry;
+            entry.kind = ReplToken::Kind::Text;
+            entry.token = token;
+            entry.pasteBefore = pendingPaste;
+            if (pendingPaste)
+                entry.token.whitespaceBefore.clear();
+            result.append(entry);
         }
         pendingStringize = false;
         pendingPaste = false;
     }
-    flushText();
     return result;
 }

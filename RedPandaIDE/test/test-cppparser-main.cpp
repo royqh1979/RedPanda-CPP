@@ -5,6 +5,7 @@
 #include "test_cpppreprocessor_include.h"
 #include "test_cpptokenizer.h"
 #include "test_pptoken.h"
+#include "test_ppexpander.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -60,6 +61,13 @@ int main(int argc, char *argv[]) {
     }
     {
         TestPpTokenizer tc;
+        QString className = tc.metaObject()->className();
+        className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestPpExpander tc;
         QString className = tc.metaObject()->className();
         className = className.split("::").last();
         if (suite == className || suite == "all")

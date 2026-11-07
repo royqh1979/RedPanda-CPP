@@ -130,6 +130,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 - 资源通过 `target_embed_resources`/`target_embed_translations` CMake 辅助函数嵌入，这些集合不手写 `.qrc`。
 - 注释与文档使用英文；新写的注释和文档也请使用英文。
 - 设计文档（`docs/architecture.md`、`docs/qsynedit-design.md`）只描述**现状与约定**，以代码为准；具体修改记录（改名、bug 修复等）写入 git 提交信息，不放进设计文档。提交信息使用英文。
+- **NEWS.md 维护**：完成功能/修复工作时，必须在 `NEWS.md` 当前版本节中面向用户记录变更——新增功能（`enhancement:`）、修复的 bug（`fix:`）、行为变化（`change:`）。只记录已发布/既有版本中就存在的问题修复与新能力；**不记录**本次开发/调试/重构过程中引入又修复的临时问题（那些从未发布）。
 - 特性代码用 `ENABLE_LUA_ADDON`、`ENABLE_SDCC`、`ENABLE_VCS` 宏做条件编译——相应的 `#include` 也要加保护。
 - **lambda/functor 槽的寿命不变式：连接的寿命必须 ≤ 它捕获的每个对象的寿命**。落实为两条机械规则：
   1. `connect()`/`QTimer::singleShot()` 等以 lambda 作槽时必须传入 QObject context 对象（context 析构即断开连接），它约束按值捕获的 `this`/裸指针。无 context 的连接只随 sender 存亡，sender 可能比捕获的对象长寿——案例：todoparser 的 `connect(mThread, finished, [this]{...})`，TodoParser 先析构则 `this` 悬空。

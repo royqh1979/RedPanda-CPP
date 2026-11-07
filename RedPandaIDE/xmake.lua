@@ -91,6 +91,7 @@ target("RedPandaIDE")
         -- parser
         "src/parser/cpppreprocessor.cpp",
         "src/parser/pptoken.cpp",
+        "src/parser/ppexpander.cpp",
         "src/parser/cpptokenizer.cpp",
         "src/parser/parserutils.cpp",
         -- problems

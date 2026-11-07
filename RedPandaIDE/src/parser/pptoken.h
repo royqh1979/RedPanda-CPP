@@ -42,7 +42,7 @@ enum class PpTokenKind {
 struct PpToken {
     PpTokenKind kind = PpTokenKind::EndOfInput;
     QString text;          // exact spelling
-    bool spaceBefore = false; // whitespace preceded this token
+    QString whitespaceBefore; // exact whitespace that preceded the token ("" if none)
 
     bool isWordLike() const {
         return kind == PpTokenKind::Identifier || kind == PpTokenKind::Number;
@@ -82,7 +82,7 @@ private:
     int mCol;
     enum class State { Other, Raw } mState = State::Other;
     QString mRawDelimiter;
-    bool mSpaceBefore = false;
+    QString mWhitespace;
 };
 
 /*
@@ -90,12 +90,13 @@ private:
  * #define; replaces the old formatValue template).
  */
 struct ReplToken {
-    enum class Kind { Text, Argument } kind = Kind::Text;
-    QString text;         // Kind::Text - source spelling
+    enum class Kind { Text, Argument, VarOptBegin, VarOptEnd } kind = Kind::Text;
+    PpToken token;        // Kind::Text - the body token (kind/text/whitespace preserved)
     int argIndex = -1;    // Kind::Argument - index into the parameter list
     bool stringize = false;   // preceded by '#'
     bool pasteBefore = false; // preceded by '##'
-    bool spaceBefore = false;
+    QString whitespaceBefore;   // Kind::Argument - whitespace before the
+                                // parameter (or before '#' when stringized)
 };
 
 using ReplTokenList = QVector<ReplToken>;

@@ -22,6 +22,7 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/cppparser
     src/parser/cpppreprocessor
     src/parser/pptoken
+    src/parser/ppexpander
     src/parser/cpptokenizer
     src/parser/parserutils
     src/parser/statementmodel
@@ -230,6 +231,7 @@ target_qt_plain_cpp(test-editor
     src/parser/cppparser
     src/parser/cpppreprocessor
     src/parser/pptoken
+    src/parser/ppexpander
     src/parser/cpptokenizer
     src/parser/parserutils
     src/parser/statementmodel
@@ -317,6 +319,7 @@ target_qt_plain_cpp(test-cppparser
     src/parser/cppparser
     src/parser/cpppreprocessor
     src/parser/pptoken
+    src/parser/ppexpander
     src/parser/cpptokenizer
     src/parser/parserutils
     src/parser/statementmodel
@@ -329,6 +332,7 @@ target_moc_classes(test-cppparser
     test/test_cpppreprocessor_include
     test/test_cpptokenizer
     test/test_pptoken
+    test/test_ppexpander
 )
 target_include_directories(test-cppparser PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR})
