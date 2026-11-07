@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QSet>
 #include <QVector>
+#include <QDateTime>
 #include <memory>
 #include <functional>
 
@@ -348,6 +349,13 @@ public:
     void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo) { mHandledInheritances.append(classInheritanceInfo); }
     void clearHandledInheritances() { mHandledInheritances.clear(); }
 
+    // Disk stamp of the file when it was scanned (only for files actually
+    // read from disk; content provided through GetFileStreamFunc has no stamp)
+    void setFileStamp(const QDateTime& lastModified, qint64 size) { mLastModified = lastModified; mSize = size; }
+    bool hasFileStamp() const { return mSize >= 0; }
+    QDateTime lastModified() const { return mLastModified; }
+    qint64 fileSize() const { return mSize; }
+
     QString fileName() const { return mFileName; }
     const StatementMap& statements() const { return mStatements; }
     const QSet<QString>& usings() const { return mUsings; }
@@ -364,6 +372,8 @@ private:
     CppScopes mScopes; // int is start line of the statement scope
     QMap<int,bool> mBranches;
     QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
+    QDateTime mLastModified;
+    qint64 mSize = -1;
 };
 
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;

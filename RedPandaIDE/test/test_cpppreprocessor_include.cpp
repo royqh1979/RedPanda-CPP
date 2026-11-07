@@ -608,9 +608,18 @@ void TestCppPreprocessorInclude::test_replay_external_modification()
     QVERIFY(writeFile(tmp.filePath("h.h"),
                     {"#define V 2", "int v2;", "int v2b;"}));
     p.preprocess(tmp.filePath("b.cpp"));
-    // Correct semantics: the mtime change should invalidate the recorded
-    // defines and re-scan the header. The replay cache does not check
-    // (pinned; fixed in phase 0.5).
-    QEXPECT_FAIL("", "replay ignores on-disk modification of scanned files", Continue);
+    // The mtime change invalidates the recorded scan of h.h, so it is
+    // re-scanned (it was once replayed from stale recorded defines).
     QCOMPARE(p.getDefine("V")->value, "2");
+    QStringList bResult = p.result();
+    for (QString& line : bResult)
+        line.replace(tmp.path(), "<DIR>");
+    QCOMPARE(bResult, QStringList({
+                 "#include <DIR>/b.cpp:-1",
+                 "#include <DIR>/h.h:-1",
+                 "#define V 2",
+                 "int v2;",
+                 "int v2b;",
+                 "#include <DIR>/b.cpp:0",
+                 "int b;"}));
 }

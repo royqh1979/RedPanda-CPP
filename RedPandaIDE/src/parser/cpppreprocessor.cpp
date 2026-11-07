@@ -17,6 +17,7 @@
 #include "cpppreprocessor.h"
 
 #include <QFile>
+#include <QFileInfo>
 #include <QDebug>
 #include <QMessageBox>
 #include <QMultiHash>
@@ -820,6 +821,17 @@ void CppPreprocessor::openInclude(QString fileName)
         fileName.squeeze();
         fileInfo = std::make_shared<ParsedFileInfo>(fileName);
     }
+    // Discard the recorded scan if the file changed on disk since then,
+    // so its content (and defines) are re-scanned instead of replayed.
+    if (mScannedFiles.contains(fileName) && fileInfo->hasFileStamp()) {
+        QFileInfo diskInfo(fileName);
+        if (!diskInfo.exists()
+                || diskInfo.lastModified() != fileInfo->lastModified()
+                || diskInfo.size() != fileInfo->fileSize()) {
+            removeScannedFile(fileName);
+            fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+        }
+    }
     if (mIncludeStack.size()>0) {
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludeStack) {
@@ -881,6 +893,8 @@ void CppPreprocessor::openInclude(QString fileName)
                 parsedFile->buffer  = bufferedText;
             } else {
                 parsedFile->buffer = readFileToLines(fileName);
+                QFileInfo diskInfo(fileName);
+                fileInfo->setFileStamp(diskInfo.lastModified(), diskInfo.size());
             }
             combineLinesEndingWithBackslash(parsedFile->buffer);
             replaceCommentsBySpaceChar(parsedFile->buffer);
