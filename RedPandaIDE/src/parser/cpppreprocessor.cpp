@@ -1464,7 +1464,14 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                 // Does it exist in the database?
                 PDefine define = getDefine(name.toString());
                 if (!define) {
-                    newLine += name;
+                    // Per the C++ standard, identifiers that remain after
+                    // macro expansion (and defined/__has_include handling)
+                    // evaluate to 0; true and false evaluate to 1 and 0.
+                    if (name == QLatin1String("true")) {
+                        newLine += "1";
+                    } else {
+                        newLine += "0";
+                    }
                     continue;
                 } else {
                     QSet<QString> macrosToBeIgnored;

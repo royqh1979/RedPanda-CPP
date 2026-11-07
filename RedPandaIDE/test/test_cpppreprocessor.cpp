@@ -694,14 +694,16 @@ void TestCppPreprocessor::test_macro_word_boundaries()
 
 void TestCppPreprocessor::test_if_undefined_identifier()
 {
-    // PINNED: undefined identifiers are kept verbatim in the expression,
-    // so evaluation fails and the branch is taken as false. The C
-    // standard requires them to be replaced by 0 (so "UNDEFINED == 0"
-    // should be true).
+    // Per the C++ standard, identifiers left over after macro expansion
+    // evaluate to 0 (and true/false to 1/0). They were once kept
+    // verbatim, breaking evaluation (e.g. "UNDEFINED == 0" was false).
     CppPreprocessor p;
     QCOMPARE(p.evaluateIf("UNDEFINED"), false);
-    QCOMPARE(p.evaluateIf("UNDEFINED == 0"), false);
+    QCOMPARE(p.evaluateIf("UNDEFINED == 0"), true);
+    QCOMPARE(p.evaluateIf("UNDEFINED == 1"), false);
     QCOMPARE(p.evaluateIf("!defined(UNDEFINED)"), true);
+    QCOMPARE(p.evaluateIf("true"), true);
+    QCOMPARE(p.evaluateIf("false"), false);
 }
 
 void TestCppPreprocessor::test_nested_branches()
