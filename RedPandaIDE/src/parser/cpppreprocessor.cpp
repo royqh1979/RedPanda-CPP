@@ -1464,7 +1464,9 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                             args,
                             mIncludePathList,
                             mProjectIncludePathList);
-                    newLine += (mIncludeStack.front()->fileInfo->including(fileName))?"1":"0";
+                    // __has_include checks whether the file can be found,
+                    // not whether it has already been included.
+                    newLine += fileName.isEmpty()?"0":"1";
                 } else {
                     // ill-formed
                     return "";

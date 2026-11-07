@@ -395,23 +395,23 @@ void TestCppPreprocessorInclude::test_include_in_false_branch()
 
 void TestCppPreprocessorInclude::test_has_include()
 {
-    // PINNED (suspect, phase 0.5 review): __has_include does not check
-    // file existence; it checks whether the root file has ALREADY
-    // included the file (mIncludeStack.front()->fileInfo->including()).
+    // __has_include checks whether the file can be found (it once
+    // reported whether the root file had already included it).
     QString dir = scenarioPath("has_include");
     {
-        // not included yet -> 0 -> the #else branch is taken
+        // the file exists -> 1 -> the #if branch is taken
         CppPreprocessor p;
         QCOMPARE(runScenario(p, dir, "main1.cpp", true), QStringList({
                      "#include <DIR>/main1.cpp:-1",
                      "",
+                     "int yes;",
                      "",
                      "",
-                     "int no;",
                      ""}));
     }
     {
-        // already included above -> 1 -> the #if branch is taken
+        // a nonexistent file -> 0 -> the #else branch is taken
+        // (even though another file was already included)
         CppPreprocessor p;
         QCOMPARE(runScenario(p, dir, "main2.cpp", true), QStringList({
                      "#include <DIR>/main2.cpp:-1",
@@ -419,9 +419,9 @@ void TestCppPreprocessorInclude::test_has_include()
                      "int ah;",
                      "#include <DIR>/main2.cpp:0",
                      "",
-                     "int yes2;",
                      "",
                      "",
+                     "int no2;",
                      ""}));
     }
 }
