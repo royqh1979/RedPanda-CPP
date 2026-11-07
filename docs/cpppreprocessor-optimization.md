@@ -178,6 +178,11 @@ RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → token
 11. **未定义标识符在 `#if` 中不按标准替换为 0**（`test_if_undefined_identifier`）：保留原名导致求值失败按 false 处理；`UNDEFINED == 0` 应为 true 实得 false。
 12. **`MAX_DEFINE_EXPAND_DEPTH` 死常量**：递归防护实际只靠 ignore 集合（`test_mutual_recursion_function_macros` 钉住防护有效）。
 
+**已知不支持（记录在案，用户确认暂无计划实现）**：
+
+- **二合符（digraphs）**：`<%`、`%>`、`<:`、`:>`（`{`、`}`、`[`、`]`）、`%:`（`#`）、`%:%:`（`##`）。C/C++ 均有效的替代标点，但真实代码使用率≈0（EBCDIC 时代遗产）；全代码库（preprocessor/cpptokenizer/syntaxer）均不处理。若将来实现：指令行识别接受 `%:` 前缀、token 层映射、字符串/字符字面量内豁免。
+- **三字母符（trigraphs）**：`??=`、`??/`、`??'`、`??(`、`??)`、`??!`、`??<`、`??>`、`??-`（`# \ ^ [ ] | { } ~`）。**C++17 与 C23 已从标准删除**，GCC 的 C++ 模式默认忽略；不做。
+
 ### 阶段 0.6 — 宏展开核心重写（pp-token 流式展开器）
 
 **动机**：宏展开实现的别扭是结构性的，补丁无法根治——`formatValue` 模板 + `QString::arg`（衍生出 9 参数上限、宏体内字面 `%` 误替换、`%%` 收尾补丁、`##` 靠占位符相邻拼接等整类问题）；普通行与 `#if` 两套展开引擎行为分叉；防自递归"蓝漆"按位置记录（每次展开整表拷贝+位置平移）；rescan 用字符串替换+回退（O(n²) 且位置簿记脆弱）；`handleBuffer` 跨行突变 `mIndex`。
