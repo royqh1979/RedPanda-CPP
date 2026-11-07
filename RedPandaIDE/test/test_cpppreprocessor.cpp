@@ -321,3 +321,87 @@ QStringList TestCppPreprocessor::filterIncludes(const QStringList &text)
     }
     return result;
 }
+
+QStringList TestCppPreprocessor::preprocessContent(CppPreprocessor &p, const QStringList &lines)
+{
+    p.setOnGetFileStream([&lines](const QString&, QStringList& out){
+        out = lines;
+        return true;
+    });
+    p.preprocess("/virtual/main.cpp");
+    return p.result();
+}
+
+void TestCppPreprocessor::test_combine_backslash_trailing_space()
+{
+    // Current behavior is intentionally lenient: a backslash followed by
+    // trailing spaces still splices the lines (the C standard requires the
+    // backslash to be immediately followed by newline).
+    QStringList text{"abc\\  ", "def"};
+    CppPreprocessor::combineLinesEndingWithBackslash(text);
+    QCOMPARE(text, QStringList({"abcdef", ""}));
+}
+
+void TestCppPreprocessor::test_combine_backslash_multiple()
+{
+    QStringList text{"a\\", "b\\", "c"};
+    CppPreprocessor::combineLinesEndingWithBackslash(text);
+    QCOMPARE(text, QStringList({"abc", "", ""}));
+}
+
+void TestCppPreprocessor::test_combine_backslash_last_line()
+{
+    // Backslash on the last line: nothing to merge with, line kept as-is.
+    QStringList text{"abc\\"};
+    CppPreprocessor::combineLinesEndingWithBackslash(text);
+    QCOMPARE(text, QStringList({"abc\\"}));
+}
+
+void TestCppPreprocessor::test_combine_backslash_in_block_comment()
+{
+    // Line splicing happens before comment removal, so a block comment
+    // split by a line continuation stays intact.
+    QStringList text{"/* com\\", "ment */ int x;"};
+    CppPreprocessor::combineLinesEndingWithBackslash(text);
+    CppPreprocessor::replaceCommentsBySpaceChar(text);
+    QCOMPARE(text, QStringList({"  int x;", ""}));
+}
+
+void TestCppPreprocessor::test_backslash_in_directive_name()
+{
+    // Line splicing happens before directive parsing, so even the directive
+    // name may be split across lines.
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {"#def\\", "ine X 1", "X"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "#define X 1",
+                 "",
+                 "1"}));
+    QCOMPARE(p.getDefine("X")->value, "1");
+}
+
+void TestCppPreprocessor::test_backslash_in_string()
+{
+    CppPreprocessor p;
+    QCOMPARE(preprocessContent(p, {"const char* s = \"ab\\", "c\";"}),
+             QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "const char* s = \"abc\";",
+                 ""}));
+}
+
+void TestCppPreprocessor::test_backslash_result_line_alignment()
+{
+    // Spliced-away lines become empty lines so that result lines stay
+    // aligned with the physical source lines.
+    CppPreprocessor p;
+    QStringList src{"int a;\\", "int b;", "int c;"};
+    QStringList result = preprocessContent(p, src);
+    QCOMPARE(result, QStringList({
+                 "#include /virtual/main.cpp:-1",
+                 "int a;int b;",
+                 "",
+                 "int c;"}));
+    QCOMPARE(result.count(), 1 + src.count());
+}
