@@ -43,9 +43,8 @@ void TestCppPreprocessorInclude::test_basic_include()
 }
 
 QStringList TestCppPreprocessorInclude::runScenario(CppPreprocessor &p, const QString &dir,
-                                                     const QString &mainFile, bool includeOnce)
+                                                     const QString &mainFile)
 {
-    p.setFileOnlyIncludeOnce(includeOnce);
     p.preprocess(dir + "/" + mainFile);
     return normalizedResult(p, dir);
 }
@@ -54,7 +53,7 @@ void TestCppPreprocessorInclude::test_nested_include()
 {
     QString dir = scenarioPath("nested_include");
     CppPreprocessor p;
-    QStringList result = runScenario(p, dir, "main.cpp", true);
+    QStringList result = runScenario(p, dir, "main.cpp");
     QCOMPARE(result, QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "int before;",
@@ -95,15 +94,13 @@ void TestCppPreprocessorInclude::test_include_guard()
         "#include <DIR>/main.cpp:0",
         "",
         "int after;"};
-    for (bool includeOnce : {true, false}) {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", includeOnce), expected);
-        QVERIFY(p.getDefine("GUARD_H"));
-        PParsedFileInfo mainInfo = p.findFileInfo(dir + "/main.cpp");
-        QVERIFY(mainInfo);
-        QCOMPARE(mainInfo->directIncludes(),
-                 QStringList({dir + "/guard.h", dir + "/guard.h"}));
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), expected);
+    QVERIFY(p.getDefine("GUARD_H"));
+    PParsedFileInfo mainInfo = p.findFileInfo(dir + "/main.cpp");
+    QVERIFY(mainInfo);
+    QCOMPARE(mainInfo->directIncludes(),
+             QStringList({dir + "/guard.h", dir + "/guard.h"}));
 }
 
 void TestCppPreprocessorInclude::test_pragma_once()
@@ -117,44 +114,25 @@ void TestCppPreprocessorInclude::test_pragma_once()
         "#include <DIR>/main.cpp:0",
         "",
         "int after;"};
-    for (bool includeOnce : {true, false}) {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", includeOnce), expected);
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), expected);
 }
 
 void TestCppPreprocessorInclude::test_no_guard()
 {
-    // THE behavioral difference between the two include-once modes:
-    // - include-once mode (default): every scanned file is treated as
-    //   include-once, so the second #include just replays defines and
-    //   leaves an empty line;
-    // - parser mode (fileOnlyIncludeOnce=false, what CppParser uses):
-    //   an unguarded header is re-scanned on every #include (correct for
-    //   headers like <cassert> that are meant to be re-includable).
+    // An unguarded header is re-scanned on every #include (correct for
+    // headers like <cassert> that are meant to be re-includable).
     QString dir = scenarioPath("no_guard");
-    {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
-                     "#include <DIR>/main.cpp:-1",
-                     "#include <DIR>/noguard.h:-1",
-                     "int unguarded;",
-                     "#include <DIR>/main.cpp:0",
-                     "",
-                     "int after;"}));
-    }
-    {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", false), QStringList({
-                     "#include <DIR>/main.cpp:-1",
-                     "#include <DIR>/noguard.h:-1",
-                     "int unguarded;",
-                     "#include <DIR>/main.cpp:0",
-                     "#include <DIR>/noguard.h:-1",
-                     "int unguarded;",
-                     "#include <DIR>/main.cpp:1",
-                     "int after;"}));
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
+                 "#include <DIR>/main.cpp:-1",
+                 "#include <DIR>/noguard.h:-1",
+                 "int unguarded;",
+                 "#include <DIR>/main.cpp:0",
+                 "#include <DIR>/noguard.h:-1",
+                 "int unguarded;",
+                 "#include <DIR>/main.cpp:1",
+                 "int after;"}));
 }
 
 void TestCppPreprocessorInclude::test_guard_after_comment()
@@ -175,56 +153,38 @@ void TestCppPreprocessorInclude::test_guard_after_comment()
         "#include <DIR>/main.cpp:0",
         "",
         "int after;"};
-    for (bool includeOnce : {true, false}) {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", includeOnce), expected);
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), expected);
 }
 
 void TestCppPreprocessorInclude::test_guard_after_define()
 {
-    // PINNED: the guard detection requires the guard #ifndef to be the
-    // first preprocessor directive in the file; a leading #define clears
-    // mFileJustOpenned, so in parser mode the guard is NOT detected and
-    // the file is re-scanned on the second #include.
+    // The guard detection requires the guard #ifndef to be the first
+    // preprocessor directive in the file; a leading #define clears
+    // mFileJustOpenned, so the guard is NOT detected and the file is
+    // re-scanned on the second #include. On the re-scan the guard macro
+    // from the first scan is still defined, so the guard body is
+    // skipped after all; only the pre-guard content (#define SOMETHING)
+    // is duplicated.
     QString dir = scenarioPath("guard_after_define");
-    {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
-                     "#include <DIR>/main.cpp:-1",
-                     "#include <DIR>/guard.h:-1",
-                     "#define SOMETHING 1",
-                     "",
-                     "#define GUARD_H",
-                     "int guarded;",
-                     "",
-                     "#include <DIR>/main.cpp:0",
-                     "",
-                     "int after;"}));
-    }
-    {
-        CppPreprocessor p;
-        // On the re-scan the guard macro from the first scan is still
-        // defined, so the guard body is skipped after all; only the
-        // pre-guard content (#define SOMETHING) is duplicated.
-        QCOMPARE(runScenario(p, dir, "main.cpp", false), QStringList({
-                     "#include <DIR>/main.cpp:-1",
-                     "#include <DIR>/guard.h:-1",
-                     "#define SOMETHING 1",
-                     "",
-                     "#define GUARD_H",
-                     "int guarded;",
-                     "",
-                     "#include <DIR>/main.cpp:0",
-                     "#include <DIR>/guard.h:-1",
-                     "#define SOMETHING 1",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "#include <DIR>/main.cpp:1",
-                     "int after;"}));
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
+                 "#include <DIR>/main.cpp:-1",
+                 "#include <DIR>/guard.h:-1",
+                 "#define SOMETHING 1",
+                 "",
+                 "#define GUARD_H",
+                 "int guarded;",
+                 "",
+                 "#include <DIR>/main.cpp:0",
+                 "#include <DIR>/guard.h:-1",
+                 "#define SOMETHING 1",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "#include <DIR>/main.cpp:1",
+                 "int after;"}));
 }
 
 void TestCppPreprocessorInclude::test_guard_after_include()
@@ -245,10 +205,8 @@ void TestCppPreprocessorInclude::test_guard_after_include()
         "#include <DIR>/main.cpp:0",
         "",
         "int after;"};
-    for (bool includeOnce : {true, false}) {
-        CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main.cpp", includeOnce), expected);
-    }
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), expected);
 }
 
 void TestCppPreprocessorInclude::test_include_via_macro()
@@ -256,7 +214,7 @@ void TestCppPreprocessorInclude::test_include_via_macro()
     // The include operand may be produced by macro expansion.
     QString dir = scenarioPath("include_via_macro");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "#define HEADER \"dep.h\"",
                  "#include <DIR>/dep.h:-1",
@@ -267,20 +225,28 @@ void TestCppPreprocessorInclude::test_include_via_macro()
 
 void TestCppPreprocessorInclude::test_recursive_include()
 {
-    // Mutually recursive includes are stopped by the include stack
-    // (no infinite loop); the recursive include line stays empty.
+    // An unguarded include cycle is processed like real compilers do:
+    // the files are re-entered on the stack, bounded by the nesting
+    // depth cap (set low here to keep the test small).
     QString dir = scenarioPath("recursive_include");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
-                 "#include <DIR>/main.cpp:-1",
-                 "#include <DIR>/a.h:-1",
-                 "#include <DIR>/b.h:-1",
-                 "",
-                 "int in_b;",
-                 "#include <DIR>/a.h:0",
-                 "int in_a;",
-                 "#include <DIR>/main.cpp:0",
-                 "int after;"}));
+    p.setMaxIncludeNestingDepth(5);
+    QStringList result = runScenario(p, dir, "main.cpp");
+    int inA = 0, inB = 0;
+    bool sawAfter = false;
+    for (const QString& line : result) {
+        if (line == "int in_a;")
+            inA++;
+        if (line == "int in_b;")
+            inB++;
+        if (line == "int after;")
+            sawAfter = true;
+    }
+    // main(1) -> a.h(2) -> b.h(3) -> a.h(4) -> b.h(5): each file is
+    // scanned twice before the cap stops the cycle.
+    QCOMPARE(inA, 2);
+    QCOMPARE(inB, 2);
+    QVERIFY(sawAfter);
 }
 
 void TestCppPreprocessorInclude::test_include_nonexistent()
@@ -288,7 +254,7 @@ void TestCppPreprocessorInclude::test_include_nonexistent()
     // A missing include file is silently skipped.
     QString dir = scenarioPath("include_nonexistent");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "int after;"}));
@@ -302,7 +268,7 @@ void TestCppPreprocessorInclude::test_include_next()
     CppPreprocessor p;
     p.addIncludePath(dir + "/dirA");
     p.addIncludePath(dir + "/dirB");
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "#include <DIR>/dirA/x.h:-1",
                  "#include <DIR>/dirB/x.h:-1",
@@ -319,7 +285,7 @@ void TestCppPreprocessorInclude::test_undef_external()
     // working define set (and is recorded for invalidation restore).
     QString dir = scenarioPath("undef_external");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "#include <DIR>/def.h:-1",
                  "#define X 1",
@@ -335,7 +301,7 @@ void TestCppPreprocessorInclude::test_ignored_directives()
     // are silently ignored.
     QString dir = scenarioPath("ignored_directives");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "",
@@ -353,7 +319,7 @@ void TestCppPreprocessorInclude::test_include_order_quote()
     CppPreprocessor p;
     p.addIncludePath(dir + "/sys");
     p.addProjectIncludePath(dir + "/proj");
-    QCOMPARE(runScenario(p, dir, "main_quote.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main_quote.cpp"), QStringList({
                  "#include <DIR>/main_quote.cpp:-1",
                  "#include <DIR>/shared.h:-1",
                  "int from_local;",
@@ -369,7 +335,7 @@ void TestCppPreprocessorInclude::test_include_order_angle()
     CppPreprocessor p;
     p.addIncludePath(dir + "/sys");
     p.addProjectIncludePath(dir + "/proj");
-    QCOMPARE(runScenario(p, dir, "main_angle.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main_angle.cpp"), QStringList({
                  "#include <DIR>/main_angle.cpp:-1",
                  "#include <DIR>/proj/shared.h:-1",
                  "int from_project;",
@@ -383,7 +349,7 @@ void TestCppPreprocessorInclude::test_include_in_false_branch()
     // defines, and no file info is recorded for it.
     QString dir = scenarioPath("include_in_false_branch");
     CppPreprocessor p;
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "",
@@ -391,6 +357,108 @@ void TestCppPreprocessorInclude::test_include_in_false_branch()
                  "int after;"}));
     QVERIFY(!p.getDefine("FROM_A"));
     QVERIFY(!p.findFileInfo(dir + "/a.h"));
+}
+
+void TestCppPreprocessorInclude::test_recursive_include_env_sensitive()
+{
+    // x.h is environment-sensitive and cycles with y.h (x -> y -> x).
+    // The cycle is processed like compilers do, bounded by the depth
+    // cap; the on-stack re-scan must not invalidate the outer scan's
+    // recorded file info (that once crashed the parser).
+    QString dir = scenarioPath("env_recursive");
+    CppPreprocessor p;
+    p.setMaxIncludeNestingDepth(5);
+    QStringList result = runScenario(p, dir, "main.cpp");
+    int inX = 0, inY = 0;
+    for (const QString& line : result) {
+        if (line == "int in_x;")
+            inX++;
+        if (line == "int in_y;")
+            inY++;
+    }
+    // main(1) -> x.h(2) -> y.h(3) -> x.h(4) -> y.h(5): each scanned twice
+    QCOMPARE(inX, 2);
+    QCOMPARE(inY, 2);
+    QVERIFY(!p.getDefine("FROM_X"));
+    QVERIFY(p.findFileInfo(dir + "/x.h"));
+    QVERIFY(p.findFileInfo(dir + "/y.h"));
+    QVERIFY(p.findFileInfo(dir + "/main.cpp"));
+}
+
+void TestCppPreprocessorInclude::test_env_sensitive_included_twice()
+{
+    // Regression: x.h is environment-sensitive, first included via a.h
+    // (which makes it transitively included by main), then directly by
+    // main. At the second include point it is invalidated for the
+    // re-scan - but the "already included" shortcut then dropped it
+    // without re-inserting its file info (crashing the parser later).
+    QString dir = scenarioPath("env_twice");
+    CppPreprocessor p;
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
+                 "#include <DIR>/main.cpp:-1",
+                 "#include <DIR>/a.h:-1",
+                 "#include <DIR>/x.h:-1",
+                 "",
+                 "",
+                 "",
+                 "int x_content;",
+                 "#include <DIR>/a.h:0",
+                 "int a_content;",
+                 "#include <DIR>/main.cpp:0",
+                 "#include <DIR>/x.h:-1",
+                 "",
+                 "",
+                 "",
+                 "int x_content;",
+                 "#include <DIR>/main.cpp:1",
+                 "int after;"}));
+    QVERIFY(!p.getDefine("FROM_X"));
+    QVERIFY(p.findFileInfo(dir + "/x.h"));
+    QVERIFY(p.findFileInfo(dir + "/a.h"));
+    QVERIFY(p.findFileInfo(dir + "/main.cpp"));
+}
+
+void TestCppPreprocessorInclude::test_depth_bounded_iteration()
+{
+    // Depth-bounded intentional cycles (Boost-iteration style) terminate
+    // by branch evaluation and work like real compilers: in parser mode
+    // the unguarded file is re-entered on the stack until the pattern
+    // converges by itself.
+    QString dir = scenarioPath("iter_cycle");
+    CppPreprocessor p;
+    QStringList result = runScenario(p, dir, "main.cpp");
+    int markerCount = 0;
+    for (const QString& line : result) {
+        if (line == "int iter_marker;")
+            markerCount++;
+    }
+    QCOMPARE(markerCount, 4);
+    QVERIFY(p.getDefine("ITER_DONE"));
+    QVERIFY(p.getDefine("ITER_1"));
+    QVERIFY(p.getDefine("ITER_2"));
+    QVERIFY(p.getDefine("ITER_3"));
+}
+
+void TestCppPreprocessorInclude::test_cycle_depth_cap()
+{
+    // An unconditional include cycle (a user error) is bounded by the
+    // nesting depth cap instead of looping forever: real compilers
+    // recurse to a limit and error out, we skip the include at the cap.
+    QString dir = scenarioPath("true_cycle");
+    CppPreprocessor p;
+    p.setMaxIncludeNestingDepth(3);
+    QStringList result = runScenario(p, dir, "main.cpp");
+    int sCount = 0;
+    bool sawAfter = false;
+    for (const QString& line : result) {
+        if (line == "int s;")
+            sCount++;
+        if (line == "int after;")
+            sawAfter = true;
+    }
+    // main(1) -> self(2) -> self(3): the cap allows two scans of self.h
+    QCOMPARE(sCount, 2);
+    QVERIFY(sawAfter);
 }
 
 void TestCppPreprocessorInclude::test_has_include()
@@ -401,7 +469,7 @@ void TestCppPreprocessorInclude::test_has_include()
     {
         // the file exists -> 1 -> the #if branch is taken
         CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main1.cpp", true), QStringList({
+        QCOMPARE(runScenario(p, dir, "main1.cpp"), QStringList({
                      "#include <DIR>/main1.cpp:-1",
                      "",
                      "int yes;",
@@ -413,7 +481,7 @@ void TestCppPreprocessorInclude::test_has_include()
         // a nonexistent file -> 0 -> the #else branch is taken
         // (even though another file was already included)
         CppPreprocessor p;
-        QCOMPARE(runScenario(p, dir, "main2.cpp", true), QStringList({
+        QCOMPARE(runScenario(p, dir, "main2.cpp"), QStringList({
                      "#include <DIR>/main2.cpp:-1",
                      "#include <DIR>/a.h:-1",
                      "int ah;",
@@ -434,9 +502,9 @@ void TestCppPreprocessorInclude::test_reprocess_same_instance()
     // file first (see test_reprocess_after_remove_scanned).
     QString dir = scenarioPath("basic_include");
     CppPreprocessor p;
-    QStringList first = runScenario(p, dir, "main.cpp", true);
+    QStringList first = runScenario(p, dir, "main.cpp");
     QVERIFY(!first.isEmpty());
-    QStringList second = runScenario(p, dir, "main.cpp", true);
+    QStringList second = runScenario(p, dir, "main.cpp");
     QCOMPARE(second, QStringList());
     // defines survive the empty replay
     QVERIFY(p.getDefine("foo") == nullptr); // foo is a function, no defines here
@@ -449,9 +517,9 @@ void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
     // lines collapse to empty lines - their parser statements persist).
     QString dir = scenarioPath("basic_include");
     CppPreprocessor p;
-    QStringList first = runScenario(p, dir, "main.cpp", true);
+    QStringList first = runScenario(p, dir, "main.cpp");
     p.removeScannedFile(dir + "/main.cpp");
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), QStringList({
+    QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "int main() { return foo(); }"}));
@@ -459,7 +527,7 @@ void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
     // and reproduces the original result.
     p.removeScannedFile(dir + "/main.cpp");
     p.removeScannedFile(dir + "/a.h");
-    QCOMPARE(runScenario(p, dir, "main.cpp", true), first);
+    QCOMPARE(runScenario(p, dir, "main.cpp"), first);
 }
 
 void TestCppPreprocessorInclude::test_hard_define_restore()
@@ -514,7 +582,6 @@ void TestCppPreprocessorInclude::test_replay_env_dependent()
     // hands b.cpp the defines recorded under a.cpp's environment.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
-    p.setFileOnlyIncludeOnce(false); // parser mode
     p.preprocess(dir + "/a.cpp");
     QCOMPARE(p.getDefine("SPEED")->value, "100");
     QCOMPARE(normalizedResult(p, dir), QStringList({
@@ -553,7 +620,6 @@ void TestCppPreprocessorInclude::test_replay_env_independent()
     // whole session), so replaying it is always correct.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
-    p.setFileOnlyIncludeOnce(false);
     p.addHardDefineByLine("#define __cplusplus 202002L");
     p.preprocess(dir + "/a2.cpp");
     QCOMPARE(p.getDefine("CPP17_OK")->value, "1");
@@ -572,7 +638,6 @@ void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
     // is per-run and starts empty.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
-    p.setFileOnlyIncludeOnce(false);
     p.preprocess(dir + "/a3.cpp");
     QCOMPARE(normalizedResult(p, dir), QStringList({
                  "#include <DIR>/a3.cpp:-1",
@@ -608,7 +673,6 @@ void TestCppPreprocessorInclude::test_replay_external_modification()
     QVERIFY(writeFile(tmp.filePath("a.cpp"), {"#include \"h.h\"", "int a;"}));
     QVERIFY(writeFile(tmp.filePath("b.cpp"), {"#include \"h.h\"", "int b;"}));
     CppPreprocessor p;
-    p.setFileOnlyIncludeOnce(false);
     p.preprocess(tmp.filePath("a.cpp"));
     QCOMPARE(p.getDefine("V")->value, "1");
     QVERIFY(writeFile(tmp.filePath("h.h"),

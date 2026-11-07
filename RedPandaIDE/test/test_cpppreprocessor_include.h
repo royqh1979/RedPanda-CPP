@@ -31,6 +31,10 @@ private slots:
     void test_include_order_angle();
     void test_include_in_false_branch();
     void test_has_include();
+    void test_recursive_include_env_sensitive();
+    void test_env_sensitive_included_twice();
+    void test_depth_bounded_iteration();
+    void test_cycle_depth_cap();
     // group F: incremental / registry behavior
     void test_reprocess_same_instance();
     void test_reprocess_after_remove_scanned();
@@ -51,7 +55,7 @@ private:
     // Preprocess <dir>/<mainFile> in the given include-once mode and
     // return the normalized result lines.
     static QStringList runScenario(CppPreprocessor& p, const QString& dir,
-                                   const QString& mainFile, bool includeOnce);
+                                   const QString& mainFile);
 };
 
 #endif // TEST_CPPPREPROCESSOR_INCLUDE_H

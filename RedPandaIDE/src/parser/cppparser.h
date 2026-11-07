@@ -47,7 +47,6 @@ public:
 
     ~CppParser();
 
-    void setFileOnlyIncludeOnce(bool includeOnce);
     void addHardDefineByLine(const QString& line);
     void addProjectFile(const QString &fileName, bool needScan);
     void addIncludePath(const QString& value);

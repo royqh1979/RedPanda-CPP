@@ -41,7 +41,6 @@ CppPreprocessor::CppPreprocessor()
     mPreprocessorHandlers.insert("pragma",[this](const QString& tokens){ handlePragma(tokens);});
     mParseLocal = true;
     mParseSystem = true;
-    mFileOnlyIncludeOnce = true;
 }
 
 void CppPreprocessor::clear()
@@ -613,35 +612,51 @@ void CppPreprocessor::openInclude(QString fileName)
         fileName.squeeze();
         fileInfo = std::make_shared<ParsedFileInfo>(fileName);
     }
-    // Discard the recorded scan if the file changed on disk since then,
-    // so its content (and defines) are re-scanned instead of replayed.
-    if (mScannedFiles.contains(fileName) && fileInfo->hasFileStamp()) {
-        QFileInfo diskInfo(fileName);
-        if (!diskInfo.exists()
-                || diskInfo.lastModified() != fileInfo->lastModified()
-                || diskInfo.size() != fileInfo->fileSize()) {
+    bool inStack = false;
+    for (PParsedFile& parsedFile : mIncludeStack) {
+        if (parsedFile->fileName == fileName) {
+            inStack = true;
+            break;
+        }
+    }
+    if (inStack) {
+        // A file that is currently being scanned must never be
+        // invalidated or re-scanned out from under itself. Guarded or
+        // include-once files gain nothing by re-entering (their content
+        // is idempotent); unguarded files behave like real compilers
+        // and re-enter, bounded by a nesting depth cap.
+        if (!mFilesCouldRepeatInclude.contains(fileName)
+                || mIncludeStack.count() >= mMaxIncludeNestingDepth)
+            return;
+    } else {
+        // Discard the recorded scan if the file changed on disk since
+        // then, so its content (and defines) are re-scanned instead of
+        // replayed.
+        if (mScannedFiles.contains(fileName) && fileInfo->hasFileStamp()) {
+            QFileInfo diskInfo(fileName);
+            if (!diskInfo.exists()
+                    || diskInfo.lastModified() != fileInfo->lastModified()
+                    || diskInfo.size() != fileInfo->fileSize()) {
+                removeScannedFile(fileName);
+                fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+            }
+        }
+        // A file whose conditions depend on the including environment
+        // must be re-scanned at every include point; replaying its
+        // recorded defines would reproduce the branch outcomes of the
+        // first scan's environment. (The root file is exempt: it is
+        // always preprocessed from scratch anyway.)
+        if (mScannedFiles.contains(fileName)
+                && !mFilesCouldRepeatInclude.contains(fileName)
+                && mIncludeStack.size()>0
+                && !isEnvironmentIndependent(fileInfo)) {
             removeScannedFile(fileName);
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
         }
     }
-    // A file whose conditions depend on the including environment must
-    // be re-scanned at every include point; replaying its recorded
-    // defines would reproduce the branch outcomes of the first scan's
-    // environment.
-    if (mScannedFiles.contains(fileName)
-            && !mFilesCouldRepeatInclude.contains(fileName)
-            && mIncludeStack.size()>0
-            && !isEnvironmentIndependent(fileInfo)) {
-        removeScannedFile(fileName);
-        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
-    }
     if (mIncludeStack.size()>0) {
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludeStack) {
-            if (parsedFile->fileName == fileName) {
-                //prevent recursive including;
-                return;
-            }
             if (parsedFile->fileInfo->including(fileName)) {
                 alreadyIncluded = true;
             }
@@ -652,7 +667,11 @@ void CppPreprocessor::openInclude(QString fileName)
         }
         PParsedFile innerMostFile = mIncludeStack.back();
         innerMostFile->fileInfo->addDirectInclude(fileName);
-        if (alreadyIncluded && !mFilesCouldRepeatInclude.contains(fileName))
+        // Skipping an already-included file is only valid while its
+        // recorded scan is intact; a just-invalidated file must be
+        // re-scanned here, otherwise its file info is lost for good.
+        if (alreadyIncluded && !mFilesCouldRepeatInclude.contains(fileName)
+                && mScannedFiles.contains(fileName))
             return;
         // Backup old position if we're entering a new file
         innerMostFile->index = mIndex;
@@ -727,8 +746,7 @@ void CppPreprocessor::openInclude(QString fileName)
     mFileJustOpenned = true;
     mFileIncludeOnceToken = "";
     //qDebug()<<"+ "<<fileName;
-    if (!mFileOnlyIncludeOnce)
-        mFilesCouldRepeatInclude.insert(fileName);
+    mFilesCouldRepeatInclude.insert(fileName);
 }
 
 
@@ -1735,16 +1753,6 @@ bool CppPreprocessor::evaluateExpression(QString line) const
     if (skipSpaces(line,pos))
         return false;
     return result;
-}
-
-bool CppPreprocessor::fileOnlyIncludeOnce() const
-{
-    return mFileOnlyIncludeOnce;
-}
-
-void CppPreprocessor::setFileOnlyIncludeOnce(bool newFileOnlyIncludeOnce)
-{
-    mFileOnlyIncludeOnce = newFileOnlyIncludeOnce;
 }
 
 

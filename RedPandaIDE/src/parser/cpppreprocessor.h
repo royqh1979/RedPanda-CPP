@@ -77,6 +77,15 @@ public:
     void preprocess(const QString& fileName);
     void stopForParserReset() {mStopForParserReset = true;}
 
+    // Safety net for unconditional include cycles (a user error): real
+    // compilers recurse until a nesting limit and then error out; we
+    // skip the include at this depth instead. Depth-bounded intentional
+    // patterns (Boost-style iteration) terminate by branch evaluation
+    // and never reach it.
+    static constexpr int DEFAULT_MAX_INCLUDE_NESTING_DEPTH = 200;
+    int maxIncludeNestingDepth() const { return mMaxIncludeNestingDepth; }
+    void setMaxIncludeNestingDepth(int depth) { mMaxIncludeNestingDepth = depth; }
+
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
     void addIncludePath(const QString& fileName);
@@ -135,8 +144,6 @@ public:
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
     static void combineLinesEndingWithBackslash(QStringList& text);
     static void replaceCommentsBySpaceChar(QStringList& text);
-    bool fileOnlyIncludeOnce() const;
-    void setFileOnlyIncludeOnce(bool newFileOnlyIncludeOnce);
     bool evaluateIf(const QString& line) const;
     QString expandMacrosInConditioningExpression(QString line) const;
 
@@ -317,7 +324,7 @@ private:
     bool mSupportCPP23;
 
     bool mStopForParserReset;
-    bool mFileOnlyIncludeOnce;
+    int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
 };
