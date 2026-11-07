@@ -1087,12 +1087,19 @@ QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
             }
             i++;
         } else if (ch=='#') {
-            if (token->type!=DefineArgTokenType::Other
-                    && token->type!=DefineArgTokenType::Space) {
+            bool isDSharp = (i+1<value.length()) && (value[i+1]=='#');
+            if (token->type==DefineArgTokenType::Space) {
+                if (!isDSharp) {
+                    // keep whitespace before '#' (stringize)
+                    tokens.append(token);
+                }
+                // whitespace before '##' is dropped (pasting ignores it)
+                token = std::make_shared<DefineArgToken>();
+            } else if (token->type!=DefineArgTokenType::Other) {
                 tokens.append(token);
                 token = std::make_shared<DefineArgToken>();
             }
-            if ((i+1<value.length()) && (value[i+1]=='#')) {
+            if (isDSharp) {
                 i+=2;
                 token->value = "##";
                 token->type = DefineArgTokenType::DSharp;

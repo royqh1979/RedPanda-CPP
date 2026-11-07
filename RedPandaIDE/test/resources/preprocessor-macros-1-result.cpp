@@ -20,8 +20,8 @@ int main()
 	std::cout << "qqq: " << fun_qqq() << '\n';
 	
 	std::cout << 34 << '\n';
-	std::cout << "output: ""million" << '\n'; 
+	std::cout << "output: " "million" << '\n'; 
 	
-	std::cout << "Hello ""World" << '\n';
-	std::cout << "Hello ""WORD World" << '\n';
+	std::cout << "Hello " "World" << '\n';
+	std::cout << "Hello " "WORD World" << '\n';
 }

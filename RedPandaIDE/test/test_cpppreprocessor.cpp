@@ -634,13 +634,12 @@ void TestCppPreprocessor::test_empty_args()
 
 void TestCppPreprocessor::test_empty_varargs()
 {
-    // PINNED (suspect, phase 0.5 review): the space before '#' is lost by
-    // tokenizeValue (the pending Space token is discarded when the '#'
-    // token overwrites it), so the expansion has no space between WORD
-    // and the stringized (empty) argument list.
+    // The space before '#' is kept (stringize); it was once swallowed
+    // by tokenizeValue. Variadic arguments may be empty.
     CppPreprocessor p;
     p.addHardDefineByLine("#define OUTER(...) WORD #__VA_ARGS__");
-    QCOMPARE(p.expandMacros("OUTER()"), "WORD\"\"");
+    QCOMPARE(p.expandMacros("OUTER()"), "WORD \"\"");
+    QCOMPARE(p.expandMacros("OUTER(x)"), "WORD \"x\"");
 }
 
 void TestCppPreprocessor::test_chain_rescan_object_to_function()
