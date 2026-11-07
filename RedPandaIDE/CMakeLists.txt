@@ -323,6 +323,7 @@ target_moc_classes(test-cppparser
     #test
     test/test_cppparser
     test/test_cpppreprocessor
+    test/test_cpppreprocessor_include
     test/test_cpptokenizer
 )
 target_include_directories(test-cppparser PRIVATE
