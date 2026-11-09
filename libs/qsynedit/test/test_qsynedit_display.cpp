@@ -1630,9 +1630,16 @@ void TestQSyneditDisplay::test_wordwrap_boundary_token_painting()
 {
     // regression: with the continuation scan, a token straddling a wrap
     // boundary is painted (clipped) in BOTH segments, and tokens starting
-    // in a later segment are not skipped; check glyph pixels hugging both
-    // sides of every segment boundary. A line comment is ONE token for
-    // the C++ syntaxer, so it straddles several boundaries.
+    // in a later segment are not skipped; check pixels hugging both sides
+    // of every segment boundary. A line comment is ONE token for the C++
+    // syntaxer, so it straddles several boundaries.
+    //
+    // The bundled test font draws every glyph as a solid rectangle
+    // (gen_test_font.py: "tests measure metrics, they never compare
+    // rendered pixels"), so glyph-interior probes must not rely on
+    // texture: assert "glyphs hug the edge" as "some pixel near the edge
+    // differs from the row's fill color". Every row here belongs to the
+    // caret line (line 0), so the fill is the active-line color.
     QSynedit::EditorOptions opts = mEdit->getOptions();
     opts.setFlag(QSynedit::EditorOption::WordWrap, true);
     mEdit->setOptions(opts);
@@ -1643,28 +1650,30 @@ void TestQSyneditDisplay::test_wordwrap_boundary_token_painting()
 
     QImage image = mEdit->grab().toImage().convertToFormat(QImage::Format_ARGB32);
     int h = mEdit->textHeight();
-    int left = mEdit->gutterWidth() + 2;
+    int left = mEdit->textOffset() + 1;
     int probe = 3 * mEdit->charWidth();
+    const QRgb fill = (mEdit->mActiveLineColor.isValid() ? mEdit->mActiveLineColor
+                                                         : mEdit->mBackgroundColor).rgb();
     const WrapLayout &layout = mEdit->wrapLayout(0);
     int rowsToCheck = std::min(segments, mEdit->linesInWindow());
+    auto hasGlyphPixel = [&](int x0, int x1, int y) {
+        for (int x = x0; x < x1; x++)
+            if (image.pixel(x, y) != fill)
+                return true;
+        return false;
+    };
     for (int seg = 0; seg < rowsToCheck; seg++) {
         int y = seg * h + h / 2;
         // the first glyph columns of the segment's row must not be blank
         // (a lost boundary token leaves them empty)
-        QSet<QRgb> leftColors;
-        for (int x = left; x < left + probe; x++)
-            leftColors.insert(image.pixel(x, y));
-        QVERIFY2(leftColors.count() >= 2,
+        QVERIFY2(hasGlyphPixel(left, left + probe, y),
                  qPrintable(QString("segment %1 starts blank").arg(seg)));
         // a non-last segment is full width: glyphs must hug its right edge
         // (the segment's own end, which is narrower than the viewport)
         if (seg + 1 < segments) {
             int segRight = mEdit->textOffset()
                     + (layout.segmentStartXs[seg+1] - layout.segmentStartXs[seg]);
-            QSet<QRgb> rightColors;
-            for (int x = segRight - probe; x < segRight - 1; x++)
-                rightColors.insert(image.pixel(x, y));
-            QVERIFY2(rightColors.count() >= 2,
+            QVERIFY2(hasGlyphPixel(segRight - probe, segRight - 1, y),
                      qPrintable(QString("segment %1 ends blank").arg(seg)));
         }
     }
