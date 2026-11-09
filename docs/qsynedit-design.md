@@ -592,6 +592,27 @@ caret 已是终态。
    `reparseDocument`）立即重绘。Qt 的 `update()` 自动合并，多次 invalidate
    无性能问题。
 
+**批内视图状态意图延迟**（2026-11 修"reformat 后 top pos 复位到文件尾"引入）：
+批内（`mDocument->inUpdate()`）行索引与折叠态都是编辑前的，一切依赖它们的
+视图状态计算**不在批内做**，只记录意图、统一在 `onDocumentContentChanged`
+（树已同步、折叠重扫已落定）兑现一次：
+
+- `setTopLineSegment` 批内只把（按新文档行数钳制过的）line/segment 记入
+  `mPendingTopLine/mPendingTopSegment`；`ensureCaretVisible` 批内只置
+  `StateFlag::EnsureCaretVisible(ForceMiddle)`。兑现顺序：应用 pending 锚点
+  （folded-away 吸附在**这里**做，用的是新折叠态）→ 兑现 ensureCaretVisible
+  → `recalcTopPosFromAnchor`。
+- 关键：pending 锚点是**编辑后坐标**，槽内必须跳过对它的 marker 式平移
+  （`shiftAnchorByChange`）——否则同一坐标被平移两次（全量替换场景：删带把它
+  钳到 0、插入再把它推到文档末行）。caret/选区本就有发起者豁免
+  （`mEditingCount>0`，`endEditing` 故意在信号期间保持不减零），锚点靠 pending
+  机制获得等价语义，两类视图状态规则统一。
+- 无内容变化的批次不发 `contentChanged`：意图由 `endEditing` 末尾兜底冲刷
+  （此时树从未变脏）；`resetEditState`（装载路径）清空 pending 与 flag。
+- 行为边界：非发起视图、以及批内未显式设锚点的发起批次，marker 平移照常，
+  与旧语义一致。回归测试：`test_batch_top_restore`（模拟
+  `Editor::replaceContent`）、`test_batch_ensure_caret_visible_flush`。
+
 **ChangeSet 累积规则**（`Document::recordChange`，`document.cpp`）：
 
 - 原语在批次内按序记录 `(kind, line, count)`（`DocumentChangeKind`：

@@ -677,6 +677,11 @@ private:
     // sub-pixel offset; clamps to the scroll range and re-derives the
     // anchor if clamped
     void recalcTopPosFromAnchor();
+    // apply a mid-batch setTopLineSegment intent recorded in
+    // mPendingTopLine/mPendingTopSegment. Only valid when the row index
+    // is current again (onDocumentContentChanged, or the no-change-batch
+    // flush in endEditing)
+    void applyPendingTopAnchor();
     // window row of (line, segment) relative to the anchor, walked from it
     // (exact under any mapping state, no row-index query). Capped at
     // ±(mLinesInWindow+2): positions outside the window need no repaint,
@@ -948,6 +953,12 @@ private:
     // docs/qsynedit-wordwrap-plan.md)
     int mTopLine = 0;
     int mTopSegment = 0;
+    // mid-batch setTopLineSegment intent: coordinates are already post-edit
+    // while the row index still describes the pre-edit document, so the
+    // assignment waits for onDocumentContentChanged (tree synced) instead of
+    // being marker-shifted there. -1 = no pending intent.
+    int mPendingTopLine = -1;
+    int mPendingTopSegment = 0;
     // set by resetEditState: the pending content replacement (load/clear)
     // is not an edit, so onDocumentContentChanged must not marker-shift
     // the anchor for its change set

@@ -1217,6 +1217,56 @@ void TestQSyneditDisplay::test_set_top_line_segment()
     mEdit->setOptions(opts);
 }
 
+void TestQSyneditDisplay::test_batch_top_restore()
+{
+    // regression (reformat): Editor::replaceContent restores the caret and
+    // the top anchor INSIDE its beginEditing/endEditing batch. Those
+    // coordinates are post-edit while the row index still describes the
+    // pre-edit document, so the batch's own contentChanged must apply the
+    // recorded intent instead of marker-shifting the anchor by the change
+    // set (which flung it to the end of the document)
+    mEdit->loadContent(makeLines(200));
+    int h = mEdit->textHeight();
+    mEdit->setTopLineSegment(50, 0);
+    QCOMPARE(mEdit->mTopLine, 50);
+    QSynedit::CharPos savedCaret{5, 55}; // ch, line; on screen from the top
+    mEdit->setCaretPos(savedCaret);
+
+    QStringList newLines;
+    for (int i = 0; i < 160; i++)
+        newLines << QString("reformatted line %1; int variable%1 = 0;").arg(i);
+    QString newContent = newLines.join('\n');
+
+    mEdit->beginEditing();
+    mEdit->replaceAll(newContent);
+    mEdit->setCaretPos(savedCaret);
+    mEdit->setTopLineSegment(50, 0);
+    mEdit->endEditing();
+
+    QCOMPARE(mEdit->mPendingTopLine, -1);
+    QCOMPARE(mEdit->caretPos().line, savedCaret.line);
+    QCOMPARE(mEdit->caretPos().ch, savedCaret.ch);
+    QCOMPARE(mEdit->mTopLine, 50);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 50 * h);
+}
+
+void TestQSyneditDisplay::test_batch_ensure_caret_visible_flush()
+{
+    // a batch that records a deferred ensureCaretVisible but makes no
+    // document change emits no contentChanged; endEditing must flush it
+    mEdit->loadContent(makeLines(200));
+    mEdit->setTopLineSegment(0, 0);
+    mEdit->beginEditing();
+    mEdit->setCaretPos(QSynedit::CharPos{0, 100}); // far below the window
+    mEdit->endEditing();
+    QCOMPARE(mEdit->mPendingTopLine, -1);
+    QVERIFY(!mEdit->mStateFlags.testFlag(QSynedit::StateFlag::EnsureCaretVisible));
+    QVERIFY(mEdit->mTopLine > 0);
+    QVERIFY(mEdit->mTopLine <= 100);
+    QVERIFY(100 - mEdit->mTopLine < mEdit->mLinesInWindow);
+}
+
 }
 
 #include <random>

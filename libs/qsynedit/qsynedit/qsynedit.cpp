@@ -2412,6 +2412,23 @@ void QSynEdit::endEditing()
         mEditingCount--;
         mDocument->endUpdate();
     }
+    // a batch that produced no document change emits no contentChanged, so
+    // view-state intents recorded mid-batch would sit unconsumed: resolve
+    // them here (the tree was never dirtied; in a nested batch the deferred
+    // ensureCaretVisible re-arms itself and the outer endUpdate consumes it)
+    if (mPendingTopLine >= 0
+            || mStateFlags.testFlag(StateFlag::EnsureCaretVisible)
+            || mStateFlags.testFlag(StateFlag::EnsureCaretVisibleForceMiddle)) {
+        applyPendingTopAnchor();
+        if (mStateFlags.testFlag(StateFlag::EnsureCaretVisible)) {
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisible, false);
+            ensureCaretVisible(false);
+        } else if (mStateFlags.testFlag(StateFlag::EnsureCaretVisibleForceMiddle)) {
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, false);
+            ensureCaretVisible(true);
+        }
+        recalcTopPosFromAnchor();
+    }
     endInternalChanges();
 }
 
@@ -2936,6 +2953,10 @@ void QSynEdit::resetEditState()
     mAnchorResetPending = true;
     mTopLine = 0;
     mTopSegment = 0;
+    mPendingTopLine = -1;
+    mPendingTopSegment = 0;
+    mStateFlags.setFlag(StateFlag::EnsureCaretVisible, false);
+    mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, false);
     mCodeBlocks.clear();
     setModified(false);
     clearUndo();
@@ -3718,6 +3739,15 @@ void QSynEdit::updateLastCaretX()
 
 void QSynEdit::ensureCaretVisible(bool forceToMiddle)
 {
+    if (mDocument->inUpdate()) {
+        // mid-batch the row index still describes the pre-edit document, so
+        // the visibility judgment (and any anchor adjustment it implies)
+        // cannot be made yet: defer to onDocumentContentChanged, where the
+        // tree is current again
+        mStateFlags.setFlag(forceToMiddle ? StateFlag::EnsureCaretVisibleForceMiddle
+                                          : StateFlag::EnsureCaretVisible, true);
+        return;
+    }
     // Make sure Y is visible. Visibility is judged by RETREATING from the
     // caret toward the anchor instead of walking forward from it: mid-batch
     // the row index does not know just-inserted lines yet, so a forward walk
@@ -7898,7 +7928,9 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             scrollbarChanged = true;
             break;
         }
-        if (!mAnchorResetPending)
+        // a pending mid-batch setTopLineSegment intent is already expressed
+        // in post-edit coordinates: marker-shifting it would corrupt it
+        if (mPendingTopLine < 0 && !mAnchorResetPending)
             shiftAnchorByChange(change);
         dirtyFrom = std::min(dirtyFrom, changeFrom);
     }
@@ -7921,6 +7953,18 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
         // endEditing with mEditingCount>0 and its caret/selection are
         // already final): shift the caret/selection marker-style
         shiftCaretAndSelectionByChanges(changes);
+    }
+    // resolve the view-state intents recorded while the row index was
+    // stale (mid-batch setTopLineSegment / ensureCaretVisible): the tree
+    // is current now and the fold rescan above has settled, so all
+    // layout-dependent top-state computation lands on fresh data
+    applyPendingTopAnchor();
+    if (mStateFlags.testFlag(StateFlag::EnsureCaretVisible)) {
+        mStateFlags.setFlag(StateFlag::EnsureCaretVisible, false);
+        ensureCaretVisible(false);
+    } else if (mStateFlags.testFlag(StateFlag::EnsureCaretVisibleForceMiddle)) {
+        mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, false);
+        ensureCaretVisible(true);
     }
     // the anchor was shifted marker-style in the change loop above and the
     // tree is current: re-derive the pixel offset (idempotent with the
@@ -8317,12 +8361,52 @@ void QSynEdit::setTopLineSegment(int line, int segment)
     if (mDocument->count() <= 0) {
         mTopLine = 0;
         mTopSegment = 0;
+        mPendingTopLine = -1;
         setTopPos(0);
         return;
     }
     line = minMax(line, 0, mDocument->count()-1);
+    segment = minMax(segment, 0, wrapSegmentCount(line)-1);
+    if (mDocument->inUpdate()) {
+        // mid-batch the row index still describes the pre-edit document and
+        // the fold states are stale: record the intent and let
+        // onDocumentContentChanged apply it once the tree is current again
+        // (applied coordinates are post-edit, so the marker-style anchor
+        // shift must skip them)
+        mPendingTopLine = line;
+        mPendingTopSegment = segment;
+        return;
+    }
     // a folded-away line has no display position: snap to the fold start
     // (the nearest visible line above; line 0 is never hidden)
+    if (line < mRowIndex.count() && mRowIndex.isHidden(line)) {
+        int prev = mRowIndex.prevVisibleLine(line);
+        line = std::max(prev, 0);
+    }
+    mTopLine = line;
+    mTopSegment = segment;
+    // setTopPos clamps, re-derives the (same) anchor, syncs the scrollbar
+    // and repaints. Under the estimate mapping the pixel value converges
+    // around the fixed anchor as background refinement lands
+    setTopPos(lineSegmentToRow(mTopLine, mTopSegment) * mTextHeight);
+}
+
+void QSynEdit::applyPendingTopAnchor()
+{
+    if (mPendingTopLine < 0)
+        return;
+    int line = mPendingTopLine;
+    int segment = mPendingTopSegment;
+    mPendingTopLine = -1;
+    mPendingTopSegment = 0;
+    if (mDocument->count() <= 0) {
+        mTopLine = 0;
+        mTopSegment = 0;
+        return;
+    }
+    line = minMax(line, 0, mDocument->count()-1);
+    // the tree is current here (unlike the mid-batch call): fold-aware
+    // snapping sees the settled hidden states
     if (line < mRowIndex.count() && mRowIndex.isHidden(line)) {
         int prev = mRowIndex.prevVisibleLine(line);
         line = std::max(prev, 0);
@@ -8330,10 +8414,6 @@ void QSynEdit::setTopLineSegment(int line, int segment)
     segment = minMax(segment, 0, wrapSegmentCount(line)-1);
     mTopLine = line;
     mTopSegment = segment;
-    // setTopPos clamps, re-derives the (same) anchor, syncs the scrollbar
-    // and repaints. Under the estimate mapping the pixel value converges
-    // around the fixed anchor as background refinement lands
-    setTopPos(lineSegmentToRow(mTopLine, mTopSegment) * mTextHeight);
 }
 
 void QSynEdit::setTopPos(int value)
