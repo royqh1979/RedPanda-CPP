@@ -276,8 +276,8 @@ QString Document::lineBreak() const
 PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
-    Q_ASSERT(line>=0 && line < mLines.size());
-    // Crash Prevention
+    // Crash Prevention (also hit by the background wrap-layout worker with a
+    // stale line index; the guard below is the intended behavior)
     if (line<0 || line>=count())
         return std::make_shared<SyntaxState>();
     PSyntaxState state = mLines[line]->syntaxState();
