@@ -424,7 +424,7 @@ void TestQSyneditDisplay::test_paging_wrap_before_ready()
 
 void TestQSyneditDisplay::test_page_up_down()
 {
-    mEdit->loadContent(makeLines(50));
+    mEdit->loadContent(makeLines(200));
     int linesInWindow = mEdit->linesInWindow();
     QVERIFY(linesInWindow > 0 && linesInWindow < 50);
 
@@ -479,7 +479,7 @@ void TestQSyneditDisplay::test_scrollbar_drag_is_pixel_smooth()
 {
     // thumb drags report pixel positions: the top offset must keep the
     // sub-row remainder (content shifts by single pixels)
-    mEdit->loadContent(makeLines(50));
+    mEdit->loadContent(makeLines(200));
     int h = mEdit->textHeight();
     QScrollBar *vsb = mEdit->verticalScrollBar();
     vsb->setValue(10 * h + h / 2);
@@ -585,16 +585,16 @@ void TestQSyneditDisplay::test_wordwrap_caret_display()
         mEdit->setCaretPos(CharPos{start, 1});
         VisualPos coord = mEdit->displayXY();
         QCOMPARE(coord.x, 0);
-        QCOMPARE(coord.row, mEdit->lineSegmentToRow(1, seg));
+        QCOMPARE(coord.y, mEdit->lineSegmentToRow(1, seg) * mEdit->textHeight());
         int end = mEdit->wrapSegmentEndChar(1, seg);
         mEdit->setCaretPos(CharPos{end, 1});
         VisualPos endCoord = mEdit->displayXY();
         // a segment end that is also the next segment's start belongs to
         // the next segment's row; only the line end stays on the same row
         if (seg+1 < layout.segmentStartChars.count())
-            QCOMPARE(endCoord.row, mEdit->lineSegmentToRow(1, seg+1));
+            QCOMPARE(endCoord.y, mEdit->lineSegmentToRow(1, seg+1) * mEdit->textHeight());
         else
-            QCOMPARE(endCoord.row, coord.row);
+            QCOMPARE(endCoord.y, coord.y);
         QVERIFY(endCoord.x >= 0);
         QCOMPARE(mEdit->displayToBufferPos(endCoord), CharPos(end, 1));
     }
@@ -1060,7 +1060,7 @@ void TestQSyneditDisplay::test_edit_shifts_anchor_marker_style()
 {
     // an editing view without an explicit pending top keeps following its
     // content marker-style
-    mEdit->loadContent(makeLines(50));
+    mEdit->loadContent(makeLines(200));
     int h = mEdit->textHeight();
     mEdit->setTopPos(30 * h);
     QCOMPARE(mEdit->mTopLine, 30);
@@ -1101,7 +1101,8 @@ void TestQSyneditDisplay::test_setline_clamps_anchor_segment()
 {
     mEdit->loadContent(QStringList{
         "int main() {",
-        "    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789",
+        QString("    // 一二三四五六七八九十 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789")
+                + QString(300, 'x'),
         "    return 0;",
         "}"});
     QSynedit::EditorOptions opts = mEdit->getOptions();
@@ -1162,7 +1163,7 @@ void TestQSyneditDisplay::test_wrap_batch_recomputes_toppos()
     QStringList lines;
     for (int i = 0; i < 10; i++)
         lines << QString("long line %1: ").arg(i) + QString(300, 'x');
-    lines << makeLines(40);
+    lines << makeLines(200);
     mEdit->loadContent(lines);
     int h = mEdit->textHeight();
 

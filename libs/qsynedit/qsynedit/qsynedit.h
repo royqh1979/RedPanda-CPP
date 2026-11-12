@@ -217,7 +217,7 @@ public:
         return displayXY().x;
     }
     int displayY() const {
-        return displayXY().row;
+        return displayXY().y;
     }
     CharPos caretPos() const {
         return CharPos{caretCh(),caretLine()};

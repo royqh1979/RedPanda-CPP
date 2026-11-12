@@ -1126,7 +1126,7 @@ VisualPos QSynEdit::pixelsToNearestGlyphPos(int x, int y) const
         else
             xpos = glyphStartX(line, glyphIndex);
     }
-    return VisualPos{xpos - segStartX, row};
+    return VisualPos{xpos - segStartX, row * mTextHeight};
 }
 
 VisualPos QSynEdit::pixelsToGlyphPos(int x, int y) const
@@ -1145,63 +1145,54 @@ VisualPos QSynEdit::pixelsToGlyphPos(int x, int y) const
         int glyphIndex = xposToGlyphIndex(line, xpos);
         xpos = glyphStartX(line, glyphIndex);
     }
-    return VisualPos{xpos - segStartX, row};
+    return VisualPos{xpos - segStartX, row * mTextHeight};
 }
 
 QPoint QSynEdit::displayCoordToPixels(const VisualPos &coord) const
 {
     QPoint result;
     result.setX(coord.x + textOffset());
-    result.setY(coord.row * mTextHeight - mTopPos);
+    result.setY(coord.y - mTopPos);
     return result;
 }
 
-/**
- * @brief takes a position in the text and transforms it into
- *  the row and column it appears to be on the screen
- * @param p
- * @return
- */
 VisualPos QSynEdit::bufferToDisplayPos(const CharPos &p) const
 {
     Q_ASSERT(validInDoc(p));
-    VisualPos result {p.ch,p.line};
+    VisualPos result {p.ch, p.line * mTextHeight};
     if (p.line<0)
         return result;
-    // Account for tabs and charColumns
     if (p.line<mDocument->count()) {
+        int row;
         if (mOptions.testFlag(EditorOption::WordWrap)) {
             int segment;
             charToSegmentCoord(p.line, p.ch, segment, result.x);
-            result.row = lineSegmentToRow(p.line, segment);
+            row = lineSegmentToRow(p.line, segment);
         } else {
             result.x = charToGlyphLeft(p.line,p.ch);
-            result.row = lineToRow(result.row);
+            row = lineToRow(p.line);
         }
+        result.y = row * mTextHeight;
     }
     return result;
 }
 
-/**
- * @brief takes a position on screen and transfrom it into position of text
- * @param p
- * @return
- */
 CharPos QSynEdit::displayToBufferPos(const VisualPos &p) const
 {
-    CharPos result{p.x,p.row};
-    if (p.row<0)
-        return result;
+    if (p.y<0)
+        return CharPos{p.x,-1};
+    int row = p.y / mTextHeight;
+    CharPos result{p.x,row};
     if (mOptions.testFlag(EditorOption::WordWrap)) {
         int line, segment;
-        rowToLineSegment(p.row, line, segment);
+        rowToLineSegment(row, line, segment);
         result.line = line;
         if (line < mDocument->count())
             result.ch = segmentCoordToChar(line, segment, p.x);
         return result;
     }
     // Account for code folding
-    result.line = rowToLine(p.row);
+    result.line = rowToLine(row);
     // Account for tabs
     if (result.line < mDocument->count() ) {
         result.ch = xposToGlyphStartChar(result.line,p.x);
@@ -2325,7 +2316,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     mousePos = QCursor::pos();
     mousePos = mapFromGlobal(mousePos);
     coord = pixelsToNearestGlyphPos(mousePos.x(), mousePos.y());
-    coord.row = minMax(coord.row, 0, displayLineCount()-1);
+    coord.y = minMax(coord.y, 0, (displayLineCount()-1) * mTextHeight);
     if (scrollX != 0) {
         int x;
         setLeftPos(leftPos() + scrollX * mMouseSelectionScrollSpeed);
@@ -2340,7 +2331,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         y = yposToRow(0);
         if (scrollY > 0)  // scrolling down?
             y+=mLinesInWindow - 1;
-        coord.row = minMax(y, 0, displayLineCount()-1);
+        coord.y = minMax(y, 0, displayLineCount()-1) * mTextHeight;
     }
     CharPos caret = displayToBufferPos(coord);
     if ((mCaretCh != caret.ch) || (mCaretLine != caret.line)) {
@@ -3158,7 +3149,7 @@ QRect QSynEdit::calculateCaretRect() const
     if (mActiveSelectionMode == SelectionMode::Column) {
         int startRow = lineToRow(std::min(selBegin().line, selEnd().line));
         int endRow = lineToRow(std::max(selBegin().line, selEnd().line));
-        coord.row = startRow;
+        coord.y = startRow * mTextHeight;
         rows = endRow-startRow+1;
     }
     QPoint caretPos = displayCoordToPixels(coord);
@@ -3198,7 +3189,8 @@ void QSynEdit::computeCaret(const QPoint &point)
     int y=point.y();
 
     VisualPos caretNearestPos = pixelsToNearestGlyphPos(x, y);
-    caretNearestPos.row = minMax(caretNearestPos.row, 0, displayLineCount()-1);
+    caretNearestPos.y = minMax(caretNearestPos.y, 0,
+                               (displayLineCount()-1) * mTextHeight);
     setCaretDisplayXY(caretNearestPos, false);
 }
 

@@ -286,7 +286,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 |---|---|---|---|
 | 缓冲区字符位置 | `CharPos{ch, line}`（`types.h`） | 均 **0 基** | 核心约定；`fileBegin()=CharPos{0,0}` |
 | 文档行 | `Document` 全部行接口 | **0 基** | `QSynEdit::validLine`: `line>=0 && line<count()`（`qsynedit.cpp`） |
-| 显示位置 | `VisualPos{x, row}`（`types.h`） | 均 **0 基** | 文档大画布坐标：x 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），row 全局显示行（含窗口外）；`displayLineCount()` 返回**行数**而非末行索引 |
+| 显示位置 | `VisualPos{x, y}`（`types.h`） | 均 **0 基** | 文档大画布的像素坐标：x 画布绝对像素（wrap 下逐段归零=段内相对，no-wrap 即行绝对），y 画布纵向像素（含窗口外）；`displayLineCount()` 返回**行数**而非末行索引 |
 | 滚动偏移 | `leftPos()`/`topPos()` | 像素 | `topPos`/`setTopPos` 为私有像素级入口（滚动条/平滑滚动/undo 用）；对外语义定位用锚点 API（`topLine()`/`topSegment()`/`setTopLineSegment()`） |
 | Gutter 行号显示 | `Gutter::formatLineNumber` | 入参 1 基 | 调用方 `painter.cpp` 传 `line+1`，函数内再加 `lineNumberStart-1`（`gutter.cpp`）——换算分散在两侧，自洽但易误解 |
 | 解析器行号 | token 的 `line` 等 | **0 基** | `Syntaxer::setLine` 直接接收 0 基缓冲区行号（`syntaxer/cpp.cpp`；调用点如 `qsynedit.cpp`），与 `CharPos.line` 一致，跨模块传递无需换算 |
@@ -297,7 +297,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 ### 3.2 命名约定
 
 - `CharPos` 变量/参数命名为 `pos`/`xxxPos`（`startPos`/`endPos`/`blockBegin`/`blockEnd` 等）；`VisualPos` 变量用 `coord`/`pos`；
-- caret 访问器与 `CharPos{ch,line}` 对齐：`caretCh()`/`caretLine()`/`caretPos()`、`setCaretCh()`/`setCaretLine()`/`setCaretPos()`/`setCaretPosCentered()`，成员 `mCaretCh`/`mCaretLine`；`displayX()`/`displayY()`/`displayXY()` 返回 `VisualPos`（成员本就是 `x`/`row`），用 X/Y 命名；
+- caret 访问器与 `CharPos{ch,line}` 对齐：`caretCh()`/`caretLine()`/`caretPos()`、`setCaretCh()`/`setCaretLine()`/`setCaretPos()`/`setCaretPosCentered()`，成员 `mCaretCh`/`mCaretLine`；`displayX()`/`displayY()`/`displayXY()` 返回 `VisualPos`（成员为 `x`/`y`），用 X/Y 命名；
 - `mLastCaretX` 存的是 `displayX()`（glyph 显示列），不是缓冲区 ch；
 - `getWordAtPosition`（RedPandaIDE 侧）的 `p.ch` 是 caret 缝隙索引，语义契约见其声明处注释（`editor.h`）；
 - 禁用匈牙利前缀（`v`/`pt`/`i` 等）和 PascalCase 局部变量。

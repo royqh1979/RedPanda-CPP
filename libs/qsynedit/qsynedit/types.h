@@ -128,14 +128,13 @@ QDataStream &operator>>(QDataStream &in, CharPos &data);
 
 QDebug operator<<(QDebug dbg, const CharPos& data);
 
-// position on the document's display canvas (the whole document as one
-// big image): x is the canvas-absolute pixel x — per-row (segment-relative)
-// under word wrap, line-absolute without it; row is the global display row
-// across all visible segments (folding hides rows; includes rows scrolled
-// off above the viewport)
+// Position on the document's display canvas (the whole document as one
+// big image). Both fields are 0-based canvas pixels and include content
+// scrolled off above the viewport. X is segment-relative under word wrap
+// and line-absolute without it; Y crosses all visible segments.
 struct VisualPos {
-    int x;   // glyph x position in pixels, 0-based
-    int row; // display row, 0-based
+    int x;
+    int y;
 };
 
 enum FontStyle {
