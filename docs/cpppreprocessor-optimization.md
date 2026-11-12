@@ -1,300 +1,140 @@
-# CppPreprocessor 优化计划（正确性优先）
+# CppPreprocessor 跨边界 Replay 设计
 
-> 状态：阶段 0（测试集）、0.5（12 项定性修复）、**0.6（宏展开核心重写）已完成**——pp-token 引擎已全面接管预处理管线并删除旧引擎。分支 `parser-preprocess-opt`。后续：阶段 1（Session/Registry 拆分）、阶段 2（性能基线）、阶段 3（缓存等优化）未开始。本文是计划与设计结论的记录；具体修改记录见 git 提交信息。
+> 当前状态：pp-token 宏展开器已完成并合并到主干；本文的跨边界 replay 重写尚未实现。
+> 正确性优先于性能。任何缓存都必须能证明结果等价，并能通过测试证明缓存确实命中。
 
-## 背景
+## 1. 目标与范围
 
-RedPandaIDE C++ 解析器（`RedPandaIDE/src/parser/`）分 preprocess → tokenize → analysis 三步。本次先做 preprocessor（`cpppreprocessor.cpp/h`）的整体优化。
+预处理管线为 preprocess → tokenize → analysis。本次改造处理：
 
-**原则：不管任何优化，首先保证处理的正确性，然后才是性能。** 测试集完善是第一阶段、是后续一切改动的前置门禁。
+- 单次预处理的 Session 状态与跨轮 Registry 数据分离；
+- include 扫描、replay、include 保护和失效的统一规则；
+- Statement 的实际文件与跨边界祖先双重归属；
+- 文件内容、include 路径解析和 replay 缓存的有界复用。
 
-目标（用户确认）：
+pp-token 宏展开器不在本次重写范围内。
 
-1. 降低重解析延迟（编辑/保存后 reparse）；
-2. 降低首次全量解析耗时（开项目/切编译器）；
-3. 控制内存占用（新增缓存必须有界）；
-4. 先建性能基准，用数据验收，防退化。
+硬性验收条件：边界外用户宏、跨边界包含前缀和文件内容均未变化时，`bits/stdc++.h` 不得因 reparse 被重新扫描。
 
-## 现状评估
+## 2. 术语与生命周期
 
-### 测试覆盖缺口
+- **Session**：一次 `preprocess()` 的临时状态，包括 include 栈、当前行游标、分支栈、当前文件和本轮有序跨边界前缀。每轮从空状态开始。
+- **Registry**：跨 preprocess 轮次保留的数据，包括文件记录、include 闭包、replay 记录、内容缓存和路径配置。
+- **边界外文件**：当前 TU 根文件和项目文件。被编辑器作为根打开的文件始终属于边界外。
+- **边界内文件**：编译器 include 路径中的文件，以及通过 include 路径找到但不属于项目的文件。非项目文件位于项目 include 路径中时仍属于边界内。
+- **跨边界头文件**：由边界外文件直接或经边界外文件链包含进入的边界内文件。直接作为根打开系统文件也视为一次跨边界进入。
+- **跨边界前缀**：本轮 preprocessing 中，跨边界记录生效的完整有序路径序列。重扫和 replay 都会使记录生效；保护导致的 no-op 不会。
+- **用户宏状态**：进入边界时可见的非 hard-defined 宏，包括宏名、参数和替换内容；“未定义”也是状态。编译器或编译参数变化由 IDE reset parser，不在 include 时比较 hard define。
+- **实际文件**：define/declare statement 文本所在文件，可以是边界内子树文件或无保护的 `.tpl`。
+- **跨边界祖先**：使该 statement 在本轮生效的跨边界头文件。边界外 statement 的祖先为空。
 
-- 现有 `test_cpppreprocessor.cpp` 13 个测试：续行（1 例）、注释（1 例）、宏展开（4 个资源文件 + 5 个内联用例）、条件表达式求值。
-- **include 场景测试为零**（没有多文件测试），而后续缓存与 `openInclude` 剪枝正改这里。
-- **`CppParser` 实际运行用 `setFileOnlyIncludeOnce(false)`（cppparser.cpp 构造函数），现有测试全用默认值 `true`**——真实运行模式从未被测。
-- 增量路径（`removeScannedFile`→`invalidDefinesInFile`/`mFileUndefines` 恢复、`addDefinesInFile` 重放）完全未测。
-- `conditional1.cpp` 是死资源（无测试引用，其注释恰好写明 `#elifdef` 降级语义）。
-- `MAX_DEFINE_EXPAND_DEPTH`（cpppreprocessor.h）是死常量，递归防护实际只靠 ignore 集合。
+边界内文件继续包含边界内文件属于系统子树内部包含，不追加跨边界前缀。边界外文件之间的包含也不追加。正常代码不存在边界内→边界外包含；若出现，必须记录诊断并补充测试，不能静默生成错误归属。
 
-### 热点（代码审查结论）
+## 3. 数据归属
 
-- `expandMacros()`——每个活动行都走：逐字符 `word += ch`、逐字符 `newLine += ch`；每次宏展开拷贝整个 `QSet`/`QMultiHash`；`text.replace()` 后回退重扫（宏密集行 O(n²)）。
-- `expandFunctionLikeMacro()`——循环 `QString::arg()` 逐参数全串扫描。
-- `openInclude()`——对 include 栈上每个祖先无条件传播被包含文件的完整传递闭包；祖先已包含该头时闭包必然已建立，可剪枝。
-- `getSystemHeaderFilename()`（parserutils.cpp）——每个 `#include` 对全部 include 路径逐个 `QDir::exists()`（文件系统 stat），无缓存。
-- 文件内容无通用缓存：`mFileCache` 只覆盖单次运行内"可重复 include"的文件；被级联失效的文件每次重读都重新做编码检测（最多 3 趟完整解码）+ 续行合并 + 注释剥离。
+### 3.1 Registry 文件记录
 
-### 结构性结论
+只为以下文件建立独立 replay/fileInfo 记录：
 
-- 项目首解析/新增文件的双重预处理（`sortFilesByIncludeRelations` 预扫后丢弃结果）——**推迟到 CppParser 层测试建立后处理**（改的是 cppparser.cpp 的 parse 流程，超出 preprocessor 单元测试保护范围，用户明确不着急做）。
-- `CppPreprocessor` 单类混杂"单次运行状态机"与"跨次注册表"两层生命周期——本次拆分。
-- `expandMacro` 的 `handleBuffer` 隐式推进 `mIndex`——本次显式化。
-- 结果接口的 `#include file:line` 魔数标记——留待 tokenizer 阶段。
+- 边界外文件；
+- 跨边界头文件。
 
-## 缓存的正确性分析（三种缓存，约束完全不同）
+边界内子树文件不建立独立 replay 记录，而是并入其跨边界祖先的记录。每条记录包含：
 
-### 1. 文件内容缓存（新增，缓存"续行合并+注释剥离后的行表"）——与 `#if` 无关，完全安全
+- 文件名和传递 include 闭包；
+- 进入时的用户宏状态；
+- 本次生效时的有序跨边界前缀；
+- 磁盘文件的 mtime/size；
+- 本次扫描产生的 define/undef；
+- statement 归属及重放所需的信息。
 
-它缓存在状态机扫描**之前**，只是文件文本。`#if` 是扫描行表时才求值的，缓存行表不影响条件判断的正确性。含条件判断的文件一样安全。
+include 闭包用于级联失效；它不是 replay 条件本身。
 
-### 2. 重放缓存（现有机制：`mScannedFiles` + `mFileDefines` + `addDefinesInFile`）——与 `#if` 纠缠，现状比预想更宽
+### 3.2 Statement 位置与归属
 
-`mFilesCouldRepeatInclude` 在 `clearTempResults()` 里被清空，所以**跨 reparse 时连无守卫文件也走重放**（本运行内第一次包含它时已 scanned → 直接 `addDefinesInFile` 跳过重扫）。
+每个 Statement 分别记录声明侧和定义侧的位置与归属：
 
-重放出错的**充要条件**：文件的分支结果依赖**包含点的宏环境**，且首次扫描时的环境与当前包含点环境不同。典型：
+- 声明侧：实际所在文件、跨边界祖先；
+- 定义侧：实际所在文件、跨边界祖先；没有独立定义时定义侧归属为空。
 
-```c
-// config.h
-#ifdef USE_FAST
-#define SPEED 100
-#else
-#define SPEED 1
-#endif
-```
+`fileName`/`definitionFileName` 继续表示声明和定义的实际位置，新增的两侧祖先只用于生命周期管理，不改变跳转的位置语义。
 
-`a.c` 先 `#define USE_FAST` 再 include → 首次扫描记录 SPEED=100；`b.c` 不带定义 include → 标准语义应得 SPEED=1，重放给 SPEED=100（错）。
+定义合并到已有声明时，保留声明侧归属，同时记录定义侧自身的跨边界祖先。两侧可以属于不同记录，失效时必须分别处理：
 
-注意：**共享宏表架构**（所有文件一个 `mDefines`）本身已是 per-TU 语义的近似——有 guard 的文件在重扫路径下也会因 guard 宏已定义而跳过文件体，结果同样是"第一次展开的产物"。所以重放的大部分"错误"是架构近似而非缓存引入；重放真正额外引入的错误是上面的环境依赖分支场景。
+- 定义侧失效：清除定义位置、定义侧祖先和 `HasDefinition`，保留有效声明；
+- 声明侧失效：若定义仍有效，将定义位置同时作为声明位置，并把声明侧祖先设为定义侧祖先；两侧都失效才删除 Statement。
 
-**安全化方案（已按最终实现修订，替代阶段 0.5 的布尔判定初版）：**
+同一实际声明经不同跨边界祖先产生时，必须使用可分别失效的 Statement 实例，不能让多个祖先隐式共享一个只有单一声明侧归属的对象。
 
-1. **快照式重放校验**：分支求值时（`handleIf`/`handleIfdef`/`evaluateIf` 等处）记录每个条件引用在**求值时刻**的宏状态快照（宏名 → 定义签名或"未定义"标记，`ParsedFileInfo::conditionSnapshot`）。重包含时逐个比对当前宏状态：**全部一致才重放**（分支结果必然相同），任一不一致才重扫。
-   - **求值时刻由本文件提供的引用直接豁免**（`define->filename == 当前文件`）——覆盖 libstdc++ 常见的 define-use-undef 特性宏（定义-使用-文件末尾 `#undef`）；这类宏的"定义/未定义"两种状态都是文件每次扫描自己制造的，与环境无关（初版误判它们导致 libstdc++ 头文件被全量重扫）。
-   - **守卫宏经"文件自定义宏"豁免**（`mFileDefines` 机制，覆盖"求值时未定义、扫描中自定义"的守卫模式）。
-   - **带 include 保护的文件（guard / `#pragma once`，记录在 `ParsedFileInfo::includeProtected`）一律重放**：守卫使重包含天然幂等，对它们做失效重扫只会删掉守卫宏、错误地全量重发内容（这正是 stdc++.h 崩溃链的关键一环）。
-   - 跨运行重放错误的**充要条件**因此精确为：无保护文件 + 其条件引用的外部宏状态在新包含点发生了变化。libstdc++ 的配置宏（由其它头文件提供、session 内稳定）全部命中重放；MinGW 的 `__need_wchar_t`、`_mingw_print_push/pop.h` 等真实环境依赖模式仍会正确触发重扫。
-2. **重放的 mtime 校验**：重放前 stat 一次，mtime/size 变了 → `removeScannedFile` + 重扫（解决外部修改/git pull 后解析过期）。
+## 4. 每轮处理流程
 
-**循环包含语义（已按"贴近编译器实际行为"修订）**：guard/`#pragma once` 文件在环上重进是 no-op（直接跳过，与编译器等价）；**无守卫文件在环上按编译器行为重进重扫**（每次内容可能因环境不同而不同），总嵌套深度到上限（默认 200，对齐 GCC，可 `setMaxIncludeNestingDepth` 调整）才跳过兜底；Boost 式深度受限迭代靠分支求值自然收敛，到不了上限。栈上的文件正在扫描，任何失效/重扫操作不得触碰（不变式）。
+### 4.1 开始预处理
 
-**`fileOnlyIncludeOnce` 选项已移除**（证明无用的兼容期遗留）：所有文件都是可重复包含候选；guard/pragma once 经检测移出 could-repeat 集。
+- 创建新的 Session，恢复 hard define。
+- 根文件按边界外文件处理；其上一轮记录先按 Parser 的编辑/失效流程处理。
+- 磁盘文件以 mtime/size 检测外部变化。文件变化后，其自身及所有依赖它的记录均不可靠，必须级联失效。
+- 编辑器提供的内容不以磁盘缓存代替；编辑器修改必须进入现有 invalidate 流程。
 
-### 3. include 解析结果缓存（新增，"名字→路径"映射）——与文件内容无关，存在性校验即可
+### 4.2 include 入口统一顺序
 
-只缓存"`#include <vector>` 解析到哪个路径"。文件内容变了映射依然有效（内容变化由上面两层负责）。**一次 `exists` stat 校验就够，不需要 mtime。** 负结果不缓存（避免"新建文件后找不到"的陈旧结果）。
+每次进入 include 都按以下顺序处理：
 
-### mtime 还是摘要（hash）
+1. 检查 parser reset/stop 状态和最大嵌套深度。深度检查不依赖当前栈是否存在重复文件。
+2. 规范化文件名，确定包含者、被包含者和是否跨边界。
+3. 更新必要的直接/传递 include 关系；保护导致的 no-op 不追加跨边界前缀。
+4. 若磁盘 stamp 变化，先级联失效。当前 include 栈上正在扫描的文件不得被失效。
+5. 若 include guard 或 `#pragma once` 使本次包含成为 no-op，直接跳过；不校验或追加跨边界前缀。
+6. 若存在跨边界记录，比较用户宏状态和当前跨边界前缀：
+   - 完全一致且 include 闭包未失效：replay；
+   - 任一项不同：失效该记录上一轮的 define/undef、statement、fileInfo 和派生缓存，然后重扫。
+7. 无可用记录时正常扫描。
+8. 重扫或 replay 使记录生效后，将完整路径追加到本轮跨边界前缀。
 
-**结论：mtime+size，不要 hash。**
+前缀必须包含 replay 生效的记录；否则首轮记录的前缀在第二轮永远无法匹配。保护 no-op 不能追加，否则“上轮被跳过、本轮首次真正生效”的场景会误命中。
 
-- mtime+size：一次 stat，免读盘——这是缓存的核心收益（免 I/O + 免编码检测）。编辑器保存、git 操作必然更新 mtime；漏判（内容变时间不变）在 IDE 工作流里极罕见；误判失效（touch）无害，只是多重扫一次。
-- hash：算摘要必须先读整个文件——缓存的免 I/O 收益直接被杀掉，只剩"免文本处理"的小头。且 IDE 内部修改本来就有失效路径（编辑器保存 → `invalidateFile` → `removeScannedFile` → 清条目），mtime 只是兜底外部修改。
+### 4.3 Replay 与重扫
 
-## 阶段计划
+- Replay 恢复该记录的 define/undef 和 include 关系，不重新读取或扫描系统子树。
+- 有效记录的 Statement 保留在 StatementMap 中，replay 直接复用，不重复创建。Statement 需要重建即说明记录已失效，必须走重扫。
+- 重扫前必须清除该记录上一轮产物；不能等到扫描后清理，也不能与 Parser 中其它失效合并成一次模糊的全局删除。
+- 同一文件在同一 include 栈中重复出现时，两次包含的宏环境和传递闭包可能不同。不能仅按文件名复用当前栈记录。
+- 无保护文件允许按编译器语义重进；保护文件在环上重进是 no-op。所有路径都受统一嵌套深度上限约束。
 
-### 阶段 0 — 测试集完善（先行，后续一切改动的前置门禁）
+## 5. 失效规则
 
-测试基建：
+文件变化或 replay 校验失败时，失效范围包括：
 
-- 多文件 include 场景：资源文件放 `RedPandaIDE/test/resources/preprocessor/` 子目录（小文件集 + golden，可审查）；
-- `fileOnlyIncludeOnce` true/false 两种模式参数化（QTest `_data` 行）——false 是 parser 真实模式；
-- 每个场景三个层面的断言：`result()` 行序列（golden 对比）、defines 终态（`getDefine()`）、`fileInfo`（includes/directIncludes/branch 可见性）；
-- 补 test-cppparser 的 `--suite=类名` 参数（AGENTS.md 既定要求）。
-
-测试清单：
-
-**A. 行尾 `\` 处理**（`combineLinesEndingWithBackslash`，现有 1 例）
-
-- `\` 后带尾随空白（当前实现宽容——钉住现状）；
-- 连续 3+ 行续行；预处理指令名中间续行（`#def\`+`ine`）；
-- 字符串内续行与续行中的转义；文件末行以 `\` 结尾（无下一行）；
-- CRLF 行尾；续行发生在块注释中间（先合并后剥注释，注释应完整）；
-- 合并产生的空行与 result 行号对齐（result 行数 == 源行数）。
-
-**B. 字符串/字符处理**（`replaceCommentsBySpaceChar` 与 `expandMacros` 的状态机）
-
-- 字符串内 `//`、`/*` 不被当注释；`\"` 不终止字符串；
-- 字符字面量 `'\''`、`'\\'`、多字符字面量；
-- raw string：`R"(...)"`、`R"delim(...)delim"`、跨行、内部孤立的 `)` 不提前终止、内部注释样式文本不剥除；
-- 字符串/字符内的宏名不展开；
-- `R` 与标识符相邻（`FOO R"(x)"`、以 R 结尾的宏名）；
-- `"` 在注释内不开始字符串（状态机交互）。
-
-**C. 宏展开**（现有覆盖不错，补边界）
-
-- `#` 字符串化：含空格的参数、含引号/反斜杠的参数（当前实现疑似不转义——钉住现状后定性）；
-- `##` 在宏体首/尾、连续 `##`；
-- 参数内逗号：括号内不拆（已有）、**模板尖括号内逗号会拆参数**（非标准偏差，钉住）；
-- 空实参 `F(,)`、空 `__VA_ARGS__`；命名参数与 `__VA_ARGS__` 混合；
-- 对象宏→函数宏的链式 rescan；互相递归调用的函数宏（防护仅靠 ignore 集，钉住防护有效）；
-- 同名重定义（覆盖）；空体宏 `#define E`；
-- 展开结果与相邻词的粘合/隔离边界。
-
-**D. 条件判断**（`handleIf` 族 + `evaluateIf` 家族）
-
-- 未定义标识符在 `#if` 中的行为（现状：保留名字→求值失败→false，钉住）；
-- 3+ 层嵌套分支真假组合；假分支内 `#define`/`#include` 不生效；
-- `#elif` 链（首真后后续分支不求值——借 defines 状态断言）；
-- 假分支内函数式宏跨行调用（`mIndex` 不被错误推进）；
-- `#else`/`#endif` 不配对的健壮性（钉住现状）；
-- `and`/`or` 替代关键字（代码已有、无测试）；`__has_include`（代码已有、无测试）；
-- 字符常量在 `#if`（现状不支持——钉住并定性）；
-- `#elifdef/#elifndef`：CPP23 支持与不支持两条路径——启用死资源 `conditional1.cpp`。
-
-**E. 预处理指令与 include（当前测试为零，最大黑洞）**
-
-- 单级/三层嵌套 include：插入位置、`#include file:line` 标记行、行号映射、返回后继续正确行；
-- 重复 include 三种形态：include guard（`#ifndef` 模式，guard 检测 `mFileIncludeOnceToken`）、`#pragma once`、无守卫重扫（defines 重放、内容重复）；
-- guard 检测边界：guard 前有空行/注释/`#include` 时 `mFileJustOpenned` 的翻转行为（钉住）；
-- `#include` 宏计算（`#include PATH_H`）；递归 include A→B→A（栈查重不死循环）；文件不存在静默跳过；`#include_next`；
-- `#undef`：本文件宏、外部文件宏（`mFileUndefines` 机制）；`#error`/`#warning`/`#line`/其它 `#pragma` 忽略不炸；
-- `<>` 与 `""` 的解析顺序（project 路径优先于 compiler 路径）；
-- 行首空白后的 `#`（现状不识别——钉住并定性）。
-
-**F. 增量/注册表行为（为重构与缓存铺路）**
-
-- 同实例 preprocess 两次：第二次走 `addDefinesInFile` 重放路径，结果一致；
-- `removeScannedFile` 后重预处理：defines 清除与 hard define 恢复（`invalidDefinesInFile`）、undef 恢复（`mFileUndefines`）正确；
-- `mOnGetFileStream` 回调路径；
-- `mFileCache` 单次运行内对无守卫重复包含文件的命中（`fileOnlyIncludeOnce=false` 模式）。
-
-**G. 重放正确性（钉住现状中的错误语义，阶段 0.5 修复的依据）**
-
-- **环境依赖头文件**：分支条件引用包含点环境宏的头文件（如 `#ifdef USE_FAST` 的 config.h），在两个不同环境的包含者先后包含时，第二个包含者得到的分支结果——按正确语义写期望（现状重放会给出第一个包含者的结果，测试预期失败，驱动阶段 0.5 修复）；
-- **环境无关头文件**（条件只依赖 hard defines 和自身定义宏，含 guard 宏）：重放结果与重扫一致，长期安全；
-- 无守卫文件跨 reparse 的重放行为（钉住后定性）；
-- 外部修改：文件 mtime 变化后（模拟 git pull/外部编辑器），重放应让位重扫（现状无校验——钉住正确语义，驱动 mtime 校验）。
-
-### 阶段 0.5 — 测试中暴露问题的定性与修复
-
-逐个定性（bug / 已知限制），bug 修复独立提交、先于一切优化。
-
-**阶段 0 已确认的发现**（均有钉住测试，测试名见括号）：
-
-1. **重放缓存不安全（两个 XFAIL）**：
-   - 环境依赖头文件：分支条件引用包含点环境宏时，重放给出首次包含环境的结果（`test_replay_env_dependent`）——修复方案见上文"缓存的正确性分析"（环境依赖检测）；
-   - 外部修改已扫描头文件后仍重放旧 defines（`test_replay_external_modification`）——修复方案：重放前 mtime 校验。
-2. **raw string 支持失效**（`test_raw_string_*`、`test_raw_string_pipeline_canary`）：`replaceCommentsBySpaceChar` 的关闭判定要求文本以 `)` + delimiter 结尾，但 delimiter 被错误地塞入了开引号（且自定义 delimiter 字符从未被记录），导致 raw string 状态**永不终止**并跨行泄漏；后果链：raw string 之后的注释不被剥离 → `expandMacros`（不懂注释）会把注释里的宏名展开。
-3. **C++23 特性检测失效**（`test_elifdef_cpp23_detection`）：`addDefineByParts` 用 `QString::toLong` 整体转换 `__cplusplus` 的值，真实的带 `L` 后缀值（`202302L`）必然转换失败 → `#elifdef/#elifndef` 在实践中永远走降级空转路径（`conditional1.cpp` 的 legacy golden 即此行为）；表达式求值路径（`evalNumber`）能正确处理后缀，两条路径不一致。另有死代码 `calcUnsupportedElseBranchResult`。
-4. **分支可见性映射 off-by-one**（`test_nested_branches`）：`removeCurrentBranch` 用 `mIndex` 而 `setCurrentBranch` 用 `mIndex+1` 记录可见性恢复点，导致假分支最后一个内容行被标为可见（`result()` 内容正确，仅编辑器置灰用的 branch map 错）。
-5. **`__has_include` 语义偏差**（`test_has_include`）：返回的是"根文件是否已包含该文件"（`fileInfo->including()`），而非"文件是否存在"。
-6. **`#` 字符串化不转义**（`test_stringize_escaping`）：参数内的 `"`、`\` 不转义，产生病态字符串字面量；且参数列表内的引号会破坏参数括号匹配的朴素字符串状态机，导致宏完全不展开。
-7. **`tokenizeValue` 吞空格**（`test_empty_varargs`）：`#` 前的空格 token 被 `#` token 覆盖丢弃，展开结果少一个空格。
-8. **模板尖括号内逗号拆分宏参数**（`test_args_comma_in_template_angle`）：不跟踪 `<>` 层级，多余参数被静默丢弃（非标准偏差）。
-9. **行首空白后的 `#` 不识别为指令**（`test_leading_space_directive`）：C 标准允许 `#` 前有空白。
-10. **`#if` 不支持字符常量**（`test_char_constant_in_if`）。
-11. **未定义标识符在 `#if` 中不按标准替换为 0**（`test_if_undefined_identifier`）：保留原名导致求值失败按 false 处理；`UNDEFINED == 0` 应为 true 实得 false。
-12. **`MAX_DEFINE_EXPAND_DEPTH` 死常量**：递归防护实际只靠 ignore 集合（`test_mutual_recursion_function_macros` 钉住防护有效）。
-
-**已知不支持（记录在案，用户确认暂无计划实现）**：
-
-- **二合符（digraphs）**：`<%`、`%>`、`<:`、`:>`（`{`、`}`、`[`、`]`）、`%:`（`#`）、`%:%:`（`##`）。C/C++ 均有效的替代标点，但真实代码使用率≈0（EBCDIC 时代遗产）；全代码库（preprocessor/cpptokenizer/syntaxer）均不处理。若将来实现：指令行识别接受 `%:` 前缀、token 层映射、字符串/字符字面量内豁免。
-- **三字母符（trigraphs）**：`??=`、`??/`、`??'`、`??(`、`??)`、`??!`、`??<`、`??>`、`??-`（`# \ ^ [ ] | { } ~`）。**C++17 与 C23 已从标准删除**，GCC 的 C++ 模式默认忽略；不做。
-
-### 阶段 0.6 — 宏展开核心重写（pp-token 流式展开器）
-
-**动机**：宏展开实现的别扭是结构性的，补丁无法根治——`formatValue` 模板 + `QString::arg`（衍生出 9 参数上限、宏体内字面 `%` 误替换、`%%` 收尾补丁、`##` 靠占位符相邻拼接等整类问题）；普通行与 `#if` 两套展开引擎行为分叉；防自递归"蓝漆"按位置记录（每次展开整表拷贝+位置平移）；rescan 用字符串替换+回退（O(n²) 且位置簿记脆弱）；`handleBuffer` 跨行突变 `mIndex`。
-
-**总体步骤**（只换宏展开引擎，其余骨架不动）：
-
-```
-读文件（readFileToLines / 回调）
-   → ① 续行合并（不变）
-   → ② 注释剥离（不变）
-   → ③ 主扫描循环（原 preprocessBuffer，仍按行驱动——指令以行为单位）
-        ├─ 指令行：#define → parseArgs 预编译【替换列表】存入 Define（换掉 formatValue）
-        │         #undef / include / pragma 等（不变，含 guard 检测、重放、mtime、环境依赖判定）
-        │         #if/#elif → 同一个 token 展开器展开表达式 → token 流求值（引擎合一）
-        └─ 非指令行：喂给【token 展开器】，输出按行写 mResult；
-              跨行函数式宏由展开器通过显式游标超前消费，被消费行补空行（与现状逐字节一致）
-   → ④ closeInclude / 文件栈恢复（不变）
-   → mResult (QStringList)（接口不变，留给将来结构化）
-```
-
-**展开器设计**：
-
-- **PpTokenizer（拉式）**：按 token 拉动才前进。token 类型：标识符、数字、字符串、字符、raw string（可跨行）、标点（`#`/`##` 单列）、空白（只记录"前面是否有空白"标志，不发射）。raw string 状态可跨行，普通字符串/字符不跨行（与现状态机一致）。
-- **替换列表（核心数据结构，杀 formatValue）**：宏定义时一次性预编译——
-  ```cpp
-  struct ReplToken {
-      enum Kind { Text, Argument } kind;
-      QString text;        // Kind==Text: 源文本切片
-      int argIndex;        // Kind==Argument
-      bool stringize;      // 前导 #
-      bool pasteBefore;    // 前导 ##
-  };
-  // Define::replacementList: QVector<ReplToken>
-  ```
-  展开 = 单趟遍历发射；`#` 现场转义拼串；`##` 与前一发射 token 合并重 lex（合并出的新标识符经 rescan 帧可再参与展开，语义天然正确）。
-- **输入上下文栈**（rescan 与跨行）：`[文件游标 (buffer, line, col)]` 之上压"替换片段帧"。读 token 先弹栈顶帧，弹完回落游标——ISO 6.10.3.4 直译。跨行参数收集 = 游标前进（替代 handleBuffer 的 mIndex 突变，原计划"handleBuffer 显式化"并入本阶段）。
-- **蓝漆（防自递归）**：放弃位置表，改**展开帧内名字集合**——展开宏 M 时压帧 {替换序列， M}，帧存活期间 M 不可再展开（帧栈通常个位数深度，线性查即可）。
-- **参数收集**：token 级深度计数，depth-1 逗号切分；每个参数是收集序列上的区间视图（零拷贝）；`#`/`##` 用处的参数不预展开，其余用处的参数先展开（标准语义）。
-- **输出与空白还原**：Text 段保留源文本切片；参数间空白由"前面是否有空白"标志 + 防粘连检查（相邻 token 拼接会改变 lex 时补空格）决定；golden 测试逐字节验收。
-- **`#if` 求值**：条件表达式喂给同一展开器（`defined`/`__has_include` 作为 token 级运算符处理），展开后文本送现有递归求值器；条件引用记录（环境依赖判定）成为 token 扫描的副产品。
-
-**顺带解决的问题**（重写自然覆盖，不需单独补丁）：宏参数 9 上限、宏体内字面 `%` 误替换、`#define` 参数列表 `split(',')` 粗切（参数内带逗号如 `void(*)(int)` 会切错）、双引擎分叉、位置蓝漆拷贝、handleBuffer 隐式推进、`expandMacros() const` 的 `const_cast`。
-
-**兼容层（对外接口不变）**：`expandMacros(QString)`、`expandMacrosInConditioningExpression(QString)`、`evaluateIf(QString)` 保持签名，内部改走新引擎；`tokenizeValue`（cppparser 用于宏提示）独立保留。
-
-**迁移步骤（旁路实现，测试驱动切换，不一次性断代）**：
-
-1. PpTokenizer（含跨行 raw string）+ 单测；
-2. 替换列表预编译（`parseArgs` 产出 `replacementList`）+ 单测；
-3. PpExpander（上下文栈、蓝漆帧、参数收集、发射与空白还原）+ 单测（复用阶段 0 宏展开用例）；
-4. 接入主循环（显式游标、行对齐输出）——阶段 0 全部 golden 为门禁；
-5. `#if` 求值同引擎；`#define` 参数列表 token 化切分（顺带修 `split(',')` 问题）；
-6. 兼容层 + 旧代码（expandMacros 全家、formatValue、argNotExpand、tempIngoreMacros）清理。
-
-**实现完成时的要点记录**（与设计稿的差异/补充）：
-
-- **`mPopFloor` 水位线**：帧的惰性弹出不得越过子泵自身的帧基——外层已耗尽帧仍承载着界定嵌套参数预展开作用域的蓝漆（互递归测试 hang 暴露，已入引擎注释）。
-- **Text 条目保持每 token 一条**（不合并）：合并会把宏名藏进字符串导致 rescan 无法再次展开。
-- **空白保留为精确文本**（`whitespaceBefore: QString`，含 tab），非布尔标志。
-- **可变参数完整支持**：`...`、`__VA_ARGS__`、GNU `, ## __VA_ARGS__`（空则丢逗号、非空不粘合）、`__VA_OPT__`（C++20）——旧引擎前两者半残、后两者没有。
-- **宏名与 `(` 之间允许换行**（peek 跳过 EOL 并计入消耗行；未找到则回推全部 peek 过的 token）。
-- **condition 模式全套 iso646 替代关键字**（11 个，旧实现只有 and/or）。
-- **EOL token 携带空白**：纯空白行与行尾空白不丢失。
-- **统一后行为差异（已记录并更新钉住预期）**：旧"条件展开器"在 `SCAN(EXAMPLE(5))` 场景产出双空格，普通路径产出单空格；新引擎统一为单空格。
-- **已完成清理**：expandMacros 全部旧重载、expandMacro、expandFunctionLikeMacro、parseArgs、formatValue/argUsed/argNotExpand/argStringized/varArgIndex 字段、calcUnsupportedElseBranchResult、无用字符分类静态函数均已删除；`tokenizeValue`（cppparser 宏提示用）与 `eval*` 求值家族保留。
-
-### 阶段 1 — 结构重构（仅限 preprocessor 内部，有阶段 0 测试保护）
-
-1. **拆 Session/Registry**：`CppPreprocessor` 拆为 Registry（持久：defines/scanned/fileInfos/路径/缓存——阶段 3 缓存的归宿）与 Session（每次 preprocess 新建：include 栈/mIndex/mBuffer/分支栈/mProcessed/mFileCache）。对外接口保持不变。
-2. ~~**`handleBuffer` 显式化**~~：**并入阶段 0.6**（token 展开器的显式游标即此问题的落地）；消除 `expandMacros() const` 的 `const_cast`（随 0.6 兼容层解决）。
-3. 小项：`mPreprocessorHandlers` 的 QString map 查找改 switch。
-
-**推迟到 CppParser 层测试建立后（本次不做）**：
-
-- 消除双重预处理（`sortFilesByIncludeRelations` 预扫改完整选项并保留结果）；
-- `internalParse` 中 `mResult` 浅拷贝后 `clearTempResults` 触发 detach。
-
-### 阶段 2 — 性能基线（优化动手前）
-
-- QBENCHMARK 基准：宏展开吞吐（人造宏密集输入）、完整 preprocess（即时生成的深 include 链 + 宏密集头文件，CI 可重复）；
-- 记录基线数据到提交信息；本机另用真实 MinGW 头文件手动对照。
-
-### 阶段 3 — 性能优化（基线驱动，逐项提交）
-
-1. ~~`expandMacros()` 内循环重写~~、~~`expandFunctionLikeMacro()` 单次扫描替换~~：**已由阶段 0.6 的 pp-token 重写取代**（本两项删除）。
-2. `openInclude()` 传播剪枝：祖先已 `including(fileName)` 时跳过闭包传播。
-3. include 解析结果缓存：正结果缓存 + 存在性校验（一次 `exists` stat）；负结果不缓存；路径列表变化清缓存；`removeScannedFile` 清条目。
-4. 文件内容缓存扩大：处理后行表 + mtime/size 校验，LRU 字节上限（内存有界），挂在 Registry 上。
-
-### 文档同步
-
-- `docs/architecture.md` parser 章节：同步 Session/Registry 拆分与缓存设计（相应阶段完成后）。
-
-## 验证
-
-1. 每个子项提交前构建并跑 test-cppparser 全量（本机若无输出走 gdb，与 test-qsynedit 既定做法一致）；
-2. 阶段 0 完成 = 清单全部场景有测试且通过（暴露的问题进阶段 0.5）；
-3. 阶段 1 完成 = 全部测试在不改断言的情况下通过（重构纯行为保持）；
-4. 阶段 3 每项优化：测试全绿 + 基准对比记录；
-5. 最终用户在真实 IDE 手动验证。
-
-## 假设
-
-- include 测试资源用仓库内小文件集（可审查 golden），不用临时目录即时生成；性能基准用即时生成（CI 可重复）；
-- "钉住现状"的测试用例若后续定性为 bug，修复时同步改断言，提交信息记录定性理由；
-- include 解析缓存接受"同名文件后加入更高优先级路径时命中旧缓存"的极小概率风险；
-- 文件内容缓存 LRU 上限先取固定常量（如 64MB），基准后再调。
+- 该记录产生的 StatementMap 条目；
+- ParsedFileInfo::statements；
+- namespace 缓存中的对应条目；
+- define/undef 及派生路径/内容缓存；
+- include 关系和继承处理状态。
+
+按“声明/定义实际文件 + 对应侧的跨边界祖先”识别 statement。处理 declaration/definition 合并条目时，两侧分别失效；一侧仍有效时保留该侧位置，并维护另一侧位置及 namespace 缓存。
+
+重扫目标记录必须失效；与该记录无关的边界记录保持可用。扫描中的当前栈记录不得立即失效，但失效请求必须保留到扫描结束后执行，不能丢弃。失效操作不得只清 define 而留下 statement，也不得只清 statement 而留下 define。
+
+## 6. 正确性与已知代价
+
+- 用户宏状态捕获包含点可见的非 hard define 差异。
+- 有序前缀捕获系统头生效顺序的差异；即使某个头未改变宏表，也不能省略顺序校验。
+- 文件内容变化通过编辑失效或 mtime/size 级联失效处理。
+- 两个共享 Parser 的根文件以相反顺序包含相同系统头时，切换根文件会重扫相关记录。这是保证正确性的预期代价。
+- 跨 TU 的全局 Registry 可能保留由另一 TU 引入的宏和文件记录。它只用于复用可校验的扫描结果，不代表各 TU 的宏集合天然隔离。
+- 对普通库用户，优先保证公开接口在 StatementMap 中完整可见；不能为了命中率接受符号丢失。
+
+## 7. 缓存与性能
+
+Replay 正确后再处理其它缓存：
+
+- **文件内容缓存**：缓存续行合并和注释剥离后的行表，以 mtime/size 校验，使用有界 LRU。
+- **include 路径缓存**：只缓存“名字→路径”的正结果；每次做存在性校验，路径配置变化时清空，负结果不缓存。
+- 性能验收记录首扫、reparse、缓存命中和内存上界。正确性测试失败时不得以性能数据替代验收。
+
+## 8. 验证
+
+- 场景和正确性证明见 `cpppreprocessor-replay-scenarios.md`。
+- 每个场景同时检查预处理结果、defines、StatementMap 和 scan/replay/skip/invalidate 计数。
+- 使用无 replay 的全量扫描作为 oracle；结果一致但发生全扫的用例仍算失败。
+- 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。
+- 完整 `test-cppparser`、`test-editor` 和真实 IDE 编辑/切换/重解析均通过后，才能进行性能验收。
