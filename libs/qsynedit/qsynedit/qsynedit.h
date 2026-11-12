@@ -530,10 +530,12 @@ public:
     void setDocument(const PDocument &document);
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
+    // Undoable whole-content replacement: preserve the initiating view's
+    // caret/top anchor and other views' caret/selection coordinates.
+    void replaceContent(const QString& newContent);
     // load-style full reset: replaces the whole document content, resets
     // the view state and clears the undo history (NOT an undoable edit,
-    // and does not mark the document modified). For Editor::replaceContent-
-    // style edits use replaceAll instead.
+    // and does not mark the document modified).
     void loadContent(const QString& text);
     void loadContent(const QStringList& text);
 
@@ -646,7 +648,6 @@ protected:
             int ch, const QString& token, PTokenAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
 protected:
-    void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
     int clientTop() const;
@@ -743,6 +744,7 @@ private:
     // marker-style caret/selection shift for views that did not initiate an
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
+    void clampCaretAndSelectionAfterFullReplacement();
     // marker-style anchor shift (mirrors shiftPosByChange) for one document
     // change; used for the initiating view's current or pending top anchor
     void shiftAnchorByChange(const DocumentChange &change, int &line, int &segment);
@@ -870,6 +872,7 @@ private:
                        SelectionMode changeSelectionMode,
                        size_t changeNumber,
                        bool undo);
+    void doUndoRedoContentReplacement(const PUndoItem &item, bool undo);
 
     QString getDisplayStringAtLine(int line) const;
 
@@ -882,7 +885,8 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine);
+    void onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine,
+                                  bool fullContentReplacement);
     void onDocumentSyntaxerChanged();
     void onDocumentLinesReparsed(int startLine, int endLine);
     //void onRedoAdded();

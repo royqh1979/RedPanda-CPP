@@ -1,6 +1,26 @@
 #include <QTest>
 #include "test_editor_display.h"
 #include "src/editor.h"
+#include "src/reformatter/basereformatter.h"
+
+namespace {
+
+class StaticReformatter : public BaseReformatter
+{
+public:
+    StaticReformatter(const QString &content): mContent(content) { }
+
+    QString refomat(const QString &, QString &, bool &isOk) override
+    {
+        isOk = true;
+        return mContent;
+    }
+
+private:
+    QString mContent;
+};
+
+}
 
 void TestEditorDisplay::test_fold_marks_paint()
 {
@@ -23,4 +43,29 @@ void TestEditorDisplay::test_fold_marks_paint()
         for (int y = 2; y < h - 2; y++)
             colors.insert(image.pixel(x, y));
     QVERIFY(colors.count() >= 2);
+}
+
+void TestEditorDisplay::test_reformat_restores_view_state()
+{
+    QStringList oldLines;
+    for (int i = 0; i < 200; i++)
+        oldLines << QString("int old_line_%1 = %1;").arg(i);
+    mEditor->loadContent(oldLines);
+    mEditor->resize(600, 400);
+    QSynedit::CharPos savedCaret{5, 55};
+    mEditor->setCaretPos(savedCaret);
+    mEditor->setTopLineSegment(50, 0);
+
+    QStringList newLines;
+    for (int i = 0; i < 160; i++)
+        newLines << QString("int reformatted_line_%1 = %1;").arg(i);
+    QString newContent = newLines.join('\n');
+    mEditor->setGetReformatterFunc([&newContent](Editor *) {
+        return std::make_unique<StaticReformatter>(newContent);
+    });
+    mEditor->reformat(true);
+
+    QCOMPARE(mEditor->caretPos(), savedCaret);
+    QCOMPARE(mEditor->topLine(), 50);
+    QCOMPARE(mEditor->topSegment(), 0);
 }

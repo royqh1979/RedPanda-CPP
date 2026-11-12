@@ -333,6 +333,9 @@ public:
     // coalescing with an earlier entry. Consumers use the checkpoint to apply
     // only edits made after an explicit view command.
     int createChangeCheckpoint();
+    // Whole-content replacement without writing undo history. Attached views
+    // preserve caret/selection coordinates instead of marker-shifting them.
+    void replaceContent(const QString &text);
 
     /**
      * @brief the undo/redo histories are owned by the document and shared
@@ -480,7 +483,8 @@ signals:
      * idempotent, fact-driven maintenance; cross-component consistency
      * repair (e.g. re-snapping the selection to the caret) is forbidden.
      */
-    void contentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine);
+    void contentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine,
+                        bool fullContentReplacement);
     /**
      * @brief emitted after an undo/redo operation has been performed on the
      * shared stacks (by whichever view triggered it), so all views can
@@ -552,6 +556,7 @@ private:
     std::atomic<int> mContentVersion{0};
     DocumentChangeSet mPendingChanges;
     bool mChangeCoalescingBlocked = false;
+    bool mFullContentReplacement = false;
     bool mFoldStateDirty = false;
     // max reparse stabilization line over the current update batch
     // (see design doc 5.3); -1 when no reparse ran in the batch
@@ -583,6 +588,7 @@ enum class ChangeReason {
     MergeWithPrevLine,
     MergeWithNextLine,
     DuplicateLine,
+    ReplaceContent,
     Nothing // undo list empty
   };
 

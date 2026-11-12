@@ -619,6 +619,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 {
     if (mQuitting)
         return;
+    Q_ASSERT(e == nullptr || e == mEditorManager->getEditor());
     // the wrap toggle tracks the current editor's own state
     ui->actionWord_Wrap->setChecked(e ? e->wordWrap() : pSettings->editor().wordWrap());
     ui->menuCode->menuAction()->setVisible(mEditorManager->pageCount()>0);
@@ -1422,8 +1423,12 @@ void MainWindow::executeTool(PToolItem item)
         break;
     case ToolItemOutputTarget::RepalceWholeDocument:
         e=mEditorManager->getEditor();
-        if (e)
+        if (e) {
             e->replaceContent(errorMessage + byteArrayToString(output, item->isUTF8));
+            e->reparse();
+            e->checkSyntaxInBack();
+            e->reparseTodo();
+        }
         break;
     case ToolItemOutputTarget::ReplaceCurrentSelection:
         e=mEditorManager->getEditor();

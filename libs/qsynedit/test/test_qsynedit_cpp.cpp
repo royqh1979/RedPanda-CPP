@@ -12435,7 +12435,7 @@ void TestQSyneditCpp::test_edit_operations_are_batched()
     // stack variables on every later contentChanged and corrupt memory)
     QObject connContext;
     connect(mEdit->document().get(), &Document::contentChanged, &connContext,
-            [&](const DocumentChangeSet &, bool dirty, int reparseToLine) {
+            [&](const DocumentChangeSet &, bool dirty, int reparseToLine, bool) {
         contentChangedCount++;
         lastDirty = dirty;
         lastReparseToLine = reparseToLine;

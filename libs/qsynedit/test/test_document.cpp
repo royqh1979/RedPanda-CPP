@@ -858,7 +858,7 @@ void TestDocument::test_content_changed()
 {
     QList<DocumentChangeSet> batches;
     connect(mDoc.get(), &Document::contentChanged, this,
-            [&batches](const DocumentChangeSet &changes, bool, int){
+            [&batches](const DocumentChangeSet &changes, bool, int, bool){
         batches.append(changes);
     });
     auto checkEntry = [](const DocumentChange &change, DocumentChangeKind kind,
@@ -1063,7 +1063,7 @@ void TestDocument::test_edit_operations_are_batched()
         changingCount++;
     });
     connect(mDoc.get(), &Document::contentChanged, this,
-            [&](const DocumentChangeSet &changes, bool, int){
+            [&](const DocumentChangeSet &changes, bool, int, bool){
         contentChangedCount++;
         QVERIFY(!changes.isEmpty());
     });

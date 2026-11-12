@@ -426,6 +426,7 @@ void Document::beginUpdate()
     if (mUpdateCount == 0) {
         mFoldStateDirty = false;
         mReparseToLine = -1;
+        mFullContentReplacement = false;
         mChangeCoalescingBlocked = false;
         emit changing();
     }
@@ -446,7 +447,7 @@ void Document::endUpdate()
             // onDocumentContentChanged). Directly driven primitives may
             // legitimately emit dirty-without-reparse batches (e.g. a lone
             // deleteLine with parseToEnd=false).
-            emit contentChanged(changes, mFoldStateDirty, mReparseToLine);
+            emit contentChanged(changes, mFoldStateDirty, mReparseToLine, mFullContentReplacement);
         }
         emit changed();
         mChangeCoalescingBlocked = false;
@@ -469,6 +470,17 @@ int Document::createChangeCheckpoint()
     Q_ASSERT(inUpdate());
     mChangeCoalescingBlocked = true;
     return mPendingChanges.count();
+}
+
+void Document::replaceContent(const QString &text)
+{
+    QMutexLocker locker(&mMutex);
+    beginUpdate();
+    auto action = finally([this] {
+        endUpdate();
+    });
+    mFullContentReplacement = true;
+    setText(text);
 }
 
 void Document::recordChange(DocumentChangeKind kind, int line, int count)

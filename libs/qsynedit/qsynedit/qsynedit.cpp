@@ -838,11 +838,29 @@ void QSynEdit::addSelectionToUndo()
                          mSelectionEnd,QStringList(),mActiveSelectionMode);
 }
 
-void QSynEdit::replaceAll(const QString &text)
+void QSynEdit::replaceContent(const QString &newContent)
 {
-    addSelectionToUndo();
-    selectAll();
-    setSelText(text);
+    if (mReadOnly)
+        return;
+    int oldTopLine = mTopLine;
+    int oldTopSegment = mTopSegment;
+    CharPos oldCaret = caretPos();
+    QString oldContent = text();
+
+    beginEditing();
+    auto action = finally([this] {
+        endEditing();
+    });
+    EditorOptions oldOptions = mOptions;
+    EditorOptions newOptions = oldOptions;
+    newOptions.setFlag(EditorOption::AutoIndent, false);
+    setOptions(newOptions);
+    mDocument->replaceContent(newContent);
+    addChangeToUndo(ChangeReason::ReplaceContent,
+                    fileBegin(), fileBegin(), {oldContent}, SelectionMode::Normal);
+    setCaretPos(ensureCharPosValid(oldCaret));
+    setTopLineSegment(oldTopLine, oldTopSegment);
+    setOptions(oldOptions);
 }
 
 void QSynEdit::doTrimTrailingSpaces()
@@ -2382,6 +2400,21 @@ void QSynEdit::doUndoRedoInput(const QString &oldGlyph,
                     changeNumber);
     }
     internalSetCaretPos(changeStartPos);
+}
+
+void QSynEdit::doUndoRedoContentReplacement(const PUndoItem &item, bool undo)
+{
+    QString currentContent = text();
+    mDocument->replaceContent(item->changeText()[0]);
+    if (undo) {
+        mRedoList->addRedo(ChangeReason::ReplaceContent,
+                           fileBegin(), fileBegin(), {currentContent},
+                           SelectionMode::Normal, item->changeNumber());
+    } else {
+        mUndoList->restoreChange(ChangeReason::ReplaceContent,
+                                 fileBegin(), fileBegin(), {currentContent},
+                                 SelectionMode::Normal, item->changeNumber());
+    }
 }
 
 void QSynEdit::beginEditing()
@@ -5081,6 +5114,9 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             break;
+        case ChangeReason::ReplaceContent:
+            doUndoRedoContentReplacement(item, true);
+            break;
         case ChangeReason::Input: {
             doUndoRedoInput(item->changeText()[0],
                           item->changeStartPos(),
@@ -5425,6 +5461,9 @@ void QSynEdit::doRedoItem()
                         item->changeNumber()
                         );
             properSetLine(item->changeStartPos().line,item->changeText()[0], true);
+            break;
+        case ChangeReason::ReplaceContent:
+            doUndoRedoContentReplacement(item, false);
             break;
         case ChangeReason::Input: {
             doUndoRedoInput(item->changeText()[0],
@@ -7829,7 +7868,8 @@ CharPos shiftPosByChange(const CharPos &pos, const DocumentChange &change)
 }
 }
 
-void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine)
+void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool foldStateDirty, int reparseToLine,
+                                        bool fullContentReplacement)
 {
     // Structural guard: the signal is emitted at the outermost endUpdate,
     // so the document must be quiescent here (see design doc chapter 6).
@@ -7935,10 +7975,14 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
         // behavior for shifted line numbers
         invalidateGutter();
     if (mEditingCount == 0) {
-        // this view did not initiate the edit (the initiator is inside
-        // endEditing with mEditingCount>0 and its caret/selection are
-        // already final): shift the caret/selection marker-style
-        shiftCaretAndSelectionByChanges(changes);
+        if (fullContentReplacement) {
+            // There is no old-to-new text mapping for a full replacement.
+            // Keep this view's coordinates and only clamp them to the new
+            // document; do not scroll it to the caret.
+            clampCaretAndSelectionAfterFullReplacement();
+        } else {
+            shiftCaretAndSelectionByChanges(changes);
+        }
     }
     // Marker-shifted anchors are resolved after the row index and fold
     // rescan have settled. Deferred intents wait for the outermost
@@ -8044,6 +8088,22 @@ void QSynEdit::shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes)
     if (caret != caretPos() || selB != selBegin() || selE != selEnd()) {
         beginInternalChanges();
         // ensureVisible=false: another view's edit must not scroll this view
+        internalSetCaretPos(caret, false);
+        internalSetSelBegin(selB);
+        internalSetSelEnd(selE);
+        endInternalChanges();
+    }
+}
+
+void QSynEdit::clampCaretAndSelectionAfterFullReplacement()
+{
+    CharPos caret = ensureCharPosValid(caretPos());
+    CharPos selB = ensureCharPosValid(selBegin());
+    CharPos selE = ensureCharPosValid(selEnd());
+    if (selE < selB)
+        std::swap(selB, selE);
+    if (caret != caretPos() || selB != selBegin() || selE != selEnd()) {
+        beginInternalChanges();
         internalSetCaretPos(caret, false);
         internalSetSelBegin(selB);
         internalSetSelEnd(selE);

@@ -57,6 +57,7 @@ private slots:
     void test_no_change_batch_top_scrollbar_sync();
     void test_batch_top_intent_preserves_command_order();
     void test_shared_document_keeps_top_anchor();
+    void test_shared_document_full_replace_preserves_view_state();
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();

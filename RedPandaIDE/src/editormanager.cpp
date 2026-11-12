@@ -503,17 +503,23 @@ void EditorManager::onEditorLineMoved(int fromLine, int toLine)
 void EditorManager::onEditorStatusChanged(QSynedit::StatusChanges changes)
 {
     Editor *e = static_cast<Editor *>(sender());
+    // Per-view state follows the sender even when it is not active.
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
+            || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
+            || changes.testFlag(QSynedit::StatusChange::Custom0)) {
+        updateEditorTabCaption(e);
+    }
+    // Global UI reflects only the active view. Shared-document edits notify
+    // every view, and a later notification from an inactive view must not
+    // overwrite the active view's menu/status state.
+    if (e != getEditor())
+        return;
     if (changes.testFlag(QSynedit::StatusChange::CaretX)
             || changes.testFlag(QSynedit::StatusChange::CaretY)) {
         pMainWindow->updateStatusbarForLineCol(e);
     }
     if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         pMainWindow->updateForStatusbarModeInfo(e);
-    }
-    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
-            || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
-            || changes.testFlag(QSynedit::StatusChange::Custom0)) {
-        updateEditorTabCaption(e);
     }
     if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
         || changes.testFlag(QSynedit::StatusChange::Modified)

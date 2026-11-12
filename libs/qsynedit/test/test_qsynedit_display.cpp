@@ -1,4 +1,5 @@
 #include <QTest>
+#include <QSignalSpy>
 #include <QCoreApplication>
 #include <QScrollBar>
 #include <QMimeData>
@@ -1225,12 +1226,6 @@ void TestQSyneditDisplay::test_set_top_line_segment()
 
 void TestQSyneditDisplay::test_batch_top_restore()
 {
-    // regression (reformat): Editor::replaceContent restores the caret and
-    // the top anchor INSIDE its beginEditing/endEditing batch. Those
-    // coordinates are post-edit while the row index still describes the
-    // pre-edit document, so the batch's own contentChanged must apply the
-    // recorded intent instead of marker-shifting the anchor by the change
-    // set (which flung it to the end of the document)
     mEdit->loadContent(makeLines(200));
     int h = mEdit->textHeight();
     mEdit->setTopLineSegment(50, 0);
@@ -1243,11 +1238,7 @@ void TestQSyneditDisplay::test_batch_top_restore()
         newLines << QString("reformatted line %1; int variable%1 = 0;").arg(i);
     QString newContent = newLines.join('\n');
 
-    mEdit->beginEditing();
-    mEdit->replaceAll(newContent);
-    mEdit->setCaretPos(savedCaret);
-    mEdit->setTopLineSegment(50, 0);
-    mEdit->endEditing();
+    mEdit->replaceContent(newContent);
 
     QCOMPARE(mEdit->mPendingTopLine, -1);
     QCOMPARE(mEdit->caretPos().line, savedCaret.line);
@@ -1312,11 +1303,7 @@ void TestQSyneditDisplay::test_nested_batch_top_restore()
         newLines << QString("reformatted line %1; int variable%1 = 0;").arg(i);
 
     mEdit->beginEditing();
-    mEdit->beginEditing();
-    mEdit->replaceAll(newLines.join('\n'));
-    mEdit->setCaretPos(savedCaret);
-    mEdit->setTopLineSegment(50, 0);
-    mEdit->endEditing();
+    mEdit->replaceContent(newLines.join('\n'));
     int pendingAfterInner = mEdit->mPendingTopLine;
     mEdit->endEditing();
 
@@ -1445,6 +1432,53 @@ static QString dumpFoldRanges(const QList<std::tuple<int,int,bool>> &ranges)
     return out.join(" ");
 }
 
+void TestQSyneditDisplay::test_shared_document_full_replace_preserves_view_state()
+{
+    mEdit->loadContent(makeLines(200));
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+    edit2->setFont(mEdit->font());
+    edit2->resize(600, 400);
+    CharPos savedCaret{5, 55};
+    CharPos savedSelBegin{3, 50};
+    CharPos savedSelEnd{8, 60};
+    edit2->setCaretAndSelection(savedCaret, savedSelBegin, savedSelEnd);
+    edit2->setTopLineSegment(50, 0);
+    mEdit->setCaretPos(savedCaret);
+    mEdit->setTopLineSegment(50, 0);
+
+    QStringList newLines;
+    for (int i = 0; i < 160; i++)
+        newLines << QString("reformatted line %1;").arg(i);
+    QSignalSpy statusSpy(mEdit.get(), &QSynEdit::statusChanged);
+    mEdit->replaceContent(newLines.join('\n'));
+
+    auto checkSharedViewState = [&] {
+        QCOMPARE(edit2->caretPos(), savedCaret);
+        QCOMPARE(edit2->selBegin(), savedSelBegin);
+        QCOMPARE(edit2->selEnd(), savedSelEnd);
+        QCOMPARE(edit2->topLine(), 50);
+        QCOMPARE(edit2->topSegment(), 0);
+    };
+    checkSharedViewState();
+    QCOMPARE(mEdit->caretPos(), savedCaret);
+    QVERIFY(mEdit->modified());
+    bool modifiedReported = false;
+    for (const auto &args : statusSpy) {
+        modifiedReported = modifiedReported
+                || args[0].value<StatusChanges>().testFlag(StatusChange::Modified);
+    }
+    QVERIFY(modifiedReported);
+
+    mEdit->undo();
+    checkSharedViewState();
+    QCOMPARE(mEdit->caretPos(), savedCaret);
+    mEdit->redo();
+    checkSharedViewState();
+    QCOMPARE(mEdit->caretPos(), savedCaret);
+}
+
 void TestQSyneditDisplay::test_partial_fold_rescan()
 {
     // the edit-driven partial rescan must produce the same fold list
@@ -1472,7 +1506,7 @@ void TestQSyneditDisplay::test_partial_fold_rescan()
     // stack variables on every later contentChanged and corrupt memory)
     QObject connContext;
     connect(mEdit->document().get(), &Document::contentChanged, &connContext,
-            [&](const DocumentChangeSet &, bool dirty, int L) {
+            [&](const DocumentChangeSet &, bool dirty, int L, bool) {
         lastDirty = dirty;
         lastReparseToLine = L;
     });

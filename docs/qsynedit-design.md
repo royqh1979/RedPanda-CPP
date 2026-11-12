@@ -80,6 +80,7 @@
 | 操作 | undo | redo |
 |---|---|---|
 | `Input` | 共享 `doUndoRedoInput`（`qsynedit.cpp`）：用存储的旧文本逆向替换，被替换文本存进 redo 项 | 同一 helper，方向相反 |
+| `ReplaceContent` | `doUndoRedoContentReplacement` 调 `Document::replaceContent` 恢复 item 保存的旧全文，当前全文入 redo 项 | 同一 helper，方向相反 |
 | `Insert` | 删除区间，删掉的文本存进 redo 项 | `doInsertText` 回放存储文本 |
 | `Delete`/`DeleteChar`/`DeletePreviousChar` | `doInsertText` 回插存储文本 | `doDeleteText(start,end)` |
 | `ReplaceLine` | 换回旧行文本（undo 时把当前行文本存进 redo 项） | 换回另一份 |
@@ -221,7 +222,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
   旧语义（每次编辑都发，不只是跳变）。**`setDocument` 挂接时不得用 undo 栈
   重算文档的 modified 标志**（文档可以在空 undo 历史下处于 modified 状态）。
   `loadContent`（原 `setContent`，载入式整文档重置、不可撤销、不标 modified）
-  与 `loadFromFile` 同族；编辑式替换走 `replaceAll`/`Editor::replaceContent`。
+  与 `loadFromFile` 同族；编辑式替换统一走 `QSynEdit::replaceContent`。
 - **每视图独立**：caret、选区、滚动、gutter、折叠 collapsed 状态、readOnly、
   字体/字号（字体度量已完全视图化：GlyphCalculator 独立成
   `glyphcalculator.h/.cpp` 归视图持有，LineMetrics 缓存按行 seq 键控；
@@ -628,6 +629,18 @@ Document 的 `changing/changed` 为所有挂接视图配对了 internal-change �
   changeSet 跟踪文本，与顶部锚点的独立视图语义互不混用。
 - 保持的是锚点坐标，不是旧像素 `topPos`，也不是原先显示的文本。行索引变化后，
   必须从保持下来的锚点重新推导 `topPos`。
+
+**全量内容替换**：`QSynEdit::replaceContent` 统一负责发起视图的操作语义：保存并恢复
+caret/top、批内暂时关闭 AutoIndent，并记录一个 `ChangeReason::ReplaceContent` 项。
+实际内容替换由 `Document::replaceContent` 完成；它自己建立批次、调用不写 undo 的
+`setText` 原语，并在 `contentChanged` 中交付 `fullContentReplacement` 元数据。
+ReplaceContent 项经正常 `addedUndo → onUndoAdded → onChanged` 链路驱动 modified
+状态和 IDE 菜单刷新，不额外绕过 undo 发送状态。
+
+全量替换不存在可靠的旧/新文本逐行映射，因此非发起视图收到该元数据后保留
+caret/selection 的数值坐标，只做新文档合法性钳制，不执行 Delete/Insert marker 平移，
+也不因 caret 可见性而滚动。首次替换、undo 和 redo 都由同一 Document 操作产生该
+元数据；普通编辑仍按 changeSet 跟踪文本。
 
 **与滚动条、状态通知和重绘的顺序**：锚点及 caret 可见性处理必须先于垂直滚动条
 同步。`recalcTopPosFromAnchor` 只更新内部 `topPos`，不会自行同步 scrollbar 或

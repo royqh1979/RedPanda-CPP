@@ -5204,36 +5204,17 @@ void Editor::reformat(bool doReparse)
         return;
     QSet<int> breakpointsBackup = mBreakpointLines;
     QSet<int> bookmarksBackup = mBookmarkLines;
-    replaceContent(newContent, doReparse);
+    QSynEdit::replaceContent(newContent);
+    if (doReparse) {
+        reparse();
+        checkSyntaxInBack();
+        reparseTodo();
+    }
     foreach(int line, breakpointsBackup) {
         toggleBreakpoint(line);
     }
     foreach(int line, bookmarksBackup) {
         toggleBookmark(line);
-    }
-}
-
-void Editor::replaceContent(const QString &newContent, bool doReparse)
-{
-    int oldTopLine = topLine();
-    int oldTopSegment = topSegment();
-    CharPos mOldCaret = caretPos();
-
-    beginEditing();
-    QSynedit::EditorOptions oldOptions = getOptions();
-    QSynedit::EditorOptions newOptions = oldOptions;
-    newOptions.setFlag(QSynedit::EditorOption::AutoIndent,false);
-    setOptions(newOptions);
-    replaceAll(newContent);
-    setCaretPos(ensureCharPosValid(mOldCaret));
-    setTopLineSegment(oldTopLine, oldTopSegment);
-    setOptions(oldOptions);
-    endEditing();
-
-    if (doReparse) {
-        reparse();
-        checkSyntaxInBack();
-        reparseTodo();
     }
 }
 

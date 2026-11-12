@@ -211,7 +211,6 @@ public:
                                                    QSynedit::TokenType &tokenType);
     QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::CharPos& p) const;
     void reformat(bool doReparse=true);
-    void replaceContent(const QString &newContent, bool doReparse=true);
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::CharPos& pos);
     void gotoDefinition(const QSynedit::CharPos& pos);

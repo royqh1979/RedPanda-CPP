@@ -8,6 +8,7 @@ class TestEditorDisplay : public TestEditorBase
     Q_OBJECT
 private slots:
     void test_fold_marks_paint();
+    void test_reformat_restores_view_state();
 };
 
 #endif // TEST_EDITOR_DISPLAY_H
