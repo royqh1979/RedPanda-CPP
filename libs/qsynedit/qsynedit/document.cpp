@@ -426,6 +426,7 @@ void Document::beginUpdate()
     if (mUpdateCount == 0) {
         mFoldStateDirty = false;
         mReparseToLine = -1;
+        mChangeCoalescingBlocked = false;
         emit changing();
     }
     mUpdateCount++;
@@ -448,6 +449,7 @@ void Document::endUpdate()
             emit contentChanged(changes, mFoldStateDirty, mReparseToLine);
         }
         emit changed();
+        mChangeCoalescingBlocked = false;
     }
 }
 
@@ -459,6 +461,14 @@ bool Document::inUpdate() const
 int Document::contentVersion() const
 {
     return mContentVersion.load();
+}
+
+int Document::createChangeCheckpoint()
+{
+    QMutexLocker locker(&mMutex);
+    Q_ASSERT(inUpdate());
+    mChangeCoalescingBlocked = true;
+    return mPendingChanges.count();
 }
 
 void Document::recordChange(DocumentChangeKind kind, int line, int count)
@@ -487,8 +497,9 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
         mContentVersion.fetch_add(1);
     // Only same-kind, adjacent entries coalesce. No cross-kind merging or
     // cancellation: the sequence must faithfully mirror what the primitives
-    // did, so consumers can replay it naively.
-    if (!mPendingChanges.isEmpty()) {
+    // did, so consumers can replay it naively. A checkpoint keeps edits on
+    // opposite sides of an explicit view command in separate entries.
+    if (!mPendingChanges.isEmpty() && !mChangeCoalescingBlocked) {
         DocumentChange &last = mPendingChanges.last();
         if (last.kind == kind) {
             switch (kind) {
@@ -510,6 +521,7 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
             }
         }
     }
+    mChangeCoalescingBlocked = false;
     mPendingChanges.append(DocumentChange{kind, line, count});
 }
 

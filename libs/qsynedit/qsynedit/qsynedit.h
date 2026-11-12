@@ -678,10 +678,12 @@ private:
     // anchor if clamped
     void recalcTopPosFromAnchor();
     // apply a mid-batch setTopLineSegment intent recorded in
-    // mPendingTopLine/mPendingTopSegment. Only valid when the row index
-    // is current again (onDocumentContentChanged, or the no-change-batch
-    // flush in endEditing)
+    // mPendingTopLine/mPendingTopSegment at the outermost
+    // endInternalChanges, when the row index and fold states are current
     void applyPendingTopAnchor();
+    // resolve deferred top-anchor and caret-visibility intents at the
+    // outermost endInternalChanges
+    void flushDeferredViewState();
     // window row of (line, segment) relative to the anchor, walked from it
     // (exact under any mapping state, no row-index query). Capped at
     // ±(mLinesInWindow+2): positions outside the window need no repaint,
@@ -742,8 +744,8 @@ private:
     // edit (called from onDocumentContentChanged when mEditingCount==0)
     void shiftCaretAndSelectionByChanges(const DocumentChangeSet &changes);
     // marker-style anchor shift (mirrors shiftPosByChange) for one document
-    // change; called for EVERY view from onDocumentContentChanged
-    void shiftAnchorByChange(const DocumentChange &change);
+    // change; used for the initiating view's current or pending top anchor
+    void shiftAnchorByChange(const DocumentChange &change, int &line, int &segment);
     void invalidateAllLineMetrics();
     void compactLineMetrics();  // drop entries of deleted lines when the map grows
     // word-wrap layout computation (view-side, lazily cached per line seq)
@@ -953,12 +955,12 @@ private:
     // docs/qsynedit-wordwrap-plan.md)
     int mTopLine = 0;
     int mTopSegment = 0;
-    // mid-batch setTopLineSegment intent: coordinates are already post-edit
-    // while the row index still describes the pre-edit document, so the
-    // assignment waits for onDocumentContentChanged (tree synced) instead of
-    // being marker-shifted there. -1 = no pending intent.
+    // mid-batch setTopLineSegment intent: changes before the command leave
+    // it untouched, while later changes shift it marker-style. Application
+    // waits for the outermost endInternalChanges. -1 = no pending intent.
     int mPendingTopLine = -1;
     int mPendingTopSegment = 0;
+    int mPendingTopChangeIndex = 0;
     // set by resetEditState: the pending content replacement (load/clear)
     // is not an edit, so onDocumentContentChanged must not marker-shift
     // the anchor for its change set

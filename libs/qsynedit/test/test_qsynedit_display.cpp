@@ -1057,15 +1057,17 @@ void TestQSyneditDisplay::test_wrap_toggle_preserves_anchor()
 
 void TestQSyneditDisplay::test_edit_shifts_anchor_marker_style()
 {
-    // edits through the document (as another view of it would) shift the
-    // anchor marker-style: the content at the viewport top stays put
+    // an editing view without an explicit pending top keeps following its
+    // content marker-style
     mEdit->loadContent(makeLines(50));
     int h = mEdit->textHeight();
     mEdit->setTopPos(30 * h);
     QCOMPARE(mEdit->mTopLine, 30);
 
     // insert above the anchor: the anchor follows its content
+    mEdit->beginEditing();
     mEdit->document()->insertLines(5, 3, false);
+    mEdit->endEditing();
     QCOMPARE(mEdit->mTopLine, 33);
     QCOMPARE(mEdit->mTopSegment, 0);
     QCOMPARE(mEdit->topPos(), 33 * h);
@@ -1073,12 +1075,16 @@ void TestQSyneditDisplay::test_edit_shifts_anchor_marker_style()
     QCOMPARE(mEdit->verticalScrollBar()->value(), 33 * h);
 
     // delete above the anchor: the anchor moves back up
+    mEdit->beginEditing();
     mEdit->document()->deleteLines(5, 3, false);
+    mEdit->endEditing();
     QCOMPARE(mEdit->mTopLine, 30);
     QCOMPARE(mEdit->topPos(), 30 * h);
 
     // delete a band containing the anchor: clamp to the band start
+    mEdit->beginEditing();
     mEdit->document()->deleteLines(28, 5, false);
+    mEdit->endEditing();
     QCOMPARE(mEdit->mTopLine, 28);
     QCOMPARE(mEdit->mTopSegment, 0);
     QCOMPARE(mEdit->topPos(), 28 * h);
@@ -1254,7 +1260,8 @@ void TestQSyneditDisplay::test_batch_top_restore()
 void TestQSyneditDisplay::test_batch_ensure_caret_visible_flush()
 {
     // a batch that records a deferred ensureCaretVisible but makes no
-    // document change emits no contentChanged; endEditing must flush it
+    // document change emits no contentChanged; the outermost internal-change
+    // boundary must flush it
     mEdit->loadContent(makeLines(200));
     mEdit->setTopLineSegment(0, 0);
     mEdit->beginEditing();
@@ -1265,6 +1272,162 @@ void TestQSyneditDisplay::test_batch_ensure_caret_visible_flush()
     QVERIFY(mEdit->mTopLine > 0);
     QVERIFY(mEdit->mTopLine <= 100);
     QVERIFY(100 - mEdit->mTopLine < mEdit->mLinesInWindow);
+}
+
+void TestQSyneditDisplay::test_batch_ensure_caret_last_request_wins()
+{
+    mEdit->loadContent(makeLines(200));
+    mEdit->setTopLineSegment(0, 0);
+    mEdit->beginEditing();
+    mEdit->setCaretPos(CharPos{0, 100});
+    mEdit->ensureCaretVisible(true);
+    mEdit->endEditing();
+
+    QVERIFY(!mEdit->mStateFlags.testFlag(QSynedit::StateFlag::EnsureCaretVisible));
+    QVERIFY(!mEdit->mStateFlags.testFlag(QSynedit::StateFlag::EnsureCaretVisibleForceMiddle));
+    QCOMPARE(mEdit->mTopLine, 100 - (mEdit->mLinesInWindow - 1) / 2);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), mEdit->topPos());
+
+    mEdit->setTopLineSegment(0, 0);
+    mEdit->beginEditing();
+    mEdit->ensureCaretVisible(true);
+    mEdit->ensureCaretVisible(false);
+    mEdit->endEditing();
+    QVERIFY(!mEdit->mStateFlags.testFlag(QSynedit::StateFlag::EnsureCaretVisible));
+    QVERIFY(!mEdit->mStateFlags.testFlag(QSynedit::StateFlag::EnsureCaretVisibleForceMiddle));
+    QCOMPARE(mEdit->mTopLine, 100 - (mEdit->mLinesInWindow - 1));
+    QCOMPARE(mEdit->verticalScrollBar()->value(), mEdit->topPos());
+}
+
+void TestQSyneditDisplay::test_nested_batch_top_restore()
+{
+    mEdit->loadContent(makeLines(200));
+    int h = mEdit->textHeight();
+    mEdit->setTopLineSegment(50, 0);
+    QSynedit::CharPos savedCaret{5, 55};
+    mEdit->setCaretPos(savedCaret);
+
+    QStringList newLines;
+    for (int i = 0; i < 160; i++)
+        newLines << QString("reformatted line %1; int variable%1 = 0;").arg(i);
+
+    mEdit->beginEditing();
+    mEdit->beginEditing();
+    mEdit->replaceAll(newLines.join('\n'));
+    mEdit->setCaretPos(savedCaret);
+    mEdit->setTopLineSegment(50, 0);
+    mEdit->endEditing();
+    int pendingAfterInner = mEdit->mPendingTopLine;
+    mEdit->endEditing();
+
+    QCOMPARE(pendingAfterInner, 50);
+    QCOMPARE(mEdit->mPendingTopLine, -1);
+    QCOMPARE(mEdit->caretPos(), savedCaret);
+    QCOMPARE(mEdit->mTopLine, 50);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 50 * h);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), mEdit->topPos());
+}
+
+void TestQSyneditDisplay::test_no_change_batch_top_scrollbar_sync()
+{
+    mEdit->loadContent(makeLines(200));
+    int h = mEdit->textHeight();
+    mEdit->setTopLineSegment(0, 0);
+
+    mEdit->beginEditing();
+    mEdit->beginEditing();
+    mEdit->setTopLineSegment(80, 0);
+    mEdit->endEditing();
+    int pendingAfterInner = mEdit->mPendingTopLine;
+    mEdit->endEditing();
+
+    QCOMPARE(pendingAfterInner, 80);
+    QCOMPARE(mEdit->mPendingTopLine, -1);
+    QCOMPARE(mEdit->mTopLine, 80);
+    QCOMPARE(mEdit->mTopSegment, 0);
+    QCOMPARE(mEdit->topPos(), 80 * h);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), 80 * h);
+
+    // A direct Document batch has the same changing/changed boundary.
+    mEdit->setTopLineSegment(0, 0);
+    mEdit->document()->beginUpdate();
+    mEdit->setTopLineSegment(60, 0);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mPendingTopLine, -1);
+    QCOMPARE(mEdit->mTopLine, 60);
+    QCOMPARE(mEdit->topPos(), 60 * h);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), 60 * h);
+}
+
+void TestQSyneditDisplay::test_batch_top_intent_preserves_command_order()
+{
+    mEdit->loadContent(makeLines(200));
+    mEdit->setTopLineSegment(0, 0);
+
+    mEdit->beginEditing();
+    mEdit->document()->insertLines(5, 2, false);
+    mEdit->setTopLineSegment(50, 0);
+    // This edit is adjacent to the pre-intent insertion and would coalesce
+    // with it without a command-order checkpoint.
+    mEdit->document()->insertLines(7, 3, false);
+    mEdit->endEditing();
+    QCOMPARE(mEdit->mTopLine, 53);
+    QCOMPARE(mEdit->topPos(), 53 * mEdit->textHeight());
+
+    mEdit->beginEditing();
+    mEdit->document()->insertLines(5, 2, false);
+    mEdit->setTopLineSegment(40, 0);
+    mEdit->endEditing();
+    QCOMPARE(mEdit->mTopLine, 40);
+    QCOMPARE(mEdit->topPos(), 40 * mEdit->textHeight());
+
+    mEdit->document()->beginUpdate();
+    mEdit->document()->insertLines(5, 2, false);
+    mEdit->setTopLineSegment(45, 0);
+    mEdit->document()->insertLines(7, 3, false);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mTopLine, 48);
+    QCOMPARE(mEdit->topPos(), 48 * mEdit->textHeight());
+}
+
+void TestQSyneditDisplay::test_shared_document_keeps_top_anchor()
+{
+    mEdit->loadContent(makeLines(200));
+    auto edit2 = std::make_shared<QSynEdit>();
+    edit2->setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit2->setDocument(mEdit->document());
+    edit2->setFont(mEdit->font());
+    edit2->resize(600, 400);
+    edit2->setTopLineSegment(50, 0);
+    edit2->setCaretPos(CharPos{0, 60});
+    int h = edit2->textHeight();
+
+    mEdit->beginEditing();
+    mEdit->document()->insertLines(5, 3, false);
+    mEdit->endEditing();
+    QCOMPARE(edit2->topLine(), 50);
+    QCOMPARE(edit2->topSegment(), 0);
+    QCOMPARE(edit2->caretPos(), CharPos(0, 63));
+    QCOMPARE(edit2->topPos(), 50 * h);
+    QCOMPARE(edit2->verticalScrollBar()->value(), edit2->topPos());
+
+    mEdit->beginEditing();
+    mEdit->document()->deleteLines(5, 3, false);
+    mEdit->endEditing();
+    QCOMPARE(edit2->topLine(), 50);
+    QCOMPARE(edit2->topSegment(), 0);
+    QCOMPARE(edit2->caretPos(), CharPos(0, 60));
+    QCOMPARE(edit2->topPos(), 50 * h);
+    QCOMPARE(edit2->verticalScrollBar()->value(), edit2->topPos());
+
+    mEdit->beginEditing();
+    mEdit->document()->moveLine(0, 10, false);
+    mEdit->endEditing();
+    QCOMPARE(edit2->topLine(), 50);
+    QCOMPARE(edit2->topSegment(), 0);
+    QCOMPARE(edit2->topPos(), 50 * h);
+    QCOMPARE(edit2->verticalScrollBar()->value(), edit2->topPos());
 }
 
 }

@@ -329,6 +329,10 @@ public:
      * while inUpdate() is true), since their results would be stale.
      */
     int contentVersion() const;
+    // Return the current change index and keep the next recorded change from
+    // coalescing with an earlier entry. Consumers use the checkpoint to apply
+    // only edits made after an explicit view command.
+    int createChangeCheckpoint();
 
     /**
      * @brief the undo/redo histories are owned by the document and shared
@@ -547,6 +551,7 @@ private:
     // reason as mUpdateCount
     std::atomic<int> mContentVersion{0};
     DocumentChangeSet mPendingChanges;
+    bool mChangeCoalescingBlocked = false;
     bool mFoldStateDirty = false;
     // max reparse stabilization line over the current update batch
     // (see design doc 5.3); -1 when no reparse ran in the batch

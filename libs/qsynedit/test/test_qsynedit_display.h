@@ -52,6 +52,11 @@ private slots:
     void test_set_top_line_segment();
     void test_batch_top_restore();
     void test_batch_ensure_caret_visible_flush();
+    void test_batch_ensure_caret_last_request_wins();
+    void test_nested_batch_top_restore();
+    void test_no_change_batch_top_scrollbar_sync();
+    void test_batch_top_intent_preserves_command_order();
+    void test_shared_document_keeps_top_anchor();
     void test_partial_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();

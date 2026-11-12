@@ -565,13 +565,16 @@ foldStateDirty 的交付）、`changed`（`onLinesChanged`）、undo 记录的�
 
 **批次与发射时机**：`QSynEdit::beginEditing/endEditing` 同时包裹
 `Document::beginUpdate/endUpdate`（两者都计数嵌套），文档批次边界 == 编辑操作边界。
-`endEditing` 的顺序：`endBlock` 拍"变更后"快照 → 文档 `endUpdate`（发
-`contentChanged`；槽内先按 changeSet 做折叠增量平移，再 `rescanCodeBlocks`
-全量重扫——重扫按平移后的行号回贴 collapsed 状态——然后非发起视图做 caret/选区
-marker 式平移、滚动条修正与重绘）→ `endInternalChanges`。
-`mEditingCount` 的递减**推迟到 `endUpdate` 之后**，使槽内可用 `mEditingCount>0`
-识别出发起视图（其 caret/选区已是终态，跳过平移）。发射时文档静默、发起视图
-caret 已是终态。
+`endEditing` 的顺序：`endBlock` 拍"变更后"快照 → 文档 `endUpdate`：先发
+`contentChanged`，槽内按 changeSet 做折叠增量平移、局部重扫、caret/选区与普通
+锚点维护；再发 `changed`，由 `onLinesChanged` 进入最外层 `endInternalChanges`，
+统一兑现视图意图并同步滚动条、状态通知和重绘。`mEditingCount` 的递减推迟到
+`endUpdate` 之后，使槽内可用 `mEditingCount>0` 识别发起视图（其 caret/选区已是
+终态，跳过平移）。发射时文档静默、发起视图 caret 已是终态。
+
+编辑层不再另套一对 `beginInternalChanges/endInternalChanges`：Document 最外层
+`changing/changed` 已经提供唯一的视图批次边界，直接 Document 原语与
+`beginEditing/endEditing` 因而共用同一收尾路径。
 未走 `beginEditing` 的 Document 直改路径（如测试直接调 document 方法）
 按原语自身批次发射，粒度退化为逐原语但语义不变。
 
@@ -592,26 +595,53 @@ caret 已是终态。
    `reparseDocument`）立即重绘。Qt 的 `update()` 自动合并，多次 invalidate
    无性能问题。
 
-**批内视图状态意图延迟**（2026-11 修"reformat 后 top pos 复位到文件尾"引入）：
-批内（`mDocument->inUpdate()`）行索引与折叠态都是编辑前的，一切依赖它们的
-视图状态计算**不在批内做**，只记录意图、统一在 `onDocumentContentChanged`
-（树已同步、折叠重扫已落定）兑现一次：
+**批内视图状态意图延迟与共享视图锚点**：批内（`mDocument->inUpdate()`）
+行索引与折叠态都是编辑前的，一切依赖它们的视图状态计算不在批内做，只记录意图。
+`setTopLineSegment` 记录 `mPendingTopLine/mPendingTopSegment`；
+`ensureCaretVisible` 设置 `StateFlag::EnsureCaretVisible(ForceMiddle)`。
+两类意图必须由同一个内部收尾步骤处理，顺序为：应用 pending 锚点（此时按新折叠态
+吸附隐藏行）→ 兑现 ensureCaretVisible → 钳制锚点并从锚点重算 `topPos`。
+两个 caret-visible 标志互斥：每次延迟请求都覆盖另一个标志，最后一次请求决定普通
+可见性检查还是强制居中；收尾时只需消费当前唯一标志，不得把旧请求留给后续批次。
 
-- `setTopLineSegment` 批内只把（按新文档行数钳制过的）line/segment 记入
-  `mPendingTopLine/mPendingTopSegment`；`ensureCaretVisible` 批内只置
-  `StateFlag::EnsureCaretVisible(ForceMiddle)`。兑现顺序：应用 pending 锚点
-  （folded-away 吸附在**这里**做，用的是新折叠态）→ 兑现 ensureCaretVisible
-  → `recalcTopPosFromAnchor`。
-- 关键：pending 锚点是**编辑后坐标**，槽内必须跳过对它的 marker 式平移
-  （`shiftAnchorByChange`）——否则同一坐标被平移两次（全量替换场景：删带把它
-  钳到 0、插入再把它推到文档末行）。caret/选区本就有发起者豁免
-  （`mEditingCount>0`，`endEditing` 故意在信号期间保持不减零），锚点靠 pending
-  机制获得等价语义，两类视图状态规则统一。
-- 无内容变化的批次不发 `contentChanged`：意图由 `endEditing` 末尾兜底冲刷
-  （此时树从未变脏）；`resetEditState`（装载路径）清空 pending 与 flag。
-- 行为边界：非发起视图、以及批内未显式设锚点的发起批次，marker 平移照常，
-  与旧语义一致。回归测试：`test_batch_top_restore`（模拟
-  `Editor::replaceContent`）、`test_batch_ensure_caret_visible_flush`。
+意图只有一个兑现入口：最外层 `endInternalChanges` 的 `mPaintLock == 0` 分支。
+Document 的 `changing/changed` 为所有挂接视图配对了 internal-change 计数；最外层
+`changed` 到达时 Document 已退出 update，且可能存在的 `contentChanged` 已完成
+行索引同步和折叠重扫。无内容变化的批次也发 `changed`，因此不需要第二个兜底入口。
+此处以 `Q_ASSERT(!mDocument->inUpdate())` 固化静默点不变量。内层
+`endEditing/endInternalChanges` 不得消费 pending；否则后续 `contentChanged` 会把
+已经按新文档坐标表达的锚点再次平移。`resetEditState` 清空 pending 与 flag。
+
+`onDocumentContentChanged` 不兑现视图意图，只做 changeSet 驱动的事实维护和普通
+锚点的 topPos 重算；pending 锚点、caret 可见性及其派生滚动状态统一留到上述收尾点。
+
+顶部锚点的平移规则按视图角色区分：
+
+- 发起编辑的视图若没有 pending top，保留现有 marker 平移语义；caret/选区靠
+  `mEditingCount>0` 获得发起者豁免。pending top 是显式视图指令，以
+  `Document::createChangeCheckpoint()` 记录其在 changeSet 中的位置：指令之前的编辑
+  不再移动它，指令之后的编辑继续按 marker 规则移动它；后一次 top 指令重新确立
+  基准。直接 Document 批次中的显式 top 指令也遵守同一顺序，不依赖 `mEditingCount`。
+- **非发起共享视图的 `(topLine, topSegment)` 尽量保持不变**，不做 marker 式
+  平移；其他视图在其上方插入、删除或移动行，不应主动滚动该视图。只有坐标越界、
+  segment 超出新的行段数或 topLine 被折叠隐藏时才做必要修正。caret/选区仍按
+  changeSet 跟踪文本，与顶部锚点的独立视图语义互不混用。
+- 保持的是锚点坐标，不是旧像素 `topPos`，也不是原先显示的文本。行索引变化后，
+  必须从保持下来的锚点重新推导 `topPos`。
+
+**与滚动条、状态通知和重绘的顺序**：锚点及 caret 可见性处理必须先于垂直滚动条
+同步。`recalcTopPosFromAnchor` 只更新内部 `topPos`，不会自行同步 scrollbar 或
+触发重绘；因此凡兑现 pending top 或因此改变 `topPos`，即使批次没有内容变化，
+也必须进入 `updateVScrollbar` 和重绘流程，不能只更新内部字段。最外层
+`endInternalChanges` 中，视图意图兑现必须排在 `VScrollbarChanged` 处理和状态通知
+之前；若此前没有设置 `VScrollbarChanged`，兑现步骤也要主动请求垂直滚动条更新。
+`doUpdateVScrollbar` 在新行索引对应的新范围内设置 value，并以信号阻塞避免被当成
+用户滚动；若最终精确范围仍需钳制，则由它重新推导锚点并重绘。
+
+测试必须覆盖：普通及嵌套批次中的全量替换后 top/caret 恢复；内层结束不消费
+pending；无内容变化批次兑现后锚点、`topPos`、滚动条 value 和重绘一致；非编辑
+共享视图在其他视图插入、删除、移动行后保持锚点，同时 caret 仍正确跟踪文本；
+锚点越界、segment 收缩和折叠隐藏时的必要修正。
 
 **ChangeSet 累积规则**（`Document::recordChange`，`document.cpp`）：
 
@@ -620,6 +650,8 @@ caret 已是终态。
 - 只允许**同类相邻**合并：Insert/SetLine 相邻（`last.line+last.count==line`）、
   Delete 同位置（`last.line==line`）；Move 不合并；**不做跨类合并或抵销**——
   序列必须忠实反映原语实际做了什么，消费者可朴素按序回放；
+- `createChangeCheckpoint()` 返回当前 change 下标，并阻止下一次 change 与之前的
+  条目合并，保证显式视图指令两侧的编辑不会在回放时失去顺序边界；
 - DEBUG 断言：记录时按变更后状态检查范围合法；`endUpdate` 断言批次计数配对；
   槽内 `Q_ASSERT(!inUpdate())`（发射必在静默点，中间态发射在结构上不可能）；
 - `putLine` 内容未变时不记录（空写不产生伪变更）；
@@ -627,15 +659,17 @@ caret 已是终态。
   （Delete(n-1) + SetLine），而非全删后插新行——外部观察者看到
   `linesDeleted(0, n-1)`，末行上的断点等标记得以保留。
 
-**信号挂接两条铁律**（旧"挂接准则"的可执行版）：
+**信号挂接两条铁律**：
 
-1. 槽里只允许**事实驱动的派生维护**：幂等、只凭"哪几行变了"就能做
-   （折叠平移、滚动条、重绘、非发起视图的光标按行差平移）；
-2. **跨组件一致性恢复禁止进槽**（选区按光标吸附、光标钳制等需要 caret/选区/文本
-   同时处于终态的操作）——由编辑操作自己在收尾完成。
+1. `contentChanged` 槽只允许**事实驱动的派生维护**：幂等、只凭"哪几行变了"
+   就能做（折叠平移、行索引、普通锚点、非发起视图的 caret/选区平移），不得兑现
+   需要完整终态的视图意图；
+2. 只有最外层 `changed` 对应的收尾可以兑现 pending top、caret 可见性等跨字段意图，
+   因为此时文本、行索引、折叠态和 caret 均已稳定。任何槽都不得回写文档。
 
-历史教训：`onLinesChanged` 曾在 `changed` 槽里对列选区做重吸附，编辑中间态下
-光标仍是旧值、行可能已删短，导致坐标断言崩溃。
+历史教训：`onLinesChanged` 曾在批次尚未结束时对列选区做重吸附，光标仍是旧值、
+行可能已删短，导致坐标断言崩溃。当前 `changed` 只在最外层 Document 静默点发射，
+最终一致性工作集中在该边界，不在中间信号中分散处理。
 
 **编辑的串行性与禁重入**：所有编辑在 GUI 线程事件循环中串行执行——一个编辑操作
 从 `beginEditing` 到 `endEditing` 在同一事件处理内同步跑完，多视图共享文档不产生
@@ -653,10 +687,10 @@ caret 已是终态。
 - `contentChanged(DocumentChangeSet)`：批次内行级变更的有序、合并列表，
   最外层 `endUpdate` 发射一次。QSynEdit 槽据此做折叠平移、滚动条修正、重绘，
   并**转发**对外结构信号（见下）。
-- `changing()` / `changed()`：批次边界；QSynEdit 据此做批量收尾
-  （gutter autosize、topPos 钳制、`endInternalChanges` 聚合刷新）。
-  注意：编辑被 `beginEditing/endEditing` 包裹后，编辑期间该信号**每次编辑一次**，
-  不再是逐原语 N 次。不做跨组件一致性恢复（见 6.1 铁律 2）。
+- `changing()` / `changed()`：批次边界；QSynEdit 据此配对 internal-change 计数，
+  并在最外层 `changed` 做批量收尾（gutter autosize、pending 视图意图、滚动条、
+  状态通知与重绘）。注意：编辑被 `beginEditing/endEditing` 包裹后，编辑期间该信号
+  **每次编辑一次**，不再是逐原语 N 次；只有这个最终边界可做跨字段一致性收尾。
 - `syntaxerChanged()`：文档语法器更换且全量重解析完成后发出；非发起视图据此
   换自己的语法器实例（默认配色）、重扫折叠、重绘（见 4.1）。
 - `linesReparsed(startLine, endLine)`：编辑原语内建的重解析（或 `reparseAll`）更新
