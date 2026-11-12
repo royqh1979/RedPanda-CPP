@@ -117,6 +117,12 @@ public:
     QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false) const;
 
     void invalidateFile(const QString& fileName);
+#ifdef REDPANDA_PARSER_TEST
+    void invalidateFileRecordForTest(const QString &fileName) { internalInvalidateFile(fileName); }
+    CppPreprocessor::EventCounts preprocessorEventCountsForTest(const QString &fileName) const {
+        return mPreprocessor.eventCounts(fileName);
+    }
+#endif
     bool isLineVisible(const QString& fileName, int line) const;
     bool isIncludeLine(const QString &line) const;
     bool isIncludeNextLine(const QString &line) const;
@@ -287,6 +293,16 @@ private:
     void checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex);
 
     QSet<QString> internalGetFileUsings(const QString& filename) const;
+    PParsedFileInfo findStatementOwner(const PStatement &statement) const {
+        if (!statement)
+            return PParsedFileInfo();
+        return mPreprocessor.findFileInfo(statement->declarationBoundaryAncestor.isEmpty()
+                ? statement->fileName : statement->declarationBoundaryAncestor);
+    }
+    PParsedFileInfo findCurrentFileOwner() const {
+        return mPreprocessor.findFileInfo(mCurrentBoundaryAncestor.isEmpty()
+                ? mCurrentFile : mCurrentBoundaryAncestor);
+    }
 
     PStatement doFindScopeStatement(const QString& filename, int line) const;
 
@@ -737,6 +753,10 @@ private:
     bool mIsHeader;
     bool mSharedByFiles;
     QString mCurrentFile;
+    QString mCurrentBoundaryAncestor;
+    QList<QString> mBoundaryAncestorStack;
+    QHash<QString,int> mBoundaryEntryOccurrences;
+    QHash<QString,QStringList> mBoundaryAncestors;
 //  stack list , each element is a list of one/many scopes(like intypedef struct  s1,s2;
 //  It's used for store scope nesting infos
     QVector<PStatement> mCurrentScope;

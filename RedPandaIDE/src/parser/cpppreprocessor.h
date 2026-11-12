@@ -41,8 +41,13 @@ struct ParsedFile {
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
     PParsedFileInfo fileInfo; // info of this file
-    QHash<QString,QString> conditionRefs; // condition ref -> define signature at evaluation
-    bool conditionSensitive = false; // a condition ref changed value during the scan
+    bool boundaryEntry = false;
+    QString boundaryAncestor;
+    QHash<QString,QString> userMacros;
+    QStringList boundaryPrefix;
+    bool guardCandidate = false;
+    bool guardClosed = false;
+    bool contentAfterGuard = false;
 };
 
 using PParsedFile = std::shared_ptr<ParsedFile>;
@@ -100,27 +105,29 @@ public:
         mProjectIncludePathList.clear();
     }
     void removeScannedFile(const QString& filename);
+    QSet<QString> calculateAffectedFiles(const QString &fileName) const;
+    void invalidateFile(const QString &fileName) { invalidateFileAndDependents(fileName); }
 
     PDefine getDefine(const QString& name) const{
-        return mDefines.value(name,PDefine());
+        return mSession.defines.value(name,PDefine());
     }
 
     QString expandMacros(QString text) const;
 
     const QStringList& result() const{
-        return mResult;
+        return mSession.result;
     };
 
     PParsedFileInfo findFileInfo(const QString& fileName) const {
-        return mFileInfos.value(fileName);
+        return mRegistry.replayRecords.value(fileName);
     }
 
     void removeFileInfo(const QString& fileName) {
-        mFileInfos.remove(fileName);
+        mRegistry.replayRecords.remove(fileName);
     }
 
     bool fileScanned(const QString& fileName) const {
-        return mScannedFiles.contains(fileName);
+        return mRegistry.scannedFiles.contains(fileName);
     }
 
     const QSet<QString>& includePaths() const {
@@ -128,7 +135,7 @@ public:
     }
 
     const QSet<QString>& scannedFiles() const {
-        return mScannedFiles;
+        return mRegistry.scannedFiles;
     }
 
     const QSet<QString> &projectIncludePaths() const {
@@ -141,6 +148,23 @@ public:
 
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
+    void addProjectFile(const QString &fileName) { mRegistry.projectFiles.insert(fileName); }
+    void removeProjectFile(const QString &fileName) { mRegistry.projectFiles.remove(fileName); }
+    void clearProjectFiles() { mRegistry.projectFiles.clear(); }
+    QString boundaryAncestor(const QString &fileName, int occurrence) const;
+    const QHash<QString,QStringList> &boundaryAncestors() const { return mSession.boundaryAncestors; }
+
+#ifdef REDPANDA_PARSER_TEST
+    struct EventCounts {
+        int scan = 0;
+        int replay = 0;
+        int skip = 0;
+        int invalidate = 0;
+    };
+    EventCounts eventCounts(const QString &fileName) const;
+    void clearEventCounts();
+    QStringList currentBoundaryPrefix() const { return mSession.boundaryPrefix; }
+#endif
 
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
     static void combineLinesEndingWithBackslash(QStringList& text);
@@ -189,15 +213,15 @@ private:
 
     // current file stuff
     PParsedFile getInclude(int index) const {
-        return mIncludeStack[index];
+        return mSession.includeStack[index];
     }
     void openInclude(QString fileName);
     void closeInclude();
 
     // branch stuff
     BranchResult getCurrentBranch(){
-        if (!mBranchResults.isEmpty())
-            return mBranchResults.last();
+        if (!mSession.branchResults.isEmpty())
+            return mSession.branchResults.last();
         else
             return BranchResult::isTrue;
     }
@@ -208,17 +232,17 @@ private:
     }
     void setCurrentBranch(BranchResult value){
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentFileInfo->insertBranch(mIndex+1,value==BranchResult::isTrue);
+            mSession.currentFileInfo->insertBranch(mSession.index+1,value==BranchResult::isTrue);
         }
-        mBranchResults.append(value);
+        mSession.branchResults.append(value);
     }
     void removeCurrentBranch(){
         BranchResult value = getCurrentBranch();
-        if (mBranchResults.size()>0) {
-            mBranchResults.pop_back();
+        if (mSession.branchResults.size()>0) {
+            mSession.branchResults.pop_back();
         }
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentFileInfo->insertBranch(mIndex+1,getCurrentBranch()==BranchResult::isTrue);
+            mSession.currentFileInfo->insertBranch(mSession.index+1,getCurrentBranch()==BranchResult::isTrue);
         }
     }
     void addDefinesInFile(const QString& fileName);
@@ -229,17 +253,13 @@ private:
         return mHardDefines.value(name,PDefine());
     };
     void invalidDefinesInFile(const QString& fileName);
-    // Record a macro name referenced by a condition that is actually
-    // being evaluated, together with the macro state it saw (used to
-    // decide whether the file's recorded defines may be safely replayed
-    // at other include points).
-    void recordConditionRef(const QString& name) const;
     static QString signatureOfDefine(const PDefine& define);
-    // True if replaying the file's recorded defines at the current
-    // include point reproduces the branch outcomes of its recorded
-    // scan: every condition reference still sees the same macro state
-    // (self-provided macros such as include guards are exempt).
-    bool isReplaySafe(const PParsedFileInfo& fileInfo) const;
+    bool isInsideBoundary(const QString &fileName) const;
+    QHash<QString,QString> userMacroSnapshot() const;
+    bool hasValidFileStamps(const PParsedFileInfo &fileInfo) const;
+    bool isIncludeProtected(const QString &fileName) const;
+    PParsedFileInfo replayRecordForFile(const QString &fileName) const;
+    void invalidateFileAndDependents(const QString &fileName);
 
 
     /*
@@ -288,28 +308,64 @@ private:
 
     bool evaluateExpression(QString line) const;
 private:
-    //temporary data when preprocessing single file
-    int mIndex; // points to current file buffer.
-    QString mFileName;
-    QStringList mBuffer;
-    QStringList mResult;
-    PParsedFileInfo mCurrentFileInfo;
-    int mPreProcIndex;    
-    QList<PParsedFile> mIncludeStack; // stack of files we've stepped into. last one is current file, first one is source file
-    QList<BranchResult> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    DefineMap mDefines; // working set, editable
-    QSet<QString> mProcessed; // dictionary to save filename already processed
+    struct Session {
+        int index = 0;
+        QString fileName;
+        QStringList buffer;
+        QStringList result;
+        PParsedFileInfo currentFileInfo;
+        int preProcIndex = 0;
+        QList<PParsedFile> includeStack;
+        QList<BranchResult> branchResults;
+        DefineMap defines;
+        QSet<QString> processed;
+        bool fileJustOpenned = false;
+        QString fileIncludeOnceToken;
+        QHash<QString, QStringList> fileCache;
+        QStringList boundaryPrefix;
+        bool allBoundaryEntriesReplayed = true;
+        QHash<QString, QStringList> boundaryAncestors;
 
-    bool mFileJustOpenned;
-    QString mFileIncludeOnceToken;
-    QSet<QString> mFilesCouldRepeatInclude;
-    QHash<QString, QStringList> mFileCache;
-    //Result across processings.
-    //used by parser even preprocess finished
-    QHash<QString, PParsedFileInfo> mFileInfos;
-    QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
-    QHash<QString, PDefineMap> mFileUndefines; //dictionary to save defines for each headerfile;
-    QSet<QString> mScannedFiles;
+        void clear() {
+            fileName.clear();
+            buffer.clear();
+            result.clear();
+            currentFileInfo.reset();
+            fileJustOpenned = false;
+            fileIncludeOnceToken.clear();
+            fileCache.clear();
+            includeStack.clear();
+            branchResults.clear();
+            processed.clear();
+            boundaryPrefix.clear();
+            allBoundaryEntriesReplayed = true;
+            boundaryAncestors.clear();
+        }
+    };
+
+    struct Registry {
+        struct FileMetadata {
+            QDateTime lastModified;
+            qint64 size = -1;
+            bool includeProtected = false;
+        };
+        QHash<QString, PParsedFileInfo> replayRecords;
+        QSet<QString> scannedFiles;
+        QSet<QString> projectFiles;
+        QHash<QString, FileMetadata> fileMetadata;
+        QSet<QString> pendingInvalidations;
+
+        void clear() {
+            replayRecords.clear();
+            scannedFiles.clear();
+            projectFiles.clear();
+            fileMetadata.clear();
+            pendingInvalidations.clear();
+        }
+    };
+
+    Session mSession;
+    Registry mRegistry;
 
     //option data for the parser
     //{ List of current project's include path }
@@ -331,6 +387,13 @@ private:
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
+
+#ifdef REDPANDA_PARSER_TEST
+    QHash<QString, int> mScanCounts;
+    QHash<QString, int> mReplayCounts;
+    QHash<QString, int> mSkipCounts;
+    QHash<QString, int> mInvalidateCounts;
+#endif
 };
 
 using PCppPreprocessor = std::shared_ptr<CppPreprocessor>;

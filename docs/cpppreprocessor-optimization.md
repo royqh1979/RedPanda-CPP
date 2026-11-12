@@ -1,7 +1,6 @@
 # CppPreprocessor 跨边界 Replay 设计
 
-> 当前状态：pp-token 宏展开器已完成并合并到主干；本文的跨边界 replay 重写尚未实现。
-> 正确性优先于性能。任何缓存都必须能证明结果等价，并能通过测试证明缓存确实命中。
+> 本文描述当前实现的设计与正确性约束。正确性优先于性能；任何缓存都必须能证明结果等价，并能通过测试证明缓存确实命中。
 
 ## 1. 目标与范围
 
@@ -10,7 +9,7 @@
 - 单次预处理的 Session 状态与跨轮 Registry 数据分离；
 - include 扫描、replay、include 保护和失效的统一规则；
 - Statement 的实际文件与跨边界祖先双重归属；
-- 文件内容、include 路径解析和 replay 缓存的有界复用。
+- Session 文件内容缓存，以及 include 路径解析和 replay 缓存的复用。
 
 pp-token 宏展开器不在本次重写范围内。
 
@@ -18,11 +17,11 @@ pp-token 宏展开器不在本次重写范围内。
 
 ## 2. 术语与生命周期
 
-- **Session**：一次 `preprocess()` 的临时状态，包括 include 栈、当前行游标、分支栈、当前文件和本轮有序跨边界前缀。每轮从空状态开始。
-- **Registry**：跨 preprocess 轮次保留的数据，包括文件记录、include 闭包、replay 记录、内容缓存和路径配置。
+- **Session**：一次 `preprocess()` 的临时状态，包括 include 栈、当前行游标、分支栈、当前文件、本轮有序跨边界前缀和文件内容缓存。每轮从空状态开始。
+- **Registry**：跨 preprocess 轮次保留的数据，包括文件记录、include 闭包、replay 记录和路径配置。
 - **边界外文件**：当前 TU 根文件和项目文件。被编辑器作为根打开的文件始终属于边界外。
 - **边界内文件**：编译器 include 路径中的文件，以及通过 include 路径找到但不属于项目的文件。非项目文件位于项目 include 路径中时仍属于边界内。
-- **跨边界头文件**：由边界外文件直接或经边界外文件链包含进入的边界内文件。直接作为根打开系统文件也视为一次跨边界进入。
+- **跨边界头文件**：由边界外文件直接或经边界外文件链包含进入的边界内文件。直接作为根打开的系统文件也构成一次跨边界进入。
 - **跨边界前缀**：本轮 preprocessing 中，跨边界记录生效的完整有序路径序列。重扫和 replay 都会使记录生效；保护导致的 no-op 不会。
 - **用户宏状态**：进入边界时可见的非 hard-defined 宏，包括宏名、参数和替换内容；“未定义”也是状态。编译器或编译参数变化由 IDE reset parser，不在 include 时比较 hard define。
 - **实际文件**：define/declare statement 文本所在文件，可以是边界内子树文件或无保护的 `.tpl`。
@@ -44,13 +43,19 @@ pp-token 宏展开器不在本次重写范围内。
 - 文件名和传递 include 闭包；
 - 进入时的用户宏状态；
 - 本次生效时的有序跨边界前缀；
-- 磁盘文件的 mtime/size；
+- 磁盘文件元数据通过实际文件元数据表关联；
 - 本次扫描产生的 define/undef；
 - statement 归属及重放所需的信息。
 
 include 闭包用于级联失效；它不是 replay 条件本身。
 
-### 3.2 Statement 位置与归属
+### 3.2 实际文件元数据
+
+Registry 用一张覆盖所有实际文件的元数据表保存 mtime/size 和 include-once 保护状态。边界内子树文件也有该元数据，但不因此获得独立 replay/fileInfo 记录。
+
+保护状态是文件内容固有属性，文件变化时随 stamp 一起失效并重新检测。不能通过 Session 的 processed/filesCouldRepeatInclude 状态反推，也不能在 ParsedFileInfo 中重复维护。
+
+### 3.3 Statement 位置与归属
 
 每个 Statement 分别记录声明侧和定义侧的位置与归属：
 
@@ -64,7 +69,9 @@ include 闭包用于级联失效；它不是 replay 条件本身。
 - 定义侧失效：清除定义位置、定义侧祖先和 `HasDefinition`，保留有效声明；
 - 声明侧失效：若定义仍有效，将定义位置同时作为声明位置，并把声明侧祖先设为定义侧祖先；两侧都失效才删除 Statement。
 
-同一实际声明经不同跨边界祖先产生时，必须使用可分别失效的 Statement 实例，不能让多个祖先隐式共享一个只有单一声明侧归属的对象。
+继承产生的成员 Statement 复制被继承成员的声明侧、定义侧归属，不能使用复制时的当前文件或空祖先。父类处理、别名解析和继承覆盖都通过 Statement 的跨边界祖先定位 Registry 记录；边界内实际文件没有独立记录。
+
+声明侧和定义侧各自只有一个当前祖先，失效时不转移所有权。共享子树由第 5 节规则处理：相关边界记录立即失效或在入口处惰性重扫，因此不需要假设不同包含点首次分析结果相同，也不需要复制 Statement 或维护祖先集合。
 
 ## 4. 每轮处理流程
 
@@ -84,13 +91,13 @@ include 闭包用于级联失效；它不是 replay 条件本身。
 3. 更新必要的直接/传递 include 关系；保护导致的 no-op 不追加跨边界前缀。
 4. 若磁盘 stamp 变化，先级联失效。当前 include 栈上正在扫描的文件不得被失效。
 5. 若 include guard 或 `#pragma once` 使本次包含成为 no-op，直接跳过；不校验或追加跨边界前缀。
-6. 若存在跨边界记录，比较用户宏状态和当前跨边界前缀：
-   - 完全一致且 include 闭包未失效：replay；
-   - 任一项不同：失效该记录上一轮的 define/undef、statement、fileInfo 和派生缓存，然后重扫。
+6. 若存在跨边界记录，同时检查用户宏状态、当前跨边界前缀，以及本轮已生效前缀中的记录是否全部 replay 成功：
+   - 三项均满足且 include 闭包未失效：replay；
+   - 任一项不满足：失效该记录上一轮的 define/undef、statement、fileInfo 和派生缓存，然后重扫。
 7. 无可用记录时正常扫描。
 8. 重扫或 replay 使记录生效后，将完整路径追加到本轮跨边界前缀。
 
-前缀必须包含 replay 生效的记录；否则首轮记录的前缀在第二轮永远无法匹配。保护 no-op 不能追加，否则“上轮被跳过、本轮首次真正生效”的场景会误命中。
+前缀必须包含 replay 生效的记录；否则首轮记录的前缀在第二轮永远无法匹配。保护 no-op 不能追加，否则“上轮被跳过、本轮首次真正生效”的场景会误命中。只要已生效前缀中有一项经过重扫，本轮所有后续记录都不能 replay；Session 用一个布尔状态记录这一条件，无需逐项保存前缀的扫描来源。
 
 ### 4.3 Replay 与重扫
 
@@ -112,7 +119,20 @@ include 闭包用于级联失效；它不是 replay 条件本身。
 
 按“声明/定义实际文件 + 对应侧的跨边界祖先”识别 statement。处理 declaration/definition 合并条目时，两侧分别失效；一侧仍有效时保留该侧位置，并维护另一侧位置及 namespace 缓存。
 
-重扫目标记录必须失效；与该记录无关的边界记录保持可用。扫描中的当前栈记录不得立即失效，但失效请求必须保留到扫描结束后执行，不能丢弃。失效操作不得只清 define 而留下 statement，也不得只清 statement 而留下 define。
+文件 A 变化时，立即失效集合统一按失效前的 include 闭包计算：
+
+```text
+D = {A} ∪ {文件 f | A ∈ f 的 include 闭包}
+只立即失效 D。
+```
+
+D 中记录的传递 include 闭包已覆盖直接和间接包含者，无需递归扫描 directIncludes，也不提前失效后续跨界记录。重扫 D 中任一跨界记录后，本轮已生效前缀不再全部来自 replay，因此后续记录即使路径前缀和用户宏相同，也会在各自入口处失效并重扫。这与提前删除有序后缀等价，但保留前序及无关记录，并避免立即计算和删除整个后缀。
+
+共享内部头的后续边界记录按同一规则惰性重扫，不需要转移 Statement 所有权。重扫某条记录前必须删除其旧 Statement 和 define/undef，避免与尚未处理到的其它旧记录混杂。
+
+若后续记录在新一轮中根本没有被包含，不做全局 orphan GC：它仍是可供其它 TU 校验复用的 Registry 缓存，但不属于当前 TU 的生效集合。当前 TU 的新 include 闭包必须使其旧 Statement 在该 TU 的上下文查找中不可见；以后只有在用户宏、前缀及前缀全部 replay 等条件重新满足时才能复用。
+
+扫描中的当前栈记录不得立即失效，但失效请求必须保留到扫描结束后执行，不能丢弃。失效操作不得只清 define 而留下 statement，也不得只清 statement 而留下 define。
 
 ## 6. 正确性与已知代价
 
@@ -127,14 +147,14 @@ include 闭包用于级联失效；它不是 replay 条件本身。
 
 Replay 正确后再处理其它缓存：
 
-- **文件内容缓存**：缓存续行合并和注释剥离后的行表，以 mtime/size 校验，使用有界 LRU。
+- **Session 文件内容缓存**：缓存续行合并和注释剥离后的行表，仅供同一轮中重复扫描的文件复用；每轮 preprocess 开始时清空，不做 Registry 级内容缓存或全局 LRU。
 - **include 路径缓存**：只缓存“名字→路径”的正结果；每次做存在性校验，路径配置变化时清空，负结果不缓存。
-- 性能验收记录首扫、reparse、缓存命中和内存上界。正确性测试失败时不得以性能数据替代验收。
+- 性能验收记录首扫、reparse 和缓存命中。正确性测试失败时不得以性能数据替代验收。
 
 ## 8. 验证
 
 - 场景和正确性证明见 `cpppreprocessor-replay-scenarios.md`。
 - 每个场景同时检查预处理结果、defines、StatementMap 和 scan/replay/skip/invalidate 计数。
 - 使用无 replay 的全量扫描作为 oracle；结果一致但发生全扫的用例仍算失败。
-- 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。
+- 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。本机启用方式：配置时添加 `-DREDPANDA_PARSER_STDLIB_TEST=ON -DREDPANDA_PARSER_STDLIB_MINGW_ROOT=D:/mingw`，然后运行 `test-cppparser --suite=TestCppParser test_bits_stdcpp_not_rescanned_on_stable_reparse test_standard_library_public_api_complete`。
 - 完整 `test-cppparser`、`test-editor` 和真实 IDE 编辑/切换/重解析均通过后，才能进行性能验收。

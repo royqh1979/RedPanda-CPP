@@ -11,11 +11,26 @@ class TestCppParser: public QObject
 public:
     TestCppParser(QObject *parent=nullptr);
 private slots:
+    void init();
     void init_parser();
     void test_parse_var();
     void test_parse_vars();
     void test_struct();
     void test_structured_bindings();
+    void test_shared_boundary_statement_invalidation();
+    void test_shared_boundary_statement_invalidation_only();
+    void test_invalidation_preserves_earlier_boundary_record();
+    void test_removed_boundary_include_remains_inactive_cached_record();
+    void test_repeated_template_include_preserves_each_context();
+    void test_shared_template_statement_ownership();
+    void test_statement_ownership_declaration_definition_invalidation();
+    void test_boundary_invalidation_removes_defines_and_statements();
+    void test_replay_reuses_existing_statements();
+    void test_system_subtree_inheritance_uses_boundary_record();
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+    void test_bits_stdcpp_not_rescanned_on_stable_reparse();
+    void test_standard_library_public_api_complete();
+#endif
 protected:
     std::shared_ptr<CppParser> mParser;
 };

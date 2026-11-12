@@ -1,0 +1,1 @@
+int plain_a;

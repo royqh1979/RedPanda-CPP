@@ -119,6 +119,7 @@ void CppParser::removeProjectFile(const QString &value)
     QMutexLocker locker(&mMutex);
 
     mProjectFiles.remove(value);
+    mPreprocessor.removeProjectFile(value);
     mFilesToScan.remove(value);
 }
 
@@ -144,6 +145,7 @@ void CppParser::clearProjectFiles()
 {
     QMutexLocker  locker(&mMutex);
     mProjectFiles.clear();
+    mPreprocessor.clearProjectFiles();
 }
 
 QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const QString &phrase, int line) const
@@ -708,7 +710,7 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<S
         return PStatement();
     QString nsName=statement->type.mid(0,pos);
     QString name = statement->type.mid(pos+2);
-    PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(statement->fileName);
+    PParsedFileInfo fileInfo = findStatementOwner(statement);
     if (!fileInfo)
         return PStatement();
     foundSet.insert(statement.get());
@@ -1426,6 +1428,7 @@ void CppParser::addProjectFile(const QString &fileName, bool needScan)
 
     // Update project listing
     mProjectFiles.insert(fileName);
+    mPreprocessor.addProjectFile(fileName);
 
     // Only parse given file
     if (needScan && !mPreprocessor.fileScanned(fileName)) {
@@ -1449,6 +1452,11 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
                 inherit->scope,
                 access,
                 inherit->properties | StatementProperty::Inherited);
+    statement->declarationBoundaryAncestor = inherit->declarationBoundaryAncestor;
+    statement->definitionBoundaryAncestor = inherit->definitionBoundaryAncestor;
+    PParsedFileInfo owner = findStatementOwner(statement);
+    if (owner && !owner->statements().contains(statement->fullName, statement))
+        owner->addStatement(statement);
     return statement;
 }
 
@@ -1513,7 +1521,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
         PStatement oldStatement = findStatementInScope(newCommand,noNameArgs,kind,parent);
         if (oldStatement && oldStatement->properties.testFlag(StatementProperty::Inherited)) {
             overrided = true;
-            PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(oldStatement->fileName);
+            PParsedFileInfo fileInfo = findStatementOwner(oldStatement);
             if (fileInfo) {
                 fileInfo->removeStatement(oldStatement);
             }
@@ -1541,6 +1549,14 @@ PStatement CppParser::addStatement(const PStatement& parent,
                     }
                     oldStatement->definitionLine = line;
                     oldStatement->definitionFileName = fileName;
+                    oldStatement->definitionBoundaryAncestor = mCurrentBoundaryAncestor;
+                    if (!oldStatement->definitionBoundaryAncestor.isEmpty()
+                            && oldStatement->definitionBoundaryAncestor != fileName) {
+                        PParsedFileInfo ancestorInfo = mPreprocessor.findFileInfo(
+                                    oldStatement->definitionBoundaryAncestor);
+                        if (ancestorInfo)
+                            ancestorInfo->addStatement(oldStatement);
+                    }
                     return oldStatement;
                 }
             }
@@ -1566,7 +1582,10 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->line = line;
     result->definitionLine = line;
     result->fileName = fileName;
+    result->declarationBoundaryAncestor = mCurrentBoundaryAncestor;
     result->definitionFileName = fileName;
+    if (result->hasDefinition())
+        result->definitionBoundaryAncestor = mCurrentBoundaryAncestor;
     if (!fileName.isEmpty()) {
         result->setInProject(mIsProjectFile);
         result->setInSystemHeader(mIsSystemHeader);
@@ -1596,8 +1615,14 @@ PStatement CppParser::addStatement(const PStatement& parent,
 
     if (result->kind!= StatementKind::Block) {
         PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(fileName);
-        if (fileInfo) {
+        if (fileInfo)
             fileInfo->addStatement(result);
+        if (!result->declarationBoundaryAncestor.isEmpty()
+                && result->declarationBoundaryAncestor != fileName) {
+            PParsedFileInfo ancestorInfo = mPreprocessor.findFileInfo(
+                        result->declarationBoundaryAncestor);
+            if (ancestorInfo)
+                ancestorInfo->addStatement(result);
         }
     }
     return result;
@@ -3534,9 +3559,16 @@ void CppParser::handlePreprocessor()
             bool ok;
             int line = QStringView(s.constBegin() + delimPos + 1, s.constEnd()).toInt(&ok);
             if (line == -1) {
+                mBoundaryAncestorStack.append(mCurrentBoundaryAncestor);
+                int occurrence = mBoundaryEntryOccurrences[mCurrentFile]++;
+                mCurrentBoundaryAncestor = mBoundaryAncestors.value(mCurrentFile).value(occurrence);
                 mFilesScannedCount++;
                 mFilesToScanCount++;
                 emit progress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
+            } else if (!mBoundaryAncestorStack.isEmpty()) {
+                mCurrentBoundaryAncestor = mBoundaryAncestorStack.takeLast();
+            } else {
+                mCurrentBoundaryAncestor.clear();
             }
         }
     } else if (text.startsWith("define")) {
@@ -4171,7 +4203,7 @@ void CppParser::handleUsing(int maxIndex)
             scopeStatement->usingList.insert(fullName);
         }
     } else {
-        PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(mCurrentFile);
+        PParsedFileInfo fileInfo = findCurrentFileOwner();
         if (!fileInfo)
             return;
         if (mNamespaces.contains(usingName)) {
@@ -4538,7 +4570,7 @@ void CppParser::handleInheritance(PStatement derivedStatement, PClassInheritance
                               inheritanceInfo->visibility);
 //        inheritanceInfo->parentClassFilename = statement->fileName;
         inheritanceInfo->handled = true;
-        PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(statement->fileName);
+        PParsedFileInfo fileInfo = findStatementOwner(statement);
         Q_ASSERT(fileInfo!=nullptr);
         fileInfo->addHandledInheritances(inheritanceInfo);
     }
@@ -4634,6 +4666,10 @@ void CppParser::internalParse(const QString &fileName)
     // Let the preprocessor augment the include records
     mPreprocessor.setScanOptions(true, true);
     mPreprocessor.preprocess(fileName);
+    mBoundaryAncestors = mPreprocessor.boundaryAncestors();
+    mCurrentBoundaryAncestor.clear();
+    mBoundaryAncestorStack.clear();
+    mBoundaryEntryOccurrences.clear();
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef PARSER_DEBUG_LOG
@@ -6216,53 +6252,63 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     if (fileName.isEmpty())
         return;
 
-    // remove its include files list
-    PParsedFileInfo p = mPreprocessor.findFileInfo(fileName);
-    if (p) {
-        //invalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
-        for(PStatement statement:p->statements()) {
-            if (statement->fileName==fileName) {
-                mStatementList.deleteStatement(statement);
-            } else {
+    PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(fileName);
+    if (fileInfo) {
+        for (const PStatement &statement : fileInfo->statements()) {
+            bool declarationMatches = statement->declarationBoundaryAncestor == fileName
+                    || (statement->declarationBoundaryAncestor.isEmpty()
+                        && statement->fileName == fileName);
+            bool definitionMatches = statement->hasDefinition()
+                    && (statement->definitionBoundaryAncestor == fileName
+                        || (statement->definitionBoundaryAncestor.isEmpty()
+                            && statement->definitionFileName == fileName));
+
+            if (definitionMatches) {
                 statement->setHasDefinition(false);
                 statement->definitionFileName = statement->fileName;
                 statement->definitionLine = statement->line;
+                statement->definitionBoundaryAncestor.clear();
             }
+            if (!declarationMatches)
+                continue;
+
+            if (statement->hasDefinition()) {
+                statement->fileName = statement->definitionFileName;
+                statement->line = statement->definitionLine;
+                statement->declarationBoundaryAncestor =
+                        statement->definitionBoundaryAncestor;
+                PParsedFileInfo newOwner = mPreprocessor.findFileInfo(
+                            statement->declarationBoundaryAncestor.isEmpty()
+                            ? statement->fileName
+                            : statement->declarationBoundaryAncestor);
+                if (newOwner && newOwner != fileInfo)
+                    newOwner->addStatement(statement);
+                continue;
+            }
+
+            for (auto it = mNamespaces.begin(); it != mNamespaces.end();) {
+                PStatementList statements = it.value();
+                for (int i = statements->size() - 1; i >= 0; i--) {
+                    if (statements->at(i) == statement)
+                        statements->removeAt(i);
+                }
+                if (statements->isEmpty())
+                    it = mNamespaces.erase(it);
+                else
+                    ++it;
+            }
+            mStatementList.deleteStatement(statement);
         }
 
-        //invalidate all handledInheritances
-        foreach (const std::weak_ptr<ClassInheritanceInfo> &pWeakInfo, p->handledInheritances()) {
-            PClassInheritanceInfo info = pWeakInfo.lock();
-            if (info) {
+        for (const std::weak_ptr<ClassInheritanceInfo> &weakInfo
+             : fileInfo->handledInheritances()) {
+            PClassInheritanceInfo info = weakInfo.lock();
+            if (info)
                 info->handled = false;
-            }
         }
-
         mPreprocessor.removeFileInfo(fileName);
     }
 
-    //remove all statements from namespace cache
-    for (auto it=mNamespaces.begin();it!=mNamespaces.end();) {
-        PStatementList statements = it.value();
-        for (int i=statements->size()-1;i>=0;i--) {
-            PStatement statement = statements->at(i);
-            if (statement->fileName == fileName) {
-                statements->removeAt(i);
-            }
-        }
-        if (statements->isEmpty()) {
-            it = mNamespaces.erase(it);
-        } else {
-            ++it;
-        }
-    }
-    // class inheritance
-    // invalid class inheritance infos (derived class is not valid) whould be auto removed in handleInheritances()
-    // foreach (const PClassInheritanceInfo& info, mClassInheritances) {
-    //     if (info->handled && info->parentClassFilename == fileName)
-    //         info->handled = false;
-    // }
-    // delete it from scannedfiles
     mPreprocessor.removeScannedFile(fileName);
 }
 
@@ -6276,15 +6322,7 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
 {
     if (fileName.isEmpty())
         return QSet<QString>();
-    QSet<QString> result;
-    result.insert(fileName);
-    foreach (const QString& file, mPreprocessor.scannedFiles()) {
-        PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(file);
-        if (fileInfo && fileInfo->including(fileName)) {
-            result.insert(file);
-        }
-    }
-    return result;
+    return mPreprocessor.calculateAffectedFiles(fileName);
 }
 
 //int CppParser::calcKeyLenForStruct(const QString &word)

@@ -64,6 +64,7 @@ xmake
 - `MAKE_INTERFACE` — `unix` 与 `mingw32`（IDE 调用哪个 make）。
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
+- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 

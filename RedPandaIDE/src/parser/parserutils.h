@@ -201,7 +201,9 @@ struct Statement {
     int line; // declaration
     int definitionLine; // definition
     QString fileName; // declaration
+    QString declarationBoundaryAncestor;
     QString definitionFileName; // definition
+    QString definitionBoundaryAncestor;
     StatementMap children;
     QList<PStatement> publicProperties;
     QSet<QString> friends; // friend class / functions
@@ -348,27 +350,27 @@ public:
     void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo) { mHandledInheritances.append(classInheritanceInfo); }
     void clearHandledInheritances() { mHandledInheritances.clear(); }
 
-    // Disk stamp of the file when it was scanned (only for files actually
-    // read from disk; content provided through GetFileStreamFunc has no stamp)
-    void setFileStamp(const QDateTime& lastModified, qint64 size) { mLastModified = lastModified; mSize = size; }
-    bool hasFileStamp() const { return mSize >= 0; }
-    QDateTime lastModified() const { return mLastModified; }
-    qint64 fileSize() const { return mSize; }
-
-    // Snapshot of the macro state each of this file's evaluated
-    // conditions saw (name -> define signature at evaluation time),
-    // used to decide whether replaying the recorded defines at another
-    // include point reproduces the same branch outcomes.
-    void addConditionSnapshot(const QHash<QString,QString>& snapshot) { mConditionSnapshot.insert(snapshot); }
-    const QHash<QString,QString>& conditionSnapshot() const { return mConditionSnapshot; }
-    // A condition reference changed value during the scan itself;
-    // the file must always be re-scanned.
-    void setConditionSensitive() { mConditionSensitive = true; }
-    bool conditionSensitive() const { return mConditionSensitive; }
-    // Whether this file has include protection (an include guard or
-    // #pragma once), making re-includes idempotent.
-    void setIncludeProtected(bool on) { mIncludeProtected = on; }
-    bool includeProtected() const { return mIncludeProtected; }
+    void setReplayCondition(const QHash<QString,QString> &userMacros,
+                            const QStringList &boundaryPrefix) {
+        mUserMacros = userMacros;
+        mBoundaryPrefix = boundaryPrefix;
+        mHasReplayCondition = true;
+    }
+    bool hasReplayCondition() const { return mHasReplayCondition; }
+    const QHash<QString,QString> &userMacros() const { return mUserMacros; }
+    const QStringList &boundaryPrefix() const { return mBoundaryPrefix; }
+    PDefineMap defines() const { return mDefines; }
+    PDefineMap defines() {
+        if (!mDefines)
+            mDefines = std::make_shared<DefineMap>();
+        return mDefines;
+    }
+    PDefineMap undefines() const { return mUndefines; }
+    PDefineMap undefines() {
+        if (!mUndefines)
+            mUndefines = std::make_shared<DefineMap>();
+        return mUndefines;
+    }
 
     QString fileName() const { return mFileName; }
     const StatementMap& statements() const { return mStatements; }
@@ -386,11 +388,11 @@ private:
     CppScopes mScopes; // int is start line of the statement scope
     QMap<int,bool> mBranches;
     QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
-    QDateTime mLastModified;
-    qint64 mSize = -1;
-    QHash<QString,QString> mConditionSnapshot;
-    bool mConditionSensitive = false;
-    bool mIncludeProtected = false;
+    bool mHasReplayCondition = false;
+    QHash<QString,QString> mUserMacros;
+    QStringList mBoundaryPrefix;
+    PDefineMap mDefines;
+    PDefineMap mUndefines;
 };
 
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;

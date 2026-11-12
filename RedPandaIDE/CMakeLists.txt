@@ -359,8 +359,23 @@ target_compile_definitions(test-cppparser PRIVATE
     APP_NAME=\"test-cppparser\"
     LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
     REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
+    REDPANDA_PARSER_TEST
     ARCH_X86_64=1
     ARCH_X86=1)
+
+option(REDPANDA_PARSER_STDLIB_TEST
+    "Enable standard library parser acceptance tests" OFF)
+set(REDPANDA_PARSER_STDLIB_MINGW_ROOT "" CACHE PATH
+    "MinGW root used by the standard library parser acceptance tests")
+if(REDPANDA_PARSER_STDLIB_TEST)
+    if(NOT EXISTS "${REDPANDA_PARSER_STDLIB_MINGW_ROOT}/bin/g++.exe")
+        message(FATAL_ERROR
+            "REDPANDA_PARSER_STDLIB_MINGW_ROOT must point to a MinGW installation")
+    endif()
+    target_compile_definitions(test-cppparser PRIVATE
+        REDPANDA_PARSER_STDLIB_TEST
+        REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
+endif()
 
 add_test(
     NAME test-cppparser

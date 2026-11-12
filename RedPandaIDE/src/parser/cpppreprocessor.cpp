@@ -45,46 +45,127 @@ CppPreprocessor::CppPreprocessor()
 
 void CppPreprocessor::clear()
 {
-    //don't use reset(), it will reset(add) defines.
     clearTempResults();
-
-    //Result across processings.
-    //used by parser even preprocess finished
-    mFileInfos.clear();
-    mFileDefines.clear(); //dictionary to save defines for each headerfile;
-    mFileUndefines.clear(); //dictionary to save undefines for each headerfile;
-    mScannedFiles.clear();
-
-    //option data for the parser
-    //{ List of current project's include path }
+    mRegistry.clear();
     mHardDefines.clear();
-    mDefines.clear();
-    //mHardDefines.clear(); // set by "cpp -dM -E -xc NUL"
+    mSession.defines.clear();
     mProjectIncludePaths.clear();
-    //we also need include paths in order (for #include_next)
     mIncludePathList.clear();
     mProjectIncludePathList.clear();
-    //{ List of current compiler set's include path}
     mIncludePaths.clear();
     mSupportCPP23=false;
 }
 
 void CppPreprocessor::clearTempResults()
-{    
-    //temporary data when preprocessing single file
-    mFileName="";
-    mBuffer.clear();
-    mResult.clear();
-    mCurrentFileInfo=nullptr;
-    mFileJustOpenned = false;
-    mFileIncludeOnceToken = "";
-    mFilesCouldRepeatInclude.clear();
-    mFileCache.clear();
-    mIncludeStack.clear(); // stack of files we've stepped into. last one is current file, first one is source file
-    mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    //mDefines.clear(); // working set, editable
-    mProcessed.clear(); // dictionary to save filename already processed
+{
+    mSession.clear();
 }
+
+QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrence) const
+{
+    const QStringList ancestors = mSession.boundaryAncestors.value(fileName);
+    if (occurrence < 0 || occurrence >= ancestors.count())
+        return QString();
+    return ancestors[occurrence];
+}
+
+bool CppPreprocessor::isInsideBoundary(const QString &fileName) const
+{
+    if (mRegistry.projectFiles.contains(fileName))
+        return false;
+    return isSystemHeaderFile(fileName, mIncludePaths)
+            || isSystemHeaderFile(fileName, mProjectIncludePaths);
+}
+
+QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
+{
+    QHash<QString,QString> result;
+    for (auto it = mSession.defines.constBegin(); it != mSession.defines.constEnd(); ++it) {
+        if (!it.value()->hardCoded)
+            result.insert(it.key(), signatureOfDefine(it.value()));
+    }
+    return result;
+}
+
+bool CppPreprocessor::hasValidFileStamps(const PParsedFileInfo &fileInfo) const
+{
+    QSet<QString> files = fileInfo->includes();
+    files.insert(fileInfo->fileName());
+    for (const QString &fileName : files) {
+        if (!mRegistry.fileMetadata.contains(fileName))
+            continue;
+        const Registry::FileMetadata &stamp = mRegistry.fileMetadata[fileName];
+        if (stamp.size < 0)
+            continue;
+        QFileInfo diskInfo(fileName);
+        if (!diskInfo.exists() || diskInfo.lastModified() != stamp.lastModified
+                || diskInfo.size() != stamp.size)
+            return false;
+    }
+    return true;
+}
+
+bool CppPreprocessor::isIncludeProtected(const QString &fileName) const
+{
+    return mRegistry.fileMetadata.value(fileName).includeProtected;
+}
+
+PParsedFileInfo CppPreprocessor::replayRecordForFile(const QString &fileName) const
+{
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
+    if (fileInfo)
+        return fileInfo;
+    if (!mSession.includeStack.isEmpty()) {
+        const QString &ancestor = mSession.includeStack.back()->boundaryAncestor;
+        if (!ancestor.isEmpty())
+            return findFileInfo(ancestor);
+    }
+    return PParsedFileInfo();
+}
+
+QSet<QString> CppPreprocessor::calculateAffectedFiles(const QString &fileName) const
+{
+    QSet<QString> affected{fileName};
+    for (const QString &scannedFile : mRegistry.scannedFiles) {
+        PParsedFileInfo fileInfo = mRegistry.replayRecords.value(scannedFile);
+        if (fileInfo && fileInfo->including(fileName))
+            affected.insert(scannedFile);
+    }
+    return affected;
+}
+
+void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
+{
+    QSet<QString> affected = calculateAffectedFiles(fileName);
+    for (const PParsedFile &parsedFile : mSession.includeStack) {
+        if (affected.contains(parsedFile->fileName)) {
+            mRegistry.pendingInvalidations.insert(parsedFile->fileName);
+            affected.remove(parsedFile->fileName);
+        }
+    }
+    for (const QString &affectedFile : affected)
+        removeScannedFile(affectedFile);
+}
+
+#ifdef REDPANDA_PARSER_TEST
+CppPreprocessor::EventCounts CppPreprocessor::eventCounts(const QString &fileName) const
+{
+    EventCounts result;
+    result.scan = mScanCounts.value(fileName);
+    result.replay = mReplayCounts.value(fileName);
+    result.skip = mSkipCounts.value(fileName);
+    result.invalidate = mInvalidateCounts.value(fileName);
+    return result;
+}
+
+void CppPreprocessor::clearEventCounts()
+{
+    mScanCounts.clear();
+    mReplayCounts.clear();
+    mSkipCounts.clear();
+    mInvalidateCounts.clear();
+}
+#endif
 
 void CppPreprocessor::addDefineByParts(const QString &name, const QString &args, const QString &value, bool hardCoded)
 {
@@ -93,7 +174,7 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     define->name = name;
     define->args = args;
     define->value = value;
-    define->filename = mFileName;
+    define->filename = mSession.fileName;
     define->hardCoded = hardCoded;
     if (!args.isEmpty()) {
         // precompile the replacement list for the pp-token engine
@@ -104,7 +185,7 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     }
     if (hardCoded) {
         mHardDefines.insert(name,define);
-        mDefines.insert(name,define);
+        mSession.defines.insert(name,define);
         if (name == "__cplusplus") {
             // strip integer suffixes (U, L, UL, LL, ULL) before converting
             QString v = value.trimmed();
@@ -116,13 +197,10 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
             mSupportCPP23 = (ok && version >=202302);
         }
     } else {
-        PDefineMap defineMap = mFileDefines.value(mFileName,PDefineMap());
-        if (!defineMap) {
-            defineMap = std::make_shared<DefineMap>();
-            mFileDefines.insert(mFileName,defineMap);
-        }
-        defineMap->insert(define->name,define);
-        mDefines.insert(name,define);
+        PParsedFileInfo fileInfo = replayRecordForFile(mSession.fileName);
+        if (fileInfo)
+            fileInfo->defines()->insert(define->name,define);
+        mSession.defines.insert(name,define);
     }
 }
 
@@ -199,34 +277,44 @@ void CppPreprocessor::preprocess(const QString &fileName)
 {
     mStopForParserReset = false;
     clearTempResults();
-    mFileName = fileName;
+    QSet<QString> pendingInvalidations = mRegistry.pendingInvalidations;
+    mRegistry.pendingInvalidations.clear();
+    for (const QString &pendingFile : pendingInvalidations)
+        invalidateFileAndDependents(pendingFile);
+    mSession.defines = mHardDefines;
+    mSession.fileName = fileName;
+    PParsedFileInfo oldRootInfo = findFileInfo(fileName);
+    if (oldRootInfo && !hasValidFileStamps(oldRootInfo))
+        invalidateFileAndDependents(fileName);
+    else
+        removeScannedFile(fileName);
     openInclude(fileName);
     preprocessBuffer();
 }
 
 void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
 {
-    //remove all defines defined in this file
-    PDefineMap defineMap = mFileDefines.value(fileName,PDefineMap());
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
+    if (!fileInfo)
+        return;
+    PDefineMap defineMap = fileInfo->defines();
     if (defineMap) {
-        foreach (const PDefine& define, *defineMap) {
-            const PDefine& p = mDefines.value(define->name);
-            if (p == define) {
-                mDefines.remove(define->name);
-                PDefine p2 = mHardDefines.value(define->name);
-                if (p2)
-                    mDefines.insert(define->name, p2);
+        for (const PDefine &define : *defineMap) {
+            const PDefine &current = mSession.defines.value(define->name);
+            if (current == define) {
+                mSession.defines.remove(define->name);
+                PDefine hardDefine = mHardDefines.value(define->name);
+                if (hardDefine)
+                    mSession.defines.insert(define->name, hardDefine);
             }
         }
-        mFileDefines.remove(fileName);
+        defineMap->clear();
     }
-    //restore all defines undefined in this file
-    PDefineMap undefineMap = mFileUndefines.value(fileName,PDefineMap());
+    PDefineMap undefineMap = fileInfo->undefines();
     if (undefineMap) {
-        foreach (const PDefine& define, *undefineMap) {
-            mDefines.insert(define->name, define);
-        }
-        mFileUndefines.remove(fileName);
+        for (const PDefine &define : *undefineMap)
+            mSession.defines.insert(define->name, define);
+        undefineMap->clear();
     }
 }
 
@@ -235,7 +323,7 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (const PDefine& define:mDefines) {
+        for (const PDefine& define:mSession.defines) {
             stream<<QString("%1 %2 %3 %4\n")
                     .arg(define->name,define->args,define->value)
                     .arg(define->hardCoded)<<Qt::endl;
@@ -248,7 +336,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (const PParsedFileInfo& fileInfo:mFileInfos) {
+        for (const PParsedFileInfo& fileInfo:mRegistry.replayRecords) {
             stream<<fileInfo->fileName()<<" : "<<Qt::endl;
             stream<<"\t**direct-includes:**"<<Qt::endl;
             foreach (const QString& s,fileInfo->directIncludes()) {
@@ -280,11 +368,14 @@ void CppPreprocessor::addProjectIncludePath(const QString &fileName)
 
 void CppPreprocessor::removeScannedFile(const QString &filename)
 {
+#ifdef REDPANDA_PARSER_TEST
+    if (mRegistry.scannedFiles.contains(filename) || mRegistry.replayRecords.contains(filename))
+        mInvalidateCounts[filename]++;
+#endif
     invalidDefinesInFile(filename);
-    mScannedFiles.remove(filename);
-    mFileInfos.remove(filename);
-    mFileDefines.remove(filename);
-    mFileUndefines.remove(filename);
+    mRegistry.scannedFiles.remove(filename);
+    mRegistry.replayRecords.remove(filename);
+    mRegistry.fileMetadata.remove(filename);
 }
 
 QString CppPreprocessor::expandMacros(QString text) const
@@ -302,15 +393,15 @@ QString CppPreprocessor::expandMacros(QString text) const
 QString CppPreprocessor::getNextPreprocessor()
 {
     skipToPreprocessor(); // skip until # at start of line
-    if (mIndex >= mBuffer.count())
+    if (mSession.index >= mSession.buffer.count())
         return ""; // we've gone past the final #preprocessor line. Yay
 
     // Calculate index to insert defines in in result file
-    mPreProcIndex = (mResult.count() - 1) + 1; // offset by one for #include rootfile
+    mSession.preProcIndex = (mSession.result.count() - 1) + 1; // offset by one for #include rootfile
 
     // Assemble whole line, convert newlines to space
-    QString result = mBuffer[mIndex];
-    mResult.append("");// defines resolve into empty files, except #define and #include
+    QString result = mSession.buffer[mSession.index];
+    mSession.result.append("");// defines resolve into empty files, except #define and #include
     return result;
 }
 
@@ -319,17 +410,11 @@ void CppPreprocessor::handleDefine(const QString &tokens)
     if (getCurrentBranch() == BranchResult::isTrue) {
         QString name,args,value;
         getDefineParts(tokens, name, args, value);
-        if (name == mFileIncludeOnceToken) {
-            mFileIncludeOnceToken = "";
-            mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
-            // the guard makes re-includes idempotent; remember it so
-            // later replay/invalidation decisions can rely on it
-            mCurrentFileInfo->setIncludeProtected(true);
-            //qDebug()<<"- "<<mIncludeStack.back()->fileName;
-        }
+        if (name == mSession.fileIncludeOnceToken)
+            mSession.fileIncludeOnceToken = "";
         // Add to the list
         addDefineByParts(name, args, value, false);
-        mResult[mPreProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
+        mSession.result[mSession.preProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
     }
 }
 
@@ -338,7 +423,7 @@ void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
     if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
 
-    PParsedFile file = mIncludeStack.back();
+    PParsedFile file = mSession.includeStack.back();
     QString fileName;
     // Get full header file name
     QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
@@ -377,18 +462,21 @@ void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
     if (fileName.isEmpty())
         return;
 
-    PParsedFileInfo oldCurrentIncludes = mCurrentFileInfo;
+    PParsedFileInfo oldCurrentIncludes = mSession.currentFileInfo;
     openInclude(fileName);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString& command, const QString& tokens)
 {
+    if (!mSession.includeStack.isEmpty()
+            && mSession.includeStack.back()->guardClosed)
+        mSession.includeStack.back()->contentAfterGuard = true;
     std::function<void(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
     if (handler) {
         handler(tokens);
         if (!command.startsWith("include") && !command.startsWith("pragma")
                 && !command.startsWith("undef"))
-            mFileJustOpenned = false;
+            mSession.fileJustOpenned = false;
     }
 }
 
@@ -404,25 +492,18 @@ void CppPreprocessor::handleUndefine(const QString& tokens)
     PDefine define = getDefine(name);
     if (define) {
         //remove the define from defines set
-        mDefines.remove(name);
-        if (define->filename == mFileName) {
-            //remove the define form the file where it defines
-            PDefineMap defineMap = mFileDefines.value(mFileName);
-            if (defineMap) {
-                defineMap->remove(name);
-            }
-        } else {
-            // add it to undefine map
-            PDefineMap undefineMap = mFileUndefines.value(mFileName);
-            if (!undefineMap) {
-                undefineMap = std::make_shared<DefineMap>();
-                mFileUndefines.insert(mFileName,undefineMap);
-            }
+        mSession.defines.remove(name);
+        PParsedFileInfo fileInfo = replayRecordForFile(mSession.fileName);
+        if (define->filename == mSession.fileName) {
+            if (fileInfo && fileInfo->defines())
+                fileInfo->defines()->remove(name);
+        } else if (fileInfo) {
+            PDefineMap undefineMap = fileInfo->undefines();
             if (!undefineMap->contains(name))
                 undefineMap->insert(name, define);
         }
     }
-    mResult[mPreProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
+    mSession.result[mSession.preProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
 
 }
 
@@ -436,49 +517,11 @@ void CppPreprocessor::handleIf(const QString &tokens)
     }
 }
 
-void CppPreprocessor::recordConditionRef(const QString &name) const
-{
-    if (mIncludeStack.isEmpty())
-        return;
-    PDefine define = getDefine(name);
-    if (define && define->filename == mIncludeStack.back()->fileName) {
-        // Self-provided at evaluation time (e.g. the define-use-undef
-        // feature macros common in libstdc++): the file produces this
-        // state on every scan by itself, no environment dependence.
-        return;
-    }
-    QString signature = signatureOfDefine(define);
-    ParsedFile& current = *mIncludeStack.back();
-    auto it = current.conditionRefs.find(name);
-    if (it == current.conditionRefs.end()) {
-        current.conditionRefs.insert(name, signature);
-    } else if (it.value() != signature) {
-        // the reference sees different states within one scan: the file
-        // can only be re-scanned at every include point
-        current.conditionSensitive = true;
-    }
-}
-
 QString CppPreprocessor::signatureOfDefine(const PDefine &define)
 {
     if (!define)
         return QStringLiteral("\x02");
     return define->args + QStringLiteral("\x01") + define->value;
-}
-
-bool CppPreprocessor::isReplaySafe(const PParsedFileInfo &fileInfo) const
-{
-    if (fileInfo->conditionSensitive())
-        return false;
-    PDefineMap ownDefines = mFileDefines.value(fileInfo->fileName());
-    const QHash<QString,QString>& snapshot = fileInfo->conditionSnapshot();
-    for (auto it = snapshot.begin(); it != snapshot.end(); ++it) {
-        if (ownDefines && ownDefines->contains(it.key()))
-            continue; // self-provided (include guards etc.)
-        if (signatureOfDefine(getDefine(it.key())) != it.value())
-            return false;
-    }
-    return true;
 }
 
 void CppPreprocessor::handleIfdef(const QString &tokens)
@@ -487,7 +530,6 @@ void CppPreprocessor::handleIfdef(const QString &tokens)
             setCurrentBranch(BranchResult::parentIsFalse);
         } else {
             QString name = tokens.trimmed();
-            recordConditionRef(name);
             setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
 }
@@ -498,9 +540,10 @@ void CppPreprocessor::handleIfndef(const QString &tokens)
         setCurrentBranch(BranchResult::parentIsFalse);
     } else {
         QString name = tokens.trimmed();
-        recordConditionRef(name);
-        if (mFileJustOpenned) {
-            mFileIncludeOnceToken = name;
+
+        if (mSession.fileJustOpenned) {
+            mSession.fileIncludeOnceToken = name;
+            mSession.includeStack.back()->guardCandidate = true;
         }
         setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
     }
@@ -527,7 +570,7 @@ void CppPreprocessor::handleElifdef(const QString &tokens)
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
-            recordConditionRef(name);
+
             setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
             setCurrentBranch(elseResult);
@@ -543,7 +586,7 @@ void CppPreprocessor::handleElifndef(const QString &tokens)
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
-            recordConditionRef(name);
+
             setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
             setCurrentBranch(elseResult);
@@ -560,7 +603,11 @@ void CppPreprocessor::handleElse(const QString &tokens)
 
 void CppPreprocessor::handleEndif(const QString &tokens)
 {
+    PParsedFile current = mSession.includeStack.back();
     removeCurrentBranch();
+    if (current->guardCandidate && mSession.branchResults.isEmpty()
+            && mSession.fileIncludeOnceToken.isEmpty())
+        current->guardClosed = true;
 }
 
 void CppPreprocessor::handleInclude(const QString &tokens)
@@ -576,8 +623,7 @@ void CppPreprocessor::handleIncludeNext(const QString &tokens)
 void CppPreprocessor::handlePragma(const QString &tokens)
 {
     if (tokens.trimmed()=="once") {
-        mFilesCouldRepeatInclude.remove(mIncludeStack.back()->fileName);
-        mCurrentFileInfo->setIncludeProtected(true);
+        mRegistry.fileMetadata[mSession.fileName].includeProtected = true;
     }
 }
 
@@ -636,189 +682,192 @@ void CppPreprocessor::openInclude(QString fileName)
 {
     if (mStopForParserReset)
         return;
-    PParsedFileInfo fileInfo = findFileInfo(fileName);
-    if (fileInfo) {
-        fileName = fileInfo->fileName();
-    } else {
-        fileName.squeeze();
-        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+    if (mSession.includeStack.count() >= mMaxIncludeNestingDepth) {
+#ifdef REDPANDA_PARSER_TEST
+        mSkipCounts[fileName]++;
+#endif
+        return;
     }
+
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
+    if (fileInfo)
+        fileName = fileInfo->fileName();
+    else
+        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+
     bool inStack = false;
-    for (PParsedFile& parsedFile : mIncludeStack) {
+    for (const PParsedFile &parsedFile : mSession.includeStack) {
         if (parsedFile->fileName == fileName) {
             inStack = true;
             break;
         }
     }
-    if (inStack) {
-        // A file that is currently being scanned must never be
-        // invalidated or re-scanned out from under itself. Guarded or
-        // include-once files gain nothing by re-entering (their content
-        // is idempotent); unguarded files behave like real compilers
-        // and re-enter, bounded by a nesting depth cap.
-        if (!mFilesCouldRepeatInclude.contains(fileName)
-                || mIncludeStack.count() >= mMaxIncludeNestingDepth)
-            return;
+
+    bool boundaryEntry = false;
+    QString boundaryAncestor;
+    if (mSession.includeStack.isEmpty()) {
+        boundaryEntry = isInsideBoundary(fileName);
+        boundaryAncestor = boundaryEntry ? fileName : QString();
     } else {
-        // Discard the recorded scan if the file changed on disk since
-        // then, so its content (and defines) are re-scanned instead of
-        // replayed.
-        if (mScannedFiles.contains(fileName) && fileInfo->hasFileStamp()) {
-            QFileInfo diskInfo(fileName);
-            if (!diskInfo.exists()
-                    || diskInfo.lastModified() != fileInfo->lastModified()
-                    || diskInfo.size() != fileInfo->fileSize()) {
-                removeScannedFile(fileName);
-                fileInfo = std::make_shared<ParsedFileInfo>(fileName);
-            }
-        }
-        // An UNPROTECTED file (no include guard / pragma once) whose
-        // conditions depend on the including environment must be
-        // re-scanned at every include point; replaying its recorded
-        // defines would reproduce the branch outcomes of the first
-        // scan's environment. Protected files are always replayed:
-        // their guard makes the re-include a no-op anyway, and
-        // invalidating them would drop the guard macro and wrongly
-        // re-emit the full content. (The root file is exempt: it is
-        // always preprocessed from scratch anyway.)
-        if (mScannedFiles.contains(fileName)
-                && !mFilesCouldRepeatInclude.contains(fileName)
-                && mIncludeStack.size()>0
-                && !fileInfo->includeProtected()
-                && !isReplaySafe(fileInfo)) {
-            removeScannedFile(fileName);
+        const PParsedFile &parent = mSession.includeStack.back();
+        bool parentInside = isInsideBoundary(parent->fileName);
+        bool childInside = isInsideBoundary(fileName);
+        boundaryEntry = !parentInside && childInside;
+        boundaryAncestor = boundaryEntry ? fileName : parent->boundaryAncestor;
+        if (parentInside && !childInside)
+            qWarning() << "Boundary-inside file includes a boundary-outside file:"
+                       << parent->fileName << fileName;
+    }
+
+    if (!inStack && mRegistry.scannedFiles.contains(fileName)
+            && !hasValidFileStamps(fileInfo)) {
+        invalidateFileAndDependents(fileName);
+        fileInfo = findFileInfo(fileName);
+        if (!fileInfo)
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
-        }
     }
-    if (mIncludeStack.size()>0) {
-        bool alreadyIncluded = false;
-        for (PParsedFile& parsedFile:mIncludeStack) {
-            if (parsedFile->fileInfo->including(fileName)) {
-                alreadyIncluded = true;
-            }
+
+    bool includeProtected = isIncludeProtected(fileName);
+    if (mSession.includeStack.count() > 0) {
+        for (PParsedFile &parsedFile : mSession.includeStack) {
             parsedFile->fileInfo->addInclude(fileName);
-            foreach (const QString& includedFileName,fileInfo->includes()) {
+            for (const QString &includedFileName : fileInfo->includes())
                 parsedFile->fileInfo->addInclude(includedFileName);
-            }
         }
-        PParsedFile innerMostFile = mIncludeStack.back();
+        PParsedFile innerMostFile = mSession.includeStack.back();
         innerMostFile->fileInfo->addDirectInclude(fileName);
-        // Skipping an already-included file is only valid while its
-        // recorded scan is intact; a just-invalidated file must be
-        // re-scanned here, otherwise its file info is lost for good.
-        if (alreadyIncluded && !mFilesCouldRepeatInclude.contains(fileName)
-                && mScannedFiles.contains(fileName))
-            return;
-        // Backup old position if we're entering a new file
-        innerMostFile->index = mIndex;
-        innerMostFile->branches = mBranchResults.count();
+        innerMostFile->index = mSession.index;
+        innerMostFile->branches = mSession.branchResults.count();
     }
 
-
-    // Don't parse stuff that no need to parse again
-    if (mScannedFiles.contains(fileName) && !mFilesCouldRepeatInclude.contains(fileName)) {
-        //add defines of already parsed including headers;
-        addDefinesInFile(fileName);
+    if (includeProtected && mSession.processed.contains(fileName)) {
+#ifdef REDPANDA_PARSER_TEST
+        mSkipCounts[fileName]++;
+#endif
         return;
     }
-//    if (mFilesCouldRepeatInclude.contains(fileName)) {
-//        qDebug()<<"++ "<<fileName;
-//    }
-    // Create and add new buffer/position
+
+    bool repeatedUnprotected = mSession.processed.contains(fileName)
+            && !includeProtected;
+    bool canReplay = boundaryEntry && !inStack && !repeatedUnprotected
+            && mRegistry.scannedFiles.contains(fileName);
+    if (canReplay) {
+        bool valid = mSession.allBoundaryEntriesReplayed
+                && fileInfo->hasReplayCondition()
+                && fileInfo->userMacros() == userMacroSnapshot()
+                && fileInfo->boundaryPrefix() == mSession.boundaryPrefix;
+        if (!valid) {
+            invalidateFileAndDependents(fileName);
+            fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+        } else {
+#ifdef REDPANDA_PARSER_TEST
+            mReplayCounts[fileName]++;
+#endif
+            addDefinesInFile(fileName);
+            mSession.boundaryPrefix.append(fileName);
+            return;
+        }
+    }
+
     PParsedFile parsedFile = std::make_shared<ParsedFile>();
     parsedFile->index = 0;
     parsedFile->fileName = fileName;
     parsedFile->branches = 0;
-    // parsedFile->buffer; it's auto initialized
+    parsedFile->fileInfo = fileInfo;
+    parsedFile->boundaryEntry = boundaryEntry;
+    parsedFile->boundaryAncestor = boundaryAncestor;
+    parsedFile->userMacros = userMacroSnapshot();
+    parsedFile->boundaryPrefix = mSession.boundaryPrefix;
 
+    mSession.currentFileInfo = fileInfo;
+    bool registryRecord = boundaryEntry || boundaryAncestor.isEmpty();
+    if (registryRecord) {
+        mRegistry.replayRecords.insert(fileName, mSession.currentFileInfo);
+        mRegistry.scannedFiles.insert(fileName);
+    }
+    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
+            || isSystemHeaderFile(fileName, mProjectIncludePaths);
+    bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
+#ifdef REDPANDA_PARSER_TEST
+    if (scanContent)
+        mScanCounts[fileName]++;
+#endif
+    mSession.processed.insert(fileName);
+    mSession.boundaryAncestors[fileName].append(boundaryAncestor);
 
-    // Keep track of files we include here
-    // Only create new items for files we have NOT scanned yet
-    mCurrentFileInfo = fileInfo;
-    mFileInfos.insert(fileName,mCurrentFileInfo);
-    parsedFile->fileInfo = mCurrentFileInfo;
-    //if not Assigned(Stream) then
-    mScannedFiles.insert(fileName);
-
-    if (mFileCache.contains(fileName))
-        parsedFile->buffer = mFileCache.value(fileName);
-    else {
-        // Only load up the file if we are allowed to parse it
-        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
-        if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
-            QStringList bufferedText;
-            if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
-                parsedFile->buffer  = bufferedText;
-            } else {
-                parsedFile->buffer = readFileToLines(fileName);
-                QFileInfo diskInfo(fileName);
-                fileInfo->setFileStamp(diskInfo.lastModified(), diskInfo.size());
-            }
-            combineLinesEndingWithBackslash(parsedFile->buffer);
-            replaceCommentsBySpaceChar(parsedFile->buffer);
+    if (mSession.fileCache.contains(fileName)) {
+        parsedFile->buffer = mSession.fileCache.value(fileName);
+    } else if (scanContent) {
+        QStringList bufferedText;
+        if (mOnGetFileStream && mOnGetFileStream(fileName, bufferedText))
+            parsedFile->buffer = bufferedText;
+        else {
+            parsedFile->buffer = readFileToLines(fileName);
+            QFileInfo diskInfo(fileName);
+            mRegistry.fileMetadata.insert(fileName,
+                    Registry::FileMetadata{diskInfo.lastModified(), diskInfo.size()});
         }
+        combineLinesEndingWithBackslash(parsedFile->buffer);
+        replaceCommentsBySpaceChar(parsedFile->buffer);
     }
-    mIncludeStack.append(parsedFile);
+    mSession.includeStack.append(parsedFile);
 
-    // Process it
-    mIndex = parsedFile->index;
-    mFileName = parsedFile->fileName;
-    mBuffer = parsedFile->buffer;
+    mSession.index = parsedFile->index;
+    mSession.fileName = parsedFile->fileName;
+    mSession.buffer = parsedFile->buffer;
 
-//    for (int i=0;i<mBuffer.count();i++) {
-//        mBuffer[i] = mBuffer[i].trimmed();
-//    }
-
-    // Update result file
-    if (mIncludeStack.count()>1) {
-        // include from within a file
-        QString includeLine = "#include " + fileName + ":-1";
-        mResult[mPreProcIndex] = includeLine;
-        mIndex = -1; //mIndex would +1 in processBuffer();
+    QString includeLine = "#include " + fileName + ":-1";
+    if (mSession.includeStack.count() > 1) {
+        mSession.result[mSession.preProcIndex] = includeLine;
+        mSession.index = -1;
     } else {
-        QString includeLine = "#include " + fileName + ":-1";
-        mResult.append(includeLine);
+        mSession.result.append(includeLine);
     }
-    mFileJustOpenned = true;
-    mFileIncludeOnceToken = "";
-    //qDebug()<<"+ "<<fileName;
-    mFilesCouldRepeatInclude.insert(fileName);
+    if (boundaryEntry) {
+        mSession.allBoundaryEntriesReplayed = false;
+        mSession.boundaryPrefix.append(fileName);
+    }
+    mSession.fileJustOpenned = true;
+    mSession.fileIncludeOnceToken = "";
 }
 
 
 void CppPreprocessor::closeInclude()
 {
-    if (mIncludeStack.isEmpty())
+    if (mSession.includeStack.isEmpty())
         return;
-    PParsedFile lastFile = mIncludeStack.back();
-    // merge the condition snapshot gathered during this scan
-    if (!lastFile->conditionRefs.isEmpty())
-        lastFile->fileInfo->addConditionSnapshot(lastFile->conditionRefs);
-    if (lastFile->conditionSensitive)
-        lastFile->fileInfo->setConditionSensitive();
-    if (mFilesCouldRepeatInclude.contains(lastFile->fileName))
-        mFileCache.insert(lastFile->fileName, lastFile->buffer);
-    mIncludeStack.pop_back();
+    PParsedFile lastFile = mSession.includeStack.back();
+    if (lastFile->boundaryEntry)
+        lastFile->fileInfo->setReplayCondition(
+                lastFile->userMacros, lastFile->boundaryPrefix);
+    if (lastFile->guardCandidate) {
+        bool fullGuard = lastFile->guardClosed && !lastFile->contentAfterGuard;
+        mRegistry.fileMetadata[lastFile->fileName].includeProtected =
+                isIncludeProtected(lastFile->fileName) || fullGuard;
+    }
+    if (!isIncludeProtected(lastFile->fileName))
+        mSession.fileCache.insert(lastFile->fileName, lastFile->buffer);
+    mSession.includeStack.pop_back();
 
-    if (mIncludeStack.isEmpty())
+    if (mSession.includeStack.isEmpty())
         return;
-    PParsedFile parsedFile = mIncludeStack.back();
+    PParsedFile parsedFile = mSession.includeStack.back();
 
     // Continue where we left off
-    mIndex = parsedFile->index+1;
-    mFileName = parsedFile->fileName;
+    mSession.index = parsedFile->index+1;
+    mSession.fileName = parsedFile->fileName;
     // Point to previous buffer and start past the include we walked into
-    mBuffer = parsedFile->buffer;
-    while (mBranchResults.count()>parsedFile->branches) {
-        mBranchResults.pop_back();
+    mSession.buffer = parsedFile->buffer;
+    while (mSession.branchResults.count()>parsedFile->branches) {
+        mSession.branchResults.pop_back();
     }
 
 
     // Start augmenting previous include list again
-    mCurrentFileInfo = parsedFile->fileInfo;
+    mSession.currentFileInfo = parsedFile->fileInfo;
 
     // Update result file (we've left the previous file)
-    mResult.append(
+    mSession.result.append(
                 QString("#include %1:%2").arg(parsedFile->fileName)
                 .arg(parsedFile->index));
 }
@@ -837,19 +886,18 @@ CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult
 
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
 {
-    if (mProcessed.contains(fileName))
+    if (mSession.processed.contains(fileName))
         return;
-    mProcessed.insert(fileName);
+    mSession.processed.insert(fileName);
 
-    // then add the defines defined in it
-    PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
+    PDefineMap defineList = fileInfo ? fileInfo->defines() : PDefineMap();
     if (defineList) {
         foreach (const PDefine& define, defineList->values()) {
-            mDefines.insert(define->name,define);
+            mSession.defines.insert(define->name,define);
         }
     }
 
-    PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
         foreach (const QString& file, fileInfo->includes()) {
             addDefinesInFile(file);
@@ -1106,11 +1154,11 @@ static bool isDirectiveLine(const QString& line)
 
 void CppPreprocessor::preprocessBuffer()
 {
-    while (mIncludeStack.count() > 0) {
+    while (mSession.includeStack.count() > 0) {
         QString s;
         do {
             if (mStopForParserReset) {
-                mBuffer.clear();
+                mSession.buffer.clear();
                 return;
             }
             s = getNextPreprocessor();
@@ -1143,34 +1191,33 @@ void CppPreprocessor::preprocessBuffer()
                 }
             }
             // Step over
-            mIndex++;
+            mSession.index++;
         } while (!s.isEmpty());
         closeInclude();
     }
-//    qDebug()<<"Files could repeat include:";
-//    foreach( const QString& fileName, mFilesCouldRepeatInclude) {
-//        qDebug()<<fileName;
-//    }
 }
 
 void CppPreprocessor::skipToPreprocessor()
 {
-    int bufferCount = mBuffer.count();
+    int bufferCount = mSession.buffer.count();
 // Increment until a line begins with a #
-    while ((mIndex < bufferCount) && !isDirectiveLine(mBuffer[mIndex])) {
+    while ((mSession.index < bufferCount) && !isDirectiveLine(mSession.buffer[mSession.index])) {
+        if (mSession.includeStack.back()->guardClosed
+                && !mSession.buffer[mSession.index].trimmed().isEmpty())
+            mSession.includeStack.back()->contentAfterGuard = true;
         if (getCurrentBranch()==BranchResult::isTrue) { // if not skipping, expand current macros
             QString expanded;
-            int consumed = expandLineWithEngine(mBuffer, mIndex, expanded);
-            mResult.append(expanded);
+            int consumed = expandLineWithEngine(mSession.buffer, mSession.index, expanded);
+            mSession.result.append(expanded);
             // lines consumed by multi-line macro invocations become
             // empty lines to keep the result aligned with the source
             for (int i = 1; i < consumed; i++) {
-                mResult.append("");
+                mSession.result.append("");
             }
-            mIndex += consumed;
+            mSession.index += consumed;
         } else { // If skipping due to a failed branch, clear line
-            mResult.append("");
-            mIndex++;
+            mSession.result.append("");
+            mSession.index++;
         }
     }
 }
@@ -1235,17 +1282,17 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
                 });
                 argExpander.expandLine(argTokenizer, header);
             }
-            if (!mCurrentFileInfo)
+            if (!mSession.currentFileInfo)
                 return false;
             QString fileName = getHeaderFilename(
-                    mCurrentFileInfo->fileName(),
+                    mSession.currentFileInfo->fileName(),
                     header,
                     mIncludePathList,
                     mProjectIncludePathList);
             return !fileName.isEmpty();
         },
         [this](const QString& name) {
-            recordConditionRef(name);
+
         });
     QString out;
     expander.expandLine(tokenizer, out);

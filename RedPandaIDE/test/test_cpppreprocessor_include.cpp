@@ -3,6 +3,7 @@
 #include "qt_utils/utils.h"
 #include <QFile>
 #include <QFileInfo>
+#include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -496,18 +497,36 @@ void TestCppPreprocessorInclude::test_has_include()
 
 void TestCppPreprocessorInclude::test_reprocess_same_instance()
 {
-    // PINNED: re-preprocessing a file that is still in the scanned set
-    // returns an EMPTY result (the root file hits the replay shortcut).
-    // Production never relies on this: CppParser always invalidates the
-    // file first (see test_reprocess_after_remove_scanned).
     QString dir = scenarioPath("basic_include");
     CppPreprocessor p;
     QStringList first = runScenario(p, dir, "main.cpp");
     QVERIFY(!first.isEmpty());
     QStringList second = runScenario(p, dir, "main.cpp");
-    QCOMPARE(second, QStringList());
-    // defines survive the empty replay
+    QCOMPARE(second, first);
     QVERIFY(p.getDefine("foo") == nullptr); // foo is a function, no defines here
+}
+
+void TestCppPreprocessorInclude::test_clear_registry()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/macro_config.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/macro_one.cpp");
+    QVERIFY(p.fileScanned(header));
+    QVERIFY(p.findFileInfo(header));
+    QVERIFY(p.getDefine("MACRO_RESULT"));
+
+    p.clear();
+    QVERIFY(!p.fileScanned(header));
+    QVERIFY(!p.findFileInfo(header));
+    QVERIFY(!p.getDefine("MACRO_RESULT"));
+    QVERIFY(p.result().isEmpty());
+
+    p.preprocess(dir + "/macro_one.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 1);
+    QCOMPARE(p.eventCounts(header).replay, 0);
 }
 
 void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
@@ -517,6 +536,8 @@ void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
     // lines collapse to empty lines - their parser statements persist).
     QString dir = scenarioPath("basic_include");
     CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/main.cpp");
     QStringList first = runScenario(p, dir, "main.cpp");
     p.removeScannedFile(dir + "/main.cpp");
     QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
@@ -575,13 +596,45 @@ void TestCppPreprocessorInclude::test_on_get_file_stream()
     QVERIFY(!p.findFileInfo(dir + "/a.h"));
 }
 
+void TestCppPreprocessorInclude::test_session_file_cache_reuse_and_clear()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("repeat.h");
+    QString main = tmp.filePath("main.cpp");
+    QFile headerFile(header);
+    QVERIFY(headerFile.open(QIODevice::WriteOnly));
+    headerFile.close();
+    QFile mainFile(main);
+    QVERIFY(mainFile.open(QIODevice::WriteOnly));
+    mainFile.write("#include \"repeat.h\"\n#include \"repeat.h\"\n");
+    mainFile.close();
+
+    int headerReads = 0;
+    CppPreprocessor p;
+    p.setOnGetFileStream([&](const QString &fileName, QStringList &out) {
+        if (!fileName.endsWith("repeat.h"))
+            return false;
+        ++headerReads;
+        out = QStringList{"int cached_value;"};
+        return true;
+    });
+    p.preprocess(main);
+    QCOMPARE(headerReads, 1);
+    QCOMPARE(p.result().count("int cached_value;"), 2);
+
+    p.preprocess(main);
+    QCOMPARE(headerReads, 2);
+    QCOMPARE(p.result().count("int cached_value;"), 2);
+}
+
 void TestCppPreprocessorInclude::test_replay_env_dependent()
 {
-    // config.h's branch depends on the environment at the include point
-    // (USE_FAST). a.cpp defines it, b.cpp undefines it. The replay cache
-    // hands b.cpp the defines recorded under a.cpp's environment.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/a.cpp");
+    p.addProjectFile(dir + "/b.cpp");
     p.preprocess(dir + "/a.cpp");
     QCOMPARE(p.getDefine("SPEED")->value, "100");
     QCOMPARE(normalizedResult(p, dir), QStringList({
@@ -620,6 +673,9 @@ void TestCppPreprocessorInclude::test_replay_env_independent()
     // whole session), so replaying it is always correct.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/a2.cpp");
+    p.addProjectFile(dir + "/b2.cpp");
     p.addHardDefineByLine("#define __cplusplus 202002L");
     p.preprocess(dir + "/a2.cpp");
     QCOMPARE(p.getDefine("CPP17_OK")->value, "1");
@@ -640,6 +696,10 @@ void TestCppPreprocessorInclude::test_replay_config_macro_stable()
     // actually changes the state forces a re-scan.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/a4.cpp");
+    p.addProjectFile(dir + "/b4.cpp");
+    p.addProjectFile(dir + "/b5.cpp");
     // a4.cpp: config3.h is scanned with CFG_V=1
     p.preprocess(dir + "/a4.cpp");
     QCOMPARE(normalizedResult(p, dir), QStringList({
@@ -677,13 +737,603 @@ void TestCppPreprocessorInclude::test_replay_config_macro_stable()
                  "int vb5 = 0;"}));
 }
 
+void TestCppPreprocessorInclude::test_replay_event_counts()
+{
+    QString dir = scenarioPath("replay");
+    QString config = dir + "/config3.h";
+    CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/a4.cpp");
+    p.addProjectFile(dir + "/b4.cpp");
+    p.addProjectFile(dir + "/b5.cpp");
+    p.preprocess(dir + "/a4.cpp");
+    CppPreprocessor::EventCounts counts = p.eventCounts(config);
+    QCOMPARE(counts.scan, 1);
+    QCOMPARE(counts.replay, 0);
+    QCOMPARE(counts.invalidate, 0);
+
+    p.preprocess(dir + "/b4.cpp");
+    counts = p.eventCounts(config);
+    QCOMPARE(counts.scan, 1);
+    QCOMPARE(counts.replay, 1);
+    QCOMPARE(counts.invalidate, 0);
+
+    p.preprocess(dir + "/b5.cpp");
+    counts = p.eventCounts(config);
+    QCOMPARE(counts.scan, 2);
+    QCOMPARE(counts.replay, 1);
+    QCOMPARE(counts.invalidate, 1);
+}
+
+void TestCppPreprocessorInclude::test_replay_miss_reasons_are_observable()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    {
+        CppPreprocessor p;
+        p.addIncludePath(includeDir);
+        p.preprocess(dir + "/macro_one.cpp");
+        p.preprocess(dir + "/macro_two.cpp");
+        QCOMPARE(p.eventCounts(includeDir + "/macro_config.h").scan, 2);
+        QCOMPARE(p.eventCounts(includeDir + "/macro_config.h").invalidate, 1);
+    }
+    {
+        CppPreprocessor p;
+        p.addIncludePath(includeDir);
+        p.preprocess(dir + "/order_ab.cpp");
+        p.preprocess(dir + "/order_ba.cpp");
+        QCOMPARE(p.eventCounts(includeDir + "/plain_a.h").scan, 2);
+        QCOMPARE(p.eventCounts(includeDir + "/plain_b.h").scan, 2);
+    }
+    {
+        QTemporaryDir tmp;
+        QVERIFY(tmp.isValid());
+        QString header = tmp.filePath("h.h");
+        QString main = tmp.filePath("main.cpp");
+        QFile headerFile(header);
+        QVERIFY(headerFile.open(QIODevice::WriteOnly));
+        headerFile.write("int v1;\n");
+        headerFile.close();
+        QFile mainFile(main);
+        QVERIFY(mainFile.open(QIODevice::WriteOnly));
+        mainFile.write("#include \"h.h\"\n");
+        mainFile.close();
+        CppPreprocessor p;
+        p.addIncludePath(tmp.path());
+        p.addProjectFile(main);
+        p.preprocess(main);
+        QVERIFY(headerFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        headerFile.write("int version_two;\n");
+        headerFile.close();
+        p.preprocess(main);
+        QCOMPARE(p.eventCounts(header).scan, 2);
+        QCOMPARE(p.eventCounts(header).invalidate, 1);
+    }
+}
+
+void TestCppPreprocessorInclude::test_metadata_only_open_is_not_counted_as_scan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString header = dir + "/include/plain_a.h";
+    CppPreprocessor p;
+    p.addIncludePath(dir + "/include");
+    p.addProjectFile(dir + "/order_ab.cpp");
+    p.setScanOptions(false, true);
+    p.preprocess(dir + "/order_ab.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 0);
+}
+
+void TestCppPreprocessorInclude::test_replay_same_user_macros()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/macro_config.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/macro_one.cpp");
+    p.preprocess(dir + "/macro_same.cpp");
+    CppPreprocessor::EventCounts counts = p.eventCounts(header);
+    QCOMPARE(counts.scan, 1);
+    QCOMPARE(counts.replay, 1);
+    QCOMPARE(p.expandMacros("MACRO_RESULT"), QString("1"));
+}
+
+void TestCppPreprocessorInclude::test_user_macro_change_forces_rescan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/macro_config.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/macro_one.cpp");
+    p.preprocess(dir + "/macro_two.cpp");
+    CppPreprocessor::EventCounts counts = p.eventCounts(header);
+    QCOMPARE(counts.scan, 2);
+    QCOMPARE(counts.replay, 0);
+    QCOMPARE(counts.invalidate, 1);
+    QVERIFY(normalizedResult(p, dir).contains("int macro_result = 2;"));
+}
+
+void TestCppPreprocessorInclude::test_replayed_entries_extend_prefix()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/order_ab.cpp");
+    p.preprocess(dir + "/order_ab.cpp");
+    for (const char *name : {"plain_a.h", "plain_b.h"}) {
+        CppPreprocessor::EventCounts counts = p.eventCounts(includeDir + "/" + name);
+        QCOMPARE(counts.scan, 1);
+        QCOMPARE(counts.replay, 1);
+    }
+}
+
+void TestCppPreprocessorInclude::test_include_order_change_forces_rescan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/order_ab.cpp");
+    p.preprocess(dir + "/order_ba.cpp");
+    for (const char *name : {"plain_a.h", "plain_b.h"}) {
+        CppPreprocessor::EventCounts counts = p.eventCounts(includeDir + "/" + name);
+        QCOMPARE(counts.scan, 2);
+        QCOMPARE(counts.replay, 0);
+        QCOMPARE(counts.invalidate, 1);
+    }
+}
+
+void TestCppPreprocessorInclude::test_scanned_prefix_entry_forces_lazy_suffix_rescan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString root = dir + "/order_ab.cpp";
+    QString first = includeDir + "/plain_a.h";
+    QString second = includeDir + "/plain_b.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(root);
+
+    p.invalidateFile(first);
+    QCOMPARE(p.eventCounts(first).invalidate, 1);
+    QCOMPARE(p.eventCounts(second).invalidate, 0);
+    QVERIFY(p.fileScanned(second));
+
+    p.preprocess(root);
+    QCOMPARE(p.eventCounts(first).scan, 2);
+    QCOMPARE(p.eventCounts(second).scan, 2);
+    QCOMPARE(p.eventCounts(first).replay, 0);
+    QCOMPARE(p.eventCounts(second).replay, 0);
+    QCOMPARE(p.eventCounts(second).invalidate, 1);
+    QVERIFY(p.result().contains("int plain_a;"));
+    QVERIFY(p.result().contains("int plain_b;"));
+}
+
+void TestCppPreprocessorInclude::test_guarded_noop_then_first_boundary_entry()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/guarded.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.preprocess(dir + "/guard_first.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 1);
+    QCOMPARE(p.eventCounts(header).skip, 1);
+    p.preprocess(dir + "/guard_second.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 2);
+    QCOMPARE(p.eventCounts(header).replay, 0);
+}
+
+void TestCppPreprocessorInclude::test_user_to_user_include_has_no_boundary_record()
+{
+    QString dir = scenarioPath("basic_include");
+    CppPreprocessor p;
+    p.addProjectFile(dir + "/main.cpp");
+    p.preprocess(dir + "/main.cpp");
+    QString header = dir + "/a.h";
+    QVERIFY(p.fileScanned(header));
+    QCOMPARE(p.boundaryAncestor(header, 0), QString());
+}
+
+void TestCppPreprocessorInclude::test_system_subtree_belongs_to_boundary_ancestor()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString container = includeDir + "/guard_container.h";
+    QString guarded = includeDir + "/guarded.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/guard_first.cpp");
+    p.preprocess(dir + "/guard_first.cpp");
+    QCOMPARE(p.boundaryAncestor(guarded, 0), container);
+    QVERIFY(!p.findFileInfo(guarded));
+}
+
+void TestCppPreprocessorInclude::test_nonproject_include_path_file_is_inside_boundary()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/plain_a.h";
+    CppPreprocessor p;
+    p.addProjectIncludePath(includeDir);
+    p.addProjectFile(dir + "/order_ab.cpp");
+    p.preprocess(dir + "/order_ab.cpp");
+    QCOMPARE(p.boundaryAncestor(header, 0), header);
+}
+
+void TestCppPreprocessorInclude::test_system_header_root_is_boundary_entry()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString header = dir + "/include/plain_a.h";
+    CppPreprocessor p;
+    p.addIncludePath(dir + "/include");
+    p.preprocess(header);
+    QVERIFY(p.fileScanned(header));
+    QCOMPARE(p.boundaryAncestor(header, 0), header);
+}
+
+void TestCppPreprocessorInclude::test_guard_must_cover_whole_file()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/partial_guard.cpp");
+    p.preprocess(dir + "/partial_guard.cpp");
+    QCOMPARE(p.result().count("int guarded_part;"), 1);
+    QCOMPARE(p.result().count("int unguarded_part;"), 2);
+}
+
+void TestCppPreprocessorInclude::test_pragma_once_different_environments()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/pragma_env.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/pragma_a.cpp");
+    p.addProjectFile(dir + "/pragma_b.cpp");
+    p.preprocess(dir + "/pragma_a.cpp");
+    QVERIFY(p.result().contains("int pragma_int;"));
+
+    p.preprocess(dir + "/pragma_b.cpp");
+    QVERIFY(p.result().contains("int pragma_long;"));
+    QCOMPARE(p.eventCounts(header).scan, 2);
+}
+
+void TestCppPreprocessorInclude::test_user_macro_undefined_state_forces_rescan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/macro_config.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/macro_one.cpp");
+    p.addProjectFile(dir + "/macro_none.cpp");
+    p.preprocess(dir + "/macro_one.cpp");
+    p.preprocess(dir + "/macro_none.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 2);
+    QVERIFY(p.result().contains("int macro_result = 0;"));
+}
+
+void TestCppPreprocessorInclude::test_user_function_macro_signature_forces_rescan()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/plain_a.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/function_a.cpp");
+    p.addProjectFile(dir + "/function_b.cpp");
+    p.preprocess(dir + "/function_a.cpp");
+    p.preprocess(dir + "/function_b.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 2);
+}
+
+void TestCppPreprocessorInclude::test_hard_define_change_resets_parser()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/macro_none.cpp");
+    p.addHardDefineByLine("#define MODE 1");
+    p.preprocess(dir + "/macro_none.cpp");
+    QVERIFY(p.result().contains("int macro_result = 1;"));
+
+    p.clear();
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/macro_none.cpp");
+    p.addHardDefineByLine("#define MODE 2");
+    p.preprocess(dir + "/macro_none.cpp");
+    QVERIFY(p.result().contains("int macro_result = 2;"));
+}
+
+void TestCppPreprocessorInclude::test_header_internal_define_undef_replays()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/internal_define.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/internal_a.cpp");
+    p.addProjectFile(dir + "/internal_b.cpp");
+    p.preprocess(dir + "/internal_a.cpp");
+    p.preprocess(dir + "/internal_b.cpp");
+    QCOMPARE(p.eventCounts(header).scan, 1);
+    QCOMPARE(p.eventCounts(header).replay, 1);
+    QCOMPARE(p.expandMacros("INTERNAL_OUT"), QString("1"));
+}
+
+void TestCppPreprocessorInclude::test_indirect_user_header_macro_change_forces_rescan()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString provider = tmp.filePath("provider.h");
+    QString main = tmp.filePath("main.cpp");
+    QString config = tmp.filePath("macro_config.h");
+    QVERIFY(writeFile(provider, {"#define MODE 1"}));
+    QVERIFY(writeFile(config, {"#ifdef MODE", "#define OUT MODE", "#else",
+                               "#define OUT 0", "#endif", "int result = OUT;"}));
+    QVERIFY(writeFile(main, {"#include \"provider.h\"", "#include \"macro_config.h\""}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int result = 1;"));
+
+    QVERIFY(writeFile(provider, {"#define MODE 2"}));
+    p.invalidateFile(provider);
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int result = 2;"));
+    QCOMPARE(p.eventCounts(config).scan, 2);
+}
+
+void TestCppPreprocessorInclude::test_system_internal_include_does_not_extend_prefix()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString container = includeDir + "/guard_container.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/guard_first.cpp");
+    p.preprocess(dir + "/guard_first.cpp");
+    QCOMPARE(p.currentBoundaryPrefix(), QStringList{container});
+}
+
+void TestCppPreprocessorInclude::test_system_to_user_include_is_diagnosed()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/reverse.cpp");
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                "Boundary-inside file includes a boundary-outside file:.*"));
+    p.preprocess(dir + "/reverse.cpp");
+    QVERIFY(p.result().contains("int reverse_user;"));
+}
+
+void TestCppPreprocessorInclude::test_touch_conservatively_invalidates()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("touch.h");
+    QString main = tmp.filePath("main.cpp");
+    QFile headerFile(header);
+    QVERIFY(headerFile.open(QIODevice::WriteOnly));
+    headerFile.write("int touched;\n");
+    headerFile.close();
+    QFile mainFile(main);
+    QVERIFY(mainFile.open(QIODevice::WriteOnly));
+    mainFile.write("#include \"touch.h\"\n");
+    mainFile.close();
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+    QDateTime newTime = QFileInfo(header).lastModified().addSecs(2);
+    QVERIFY(headerFile.open(QIODevice::ReadWrite));
+    QVERIFY(headerFile.setFileTime(newTime, QFileDevice::FileModificationTime));
+    p.preprocess(main);
+    QCOMPARE(p.eventCounts(header).scan, 2);
+    QVERIFY(p.result().contains("int touched;"));
+}
+
+void TestCppPreprocessorInclude::test_editor_change_invalidates_without_disk_change()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("callback.h");
+    QString main = tmp.filePath("main.cpp");
+    QFile file(header);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    file.close();
+    file.setFileName(main);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    file.write("#include \"callback.h\"\n");
+    file.close();
+
+    int version = 1;
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.setOnGetFileStream([&](const QString &name, QStringList &out) {
+        if (name != header)
+            return false;
+        out = QStringList{QString("int callback_v%1;").arg(version)};
+        return true;
+    });
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int callback_v1;"));
+
+    version = 2;
+    p.invalidateFile(header);
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int callback_v2;"));
+    QCOMPARE(p.eventCounts(header).scan, 2);
+}
+
+void TestCppPreprocessorInclude::test_depth_cap_without_repeated_file()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QString &text) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(text.toUtf8());
+        file.close();
+        return true;
+    };
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeFile(main, "#include \"f0.h\"\n"));
+    for (int i = 0; i < 60; i++) {
+        QString text = i == 59 ? "int last;\n"
+                               : QString("#include \"f%1.h\"\n").arg(i + 1);
+        QVERIFY(writeFile(tmp.filePath(QString("f%1.h").arg(i)), text));
+    }
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.setMaxIncludeNestingDepth(40);
+    p.preprocess(main);
+    QCOMPARE(p.eventCounts(tmp.filePath("f39.h")).scan, 0);
+    QVERIFY(p.eventCounts(tmp.filePath("f38.h")).scan > 0);
+}
+
+void TestCppPreprocessorInclude::test_active_include_stack_is_not_invalidated_mid_scan()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString child = tmp.filePath("child.h");
+    QString main = tmp.filePath("main.cpp");
+    QFile childFile(child);
+    QVERIFY(childFile.open(QIODevice::WriteOnly));
+    childFile.close();
+    QFile mainFile(main);
+    QVERIFY(mainFile.open(QIODevice::WriteOnly));
+    mainFile.write("int root_value;\n#include \"child.h\"\n");
+    mainFile.close();
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    bool triggered = false;
+    p.setOnGetFileStream([&](const QString &name, QStringList &out) {
+        if (name != child)
+            return false;
+        if (!triggered) {
+            triggered = true;
+            p.invalidateFile(main);
+        }
+        out = QStringList{"int child_value;"};
+        return true;
+    });
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int root_value;"));
+    QVERIFY(p.result().contains("int child_value;"));
+    QVERIFY(p.findFileInfo(main));
+
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int root_value;"));
+    QCOMPARE(p.eventCounts(main).scan, 2);
+    QCOMPARE(p.eventCounts(child).scan, 1);
+    QCOMPARE(p.eventCounts(child).replay, 1);
+    QVERIFY(p.findFileInfo(child));
+}
+
+void TestCppPreprocessorInclude::test_stack_reentry_uses_current_environment()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString a = tmp.filePath("a.h");
+    QString b = tmp.filePath("b.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeFile(a, {"#ifdef MODE", "int a_mode;", "#else",
+                          "int a_default;", "#endif", "#include \"b.h\""}));
+    QVERIFY(writeFile(b, {"#undef MODE", "#include \"a.h\""}));
+    QVERIFY(writeFile(main, {"#define MODE 1", "#include \"a.h\""}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.setMaxIncludeNestingDepth(10);
+    p.preprocess(main);
+    QCOMPARE(p.result().count("int a_mode;"), 1);
+    QVERIFY(p.result().count("int a_default;") > 0);
+}
+
+void TestCppPreprocessorInclude::test_user_to_system_creates_boundary_record()
+{
+    QString dir = scenarioPath("boundary_replay");
+    QString includeDir = dir + "/include";
+    QString header = includeDir + "/plain_a.h";
+    CppPreprocessor p;
+    p.addIncludePath(includeDir);
+    p.addProjectFile(dir + "/order_ab.cpp");
+    p.preprocess(dir + "/order_ab.cpp");
+    QVERIFY(p.fileScanned(header));
+    QCOMPARE(p.boundaryAncestor(header, 0), header);
+    QCOMPARE(p.currentBoundaryPrefix().first(), header);
+}
+
+void TestCppPreprocessorInclude::test_protected_include_cycle_stops()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString a = tmp.filePath("a.h");
+    QString b = tmp.filePath("b.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeFile(a, {"#ifndef A_H", "#define A_H", "#include \"b.h\"",
+                          "int in_a;", "#endif"}));
+    QVERIFY(writeFile(b, {"#pragma once", "#include \"a.h\"", "int in_b;"}));
+    QVERIFY(writeFile(main, {"#include \"a.h\""}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+    QCOMPARE(p.result().count("int in_a;"), 1);
+    QCOMPARE(p.result().count("int in_b;"), 1);
+}
+
 void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
 {
-    // PINNED: even UNGUARDED headers are replayed (not re-scanned) when
-    // a later preprocess run includes them, because the could-repeat set
-    // is per-run and starts empty.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
+    p.addIncludePath(dir);
+    p.addProjectFile(dir + "/a3.cpp");
+    p.addProjectFile(dir + "/b3.cpp");
     p.preprocess(dir + "/a3.cpp");
     QCOMPARE(normalizedResult(p, dir), QStringList({
                  "#include <DIR>/a3.cpp:-1",
@@ -701,10 +1351,39 @@ void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
     QVERIFY(p.getDefine("UNG_V"));
 }
 
+void TestCppPreprocessorInclude::test_subtree_mtime_invalidates_matching_prefix()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString inner = tmp.filePath("inner.h");
+    QString outer = tmp.filePath("outer.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeFile(inner, {"int inner_v1;"}));
+    QVERIFY(writeFile(outer, {"#include \"inner.h\"", "int outer;"}));
+    QVERIFY(writeFile(main, {"#include \"outer.h\""}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int inner_v1;"));
+
+    QVERIFY(writeFile(inner, {"int inner_v2;"}));
+    p.preprocess(main);
+    QVERIFY(p.result().contains("int inner_v2;"));
+    QCOMPARE(p.eventCounts(outer).invalidate, 1);
+}
+
 void TestCppPreprocessorInclude::test_replay_external_modification()
 {
-    // A header changed on disk (git pull, external editor) after the
-    // first scan is still replayed from the stale recorded defines.
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     auto writeFile = [](const QString& path, const QStringList& lines) {
@@ -719,13 +1398,15 @@ void TestCppPreprocessorInclude::test_replay_external_modification()
     QVERIFY(writeFile(tmp.filePath("a.cpp"), {"#include \"h.h\"", "int a;"}));
     QVERIFY(writeFile(tmp.filePath("b.cpp"), {"#include \"h.h\"", "int b;"}));
     CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(tmp.filePath("a.cpp"));
+    p.addProjectFile(tmp.filePath("b.cpp"));
     p.preprocess(tmp.filePath("a.cpp"));
     QCOMPARE(p.getDefine("V")->value, "1");
     QVERIFY(writeFile(tmp.filePath("h.h"),
                     {"#define V 2", "int v2;", "int v2b;"}));
     p.preprocess(tmp.filePath("b.cpp"));
-    // The mtime change invalidates the recorded scan of h.h, so it is
-    // re-scanned (it was once replayed from stale recorded defines).
+    // The mtime change invalidates the recorded scan of h.h and forces a re-scan.
     QCOMPARE(p.getDefine("V")->value, "2");
     QStringList bResult = p.result();
     for (QString& line : bResult)

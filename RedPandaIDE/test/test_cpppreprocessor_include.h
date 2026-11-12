@@ -37,16 +37,48 @@ private slots:
     void test_cycle_depth_cap();
     // group F: incremental / registry behavior
     void test_reprocess_same_instance();
+    void test_clear_registry();
     void test_reprocess_after_remove_scanned();
     void test_hard_define_restore();
     void test_undef_restore();
     void test_on_get_file_stream();
+    void test_session_file_cache_reuse_and_clear();
     // group G: replay correctness
     void test_replay_env_dependent();
     void test_replay_env_independent();
     void test_replay_config_macro_stable();
     void test_replay_unguarded_cross_reparse();
     void test_replay_external_modification();
+    void test_subtree_mtime_invalidates_matching_prefix();
+    void test_replay_event_counts();
+    void test_replay_miss_reasons_are_observable();
+    void test_metadata_only_open_is_not_counted_as_scan();
+    void test_replay_same_user_macros();
+    void test_user_macro_change_forces_rescan();
+    void test_replayed_entries_extend_prefix();
+    void test_include_order_change_forces_rescan();
+    void test_scanned_prefix_entry_forces_lazy_suffix_rescan();
+    void test_guarded_noop_then_first_boundary_entry();
+    void test_user_to_user_include_has_no_boundary_record();
+    void test_system_subtree_belongs_to_boundary_ancestor();
+    void test_nonproject_include_path_file_is_inside_boundary();
+    void test_system_header_root_is_boundary_entry();
+    void test_guard_must_cover_whole_file();
+    void test_pragma_once_different_environments();
+    void test_user_macro_undefined_state_forces_rescan();
+    void test_user_function_macro_signature_forces_rescan();
+    void test_hard_define_change_resets_parser();
+    void test_header_internal_define_undef_replays();
+    void test_indirect_user_header_macro_change_forces_rescan();
+    void test_system_internal_include_does_not_extend_prefix();
+    void test_system_to_user_include_is_diagnosed();
+    void test_touch_conservatively_invalidates();
+    void test_editor_change_invalidates_without_disk_change();
+    void test_depth_cap_without_repeated_file();
+    void test_active_include_stack_is_not_invalidated_mid_scan();
+    void test_stack_reentry_uses_current_environment();
+    void test_user_to_system_creates_boundary_record();
+    void test_protected_include_cycle_stops();
 private:
     // Absolute path of resources/preprocessor/<name>
     static QString scenarioPath(const QString& name);
