@@ -18,6 +18,9 @@ Red Panda C++ Version 3.6
   - fix: Preprocessor no longer crashes when parsing headers like <bits/stdc++.h> (a replay-cache invalidation could drop a header's recorded file info when it was already transitively included, and over-eager environment-sensitivity rescanning duplicated parser statements).
   - change: Remove the "Included files only parse once" option (proved useless).
   - enhancement: Include cycles now behave like real compilers (unguarded files are re-entered and re-scanned, bounded by a nesting depth of 200).
+  - fix: Undoing a multi-line paste or selection replacement with auto-indent preserves existing text and uses valid caret positions.
+  - fix: Undo correctly restores text removed by Trim Trailing Spaces.
+  - fix: Undoing drag-and-drop editing restores the pre-drag caret, including reversed selections.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

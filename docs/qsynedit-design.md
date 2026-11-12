@@ -512,6 +512,8 @@ insert-before"的早退（0 基迁移期的防御性绕过，80170a75），它�
   最终）；`parseToEnd=false` 仅跑到范围末的按 **line** 累积（该行**未验证**）。
   局部重扫以此为停止界；`onDocumentContentChanged`（视图侧）含 DEBUG 断言
   `!foldStateDirty || reparseToLine >= 0`（收敛契约：脏批次必有重解析）。
+  冻结线是随文档内容移动的位置标记：同批次后续的插行、删行和移行必须同步平移它，
+  再与本次重解析得到的新停止行合并，否则停止行会落到无关文本上。
   注意该契约是**视图编辑级**的：QSynEdit 的编辑路径保证同批次内有重解析
   （如 doDeleteText 先 parseToEnd=false 删行、随后 setLine(...,true) 收敛），
   但 Document 原语直驱可以合法产生"脏而无重解析"的批次（如单独的

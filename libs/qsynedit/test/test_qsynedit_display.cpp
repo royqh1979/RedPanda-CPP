@@ -1,6 +1,8 @@
 #include <QTest>
 #include <QSignalSpy>
 #include <QCoreApplication>
+#include <QApplication>
+#include <QClipboard>
 #include <QScrollBar>
 #include <QMimeData>
 #include <QDragEnterEvent>
@@ -324,6 +326,67 @@ void TestQSyneditDisplay::test_dnd_drop_path()
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_dnd_undo_restores_content_and_folds()
+{
+    QFile sourceFile("resources/editormanager.cpp");
+    QVERIFY(sourceFile.open(QIODevice::ReadOnly));
+    mEdit->setSelText(QString::fromUtf8(sourceFile.readAll()));
+    QStringList lines = mEdit->content();
+    auto originalFolds = mEdit->foldRangesForTest();
+    auto foldTree = [](const QSynEdit *edit) {
+        QStringList result;
+        for (const PCodeBlock &block : edit->mCodeBlocks) {
+            PCodeBlock parent = block->parent.lock();
+            QStringList children;
+            for (const PCodeBlock &child : block->subBlocks)
+                children << QString("%1-%2").arg(child->fromLine).arg(child->toLine);
+            result << QString("%1-%2@%3[%4]")
+                    .arg(block->fromLine).arg(block->toLine)
+                    .arg(parent ? parent->fromLine : -1)
+                    .arg(children.join(','));
+        }
+        return result;
+    };
+    QStringList originalTree = foldTree(mEdit.get());
+    auto selectTail = [&] {
+        int endLine = 1148;
+        mEdit->setCaretAndSelection(CharPos{mEdit->lineText(endLine).length(), endLine},
+                                    CharPos{4, 1146},
+                                    CharPos{mEdit->lineText(endLine).length(), endLine});
+    };
+    selectTail();
+    QString selected = mEdit->selText();
+    QMimeData mime;
+    mime.setText(selected);
+    auto dragTo = [&](int line, int ch) {
+        QDragEnterEvent enterEvent(QPoint(100, 100), Qt::MoveAction, &mime,
+                                   Qt::LeftButton, Qt::NoModifier);
+        mEdit->dragEnterEvent(&enterEvent);
+        mEdit->setTopLineSegment(line, 0);
+        QPoint pt = mEdit->displayCoordToPixels(
+                    mEdit->bufferToDisplayPos(CharPos{ch, line})) + QPoint(0, 2);
+        QDropEvent dropEvent(pt, Qt::MoveAction, &mime, Qt::LeftButton, Qt::NoModifier);
+        mEdit->dropEvent(&dropEvent);
+    };
+
+    dragTo(1136, 8);
+    QCOMPARE(mEdit->lineCount(), lines.count());
+
+    mEdit->loadContent(lines);
+    selectTail();
+    CharPos caretBeforeDrag = mEdit->caretPos();
+    dragTo(1138, 4);
+    mEdit->undo();
+    QCOMPARE(mEdit->caretPos(), caretBeforeDrag);
+    QCOMPARE(mEdit->content(), lines);
+    QCOMPARE(mEdit->foldRangesForTest(), originalFolds);
+    QCOMPARE(foldTree(mEdit.get()), originalTree);
+
+    selectTail();
+    dragTo(1105, 0);
+    QCOMPARE(mEdit->lineCount(), lines.count());
 }
 
 void TestQSyneditDisplay::test_wrap_mapping_reset_keeps_anchor()
@@ -1535,7 +1598,7 @@ void TestQSyneditDisplay::test_partial_fold_rescan()
     std::mt19937 rng(20261101);
     for (int op = 0; op < 200; op++) {
         int n = mEdit->document()->count();
-        int kind = rng() % 6;
+        int kind = rng() % 10;
         int line = rng() % n;
         opLog.append(QString("op %1: kind=%2 line=%3").arg(op).arg(kind).arg(line));
         switch (kind) {
@@ -1568,10 +1631,206 @@ void TestQSyneditDisplay::test_partial_fold_rescan()
             }
             break;
         }
+        case 6:
+            mEdit->document()->moveLine(line, rng() % n, true);
+            break;
+        case 7:
+            if (n > 1)
+                mEdit->document()->deleteLines(line, std::min(2, n - line), true);
+            break;
+        case 8:
+            mEdit->document()->insertLines(line, 2, true);
+            break;
+        case 9: {
+            // Reparse first, then move both the document and its freeze line.
+            mEdit->document()->beginUpdate();
+            mEdit->document()->putLine(line, (rng() % 2) ? "{" : "}", true);
+            int insertAt = rng() % mEdit->document()->count();
+            mEdit->document()->insertLines(insertAt, 2, true);
+            mEdit->document()->moveLine(insertAt, rng() % mEdit->document()->count(), true);
+            mEdit->document()->endUpdate();
+            break;
+        }
         }
         opLog.append(QString("  => %1").arg(dumpFoldRanges(mEdit->foldRangesForTest())));
         verifyRescan();
     }
+}
+
+void TestQSyneditDisplay::test_public_edit_fold_rescan()
+{
+    EditorOptions options = mEdit->getOptions();
+    options.setFlag(EditorOption::TabsToSpaces, false);
+    mEdit->setOptions(options);
+    auto verifyRescan = [&](const QString &name) {
+        QList<std::tuple<int,int,bool>> partial = mEdit->foldRangesForTest();
+        mEdit->fullRescanCodeBlocksForTest();
+        QList<std::tuple<int,int,bool>> full = mEdit->foldRangesForTest();
+        QVERIFY2(partial == full,
+                 qPrintable(QString("%1\npartial: %2\nfull:    %3")
+                            .arg(name, dumpFoldRanges(partial), dumpFoldRanges(full))));
+    };
+    auto runOnContent = [&](const char *name, const QStringList &initialContent,
+                            const std::function<void()> &op) {
+        mEdit->loadContent(initialContent);
+        mEdit->setInsertMode(true);
+        mEdit->setCaretPos(CharPos{5, 1});
+        QStringList originalContent = mEdit->content();
+        op();
+        QStringList editedContent = mEdit->content();
+        verifyRescan(name);
+        if (mEdit->canUndo()) {
+            mEdit->undo();
+            QVERIFY2(mEdit->content() == originalContent,
+                     qPrintable(QString("%1 / undo content\nactual:   %2\nexpected: %3")
+                                .arg(name, mEdit->content().join('\n'), originalContent.join('\n'))));
+            verifyRescan(QString("%1 / undo").arg(name));
+            QVERIFY(mEdit->canRedo());
+            mEdit->redo();
+            QVERIFY2(mEdit->content() == editedContent,
+                     qPrintable(QString("%1 / redo content\nactual:   %2\nexpected: %3")
+                                .arg(name, mEdit->content().join('\n'), editedContent.join('\n'))));
+            verifyRescan(QString("%1 / redo").arg(name));
+        }
+    };
+    auto run = [&](const char *name, const std::function<void()> &op) {
+        runOnContent(name, makeFoldableLines(), op);
+    };
+    auto selectLines = [&] {
+        mEdit->setCaretAndSelection(CharPos{0, 5}, CharPos{0, 1}, CharPos{0, 5});
+    };
+
+    run("input", [&] {
+        mEdit->setCaretPos(CharPos{mEdit->lineText(2).length() - 1, 2});
+        mEdit->processCommand(EditCommand::Input, "{");
+    });
+    run("IME input", [&] {
+        mEdit->processCommand(EditCommand::ImeStr, "x");
+    });
+    run("overwrite input", [&] {
+        mEdit->setInsertMode(false);
+        mEdit->processCommand(EditCommand::Input, "{");
+    });
+    run("delete previous char", [&] {
+        mEdit->setCaretPos(CharPos{mEdit->lineText(2).length(), 2});
+        mEdit->processCommand(EditCommand::DeleteLastChar);
+    });
+    run("delete char", [&] {
+        mEdit->setCaretPos(CharPos{mEdit->lineText(2).length() - 1, 2});
+        mEdit->processCommand(EditCommand::DeleteChar);
+    });
+    run("delete word", [&] {
+        mEdit->processCommand(EditCommand::DeleteWord);
+    });
+    run("delete word start", [&] {
+        mEdit->setCaretPos(CharPos{8, 0});
+        mEdit->processCommand(EditCommand::DeleteWordStart);
+    });
+    run("delete word end", [&] {
+        mEdit->setCaretPos(CharPos{5, 0});
+        mEdit->processCommand(EditCommand::DeleteWordEnd);
+    });
+    run("delete to BOL", [&] {
+        mEdit->setCaretPos(mEdit->lineEnd(2));
+        mEdit->processCommand(EditCommand::DeleteBOL);
+    });
+    run("delete to EOL", [&] {
+        mEdit->setCaretPos(CharPos{10, 0});
+        mEdit->processCommand(EditCommand::DeleteEOL);
+    });
+    run("delete line", [&] {
+        mEdit->setCaretPos(CharPos{0, 2});
+        mEdit->processCommand(EditCommand::DeleteLine);
+    });
+    run("delete selection", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::DeleteChar);
+    });
+    run("clear all", [&] {
+        mEdit->processCommand(EditCommand::ClearAll);
+    });
+    run("line break", [&] {
+        mEdit->setCaretPos(CharPos{mEdit->lineText(2).length() - 1, 2});
+        mEdit->processCommand(EditCommand::LineBreak);
+    });
+    run("line break at end", [&] {
+        mEdit->setCaretPos(CharPos{0, 2});
+        mEdit->processCommand(EditCommand::LineBreakAtEnd);
+    });
+    run("duplicate line", [&] {
+        mEdit->setCaretPos(CharPos{0, 2});
+        mEdit->processCommand(EditCommand::Duplicate);
+    });
+    run("duplicate selection", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::Duplicate);
+    });
+    run("move selection up", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::MoveSelUp);
+    });
+    run("move selection down", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::MoveSelDown);
+    });
+    run("block indent", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::BlockIndent);
+    });
+    run("block unindent", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::BlockUnindent);
+    });
+    run("tab", [&] {
+        mEdit->setCaretPos(CharPos{0, 1});
+        mEdit->processCommand(EditCommand::Tab);
+    });
+    run("shift tab", [&] {
+        mEdit->setCaretPos(CharPos{0, 1});
+        mEdit->processCommand(EditCommand::ShiftTab);
+    });
+    run("replace line", [&] {
+        mEdit->replaceLine(2, "    while (a) {");
+    });
+    run("set selection text", [&] {
+        mEdit->setCaretAndSelection(CharPos{0, 3}, CharPos{0, 2}, CharPos{0, 3});
+        mEdit->setSelText("    while (a) {\n");
+    });
+    run("cut", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::Cut);
+    });
+    run("paste", [&] {
+        QApplication::clipboard()->setText("    if (b) {\n    }\n");
+        mEdit->processCommand(EditCommand::Paste);
+    });
+    run("comment", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::Comment);
+    });
+    QStringList commentedLines = makeFoldableLines();
+    for (int i = 1; i <= 4; i++)
+        commentedLines[i].prepend("//");
+    runOnContent("uncomment", commentedLines, [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::Uncomment);
+    });
+    run("toggle comment", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::ToggleComment);
+    });
+    run("toggle block comment", [&] {
+        selectLines();
+        mEdit->processCommand(EditCommand::ToggleBlockComment);
+    });
+    QStringList trailingSpaceLines = makeFoldableLines();
+    trailingSpaceLines[1].append("   ");
+    runOnContent("trim trailing spaces", trailingSpaceLines, [&] {
+        mEdit->processCommand(EditCommand::TrimTrailingSpaces);
+    });
+    run("replace content", [&] {
+        mEdit->replaceContent("void g() {\n    if (true) {\n    }\n}\n");
+    });
 }
 
 }
@@ -1670,6 +1929,11 @@ void TestQSyneditDisplay::test_fold_shift_maintenance()
     mEdit->document()->moveLine(9, 0, true);
     expectRanges({{0, 11, false}, {1, 3, false}, {4, 6, true}, {7, 9, false}},
                  "move up keeps collapsed state");
+
+    // An unrelated move must not delete an unfinished one-line block.
+    mEdit->loadContent(QStringList{"int x;", "int y;", "void f() {"});
+    mEdit->document()->moveLine(0, 1, true);
+    expectRanges({{2, 2, false}}, "move keeps unfinished one-line block");
 }
 
 }

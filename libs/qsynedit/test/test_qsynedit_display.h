@@ -32,6 +32,7 @@ private slots:
     void test_gutter_fold_button_paints();
     void test_wrap_selection_paints_on_start_segment();
     void test_dnd_drop_path();
+    void test_dnd_undo_restores_content_and_folds();
     void test_wrap_mapping_reset_keeps_anchor();
     void test_paging_wrap_before_ready();
     void test_wordwrap_basics();
@@ -59,6 +60,7 @@ private slots:
     void test_shared_document_keeps_top_anchor();
     void test_shared_document_full_replace_preserves_view_state();
     void test_partial_fold_rescan();
+    void test_public_edit_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();
     void test_layout_with_zero_wrap_width();

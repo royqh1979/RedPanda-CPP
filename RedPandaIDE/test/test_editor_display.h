@@ -9,6 +9,7 @@ class TestEditorDisplay : public TestEditorBase
 private slots:
     void test_fold_marks_paint();
     void test_reformat_restores_view_state();
+    void test_dnd_undo_restores_caret();
 };
 
 #endif // TEST_EDITOR_DISPLAY_H

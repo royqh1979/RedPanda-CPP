@@ -97,6 +97,7 @@ private slots:
     void test_crash_on_debian_amd_64();
 
     void test_fold_state_dirty();
+    void test_reparse_freeze_line_follows_edits();
     void test_edit_operations_are_batched();
     void test_content_version();
 

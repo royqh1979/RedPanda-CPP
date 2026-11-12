@@ -151,6 +151,9 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
     maxLine = std::min(maxLine, (int)mLines.size());
 
     if (startLine >= maxLine) {
+        // No line remains to parse (e.g. a block delimiter was deleted at
+        // EOF). The new end of document is nevertheless a valid freeze line.
+        mReparseToLine = std::max(mReparseToLine, startLine);
         emit linesReparsed(startLine, INT_MAX);
         return startLine;
     }
@@ -503,6 +506,36 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
         break;
     }
 #endif
+    // A stop line recorded by an earlier reparse in this batch is a marker
+    // into the document: later structural edits must move it, rather than
+    // leaving it on a now-unrelated line and letting max() hide the drift.
+    if (mReparseToLine >= 0) {
+        switch (kind) {
+        case DocumentChangeKind::Insert:
+            if (mReparseToLine >= line)
+                mReparseToLine += count;
+            break;
+        case DocumentChangeKind::Delete:
+            if (mReparseToLine >= line + count)
+                mReparseToLine -= count;
+            else if (mReparseToLine >= line)
+                mReparseToLine = line;
+            break;
+        case DocumentChangeKind::Move:
+            if (mReparseToLine == line) {
+                mReparseToLine = count;
+            } else if (line < count
+                       && line < mReparseToLine && mReparseToLine <= count) {
+                mReparseToLine--;
+            } else if (count < line
+                       && count <= mReparseToLine && mReparseToLine < line) {
+                mReparseToLine++;
+            }
+            break;
+        case DocumentChangeKind::SetLine:
+            break;
+        }
+    }
     // first change of the batch: bump the content version so background
     // wrap-layout workers notice the modification and abort early
     if (mPendingChanges.isEmpty())

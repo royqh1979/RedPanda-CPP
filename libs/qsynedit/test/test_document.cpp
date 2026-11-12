@@ -5,6 +5,7 @@
 #include "qsynedit/document.h"
 #include "qsynedit/glyphcalculator.h"
 #include "qsynedit/syntaxer/cpp.h"
+#include "qsynedit/syntaxer/textfile.h"
 
 namespace QSynedit {
 
@@ -1049,6 +1050,35 @@ void TestDocument::test_fold_state_dirty()
     // moving a brace line: dirty via the moved line's stored state
     mDoc->moveLine(0, 1, false); // moves "int main() {"
     QVERIFY(foldStateDirty);
+}
+
+void TestDocument::test_reparse_freeze_line_follows_edits()
+{
+    mDoc->setSyntaxer(std::make_shared<TextSyntaxer>());
+    int freezeLine = -1;
+    connect(mDoc.get(), &Document::contentChanged, this,
+            [&](const DocumentChangeSet &, bool, int line, bool) {
+        freezeLine = line;
+    });
+
+    mDoc->setText("0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15");
+    mDoc->beginUpdate();
+    mDoc->putLine(5, "changed", false);
+    mDoc->insertLines(2, 3, false);
+    mDoc->endUpdate();
+    QCOMPARE(freezeLine, 9);
+
+    mDoc->setText("0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15");
+    mDoc->beginUpdate();
+    mDoc->putLine(5, "changed", false);
+    mDoc->deleteLines(2, 2, false);
+    mDoc->endUpdate();
+    QCOMPARE(freezeLine, 4);
+
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+    mDoc->setText("void f() {\n}");
+    mDoc->deleteLine(1, true);
+    QCOMPARE(freezeLine, mDoc->count());
 }
 
 void TestDocument::test_edit_operations_are_batched()

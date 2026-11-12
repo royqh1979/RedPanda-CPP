@@ -104,14 +104,18 @@ PATH="/d/qt/mingw64/bin:$PATH" cmake -G "MinGW Makefiles" \
 ```sh
 cd /r/build-redpanda-qt5-debug/libs/qsynedit
 PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
+  QT_QPA_PLATFORM=offscreen QT_QPA_FONTDIR=C:/Windows/Fonts \
   timeout 90 gdb -batch -ex run --args ./test-qsynedit.exe
 ```
+
+  本机调试版 Qt 没有 `lib/fonts`；offscreen 后端否则会反复报告字体目录 warning。
+  `QT_QPA_FONTDIR=C:/Windows/Fonts` 只影响测试进程的字体查找，不修改 Qt 安装。
 
 - **崩溃时取栈**：`gdb -batch -ex run -ex bt --args ./test-qsynedit.exe [参数]`（`-ex` 顺序必须是先 run 后 bt；对非主线程的崩溃，停止后用 `-ex "thread apply all bt"` 打印所有线程）。注意栈地址异常（如数据指针为野值）通常意味着更早前已发生堆/栈破坏，崩溃只是案发点，应向前追查写坏内存的代码，而不是只修崩溃处。
 
 - **测试中 connect 的 lambda 不得既捕获局部变量、又以长命对象（如 `mEdit.get()`）作 context**：测试函数返回后连接仍然存活，死 lambda 会在之后每次信号触发时往已释放的栈地址写数据，造成堆/栈破坏——崩溃点往往远在肇事代码之后、且看似随机（真实案例见提交 `63e90e30`）。正确做法：以一个随测试函数销毁的局部 `QObject` 作 context（连接随之自动断开），或在测试结束前显式 `disconnect`。
 
-- **按测试类筛选**：test-qsynedit 支持 `--suite=类名`（如 `--suite=TestDocument`）只跑指定测试类，不带参数则跑全部。其它测试程序（`test-editor`、`test-cppparser`）尚未支持此参数，修改它们时应照此补上。
+- **按测试类筛选**：test-qsynedit 和 test-editor 支持 `--suite=类名`（如 `--suite=TestDocument`、`--suite=TestEditorDisplay`）只跑指定测试类，不带参数则跑全部；`test-cppparser` 尚未支持此参数，修改它时应照此补上。
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
 
 - 剪贴板相关测试（列模式 paste/cut/copy-paste 等）偶发失败，多为外部程序（QQ、百度网盘等）抢占剪贴板所致，与代码无关；先重跑或排查占用程序，不要据此改代码。

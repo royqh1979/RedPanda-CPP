@@ -877,11 +877,11 @@ void QSynEdit::doTrimTrailingSpaces()
                 QString newLine = trimRight(oldLine);
                 if (newLine.isEmpty())
                     continue;
-                QString deleted = oldLine.mid(oldLine.length(),newLine.length()-oldLine.length());
+                QString deleted = oldLine.mid(newLine.length());
                 properSetLine(line,newLine,false);
                 addChangeToUndo(ChangeReason::Delete,
-                        CharPos{(int)oldLine.length(), line},
                         CharPos{(int)newLine.length(), line},
+                        CharPos{(int)oldLine.length(), line},
                         QStringList({deleted}),
                         SelectionMode::Normal
                         );
@@ -4282,7 +4282,7 @@ void QSynEdit::processFoldsOnLineMoved(int from, int to)
             } else if (to <= block->toLine && block->toLine < from)
                 block->toLine +=1;
         }
-        if (block->toLine<=block->fromLine)
+        if (block->toLine < block->fromLine)
             mCodeBlocks.remove(i);
     }
     if (collapseChanged) {
@@ -6702,6 +6702,7 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
     QString leftSide;
     QString rightSide;
     QString str;
+    CharPos newPos;
     bool changeScroll;
     beginEditing();
     QString lineText = mDocument->getLine(pos.line);
@@ -6752,10 +6753,22 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
                 if (i==text.length()-1)
                     str += rightSide;
             }
-            if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP
-                    && shouldRecalcIndent(currentLine)) {
-                int indentSpaces = calcIndentSpaces(currentLine,str,true);
-                str = genSpaces(indentSpaces)+trimLeft(str);
+            bool recalcIndent = !mUndoing
+                    && mSyntaxer->language()==ProgrammingLanguage::CPP
+                    && shouldRecalcIndent(currentLine);
+            QString indent;
+            if (recalcIndent) {
+                indent = genSpaces(calcIndentSpaces(currentLine,str,true));
+                if (i==text.length()-1)
+                    str = indent+trimLeft(text[i])+rightSide;
+                else
+                    str = indent+trimLeft(str);
+            }
+            if (i==text.length()-1) {
+                int insertedLength = recalcIndent
+                        ? indent.length() + trimLeft(text[i]).length()
+                        : text[i].length();
+                newPos = CharPos{insertedLength, currentLine};
             }
             properSetLine(currentLine, str, i==text.length()-1);
         }
@@ -6791,7 +6804,8 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
         if (changeScroll)
             mOptions.setFlag(EditorOption::ScrollPastEol,false);
     });
-    CharPos newPos=CharPos{(int)str.length() - (int)rightSide.length(),currentLine};
+    if (text.length()==1)
+        newPos = CharPos{(int)str.length() - (int)rightSide.length(),currentLine};
     //onLinesPutted(startLine-1,result+1);
     addChangeToUndo(ChangeReason::Insert,
             pos,newPos,
@@ -7424,6 +7438,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             wasSel = true;
             mMouseDownPos = event->pos();
         }
+        CharPos caretBeforeDrag = caretPos();
         computeCaret(event->pos());
         mStateFlags.setFlag(StateFlag::WaitForDragging,false);
         if (wasSel && mOptions.testFlag(EditorOption::DragDropEditing) && (x >= mGutterWidth + 2)
@@ -7431,6 +7446,10 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             startDrag = true;
         }
         if (startDrag && !mReadOnly) {
+            mDragCaretSave = caretBeforeDrag;
+            mDragSelBeginSave = selBegin();
+            mDragSelEndSave = selEnd();
+            internalSetCaretPos(caretBeforeDrag);
             mStateFlags.setFlag(StateFlag::WaitForDragging);
         } else {
             if (event->modifiers() == Qt::ShiftModifier) {
@@ -7631,11 +7650,14 @@ QVariant QSynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasFormat("text/plain")) {
+        bool internalDrag = event->source() == this;
         event->acceptProposedAction();
         mDragging = true;
-        mDragCaretSave = caretPos();
-        mDragSelBeginSave = selBegin();
-        mDragSelEndSave = selEnd();
+        if (!internalDrag) {
+            mDragCaretSave = caretPos();
+            mDragSelBeginSave = selBegin();
+            mDragSelEndSave = selEnd();
+        }
         CharPos pos = displayToBufferPos(pixelsToNearestGlyphPos(event->pos().x(),
                                                                         event->pos().y()));
         internalSetCaretPos(pos);
