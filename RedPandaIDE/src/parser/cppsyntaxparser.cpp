@@ -179,7 +179,7 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
         DeclarationAccessibility declaredAccessibility = DeclarationAccessibility::Default;
         if (mCursor.currentText() == "public" || mCursor.currentText() == "protected"
                 || mCursor.currentText() == "private") {
-            QString text = mCursor.currentText();
+            const QString &text = mCursor.currentText();
             if (mCursor.peek().text == ":") {
                 if (text == "public")
                     accessibility = DeclarationAccessibility::Public;
@@ -381,7 +381,7 @@ QString CppSyntaxParser::readUntil(const QSet<QString> &delimiters)
 {
     QString result;
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (text == "(" || text == "[" || text == "{")
             result += readBalanced(mCursor);
         else {
@@ -431,7 +431,7 @@ void CppSyntaxParser::skipBalanced()
 void CppSyntaxParser::skipDeclaration()
 {
     while (!mCursor.atEnd()) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (text == ";" || text == "}")
             return;
         if (text == "(" || text == "[" || text == "{")

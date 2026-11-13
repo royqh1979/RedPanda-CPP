@@ -43,6 +43,7 @@ private:
     bool parseStructuredBinding(DeclarationInfo &result);
     QString parseOperatorName();
     QString readBalancedToken(const QString &opening, const QString &closing);
+    void skipBalancedToken();
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);
     void skipTemplateDefaultArgument();

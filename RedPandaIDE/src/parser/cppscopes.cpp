@@ -21,11 +21,14 @@
 
 namespace {
 struct ScopesProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 insertNs = 0;
     qint64 parentLookupNs = 0;
     int insertCount = 0;
     ~ScopesProfile()
     {
+        if (!enabled)
+            return;
         qWarning() << "SCOPES_PROFILE insertMs" << insertNs / 1000000.0
                    << "parentLookupMs" << parentLookupNs / 1000000.0
                    << "count" << insertCount;
@@ -35,8 +38,14 @@ struct ScopesProfile {
 ScopesProfile scopesProfile;
 
 struct ScopesProfileScope {
-    explicit ScopesProfileScope(qint64 &target) : target(target) { timer.start(); }
-    ~ScopesProfileScope() { target += timer.nsecsElapsed(); }
+    explicit ScopesProfileScope(qint64 &target) : target(target) {
+        if (scopesProfile.enabled)
+            timer.start();
+    }
+    ~ScopesProfileScope() {
+        if (scopesProfile.enabled)
+            target += timer.nsecsElapsed();
+    }
     qint64 &target;
     QElapsedTimer timer;
 };

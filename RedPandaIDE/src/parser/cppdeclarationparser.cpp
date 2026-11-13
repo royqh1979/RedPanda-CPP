@@ -22,6 +22,7 @@
 
 namespace {
 struct DeclarationProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 simpleMs = 0;
     qint64 specifiersMs = 0;
     qint64 declaratorMs = 0;
@@ -31,17 +32,28 @@ struct DeclarationProfile {
     qint64 templateArgumentsMs = 0;
     ~DeclarationProfile()
     {
-        qWarning() << "DECLARATION_PROFILE" << simpleMs << specifiersMs << declaratorMs << parameterMs
-                   << "constructorCheck" << constructorCheckMs << "typeName" << typeNameMs
-                   << "templateArguments" << templateArgumentsMs;
+        if (!enabled)
+            return;
+        qWarning() << "DECLARATION_PROFILE" << simpleMs / 1000000.0
+                   << specifiersMs / 1000000.0 << declaratorMs / 1000000.0
+                   << parameterMs / 1000000.0
+                   << "constructorCheck" << constructorCheckMs / 1000000.0
+                   << "typeName" << typeNameMs / 1000000.0
+                   << "templateArguments" << templateArgumentsMs / 1000000.0;
     };
 };
 
 DeclarationProfile declarationProfile;
 
 struct DeclarationProfileScope {
-    explicit DeclarationProfileScope(qint64 &target) : target(target) { timer.start(); }
-    ~DeclarationProfileScope() { target += timer.restart(); }
+    explicit DeclarationProfileScope(qint64 &target) : target(target) {
+        if (declarationProfile.enabled)
+            timer.start();
+    }
+    ~DeclarationProfileScope() {
+        if (declarationProfile.enabled)
+            target += timer.nsecsElapsed();
+    }
     qint64 &target;
     QElapsedTimer timer;
 };
@@ -100,17 +112,21 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         result.declarators.append(declarator);
 
         if (mCursor.consume("=")) {
-            result.declarators.last().initializerPosition = mCursor.current().position;
-            result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
+            if (result.specifiers.type.qualifiedName == "auto") {
+                result.declarators.last().initializerPosition = mCursor.current().position;
+                result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
+            } else {
+                skipExpression({",", ";"});
+            }
         }
         if (!mCursor.atEnd() && mCursor.currentText() == "{") {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
             if (!function)
-                readBalancedToken("{", "}");
+                skipBalancedToken();
         }
         if (!mCursor.atEnd() && mCursor.currentText() == "(")
-            readBalancedToken("(", ")");
+            skipBalancedToken();
         if (mCursor.consume(":")) {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
@@ -288,7 +304,7 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
     while (!mCursor.atEnd()) {
         if (isConstructorDeclaration())
             break;
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         DeclSpecifierProperty property = DeclSpecifierProperty::None;
         if (text == "static") property = DeclSpecifierProperty::Static;
         else if (text == "extern") property = DeclSpecifierProperty::Extern;
@@ -475,7 +491,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                     function.refQualifier = ReferenceQualifier::Lvalue;
                 else if (mCursor.consume("noexcept")) {
                     if (mCursor.currentText() == "(")
-                        readBalancedToken("(", ")");
+                        skipBalancedToken();
                 } else if (mCursor.consume("override")) {
                     function.functionProperties.setFlag(FunctionProperty::Override);
                 } else if (mCursor.consume("final")) {
@@ -557,7 +573,7 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
     if (mCursor.consume("::"))
         name = "::";
     while (!mCursor.atEnd()) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
                 && !isBuiltinType(text))
             break;
@@ -616,7 +632,7 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
     QString argument;
     int level = 1;
     while (!mCursor.atEnd()) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (text == "(" || text == "[" || text == "{") {
             argument += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
             continue;
@@ -673,7 +689,7 @@ QString CppDeclarationParser::parseQualifiedNameText()
     if (mCursor.consume("::"))
         result = "::";
     while (!mCursor.atEnd()) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
                 && !isBuiltinType(text))
             break;
@@ -699,7 +715,7 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
         QString result;
         int level = 0;
         while (!mCursor.atEnd()) {
-            QString text = mCursor.currentText();
+            const QString &text = mCursor.currentText();
             if (text == "(" || text == "[" || text == "{") {
                 result += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
                 continue;
@@ -754,7 +770,7 @@ QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters
 {
     QString result;
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
-        QString text = mCursor.currentText();
+        const QString &text = mCursor.currentText();
         if (text == "(")
             result += readBalancedToken("(", ")");
         else if (text == "[")
@@ -769,26 +785,33 @@ QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters
     return result;
 }
 
+void CppDeclarationParser::skipBalancedToken()
+{
+    mCursor.skipToMatch();
+    if (!mCursor.atEnd()
+            && mCursor.current().kind != CppTokenizer::TokenKind::FileBoundary) {
+        mCursor.advance();
+    }
+}
+
 void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
 {
-    readUntilDelimiter(delimiters);
+    while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
+        const QString &text = mCursor.currentText();
+        if (text == "(" || text == "[" || text == "{")
+            skipBalancedToken();
+        else
+            mCursor.advance();
+    }
 }
 
 void CppDeclarationParser::skipTemplateDefaultArgument()
 {
     int level = 0;
     while (!mCursor.atEnd()) {
-        QString text = mCursor.currentText();
-        if (text == "(") {
-            readBalancedToken("(", ")");
-            continue;
-        }
-        if (text == "[") {
-            readBalancedToken("[", "]");
-            continue;
-        }
-        if (text == "{") {
-            readBalancedToken("{", "}");
+        const QString &text = mCursor.currentText();
+        if (text == "(" || text == "[" || text == "{") {
+            skipBalancedToken();
             continue;
         }
         if (text == "<") {

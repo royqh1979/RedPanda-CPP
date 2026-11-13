@@ -36,12 +36,14 @@ const CppTokenizer::Token &CppTokenCursor::peek(int offset) const
     return (*mTokens)[index];
 }
 
-QString CppTokenCursor::currentText() const
+const QString &CppTokenCursor::currentText() const
 {
+    static const QString empty;
+    static const QString greater = QStringLiteral(">");
     if (atEnd())
-        return QString();
+        return empty;
     if (mGreaterConsumed > 0)
-        return ">";
+        return greater;
     return current().text;
 }
 

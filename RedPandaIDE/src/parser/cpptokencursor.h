@@ -41,7 +41,7 @@ public:
     int greaterConsumed() const { return mGreaterConsumed; }
     const CppTokenizer::Token &current() const;
     const CppTokenizer::Token &peek(int offset = 1) const;
-    QString currentText() const;
+    const QString &currentText() const;
 
     void advance();
     bool consume(const QString &text);

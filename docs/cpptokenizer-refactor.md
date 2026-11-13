@@ -99,7 +99,7 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
-初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。
+初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。只有 auto 变量声明需要保存 initializerText 供类型推导；非 auto 初始化、默认参数和被丢弃的括号表达式只跳过 token，不拼接临时文本。TokenCursor::currentText 返回只读引用，避免声明解析中大量无意义的 QString 引用计数操作。
 
 ### 声明产生式与错误恢复
 

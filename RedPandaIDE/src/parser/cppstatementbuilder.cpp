@@ -22,23 +22,36 @@
 
 namespace {
 struct MergeDeclarationProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 elapsedNs = 0;
-    ~MergeDeclarationProfile() { qWarning() << "MERGE_DECLARATION_PROFILE ms" << elapsedNs / 1000000.0; }
+    ~MergeDeclarationProfile() {
+        if (enabled)
+            qWarning() << "MERGE_DECLARATION_PROFILE ms" << elapsedNs / 1000000.0;
+    }
 };
 
 MergeDeclarationProfile mergeDeclarationProfile;
 
 struct MergeDeclarationProfileScope {
-    explicit MergeDeclarationProfileScope() { timer.start(); }
-    ~MergeDeclarationProfileScope() { mergeDeclarationProfile.elapsedNs += timer.nsecsElapsed(); }
+    explicit MergeDeclarationProfileScope() {
+        if (mergeDeclarationProfile.enabled)
+            timer.start();
+    }
+    ~MergeDeclarationProfileScope() {
+        if (mergeDeclarationProfile.enabled)
+            mergeDeclarationProfile.elapsedNs += timer.nsecsElapsed();
+    }
     QElapsedTimer timer;
 };
 
 struct StatementBuilderProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 createStatementNs = 0;
     qint64 autoTypeNs = 0;
     ~StatementBuilderProfile()
     {
+        if (!enabled)
+            return;
         qWarning() << "STATEMENT_BUILDER_PROFILE createStatementMs" << createStatementNs / 1000000.0
                    << "autoTypeMs" << autoTypeNs / 1000000.0;
     }
@@ -47,8 +60,14 @@ struct StatementBuilderProfile {
 StatementBuilderProfile statementBuilderProfile;
 
 struct StatementBuilderProfileScope {
-    explicit StatementBuilderProfileScope(qint64 &target) : target(target) { timer.start(); }
-    ~StatementBuilderProfileScope() { target += timer.nsecsElapsed(); }
+    explicit StatementBuilderProfileScope(qint64 &target) : target(target) {
+        if (statementBuilderProfile.enabled)
+            timer.start();
+    }
+    ~StatementBuilderProfileScope() {
+        if (statementBuilderProfile.enabled)
+            target += timer.nsecsElapsed();
+    }
     qint64 &target;
     QElapsedTimer timer;
 };

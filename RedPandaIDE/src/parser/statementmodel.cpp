@@ -23,16 +23,26 @@
 
 namespace {
 struct StatementModelProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 addNs = 0;
     int addCount = 0;
-    ~StatementModelProfile() { qWarning() << "STATEMENT_MODEL_PROFILE addMs" << addNs / 1000000.0 << "count" << addCount; }
+    ~StatementModelProfile() {
+        if (enabled)
+            qWarning() << "STATEMENT_MODEL_PROFILE addMs" << addNs / 1000000.0 << "count" << addCount;
+    }
 };
 
 StatementModelProfile statementModelProfile;
 
 struct StatementModelProfileScope {
-    StatementModelProfileScope() { timer.start(); }
-    ~StatementModelProfileScope() { statementModelProfile.addNs += timer.nsecsElapsed(); }
+    StatementModelProfileScope() {
+        if (statementModelProfile.enabled)
+            timer.start();
+    }
+    ~StatementModelProfileScope() {
+        if (statementModelProfile.enabled)
+            statementModelProfile.addNs += timer.nsecsElapsed();
+    }
     QElapsedTimer timer;
 };
 }

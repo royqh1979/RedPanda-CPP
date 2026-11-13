@@ -126,6 +126,8 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
   ./test-cppparser.exe --suite=TestCppParser test_standard_library_public_api_complete
 ```
 
+  需要 `DECLARATION_PROFILE`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。
+
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
 
 - 剪贴板相关测试（列模式 paste/cut/copy-paste 等）偶发失败，多为外部程序（QQ、百度网盘等）抢占剪贴板所致，与代码无关；先重跑或排查占用程序，不要据此改代码。
