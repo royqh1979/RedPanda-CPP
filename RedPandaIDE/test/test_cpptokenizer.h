@@ -77,6 +77,9 @@ private slots:
     void test_statement_builder_preserves_scopes_positions_and_ancestors();
     void test_statement_model_owns_statements_and_weak_indexes();
     void test_statement_builder_preserves_array_suffixes();
+    void test_statement_builder_registers_nested_body_scopes();
+    void test_statement_builder_scope_uses_recovered_file_end();
+    void test_statement_builder_distinguishes_class_body_from_variable();
 
 private:
     void tokenize(const QStringList &lines);

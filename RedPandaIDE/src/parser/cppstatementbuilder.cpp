@@ -110,6 +110,14 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             statement->typeInfo.qualifiedName = declaration.declarators.first().name;
         }
         mModel.add(statement);
+        if (context.fileInfo) {
+            context.fileInfo->addStatement(statement);
+            if (declaration.bodyRange.isValid()
+                    && (kind == StatementKind::Class || kind == StatementKind::Namespace
+                        || isFunction(declarator))) {
+                context.fileInfo->addScope(declaration.bodyRange, statement, context.parentScope);
+            }
+        }
         result.append(statement);
 
         if (i == 0 && (kind == StatementKind::Class || kind == StatementKind::Namespace))
@@ -136,13 +144,19 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
                 enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
                                                   context.inSystemHeader);
                 mModel.add(enumStatement);
+                if (context.fileInfo)
+                    context.fileInfo->addStatement(enumStatement);
             }
         }
         if (isFunction(declarator)) {
             const TypeDerivation &function = declarator.derivations.first();
             for (const ParameterInfo &parameter : function.parameters) {
-                if (!parameter.name.isEmpty())
-                    mModel.add(createParameter(parameter, context, statement));
+                if (!parameter.name.isEmpty()) {
+                    PStatement parameterStatement = createParameter(parameter, context, statement);
+                    mModel.add(parameterStatement);
+                    if (context.fileInfo)
+                        context.fileInfo->addStatement(parameterStatement);
+                }
             }
         }
     }
@@ -197,7 +211,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         }
     }
 
-    if (declaration.bodyRange.isValid()) {
+    bool hasBodyDefinition = isFunction(declarator) || kind == StatementKind::Class
+            || kind == StatementKind::Namespace || kind == StatementKind::EnumType
+            || kind == StatementKind::EnumClassType;
+    if (hasBodyDefinition && declaration.bodyRange.isValid()) {
         statement->definitionRange = declaration.range;
         statement->definitionFileName = context.fileName;
         statement->definitionBoundaryAncestor = context.boundaryAncestor;

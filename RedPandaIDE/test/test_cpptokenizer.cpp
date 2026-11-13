@@ -997,3 +997,78 @@ void TestCppTokenizer::test_statement_builder_preserves_array_suffixes()
     QCOMPARE(values->typeInfo.derivations.count(), 1);
     QCOMPARE(values->typeInfo.derivations.first().kind, TypeDerivationKind::Array);
 }
+
+
+void TestCppTokenizer::test_statement_builder_registers_nested_body_scopes()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("namespace N { class C { int method() { return 1; } }; }", declarations));
+    QCOMPARE(declarations.count(), 1);
+    const DeclarationInfo &namespaceDeclaration = declarations.first();
+    QCOMPARE(namespaceDeclaration.children.count(), 1);
+    const DeclarationInfo &classDeclaration = namespaceDeclaration.children.first();
+    QCOMPARE(classDeclaration.children.count(), 1);
+    const DeclarationInfo &methodDeclaration = classDeclaration.children.first();
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    ParsedFileInfo fileInfo("/tmp/main.cpp");
+    StatementBuildContext context;
+    context.fileName = fileInfo.fileName();
+    context.fileInfo = &fileInfo;
+    builder.build(namespaceDeclaration, context);
+
+    PStatement n = findStatement(model.childrenStatements(), "N");
+    QVERIFY(n);
+    PStatement c = findStatement(n->children, "C");
+    QVERIFY(c);
+    PStatement method = findStatement(c->children, "method");
+    QVERIFY(method);
+    QCOMPARE(fileInfo.statements().value("N::C::method").lock(), method);
+    QCOMPARE(fileInfo.findScopeAt(namespaceDeclaration.bodyRange.start), n);
+    QCOMPARE(fileInfo.findScopeAt(classDeclaration.bodyRange.start), c);
+    QCOMPARE(fileInfo.findScopeAt(methodDeclaration.range.start), c);
+    QCOMPARE(fileInfo.findScopeAt(methodDeclaration.bodyRange.start), method);
+    QCOMPARE(fileInfo.findScopeAt(methodDeclaration.bodyRange.end), method);
+    QCOMPARE(fileInfo.findScopeAt(classDeclaration.bodyRange.end), c);
+    QVERIFY(!fileInfo.findScopeAt({namespaceDeclaration.bodyRange.end.line,
+                                   namespaceDeclaration.bodyRange.end.ch + 1}));
+}
+
+void TestCppTokenizer::test_statement_builder_scope_uses_recovered_file_end()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("int main(){ int value;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    ParsedFileInfo fileInfo("/tmp/main.cpp");
+    StatementBuildContext context;
+    context.fileName = fileInfo.fileName();
+    context.fileInfo = &fileInfo;
+    builder.build(declarations.first(), context);
+
+    PStatement main = findStatement(model.childrenStatements(), "main");
+    QVERIFY(main);
+    QVERIFY(main->hasDefinition());
+    QCOMPARE(fileInfo.findScopeAt(declarations.first().bodyRange.start), main);
+    QCOMPARE(fileInfo.findScopeAt(declarations.first().bodyRange.end), main);
+}
+
+void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_variable()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("struct S {} value;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    PStatement s = findStatement(model.childrenStatements(), "S");
+    PStatement value = findStatement(model.childrenStatements(), "value");
+    QVERIFY(s && value);
+    QVERIFY(s->hasDefinition());
+    QVERIFY(!value->hasDefinition());
+    QVERIFY(!value->definitionRange.isValid());
+    QCOMPARE(value->type(), "S");
+}

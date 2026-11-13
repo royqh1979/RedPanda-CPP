@@ -338,6 +338,9 @@ public:
     void addScope(const SourceRange &range, const PStatement &scope, int parentIndex = -1) {
         mScopes.addScope(range, scope, parentIndex);
     }
+    void addScope(const SourceRange &range, const PStatement &scope, const PStatement &parentScope) {
+        mScopes.addScope(range, scope, parentScope);
+    }
     void removeLastScope() { mScopes.removeLastScope(); }
     PStatement lastScope() const { return mScopes.lastScope(); }
     void addUsing(const QString &usingSymbol) { mUsings.insert(usingSymbol); }

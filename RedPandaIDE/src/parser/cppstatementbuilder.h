@@ -22,6 +22,7 @@
 struct StatementBuildContext {
     QString fileName;
     QString boundaryAncestor;
+    ParsedFileInfo *fileInfo = nullptr;
     PStatement parentScope;
     StatementScope scope = StatementScope::Global;
     StatementAccessibility accessibility = StatementAccessibility::None;

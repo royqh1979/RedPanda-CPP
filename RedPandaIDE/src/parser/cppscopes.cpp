@@ -57,6 +57,21 @@ void CppScopes::addScope(const SourceRange &range,
         ++mScopes[index].parentIndex;
 }
 
+void CppScopes::addScope(const SourceRange &range,
+                         const std::shared_ptr<Statement> &statement,
+                         const std::shared_ptr<Statement> &parentScope)
+{
+    int parentIndex = -1;
+    if (parentScope) {
+        for (int i = 0; i < mScopes.count(); ++i) {
+            if (mScopes[i].statement.lock() == parentScope
+                    && mScopes[i].range.contains(range.start))
+                parentIndex = i;
+        }
+    }
+    addScope(range, statement, parentIndex);
+}
+
 std::shared_ptr<Statement> CppScopes::lastScope() const
 {
     if (mScopes.isEmpty())

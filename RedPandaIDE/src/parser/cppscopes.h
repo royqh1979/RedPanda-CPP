@@ -31,6 +31,8 @@ public:
     std::shared_ptr<Statement> findScopeAt(const SourcePosition &position) const;
     void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,
                   int parentIndex = -1);
+    void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,
+                  const std::shared_ptr<Statement> &parentScope);
     std::shared_ptr<Statement> lastScope() const;
     void removeLastScope();
     void clear() { mScopes.clear(); }

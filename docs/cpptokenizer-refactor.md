@@ -93,6 +93,8 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
 
+创建层同时把 Statement 写入实际源码文件的 ParsedFileInfo。class、namespace 和函数只以 bodyRange 建立代码作用域，父节点按父 Statement 的身份关联；声明范围仍覆盖完整声明。不同 include 文件的位置和作用域分别写入各自的 ParsedFileInfo，不跨文件比较 SourcePosition。`struct S {} value;` 中类体只属于 S 的定义，不会被当作变量 value 的函数定义。
+
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
 初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。
