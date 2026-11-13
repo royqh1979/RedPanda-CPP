@@ -1114,3 +1114,47 @@ void TestCppTokenizer::test_type_resolver_binds_custom_template_members()
     QCOMPARE(resolver.invokeResult(boxType, "value").toString(), "std::string");
     QVERIFY(resolver.invokeResult(boxType, "missing").qualifiedName.isEmpty());
 }
+
+
+void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    using value_type = T;\n"
+                "    T& front();\n"
+                "    T& operator[](unsigned long);\n"
+                "  };\n"
+                "  template<typename T> class iterator {\n"
+                "  public:\n"
+                "    T& operator*();\n"
+                "  };\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+
+    DeclarationInfo vectorVariable;
+    QVERIFY(parseDeclarationText("std::vector<std::string> lst;", vectorVariable));
+    const TypeInfo &vectorType = vectorVariable.specifiers.type;
+    QCOMPARE(operations.containerValue(vectorType).toString(), "std::string");
+    QCOMPARE(operations.containerReference(vectorType).toString(), "std::string &");
+    QCOMPARE(operations.rangeValue(vectorType).toString(), "std::string");
+    QCOMPARE(operations.rangeReference(vectorType).toString(), "std::string &");
+    QCOMPARE(operations.subscriptValue(vectorType).toString(), "std::string");
+    QCOMPARE(operations.subscriptReference(vectorType).toString(), "std::string &");
+
+    DeclarationInfo iteratorVariable;
+    QVERIFY(parseDeclarationText("std::iterator<std::string> it;", iteratorVariable));
+    QCOMPARE(operations.iteratorReference(iteratorVariable.specifiers.type).toString(),
+             "std::string &");
+    QCOMPARE(operations.iteratorValue(iteratorVariable.specifiers.type).toString(),
+             "std::string");
+}

@@ -10,6 +10,7 @@
 #include "src/parser/cppsyntaxparser.h"
 #include "src/parser/cppstatementbuilder.h"
 #include "src/parser/cpptyperesolver.h"
+#include "src/parser/typeoperationregistry.h"
 #include "src/parser/cppscopes.h"
 #include "src/parser/parserutils.h"
 
@@ -82,6 +83,7 @@ private slots:
     void test_statement_builder_scope_uses_recovered_file_end();
     void test_statement_builder_distinguishes_class_body_from_variable();
     void test_type_resolver_binds_custom_template_members();
+    void test_type_operations_resolve_container_and_iterator_chain();
 
 private:
     void tokenize(const QStringList &lines);

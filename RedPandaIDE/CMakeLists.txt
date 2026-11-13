@@ -30,6 +30,7 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/cppsyntaxparser
     src/parser/cppstatementbuilder
     src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
@@ -246,6 +247,7 @@ target_qt_plain_cpp(test-editor
     src/parser/cppsyntaxparser
     src/parser/cppstatementbuilder
     src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
@@ -337,6 +339,7 @@ target_qt_plain_cpp(test-cpptokenizer
     src/parser/cppsyntaxparser
     src/parser/cppstatementbuilder
     src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
     src/parser/cppscopes
 )
 
@@ -382,6 +385,7 @@ target_qt_plain_cpp(test-cppparser
     src/parser/cppsyntaxparser
     src/parser/cppstatementbuilder
     src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
