@@ -352,7 +352,10 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             if (result.kind == EvalStatementKind::Type) {
                 index = skipBalanced(tokens, index);
             } else if (result.kind == EvalStatementKind::Function) {
-                index = skipBalanced(tokens, index);
+                QVector<TypeInfo> arguments;
+                if (!evaluateArguments(tokens, index, context, arguments))
+                    return {};
+                result.type = mResolver.invokeFunction(result.baseStatement, arguments);
             } else {
                 QVector<TypeInfo> arguments;
                 if (!evaluateArguments(tokens, index, context, arguments))

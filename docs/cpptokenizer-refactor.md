@@ -192,6 +192,8 @@ Statement 需要区分非模板、主模板、部分特化和全特化，并保�
 
 Parser 解析声明时只保存模板声明、模板实参和结构化 TypeInfo，不实例化模板，也不生成实例化 Statement。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
 
+函数 Statement 同时保留结构化 ParameterInfo 列表，不只保存 args 文本。调用时逐参数比较 formal/actual TypeInfo：直接模板形参绑定实际类型，引用先去除，指针/数组按层递归，Container<T> 等实际模板参数继续递归绑定；返回 TypeInfo 再应用这些绑定。该机制用于 find_if、transform 等算法，不做重载决议、SFINAE、参数包展开或完整隐式转换序列。
+
 无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。
 
 rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类型；filter_view 递归保持输入 range 的元素或引用；transform_view 使用函数、函数指针或 operator() 的返回类型；join_view 连续两次取元素以展平内层 range；elements_view 从 tuple、pair 或 array 的实际模板实参中取第 N 项。查不到专用规则时回退到普通容器的 value_type/front，不把 view 名称识别代替通用声明解析。

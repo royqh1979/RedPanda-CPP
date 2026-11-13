@@ -92,6 +92,65 @@ TypeInfo CppTypeResolver::invokeResult(const TypeInfo &receiver, const QString &
     return resolve(member->typeInfo, bindings, declaration);
 }
 
+TypeInfo CppTypeResolver::invokeFunction(const PStatement &function,
+                                         const QVector<TypeInfo> &arguments) const
+{
+    if (!function)
+        return {};
+    QSet<QString> templateParameters;
+    for (const TemplateParameterInfo &parameter : function->templateParameters)
+        templateParameters.insert(parameter.name);
+    TemplateBindings bindings;
+    int count = qMin(function->parameters.count(), arguments.count());
+    for (int i = 0; i < count; ++i) {
+        if (function->parameters[i].type)
+            bindParameterType(*function->parameters[i].type, arguments[i], templateParameters, bindings);
+    }
+    return resolve(function->typeInfo, bindings, function->parentScope.lock());
+}
+
+void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInfo &argument,
+                                        const QSet<QString> &templateParameters,
+                                        TemplateBindings &bindings) const
+{
+    TypeInfo formal = parameter;
+    TypeInfo actual = argument;
+    auto removeReferences = [](TypeInfo &type) {
+        while (!type.derivations.isEmpty()
+                && (type.derivations.first().kind == TypeDerivationKind::LvalueReference
+                    || type.derivations.first().kind == TypeDerivationKind::RvalueReference))
+            type.derivations.removeFirst();
+    };
+    removeReferences(formal);
+    removeReferences(actual);
+    actual.qualifiers = TypeQualifier::None;
+
+    if (templateParameters.contains(formal.qualifiedName)) {
+        if (!bindings.contains(formal.qualifiedName))
+            bindings.insert(formal.qualifiedName, TemplateArgument::fromType(actual));
+        return;
+    }
+    if (!formal.derivations.isEmpty() && !actual.derivations.isEmpty()
+            && formal.derivations.first().kind == actual.derivations.first().kind
+            && (formal.derivations.first().kind == TypeDerivationKind::Pointer
+                || formal.derivations.first().kind == TypeDerivationKind::Array)) {
+        formal.derivations.removeFirst();
+        actual.derivations.removeFirst();
+        bindParameterType(formal, actual, templateParameters, bindings);
+        return;
+    }
+    if (formal.qualifiedName != actual.qualifiedName)
+        return;
+    int count = qMin(formal.templateArguments.count(), actual.templateArguments.count());
+    for (int i = 0; i < count; ++i) {
+        const TemplateArgument &formalArgument = formal.templateArguments[i];
+        const TemplateArgument &actualArgument = actual.templateArguments[i];
+        if (formalArgument.kind == TemplateArgumentKind::Type && formalArgument.type
+                && actualArgument.kind == TemplateArgumentKind::Type && actualArgument.type)
+            bindParameterType(*formalArgument.type, *actualArgument.type, templateParameters, bindings);
+    }
+}
+
 TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindings &bindings,
                                       const PStatement &context, QSet<const Statement *> &aliases) const
 {

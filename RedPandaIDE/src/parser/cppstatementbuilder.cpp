@@ -222,6 +222,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     if (isFunction(declarator)) {
         const TypeDerivation function = declarator.derivations.first();
         statement->typeInfo.derivations.removeFirst();
+        statement->parameters = function.parameters;
         statement->args = renderParameters(function, true);
         statement->noNameArgs = renderParameters(function, false);
         if (!function.trailingReturnType.isEmpty()

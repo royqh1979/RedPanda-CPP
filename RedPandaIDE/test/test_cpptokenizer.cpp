@@ -1536,3 +1536,52 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     model.clear();
     QVERIFY(lambdaReference.expired());
 }
+
+
+void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  class string { public: unsigned long size(); };\n"
+                "  template<typename T> class iterator {\n"
+                "  public:\n"
+                "    T& operator*();\n"
+                "    T* operator->();\n"
+                "  };\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    iterator<T> begin();\n"
+                "    iterator<T> end();\n"
+                "  };\n"
+                "  template<typename InputIt, typename UnaryOp>\n"
+                "  InputIt find_if(InputIt first, InputIt last, UnaryOp pred);\n"
+                "  template<typename InputIt, typename OutputIt, typename UnaryOp>\n"
+                "  OutputIt transform(InputIt first, InputIt last, OutputIt result, UnaryOp op);\n"
+                "}\n"
+                "std::vector<std::string> lst;\n"
+                "auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.size() > 0; });\n"
+                "auto output = std::transform(lst.begin(), lst.end(), lst.begin(), [](const std::string &s) { return s.size(); });\n"
+                "auto dereferenced = *found;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    PStatement found = findStatement(model.childrenStatements(), "found");
+    PStatement output = findStatement(model.childrenStatements(), "output");
+    PStatement dereferenced = findStatement(model.childrenStatements(), "dereferenced");
+    QVERIFY(found && output && dereferenced);
+    QCOMPARE(found->type(), "std::iterator<std::string>");
+    QCOMPARE(output->type(), "std::iterator<std::string>");
+    QCOMPARE(dereferenced->type(), "std::string");
+
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTokenizer expression;
+    expression.tokenize({"found->size()"});
+    QCOMPARE(evaluator.evaluate(expression).type.toString(), "unsigned long");
+}

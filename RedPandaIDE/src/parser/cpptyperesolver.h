@@ -40,8 +40,11 @@ public:
     PStatement findStatement(const QString &qualifiedName, const PStatement &context = {}) const;
     TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
+    TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments) const;
 
 private:
+    void bindParameterType(const TypeInfo &parameter, const TypeInfo &argument,
+                           const QSet<QString> &templateParameters, TemplateBindings &bindings) const;
     TypeInfo resolveType(const TypeInfo &type, const TemplateBindings &bindings,
                          const PStatement &context, QSet<const Statement *> &aliases) const;
     PStatement findDeclaration(const QString &qualifiedName, const PStatement &context) const;
