@@ -972,10 +972,12 @@ void TestCppTokenizer::test_statement_model_owns_statements_and_weak_indexes()
     scopes.addScope({{0, 0}, {0, 9}}, value);
     QCOMPARE(fileInfo.statements().value("value").lock(), value);
     QCOMPARE(scopes.findScopeAt({0, 5}), value);
+    QCOMPARE(model.findByFullName("value"), value);
 
     fileInfo.removeStatement(value);
     model.deleteStatement(value);
     QVERIFY(!findStatement(model.childrenStatements(), "value"));
+    QVERIFY(!model.findByFullName("value"));
     QCOMPARE(model.count(), 0);
     value.reset();
     QVERIFY(built.first().expired());

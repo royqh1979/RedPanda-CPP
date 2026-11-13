@@ -214,10 +214,8 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindin
 PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
                                             const PStatement &context) const
 {
-    for (const PStatement &statement : mModel.statements()) {
-        if (statement->fullName == qualifiedName)
-            return statement;
-    }
+    if (PStatement exact = mModel.findByFullName(qualifiedName))
+        return exact;
     QString name = qualifiedName;
     PStatement initialContext = context;
     if (name.startsWith("::")) {

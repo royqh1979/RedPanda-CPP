@@ -49,9 +49,11 @@ public:
         }
         mStatements.clear();
         mGlobalStatements.clear();
+        mFullNameStatements.clear();
     }
     int count() const { return mCount; }
     const StatementList &statements() const { return mStatements; }
+    PStatement findByFullName(const QString &fullName) const;
 #ifdef QT_DEBUG
     void dump(const QString& logFile);
     void dumpAll(const QString& logFile);
@@ -64,6 +66,7 @@ private:
     int mCount;
     StatementList mStatements;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
+    StatementMap mFullNameStatements;
 };
 
 #endif // STATEMENTMODEL_H

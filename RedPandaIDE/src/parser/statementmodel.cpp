@@ -37,6 +37,7 @@ void StatementModel::add(const PStatement& statement)
     } else {
         addMember(mGlobalStatements, statement);
     }
+    mFullNameStatements.insert(statement->fullName, statement);
     mStatements.append(statement);
     ++mCount;
 }
@@ -59,8 +60,19 @@ void StatementModel::deleteStatement(const PStatement& statement)
     } else {
         deleteMember(mGlobalStatements, statement);
     }
+    deleteMember(mFullNameStatements, statement);
     if (mStatements.removeOne(statement))
         --mCount;
+}
+
+PStatement StatementModel::findByFullName(const QString &fullName) const
+{
+    const auto values = mFullNameStatements.values(fullName);
+    for (const std::weak_ptr<Statement> &weak : values) {
+        if (PStatement statement = weak.lock())
+            return statement;
+    }
+    return {};
 }
 
 #ifdef QT_DEBUG
