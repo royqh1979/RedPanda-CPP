@@ -133,6 +133,7 @@ struct TypeInfo {
     QString qualifiedName;
     std::weak_ptr<Statement> declaration;
     QVector<TemplateArgument> templateArguments;
+    QString templateArgumentsText;
     QVector<TypeDerivation> derivations;
     TypeQualifiers qualifiers = TypeQualifier::None;
 

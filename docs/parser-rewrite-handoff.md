@@ -52,13 +52,21 @@ GCC 8.1 独立 `<string>` 测试的初次总耗时约 36 秒，其中 `parseDecl
 
 改为仅收集标识符文本并跳过配对模板参数后，`constructorCheck` 降为 0，最近一次独立 `<string>` 总耗时约 21.3 秒，`parseDeclaration` 约 9.44 秒。主要剩余热点为 `basic_string.h`、`basic_string.tcc`、`stl_function.h` 中的 `parseTypeName`；后续只在既定类型推导范围内继续分析，不扩大模板参数实现。
 
-Static Release 的完整公开接口验收约 114–126 秒，主干同环境约 32.4 秒，仍存在明显性能回退。`parseTemplateArguments` 累计约 39.6 秒，是最大热点；`mergeDeclaration` 仅约 1 毫秒，不是优化方向。当前 `parseTypeName` 在声明阶段就结构化解析所有模板参数，与设计中的“类型信息按需计算”不一致。后续应单独讨论模板参数的惰性保存和按需解析方案，不能继续当作局部小优化处理。
+Static Release 的完整公开接口验收在惰性解析前约 114–126 秒，主干同环境约 32.4 秒。`parseTemplateArguments` 累计约 39.6 秒，是最大热点；`mergeDeclaration` 仅约 1 毫秒，不是优化方向。
+
+现已按既定设计实现惰性解析：声明阶段只在 `TypeInfo::templateArgumentsText` 中保存模板实参原文；类型求值、模板绑定及 range/tuple 类型操作需要结构时才调用 `parseTemplateArguments()`。函数模板的 `Container<T>` 递归绑定也会先取得结构，新增 `front_value(std::vector<T>)` 测试防止该路径因惰性保存而失效。
+
+Static Release、GCC 8.1 的实测结果：
+
+- 独立 `<string>`：总计 12.702 秒，此前约 21.3 秒；`parseDeclarations` 1.328 秒，声明阶段 `templateArguments` 为 0。
+- 完整公开接口验收：总计 89.521 秒，此前约 114–126 秒；preprocess 7.170 秒、tokenize 15.198 秒、parseDeclarations 22.932 秒、buildStatements 14.036 秒；`templateArguments` 降为 0.372 秒。
+- 两个验收测试均通过，但完整公开接口验收仍明显慢于主干的约 32.4 秒。后续性能工作应依据各阶段及声明解析内部的计时继续定位，不能把当前结果视为性能问题已经解决。
 
 GCC 8.1 的单元测试 `test_standard_library_string` 通过，但用户实际 IDE 中 `std::string` / `std::basic_string` 缺失仍未复现，需要继续比较实际 Parser 配置和失效时序，不能宣称该问题已解决。
 
 ## 后续顺序
 
-1. 单独设计模板参数的惰性保存和按需解析，先证明 `parseTemplateArguments` 的声明期语义解析可以延后且不影响 Statement/补全结果。
+1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，重点依据 parseDeclarations、tokenize 和 buildStatements 的实测热点定位，不扩大模板语义实现范围。
 2. 逐项审查 `docs/parser-concurrency-review.md`：`mParsing` 读取必须持锁，但是否需要读取及如何判断逐场景分析；修改标志的临界区尽量小。
 3. 单独分析活动引用接口（尤其 `statementList()`）的合法使用时限，不能用一次入口加锁掩盖引用生命周期问题。
 4. 评估普通嵌套 Block 的既有问题：`void f() { int local; { int inner; } }` 中局部声明后的 `{` 可能被当作前一声明 body。不要与其他修复混合。

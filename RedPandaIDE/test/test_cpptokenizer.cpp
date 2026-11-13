@@ -603,8 +603,19 @@ void TestCppTokenizer::test_parse_template_type_arguments()
     QVERIFY(parseDeclarationText("std::vector<std::vector<int>> values;", declaration));
     QCOMPARE(declaration.declarators[0].name, "values");
     QCOMPARE(declaration.specifiers.type.qualifiedName, "std::vector");
-    QCOMPARE(declaration.specifiers.type.templateArguments.count(), 1);
-    TemplateArgument argument = declaration.specifiers.type.templateArguments[0];
+    QCOMPARE(declaration.specifiers.type.templateArgumentsText, "<std::vector<int>>");
+    QVERIFY(declaration.specifiers.type.templateArguments.isEmpty());
+    QCOMPARE(declaration.specifiers.type.toString(), "std::vector<std::vector<int>>");
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/templates.cpp";
+    builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeInfo resolved = resolver.resolve(declaration.specifiers.type);
+    QCOMPARE(resolved.templateArguments.count(), 1);
+    TemplateArgument argument = resolved.templateArguments[0];
     QCOMPARE(argument.kind, TemplateArgumentKind::Type);
     QVERIFY(argument.type);
     QCOMPARE(argument.type->toString(), "std::vector<int>");
@@ -678,7 +689,7 @@ void TestCppTokenizer::test_parse_template_specializations()
     QVERIFY(parseDeclarationText("template<typename T> int value<T*>;", declaration));
     QCOMPARE(declaration.templateKind, TemplateDeclarationKind::PartialSpecialization);
     QCOMPARE(declaration.templateParameters.count(), 1);
-    QCOMPARE(declaration.declarators[0].name, "value<T *>");
+    QCOMPARE(declaration.declarators[0].name, "value<T*>");
 }
 
 void TestCppTokenizer::test_scope_range_queries()
@@ -1568,10 +1579,12 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
                 "  InputIt find_if(InputIt first, InputIt last, UnaryOp pred);\n"
                 "  template<typename InputIt, typename OutputIt, typename UnaryOp>\n"
                 "  OutputIt transform(InputIt first, InputIt last, OutputIt result, UnaryOp op);\n"
+                "  template<typename T> T front_value(std::vector<T> values);\n"
                 "}\n"
                 "std::vector<std::string> lst;\n"
                 "auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.size() > 0; });\n"
                 "auto output = std::transform(lst.begin(), lst.end(), lst.begin(), [](const std::string &s) { return s.size(); });\n"
+                "auto element = std::front_value(lst);\n"
                 "auto dereferenced = *found;\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
@@ -1582,10 +1595,12 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
 
     PStatement found = findStatement(model.childrenStatements(), "found");
     PStatement output = findStatement(model.childrenStatements(), "output");
+    PStatement element = findStatement(model.childrenStatements(), "element");
     PStatement dereferenced = findStatement(model.childrenStatements(), "dereferenced");
-    QVERIFY(found && output && dereferenced);
+    QVERIFY(found && output && element && dereferenced);
     QCOMPARE(found->type(), "std::iterator<std::string>");
     QCOMPARE(output->type(), "std::iterator<std::string>");
+    QCOMPARE(element->type(), "std::string");
     QCOMPARE(dereferenced->type(), "std::string");
 
     CppTypeResolver resolver(model);
@@ -1916,6 +1931,11 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     CppSyntaxParser parenthesisParser(parenthesisCursor);
     QVERIFY(!parenthesisParser.parseDeclaration(declaration));
     QCOMPARE(parenthesisCursor.index(), 0);
+    tokenize({"std::vector<int value;"});
+    CppTokenCursor templateCursor(mTokenizer);
+    CppDeclarationParser templateParser(templateCursor);
+    QVERIFY(!templateParser.parseDeclaration(declaration));
+    QCOMPARE(templateCursor.index(), 0);
 }
 
 

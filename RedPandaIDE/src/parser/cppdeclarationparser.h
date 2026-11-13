@@ -32,6 +32,7 @@ public:
     bool parseDeclSpecifierSeq(DeclSpecifierInfo &result);
     bool parseDeclarator(DeclaratorInfo &result);
     bool parseParameter(ParameterInfo &result);
+    bool parseTemplateArguments(TypeInfo &result);
     QString parseQualifiedNameText();
     void setCurrentClassName(const QString &className);
     QString currentClassName() const { return mClassName; }
@@ -40,8 +41,6 @@ private:
     bool parseTypeName(TypeInfo &result);
     bool isConstructorDeclaration();
     bool parseStructuredBinding(DeclarationInfo &result);
-    bool parseTemplateArguments(TypeInfo &result);
-    QString parseTemplateArgumentText();
     QString parseOperatorName();
     QString readBalancedToken(const QString &opening, const QString &closing);
     QString readUntilDelimiter(const QSet<QString> &delimiters);

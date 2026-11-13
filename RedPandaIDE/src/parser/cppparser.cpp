@@ -498,8 +498,7 @@ QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QStri
                                             const PStatement &currentScope) const
 {
     Q_UNUSED(fileName);
-    Q_UNUSED(currentScope);
-    TypeInfo type = parseTypeInfo(phrase);
+    TypeInfo type = CppTypeResolver(mStatementList).resolve(parseTypeInfo(phrase), {}, currentScope);
     return type.templateArguments.isEmpty() ? QString() : type.templateArguments.first().toString();
 }
 
@@ -507,8 +506,7 @@ QString CppParser::findTemplateParamOf(const QString &fileName, const QString &p
                                        const PStatement &currentScope) const
 {
     Q_UNUSED(fileName);
-    Q_UNUSED(currentScope);
-    TypeInfo type = parseTypeInfo(phrase);
+    TypeInfo type = CppTypeResolver(mStatementList).resolve(parseTypeInfo(phrase), {}, currentScope);
     return index >= 0 && index < type.templateArguments.count()
             ? type.templateArguments[index].toString() : QString();
 }

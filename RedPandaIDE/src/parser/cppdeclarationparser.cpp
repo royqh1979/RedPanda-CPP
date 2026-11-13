@@ -191,7 +191,7 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
         if (mCursor.consume("template")) {
             parameter.kind = TemplateParameterKind::TemplateTemplate;
             if (mCursor.currentText() == "<")
-                parseTemplateArgumentText();
+                readBalancedToken("<", ">");
             if (!mCursor.consume("class"))
                 mCursor.consume("typename");
         } else if (mCursor.consume("class") || mCursor.consume("typename")) {
@@ -563,9 +563,12 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
             break;
         name += text;
         mCursor.advance();
-        if (mCursor.currentText() == "<" && !parseTemplateArguments(result)) {
-            mCursor.restore(start);
-            return false;
+        if (mCursor.currentText() == "<") {
+            result.templateArgumentsText = readBalancedToken("<", ">");
+            if (result.templateArgumentsText.isEmpty()) {
+                mCursor.restore(start);
+                return false;
+            }
         }
         if (mCursor.consume("::"))
             name += "::";
@@ -647,14 +650,6 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
     return false;
 }
 
-QString CppDeclarationParser::parseTemplateArgumentText()
-{
-    TypeInfo result;
-    if (!parseTemplateArguments(result))
-        return QString();
-    return result.toString();
-}
-
 QString CppDeclarationParser::parseOperatorName()
 {
     QString result = "operator";
@@ -685,7 +680,7 @@ QString CppDeclarationParser::parseQualifiedNameText()
         result += text;
         mCursor.advance();
         if (mCursor.currentText() == "<")
-            result += parseTemplateArgumentText();
+            result += readBalancedToken("<", ">");
         if (mCursor.consume("::"))
             result += "::";
         else
@@ -696,9 +691,39 @@ QString CppDeclarationParser::parseQualifiedNameText()
 
 QString CppDeclarationParser::readBalancedToken(const QString &opening, const QString &closing)
 {
-    Q_UNUSED(closing);
     if (mCursor.atEnd() || mCursor.currentText() != opening)
         return QString();
+
+    if (opening == "<") {
+        CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+        QString result;
+        int level = 0;
+        while (!mCursor.atEnd()) {
+            QString text = mCursor.currentText();
+            if (text == "(" || text == "[" || text == "{") {
+                result += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
+                continue;
+            }
+            if (text == "<") {
+                ++level;
+                appendToken(result, text);
+                mCursor.advance();
+                continue;
+            }
+            if (text == ">" || text == ">>") {
+                mCursor.consumeGreater();
+                --level;
+                appendToken(result, closing);
+                if (level == 0)
+                    return result;
+                continue;
+            }
+            appendToken(result, text);
+            mCursor.advance();
+        }
+        mCursor.restore(start);
+        return QString();
+    }
 
     CppTokenCursor::MatchStatus status = mCursor.matchStatus();
     int target = mCursor.current().matchIndex;

@@ -226,7 +226,7 @@ Statement 需要区分非模板、主模板、部分特化和全特化，并保�
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 
-Parser 解析声明时只保存模板声明、模板实参和结构化 TypeInfo，不实例化模板，也不生成实例化 Statement。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
+Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的其它结构，不实例化模板，也不生成实例化 Statement。TypeInfo 以 `templateArgumentsText` 保存包括尖括号在内的实参 token 文本，此时 `templateArguments` 保持为空；只有类型求值、模板绑定或类型操作确实需要实参结构时，才调用 `parseTemplateArguments()` 生成有序 `TemplateArgument`。求值结果以结构化参数为准，避免已绑定的参数仍显示原始形参文本。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
 
 当前不支持 CTAD。deduction guide 的语法必须正确消费，但不生成 Statement：识别依据是函数 declarator 带 trailing return 且没有 decl-specifier 返回类型，不能误忽略普通 `auto f() -> T`。测试必须验证类定义和成员可查找、guide 不产生同名函数条目，以及普通 trailing-return 函数仍保留。
 
@@ -255,7 +255,7 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 ### TypeInfo 与表达式结果
 
-TypeInfo 只表示类型，包含规范化名称、可选的已解析声明、有序实际模板参数、复用 declarator 规则的有序 TypeDerivation 列表，以及基础类型 cv flags。实际模板参数使用 TemplateArgument 区分 TypeInfo 和非类型常量表达式，因此能表示 elements_view 等混合参数。
+TypeInfo 只表示类型，包含规范化名称、可选的已解析声明、模板实参原文及按需生成的有序实际模板参数、复用 declarator 规则的有序 TypeDerivation 列表，以及基础类型 cv flags。实际模板参数使用 TemplateArgument 区分 TypeInfo 和非类型常量表达式，因此能表示 elements_view 等混合参数。声明对象通常只有实参原文；求值完成后才以结构化参数为准，二者不作为两套语义同时消费。
 
 Statement 直接保存结构化 TypeInfo，不再同时保存一份类型文本。原有 `statement->type` 读取迁移为 `statement->type()`，需要兼容文本时按既有格式生成；类型修改通过明确接口完成。声明解析、auto 推导和 view 管道都直接写入 TypeInfo，避免重复解析及双份数据同步。`command/fullName/args/value` 不在这一阶段一起结构化。
 

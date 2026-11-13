@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "cpptyperesolver.h"
+#include "cppdeclarationparser.h"
+#include "cpptokencursor.h"
 
 namespace {
 bool isAlias(const PStatement &statement)
@@ -35,6 +37,18 @@ bool isInvocable(const PStatement &statement)
     default:
         return false;
     }
+}
+
+void materializeTemplateArguments(TypeInfo &type)
+{
+    if (!type.templateArguments.isEmpty() || type.templateArgumentsText.isEmpty())
+        return;
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({type.templateArgumentsText});
+    CppTokenCursor cursor(tokenizer);
+    CppDeclarationParser parser(cursor);
+    if (parser.parseTemplateArguments(type))
+        type.templateArgumentsText.clear();
 }
 }
 
@@ -250,6 +264,8 @@ void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInf
     }
     if (formal.qualifiedName != actual.qualifiedName)
         return;
+    materializeTemplateArguments(formal);
+    materializeTemplateArguments(actual);
     int count = qMin(formal.templateArguments.count(), actual.templateArguments.count());
     for (int i = 0; i < count; ++i) {
         const TemplateArgument &formalArgument = formal.templateArguments[i];
@@ -263,7 +279,9 @@ void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInf
 TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindings &bindings,
                                       const PStatement &context, QSet<const Statement *> &aliases) const
 {
-    auto binding = bindings.constFind(type.qualifiedName);
+    TypeInfo result = type;
+    materializeTemplateArguments(result);
+    auto binding = bindings.constFind(result.qualifiedName);
     if (binding != bindings.constEnd()
             && binding->kind == TemplateArgumentKind::Type && binding->type) {
         TemplateBindings nestedBindings = bindings;
@@ -274,7 +292,6 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindin
         return result;
     }
 
-    TypeInfo result = type;
     for (TemplateArgument &argument : result.templateArguments) {
         if (argument.kind == TemplateArgumentKind::Type && argument.type)
             argument.type = std::make_shared<TypeInfo>(resolveType(*argument.type, bindings,
