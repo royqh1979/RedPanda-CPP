@@ -45,6 +45,7 @@ private:
 
     CppTokenCursor &mCursor;
     CppDeclarationParser mDeclarationParser;
+    QString mRootFileName;
 };
 
 #endif // CPPSYNTAXPARSER_H

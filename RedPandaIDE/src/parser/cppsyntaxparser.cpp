@@ -60,8 +60,10 @@ int matchedScopeClose(CppTokenCursor &cursor)
 class ScopeRecovery
 {
 public:
-    ScopeRecovery(CppTokenCursor &cursor, int closeIndex, const char *scopeKind)
-        : mCursor(cursor), mCloseIndex(closeIndex), mScopeKind(scopeKind)
+    ScopeRecovery(CppTokenCursor &cursor, int closeIndex,
+                  const QString &rootFileName, const char *scopeKind)
+        : mCursor(cursor), mCloseIndex(closeIndex), mScopeKind(scopeKind),
+          mInInclude(!rootFileName.isEmpty() && cursor.current().fileName != rootFileName)
     {
     }
 
@@ -74,6 +76,8 @@ public:
                  << mCursor.current().fileName << mCursor.current().position.line
                  << mCursor.index() << "->" << mCloseIndex;
 #endif
+        Q_ASSERT_X(!mInInclude, "scope recovery",
+                   "declaration parser consumed past a scope boundary in an included file");
         mCursor.restore({mCloseIndex, 0});
         Q_ASSERT(mCursor.index() == mCloseIndex);
         Q_ASSERT(mCursor.currentText() == "}");
@@ -83,11 +87,12 @@ private:
     CppTokenCursor &mCursor;
     int mCloseIndex;
     const char *mScopeKind;
+    bool mInInclude;
 };
 }
 
 CppSyntaxParser::CppSyntaxParser(CppTokenCursor &cursor)
-    : mCursor(cursor), mDeclarationParser(cursor)
+    : mCursor(cursor), mDeclarationParser(cursor), mRootFileName(cursor.current().fileName)
 {
 }
 
@@ -160,7 +165,7 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
             ? DeclarationAccessibility::Private : DeclarationAccessibility::Public;
     while (!mCursor.atEnd()
            && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
-        ScopeRecovery recovery(mCursor, closeIndex, "class");
+        ScopeRecovery recovery(mCursor, closeIndex, mRootFileName, "class");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
@@ -240,7 +245,7 @@ bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
         return false;
     while (!mCursor.atEnd()
            && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
-        ScopeRecovery recovery(mCursor, closeIndex, "namespace");
+        ScopeRecovery recovery(mCursor, closeIndex, mRootFileName, "namespace");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
@@ -441,7 +446,7 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
     mCursor.advance();
     while (!mCursor.atEnd()
            && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
-        ScopeRecovery recovery(mCursor, closeIndex, "block");
+        ScopeRecovery recovery(mCursor, closeIndex, mRootFileName, "block");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
