@@ -33,6 +33,8 @@ private slots:
     void test_root_switch_with_include_order_change_removes_stale_statements();
     void test_internal_header_disk_change_removes_stale_statements();
     void test_bits_stdcpp_not_rescanned_when_switching_roots();
+    void test_reset_parser_clears_registry_and_statements();
+    void test_auto_invalidation_preserves_definition_after_declaration_change();
     void test_cppreference_declarator_syntax();
     void test_cppreference_function_syntax();
     void test_cppreference_class_syntax();

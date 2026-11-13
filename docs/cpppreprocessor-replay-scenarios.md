@@ -279,6 +279,13 @@
 - 判定依据：自动 stamp 失效与编辑器显式失效必须具有相同的 Statement 生命周期语义，不能只清 Preprocessor 的宏和 Registry 记录。
 - 测试：`test_internal_header_disk_change_removes_stale_statements`。
 
+### F9 Parser reset 的完整清理与重建
+
+- 操作：Parser 已解析 root 和系统头后调用 resetParser，再按原配置重建并解析。
+- 预期：StatementMap、Registry 文件记录、scanned 状态、namespace 和项目文件集合均清空；重新配置后 root 与系统头重新扫描，符号正确恢复。
+- 判定依据：reset 是编译器/参数变化和 IDE 自动清空时的统一入口，不能只清 Statement 而留下可供 replay 的旧 Registry。
+- 测试：`test_reset_parser_clears_registry_and_statements`。
+
 ## 6. 循环与深度
 
 ### C1 保护文件形成环
@@ -361,6 +368,13 @@
 - 预期：所有公开类、方法、函数都能在 StatementMap 找到；重复扫描后数量不异常增长。
 - 判定依据：标准库验收直接检查公开接口集合，可发现局部 replay 中符号丢失或重复，而不仅是文本相同。
 - 测试：`test_standard_library_public_api_complete`（独立 CMake 开关，默认关闭）。
+
+### S7 声明变化触发自动失效时保留定义
+
+- 操作：声明和定义位于不同跨边界头；修改声明文件的磁盘内容，不显式调用 Parser 失效接口，然后重扫 root。
+- 预期：声明记录重扫，定义记录 replay；合并 Statement 仍有定义，声明侧和定义侧祖先分别指向正确文件，新增声明符号可见。
+- 判定依据：自动 stamp 失效必须复用声明/定义两侧清理规则，不能因 Preprocessor 自行失效而丢失另一侧定义。
+- 测试：`test_auto_invalidation_preserves_definition_after_declaration_change`。
 
 ## 8. 性能与缓存命中验收
 

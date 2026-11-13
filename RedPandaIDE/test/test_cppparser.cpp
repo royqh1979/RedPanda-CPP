@@ -953,6 +953,63 @@ void TestCppParser::test_bits_stdcpp_not_rescanned_when_switching_roots()
     QCOMPARE(mParser->statementList().count(), statementCount + 1);
 }
 
+void TestCppParser::test_reset_parser_clears_registry_and_statements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("value.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"int header_value;"}));
+    QVERIFY(writeLines(main, {"#include \"value.h\"", "int main_value;"}));
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("header_value"));
+
+    mParser->resetParser();
+    QCOMPARE(mParser->statementList().count(), 0);
+    QVERIFY(!mParser->fileScanned(main));
+    QVERIFY(!mParser->fileScanned(header));
+    QVERIFY(!mParser->findFileInfo(main));
+    QVERIFY(!mParser->findFileInfo(header));
+    QVERIFY(mParser->namespaces().isEmpty());
+    QVERIFY(mParser->projectFiles().isEmpty());
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("header_value"));
+    QVERIFY(mParser->findStatement("main_value"));
+}
+
+void TestCppParser::test_auto_invalidation_preserves_definition_after_declaration_change()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString declaration = tmp.filePath("declaration.h");
+    QString definition = tmp.filePath("definition.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(declaration, {"int declared_function();"}));
+    QVERIFY(writeLines(definition, {"int declared_function() { return 1; }"}));
+    QVERIFY(writeLines(main, {"#include \"declaration.h\"", "#include \"definition.h\""}));
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    PStatement statement = mParser->findStatement("declared_function");
+    QVERIFY(statement && statement->hasDefinition());
+
+    QVERIFY(writeLines(declaration, {"int declared_function();", "int declaration_marker;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    statement = mParser->findStatement("declared_function");
+    QVERIFY(statement && statement->hasDefinition());
+    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
+    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QVERIFY(mParser->findStatement("declaration_marker"));
+    QCOMPARE(mParser->preprocessorEventCountsForTest(declaration).scan, 2);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(definition).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(definition).replay > 0);
+}
+
 void TestCppParser::test_cppreference_declarator_syntax()
 {
     parseSyntaxResource(mParser, "declarators.cpp");
