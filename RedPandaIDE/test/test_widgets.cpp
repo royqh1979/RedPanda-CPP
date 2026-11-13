@@ -19,6 +19,10 @@
 #include <QListView>
 #include <QSet>
 #include <QTest>
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+#include <QTemporaryDir>
+#include "test_parser_utils.h"
+#endif
 #include "src/colorscheme.h"
 #include "src/cpprefacter.h"
 #include "src/editor.h"
@@ -316,6 +320,30 @@ void TestWidgets::test_code_completion_inline_namespaces()
     QVERIFY(names.contains("basic_string"));
     QVERIFY(names.contains("string"));
 }
+
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+void TestWidgets::test_code_completion_standard_library_string()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QFile file(main);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write("#include <string>\n");
+    file.close();
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    QSet<QString> names = completionNames(popup, "std", main, CodeCompletionType::Normal,
+                                          {}, {}, {}, 1000000, "::", {});
+    QVERIFY(names.contains("basic_string"));
+    QVERIFY(names.contains("string"));
+}
+#endif
 
 void TestWidgets::test_code_completion_types()
 {

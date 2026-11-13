@@ -69,7 +69,7 @@ Static Release、GCC 8.1 直接运行并设置 `QT_FORCE_STDERR_LOGGING=1`、未
 
 最终实现使用 namespace 专用的 fullName 多值 weak 索引：每个 namespace 登记到自身 fullName，inline/匿名 namespace 同时登记到直接父 namespace 键下；同名组整体更新，以支持 late inline 和删除后取消透明。merge 对局部声明只查当前词法作用域，对非局部声明按最长 namespace 前缀取得全部节点，再沿 children 枚举全部重载；没有全表扫描或失败兜底。CppTypeResolver 的透明分支也统一使用该索引。`test_overloaded_declaration_definition_merge`、`test_local_declarations_in_disjoint_blocks_remain_distinct` 和 `test_namespace_index_inline_filter_and_invalidation` 覆盖关键场景，既有 late-inline 测试继续验证删除后的语义。
 
-用户反馈的 `std::` 补全缺少 `string` / `basic_string` 已定位并修复：Popup 的 namespace 成员收集原先调用 `findNamespace(name)`，没有纳入 inline 节点，现统一改为 `findNamespace(name, true)`。新增 `test_code_completion_inline_namespaces` 验证 `std::__cxx11` 中的 `basic_string` 和别名 `string` 均进入补全列表；测试同时保证 ownerExpression=`std`、memberOperator=`::`、memberExpression 为空，光标位于声明之后。
+用户反馈的 `std::` 补全缺少 `string` / `basic_string` 已定位并修复：Popup 的 namespace 成员收集原先调用 `findNamespace(name)`，没有纳入 inline 节点，现统一改为 `findNamespace(name, true)`。新增 `test_code_completion_inline_namespaces` 验证 `std::__cxx11` 中的 `basic_string` 和别名 `string` 均进入补全列表；测试同时保证 ownerExpression=`std`、memberOperator=`::`、memberExpression 为空，光标位于声明之后。`test_code_completion_standard_library_string` 进一步使用 GCC 8.1 的真实 `<string>` 头文件验证通过；标准库 include 目录由 `g++ -xc++ -E -v` 获取，与 IDE 的 resetCppParser 配置方式一致。
 
 ## 后续顺序
 

@@ -559,6 +559,9 @@ if(REDPANDA_PARSER_STDLIB_TEST)
     target_compile_definitions(test-cppparser PRIVATE
         REDPANDA_PARSER_STDLIB_TEST
         REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
+    target_compile_definitions(test-widgets PRIVATE
+        REDPANDA_PARSER_STDLIB_TEST
+        REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
 endif()
 
 add_test(

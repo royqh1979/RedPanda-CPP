@@ -1,10 +1,8 @@
 #include <QTest>
 #include <QTemporaryDir>
 #ifdef REDPANDA_PARSER_STDLIB_TEST
-#include <QDir>
 #include <QElapsedTimer>
-#include <QProcess>
-#include <QTemporaryFile>
+#include "test_parser_utils.h"
 #endif
 #include "src/parser/cppparser.h"
 #include "test_cppparser.h"
@@ -29,86 +27,6 @@ QString parseSyntaxResource(const PCppParser &parser, const QString &fileName)
 }
 
 #ifdef REDPANDA_PARSER_STDLIB_TEST
-QString latestChildDirectory(const QString &path)
-{
-    QDir dir(path);
-    QStringList names = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    if (names.isEmpty())
-        return QString();
-    return dir.filePath(names.last());
-}
-
-bool configureStandardLibraryParser(const PCppParser &parser, QString &bitsStdcpp)
-{
-    QString root = QStringLiteral(REDPANDA_PARSER_STDLIB_MINGW_ROOT);
-    QString compiler = root + "/bin/g++.exe";
-    QString cxxInclude = latestChildDirectory(root + "/include/c++");
-    QString gccTarget = latestChildDirectory(root + "/lib/gcc");
-    QString gccVersion = latestChildDirectory(gccTarget);
-    if (cxxInclude.isEmpty()) {
-        QDir gccRoot(root + "/lib/gcc");
-        const QStringList targets = gccRoot.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-        for (const QString &target : targets) {
-            QDir targetDir(gccRoot.filePath(target));
-            const QStringList versions = targetDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-            for (const QString &version : versions) {
-                QString versionPath = targetDir.filePath(version);
-                if (QDir(versionPath + "/include/c++").exists()) {
-                    cxxInclude = versionPath + "/include/c++";
-                    gccVersion = versionPath;
-                    break;
-                }
-            }
-            if (!cxxInclude.isEmpty())
-                break;
-        }
-    }
-    if (cxxInclude.isEmpty() || gccVersion.isEmpty()) {
-        qWarning() << "Cannot locate MinGW C++ include directories under" << root;
-        return false;
-    }
-    bitsStdcpp = cxxInclude + "/bits/stdc++.h";
-    if (!QFileInfo::exists(bitsStdcpp))
-        bitsStdcpp = cxxInclude + "/x86_64-w64-mingw32/bits/stdc++.h";
-    QStringList includePaths{
-        cxxInclude,
-        cxxInclude + "/x86_64-w64-mingw32",
-        cxxInclude + "/backward",
-        gccVersion + "/include",
-        gccVersion + "/include-fixed",
-        root + "/include"
-    };
-    for (const QString &path : includePaths) {
-        if (QDir(path).exists())
-            parser->addIncludePath(path);
-    }
-    if (!QFileInfo::exists(bitsStdcpp)) {
-        qWarning() << "Cannot find" << bitsStdcpp;
-        return false;
-    }
-
-    QTemporaryFile source(QDir::temp().filePath("redpanda-stdlib-XXXXXX.cpp"));
-    if (!source.open()) {
-        qWarning() << "Cannot create a temporary source for compiler defines";
-        return false;
-    }
-    source.write("\n");
-    source.close();
-    QProcess process;
-    process.start(compiler, {"-std=c++17", "-dM", "-E", source.fileName()});
-    if (!process.waitForStarted() || !process.waitForFinished(30000)
-            || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
-        qWarning() << "Cannot obtain compiler defines:" << process.errorString()
-                   << process.readAllStandardError();
-        return false;
-    }
-    const QStringList defines = QString::fromUtf8(process.readAllStandardOutput())
-            .split('\n', Qt::SkipEmptyParts);
-    for (const QString &define : defines)
-        parser->addHardDefineByLine(define);
-    return true;
-}
-
 void collectStatementNames(const PCppParser &parser, const PStatement &parent,
                            QSet<QString> &names)
 {
