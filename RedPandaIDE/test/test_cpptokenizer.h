@@ -91,6 +91,7 @@ private slots:
     void test_expression_evaluator_builds_range_adaptor_pipelines();
     void test_lambda_inference_preserves_source_position();
     void test_function_template_argument_deduction_for_algorithms();
+    void test_inline_namespace_member_lookup();
 
 private:
     void tokenize(const QStringList &lines);

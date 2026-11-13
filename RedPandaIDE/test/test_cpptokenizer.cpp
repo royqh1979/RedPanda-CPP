@@ -1587,3 +1587,23 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
     expression.tokenize({"found->size()"});
     QCOMPARE(evaluator.evaluate(expression).type.toString(), "unsigned long");
 }
+
+
+void TestCppTokenizer::test_inline_namespace_member_lookup()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("namespace N { namespace Inner { int early; } inline namespace Inner { using String = int; } }", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+
+    PStatement string = resolver.findStatement("N::String");
+    QVERIFY(string);
+    QCOMPARE(string->command, "String");
+    QCOMPARE(string->fullName, "N::Inner::String");
+    PStatement early = resolver.findStatement("N::Inner::early");
+    QVERIFY(early);
+}

@@ -257,6 +257,14 @@ PStatement CppTypeResolver::findMemberRecursive(const PStatement &scope, const Q
     visited.insert(scope.get());
     if (PStatement result = findInMap(scope->children, name))
         return result;
+    for (const std::weak_ptr<Statement> &weakChild : scope->children) {
+        PStatement child = weakChild.lock();
+        if (child && child->kind == StatementKind::Namespace
+                && child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+            if (PStatement result = findMemberRecursive(child, name, visited))
+                return result;
+        }
+    }
     for (QString baseName : scope->baseClasses) {
         baseName = baseName.trimmed();
         for (const QString &modifier : {QString("public"), QString("protected"),

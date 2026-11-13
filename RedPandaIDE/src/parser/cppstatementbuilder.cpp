@@ -242,6 +242,7 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
             existing->fileName = context.fileName;
             existing->declarationBoundaryAncestor = context.boundaryAncestor;
         }
+        existing->declSpecifierProperties |= candidate->declSpecifierProperties;
         return existing;
     }
     return {};
