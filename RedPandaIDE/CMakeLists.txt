@@ -310,6 +310,33 @@ add_test(
 add_dependencies(all-test-targets test-editor)
 
 #####################
+# test-cpptokenizer #
+#####################
+
+add_executable(test-cpptokenizer test/test-cpptokenizer-main.cpp)
+
+target_qt_plain_cpp(test-cpptokenizer
+    src/parser/cpptokenizer
+)
+
+target_moc_classes(test-cpptokenizer
+    test/test_cpptokenizer
+)
+
+target_include_directories(test-cpptokenizer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-cpptokenizer PRIVATE
+    Qt::Core
+    Qt::Test)
+
+add_test(
+    NAME test-cpptokenizer
+    COMMAND test-cpptokenizer)
+
+add_dependencies(all-test-targets test-cpptokenizer)
+
+#####################
 # test-cppparser    #
 #####################
 

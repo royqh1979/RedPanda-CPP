@@ -1,0 +1,218 @@
+# CppTokenizer 纯切分化重构
+
+> 状态：**整体方案已定，本次不动产品代码**。实施前以完整的 Parser/Tokenizer 测试为前置门禁。
+
+## 重构目标
+
+`CppTokenizer` 只做纯 token 切分；所有"合并/解析"决策移到 `CppParser`。
+
+动机：tokenizer 目前没有语法上下文，只能用括号配平等启发式猜测 token 边界，猜错时 parser 没有纠正机会（它拿到的已经是合并好的字符串）。哪些字符构成一个"名字"是解析决策，应归 parser。
+
+## 方向决策（2026-11，Roy 批准）：方案 A —— 声明级递归下降
+
+讨论过的候选方向：
+
+- **完整 AST + visit**：否决。对 IDE 需求（声明级符号表、作用域、include 关系和有限的表达式类型推导）是过度设计，不需要完整表达式 AST 或运行时求值。且对 C++ 不成立——`T::x * p;` 这类上下文敏感语法决定了没有语义反馈就无法正确建树，所以 clang 也是 Parse 与 Sema 交织而非两阶段，"纯语法树"要么内嵌歧义要么仍靠启发式，问题只是搬家。成本（工程量、全量头文件 AST 的内存/性能、打字中残破代码的容错）均不可接受。
+- **CST/绿树（rust-analyzer/Roslyn 路线）**：现代 IDE 标准答案，但工程量与项目规模不匹配。
+- **换 libclang/clangd 或 tree-sitter**：前者等于重写整个 C++ 分析子系统；后者只有语法没有语义，符号层仍需自己写。
+- **方案 A：声明级递归下降（选定）**。token 流保持扁平，parser 侧按 C++ 声明文法组织成递归下降函数（`parseDeclaration`/`parseDeclSpecifierSeq`/`parseDeclarator`/`parseTemplateParameterList` 等，每个产生式一个函数）。
+
+**关键澄清**：A 不是"把平循环改成递归"本身。现状本就是混合体——`handleStatement` 平循环 + scope 显式栈为主体，`handleLambda`/`evaluateConstExpr` 已是递归孤岛。方案 A 的本质是**分发依据从"关键字模式猜测"改为"上下文随调用链下传"**：被调的产生式函数知道自己在什么语法位置，`<` 是否模板参数、`[` 是否 lambda capture 由它本地判定，不需要 tokenizer 或扁平分发器猜。scope 显式栈保留（它是 `fileInfo->scopes` 的构建器，不是解析控制的替代品；clang 的 Sema 同样如此）。
+
+**A 要消灭的现有痛点**：
+
+- tokenizer 启发式误合并后无法纠正（本文件"现状问题清单"各项）；
+- `handleStatement` 扁平巨链：任何嵌套层级的任何 token 汇集一处，靠 `checkForStructs` 等前瞻启发式猜构造；
+- `mIndex` 被各 handler 全局突变（与旧 preprocessor `handleBuffer` 同味，已在那里根治过一次）；
+- parser 改写 token 流的 hack（`cppparser.cpp:2930-2937` 把 `()` 改写成 `{}`/`;` 并回填 matchIndex）；
+- 平循环误判缺少文件和作用域边界，一次错判可能级联污染后续解析；产生式化后可以结束当前文件的错误路径，include 文件再返回包含者。
+
+**A 明确不变的**：显式 scope 栈；单遍、不建 AST、statement 直接提取；token 列表 + `matchIndex` 配对；除枚举等整数常量外不求表达式的运行值，只做有限的类型推导，其余表达式跳过。
+
+**已知的真实成本**：C++ 声明语法本身复杂（declarator 的指针/数组/函数嵌套），`parseDeclarator` 写对是真功夫；现有启发式分发经真实头文件多年捶打，重写必须达到同等覆盖率——故测试补全是硬门禁。
+
+**可参考的现存范本**：`handleLambda`（`cppparser.cpp:2987`）已是"保存现场→递归→恢复"模式，是全文件最干净的 handler，说明该方向在现有代码里顺手。
+
+## 现状问题清单
+
+`RedPandaIDE/src/parser/cpptokenizer.cpp` 中越权的解析决策：
+
+1. **`<...>` 模板参数合并**：`getWord()` 在非关键字标识符后遇到 `<` 时调用 `skipAngleBracketPair()`（cpptokenizer.cpp:684）做括号配平猜测，配平成功则把整段 `<...>` 合并进 token。`a<b>c` 这类表达式与模板参数无法区分，启发式猜错即错到底。
+2. **`[...]` 数组合并**：`getWord()` 把变量名后的 `[...]`（含多维，循环处理）合并进 token，并用 `simplifyArgs()` 做空白规整（cpptokenizer.cpp:527-541）。
+3. **`[...]` lambda capture 吞并**：token 起始处的单 `[` 走 `TokenType::LambdaCaptures` 分支，整段 `[...]` 被一个 token 吞掉并记入 `mLambdas`（cpptokenizer.cpp:302-313）。"`[` 是 lambda capture 还是数组下标"是解析决策。
+4. **`::` 限定名合并**：`getWord()` 循环合并 `A::B::C`（cpptokenizer.cpp:548-552）；case ':' 把 `::word` 前缀合并（cpptokenizer.cpp:262-273）。
+5. **`template<...>` 参数整体跳过**：`skipTemplateArgs()`（cpptokenizer.cpp:813），parser 拿不到模板形参列表的 token。
+6. `[[...]]` 属性整体跳过——纯词法决策，可保留在 tokenizer（不算越权）。
+
+parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直接消费合并后 token 文本的字符串手术——`splitLastMember`、`removeTemplateParams`、`endsWith('>')`、`startsWith('[')`、`indexOf('<')`、`matchIndex` 导航等，集中在 `cppparser.cpp` 的 `handleVar`/`handleMethod`/`checkAndHandleMethodOrVar`/`handleStructs`/`handleInheritance` 等。
+
+## 实施设计
+
+### Token 模型
+
+- Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。
+- 对外提供最小词法类别：标识符、整数字面量、浮点数字面量、字符串/字符字面量、运算符或标点、预处理结果中的文件边界标记。关键字仍按文本判断，不为每个关键字建立 Token 类型。整数与浮点数按词法结构分类，包括指数、十六进制浮点和后缀；符号运算符不并入数字。
+- 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
+- 参数默认值不参与语义建模。Parameter Statement 不保存默认值；函数 `args` 在迁移期仍可能包含默认值文本，但它只是兼容和展示字符串。若以后需要高保真参数提示，应单独保存参数声明原文。
+- 保留 0 基行号和 `matchIndex`。列号、源码偏移和相邻空白等字段在实际需求出现前不加入。
+- Tokenizer 计算 `()`、`[]`、`{}` 配对，不计算 `<>` 配对。未闭合结构是正常输入状态，不能中止后续切分；文件内未配对结构以当前文件尾作为虚拟匹配位置。
+- matchIndex 按整个预处理 TU 的 token 流计算，使 Parser 能识别配对目标是否越过 include 文件边界。本 Parser 不支持跨文件配对；发现后记录诊断并跳到当前文件结束。include 文件随后返回包含者继续分析，根文件则自然分析到文件尾。
+- `#include` 文件边界标记的行号映射继续保留，其职责无语法歧义。
+- `>>` 保持单个词法 token。Parser 只有在模板闭合上下文才分两次消费；普通移位表达式和 `operator>>` 不得误拆。
+
+### TokenCursor
+
+Parser 通过 TokenCursor 消费 token，不再由各 handler 任意改写全局 `mIndex`。游标提供当前值、前瞻、消费、配对区域跳过以及保存/恢复位置。所有配对跳转集中在 TokenCursor 接口检查目标文件：同文件配对正常跳过；文件内未配对结构跳到当前文件尾；跨文件配对产生诊断并跳到当前文件尾，但不终止整个 TU 的分析。
+
+游标位置包含 token 索引和 `>>` 内已经消费的 `>` 数量，因此半 token 消费也能正确回滚。试探解析只能改变并回滚游标，不得创建 Statement、修改作用域或更新其它全局解析结果。
+
+lambda 的识别由 Parser 根据上下文完成，删除 Tokenizer 的 `mLambdas` 候选队列。表达式跳过仍使用括号和分隔符结构，不建立表达式 AST。
+
+### DeclaratorInfo
+
+`parseDeclarator()` 返回一个仅在声明解析期间存在的临时结果，不建立完整 AST。它由名称、外层限定作用域、是否全局限定、声明行号以及有序 derivation 列表组成。名称中的模板实例参数在迁移期保持现有格式。
+
+derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueReference、MemberPointer、Array 和 Function。顺序是语义的一部分：`int *a[5]` 为 Array→Pointer，而 `int (*a)[5]` 为 Pointer→Array；`int (*factory())(double)` 为 Function→Pointer→Function。不能用无序字段或单独的 pointerLevel/arraySuffix 替代。
+
+- Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
+- Array 保存维度文本，迁移期不要求值。
+- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/noNameArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 只保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号；默认值不参与语义建模。
+- Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
+
+trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。
+
+第一个 derivation 为 Function 时，名称直接声明函数；第一个为 Pointer/Reference 时，即使后面存在 Function，名称仍是函数指针或函数引用变量。不能按最后一个 derivation 判断 StatementKind。
+
+转换成现有 Statement 时，`command` 使用名称，`qualifier` 用于定位父作用域，声明说明符与有序 derivations 共同生成 TypeInfo。普通函数和函数指针变量都从对应 Function derivation 取得参数；数组变量继续将维度写入 `args`，函数指针变量继续设置 FunctionPointer 属性。
+
+声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
+
+初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。
+
+### 声明产生式与错误恢复
+
+`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。
+
+前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
+
+函数体内通过声明关键字、可见类型查询和有限前瞻区分声明与表达式，不建立表达式 AST。确认的解析错误可以结束当前文件的错误路径，但不因此终止整个 TU。跨文件配对记录诊断并跳到当前文件尾；include 文件随后返回包含者继续分析。文件内未配对结构不是致命错误，当前文件尾就是其虚拟匹配位置，仍按正常流程分析到文件尾。
+
+编辑器以行输入触发重解析，因此不为缺少分号的残缺声明增加提前提交路径，也不为未闭合表达式设计按行恢复。输入未完成或文件存在语法错误时，不保证该文件后续内容的解析结果正确，等待修正后的重解析即可。
+
+文件结束和错误退出路径都必须正常展开游标、模板形参和作用域等临时状态。所有已经创建的 Statement 都必须具有有效的实际文件和跨边界祖先归属，后续 invalidate/rescan 能完整清理，并且不崩溃、不死循环。
+
+对应确定性测试：
+
+- `test_unclosed_brace_uses_file_end_as_match`：函数或类的 `{` 到文件尾仍未闭合；文件尾前的成员/局部 Statement 仍生成，作用域正常展开，重扫不重复。
+- `test_unclosed_parenthesis_uses_file_end_as_match`：`if (x > 0` 等未完成条件以文件尾结束；不崩溃、不死循环，已生成 Statement 的归属有效。
+- `test_cross_file_match_returns_to_includer_after_diagnostic`：include 文件中的开括号配对到包含者时产生诊断并跳到 include 文件尾；随后继续分析包含者，根文件后续 Statement 可见。
+- `test_partial_statements_are_removed_after_correction_rescan`：先解析含错误文件，再通过编辑器内容回调修正并重扫；旧 Statement 完整清理，新 Statement 正确生成。
+- `test_repeated_error_rescan_does_not_duplicate_statements`：同一错误文件反复 invalidate/rescan，Statement 数量不增长，过期 weak 引用不会导致崩溃。
+- `test_expired_statement_indexes_are_ignored_during_invalidation`：文件失效时遇到已释放 Statement 的 weak 索引，安全跳过并移除索引。
+
+### 调试诊断
+
+预置默认关闭的 Parser 调试日志，复用现有 `PARSER_DEBUG_LOG` 开关，不增加用户可见诊断或运行时开销。日志至少记录实际文件、0 基行号、token 索引及半消费状态、当前产生式、期望与实际 token、include/边界祖先上下文，以及终止位置。
+
+必须覆盖文件结束时的括号或作用域不匹配、无效 matchIndex、产生式失败、回溯和终止、模板闭合失败及 include 边界异常。首个错误应保留足够上下文，避免后续级联日志淹没真正原因；现有完整 token/Statement dump 继续作为可选的详细输出。
+
+诊断只辅助定位“文件合法但 Parser 不支持”的情况，不改变错误恢复、Statement 提交或失效清理规则。代码级不变量仍使用断言；日志不能代替断言或测试。
+
+### 直接迁移
+
+Token 流只保留纯切分形式，Parser 直接使用 TokenCursor 和声明产生式，不生成旧式合并 token，也不设置临时 token 兼容层。旧 handler 按声明类别逐批替换，避免复制旧启发式、维护两套索引或在最终删除前增加额外迁移工作。
+
+`command`/`fullName` 的存储格式初期保持不变：实例化名仍可包含 `<...>`，`fullName` 仍用 `::` 连接。Statement::type() 提供的文本兼容只属于对外输出，不影响 token 流。模板声明需要新增模板类别和形参绑定信息；StatementMap 容器替换和键冗余消除不在同一批次进行。
+
+不保留新旧两套生产解析路径。旧实现用于事先确定测试基线；新实现直接替换旧实现。对旧实现已经明确错误的行为，不以兼容性为理由保留。
+
+实施批次按消费边界划分：
+
+1. 以 cppreference 示例建立语法覆盖和现有缺口基线；
+2. 纯 Tokenizer、TokenCursor、文件边界检查和调试诊断；
+3. DeclSpecifierInfo、DeclaratorInfo、TypeInfo 及 Statement::type() 兼容接口；
+4. 模板参数解析、`<` 消歧和有限模板绑定；
+5. 变量、函数、类和模板声明的产生式化；
+6. EvalResult、通用类型操作及 container/iterator/algorithm/range 验收；
+7. StatementModel 唯一所有权和各类 weak 索引；
+8. 删除旧字符串手术和 token 改写 hack。
+
+每批都必须独立构建、通过完整测试并检查真实标准库解析。验收同时记录 StatementMap、作用域、声明/定义位置和继承结果，以及 token 数量、内存和耗时。
+
+## 设计结论（2026-11 讨论）
+
+### StatementMap 结构
+
+- **作用域树 + 每层索引的整体结构合理，不动**——C++ 名字查找天然是作用域相对的（scope 内精确匹配、枚举 scope 成员、沿链向上），树-of-maps 正好镜像它。
+- **trie 出局**：所有查询（parse 期 + 补全）都是精确匹配或全量枚举，没有前缀查询；补全是模糊打分必须全扫。键短、多数 scope 很小，trie 的节点开销纯浪费。
+- **per-scope 容器从 QMultiMap 换 hash 是"有正确性依据的优化"**（见下第 1 条），但仍建议等基准数据再动手。换之前须验证一个依赖：QMultiMap 迭代按名有序，补全列表初始按字母分组；换 hash 后顺序随机，需确认补全排序比较器（codecompletionpopup.cpp）在同分时有确定性 tie-break。
+- 键冗余（map key 与 `statement->command` 双份存储）随容器改造一并消除。
+
+### Statement 所有权
+
+StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、publicProperties、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。
+
+查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。失效时仍须删除对应索引项；weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
+
+### 模板与类型推导
+
+声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过表达式/函数体时无需配平 `<>`，只有解析声明时才判定；查不到时回退到结构配平。
+
+Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。`templateSpecializationParams` 继续表示名称上的实际参数，不与声明形参混用。默认模板实参和约束表达式在第一版中只正确消费，不持久保存。
+
+类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
+
+无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。
+
+完整模板实例化、SFINAE、concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
+
+验收以常用 STL 容器、C++20 range/view 以及 cppreference 的 container/iterator/algorithm 示例为目标。例如 `std::vector<std::string> lst; lst.front().` 应能列出 string 成员。range/view 的代表性场景取自：
+
+- [filter_view](https://en.cppreference.com/w/cpp/ranges/filter_view.html)：`iota | filter | transform` 后用于 range-for，filter 保持输入元素类型。
+- [transform_view](https://en.cppreference.com/w/cpp/ranges/transform_view.html)：支持直接调用和 `|` 管道；普通函数从声明取得返回类型，lambda 使用有限的返回类型推导。
+- [elements_view](https://en.cppreference.com/w/cpp/ranges/elements_view.html)：`views::elements<N>` 从 tuple-like 元素中取第 N 项类型。
+- [join_view](https://en.cppreference.com/w/cpp/ranges/join_view.html)：嵌套 range 展平为内层元素类型。
+
+验收覆盖 view 对象成员、begin 迭代器解引用、range-for 元素、算法返回类型以及回调中的 lambda 参数和返回类型；连续 `.`, `->`, `*`, `[]` 和函数调用都应沿类型推导链处理。示例及预期提示位置复制到仓库内资源，不依赖外部网页或工具链文件。每个缺失能力都登记为具体场景并分别验证。
+
+### TypeInfo 与表达式结果
+
+TypeInfo 只表示类型，包含规范化名称、可选的已解析声明、有序实际模板参数、复用 declarator 规则的有序 TypeDerivation 列表，以及基础类型 cv flags。实际模板参数使用 TemplateArgument 区分 TypeInfo 和非类型常量表达式，因此能表示 elements_view 等混合参数。
+
+Statement 直接保存结构化 TypeInfo，不再同时保存一份类型文本。原有 `statement->type` 读取迁移为 `statement->type()`，需要兼容文本时按既有格式生成；类型修改通过明确接口完成。声明解析、auto 推导和 view 管道都直接写入 TypeInfo，避免重复解析及双份数据同步。`command/fullName/args/value` 不在这一阶段一起结构化。
+
+TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Statement 和类型声明之间形成所有权环。模板绑定上下文由求值过程持有，不形成额外的 Statement 持久所有权。
+
+表达式求值返回 EvalResult，包含 TypeInfo、表达式类别、原始 Statement 和必要的模板绑定上下文。容器元素、迭代器值/引用和 range 元素不增加固定字段，而由 containerValue、iteratorValue、iteratorReference、rangeReference、invokeResult 等统一类型操作计算。
+
+配套设计点：
+
+- **解析顺序保证信息可用**：头文件先于包含者解析、文件内声明按出现顺序入表，遇到 `<` 时前序模板声明已在表中，同 phase 查找可行（与 clang 的 Parse/Sema 交织同理）。
+- **查不到的兜底策略**：代码敲到一半、include 未解析、dependent name 都会查不到。定为"查找优先，查不到回退结构启发式（配平检测）"；宁可多合并不可漏合并——漏合并会让模板代码解析直接散架，误合并只是表达式里多个废 token。
+
+## cppreference 语法覆盖测试
+
+测试资源位于 `RedPandaIDE/test/resources/syntax/`，文件内记录来源链接。默认测试不依赖外部标准库文件。
+
+- `test_cppreference_declarator_syntax`：多 declarator、指针、函数指针、复杂参数、trailing return、noexcept 和可变参数。
+- `test_cppreference_function_syntax`：函数声明/定义、默认参数、函数返回函数指针、局部函数声明、函数 try block 和 delete。
+- `test_cppreference_class_syntax`：数据成员、成员函数、嵌套类型、枚举、typedef、继承、using 和成员模板。
+- `test_cppreference_template_syntax`：类/函数/别名模板、全特化、模板模板及非类型参数、parameter pack。
+- `test_cppreference_enum_syntax`：scoped/unscoped enum、底层类型、枚举值求值、匿名 enum 和 using enum。
+- `test_cppreference_namespace_syntax`：namespace 重开、外部定义、嵌套/inline/匿名 namespace 和全特化。
+- `test_cppreference_lambda_syntax`：捕获、默认参数、递归、显式模板参数和 init-capture。
+- `test_cppreference_structured_binding_syntax`：if 条件绑定、bit-field 绑定、lambda 初始化和引用绑定。
+- `test_cppreference_range_for_syntax`：容器、数组、引用、属性、init-statement、typedef/using。
+- `test_cppreference_ranges_syntax`：iota/filter/transform/join 管道及 range-for。
+
+当前实现由此确认的覆盖缺口：
+
+- 同一声明中的多个成员函数 declarator，例如 `virtual int f(char) const, g(int) &&`；
+- trailing return 的函数指针声明，例如 `auto fp11() -> void(*)(const std::string&)`；
+- `operator()` 成员函数；
+- 模板类中的成员函数，例如 `A<T>::f`；
+- namespace 成员函数体内的 `extern` 声明归属，例如 `Q::V::h`；
+- if 条件中的结构化绑定，例如 `if (auto [iter, success] = ...; success)`；
+- range-for 中 `char const c` 形式的循环变量。
+
+这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。

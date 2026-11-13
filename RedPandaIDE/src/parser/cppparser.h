@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 #include <QThread>
 #include <QVector>
 #include "statementmodel.h"
-#include "cpptokenizer.h"
 #include "cpppreprocessor.h"
 
 class CppParser;
@@ -766,7 +765,6 @@ private:
     StatementModel mStatementList;
     //It's used in preprocessor, so we can't use fIncludeList instead
 
-    CppTokenizer mTokenizer;
     CppPreprocessor mPreprocessor;
     QSet<QString> mProjectFiles;
 //    QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;

@@ -33,6 +33,16 @@ private slots:
     void test_root_switch_with_include_order_change_removes_stale_statements();
     void test_internal_header_disk_change_removes_stale_statements();
     void test_bits_stdcpp_not_rescanned_when_switching_roots();
+    void test_cppreference_declarator_syntax();
+    void test_cppreference_function_syntax();
+    void test_cppreference_class_syntax();
+    void test_cppreference_template_syntax();
+    void test_cppreference_enum_syntax();
+    void test_cppreference_namespace_syntax();
+    void test_cppreference_lambda_syntax();
+    void test_cppreference_structured_binding_syntax();
+    void test_cppreference_range_for_syntax();
+    void test_cppreference_ranges_syntax();
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_public_api_complete();

@@ -1,37 +1,40 @@
 #ifndef TEST_CPPTOKENIZER_H
 #define TEST_CPPTOKENIZER_H
+
 #include <QObject>
-#include <memory>
+#include <QStringList>
 #include "src/parser/cpptokenizer.h"
-class TestCppTokenizer: public QObject
+
+class TestCppTokenizer : public QObject
 {
     Q_OBJECT
 public:
-    TestCppTokenizer(QObject *parent=nullptr);
+    explicit TestCppTokenizer(QObject *parent = nullptr);
+
 private slots:
-    void test_parse_string1();
-    void test_parse_string2();
-    void test_parse_ustring1();
-    void test_parse_ustring2();
-    void test_parse_wide_string();
-    void test_parse_u8_string();
-    void test_parse_raw_string1();
-    void test_parse_raw_string2();
-    void test_parse_raw_string3();
-    void test_parse_raw_string4();
-    void test_parse_raw_string5();
-    void test_parse_char();
-    void test_parse_wide_char();
-    void test_parse_unicode_char1();
-    void test_parse_unicode_char2();
-    void test_parse_u8_char();
-    void test_parse_scope_resolution_operators1();
-    void test_parse_scope_resolution_operators2();
-    void test_parse_scope_resolution_operators3();
-    void test_parse_unend_char_literal();
-    void test_parse_unend_string_literal();
-protected:
+    void test_identifiers_and_operators();
+    void test_qualified_names_and_templates_are_split();
+    void test_array_and_lambda_brackets_are_split();
+    void test_integer_and_floating_literals();
+    void test_string_and_character_literals();
+    void test_escaped_literals();
+    void test_raw_string_with_custom_delimiter();
+    void test_unterminated_raw_string();
+    void test_balanced_match_indices();
+    void test_unmatched_pairs_use_file_end();
+    void test_file_boundaries_and_file_names();
+    void test_cross_file_match_indices();
+    void test_unmatched_include_pair_uses_include_end();
+    void test_literal_prefixes();
+    void test_attributes_are_skipped();
+    void test_preprocessor_tokens();
+    void test_line_numbers();
+
+private:
+    void tokenize(const QStringList &lines);
+    QStringList tokenTexts() const;
+
     CppTokenizer mTokenizer;
 };
 
-#endif
+#endif // TEST_CPPTOKENIZER_H
