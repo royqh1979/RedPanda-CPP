@@ -136,6 +136,14 @@ Token 流只保留纯切分形式，Parser 直接使用 TokenCursor 和声明产
 
 不保留新旧两套生产解析路径。旧实现用于事先确定测试基线；新实现直接替换旧实现。对旧实现已经明确错误的行为，不以兼容性为理由保留。
 
+### CppParser 生产接入
+
+CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxParser → CppStatementBuilder。FileBoundary token 在读取后保存新文件名，DeclarationInfo 也携带实际文件；递归创建子声明时使用 child 的文件，include 内容不登记到宿主的 ParsedFileInfo。旧 handler、token 改写和字符串类型手术不保留。
+
+同一实体的声明和定义合并到一个 Statement，分别保存 declarationRange/definitionRange、实际文件和跨边界祖先；参数不重复创建。变量统一使用 StatementKind::Variable，global/local/class-local 由 StatementScope 区分。typeInfo.toString 保留完整结构化类型，Statement::type() 生成旧 API 所需的存储类别、返回类型及数组/函数指针兼容文本。
+
+class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root。
+
 实施批次按消费边界划分：
 
 1. 以 cppreference 示例建立语法覆盖和现有缺口基线；

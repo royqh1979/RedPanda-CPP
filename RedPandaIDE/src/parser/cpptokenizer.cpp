@@ -128,6 +128,7 @@ void CppTokenizer::addToken(const QString &text, TokenKind kind, const SourcePos
 
     if (kind == TokenKind::FileBoundary) {
         readFileBoundary(text, index);
+        mTokenList.last().fileName = mCurrentFile;
         mFileBoundaries.append(index);
     }
 }
@@ -351,8 +352,8 @@ void CppTokenizer::readFileBoundary(const QString &text, int tokenIndex)
                             delimiter - QString("#include ").length());
     bool ok = false;
     int line = QStringView(text.constBegin() + delimiter + 1, text.constEnd()).toInt(&ok);
-    if (ok && line >= 0)
-        mCurrentPosition = SourcePosition{line - 1, 0};
+    if (ok)
+        mCurrentPosition = SourcePosition{line, 0};
 }
 
 bool CppTokenizer::startsWith(const QString &text) const

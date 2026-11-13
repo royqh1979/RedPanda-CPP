@@ -200,6 +200,7 @@ struct Statement {
     QString templateSpecializationParams;
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
     QVector<TemplateParameterInfo> templateParameters;
+    DeclSpecifierProperties declSpecifierProperties;
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
@@ -214,11 +215,45 @@ struct Statement {
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
+    QStringList baseClasses;
     QString noNameArgs;// Args without name
     QSet<QString> lambdaCaptures;
     StatementProperties properties;
 
-    QString type() const { return typeInfo.toString(); }
+    QString type() const {
+        QString result;
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Static))
+            result = "static ";
+        else if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern))
+            result = "extern ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Register))
+            result += "register ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::ThreadLocal))
+            result += "thread_local ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Mutable))
+            result += "mutable ";
+        TypeInfo compatibleType = typeInfo;
+        bool hasArray = false;
+        bool hasPointer = false;
+        for (const TypeDerivation &derivation : compatibleType.derivations) {
+            hasArray |= derivation.kind == TypeDerivationKind::Array;
+            hasPointer |= derivation.kind == TypeDerivationKind::Pointer;
+        }
+        for (int i = compatibleType.derivations.count() - 1; i >= 0; --i) {
+            if (properties.testFlag(StatementProperty::FunctionPointer)
+                    && compatibleType.derivations[i].kind == TypeDerivationKind::Function) {
+                compatibleType.derivations.remove(0, i + 1);
+                break;
+            }
+            if (compatibleType.derivations[i].kind == TypeDerivationKind::Array
+                    || (hasArray && compatibleType.derivations[i].kind == TypeDerivationKind::Pointer))
+                compatibleType.derivations.remove(i);
+        }
+        QString typeText = compatibleType.toString();
+        if (hasArray && hasPointer)
+            typeText += " (*)";
+        return result + typeText;
+    }
     void setType(const TypeInfo &type) { typeInfo = type; }
 
     // fields for code completion
@@ -324,6 +359,7 @@ public:
     void addDirectInclude(const QString &fileName) { mDirectIncludes.append(fileName); }
     bool including(const QString &fileName) const { return mIncludes.contains(fileName); }
     PStatement findScopeAt(const SourcePosition &position) const { return mScopes.findScopeAt(position); }
+    PStatement findScopeAtLine(int line) const { return mScopes.findScopeAtLine(line); }
     void addStatement(const PStatement &statement) { mStatements.insert(statement->fullName,statement); }
     void removeStatement(const PStatement &statement) {
         for (auto it = mStatements.find(statement->fullName);

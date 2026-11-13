@@ -36,6 +36,7 @@ public:
 
 private:
     bool parseTypeName(TypeInfo &result);
+    bool parseStructuredBinding(DeclarationInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
     QString parseTemplateArgumentText();
     QString parseOperatorName();

@@ -51,6 +51,7 @@ public:
         mGlobalStatements.clear();
     }
     int count() const { return mCount; }
+    const StatementList &statements() const { return mStatements; }
 #ifdef QT_DEBUG
     void dump(const QString& logFile);
     void dumpAll(const QString& logFile);

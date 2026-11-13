@@ -53,12 +53,198 @@ QString className(const DeclaratorInfo &declarator, const StatementBuildContext 
         qualifier = qualifier.mid(separator + 2);
     return qualifier;
 }
+
+class IntegerConstantExpression
+{
+public:
+    IntegerConstantExpression(const QVector<CppTokenizer::Token> &tokens,
+                              const QHash<QString, qlonglong> &values)
+        : mTokens(tokens), mValues(values) { }
+
+    qlonglong evaluate(bool &ok)
+    {
+        mIndex = 0;
+        ok = true;
+        qlonglong result = bitOr(ok);
+        return ok && mIndex == mTokens.count() ? result : 0;
+    }
+
+private:
+    qlonglong primary(bool &ok)
+    {
+        if (mIndex >= mTokens.count()) {
+            ok = false;
+            return 0;
+        }
+        const CppTokenizer::Token &token = mTokens[mIndex++];
+        if (token.text == "(") {
+            qlonglong result = bitOr(ok);
+            if (mIndex >= mTokens.count() || mTokens[mIndex++].text != ")")
+                ok = false;
+            return result;
+        }
+        if (token.kind == CppTokenizer::TokenKind::IntegerLiteral) {
+            bool converted = false;
+            qlonglong result = token.text.toLongLong(&converted, 0);
+            ok = converted;
+            return result;
+        }
+        if (token.kind == CppTokenizer::TokenKind::CharacterLiteral) {
+            QString text = token.text;
+            int quote = text.indexOf('\'');
+            if (quote >= 0 && quote + 1 < text.count()) {
+                QChar ch = text[quote + 1];
+                if (ch == '\\' && quote + 2 < text.count())
+                    ch = text[quote + 2];
+                return ch.unicode();
+            }
+        }
+        if (token.kind == CppTokenizer::TokenKind::Identifier && mValues.contains(token.text))
+            return mValues.value(token.text);
+        ok = false;
+        return 0;
+    }
+
+    qlonglong unary(bool &ok)
+    {
+        if (mIndex < mTokens.count() && (mTokens[mIndex].text == "+"
+                                         || mTokens[mIndex].text == "-"
+                                         || mTokens[mIndex].text == "~")) {
+            QString operation = mTokens[mIndex++].text;
+            qlonglong result = unary(ok);
+            if (operation == "-")
+                result = -result;
+            else if (operation == "~")
+                result = ~result;
+            return result;
+        }
+        return primary(ok);
+    }
+
+    qlonglong multiply(bool &ok)
+    {
+        qlonglong result = unary(ok);
+        while (ok && mIndex < mTokens.count()) {
+            QString operation = mTokens[mIndex].text;
+            if (operation != "*" && operation != "/" && operation != "%")
+                break;
+            ++mIndex;
+            qlonglong right = unary(ok);
+            if (operation == "*")
+                result *= right;
+            else if (operation == "/")
+                result /= right;
+            else
+                result %= right;
+        }
+        return result;
+    }
+
+    qlonglong add(bool &ok)
+    {
+        qlonglong result = multiply(ok);
+        while (ok && mIndex < mTokens.count()) {
+            QString operation = mTokens[mIndex].text;
+            if (operation != "+" && operation != "-")
+                break;
+            ++mIndex;
+            qlonglong right = multiply(ok);
+            result = operation == "+" ? result + right : result - right;
+        }
+        return result;
+    }
+
+    qlonglong shift(bool &ok)
+    {
+        qlonglong result = add(ok);
+        while (ok && mIndex < mTokens.count()) {
+            QString operation = mTokens[mIndex].text;
+            if (operation != "<<" && operation != ">>")
+                break;
+            ++mIndex;
+            qlonglong right = add(ok);
+            result = operation == "<<" ? result << right : result >> right;
+        }
+        return result;
+    }
+
+    qlonglong bitAnd(bool &ok)
+    {
+        qlonglong result = shift(ok);
+        while (ok && mIndex < mTokens.count() && mTokens[mIndex].text == "&") {
+            ++mIndex;
+            result &= shift(ok);
+        }
+        return result;
+    }
+
+    qlonglong bitXor(bool &ok)
+    {
+        qlonglong result = bitAnd(ok);
+        while (ok && mIndex < mTokens.count() && mTokens[mIndex].text == "^") {
+            ++mIndex;
+            result ^= bitAnd(ok);
+        }
+        return result;
+    }
+
+    qlonglong bitOr(bool &ok)
+    {
+        qlonglong result = bitXor(ok);
+        while (ok && mIndex < mTokens.count() && mTokens[mIndex].text == "|") {
+            ++mIndex;
+            result |= bitXor(ok);
+        }
+        return result;
+    }
+
+    const QVector<CppTokenizer::Token> &mTokens;
+    const QHash<QString, qlonglong> &mValues;
+    int mIndex = 0;
+};
+
+qlonglong evaluateIntegerConstant(const QString &text, const QHash<QString, qlonglong> &values,
+                                  bool &ok)
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({text});
+    IntegerConstantExpression parser(tokenizer.tokens(), values);
+    return parser.evaluate(ok);
+}
 }
 
 CppStatementBuilder::CppStatementBuilder(StatementModel &model)
     : mModel(model), mTypeResolver(model), mTypeOperations(mTypeResolver),
       mExpressionEvaluator(model, mTypeResolver, mTypeOperations)
 {
+}
+
+PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
+                                                 const StatementBuildContext &context) const
+{
+    for (const PStatement &existing : mModel.statements()) {
+        if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
+                || existing->noNameArgs != candidate->noNameArgs)
+            continue;
+        bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
+                || existing->definitionBoundaryAncestor == context.boundaryAncestor;
+        bool declarationPair = existing->hasDefinition() != candidate->hasDefinition();
+        if (!sameAncestor && !declarationPair)
+            continue;
+
+        if (candidate->hasDefinition()) {
+            existing->definitionRange = candidate->declarationRange;
+            existing->definitionFileName = context.fileName;
+            existing->definitionBoundaryAncestor = context.boundaryAncestor;
+            existing->setHasDefinition(true);
+        } else {
+            existing->declarationRange = candidate->declarationRange;
+            existing->fileName = context.fileName;
+            existing->declarationBoundaryAncestor = context.boundaryAncestor;
+        }
+        return existing;
+    }
+    return {};
 }
 
 QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
@@ -72,7 +258,7 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
         mModel.add(block);
         if (context.fileInfo) {
             context.fileInfo->addStatement(block);
-            context.fileInfo->addScope(declaration.bodyRange, block, context.parentScope);
+            context.fileInfo->addScope(declaration.range, block, context.parentScope);
         }
         result.append(block);
         StatementBuildContext childContext = context;
@@ -129,13 +315,27 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             kind = declaratorKind(declaration, declarator, context);
         }
 
-        PStatement statement = createStatement(declaration, declarator, context, kind);
+        StatementBuildContext declarationContext = context;
+        if (isFunction(declarator) && context.scope == StatementScope::Local
+                && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)) {
+            declarationContext.scope = StatementScope::Global;
+            declarationContext.accessibility = StatementAccessibility::None;
+            PStatement parent = context.parentScope;
+            while (parent && parent->kind != StatementKind::Namespace)
+                parent = parent->parentScope.lock();
+            declarationContext.parentScope = parent;
+        }
+        PStatement statement = createStatement(declaration, declarator, declarationContext, kind);
         if (i >= firstVariable && firstVariable > 0
                 && (declaration.kind == DeclarationKind::Class
                     || declaration.kind == DeclarationKind::Enum)) {
             statement->typeInfo.qualifiedName = declaration.declarators.first().name;
         }
-        mModel.add(statement);
+        PStatement merged = mergeDeclaration(statement, context);
+        if (merged)
+            statement = merged;
+        else
+            mModel.add(statement);
         if (context.fileInfo) {
             context.fileInfo->addStatement(statement);
             if (declaration.bodyRange.isValid()
@@ -152,6 +352,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             PStatement enumeratorParent = declaration.enumScoped ? statement : context.parentScope;
             StatementBuildContext enumeratorContext = context;
             enumeratorContext.parentScope = enumeratorParent;
+            QHash<QString, qlonglong> enumeratorValues;
+            qlonglong nextEnumeratorValue = 0;
             for (const EnumeratorInfo &enumerator : declaration.enumerators) {
                 auto enumStatement = std::make_shared<Statement>();
                 enumStatement->parentScope = enumeratorParent;
@@ -165,7 +367,16 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
                 enumStatement->fileName = context.fileName;
                 enumStatement->declarationBoundaryAncestor = context.boundaryAncestor;
                 enumStatement->typeInfo.qualifiedName = declaration.declarators.first().name;
-                enumStatement->value = enumerator.value;
+                qlonglong numericValue = nextEnumeratorValue;
+                if (!enumerator.value.isEmpty()) {
+                    bool ok = false;
+                    numericValue = evaluateIntegerConstant(enumerator.value, enumeratorValues, ok);
+                    enumStatement->value = ok ? QString::number(numericValue) : enumerator.value;
+                } else {
+                    enumStatement->value = QString::number(numericValue);
+                }
+                enumeratorValues.insert(enumerator.name, numericValue);
+                nextEnumeratorValue = numericValue + 1;
                 enumStatement->properties.setFlag(StatementProperty::InProject, context.inProject);
                 enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
                                                   context.inSystemHeader);
@@ -178,6 +389,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             const TypeDerivation &function = declarator.derivations.first();
             for (const ParameterInfo &parameter : function.parameters) {
                 if (!parameter.name.isEmpty()) {
+                    if (merged && statement->children.contains(parameter.name))
+                        continue;
                     PStatement parameterStatement = createParameter(parameter, context, statement);
                     mModel.add(parameterStatement);
                     if (context.fileInfo)
@@ -208,6 +421,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     statement->declarationBoundaryAncestor = context.boundaryAncestor;
     statement->templateKind = declaration.templateKind;
     statement->templateParameters = declaration.templateParameters;
+    statement->declSpecifierProperties = declaration.specifiers.properties;
+    statement->baseClasses = declaration.baseClasses;
     statement->properties.setFlag(StatementProperty::Static,
                                   declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Static));
     statement->properties.setFlag(StatementProperty::Virtual,
@@ -231,8 +446,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     } else {
         for (const TypeDerivation &derivation : declarator.derivations) {
             if (derivation.kind == TypeDerivationKind::Function) {
-                statement->args += renderParameters(derivation, true);
-                statement->noNameArgs += renderParameters(derivation, false);
+                bool empty = derivation.parameters.isEmpty()
+                        && !derivation.functionProperties.testFlag(FunctionProperty::Variadic);
+                statement->args += empty ? "( )" : renderParameters(derivation, true);
+                statement->noNameArgs += empty ? "( )" : renderParameters(derivation, false);
                 statement->properties.setFlag(StatementProperty::FunctionPointer);
             } else if (derivation.kind == TypeDerivationKind::Array) {
                 statement->args += derivation.text;
@@ -262,6 +479,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                                 || declarator.derivations.first().kind == TypeDerivationKind::RvalueReference);
                     initializerType = reference ? mTypeOperations.rangeReference(initializerType)
                                                 : mTypeOperations.rangeValue(initializerType);
+                } else if (declaration.structuredBinding) {
+                    initializerType = mTypeOperations.structuredBindingValue(
+                                initializerType, declarator.structuredBindingIndex);
                 }
                 statement->typeInfo = deduceAutoType(initializerType, declarator,
                                                      declaration.specifiers);
@@ -312,13 +532,8 @@ StatementKind CppStatementBuilder::declaratorKind(
 {
     if (declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Typedef))
         return StatementKind::Typedef;
-    if (!isFunction(declarator)) {
-        if (context.scope == StatementScope::Global)
-            return StatementKind::GlobalVariable;
-        if (context.scope == StatementScope::Local)
-            return StatementKind::LocalVariable;
+    if (!isFunction(declarator))
         return StatementKind::Variable;
-    }
     if (declarator.name.startsWith("operator")) {
         return declarator.name.contains("\"\"")
                 ? StatementKind::LiteralOperator : StatementKind::OverloadedOperator;
@@ -373,8 +588,14 @@ void CppStatementBuilder::buildChildren(const DeclarationInfo &declaration,
         childContext.scope = StatementScope::Local;
     childContext.accessibility = parent->kind == StatementKind::Class
             ? parent->accessibility : StatementAccessibility::None;
-    for (const DeclarationInfo &child : declaration.children)
-        build(child, childContext);
+    for (const DeclarationInfo &child : declaration.children) {
+        StatementBuildContext actualContext = childContext;
+        if (!child.fileName.isEmpty())
+            actualContext.fileName = child.fileName;
+        if (actualContext.fileName != context.fileName)
+            actualContext.fileInfo = nullptr;
+        build(child, actualContext);
+    }
 }
 
 

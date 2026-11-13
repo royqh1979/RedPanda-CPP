@@ -146,6 +146,7 @@ struct DeclaratorInfo {
     QVector<TypeDerivation> derivations;
     QString initializerText;
     SourcePosition initializerPosition;
+    int structuredBindingIndex = -1;
 
     QString toString() const;
 };
@@ -231,6 +232,7 @@ struct EnumeratorInfo {
 };
 
 struct DeclarationInfo {
+    QString fileName;
     SourceRange range;
     SourceRange bodyRange;
     DeclSpecifierInfo specifiers;
@@ -241,6 +243,7 @@ struct DeclarationInfo {
     UsingDeclarationKind usingKind = UsingDeclarationKind::Member;
     ClassKey classKey = ClassKey::None;
     DeclarationAccessibility accessibility = DeclarationAccessibility::Default;
+    bool structuredBinding = false;
     bool enumScoped = false;
     QString rangeExpression;
     SourcePosition rangeExpressionPosition;

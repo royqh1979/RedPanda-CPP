@@ -163,6 +163,13 @@
 - 预期：失效 A 后 B 的记录仍有效且 invalidate 计数不增加；重扫时 A、B 均扫描，B 的 invalidate 计数此时才增加，结果与全量扫描一致。
 - 测试：`test_scanned_prefix_entry_forces_lazy_suffix_rescan`。
 
+### P7a 声明头变化后的定义保留
+
+- 操作：main.cpp 依次包含声明头 A 和定义头 B，随后修改 A 并重扫。
+- 判定依据：与 P7 相同，A 已扫描而非 replay，后续 B 必须重扫，不能因 A、B 路径序列未变而 replay。Statement 的声明部分随 A 更新，定义部分在 B 重扫后继续合并到同一实体，不能因声明失效而丢失定义。
+- 预期：A、B 均扫描两次，B 的 replay 为 0；声明/定义范围及 ancestor 分别保留，函数仍有定义。
+- 测试：`test_auto_invalidation_preserves_definition_after_declaration_change`。
+
 ### P8 后续记录未再次包含
 
 - 操作：首轮 main.cpp 包含 A、B；随后 A 和 main 改变，main 不再包含 B。重扫 main 后，另一 TU 再按 A、B 的相同顺序包含。

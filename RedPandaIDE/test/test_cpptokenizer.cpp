@@ -199,10 +199,11 @@ void TestCppTokenizer::test_file_boundaries_and_file_names()
     tokenize({"#include /tmp/main.cpp:-1", "int root;", "#include /tmp/a.h:-1",
               "int included;", "#include /tmp/main.cpp:1", "int after;"});
     QCOMPARE(mTokenizer[0].kind, CppTokenizer::TokenKind::FileBoundary);
+    QCOMPARE(mTokenizer[0].fileName, "/tmp/main.cpp");
     QCOMPARE(mTokenizer[1].fileName, "/tmp/main.cpp");
     QCOMPARE(mTokenizer[5].fileName, "/tmp/a.h");
     QCOMPARE(mTokenizer[9].fileName, "/tmp/main.cpp");
-    QCOMPARE(mTokenizer[10].position.line, 1);
+    QCOMPARE(mTokenizer[10].position.line, 2);
 }
 
 void TestCppTokenizer::test_cross_file_match_indices()
@@ -866,7 +867,7 @@ void TestCppTokenizer::test_statement_builder_expands_declarators_and_types()
     PStatement f = findStatement(globals, "f");
     PStatement pf = findStatement(globals, "pf");
     QVERIFY(a && p && f && pf);
-    QCOMPARE(a->kind, StatementKind::GlobalVariable);
+    QCOMPARE(a->kind, StatementKind::Variable);
     QCOMPARE(a->type(), "int");
     QCOMPARE(p->type(), "int *");
     QCOMPARE(f->kind, StatementKind::Function);
@@ -874,7 +875,8 @@ void TestCppTokenizer::test_statement_builder_expands_declarators_and_types()
     QCOMPARE(f->args, "(double value)");
     QCOMPARE(f->noNameArgs, "(double)");
     QVERIFY(pf->properties.testFlag(StatementProperty::FunctionPointer));
-    QCOMPARE(pf->type(), "int (*)(char)");
+    QCOMPARE(pf->typeInfo.toString(), "int (*)(char)");
+    QCOMPARE(pf->type(), "int");
     QCOMPARE(pf->args, "(char)");
     QCOMPARE(pf->noNameArgs, "(char)");
 

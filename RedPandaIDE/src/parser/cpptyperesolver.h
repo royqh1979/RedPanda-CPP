@@ -25,6 +25,7 @@ struct EvalResult {
     TypeInfo type;
     EvalStatementKind kind = EvalStatementKind::Literal;
     PStatement baseStatement;
+    PStatement statement;
     TemplateBindings templateBindings;
 
     bool isValid() const { return !type.qualifiedName.isEmpty(); }
@@ -38,6 +39,7 @@ public:
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
                      const PStatement &context = {}) const;
     PStatement findStatement(const QString &qualifiedName, const PStatement &context = {}) const;
+    PStatement memberStatement(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments) const;
@@ -49,6 +51,8 @@ private:
                          const PStatement &context, QSet<const Statement *> &aliases) const;
     PStatement findDeclaration(const QString &qualifiedName, const PStatement &context) const;
     PStatement findMember(const PStatement &scope, const QString &name) const;
+    PStatement findMemberRecursive(const PStatement &scope, const QString &name,
+                                   QSet<const Statement *> &visited) const;
     TemplateBindings declarationBindings(const PStatement &declaration, const TypeInfo &instance,
                                          const TemplateBindings &outerBindings) const;
 

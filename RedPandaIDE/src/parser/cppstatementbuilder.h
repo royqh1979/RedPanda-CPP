@@ -50,6 +50,8 @@ private:
     PStatement createParameter(const ParameterInfo &parameter,
                                const StatementBuildContext &context,
                                const PStatement &function);
+    PStatement mergeDeclaration(const PStatement &candidate,
+                                const StatementBuildContext &context) const;
     StatementKind declaratorKind(const DeclarationInfo &declaration,
                                  const DeclaratorInfo &declarator,
                                  const StatementBuildContext &context) const;

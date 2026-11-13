@@ -1,5 +1,6 @@
 Red Panda C++ Version 3.6
 
+  - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
   - fix: Column mode doesn't work.
   - enhancement: Split the editor to two View.
   - enhancement: Rewrite the preprocessor's macro expansion engine with a pp-token based expander.

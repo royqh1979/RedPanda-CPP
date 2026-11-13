@@ -59,6 +59,8 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         mCursor.restore(start);
         return false;
     }
+    if (mCursor.currentText() == "[")
+        return parseStructuredBinding(result);
 
     while (!mCursor.atEnd()) {
         DeclaratorInfo declarator;
@@ -99,6 +101,45 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
             }
         }
     }
+    return !result.declarators.isEmpty();
+}
+
+bool CppDeclarationParser::parseStructuredBinding(DeclarationInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result.structuredBinding = true;
+    mCursor.advance();
+    while (!mCursor.atEnd() && mCursor.currentText() != "]") {
+        if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier) {
+            mCursor.restore(start);
+            return false;
+        }
+        DeclaratorInfo declarator;
+        declarator.name = mCursor.currentText();
+        declarator.position = mCursor.current().position;
+        declarator.structuredBindingIndex = result.declarators.count();
+        result.declarators.append(declarator);
+        mCursor.advance();
+        if (mCursor.consume(","))
+            continue;
+        if (mCursor.currentText() != "]") {
+            mCursor.restore(start);
+            return false;
+        }
+    }
+    if (!mCursor.consume("]")) {
+        mCursor.restore(start);
+        return false;
+    }
+    if (mCursor.consume("=")) {
+        SourcePosition initializerPosition = mCursor.current().position;
+        QString initializer = readUntilDelimiter({";"});
+        for (DeclaratorInfo &declarator : result.declarators) {
+            declarator.initializerText = initializer;
+            declarator.initializerPosition = initializerPosition;
+        }
+    }
+    mCursor.consume(";");
     return !result.declarators.isEmpty();
 }
 
@@ -424,6 +465,8 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
         result.qualifiedName = "decltype";
         if (mCursor.currentText() == "(")
             result.qualifiedName += readBalancedToken("(", ")");
+        while (mCursor.consume("::"))
+            result.qualifiedName += "::" + parseQualifiedNameText();
         if (!prefix.isEmpty())
             result.qualifiedName = prefix + " " + result.qualifiedName;
         return true;

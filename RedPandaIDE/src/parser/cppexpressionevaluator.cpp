@@ -325,6 +325,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             bool call = index < tokens.count() && tokens[index].text == "(";
             if (call)
                 index = skipBalanced(tokens, index);
+            result.statement = mResolver.memberStatement(receiver, memberName);
             result.type = call ? mResolver.invokeResult(receiver, memberName)
                                : mResolver.memberType(receiver, memberName);
             result.kind = EvalStatementKind::Variable;
@@ -627,6 +628,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &
     result.type.qualifiedName = lambda->fullName;
     result.type.declaration = lambda;
     result.baseStatement = lambda;
+    result.statement = lambda;
     result.kind = EvalStatementKind::Variable;
     return result;
 }
@@ -654,6 +656,7 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
         return {};
     EvalResult result;
     result.baseStatement = statement;
+    result.statement = statement;
     switch (statement->kind) {
     case StatementKind::Namespace:
         result.type.qualifiedName = statement->fullName;

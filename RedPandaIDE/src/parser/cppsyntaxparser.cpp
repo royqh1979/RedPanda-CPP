@@ -54,6 +54,7 @@ bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
 {
     SourcePosition start = mCursor.current().position;
     result = DeclarationInfo();
+    result.fileName = mCursor.current().fileName;
     bool success = false;
     if (!mDeclarationParser.parseTemplatePrefix(result))
         return false;
@@ -108,6 +109,11 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     DeclarationAccessibility accessibility = result.classKey == ClassKey::Class
             ? DeclarationAccessibility::Private : DeclarationAccessibility::Public;
     while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
+                || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
+            mCursor.advance();
+            continue;
+        }
         if (mCursor.consume(";"))
             continue;
         DeclarationAccessibility declaredAccessibility = DeclarationAccessibility::Default;
@@ -176,6 +182,11 @@ bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
     if (!mCursor.consume("{"))
         return false;
     while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
+                || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
+            mCursor.advance();
+            continue;
+        }
         if (mCursor.consume(";"))
             continue;
         DeclarationInfo child;
@@ -365,6 +376,11 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
     result.bodyRange.start = mCursor.current().position;
     mCursor.advance();
     while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
+                || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
+            mCursor.advance();
+            continue;
+        }
         if (mCursor.consume(";"))
             continue;
         DeclarationInfo child;
@@ -453,6 +469,21 @@ bool CppSyntaxParser::parseFor(DeclarationInfo &result)
         readUntil({";"});
         mCursor.consume(";");
     }
+
+    CppTokenCursor::Checkpoint rangeStart = mCursor.checkpoint();
+    DeclSpecifierInfo rangeSpecifiers;
+    DeclaratorInfo rangeVariable;
+    if (mDeclarationParser.parseDeclSpecifierSeq(rangeSpecifiers)
+            && mDeclarationParser.parseDeclarator(rangeVariable)
+            && mCursor.consume(":")) {
+        result.specifiers = rangeSpecifiers;
+        result.declarators.append(rangeVariable);
+        result.rangeExpressionPosition = mCursor.current().position;
+        result.rangeExpression = readUntil({")"});
+        mCursor.consume(")");
+        return parseStatementBody(result);
+    }
+    mCursor.restore(rangeStart);
     readUntil({";"});
     mCursor.consume(";");
     readUntil({")"});
@@ -488,8 +519,21 @@ bool CppSyntaxParser::parseControlBlock(DeclarationInfo &result)
     result.kind = DeclarationKind::Block;
     result.range.start = mCursor.current().position;
     mCursor.advance();
-    if (mCursor.currentText() == "(")
-        skipBalanced();
+    if (mCursor.consume("(")) {
+        CppTokenCursor::Checkpoint conditionStart = mCursor.checkpoint();
+        DeclarationInfo conditionDeclaration;
+        if (parseDeclaration(conditionDeclaration)) {
+            result.children.append(conditionDeclaration);
+            mCursor.consume(";");
+            if (mCursor.currentText() != ")")
+                readUntil({")"});
+            mCursor.consume(")");
+        } else {
+            mCursor.restore(conditionStart);
+            readUntil({")"});
+            mCursor.consume(")");
+        }
+    }
     return parseStatementBody(result);
 }
 

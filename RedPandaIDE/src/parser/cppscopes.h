@@ -29,6 +29,7 @@ class CppScopes
 {
 public:
     std::shared_ptr<Statement> findScopeAt(const SourcePosition &position) const;
+    std::shared_ptr<Statement> findScopeAtLine(int line) const;
     void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,
                   int parentIndex = -1);
     void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,

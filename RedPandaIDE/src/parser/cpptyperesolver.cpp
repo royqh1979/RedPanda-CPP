@@ -66,6 +66,16 @@ PStatement CppTypeResolver::findStatement(const QString &qualifiedName,
     return findDeclaration(qualifiedName, context);
 }
 
+PStatement CppTypeResolver::memberStatement(const TypeInfo &receiver,
+                                            const QString &memberName) const
+{
+    TypeInfo resolvedReceiver = resolve(receiver);
+    PStatement declaration = resolvedReceiver.declaration.lock();
+    if (!declaration)
+        declaration = findDeclaration(resolvedReceiver.qualifiedName, {});
+    return findMember(declaration, memberName);
+}
+
 TypeInfo CppTypeResolver::memberType(const TypeInfo &receiver, const QString &memberName) const
 {
     TypeInfo resolvedReceiver = resolve(receiver);
@@ -204,6 +214,10 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindin
 PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
                                             const PStatement &context) const
 {
+    for (const PStatement &statement : mModel.statements()) {
+        if (statement->fullName == qualifiedName)
+            return statement;
+    }
     QString name = qualifiedName;
     PStatement initialContext = context;
     if (name.startsWith("::")) {
@@ -231,9 +245,33 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
 
 PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &name) const
 {
-    if (!scope)
+    QSet<const Statement *> visited;
+    return findMemberRecursive(scope, name, visited);
+}
+
+PStatement CppTypeResolver::findMemberRecursive(const PStatement &scope, const QString &name,
+                                                QSet<const Statement *> &visited) const
+{
+    if (!scope || visited.contains(scope.get()))
         return nullptr;
-    return findInMap(scope->children, name);
+    visited.insert(scope.get());
+    if (PStatement result = findInMap(scope->children, name))
+        return result;
+    for (QString baseName : scope->baseClasses) {
+        baseName = baseName.trimmed();
+        for (const QString &modifier : {QString("public"), QString("protected"),
+                                       QString("private"), QString("virtual")}) {
+            if (baseName.startsWith(modifier + ' '))
+                baseName = baseName.mid(modifier.length()).trimmed();
+        }
+        int templateStart = baseName.indexOf('<');
+        if (templateStart >= 0)
+            baseName.truncate(templateStart);
+        PStatement base = findDeclaration(baseName, scope->parentScope.lock());
+        if (PStatement result = findMemberRecursive(base, name, visited))
+            return result;
+    }
+    return nullptr;
 }
 
 TemplateBindings CppTypeResolver::declarationBindings(

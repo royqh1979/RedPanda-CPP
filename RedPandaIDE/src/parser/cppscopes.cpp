@@ -41,6 +41,29 @@ std::shared_ptr<Statement> CppScopes::findScopeAt(const SourcePosition &position
     return nullptr;
 }
 
+std::shared_ptr<Statement> CppScopes::findScopeAtLine(int line) const
+{
+    if (mScopes.isEmpty() || line < 0)
+        return nullptr;
+    int low = 0;
+    int high = mScopes.count();
+    while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (mScopes[mid].range.start.line <= line)
+            low = mid + 1;
+        else
+            high = mid;
+    }
+    int index = low - 1;
+    while (index >= 0) {
+        const CppScope &scope = mScopes[index];
+        if (scope.range.start.line <= line && line <= scope.range.end.line)
+            return scope.statement.lock();
+        index = scope.parentIndex;
+    }
+    return nullptr;
+}
+
 void CppScopes::addScope(const SourceRange &range,
                          const std::shared_ptr<Statement> &statement, int parentIndex)
 {
