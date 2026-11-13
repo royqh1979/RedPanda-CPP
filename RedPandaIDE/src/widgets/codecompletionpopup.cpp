@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,6 +107,8 @@ void CodeCompletionPopup::prepareSearch(
 
     mMemberPhrase = memberExpression.join("");
     mMemberOperator = memberOperator;
+    mIncludedFiles = mParser->getIncludedFiles(filename);
+    mIncludedFiles.insert(filename);
     switch(type) {
     case CodeCompletionType::ComplexKeyword:
         getCompletionListForComplexKeyword(preWord);
@@ -115,15 +117,12 @@ void CodeCompletionPopup::prepareSearch(
         getCompletionListForLabels(filename,line);
         break;
     case CodeCompletionType::Types:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForTypes(preWord,filename,line);
         break;
     case CodeCompletionType::FunctionWithoutDefinition:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionForFunctionWithoutDefinition(preWord, ownerExpression,memberOperator,memberExpression, filename,line);
         break;
     case CodeCompletionType::Namespaces:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForNamespaces(preWord,filename,line);
         break;
     case CodeCompletionType::KeywordsOnly:
@@ -131,15 +130,12 @@ void CodeCompletionPopup::prepareSearch(
         getKeywordCompletionFor(customKeywords);
         break;
     case CodeCompletionType::Macros:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getMacroCompletionList(filename, line);
         break;
     case CodeCompletionType::LiteralOperators:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForLiteralOperators(filename,line);
         break;
     default:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
     }
     setCursor(oldCursor);
@@ -228,65 +224,19 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
         return;
-    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-    if (children.isEmpty())
-        return;
-
-    if (onlyTypes) {
-        if (!scopeStatement) { //Global scope
-            for (const std::weak_ptr<Statement>& weakStatement: children) {
-            PStatement childStatement = weakStatement.lock();
-            if (!childStatement)
+    const StatementList children = mParser->membersOfStatement(scopeStatement);
+    for (const PStatement &childStatement : children) {
+        if (onlyTypes && !isTypeKind(childStatement->kind))
+            continue;
+        if (!scopeStatement) {
+            if (childStatement->fileName.isEmpty()) {
+                addStatement(childStatement, fileName, -1);
+            } else if (!isIncluded(childStatement->fileName)
+                       && !isIncluded(childStatement->definitionFileName)) {
                 continue;
-                if (!isTypeKind(childStatement->kind))
-                    continue;
-                if (childStatement->fileName.isEmpty()) {
-                    // hard defines
-                    addStatement(childStatement,fileName,-1);
-                } else if (
-                           isIncluded(childStatement->fileName)
-                           || isIncluded(childStatement->definitionFileName)
-                           ) {
-                    //we must check if the statement is included by the file
-                    addStatement(childStatement,fileName,line);
-                }
-            }
-        } else {
-            for (const std::weak_ptr<Statement>& weakStatement: children) {
-            PStatement childStatement = weakStatement.lock();
-            if (!childStatement)
-                continue;
-                if (!isTypeKind(childStatement->kind))
-                    continue;
-                addStatement(childStatement,fileName,line);
             }
         }
-    } else {
-        if (!scopeStatement) { //Global scope
-            for (const std::weak_ptr<Statement>& weakStatement: children) {
-            PStatement childStatement = weakStatement.lock();
-            if (!childStatement)
-                continue;
-                if (childStatement->fileName.isEmpty()) {
-                    // hard defines
-                    addStatement(childStatement,fileName,-1);
-                } else if (
-                           isIncluded(childStatement->fileName)
-                           || isIncluded(childStatement->definitionFileName)
-                           ) {
-                    //we must check if the statement is included by the file
-                    addStatement(childStatement,fileName,line);
-                }
-            }
-        } else {
-            for (const std::weak_ptr<Statement>& weakStatement: children) {
-            PStatement childStatement = weakStatement.lock();
-            if (!childStatement)
-                continue;
-                addStatement(childStatement,fileName,line);
-            }
-        }
-
+        addStatement(childStatement, fileName, line);
     }
 }
 
@@ -295,14 +245,8 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
         return;
-    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-    if (children.isEmpty())
-        return;
-
-    for (const std::weak_ptr<Statement>& weakStatement: children) {
-            PStatement childStatement = weakStatement.lock();
-            if (!childStatement)
-                continue;
+    const StatementList children = mParser->membersOfStatement(scopeStatement);
+    for (const PStatement &childStatement : children) {
         if (childStatement->inSystemHeader())
             continue;
         if (childStatement->fileName.isEmpty()) {
@@ -894,17 +838,14 @@ void CodeCompletionPopup::getCompletionFor(
                     //we can use all members
                     addChildren(classTypeStatement,fileName,-1);
                 } else { // we can only use public members
-                    const StatementMap& children = mParser->statementList().childrenStatements(classTypeStatement);
+                    const StatementList children = mParser->membersOfStatement(classTypeStatement);
                     if (children.isEmpty())
                         return;
-                    foreach (const std::weak_ptr<Statement>& weakStatement, children) {
-                        PStatement childStatement = weakStatement.lock();
-                        if (!childStatement)
-                            continue;
-                        if ((childStatement->accessibility==StatementAccessibility::Public)
-                                && !(
-                                    childStatement->kind == StatementKind::Constructor
-                                    || childStatement->kind == StatementKind::Destructor)
+                    for (const PStatement &childStatement : children) {
+                        if (mParser->memberAccessibility(classTypeStatement, childStatement)
+                                == StatementAccessibility::Public
+                                && childStatement->kind != StatementKind::Constructor
+                                && childStatement->kind != StatementKind::Destructor
                                 && !mAddedStatements.contains(childStatement->command)) {
                             addStatement(childStatement,fileName,-1);
                         }
@@ -922,24 +863,15 @@ void CodeCompletionPopup::getCompletionFor(
                     return;
                 if (classTypeStatement->kind == StatementKind::EnumType
                         || classTypeStatement->kind == StatementKind::EnumClassType) {
-                    const StatementMap& children =
-                            mParser->statementList().childrenStatements(classTypeStatement);
-                    foreach (const std::weak_ptr<Statement>& weakStatement, children) {
-                        PStatement child = weakStatement.lock();
-                        if (!child)
-                            continue;
+                    const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                    for (const PStatement &child : children)
                         addStatement(child,fileName,line);
-                    }
                 } else {
                     //class
                     if (classTypeStatement == scopeTypeStatement) {
                         //we can use all static members
-                        const StatementMap& children =
-                                mParser->statementList().childrenStatements(classTypeStatement);
-                        foreach (const std::weak_ptr<Statement>& weakStatement, children) {
-                        PStatement childStatement = weakStatement.lock();
-                        if (!childStatement)
-                            continue;
+                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        for (const PStatement &childStatement : children) {
                             if (
                               (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::Typedef
@@ -953,12 +885,8 @@ void CodeCompletionPopup::getCompletionFor(
                         }
                     } else {
                         // we can only use public static members
-                        const StatementMap& children =
-                                mParser->statementList().childrenStatements(classTypeStatement);
-                        foreach (const std::weak_ptr<Statement>& weakStatement, children) {
-                            PStatement childStatement = weakStatement.lock();
-                            if (!childStatement)
-                                continue;
+                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        for (const PStatement &childStatement : children) {
                             if (
                               (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::Typedef
@@ -967,8 +895,10 @@ void CodeCompletionPopup::getCompletionFor(
                                 || childStatement->kind == StatementKind::EnumClassType
                                 || childStatement->kind == StatementKind::EnumType
                                    )) {
-                                if (childStatement->accessibility == StatementAccessibility::Public)
+                                if (mParser->memberAccessibility(classTypeStatement, childStatement)
+                                        == StatementAccessibility::Public) {
                                     addStatement(childStatement,fileName,-1);
+                                }
                             }
                         }
                     }

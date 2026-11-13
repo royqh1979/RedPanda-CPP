@@ -22,7 +22,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
     - `utils/` — 文件、字体、操作系统、终端、转义等辅助工具。
     - `addon/` — Lua 插件运行时集成（仅在启用 `LUA_ADDON` 时构建）。
     - `vcs/` — Git 集成（仅在启用 `VCS` 时构建）。
-  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-cppparser`，以及重写期间独立运行的 `test-cpptokenizer`。
+  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-cppparser`，以及重写期间独立运行的 `test-cpptokenizer`。
   - `resources/`、`images/`、`*.qrc` — 嵌入资源（图标、主题、配色方案、字体、代码片段、项目模板）。
   - `translations/` — `.ts` 翻译文件。
 - `libs/qsynedit/` — 代码编辑器组件（QSynEdit 的深度改造分支）：文档模型、绘制器、行号栏、代码折叠、搜索器、导出器，以及语法高亮器（cpp、asm/gas/nasm、lua、makefile、glsl）。自带 Qt Test 测试套件，位于 `libs/qsynedit/test/`。
@@ -36,7 +36,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cpptokenizer-refactor.md`（Tokenizer 纯切分化与 Parser 声明级递归下降重构设计）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cpptokenizer-refactor.md`（Tokenizer 纯切分化与 Parser 声明级递归下降重构设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
 
 ## 构建
 
@@ -64,13 +64,13 @@ xmake
 - `MAKE_INTERFACE` — `unix` 与 `mingw32`（IDE 调用哪个 make）。
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
-- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。
+- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 
 ## 测试
 
-测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
+测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
 
 ```sh
 # CMake：构建全部测试目标，然后运行（GUI 测试使用 offscreen）

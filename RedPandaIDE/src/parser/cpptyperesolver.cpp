@@ -109,6 +109,115 @@ TypeInfo CppTypeResolver::invokeFunction(const PStatement &function,
     return resolve(function->typeInfo, bindings, function->parentScope.lock());
 }
 
+QList<PStatement> CppTypeResolver::membersOf(const PStatement &scope) const
+{
+    QList<PStatement> result;
+    if (!scope) {
+        for (const std::weak_ptr<Statement> &weak : mModel.childrenStatements()) {
+            if (PStatement statement = weak.lock())
+                result.append(statement);
+        }
+        return result;
+    }
+    QSet<const Statement *> visited;
+    MemberEntryList entries;
+    appendMembers(scope, false, visited, entries);
+    for (const MemberEntry &entry : entries)
+        result.append(entry.statement);
+    return result;
+}
+
+StatementAccessibility CppTypeResolver::memberAccessibility(
+        const PStatement &scope, const PStatement &member) const
+{
+    if (!scope)
+        return member ? member->accessibility : StatementAccessibility::None;
+    QSet<const Statement *> visited;
+    MemberEntryList entries;
+    appendMembers(scope, false, visited, entries);
+    for (const MemberEntry &entry : entries) {
+        if (entry.statement == member)
+            return entry.accessibility;
+    }
+    return StatementAccessibility::None;
+}
+
+PStatement CppTypeResolver::baseClass(const PStatement &scope, const QString &baseSpecifier,
+                                      StatementAccessibility &inheritance) const
+{
+    QString baseName = baseSpecifier.trimmed();
+    inheritance = scope->classKey == ClassKey::Struct
+            ? StatementAccessibility::Public : StatementAccessibility::Private;
+    for (const QString &modifier : {QString("public"), QString("protected"),
+                                   QString("private"), QString("virtual")}) {
+        if (!baseName.startsWith(modifier + ' '))
+            continue;
+        if (modifier == "public")
+            inheritance = StatementAccessibility::Public;
+        else if (modifier == "protected")
+            inheritance = StatementAccessibility::Protected;
+        else if (modifier == "private")
+            inheritance = StatementAccessibility::Private;
+        baseName = baseName.mid(modifier.length()).trimmed();
+    }
+    int templateStart = baseName.indexOf('<');
+    if (templateStart >= 0)
+        baseName.truncate(templateStart);
+    return findDeclaration(baseName, scope->parentScope.lock());
+}
+
+StatementAccessibility CppTypeResolver::applyInheritance(
+        StatementAccessibility member, StatementAccessibility inheritance) const
+{
+    if (member == StatementAccessibility::None || inheritance == StatementAccessibility::None)
+        return StatementAccessibility::None;
+    if (member == StatementAccessibility::Private || inheritance == StatementAccessibility::Private)
+        return StatementAccessibility::Private;
+    if (member == StatementAccessibility::Protected || inheritance == StatementAccessibility::Protected)
+        return StatementAccessibility::Protected;
+    return StatementAccessibility::Public;
+}
+
+void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
+                                    QSet<const Statement *> &visited,
+                                    MemberEntryList &result) const
+{
+    if (!scope || visited.contains(scope.get()))
+        return;
+    visited.insert(scope.get());
+    QSet<QString> signatures;
+    for (const MemberEntry &entry : result)
+        signatures.insert(entry.statement->command + entry.statement->noNameArgs);
+
+    for (const std::weak_ptr<Statement> &weak : scope->children) {
+        PStatement statement = weak.lock();
+        if (!statement || (inherited && (statement->kind == StatementKind::Constructor
+                                        || statement->kind == StatementKind::Destructor))) {
+            continue;
+        }
+        if (signatures.contains(statement->command + statement->noNameArgs))
+            continue;
+        signatures.insert(statement->command + statement->noNameArgs);
+        result.append({statement, statement->accessibility});
+    }
+
+    for (const QString &baseSpecifier : scope->baseClasses) {
+        StatementAccessibility inheritance;
+        PStatement base = baseClass(scope, baseSpecifier, inheritance);
+        if (!base)
+            continue;
+        MemberEntryList baseMembers;
+        appendMembers(base, true, visited, baseMembers);
+        for (MemberEntry entry : baseMembers) {
+            if (signatures.contains(entry.statement->command + entry.statement->noNameArgs))
+                continue;
+            entry.accessibility = applyInheritance(entry.accessibility, inheritance);
+            signatures.insert(entry.statement->command + entry.statement->noNameArgs);
+            result.append(entry);
+        }
+    }
+}
+
 void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInfo &argument,
                                         const QSet<QString> &templateParameters,
                                         TemplateBindings &bindings) const

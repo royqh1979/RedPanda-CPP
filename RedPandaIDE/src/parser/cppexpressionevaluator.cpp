@@ -682,7 +682,10 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
         PStatement parent = statement->parentScope.lock();
         if (!parent)
             return {};
-        return createResult(parent);
+        EvalResult parentResult = createResult(parent);
+        parentResult.baseStatement = statement;
+        parentResult.statement = statement;
+        return parentResult;
     }
     case StatementKind::Function:
     case StatementKind::OverloadedOperator:

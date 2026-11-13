@@ -202,6 +202,7 @@ struct Statement {
     QVector<TemplateParameterInfo> templateParameters;
     DeclSpecifierProperties declSpecifierProperties;
     StatementKind kind; // kind of statement class/variable/function/etc
+    ClassKey classKey = ClassKey::Class;
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
     SourceRange declarationRange;
@@ -211,7 +212,6 @@ struct Statement {
     QString definitionFileName; // definition
     QString definitionBoundaryAncestor;
     StatementMap children;
-    QList<std::weak_ptr<Statement>> publicProperties;
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces

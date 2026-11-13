@@ -44,6 +44,24 @@ bool configureStandardLibraryParser(const PCppParser &parser, QString &bitsStdcp
     QString cxxInclude = latestChildDirectory(root + "/include/c++");
     QString gccTarget = latestChildDirectory(root + "/lib/gcc");
     QString gccVersion = latestChildDirectory(gccTarget);
+    if (cxxInclude.isEmpty()) {
+        QDir gccRoot(root + "/lib/gcc");
+        const QStringList targets = gccRoot.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+        for (const QString &target : targets) {
+            QDir targetDir(gccRoot.filePath(target));
+            const QStringList versions = targetDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+            for (const QString &version : versions) {
+                QString versionPath = targetDir.filePath(version);
+                if (QDir(versionPath + "/include/c++").exists()) {
+                    cxxInclude = versionPath + "/include/c++";
+                    gccVersion = versionPath;
+                    break;
+                }
+            }
+            if (!cxxInclude.isEmpty())
+                break;
+        }
+    }
     if (cxxInclude.isEmpty() || gccVersion.isEmpty()) {
         qWarning() << "Cannot locate MinGW C++ include directories under" << root;
         return false;
@@ -423,21 +441,20 @@ void TestCppParser::test_struct()
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->command, "TTT");
     QCOMPARE(statement->kind, StatementKind::Class);
-    QCOMPARE(statement->publicProperties.count(), 3);
     PStatement child;
-    child = statement->publicProperties[0].lock();
+    child = statement->children.value("xxx").lock();
     QCOMPARE(child->command,"xxx");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::xxx");
     QCOMPARE(child->type(), "int");
     QCOMPARE(child->accessibility, StatementAccessibility::Public);
-    child = statement->publicProperties[1].lock();
+    child = statement->children.value("yyy").lock();
     QCOMPARE(child->command,"yyy");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::yyy");
     QCOMPARE(child->type(), "short");
     QCOMPARE(child->accessibility, StatementAccessibility::Public);
-    child = statement->publicProperties[2].lock();
+    child = statement->children.value("zzz").lock();
     QCOMPARE(child->command,"zzz");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::zzz");
@@ -718,54 +735,97 @@ void TestCppParser::test_replay_reuses_existing_statements()
     QCOMPARE(mParser->statementList().count(), count);
 }
 
+void TestCppParser::test_preprocessor_statements()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "#define OBJECT_MACRO 7",
+            "#define FUNCTION_MACRO(x) ((x)+1)",
+            "int value;"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "macros.cpp", false, "");
+
+    PStatement object = mParser->findStatement("OBJECT_MACRO");
+    QVERIFY(object);
+    QCOMPARE(object->kind, StatementKind::Preprocessor);
+    QCOMPARE(object->args, "");
+    QCOMPARE(object->value, "7");
+    QCOMPARE(object->fileName, "macros.cpp");
+    QCOMPARE(object->definitionFileName, "macros.cpp");
+    QCOMPARE(object->declarationRange.start.line, 0);
+    QVERIFY(object->hasDefinition());
+
+    PStatement function = mParser->findStatement("FUNCTION_MACRO");
+    QVERIFY(function);
+    QCOMPARE(function->kind, StatementKind::Preprocessor);
+    QCOMPARE(function->args, "(x)");
+    QCOMPARE(function->value, "((x)+1)");
+    QCOMPARE(function->fileName, "macros.cpp");
+    QCOMPARE(function->definitionFileName, "macros.cpp");
+    QCOMPARE(function->declarationRange.start.line, 1);
+    QVERIFY(function->hasDefinition());
+}
+
+void TestCppParser::test_label_statements()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "void f() { retry: ; }",
+            "void g() { bool flag = true; flag ? retry : retry; "
+            "switch (flag) { case true: break; default: break; } }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "labels.cpp", false, "");
+
+    PStatement function = mParser->findStatement("f");
+    QVERIFY(function);
+    PStatement label = function->children.value("retry").lock();
+    QVERIFY(label);
+    QCOMPARE(label->kind, StatementKind::Label);
+    QCOMPARE(label->fullName, "f::retry");
+    QCOMPARE(label->declarationRange.start.line, 0);
+    QCOMPARE(label->fileName, "labels.cpp");
+
+    PStatement notLabels = mParser->findStatement("g");
+    QVERIFY(notLabels);
+    for (const std::weak_ptr<Statement> &weak : notLabels->children) {
+        PStatement child = weak.lock();
+        QVERIFY(!child || child->kind != StatementKind::Label);
+    }
+}
+
+void TestCppParser::test_hard_define_statements()
+{
+    mParser->addHardDefineByLine("#define HARD_MACRO(x) ((x)+1)");
+    mParser->parseHardDefines();
+    PStatement macro = mParser->findStatement("HARD_MACRO");
+    QVERIFY(macro);
+    QCOMPARE(macro->kind, StatementKind::Preprocessor);
+    QCOMPARE(macro->args, "(x)");
+    QCOMPARE(macro->value, "((x)+1)");
+    QVERIFY(macro->fileName.isEmpty());
+    QVERIFY(!macro->declarationRange.isValid());
+    QVERIFY(macro->hasDefinition());
+    QCOMPARE(mParser->statementList().count(), 1);
+}
+
 void TestCppParser::test_structured_bindings()
 {
     mParser->setOnGetFileStream(nullptr);
     QFileInfo file("resources/structured-bindings.cpp");
     QVERIFY(file.exists());
     CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
-    PStatement statement;
-    statement = mParser->findStatement("a");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"a");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"int");
-    QCOMPARE(statement->args,"");
-
-    statement = mParser->findStatement("b");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"b");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"short");
-    QCOMPARE(statement->args,"");
-
-    statement = mParser->findStatement("c");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"c");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"double");
-    QCOMPARE(statement->args,"");
-
-    statement = mParser->findStatement("d");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"d");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"int");
-    QCOMPARE(statement->args,"");
-
-    statement = mParser->findStatement("e");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"e");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"short");
-    QCOMPARE(statement->args,"");
-
-    statement = mParser->findStatement("g");
-    QVERIFY(statement!=nullptr);
-    QCOMPARE(statement->fullName,"g");
-    QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"double");
-    QCOMPARE(statement->args,"");
+    for (const QString &name : QStringList{"a", "b", "c", "d", "e", "g"}) {
+        PStatement statement = mParser->findStatement(name);
+        QVERIFY(statement!=nullptr);
+        QCOMPARE(statement->fullName,name);
+        QCOMPARE(statement->kind,StatementKind::Variable);
+        QCOMPARE(statement->type(),"auto");
+        QCOMPARE(statement->args,"");
+    }
 }
 
 void TestCppParser::test_system_subtree_inheritance_uses_boundary_record()

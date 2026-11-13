@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3909,7 +3909,7 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
     PStatement statement = mParser->findStatementOf(
                 mFilename,expression,
                 p.line);
-    statement = constructorToClass(statement, p);
+    statement = resolveClassOrConstructorAt(statement, p);
     if (!statement)
         return result;
     if (statement->kind == StatementKind::Function
@@ -4428,18 +4428,23 @@ bool Editor::needReparse() const
                        || (!mParser->isFileParsed(mFilename)));
 }
 
-PStatement Editor::constructorToClass(PStatement statement, const CharPos& p)
+PStatement Editor::resolveClassOrConstructorAt(const PStatement &statement, const CharPos &pos)
 {
     if (statement && statement->kind == StatementKind::Constructor) {
         QString token;
         int start;
         QSynedit::PTokenAttribute attri;
-        if (getTokenAttr(p,token,start,attri)) {
-            QString s = lineText(p.line);
-            int pos = start+token.length()-1;
-            while (pos<s.length() && CppParser::isSpaceChar(s[pos]))
-                pos++;
-            if (pos >= s.length() || (s[pos]!='(' && s[pos]!='{')) {
+        if (getTokenAttr(pos,token,start,attri)) {
+            QString s = lineText(pos.line);
+            QString prefix = s.left(start).trimmed();
+            if (prefix.endsWith("class") || prefix.endsWith("struct")
+                    || prefix.endsWith("union")) {
+                return statement->parentScope.lock();
+            }
+            int nextPos = start+token.length();
+            while (nextPos<s.length() && CppParser::isSpaceChar(s[nextPos]))
+                nextPos++;
+            if (nextPos >= s.length() || (s[nextPos]!='(' && s[nextPos]!='{')) {
                 return statement->parentScope.lock();
             }
         }
@@ -4756,7 +4761,7 @@ void Editor::gotoDeclaration(const CharPos &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos);
+    statement = resolveClassOrConstructorAt(statement, pos);
 
     if (!statement) {
         return;
@@ -4784,7 +4789,7 @@ void Editor::gotoDefinition(const CharPos &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos);
+    statement = resolveClassOrConstructorAt(statement, pos);
     if (!statement) {
         return;
     }

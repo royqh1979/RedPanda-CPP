@@ -31,9 +31,6 @@ void StatementModel::add(const PStatement& statement)
     PStatement parent = statement->parentScope.lock();
     if (parent) {
         addMember(parent->children, statement);
-        if (statement->kind == StatementKind::Variable
-                && statement->accessibility == StatementAccessibility::Public)
-            parent->publicProperties.append(statement);
     } else {
         addMember(mGlobalStatements, statement);
     }
@@ -48,14 +45,6 @@ void StatementModel::deleteStatement(const PStatement& statement)
     PStatement parent = statement->parentScope.lock();
     if (parent) {
         deleteMember(parent->children, statement);
-        for (auto it = parent->publicProperties.begin();
-                it != parent->publicProperties.end();) {
-            PStatement property = it->lock();
-            if (!property || property == statement)
-                it = parent->publicProperties.erase(it);
-            else
-                ++it;
-        }
     } else {
         deleteMember(mGlobalStatements, statement);
     }

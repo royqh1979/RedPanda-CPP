@@ -43,10 +43,8 @@ public:
     }
     void clear() {
         mCount=0;
-        for (const PStatement &statement : mStatements) {
+        for (const PStatement &statement : mStatements)
             statement->children.clear();
-            statement->publicProperties.clear();
-        }
         mStatements.clear();
         mGlobalStatements.clear();
     }

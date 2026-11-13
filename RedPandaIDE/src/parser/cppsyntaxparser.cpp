@@ -157,9 +157,10 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     if (mCursor.consume(";"))
         return true;
     SourcePosition bodyStart = mCursor.current().position;
-    int closeIndex = matchedScopeClose(mCursor);
-    if (!mCursor.consume("{"))
+    if (mCursor.currentText() != "{")
         return false;
+    int closeIndex = matchedScopeClose(mCursor);
+    mCursor.advance();
 
     QString previousClassName = mDeclarationParser.currentClassName();
     mDeclarationParser.setCurrentClassName(declarator.name);
@@ -245,9 +246,10 @@ bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
         return true;
     }
     SourcePosition bodyStart = mCursor.current().position;
-    int closeIndex = matchedScopeClose(mCursor);
-    if (!mCursor.consume("{"))
+    if (mCursor.currentText() != "{")
         return false;
+    int closeIndex = matchedScopeClose(mCursor);
+    mCursor.advance();
     while (!mCursor.atEnd()
            && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
         ScopeRecovery recovery(mCursor, closeIndex, mRootFileName, "namespace");
@@ -497,6 +499,23 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
                 skipBalanced();
             else
                 result.children.append(child);
+            continue;
+        }
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
+                && mCursor.peek().text == ":"
+                && mCursor.currentText() != "default"
+                && mCursor.peek(-1).text != "case"
+                && mCursor.peek(-1).text != "?") {
+            child.kind = DeclarationKind::Label;
+            child.range.start = mCursor.current().position;
+            DeclaratorInfo label;
+            label.name = mCursor.currentText();
+            label.position = mCursor.current().position;
+            child.declarators.append(label);
+            mCursor.advance();
+            mCursor.advance();
+            child.range.end = mCursor.peek(-1).position;
+            result.children.append(child);
             continue;
         }
         CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();

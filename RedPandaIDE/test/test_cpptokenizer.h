@@ -103,6 +103,8 @@ private slots:
     void test_constructor_declarations_with_specifiers();
     void test_integer_constant_expression_invalid_division();
     void test_deduction_guides_are_consumed_without_statements();
+    void test_inherited_member_enumeration_and_access();
+    void test_expression_evaluator_preserves_constructor_statement();
 
 private:
     void tokenize(const QStringList &lines);

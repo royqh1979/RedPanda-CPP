@@ -131,6 +131,39 @@ void CppParser::internalParse(const QString &fileName)
             continue;
         }
         if (token.kind == CppTokenizer::TokenKind::Preprocessor) {
+            if (token.text.startsWith("#define ")) {
+                QString name, args, value;
+                mPreprocessor.getDefineParts(token.text.mid(7).trimmed(), name, args, value);
+                if (!name.isEmpty()) {
+                    auto statement = std::make_shared<Statement>();
+                    statement->command = name;
+                    statement->fullName = name;
+                    statement->kind = StatementKind::Preprocessor;
+                    statement->scope = StatementScope::Global;
+                    statement->accessibility = StatementAccessibility::None;
+                    statement->args = args;
+                    statement->value = value;
+                    statement->fileName = currentFile;
+                    statement->declarationBoundaryAncestor = currentAncestor;
+                    statement->declarationRange = SourceRange{
+                        token.position,
+                        SourcePosition{token.position.ch + token.text.length() - 1,
+                                       token.position.line}};
+                    statement->definitionRange = statement->declarationRange;
+                    statement->definitionFileName = currentFile;
+                    statement->definitionBoundaryAncestor = currentAncestor;
+                    statement->setHasDefinition(true);
+                    statement->properties.setFlag(StatementProperty::InProject,
+                                                  mProjectFiles.contains(currentFile));
+                    statement->properties.setFlag(StatementProperty::InSystemHeader,
+                        !currentAncestor.isEmpty()
+                                || ::isSystemHeaderFile(currentFile, mPreprocessor.includePaths()));
+                    mStatementList.add(statement);
+                    PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(currentFile);
+                    if (fileInfo)
+                        fileInfo->addStatement(statement);
+                }
+            }
             cursor.advance();
             continue;
         }
@@ -385,6 +418,8 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
 {
     QMutexLocker locker(&mMutex);
     QList<PStatement> result;
+    if (mParsing)
+        return result;
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return result;
@@ -413,6 +448,8 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
 PStatement CppParser::findScopeStatement(const QString &filename, int line) const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     PParsedFileInfo info = mPreprocessor.findFileInfo(filename);
     return info ? info->findScopeAtLine(line) : PStatement();
 }
@@ -420,6 +457,8 @@ PStatement CppParser::findScopeStatement(const QString &filename, int line) cons
 PParsedFileInfo CppParser::findFileInfo(const QString &filename) const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     return mPreprocessor.findFileInfo(filename);
 }
 
@@ -445,6 +484,8 @@ QString CppParser::findTemplateParamOf(const QString &fileName, const QString &p
 PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return {};
@@ -478,6 +519,13 @@ int CppParser::findLastOperator(const QString &phrase) const
 PStatementList CppParser::findNamespace(const QString &name) const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return std::make_shared<StatementList>();
+    return doFindNamespace(name);
+}
+
+PStatementList CppParser::doFindNamespace(const QString &name) const
+{
     auto result = std::make_shared<StatementList>();
     for (const PStatement &statement : mStatementList.statements()) {
         if (statement->kind == StatementKind::Namespace && statement->fullName == name)
@@ -489,31 +537,52 @@ PStatementList CppParser::findNamespace(const QString &name) const
 PStatement CppParser::findStatement(const QString &fullname) const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     CppTypeResolver resolver(mStatementList);
     return resolver.findStatement(fullname);
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, int line) const
 {
-    PStatement scope = findScopeStatement(fileName, line);
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
+    return doFindStatementOf(fileName, phrase, line);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QString &phrase, int line) const
+{
+    PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
+    PStatement scope = info ? info->findScopeAtLine(line) : PStatement();
     QStringList parts;
     CppTokenizer tokenizer;
     tokenizer.tokenize({phrase});
     for (const CppTokenizer::Token &token : tokenizer.tokens())
         parts.append(token.text);
-    return findStatementOf(fileName, parts, scope);
+    return doFindStatementOf(fileName, parts, scope);
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase,
                                       const PStatement &currentScope,
                                       PStatement &parentScopeType) const
 {
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
+    return doFindStatementOf(fileName, phrase, currentScope, parentScopeType);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QString &phrase,
+                                        const PStatement &currentScope,
+                                        PStatement &parentScopeType) const
+{
     CppTokenizer tokenizer;
     tokenizer.tokenize({phrase});
     QStringList expression;
     for (const CppTokenizer::Token &token : tokenizer.tokens())
         expression.append(token.text);
-    EvalResult result = evalExpression(fileName, expression, currentScope);
+    EvalResult result = doEvalExpression(fileName, expression, currentScope);
     parentScopeType = result.type.declaration.lock();
     return visibleStatement(fileName, result.statement ? result.statement : parentScopeType);
 }
@@ -521,8 +590,17 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
 PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression,
                                       const PStatement &currentScope) const
 {
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
+    return doFindStatementOf(fileName, expression, currentScope);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringList &expression,
+                                        const PStatement &currentScope) const
+{
     QStringList copy = expression;
-    EvalResult result = evalExpression(fileName, copy, currentScope);
+    EvalResult result = doEvalExpression(fileName, copy, currentScope);
     return visibleStatement(fileName,
                             result.statement ? result.statement : result.type.declaration.lock());
 }
@@ -530,11 +608,25 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
 PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression,
                                       int line) const
 {
-    return findStatementOf(fileName, expression, findScopeStatement(fileName, line));
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
+    return doFindStatementOf(fileName, expression, line);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringList &expression,
+                                        int line) const
+{
+    PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
+    PStatement scope = info ? info->findScopeAtLine(line) : PStatement();
+    return doFindStatementOf(fileName, expression, scope);
 }
 
 PStatement CppParser::findAliasedStatement(const PStatement &statement) const
 {
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     if (!statement)
         return {};
     if (statement->kind != StatementKind::Alias && statement->kind != StatementKind::Typedef)
@@ -562,6 +654,9 @@ QStringList CppParser::getFunctionParameterNames(const PStatement &statement) co
 
 QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int line) const
 {
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
     return doListStatements(fileName, line, {
         StatementKind::Class, StatementKind::EnumType, StatementKind::EnumClassType,
         StatementKind::Typedef, StatementKind::Alias
@@ -570,13 +665,15 @@ QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int lin
 
 QList<PStatement> CppParser::listLiteralOperators(const QString &fileName, int line) const
 {
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
     return doListStatements(fileName, line, {StatementKind::LiteralOperator});
 }
 
 QList<PStatement> CppParser::doListStatements(const QString &fileName, int line,
                                               const QSet<StatementKind> &kinds) const
 {
-    QMutexLocker locker(&mMutex);
     QList<PStatement> result;
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
@@ -595,8 +692,16 @@ QList<PStatement> CppParser::doListStatements(const QString &fileName, int line,
 EvalResult CppParser::evalExpression(const QString &fileName, QStringList &expression,
                                      const PStatement &currentScope) const
 {
-    Q_UNUSED(fileName);
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
+    return doEvalExpression(fileName, expression, currentScope);
+}
+
+EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &expression,
+                                       const PStatement &currentScope) const
+{
+    Q_UNUSED(fileName);
     CppTypeResolver resolver(mStatementList);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(mStatementList, resolver, operations);
@@ -609,6 +714,9 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
                                            const PStatement &currentClass) const
 {
     Q_UNUSED(fileName);
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     CppTypeResolver resolver(mStatementList);
     return resolver.resolve(parseTypeInfo(typeName), {}, currentClass).declaration.lock();
 }
@@ -616,6 +724,9 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
 PStatement CppParser::findTypeDef(const PStatement &statement, const QString &fileName) const
 {
     Q_UNUSED(fileName);
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
     if (!statement)
         return {};
     CppTypeResolver resolver(mStatementList);
@@ -643,6 +754,8 @@ bool CppParser::freeze(const QString &serialId)
 QStringList CppParser::getClassesList() const
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
     QSet<QString> names;
     for (const PStatement &statement : mStatementList.statements()) {
         if (statement->kind == StatementKind::Class)
@@ -920,15 +1033,36 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
     return resolver.findStatement(phrase, startScope);
 }
 
+QList<PStatement> CppParser::membersOfStatement(const PStatement &scopeStatement) const
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
+    return doMembersOfStatement(scopeStatement);
+}
+
+QList<PStatement> CppParser::doMembersOfStatement(const PStatement &scopeStatement) const
+{
+    CppTypeResolver resolver(mStatementList);
+    return resolver.membersOf(scopeStatement);
+}
+
+StatementAccessibility CppParser::memberAccessibility(
+        const PStatement &scopeStatement, const PStatement &member) const
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return StatementAccessibility::None;
+    CppTypeResolver resolver(mStatementList);
+    return resolver.memberAccessibility(scopeStatement, member);
+}
+
 PStatement CppParser::findMemberOfStatement(const QString &phrase,
                                             const PStatement &scopeStatement) const
 {
-    if (!scopeStatement)
-        return {};
-    const auto values = scopeStatement->children.values(phrase);
-    for (const std::weak_ptr<Statement> &weak : values) {
-        if (PStatement result = weak.lock())
-            return result;
+    for (const PStatement &statement : doMembersOfStatement(scopeStatement)) {
+        if (statement->command == phrase)
+            return statement;
     }
     return {};
 }
@@ -937,11 +1071,8 @@ QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase,
                                                     const PStatement &scopeStatement) const
 {
     QList<PStatement> result;
-    if (!scopeStatement)
-        return result;
-    const auto values = scopeStatement->children.values(phrase);
-    for (const std::weak_ptr<Statement> &weak : values) {
-        if (PStatement statement = weak.lock())
+    for (const PStatement &statement : doMembersOfStatement(scopeStatement)) {
+        if (statement->command == phrase)
             result.append(statement);
     }
     return result;
@@ -966,7 +1097,7 @@ PStatement CppParser::findStatementInScope(const QString &name, const PStatement
 PStatement CppParser::findStatementInNamespace(const QString &name,
                                                const QString &namespaceName) const
 {
-    PStatementList list = findNamespace(namespaceName);
+    PStatementList list = doFindNamespace(namespaceName);
     for (const PStatement &space : *list) {
         if (PStatement result = findMemberOfStatement(name, space))
             return result;
@@ -1088,6 +1219,8 @@ const QSet<QString> &CppParser::projectFiles() const
 QList<QString> CppParser::namespaces()
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
     QSet<QString> result;
     for (const PStatement &statement : mStatementList.statements()) {
         if (statement->kind == StatementKind::Namespace)

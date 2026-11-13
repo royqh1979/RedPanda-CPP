@@ -64,35 +64,6 @@ TypeInfo TypeOperationRegistry::subscriptReference(const TypeInfo &receiver) con
     return mResolver.invokeResult(receiver, "operator[]");
 }
 
-TypeInfo TypeOperationRegistry::structuredBindingValue(const TypeInfo &value, int index) const
-{
-    if (index < 0)
-        return {};
-    TypeInfo resolved = mResolver.resolve(value);
-    if (!resolved.derivations.isEmpty()
-            && resolved.derivations.first().kind == TypeDerivationKind::Array) {
-        resolved.derivations.removeFirst();
-        return resolved;
-    }
-    TypeInfo tuple = tupleElement(resolved, index);
-    if (!tuple.qualifiedName.isEmpty())
-        return tuple;
-    PStatement declaration = resolved.declaration.lock();
-    if (!declaration)
-        declaration = mResolver.findStatement(resolved.qualifiedName);
-    if (!declaration)
-        return {};
-    int current = 0;
-    for (const std::weak_ptr<Statement> &weak : declaration->publicProperties) {
-        PStatement property = weak.lock();
-        if (!property || property->isStatic())
-            continue;
-        if (current++ == index)
-            return property->typeInfo;
-    }
-    return {};
-}
-
 TypeInfo TypeOperationRegistry::invokeResult(const TypeInfo &callable,
                                               const QVector<TypeInfo> &arguments) const
 {

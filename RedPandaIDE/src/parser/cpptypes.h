@@ -203,7 +203,8 @@ enum class DeclarationKind {
     NamespaceAlias,
     Alias,
     Using,
-    Block
+    Block,
+    Label
 };
 
 enum class UsingDeclarationKind {

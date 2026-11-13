@@ -953,13 +953,10 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
     QCOMPARE(count->kind, StatementKind::Variable);
     QCOMPARE(count->scope, StatementScope::ClassLocal);
     QVERIFY(count->isStatic());
-    QCOMPARE(c->publicProperties.count(), 1);
-    QCOMPARE(c->publicProperties.first().lock(), count);
 
     std::weak_ptr<Statement> countReference = count;
     model.clear();
     QVERIFY(c->children.isEmpty());
-    QVERIFY(c->publicProperties.isEmpty());
     count.reset();
     QVERIFY(countReference.expired());
 }
@@ -1914,6 +1911,11 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     DeclarationInfo declaration;
     QVERIFY(!parser.parseDeclaration(declaration));
     QCOMPARE(cursor.index(), 0);
+    tokenize({"namespace Broken ( )"});
+    CppTokenCursor parenthesisCursor(mTokenizer);
+    CppSyntaxParser parenthesisParser(parenthesisCursor);
+    QVERIFY(!parenthesisParser.parseDeclaration(declaration));
+    QCOMPARE(parenthesisCursor.index(), 0);
 }
 
 
@@ -2029,4 +2031,117 @@ void TestCppTokenizer::test_deduction_guides_are_consumed_without_statements()
         }
     }
     QCOMPARE(entries, 1);
+}
+
+
+void TestCppTokenizer::test_inherited_member_enumeration_and_access()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Base {\n"
+                "  Base();\n"
+                "  int publicValue;\n"
+                "  virtual void action();\n"
+                "  void action(int);\n"
+                "protected:\n"
+                "  int protectedValue;\n"
+                "private:\n"
+                "  int privateValue;\n"
+                "};\n"
+                "class Derived : Base { public: void action() override; };\n"
+                "struct PublicDerived : Base {};\n"
+                "struct ProtectedDerived : protected Base {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/inheritance.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    int statementCount = model.count();
+
+    PStatement base = resolver.findStatement("Base");
+    PStatement derived = resolver.findStatement("Derived");
+    PStatement publicDerived = resolver.findStatement("PublicDerived");
+    PStatement protectedDerived = resolver.findStatement("ProtectedDerived");
+    QVERIFY(base && derived && publicDerived && protectedDerived);
+    QCOMPARE(base->classKey, ClassKey::Struct);
+    QCOMPARE(derived->classKey, ClassKey::Class);
+    PStatement basePublicValue = findStatement(base->children, "publicValue");
+    PStatement baseProtectedValue = findStatement(base->children, "protectedValue");
+    PStatement basePrivateValue = findStatement(base->children, "privateValue");
+    PStatement baseConstructor = findStatement(base->children, "Base");
+    PStatement baseAction;
+    PStatement baseIntOverload;
+    for (const std::weak_ptr<Statement> &weak : base->children.values("action")) {
+        PStatement action = weak.lock();
+        if (action && action->parameters.isEmpty())
+            baseAction = action;
+        else
+            baseIntOverload = action;
+    }
+    QVERIFY(basePublicValue && baseProtectedValue && basePrivateValue);
+    QVERIFY(baseConstructor && baseAction && baseIntOverload);
+
+    QList<PStatement> members = resolver.membersOf(derived);
+    QCOMPARE(model.count(), statementCount);
+    QCOMPARE(members.count(), 5);
+    QVERIFY(!members.contains(baseConstructor));
+    QVERIFY(!members.contains(baseAction));
+    QVERIFY(members.contains(baseIntOverload));
+    PStatement override;
+    for (const PStatement &member : members) {
+        if (member->command == "action" && member->parameters.isEmpty()) {
+            override = member;
+            break;
+        }
+    }
+    QVERIFY(override);
+    QVERIFY(override->properties.testFlag(StatementProperty::Override));
+    QCOMPARE(override->parentScope.lock(), derived);
+    QVERIFY(members.contains(basePublicValue));
+    QVERIFY(members.contains(baseProtectedValue));
+    QVERIFY(members.contains(basePrivateValue));
+    QCOMPARE(resolver.memberAccessibility(derived, override), StatementAccessibility::Public);
+    QCOMPARE(resolver.memberAccessibility(derived, basePublicValue), StatementAccessibility::Private);
+    QCOMPARE(resolver.memberAccessibility(derived, baseProtectedValue), StatementAccessibility::Private);
+    QCOMPARE(resolver.memberAccessibility(derived, basePrivateValue), StatementAccessibility::Private);
+
+    QCOMPARE(resolver.memberAccessibility(publicDerived, basePublicValue), StatementAccessibility::Public);
+    QCOMPARE(resolver.memberAccessibility(publicDerived, baseProtectedValue), StatementAccessibility::Protected);
+    QCOMPARE(resolver.memberAccessibility(publicDerived, basePrivateValue), StatementAccessibility::Private);
+    QCOMPARE(resolver.memberAccessibility(protectedDerived, basePublicValue), StatementAccessibility::Protected);
+    QCOMPARE(resolver.memberAccessibility(protectedDerived, baseProtectedValue), StatementAccessibility::Protected);
+    QCOMPARE(resolver.memberAccessibility(protectedDerived, basePrivateValue), StatementAccessibility::Private);
+    QCOMPARE(basePublicValue->accessibility, StatementAccessibility::Public);
+    QCOMPARE(baseProtectedValue->accessibility, StatementAccessibility::Protected);
+    QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);
+}
+
+
+void TestCppTokenizer::test_expression_evaluator_preserves_constructor_statement()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("class Foo { public: Foo(); };", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructor.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    PStatement classStatement = resolver.findStatement("Foo");
+    QVERIFY(classStatement);
+    PStatement constructorStatement = findStatement(classStatement->children, "Foo");
+    QVERIFY(constructorStatement);
+    QCOMPARE(constructorStatement->kind, StatementKind::Constructor);
+
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({"Foo"});
+    EvalResult result = evaluator.evaluate(tokenizer, classStatement);
+    QCOMPARE(result.kind, EvalStatementKind::Type);
+    QCOMPARE(result.type.declaration.lock(), classStatement);
+    QCOMPARE(result.statement, constructorStatement);
+    QCOMPARE(result.baseStatement, constructorStatement);
 }

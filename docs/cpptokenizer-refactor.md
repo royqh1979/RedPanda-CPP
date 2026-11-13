@@ -95,6 +95,8 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 创建层同时把 Statement 写入实际源码文件的 ParsedFileInfo。class、namespace 和函数只以 bodyRange 建立代码作用域，父节点按父 Statement 的身份关联；声明范围仍覆盖完整声明。不同 include 文件的位置和作用域分别写入各自的 ParsedFileInfo，不跨文件比较 SourcePosition。`struct S {} value;` 中类体只属于 S 的定义，不会被当作变量 value 的函数定义。
 
+internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
+
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
 初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。
@@ -172,7 +174,7 @@ class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 
 
 ### Statement 所有权
 
-StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、publicProperties、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立，fullName 查询复用作用域索引，不增加重复的全量名称索引。
+StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立，fullName 查询复用作用域索引，不增加重复的全量名称索引。
 
 查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。失效时仍须删除对应索引项；weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
 
@@ -190,9 +192,13 @@ StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存
 
 继承成员默认采用按需递归查找，不复制基类 children。derived 的直接成员优先，随后递归补充基类成员；override 按函数签名去重，inline/匿名 namespace 作为透明作用域处理。树形视图和补全列表通过统一的 membersOf(scope) 获得临时成员列表，不读取持久 children 作为继承结果。
 
-复制 children 虽然能降低单次查询成本，但会增加 Statement 和索引数量，并要求在基类变化时级联失效。它还必须处理 override 签名、继承访问级别、模板参数替换、声明范围和 boundary ancestor，容易破坏 replay 与唯一所有权模型。publicProperties 只保存当前类直接声明的 public 非静态成员，服务于结构化绑定，不能当作继承成员列表复制。
+复制 children 虽然能降低单次查询成本，但会增加 Statement 和索引数量，并要求在基类变化时级联失效。它还必须处理 override 签名、继承访问级别、模板参数替换、声明范围和 boundary ancestor，容易破坏 replay 与唯一所有权模型。继承访问级别只在临时查询结果中计算，不改写基类 Statement。
 
 递归查找的代价是单次查询为 O(继承深度)，生成补全列表需要遍历继承成员。若实测成为瓶颈，可以增加按 derived、receiver 实际模板参数和 parser 代次区分的缓存；缓存仅保存 weak_ptr 和有效访问信息，不复制 Statement。缓存不是默认前提，必须以性能数据决定。
+
+### auto 类型推导与结构化绑定的边界
+
+expression 的类型必须首先由表达式求值独立确定，结构化绑定不参与 expression 返回类型的推导。普通 `auto x = expression` 只使用表达式结果，不需要结构化绑定规则。当前不根据 `auto [a,b] = expression` 的拆分规则继续推导各绑定名的类型；解析器仍保留声明结构，但不把 initializer 的整体类型错误赋给每个绑定名，也不为此维护 publicProperties 索引。若以后确需支持绑定名类型推导，再作为独立功能设计，不与普通 auto 推导或继承成员枚举混合。
 
 ### 源码位置与范围查询
 
@@ -292,3 +298,13 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 - range-for 中 `char const c` 形式的循环变量。
 
 这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。
+
+## IDE 查询与重命名约定
+
+`getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。
+
+`gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
+
+重命名按 syntax token 工作：只处理 `TokenType::Identifier`，用该位置表达式查找 Statement，并比较声明文件与声明位置，不能只按文本相同替换。`findOccurenceInFile` 和 `renameSymbolInEditor` 都采用该规则。`renameSymbol` 只允许声明和定义位于当前文件的符号，私有实现直接操作传入的当前 Editor，不再通过 MainWindow 二次查找，也不处理未打开文件。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
+
+补全和类浏览器使用统一的临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。

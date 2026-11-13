@@ -73,6 +73,7 @@ private:
     void addMembers();
     void sortNode(ClassBrowserNode * node);
     void filterChildren(ClassBrowserNode * node, const StatementMap& statements);
+    void filterChildren(ClassBrowserNode * node, const StatementList& statements);
     PStatement createDummy(const PStatement& statement);
     ClassBrowserNode* getParentNode(const PStatement &parentStatement, int depth);
     bool isScopeStatement(const PStatement& statement);
@@ -81,7 +82,7 @@ private:
     QHash<QString,PStatement> mDummyStatements;
     QHash<QString,PClassBrowserNode> mScopeNodes;
     QHash<QString,PClassBrowserNode> mNodeIndex;
-    QSet<Statement*> mProcessedStatements;
+    QHash<ClassBrowserNode *, QSet<Statement *>> mProcessedStatements;
     QVector<PClassBrowserNode> mNodes;
     PCppParser mParser;
     bool mUpdating;

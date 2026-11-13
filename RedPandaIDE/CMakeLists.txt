@@ -328,6 +328,120 @@ add_test(
 add_dependencies(all-test-targets test-editor)
 
 #####################
+# test-widgets      #
+#####################
+
+add_executable(test-widgets test/test-widgets-main.cpp)
+
+target_qt_plain_cpp(test-widgets
+    src/settings
+    src/settings/basesettings
+    src/settings/codecompletionsettings
+    src/settings/codeformattersettings
+    src/settings/compilersetsettings
+    src/settings/compilesettings
+    src/settings/debuggersettings
+    src/settings/dirsettings
+    src/settings/editorsettings
+    src/settings/environmentsettings
+    src/settings/executorsettings
+    src/settings/languagesettings
+    src/settings/uisettings
+
+    src/parser/cppparser
+    src/parser/cpppreprocessor
+    src/parser/pptoken
+    src/parser/ppexpander
+    src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
+    src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
+    src/parser/cppexpressionevaluator
+    src/parser/cppscopes
+    src/parser/parserutils
+    src/parser/statementmodel
+
+    src/utils
+    src/utils/escape
+    src/utils/file
+    src/utils/font
+    src/utils/os
+    src/utils/parsearg
+    src/utils/parsemacros
+    src/utils/pe
+    src/utils/ui
+
+    src/compiler/runner
+    src/compiler/executablerunner
+    src/cpprefacter
+    src/projectoptions
+    src/colorscheme
+    src/syntaxermanager
+    src/iconsmanager
+    src/systemconsts
+    src/compiler/compilerinfo
+    src/reformatter/basereformatter
+    )
+
+target_moc_classes(test-widgets
+    src/editor
+
+    src/widgets/bookmarkmodel
+    src/widgets/classbrowser
+    src/widgets/codecompletionlistview
+    src/widgets/codecompletionpopup
+    src/widgets/customdisablediconengine
+    src/widgets/functiontooltipwidget
+    src/widgets/headercompletionpopup
+
+    src/symbolusagemanager
+    src/codesnippetsmanager
+    test/test_widgets
+    )
+target_include_directories(test-widgets PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-widgets PRIVATE
+        Qt::Core
+        Qt::Gui
+        Qt::PrintSupport
+        Qt::Svg
+        Qt::Test
+        Qt::Widgets
+        Qt::Xml
+        qsynedit
+        redpanda_qt_utils)
+
+if (QT_FEATURE_static)
+    qt_import_plugins(test-widgets
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
+
+add_custom_command(
+    TARGET test-widgets POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:test-widgets,SOURCE_DIR>/test/resources"
+        "$<TARGET_PROPERTY:test-widgets,BINARY_DIR>/resources")
+
+target_compile_definitions(test-widgets PRIVATE
+    ${GLOBAL_COMPILE_DEFINITIONS}
+    APP_NAME=\"test-widgets\"
+    LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
+    REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
+    ARCH_X86_64=1
+    ARCH_X86=1)
+
+add_test(
+    NAME test-widgets
+    COMMAND test-widgets)
+
+add_dependencies(all-test-targets test-widgets)
+
+#####################
 # test-cpptokenizer #
 #####################
 
@@ -468,6 +582,7 @@ if(WIN32)
         psapi
         shlwapi
         user32)
+    target_link_libraries(test-widgets PRIVATE dbghelp)
 endif()
 
 if(MACOS)
@@ -529,6 +644,7 @@ set (MAIN_PROGRAM_PATH_DEFS
 
 target_compile_definitions(RedPandaIDE PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 target_compile_definitions(test-editor PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
+target_compile_definitions(test-widgets PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 
 ###################
 # Feature options #

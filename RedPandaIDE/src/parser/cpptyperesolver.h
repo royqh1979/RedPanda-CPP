@@ -43,8 +43,22 @@ public:
     TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments) const;
+    QList<PStatement> membersOf(const PStatement &scope) const;
+    StatementAccessibility memberAccessibility(const PStatement &scope,
+                                               const PStatement &member) const;
 
 private:
+    struct MemberEntry {
+        PStatement statement;
+        StatementAccessibility accessibility;
+    };
+    using MemberEntryList = QList<MemberEntry>;
+    void appendMembers(const PStatement &scope, bool inherited,
+                       QSet<const Statement *> &visited, MemberEntryList &result) const;
+    PStatement baseClass(const PStatement &scope, const QString &baseSpecifier,
+                         StatementAccessibility &inheritance) const;
+    StatementAccessibility applyInheritance(
+            StatementAccessibility member, StatementAccessibility inheritance) const;
     void bindParameterType(const TypeInfo &parameter, const TypeInfo &argument,
                            const QSet<QString> &templateParameters, TemplateBindings &bindings) const;
     TypeInfo resolveType(const TypeInfo &type, const TemplateBindings &bindings,

@@ -65,6 +65,9 @@ public:
     int findLastOperator(const QString& phrase) const;
     PStatementList findNamespace(const QString& name) const;
     PStatement findStatement(const QString& fullname) const;
+    QList<PStatement> membersOfStatement(const PStatement &scopeStatement) const;
+    StatementAccessibility memberAccessibility(const PStatement &scopeStatement,
+                                               const PStatement &member) const;
     PStatement findStatementOf(const QString& fileName, const QString& phrase, int line) const;
     PStatement findStatementOf(const QString& fileName, const QString& phrase,
                                const PStatement& currentScope, PStatement& parentScopeType) const;
@@ -160,6 +163,16 @@ private:
     QStringList sortFilesByIncludeRelations(const QSet<QString>& files);
     void internalClear();
 
+    PStatement doFindStatementOf(const QString& fileName, const QString& phrase, int line) const;
+    PStatement doFindStatementOf(const QString& fileName, const QString& phrase,
+                                 const PStatement& currentScope, PStatement& parentScopeType) const;
+    PStatement doFindStatementOf(const QString& fileName, const QStringList& expression,
+                                 const PStatement& currentScope) const;
+    PStatement doFindStatementOf(const QString& fileName, const QStringList& expression, int line) const;
+    EvalResult doEvalExpression(const QString& fileName, QStringList& expression,
+                                const PStatement& currentScope) const;
+    PStatementList doFindNamespace(const QString& name) const;
+    QList<PStatement> doMembersOfStatement(const PStatement &scopeStatement) const;
     PStatement findStatementStartingFrom(const QString& fileName, const QString& phrase,
                                          const PStatement& startScope) const;
     PStatement findMemberOfStatement(const QString& phrase, const PStatement& scopeStatement) const;

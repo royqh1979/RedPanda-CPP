@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -290,13 +290,13 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
                 .arg(statement->fullName,
                      statement->noNameArgs)
                 .arg((int)statement->kind),newNode);
-    mProcessedStatements.insert(statement.get());
+    mProcessedStatements[node].insert(statement.get());
     if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
     }
     //don't show enum type's children values (they are displayed in parent scope)
 //    if (statement->kind != StatementKind::skEnumType) {
-        filterChildren(newNode.get(), statement->children);
+        filterChildren(newNode.get(), mParser->membersOfStatement(statement));
 //    }
     return newNode;
 }
@@ -375,15 +375,24 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
 {
+    StatementList lockedStatements;
     for (const std::weak_ptr<Statement> &weakStatement : statements) {
-        PStatement statement = weakStatement.lock();
+        if (PStatement statement = weakStatement.lock())
+            lockedStatements.append(statement);
+    }
+    filterChildren(node, lockedStatements);
+}
+
+void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementList &statements)
+{
+    for (const PStatement &statement : statements) {
         if (!statement)
             continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statement->inProject())
             continue;
 
-        if (mProcessedStatements.contains(statement.get()))
+        if (mProcessedStatements.value(node).contains(statement.get()))
             continue;
 //        if (statement->properties.testFlag(StatementProperty::spDummyStatement))
 //            continue;
@@ -419,7 +428,10 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
-        if ( (parentScope!=node->statement)
+        bool memberOfNode = node->statement
+                && mParser->memberAccessibility(node->statement, statement)
+                != StatementAccessibility::None;
+        if (!memberOfNode && (parentScope!=node->statement)
                 && (!parentScope || !node->statement
                     || parentScope->fullName!=node->statement->fullName)) {
 //          //should not happend, just in case of error
@@ -443,7 +455,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
                 PStatement dummy = createDummy(statement);
                 scopeNode = addChild(parentNode,dummy);
             }
-            filterChildren(scopeNode.get(),statement->children);
+            filterChildren(scopeNode.get(), mParser->membersOfStatement(statement));
         } else {
             addChild(parentNode,statement);
         }
@@ -459,11 +471,18 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->noNameArgs = statement->noNameArgs;
     result->fullName = statement->fullName;
     result->kind = statement->kind;
+    result->classKey = statement->classKey;
+    result->baseClasses = statement->baseClasses;
     result->typeInfo = statement->typeInfo;
     result->declSpecifierProperties = statement->declSpecifierProperties;
     result->value = statement->value;
     result->scope = statement->scope;
-    result->accessibility = statement->accessibility;
+    if (statement->parentScope.lock()) {
+        result->accessibility = mParser->memberAccessibility(
+                    statement->parentScope.lock(), statement);
+    } else {
+        result->accessibility = statement->accessibility;
+    }
     result->properties = statement->properties;
     result->fileName= statement->fileName;
     result->declarationRange = statement->declarationRange;

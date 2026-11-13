@@ -268,6 +268,17 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
         const DeclarationInfo &declaration, const StatementBuildContext &context)
 {
     QList<std::weak_ptr<Statement>> result;
+    if (declaration.kind == DeclarationKind::Label) {
+        for (const DeclaratorInfo &declarator : declaration.declarators) {
+            PStatement statement = createStatement(declaration, declarator, context,
+                                                   StatementKind::Label);
+            mModel.add(statement);
+            if (context.fileInfo)
+                context.fileInfo->addStatement(statement);
+            result.append(statement);
+        }
+        return result;
+    }
     if (declaration.kind == DeclarationKind::Using)
         return buildUsing(declaration, context);
     if (declaration.kind == DeclarationKind::Namespace)
@@ -435,6 +446,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     statement->command = declarator.name;
     statement->fullName = fullName(declarator, context);
     statement->kind = kind;
+    statement->classKey = declaration.classKey;
     statement->scope = context.scope;
     statement->accessibility = accessibility(declaration, context);
     statement->declarationRange = declaration.range;
@@ -481,6 +493,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     }
 
     if (declaration.specifiers.type.qualifiedName == "auto"
+            && !declaration.structuredBinding
             && (kind == StatementKind::Variable || kind == StatementKind::GlobalVariable
                 || kind == StatementKind::LocalVariable)) {
         QString expression = declaration.rangeExpression.isEmpty()
@@ -502,9 +515,6 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                                 || declarator.derivations.first().kind == TypeDerivationKind::RvalueReference);
                     initializerType = reference ? mTypeOperations.rangeReference(initializerType)
                                                 : mTypeOperations.rangeValue(initializerType);
-                } else if (declaration.structuredBinding) {
-                    initializerType = mTypeOperations.structuredBindingValue(
-                                initializerType, declarator.structuredBindingIndex);
                 }
                 statement->typeInfo = deduceAutoType(initializerType, declarator,
                                                      declaration.specifiers);
