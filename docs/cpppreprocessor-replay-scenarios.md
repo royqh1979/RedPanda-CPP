@@ -98,6 +98,13 @@
 - 判定依据：用户头的内容变化会改变后续系统头的进入环境，现有失效链必须覆盖该间接依赖。
 - 测试：`test_indirect_user_header_macro_change_forces_rescan`。
 
+### M8 多 root 切换时旧分支 Statement 失效
+
+- 操作：根 A 定义 MODE 后包含系统头 H，根 B 不定义 MODE 并包含同一 H；H 的两个分支声明不同符号。按 A→B→A 往返解析。
+- 预期：每次切换后当前 root 只看见新分支符号；上一环境的旧分支 Statement 必须从 StatementMap 删除，而不能因预处理文本正确就继续残留。
+- 判定依据：宏校验失败使 H 的旧扫描记录整体失效，Statement 与 define/undef 都是该记录产物，必须在重扫前同步清理。
+- 测试：`test_root_switch_with_macro_change_removes_stale_statements`。
+
 ## 3. 有序跨边界前缀
 
 ### P1 相同顺序且 replay 生效
@@ -113,6 +120,13 @@
 - 预期：B 中前缀不匹配的记录重扫；最终公开符号与全量扫描一致。
 - 判定依据：有序前缀不同意味着系统内容的生效顺序不同，即使宏表碰巧相同也不能复用旧记录。
 - 测试：`test_include_order_change_forces_rescan`。
+
+### P2a 顺序反转后的 Statement 清理
+
+- 操作：sys1 定义供 sys2 判断的宏；根 A 按 sys1、sys2 包含，根 B 反向包含，sys2 在两种顺序下声明不同符号。按 A→B→A 往返解析。
+- 预期：每次切换后 sys2 的旧分支 Statement 被删除，新分支可见；当前 root 不能通过 include 闭包继续找到旧符号。
+- 判定依据：前缀校验失败不仅要求生成新预处理文本，也使旧记录的 Statement 失效。文本和 StatementMap 必须同时反映新顺序。
+- 测试：`test_root_switch_with_include_order_change_removes_stale_statements`。
 
 ### P3 前缀相同但中间系统子树不同
 
@@ -200,6 +214,13 @@
 - 预期：A 得到 MODE 分支，B 得到另一分支；B 不复用 A 的 Statement。
 - 测试：`test_pragma_once_different_environments`。
 
+### G7 replay 子树中的 `#pragma once` 文件再次包含
+
+- 操作：边界头 A 内部包含 pragma 头 H，根文件随后直接包含 H；稳定重扫使 A replay，然后再次直接包含 H。
+- 预期：首轮 H 实际扫描，第二次包含为保护 no-op；重扫时 A replay 将 H 标记为本轮已逻辑生效，直接包含 H 仍为保护 no-op，不扫描也不追加跨边界前缀。
+- 判定依据：replay 恢复了 A 的完整 include 闭包，其语义效果等同于扫描 A；`processed` 因而必须包含闭包内文件，而非仅包含本轮实际读取的文件。
+- 测试：`test_replayed_subtree_marks_pragma_once_file_processed`。
+
 ## 5. 文件与编辑器变化
 
 ### F1 磁盘 mtime/size 变化
@@ -236,6 +257,27 @@
 - 预期：StatementMap 复用已有对象，statement 数量不增加；define/undef 按本轮需要恢复。
 - 判定依据：有效记录的 Statement 已在 StatementMap 中，重复创建只会产生重复定义。
 - 测试：`test_replay_reuses_existing_statements`。
+
+### F6 边界外间接头失效
+
+- 操作：项目根 main 包含项目头 A，A 再包含项目头 B；修改并显式失效 B 后重扫 main。
+- 预期：失效集合包含 B、A 和 main；B 的旧 Statement 删除，新 Statement 生效，A/main 的 Statement 正确恢复。
+- 判定依据：边界外 include 不进入 replay 前缀，但传递 include 闭包仍决定内容依赖；叶子变化必须级联到全部包含者。
+- 测试：`test_user_header_change_invalidates_dependent_roots`。
+
+### F7 边界内共享头显式失效
+
+- 操作：跨边界头 A、B 共享 pragma 内部头 H；修改并显式失效 H 后重扫 main。
+- 预期：H 没有独立 Registry 记录，但失效通过 include 闭包到达 A、B 和 main；旧 Statement 删除，新 Statement 恢复且数量不增加。
+- 判定依据：内部头没有独立记录不等于没有依赖关系；其生命周期由所有包含它的跨边界祖先记录共同决定。
+- 测试：`test_shared_internal_header_change_invalidates_boundary_ancestors`。
+
+### F8 边界内磁盘变化同步清理 Statement
+
+- 操作：跨边界头 A 包含内部头 H；直接修改 H 的磁盘内容，不显式调用 Parser 失效接口，随后重扫 main。
+- 预期：stamp 校验失效 A 及其依赖记录；H 的旧 Statement 在重扫前删除，新 Statement 可见，A 的 Statement 正确恢复。
+- 判定依据：自动 stamp 失效与编辑器显式失效必须具有相同的 Statement 生命周期语义，不能只清 Preprocessor 的宏和 Registry 记录。
+- 测试：`test_internal_header_disk_change_removes_stale_statements`。
 
 ## 6. 循环与深度
 
@@ -328,6 +370,13 @@
 - 预期：首轮扫描；后续 replay/保护跳过；`bits/stdc++.h` 扫描计数不增加。
 - 判定依据：稳定宏、前缀和文件闭包保证其内容不变，重扫没有语义收益且违背性能目标。
 - 测试：`test_bits_stdcpp_not_rescanned_on_stable_reparse`。
+
+### R1a 多 root 往返包含 `bits/stdc++.h`
+
+- 操作：A、B 都只额外声明各自的 root 符号，并以相同宏环境包含 `bits/stdc++.h`；按 A→B→A→B→A 解析。
+- 预期：仅首轮扫描 `bits/stdc++.h`，之后每次切换都 replay；Statement 总数稳定，两个 root 各自符号正确保留。
+- 判定依据：root 自身的 Statement 失效不会失效其包含的系统记录；相同用户宏和空前缀满足 replay 条件，往返切换不构成重扫理由。本场景要求切换时保留并共享 Parser；IDE 默认启用“编辑器隐藏时自动清空 Parser”时，Registry 被清空，切回后重扫是该设置的正常结果。
+- 测试：`test_bits_stdcpp_not_rescanned_when_switching_roots`。使用仓库内的 `boundary_replay/include/bits/stdc++.h` 测试头，不依赖外部工具链。
 
 ### R2 缓存未命中必须可见
 

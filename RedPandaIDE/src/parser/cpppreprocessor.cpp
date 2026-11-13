@@ -143,8 +143,12 @@ void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
             affected.remove(parsedFile->fileName);
         }
     }
-    for (const QString &affectedFile : affected)
-        removeScannedFile(affectedFile);
+    for (const QString &affectedFile : affected) {
+        if (mFileInvalidationHandler)
+            mFileInvalidationHandler(affectedFile);
+        else
+            removeScannedFile(affectedFile);
+    }
 }
 
 #ifdef REDPANDA_PARSER_TEST

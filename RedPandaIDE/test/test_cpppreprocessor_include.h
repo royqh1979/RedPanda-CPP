@@ -79,6 +79,7 @@ private slots:
     void test_stack_reentry_uses_current_environment();
     void test_user_to_system_creates_boundary_record();
     void test_protected_include_cycle_stops();
+    void test_replayed_subtree_marks_pragma_once_file_processed();
 private:
     // Absolute path of resources/preprocessor/<name>
     static QString scenarioPath(const QString& name);

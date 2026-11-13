@@ -73,6 +73,8 @@ CppParser::CppParser() : QObject{nullptr},
     mCppTypeKeywords = CppTypeKeywords;
     mEnabled = true;
     mStopForReset = false;
+    mPreprocessor.setFileInvalidationHandler(
+                [this](const QString &fileName) { internalInvalidateFile(fileName); });
     internalClear();
 
     //mNamespaces;

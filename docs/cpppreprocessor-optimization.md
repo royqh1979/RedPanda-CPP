@@ -119,6 +119,8 @@ Registry 用一张覆盖所有实际文件的元数据表保存 mtime/size 和 i
 
 按“声明/定义实际文件 + 对应侧的跨边界祖先”识别 statement。处理 declaration/definition 合并条目时，两侧分别失效；一侧仍有效时保留该侧位置，并维护另一侧位置及 namespace 缓存。
 
+生产环境中 Preprocessor 必须隶属于 Parser，不能脱离 Parser 独立使用。Preprocessor 因 stamp 或 replay 条件自动失效记录时，必须在删除 Registry 记录前通知所属 Parser，由 Parser 使用与显式编辑失效相同的清理入口。只有直接测试 Preprocessor 的单元测试可以不安装失效处理器，此时仅清理 Preprocessor 自身的宏和文件记录。不能在 Preprocessor 中另写一套 Statement 删除规则，也不能等 Registry 记录删除后再让 Parser 推测失效范围。
+
 文件 A 变化时，立即失效集合统一按失效前的 include 闭包计算：
 
 ```text
@@ -140,6 +142,7 @@ D 中记录的传递 include 闭包已覆盖直接和间接包含者，无需递
 - 有序前缀捕获系统头生效顺序的差异；即使某个头未改变宏表，也不能省略顺序校验。
 - 文件内容变化通过编辑失效或 mtime/size 级联失效处理。
 - 两个共享 Parser 的根文件以相反顺序包含相同系统头时，切换根文件会重扫相关记录。这是保证正确性的预期代价。
+- 多 root 复用以切换时保留并共享 Parser 为前提。IDE 默认启用“编辑器隐藏时自动清空 Parser”时，隐藏编辑器会同时清空 Registry；切回后的完整重扫是该设置的正常结果，不属于 replay 未命中。
 - 跨 TU 的全局 Registry 可能保留由另一 TU 引入的宏和文件记录。它只用于复用可校验的扫描结果，不代表各 TU 的宏集合天然隔离。
 - 对普通库用户，优先保证公开接口在 StatementMap 中完整可见；不能为了命中率接受符号丢失。
 

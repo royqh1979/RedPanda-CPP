@@ -778,6 +778,173 @@ void TestCppParser::test_system_subtree_inheritance_uses_boundary_record()
     QVERIFY(mParser->findStatement("Derived::inherited_value"));
 }
 
+void TestCppParser::test_user_header_change_invalidates_dependent_roots()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString leaf = tmp.filePath("leaf.h");
+    QString middle = tmp.filePath("middle.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(leaf, {"int leaf_old;"}));
+    QVERIFY(writeLines(middle, {"#include \"leaf.h\"", "int middle_value;"}));
+    QVERIFY(writeLines(main, {"#include \"middle.h\"", "int main_value;"}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    mParser->addProjectFile(middle, false);
+    mParser->addProjectFile(leaf, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("leaf_old"));
+
+    QVERIFY(writeLines(leaf, {"int leaf_new;"}));
+    mParser->invalidateFile(leaf);
+    QVERIFY(!mParser->findStatement("leaf_old"));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("leaf_new"));
+    QVERIFY(mParser->findStatement("middle_value"));
+    QVERIFY(mParser->findStatement("main_value"));
+}
+
+void TestCppParser::test_shared_internal_header_change_invalidates_boundary_ancestors()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString inner = tmp.filePath("inner.h");
+    QString a = tmp.filePath("a.h");
+    QString b = tmp.filePath("b.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(inner, {"#pragma once", "int shared_old;"}));
+    QVERIFY(writeLines(a, {"#include \"inner.h\"", "int a_value;"}));
+    QVERIFY(writeLines(b, {"#include \"inner.h\"", "int b_value;"}));
+    QVERIFY(writeLines(main, {"#include \"a.h\"", "#include \"b.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("shared_old"));
+    int oldCount = mParser->statementList().count();
+
+    QVERIFY(writeLines(inner, {"#pragma once", "int shared_new;"}));
+    mParser->invalidateFile(inner);
+    QVERIFY(!mParser->findStatement("shared_old"));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("shared_new"));
+    QVERIFY(mParser->findStatement("a_value"));
+    QVERIFY(mParser->findStatement("b_value"));
+    QCOMPARE(mParser->statementList().count(), oldCount);
+}
+
+void TestCppParser::test_root_switch_with_macro_change_removes_stale_statements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("config.h");
+    QString a = tmp.filePath("a.cpp");
+    QString b = tmp.filePath("b.cpp");
+    QVERIFY(writeLines(header, {"#ifdef MODE", "int mode_enabled;", "#else",
+                                "int mode_disabled;", "#endif"}));
+    QVERIFY(writeLines(a, {"#define MODE 1", "#include \"config.h\""}));
+    QVERIFY(writeLines(b, {"#include \"config.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(a, false);
+    mParser->addProjectFile(b, false);
+    CppParser::parseFileBlocking(mParser, a, false, "");
+    QVERIFY(mParser->findStatement("mode_enabled"));
+
+    CppParser::parseFileBlocking(mParser, b, false, "");
+    QVERIFY(mParser->findStatementOf(b, "mode_disabled", 0));
+    QVERIFY(!mParser->findStatementOf(b, "mode_enabled", 0));
+    QVERIFY(!mParser->findStatement("mode_enabled"));
+
+    CppParser::parseFileBlocking(mParser, a, false, "");
+    QVERIFY(mParser->findStatementOf(a, "mode_enabled", 0));
+    QVERIFY(!mParser->findStatementOf(a, "mode_disabled", 0));
+    QVERIFY(!mParser->findStatement("mode_disabled"));
+}
+
+void TestCppParser::test_root_switch_with_include_order_change_removes_stale_statements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString first = tmp.filePath("first.h");
+    QString second = tmp.filePath("second.h");
+    QString ab = tmp.filePath("ab.cpp");
+    QString ba = tmp.filePath("ba.cpp");
+    QVERIFY(writeLines(first, {"#define FROM_FIRST 1", "int first_value;"}));
+    QVERIFY(writeLines(second, {"#ifdef FROM_FIRST", "int second_after_first;", "#else",
+                                "int second_alone;", "#endif"}));
+    QVERIFY(writeLines(ab, {"#include \"first.h\"", "#include \"second.h\""}));
+    QVERIFY(writeLines(ba, {"#include \"second.h\"", "#include \"first.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(ab, false);
+    mParser->addProjectFile(ba, false);
+    CppParser::parseFileBlocking(mParser, ab, false, "");
+    QVERIFY(mParser->findStatement("second_after_first"));
+
+    CppParser::parseFileBlocking(mParser, ba, false, "");
+    QVERIFY(mParser->findStatementOf(ba, "second_alone", 0));
+    QVERIFY(!mParser->findStatementOf(ba, "second_after_first", 0));
+    QVERIFY(!mParser->findStatement("second_after_first"));
+
+    CppParser::parseFileBlocking(mParser, ab, false, "");
+    QVERIFY(mParser->findStatementOf(ab, "second_after_first", 0));
+    QVERIFY(!mParser->findStatementOf(ab, "second_alone", 0));
+    QVERIFY(!mParser->findStatement("second_alone"));
+}
+
+void TestCppParser::test_internal_header_disk_change_removes_stale_statements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString inner = tmp.filePath("inner.h");
+    QString outer = tmp.filePath("outer.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(inner, {"int inner_old;"}));
+    QVERIFY(writeLines(outer, {"#include \"inner.h\"", "int outer_value;"}));
+    QVERIFY(writeLines(main, {"#include \"outer.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("inner_old"));
+
+    QVERIFY(writeLines(inner, {"int inner_new;", "int inner_new_extra;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QCOMPARE(mParser->preprocessorEventCountsForTest(outer).scan, 2);
+    QVERIFY(mParser->findStatement("inner_new"));
+    QVERIFY(mParser->findStatement("inner_new_extra"));
+    QVERIFY(!mParser->findStatement("inner_old"));
+    QVERIFY(mParser->findStatement("outer_value"));
+}
+
+void TestCppParser::test_bits_stdcpp_not_rescanned_when_switching_roots()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString a = tmp.filePath("a.cpp");
+    QString b = tmp.filePath("b.cpp");
+    QVERIFY(writeLines(a, {"#include <bits/stdc++.h>", "int root_a;"}));
+    QVERIFY(writeLines(b, {"#include <bits/stdc++.h>", "int root_b;"}));
+    QString includeDir = QFileInfo("resources/preprocessor/boundary_replay/include").absoluteFilePath();
+    QString bitsStdcpp = includeDir + "/bits/stdc++.h";
+    mParser->addIncludePath(includeDir);
+
+    CppParser::parseFileBlocking(mParser, a, true, "");
+    QCOMPARE(mParser->preprocessorEventCountsForTest(bitsStdcpp).scan, 1);
+    int statementCount = mParser->statementList().count();
+
+    for (int i = 0; i < 2; ++i) {
+        CppParser::parseFileBlocking(mParser, b, true, "");
+        QCOMPARE(mParser->preprocessorEventCountsForTest(bitsStdcpp).scan, 1);
+        CppParser::parseFileBlocking(mParser, a, true, "");
+        QCOMPARE(mParser->preprocessorEventCountsForTest(bitsStdcpp).scan, 1);
+    }
+    QVERIFY(mParser->preprocessorEventCountsForTest(bitsStdcpp).replay >= 4);
+    QCOMPARE(mParser->statementList().count(), statementCount + 1);
+}
+
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
 {

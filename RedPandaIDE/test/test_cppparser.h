@@ -27,6 +27,12 @@ private slots:
     void test_boundary_invalidation_removes_defines_and_statements();
     void test_replay_reuses_existing_statements();
     void test_system_subtree_inheritance_uses_boundary_record();
+    void test_user_header_change_invalidates_dependent_roots();
+    void test_shared_internal_header_change_invalidates_boundary_ancestors();
+    void test_root_switch_with_macro_change_removes_stale_statements();
+    void test_root_switch_with_include_order_change_removes_stale_statements();
+    void test_internal_header_disk_change_removes_stale_statements();
+    void test_bits_stdcpp_not_rescanned_when_switching_roots();
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_public_api_complete();

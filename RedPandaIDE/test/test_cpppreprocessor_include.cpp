@@ -1327,6 +1327,42 @@ void TestCppPreprocessorInclude::test_protected_include_cycle_stops()
     QCOMPARE(p.result().count("int in_b;"), 1);
 }
 
+void TestCppPreprocessorInclude::test_replayed_subtree_marks_pragma_once_file_processed()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeFile = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString inner = tmp.filePath("inner.h");
+    QString outer = tmp.filePath("outer.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeFile(inner, {"#pragma once", "int inner_value;"}));
+    QVERIFY(writeFile(outer, {"#include \"inner.h\"", "int outer_value;"}));
+    QVERIFY(writeFile(main, {"#include \"outer.h\"", "#include \"inner.h\""}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+    QCOMPARE(p.eventCounts(outer).scan, 1);
+    QCOMPARE(p.eventCounts(inner).scan, 1);
+    QCOMPARE(p.eventCounts(inner).skip, 1);
+
+    p.preprocess(main);
+    QCOMPARE(p.eventCounts(outer).scan, 1);
+    QCOMPARE(p.eventCounts(outer).replay, 1);
+    QCOMPARE(p.eventCounts(inner).scan, 1);
+    QCOMPARE(p.eventCounts(inner).skip, 2);
+    QCOMPARE(p.currentBoundaryPrefix(), QStringList{outer});
+    QCOMPARE(p.result().count("int inner_value;"), 0);
+}
+
 void TestCppPreprocessorInclude::test_replay_unguarded_cross_reparse()
 {
     QString dir = scenarioPath("replay");

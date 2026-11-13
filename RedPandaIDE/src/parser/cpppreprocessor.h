@@ -67,6 +67,8 @@ class CppPreprocessor
     typedef qlonglong NumberType;
 public:
 
+    using FileInvalidationHandler = std::function<void(const QString&)>;
+
     explicit CppPreprocessor();
     CppPreprocessor(const CppPreprocessor&)=delete;
     CppPreprocessor& operator=(const CppPreprocessor&)=delete;
@@ -148,6 +150,7 @@ public:
 
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
+    void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
     void addProjectFile(const QString &fileName) { mRegistry.projectFiles.insert(fileName); }
     void removeProjectFile(const QString &fileName) { mRegistry.projectFiles.remove(fileName); }
     void clearProjectFiles() { mRegistry.projectFiles.clear(); }
@@ -387,6 +390,7 @@ private:
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
+    FileInvalidationHandler mFileInvalidationHandler;
 
 #ifdef REDPANDA_PARSER_TEST
     QHash<QString, int> mScanCounts;
