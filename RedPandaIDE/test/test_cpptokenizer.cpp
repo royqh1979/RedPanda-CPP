@@ -1343,3 +1343,55 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
     QCOMPARE(findStatement(localUsing->children, "text")->type(), "std::string");
     QCOMPARE(findStatement(localUsing->children, "text2")->type(), "std::string");
 }
+
+
+void TestCppTokenizer::test_type_operations_resolve_standard_range_views()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    using value_type = T;\n"
+                "    T& front();\n"
+                "  };\n"
+                "}\n"
+                "class ToString { public: std::string operator()(int); };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    auto parseType = [](const QString &declaration) {
+        DeclarationInfo result;
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({declaration});
+        CppTokenCursor cursor(tokenizer);
+        CppDeclarationParser parser(cursor);
+        if (!parser.parseDeclaration(result))
+            return TypeInfo();
+        return result.specifiers.type;
+    };
+
+    QCOMPARE(operations.rangeValue(parseType("std::ranges::iota_view<int> view;")).toString(),
+             "int");
+    TypeInfo filter = parseType(
+                "std::ranges::filter_view<std::vector<std::string>, Pred> view;");
+    QCOMPARE(operations.rangeValue(filter).toString(), "std::string");
+    QCOMPARE(operations.rangeReference(filter).toString(), "std::string &");
+    QCOMPARE(operations.rangeValue(parseType(
+                 "std::ranges::transform_view<std::ranges::iota_view<int>, ToString> view;"))
+             .toString(), "std::string");
+    QCOMPARE(operations.rangeValue(parseType(
+                 "std::ranges::join_view<std::vector<std::vector<std::string>>> view;"))
+             .toString(), "std::string");
+    QCOMPARE(operations.rangeValue(parseType(
+                 "std::ranges::elements_view<std::vector<std::pair<std::string, int>>, 0> view;"))
+             .toString(), "std::string");
+    QCOMPARE(operations.rangeValue(parseType(
+                 "std::ranges::elements_view<std::vector<std::pair<std::string, int>>, 1> view;"))
+             .toString(), "int");
+}

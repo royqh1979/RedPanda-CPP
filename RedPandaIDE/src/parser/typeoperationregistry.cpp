@@ -46,12 +46,12 @@ TypeInfo TypeOperationRegistry::iteratorReference(const TypeInfo &iterator) cons
 
 TypeInfo TypeOperationRegistry::rangeValue(const TypeInfo &range) const
 {
-    return containerValue(range);
+    return rangeElement(range, false);
 }
 
 TypeInfo TypeOperationRegistry::rangeReference(const TypeInfo &range) const
 {
-    return containerReference(range);
+    return rangeElement(range, true);
 }
 
 TypeInfo TypeOperationRegistry::subscriptValue(const TypeInfo &receiver) const
@@ -62,6 +62,64 @@ TypeInfo TypeOperationRegistry::subscriptValue(const TypeInfo &receiver) const
 TypeInfo TypeOperationRegistry::subscriptReference(const TypeInfo &receiver) const
 {
     return mResolver.invokeResult(receiver, "operator[]");
+}
+
+TypeInfo TypeOperationRegistry::rangeElement(const TypeInfo &range, bool reference) const
+{
+    const QVector<TemplateArgument> &arguments = range.templateArguments;
+    auto typeArgument = [&](int index) {
+        return index < arguments.count() && arguments[index].kind == TemplateArgumentKind::Type
+                && arguments[index].type ? *arguments[index].type : TypeInfo();
+    };
+    if (range.qualifiedName == "std::ranges::iota_view")
+        return typeArgument(0);
+    if (range.qualifiedName == "std::ranges::filter_view" && !arguments.isEmpty())
+        return rangeElement(typeArgument(0), reference);
+    if (range.qualifiedName == "std::ranges::transform_view" && arguments.count() >= 2)
+        return callableResult(typeArgument(1));
+    if (range.qualifiedName == "std::ranges::join_view" && !arguments.isEmpty()) {
+        TypeInfo inner = rangeElement(typeArgument(0), reference);
+        return rangeElement(inner, reference);
+    }
+    if (range.qualifiedName == "std::ranges::elements_view" && arguments.count() >= 2
+            && arguments[1].kind == TemplateArgumentKind::NonType) {
+        TypeInfo tuple = rangeElement(typeArgument(0), false);
+        return tupleElement(tuple, arguments[1].constantExpression.toInt());
+    }
+    return reference ? containerReference(range) : containerValue(range);
+}
+
+TypeInfo TypeOperationRegistry::callableResult(const TypeInfo &callable) const
+{
+    TypeInfo result = mResolver.invokeResult(callable, "operator()");
+    if (!result.qualifiedName.isEmpty())
+        return result;
+    for (int i = 0; i < callable.derivations.count(); ++i) {
+        const TypeDerivation &function = callable.derivations[i];
+        if (function.kind != TypeDerivationKind::Function)
+            continue;
+        result = callable;
+        result.derivations.remove(0, i + 1);
+        if (result.qualifiedName == "auto" && !function.trailingReturnType.isEmpty())
+            result.qualifiedName = function.trailingReturnType;
+        return result;
+    }
+    return {};
+}
+
+TypeInfo TypeOperationRegistry::tupleElement(const TypeInfo &tuple, int index) const
+{
+    if (index < 0)
+        return {};
+    if (tuple.qualifiedName == "std::array")
+        index = 0;
+    else if (tuple.qualifiedName != "std::tuple" && tuple.qualifiedName != "std::pair")
+        return {};
+    if (index >= tuple.templateArguments.count())
+        return {};
+    const TemplateArgument &argument = tuple.templateArguments[index];
+    return argument.kind == TemplateArgumentKind::Type && argument.type
+            ? *argument.type : TypeInfo();
 }
 
 TypeInfo TypeOperationRegistry::valueFromReference(TypeInfo type) const

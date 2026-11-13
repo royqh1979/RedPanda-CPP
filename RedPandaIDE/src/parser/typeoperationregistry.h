@@ -34,6 +34,9 @@ public:
     TypeInfo subscriptReference(const TypeInfo &receiver) const;
 
 private:
+    TypeInfo rangeElement(const TypeInfo &range, bool reference) const;
+    TypeInfo callableResult(const TypeInfo &callable) const;
+    TypeInfo tupleElement(const TypeInfo &tuple, int index) const;
     TypeInfo valueFromReference(TypeInfo type) const;
 
     const CppTypeResolver &mResolver;
