@@ -144,30 +144,30 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            if (!(node->statement->type.isEmpty())) {
+            if (!(node->statement->type().isEmpty())) {
                 if ( (node->statement->kind == StatementKind::Variable)
                      || (node->statement->kind == StatementKind::Typedef) ) {
                     if (node->statement->args.isEmpty())
-                        return node->statement->command + " : " + node->statement->type;
+                        return node->statement->command + " : " + node->statement->type();
                     else if (node->statement->args.startsWith("("))
                         return QString("%1 : %2 (*)%3").arg(node->statement->command,
-                                                            node->statement->type,
+                                                            node->statement->type(),
                                                             node->statement->args);
                     else
-                        return node->statement->command + " : " + node->statement->type + node->statement->args;
+                        return node->statement->command + " : " + node->statement->type() + node->statement->args;
                 } else if (node->statement->kind == StatementKind::Function) {
-                    return node->statement->command + node->statement->args + " : " + node->statement->type;
+                    return node->statement->command + node->statement->args + " : " + node->statement->type();
                 } else if (node->statement->kind == StatementKind::OverloadedOperator) {
                     if (!CppParser::isIdentifier(node->statement->command)) {
-                        return "operator"+node->statement->command + node->statement->args + " : " + node->statement->type;
+                        return "operator"+node->statement->command + node->statement->args + " : " + node->statement->type();
                     } else if (node->statement->command == "new"
                                || node->statement->command == "delete") {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type;
+                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type();
                     } else {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type + " " + node->statement->command;
+                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type() + " " + node->statement->command;
                     }
                 } else if (node->statement->kind == StatementKind::LiteralOperator) {
-                    return "operator \"\""+node->statement->command + node->statement->args + " : " + node->statement->type;
+                    return "operator \"\""+node->statement->command + node->statement->args + " : " + node->statement->type();
                 }
             }
             if (node->statement->kind == StatementKind::Enum) {
@@ -330,7 +330,7 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
         if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
             std::sort(node->children.begin(),node->children.end(),
                       [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                return (node1->statement->line < node2->statement->line);
+                return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
             });
         } else {
             std::sort(node->children.begin(),node->children.end(),
@@ -339,7 +339,7 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
                 if (comp<0)
                     return true;
                 else if (comp==0)
-                    return (node1->statement->line < node2->statement->line);
+                    return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
                 return false;
             });
         };
@@ -375,7 +375,10 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
 {
-    for (PStatement statement:statements) {
+    for (const std::weak_ptr<Statement> &weakStatement : statements) {
+        PStatement statement = weakStatement.lock();
+        if (!statement)
+            continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statement->inProject())
             continue;
@@ -456,15 +459,16 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->noNameArgs = statement->noNameArgs;
     result->fullName = statement->fullName;
     result->kind = statement->kind;
-    result->type = statement->type;
+    result->typeInfo = statement->typeInfo;
+    result->declSpecifierProperties = statement->declSpecifierProperties;
     result->value = statement->value;
     result->scope = statement->scope;
     result->accessibility = statement->accessibility;
     result->properties = statement->properties;
     result->fileName= statement->fileName;
-    result->line = statement->line;
-    result->definitionFileName = statement->fileName;
-    result->definitionLine = statement->definitionLine;
+    result->declarationRange = statement->declarationRange;
+    result->definitionFileName = statement->definitionFileName;
+    result->definitionRange = statement->definitionRange;
     mDummyStatements.insert(result->fullName,result);
     return result;
 }

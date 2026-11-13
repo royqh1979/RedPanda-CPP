@@ -81,7 +81,7 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const Q
         PStatement scopeStatement = editor->parser()->findStatement(scopeFullName);
         if (!scopeStatement)
             return false;
-        statement = scopeStatement->children.value(keyword);
+        statement = scopeStatement->children.value(keyword).lock();
     } else {
         statement = editor->parser()->findStatement(keyword);
     }
@@ -202,7 +202,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
                 newExpression,
                 pos.line);
     QSynedit::PSyntaxer syntaxer = SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
-    int posY = scope->definitionLine;
+    int posY = scope->definitionRange.start.line;
     editor->clearSelection();
     editor->beginEditing();
     while (posY < editor->lineCount()) {
@@ -363,7 +363,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                                 filename,
                                 expression, p.line);
                     if (tokenStatement
-                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->declarationRange.start.line == statement->declarationRange.start.line)
                             && (tokenStatement->fileName == statement->fileName)) {
                         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
                         item->filename = filename;
@@ -410,7 +410,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                                 filename,
                                 expression, p.line);
                     if (tokenStatement
-                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->declarationRange.start.line == statement->declarationRange.start.line)
                             && (tokenStatement->fileName == statement->fileName)) {
                         token = newWord;
                     }
@@ -457,7 +457,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                                 filename,
                                 expression, p.line);
                     if (tokenStatement
-                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->declarationRange.start.line == statement->declarationRange.start.line)
                             && (tokenStatement->fileName == statement->fileName)) {
                         token = newWord;
                     }

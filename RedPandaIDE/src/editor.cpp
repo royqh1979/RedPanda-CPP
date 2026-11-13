@@ -650,7 +650,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         if (mParser)
                             function = mParser->findFunctionAt(mFilename,caretLine()+1);
                         if (function) {
-                            bool isVoid = (function->type  == "void");
+                            bool isVoid = (function->type() == "void");
                             QStringList params = mParser->getFunctionParameterNames(function);
                             insertStrings.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
                             if (!params.isEmpty())
@@ -3916,10 +3916,10 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
             || statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor) {
           result = getHintForFunction(statement,mFilename,p.line);
-    } else if (statement->line>=0) {
+    } else if (statement->declarationRange.start.line>=0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
-                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
+                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -3962,7 +3962,7 @@ QString Editor::getHintForFunction(const PStatement &statement, const QString& f
     QFileInfo fileInfo(statement->fileName);
     QString result;
     result = mParser->prettyPrintStatement(statement,filename,line) + " - "
-            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
+            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
             + tr("Ctrl+click for more info");
     return result;
 }
@@ -4170,7 +4170,7 @@ void Editor::updateFunctionTip(bool showTip)
             mFunctionTooltip->addTip(
                         statement->command,
                         statement->fullName,
-                        statement->type,
+                        statement->type(),
                         statement->args,
                         statement->noNameArgs);
         }
@@ -4763,12 +4763,12 @@ void Editor::gotoDeclaration(const CharPos &pos)
     }
     QString filename;
     int line;
-    if (statement->fileName == mFilename && statement->line == pos.line) {
+    if (statement->fileName == mFilename && statement->declarationRange.start.line == pos.line) {
             filename = statement->definitionFileName;
-            line = statement->definitionLine;
+            line = statement->definitionRange.start.line;
     } else {
         filename = statement->fileName;
-        line = statement->line;
+        line = statement->declarationRange.start.line;
     }
     openFileInContext(filename, CharPos{0,line});
 }
@@ -4790,12 +4790,12 @@ void Editor::gotoDefinition(const CharPos &pos)
     }
     QString filename;
     int line;
-    if (statement->definitionFileName == mFilename && statement->definitionLine == pos.line) {
+    if (statement->definitionFileName == mFilename && statement->definitionRange.start.line == pos.line) {
             filename = statement->fileName;
-            line = statement->line;
+            line = statement->declarationRange.start.line;
     } else {
         filename = statement->definitionFileName;
-        line = statement->definitionLine;
+        line = statement->definitionRange.start.line;
     }
     openFileInContext(filename,CharPos{0,line});
 }
