@@ -1072,3 +1072,45 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     QVERIFY(!value->definitionRange.isValid());
     QCOMPARE(value->type(), "S");
 }
+
+
+void TestCppTokenizer::test_type_resolver_binds_custom_template_members()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> using Ptr = T*;\n"
+                "template<typename T> class Box {\n"
+                "public:\n"
+                "  using ValueType = T;\n"
+                "  T& front();\n"
+                "  ValueType value();\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo pointerVariable;
+    QVERIFY(parseDeclarationText("Ptr<std::string> pointer;", pointerVariable));
+    QCOMPARE(resolver.resolve(pointerVariable.specifiers.type).toString(), "std::string *");
+    DeclarationInfo pairVariable;
+    QVERIFY(parseDeclarationText("Pair<Ptr<int>, Ptr<int>> pair;", pairVariable));
+    TypeInfo pairType = resolver.resolve(pairVariable.specifiers.type);
+    QCOMPARE(pairType.templateArguments.count(), 2);
+    QCOMPARE(pairType.templateArguments[0].type->toString(), "int *");
+    QCOMPARE(pairType.templateArguments[1].type->toString(), "int *");
+
+    DeclarationInfo boxVariable;
+    QVERIFY(parseDeclarationText("Box<std::string> lst;", boxVariable));
+    const TypeInfo &boxType = boxVariable.specifiers.type;
+    PStatement box = findStatement(model.childrenStatements(), "Box");
+    QVERIFY(box);
+    QCOMPARE(resolver.resolve(boxType).declaration.lock(), box);
+    QCOMPARE(resolver.memberType(boxType, "ValueType").toString(), "std::string");
+    QCOMPARE(resolver.invokeResult(boxType, "front").toString(), "std::string &");
+    QCOMPARE(resolver.invokeResult(boxType, "value").toString(), "std::string");
+    QVERIFY(resolver.invokeResult(boxType, "missing").qualifiedName.isEmpty());
+}

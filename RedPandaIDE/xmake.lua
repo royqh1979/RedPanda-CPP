@@ -98,6 +98,7 @@ target("RedPandaIDE")
         "src/parser/cppdeclarationparser.cpp",
         "src/parser/cppsyntaxparser.cpp",
         "src/parser/cppstatementbuilder.cpp",
+        "src/parser/cpptyperesolver.cpp",
         "src/parser/cppscopes.cpp",
         "src/parser/parserutils.cpp",
         "src/parser/statementmodel.cpp",
