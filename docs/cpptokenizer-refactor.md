@@ -228,7 +228,7 @@ Statement 需要区分非模板、主模板、部分特化和全特化，并保�
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 
-Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的其它结构，不实例化模板，也不生成实例化 Statement。TypeInfo 以 `templateArgumentsText` 保存包括尖括号在内的实参文本，此时 `templateArguments` 保持为空。原文直接从预处理输出的原始行按起止 token 的 line/ch 截取，跨行时用空格分隔，避免逐 token 拼接；截取后立即保存 QString，不保留 TokenList 或源缓冲区引用。只有类型求值、模板绑定或类型操作确实需要实参结构时，才重新 tokenize 并调用 `parseTemplateArguments()` 生成有序 `TemplateArgument`。求值结果以结构化参数为准，避免已绑定的参数仍显示原始形参文本。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
+Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的其它结构，不实例化模板，也不生成实例化 Statement。TypeInfo 以 `templateArgumentsText` 保存包括尖括号在内的实参文本，此时 `templateArguments` 保持为空。原文直接从预处理输出的原始行按起止 token 的 line/ch 截取，跨行时用空格分隔，避免逐 token 拼接；截取后立即保存 QString，不保留 TokenList 或源缓冲区引用。限定名及模板特化名只有在源码已经符合规范化格式时才直接截取，遇到换行、连续空白、注释或运算符周围空白时仍按 token 规范化拼接，保证 fullName 比较和索引一致。只有类型求值、模板绑定或类型操作确实需要实参结构时，才重新 tokenize 并调用 `parseTemplateArguments()` 生成有序 `TemplateArgument`。求值结果以结构化参数为准，避免已绑定的参数仍显示原始形参文本。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
 
 当前不支持 CTAD。deduction guide 的语法必须正确消费，但不生成 Statement：识别依据是函数 declarator 带 trailing return 且没有 decl-specifier 返回类型，不能误忽略普通 `auto f() -> T`。测试必须验证类定义和成员可查找、guide 不产生同名函数条目，以及普通 trailing-return 函数仍保留。
 

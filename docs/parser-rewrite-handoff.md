@@ -57,8 +57,9 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 Static Release、GCC 8.1 直接运行并设置 `QT_FORCE_STDERR_LOGGING=1`、未启用详细 profile 的有效实测结果：
 
 - 独立 `<string>`：总计 299 毫秒；preprocess 70 毫秒、tokenize 69 毫秒、parseDeclarations 61 毫秒、buildStatements 4 毫秒。
-- 完整公开接口验收：总计 1.949 秒；首次解析 1.846 秒，其中 preprocess 411 毫秒、tokenize 488 毫秒、parseDeclarations 739 毫秒、buildStatements 39 毫秒、clearTempResults 2 毫秒。
-- 优化前完整验收约为 5.8 秒；namespace 索引后约为 3.572 秒，currentText 改为只读引用后又降至约 3.1 秒。配对括号改用 matchIndex 识别，尖括号文本比较统一到单个 Operator 分支后约为 3.0 秒。模板原文改为按 line/ch 直接截取预处理输出后，最终约为 1.95 秒。
+- GCC 8.1 完整公开接口验收：总计 1.393 秒；首次解析 1.284 秒，其中 preprocess 421 毫秒、tokenize 488 毫秒、parseDeclarations 165 毫秒、buildStatements 37 毫秒、clearTempResults 4 毫秒。
+- GCC 15.3 完整公开接口验收：总计 2.571 秒；首次解析 2.422 秒，其中 preprocess 1.167 秒、tokenize 626 毫秒、parseDeclarations 325 毫秒、buildStatements 62 毫秒、clearTempResults 4 毫秒；`templateText` 从限定名优化前的约 748 毫秒降为 23.8 毫秒。
+- 优化前完整验收约为 5.8 秒；namespace 索引后约为 3.572 秒，currentText 改为只读引用后又降至约 3.1 秒。配对括号改用 matchIndex 识别，尖括号文本比较统一到单个 Operator 分支后约为 3.0 秒。模板原文改为按 line/ch 直接截取预处理输出后约为 1.95 秒；限定名在格式一致时也直接截取后，GCC 8.1 最终约为 1.39 秒。
 - `mergeDeclaration()` 从优化前约 2.1 秒降为约 56 毫秒，不再是热点。完整验收的第二次 replay 为 26 毫秒，Statement 销毁为 21 毫秒；名称查找和名称收集也不是热点。
 - 非 auto 初始化及被丢弃的表达式现在只跳过 token，不再拼接临时文本；该调整没有明显独立提速，但消除了无意义工作。字符串 reserve 预分配没有收益，已撤回。
 - 详细 profile 记录模板原文读取 8916 次、共 1,228,029 个 token，是声明阶段的主要成本。普通声明调用 31,328 次，其中失败 5,826 次（18.6%）；失败声明使用 280,040 个模板 token（22.8%），大部分模板读取仍属于成功声明，不能只靠提前失败消除热点。

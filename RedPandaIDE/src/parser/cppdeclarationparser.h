@@ -43,7 +43,7 @@ private:
     bool parseStructuredBinding(DeclarationInfo &result);
     QString parseOperatorName();
     QString readBalancedToken(const QString &opening, const QString &closing,
-                              bool useSourceText = false);
+                              bool useSourceText = false, bool requireNormalized = false);
     QString readSourceText(const CppTokenizer::Token &startToken,
                            const CppTokenizer::Token &endToken) const;
     void skipBalancedToken();

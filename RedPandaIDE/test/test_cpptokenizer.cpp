@@ -698,6 +698,9 @@ void TestCppTokenizer::test_parse_template_specializations()
     QCOMPARE(declaration.templateKind, TemplateDeclarationKind::PartialSpecialization);
     QCOMPARE(declaration.templateParameters.count(), 1);
     QCOMPARE(declaration.declarators[0].name, "value<T*>");
+
+    QVERIFY(parseDeclarationText("template<typename T> int value< T * >;", declaration));
+    QCOMPARE(declaration.declarators[0].name, "value<T*>");
 }
 
 void TestCppTokenizer::test_scope_range_queries()

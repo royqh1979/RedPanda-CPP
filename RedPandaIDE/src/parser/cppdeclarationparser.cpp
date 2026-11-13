@@ -85,6 +85,22 @@ void appendTypeDerivation(TypeInfo &type, const DeclaratorInfo &declarator)
 {
     type.derivations += declarator.derivations;
 }
+
+bool isNormalizedSourceText(const QString &text)
+{
+    auto isWord = [](QChar ch) { return ch.isLetterOrNumber() || ch == '_'; };
+    for (int i = 0; i < text.length(); ++i) {
+        if (text[i] == '/')
+            return false;
+        if (!text[i].isSpace())
+            continue;
+        if (text[i] != ' ' || i == 0 || i + 1 >= text.length()
+                || !isWord(text[i - 1]) || !isWord(text[i + 1])) {
+            return false;
+        }
+    }
+    return true;
+}
 }
 
 CppDeclarationParser::CppDeclarationParser(CppTokenCursor &cursor)
@@ -720,7 +736,7 @@ QString CppDeclarationParser::parseQualifiedNameText()
         result += text;
         mCursor.advance();
         if (mCursor.currentText() == "<")
-            result += readBalancedToken("<", ">");
+            result += readBalancedToken("<", ">", true, true);
         if (mCursor.consume("::"))
             result += "::";
         else
@@ -755,7 +771,7 @@ QString CppDeclarationParser::readSourceText(const CppTokenizer::Token &startTok
 }
 
 QString CppDeclarationParser::readBalancedToken(const QString &opening, const QString &closing,
-                                                bool useSourceText)
+                                                bool useSourceText, bool requireNormalized)
 {
     if (mCursor.atEnd() || mCursor.currentText() != opening)
         return QString();
@@ -799,8 +815,10 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
                             const CppTokenizer::Token &startToken =
                                     mCursor.peek(start.index - mCursor.index());
                             QString sourceText = readSourceText(startToken, endToken);
-                            if (!sourceText.isEmpty())
+                            if (!sourceText.isEmpty()
+                                    && (!requireNormalized || isNormalizedSourceText(sourceText))) {
                                 return sourceText;
+                            }
                             mCursor.restore(start);
                             return readBalancedToken(opening, closing, false);
                         }
@@ -821,8 +839,10 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
     int target = mCursor.current().matchIndex;
     if (useSourceText && status == CppTokenCursor::MatchStatus::SameFile) {
         QString sourceText = readSourceText(mCursor.current(), mCursor.peek(target - mCursor.index()));
-        if (!sourceText.isEmpty())
+        if (!sourceText.isEmpty()
+                && (!requireNormalized || isNormalizedSourceText(sourceText))) {
             return sourceText;
+        }
     }
     if (status == CppTokenCursor::MatchStatus::CrossFile) {
         QString result;
