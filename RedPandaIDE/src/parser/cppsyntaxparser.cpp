@@ -382,7 +382,7 @@ QString CppSyntaxParser::readUntil(const QSet<QString> &delimiters)
     QString result;
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
         const QString &text = mCursor.currentText();
-        if (text == "(" || text == "[" || text == "{")
+        if (mCursor.current().matchIndex > mCursor.index())
             result += readBalanced(mCursor);
         else {
             appendToken(result, text);
@@ -434,7 +434,7 @@ void CppSyntaxParser::skipDeclaration()
         const QString &text = mCursor.currentText();
         if (text == ";" || text == "}")
             return;
-        if (text == "(" || text == "[" || text == "{")
+        if (mCursor.current().matchIndex > mCursor.index())
             skipBalanced();
         else
             mCursor.advance();

@@ -17,7 +17,7 @@
 #include "cpptokencursor.h"
 
 CppTokenCursor::CppTokenCursor(const CppTokenizer &tokenizer)
-    : mTokens(&tokenizer.tokens())
+    : mTokens(&tokenizer.tokens()), mSourceLines(&tokenizer.sourceLines())
 {
 }
 

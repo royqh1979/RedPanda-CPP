@@ -18,6 +18,7 @@
 #define CPPTOKENIZER_H
 
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <memory>
 #include "cpptypes.h"
@@ -57,6 +58,7 @@ public:
     const Token &operator[](int index) const { return mTokenList[index]; }
     int tokenCount() const { return mTokenList.count(); }
     const TokenList &tokens() const { return mTokenList; }
+    const QStringList &sourceLines() const { return mBufferLines; }
     static const Token &fileEndToken() {
         static const Token token = [] {
             Token result;
@@ -91,6 +93,7 @@ private:
     static bool isIdentifierPart(QChar ch) { return ch == '_' || ch.isLetterOrNumber(); }
 
 private:
+    QStringList mBufferLines;
     QString mBuffer;
     const QChar *mCurrent = nullptr;
     SourcePosition mCurrentPosition;

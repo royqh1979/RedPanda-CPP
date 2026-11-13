@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QVarLengthArray>
 
 namespace {
 struct DeclarationProfile {
@@ -30,6 +31,14 @@ struct DeclarationProfile {
     qint64 constructorCheckMs = 0;
     qint64 typeNameMs = 0;
     qint64 templateArgumentsMs = 0;
+    qint64 templateTextMs = 0;
+    qint64 templateTextCalls = 0;
+    qint64 templateTextTokens = 0;
+    qint64 sourceTextCalls = 0;
+    qint64 normalizedTextCalls = 0;
+    qint64 simpleCalls = 0;
+    qint64 simpleFailures = 0;
+    qint64 failedTemplateTextTokens = 0;
     ~DeclarationProfile()
     {
         if (!enabled)
@@ -39,7 +48,12 @@ struct DeclarationProfile {
                    << parameterMs / 1000000.0
                    << "constructorCheck" << constructorCheckMs / 1000000.0
                    << "typeName" << typeNameMs / 1000000.0
-                   << "templateArguments" << templateArgumentsMs / 1000000.0;
+                   << "templateArguments" << templateArgumentsMs / 1000000.0
+                   << "templateText" << templateTextMs / 1000000.0
+                   << "calls" << templateTextCalls << "tokens" << templateTextTokens
+                   << "simpleCalls" << simpleCalls << "simpleFailures" << simpleFailures
+                   << "failedTemplateTokens" << failedTemplateTextTokens
+                   << "sourceCalls" << sourceTextCalls << "normalizedCalls" << normalizedTextCalls;
     };
 };
 
@@ -89,6 +103,8 @@ bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
 bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
 {
     DeclarationProfileScope profileScope(declarationProfile.simpleMs);
+    ++declarationProfile.simpleCalls;
+    qint64 templateTextTokensAtStart = declarationProfile.templateTextTokens;
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     bool withoutSpecifiers = mCursor.currentText() == "~"
             || mCursor.currentText() == "operator"
@@ -96,6 +112,9 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 && !isBuiltinType(mCursor.currentText())
                 && mCursor.peek().text == "(");
     if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
+        ++declarationProfile.simpleFailures;
+        declarationProfile.failedTemplateTextTokens +=
+                declarationProfile.templateTextTokens - templateTextTokensAtStart;
         mCursor.restore(start);
         return false;
     }
@@ -105,6 +124,9 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
     while (!mCursor.atEnd()) {
         DeclaratorInfo declarator;
         if (!parseDeclarator(declarator)) {
+            ++declarationProfile.simpleFailures;
+            declarationProfile.failedTemplateTextTokens +=
+                    declarationProfile.templateTextTokens - templateTextTokensAtStart;
             mCursor.restore(start);
             result = DeclarationInfo();
             return false;
@@ -580,7 +602,7 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
         name += text;
         mCursor.advance();
         if (mCursor.currentText() == "<") {
-            result.templateArgumentsText = readBalancedToken("<", ">");
+            result.templateArgumentsText = readBalancedToken("<", ">", true);
             if (result.templateArgumentsText.isEmpty()) {
                 mCursor.restore(start);
                 return false;
@@ -633,25 +655,27 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
     int level = 1;
     while (!mCursor.atEnd()) {
         const QString &text = mCursor.currentText();
-        if (text == "(" || text == "[" || text == "{") {
+        if (mCursor.current().matchIndex > mCursor.index()) {
             argument += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
             continue;
         }
-        if (text == "<") {
-            ++level;
-            argument += text;
-            mCursor.advance();
-            continue;
-        }
-        if (text == ">" || text == ">>") {
-            mCursor.consumeGreater();
-            --level;
-            if (level == 0) {
-                appendArgument(argument);
-                return true;
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
+            if (text == "<") {
+                ++level;
+                argument += text;
+                mCursor.advance();
+                continue;
             }
-            argument += ">";
-            continue;
+            if (text == ">" || text == ">>") {
+                mCursor.consumeGreater();
+                --level;
+                if (level == 0) {
+                    appendArgument(argument);
+                    return true;
+                }
+                argument += ">";
+                continue;
+            }
         }
         if (text == "," && level == 1) {
             appendArgument(argument);
@@ -705,36 +729,88 @@ QString CppDeclarationParser::parseQualifiedNameText()
     return result;
 }
 
-QString CppDeclarationParser::readBalancedToken(const QString &opening, const QString &closing)
+QString CppDeclarationParser::readSourceText(const CppTokenizer::Token &startToken,
+                                             const CppTokenizer::Token &endToken) const
+{
+    if (startToken.fileName != endToken.fileName
+            || !startToken.position.isValid() || !endToken.position.isValid()
+            || endToken.position < startToken.position) {
+        return QString();
+    }
+    const QStringList &lines = mCursor.sourceLines();
+    if (startToken.position.line >= lines.count() || endToken.position.line >= lines.count())
+        return QString();
+    if (startToken.position.line == endToken.position.line) {
+        return lines[startToken.position.line].mid(
+                    startToken.position.ch,
+                    endToken.position.ch + endToken.text.length() - startToken.position.ch);
+    }
+
+    QStringList result{lines[startToken.position.line].mid(startToken.position.ch)};
+    for (int line = startToken.position.line + 1; line < endToken.position.line; ++line)
+        result.append(lines[line]);
+    result.append(lines[endToken.position.line].left(
+                endToken.position.ch + endToken.text.length()));
+    return result.join(' ');
+}
+
+QString CppDeclarationParser::readBalancedToken(const QString &opening, const QString &closing,
+                                                bool useSourceText)
 {
     if (mCursor.atEnd() || mCursor.currentText() != opening)
         return QString();
 
     if (opening == "<") {
+        DeclarationProfileScope profileScope(declarationProfile.templateTextMs);
+        ++declarationProfile.templateTextCalls;
+        if (useSourceText)
+            ++declarationProfile.sourceTextCalls;
+        else
+            ++declarationProfile.normalizedTextCalls;
         CppTokenCursor::Checkpoint start = mCursor.checkpoint();
         QString result;
         int level = 0;
         while (!mCursor.atEnd()) {
+            ++declarationProfile.templateTextTokens;
             const QString &text = mCursor.currentText();
-            if (text == "(" || text == "[" || text == "{") {
-                result += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
+            if (mCursor.current().matchIndex > mCursor.index()) {
+                if (useSourceText)
+                    skipBalancedToken();
+                else
+                    result += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
                 continue;
             }
-            if (text == "<") {
-                ++level;
+            if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
+                if (text == "<") {
+                    ++level;
+                    if (!useSourceText)
+                        appendToken(result, text);
+                    mCursor.advance();
+                    continue;
+                }
+                if (text == ">" || text == ">>") {
+                    const CppTokenizer::Token &endToken = mCursor.current();
+                    mCursor.consumeGreater();
+                    --level;
+                    if (!useSourceText)
+                        appendToken(result, closing);
+                    if (level == 0) {
+                        if (useSourceText) {
+                            const CppTokenizer::Token &startToken =
+                                    mCursor.peek(start.index - mCursor.index());
+                            QString sourceText = readSourceText(startToken, endToken);
+                            if (!sourceText.isEmpty())
+                                return sourceText;
+                            mCursor.restore(start);
+                            return readBalancedToken(opening, closing, false);
+                        }
+                        return result;
+                    }
+                    continue;
+                }
+            }
+            if (!useSourceText)
                 appendToken(result, text);
-                mCursor.advance();
-                continue;
-            }
-            if (text == ">" || text == ">>") {
-                mCursor.consumeGreater();
-                --level;
-                appendToken(result, closing);
-                if (level == 0)
-                    return result;
-                continue;
-            }
-            appendToken(result, text);
             mCursor.advance();
         }
         mCursor.restore(start);
@@ -743,6 +819,11 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
 
     CppTokenCursor::MatchStatus status = mCursor.matchStatus();
     int target = mCursor.current().matchIndex;
+    if (useSourceText && status == CppTokenCursor::MatchStatus::SameFile) {
+        QString sourceText = readSourceText(mCursor.current(), mCursor.peek(target - mCursor.index()));
+        if (!sourceText.isEmpty())
+            return sourceText;
+    }
     if (status == CppTokenCursor::MatchStatus::CrossFile) {
         QString result;
         while (!mCursor.atEnd()
@@ -797,8 +878,7 @@ void CppDeclarationParser::skipBalancedToken()
 void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
 {
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
-        const QString &text = mCursor.currentText();
-        if (text == "(" || text == "[" || text == "{")
+        if (mCursor.current().matchIndex > mCursor.index())
             skipBalancedToken();
         else
             mCursor.advance();
@@ -810,21 +890,23 @@ void CppDeclarationParser::skipTemplateDefaultArgument()
     int level = 0;
     while (!mCursor.atEnd()) {
         const QString &text = mCursor.currentText();
-        if (text == "(" || text == "[" || text == "{") {
+        if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalancedToken();
             continue;
         }
-        if (text == "<") {
-            ++level;
-            mCursor.advance();
-            continue;
-        }
-        if (text == ">" || text == ">>") {
-            if (level == 0)
-                return;
-            mCursor.consumeGreater();
-            --level;
-            continue;
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
+            if (text == "<") {
+                ++level;
+                mCursor.advance();
+                continue;
+            }
+            if (text == ">" || text == ">>") {
+                if (level == 0)
+                    return;
+                mCursor.consumeGreater();
+                --level;
+                continue;
+            }
         }
         if (text == "," && level == 0)
             return;

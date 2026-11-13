@@ -42,7 +42,10 @@ private:
     bool isConstructorDeclaration();
     bool parseStructuredBinding(DeclarationInfo &result);
     QString parseOperatorName();
-    QString readBalancedToken(const QString &opening, const QString &closing);
+    QString readBalancedToken(const QString &opening, const QString &closing,
+                              bool useSourceText = false);
+    QString readSourceText(const CppTokenizer::Token &startToken,
+                           const CppTokenizer::Token &endToken) const;
     void skipBalancedToken();
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);

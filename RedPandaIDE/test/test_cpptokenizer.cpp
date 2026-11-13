@@ -53,7 +53,7 @@ QStringList TestCppTokenizer::tokenTexts() const
 bool TestCppTokenizer::parseDeclarationText(const QString &text, DeclarationInfo &result)
 {
     CppTokenizer tokenizer;
-    tokenizer.tokenize({text});
+    tokenizer.tokenize(text.split('\n'));
     CppTokenCursor cursor(tokenizer);
     CppDeclarationParser parser(cursor);
     return parser.parseDeclaration(result);
@@ -619,6 +619,14 @@ void TestCppTokenizer::test_parse_template_type_arguments()
     QCOMPARE(argument.kind, TemplateArgumentKind::Type);
     QVERIFY(argument.type);
     QCOMPARE(argument.type->toString(), "std::vector<int>");
+
+    DeclarationInfo multiline;
+    QVERIFY(parseDeclarationText("std::vector<\n  std::vector<int>\n> values;", multiline));
+    QCOMPARE(multiline.specifiers.type.templateArgumentsText, "<   std::vector<int> >");
+    QCOMPARE(multiline.declarators[0].name, "values");
+    TypeInfo resolvedMultiline = resolver.resolve(multiline.specifiers.type);
+    QCOMPARE(resolvedMultiline.templateArguments.count(), 1);
+    QCOMPARE(resolvedMultiline.templateArguments[0].type->toString(), "std::vector<int>");
 }
 
 void TestCppTokenizer::test_parse_operator_declaration()

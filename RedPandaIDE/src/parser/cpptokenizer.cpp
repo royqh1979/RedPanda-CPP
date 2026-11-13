@@ -22,6 +22,7 @@ CppTokenizer::CppTokenizer() = default;
 
 void CppTokenizer::clear()
 {
+    mBufferLines.clear();
     mBuffer.clear();
     mCurrent = nullptr;
     mCurrentPosition = SourcePosition{0, 0};
@@ -47,6 +48,7 @@ void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition 
 void CppTokenizer::tokenize(const QStringList &buffer)
 {
     clear();
+    mBufferLines = buffer;
     mBuffer = buffer.join('\n');
     mCurrent = mBuffer.constData();
 

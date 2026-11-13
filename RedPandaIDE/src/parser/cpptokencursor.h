@@ -42,6 +42,7 @@ public:
     const CppTokenizer::Token &current() const;
     const CppTokenizer::Token &peek(int offset = 1) const;
     const QString &currentText() const;
+    const QStringList &sourceLines() const { return *mSourceLines; }
 
     void advance();
     bool consume(const QString &text);
@@ -55,6 +56,7 @@ public:
 
 private:
     const CppTokenizer::TokenList *mTokens;
+    const QStringList *mSourceLines;
     int mIndex = 0;
     int mGreaterConsumed = 0;
 };

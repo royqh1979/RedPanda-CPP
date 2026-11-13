@@ -103,7 +103,7 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 ### 声明产生式与错误恢复
 
-`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。
+`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。配对括号优先使用 matchIndex 识别；需要比较尖括号等运算符文本时，先判断 TokenKind::Operator，再在同一个分支中比较具体文本，避免对标识符和字面量做无意义比较。
 
 前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
 
@@ -228,7 +228,7 @@ Statement 需要区分非模板、主模板、部分特化和全特化，并保�
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 
-Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的其它结构，不实例化模板，也不生成实例化 Statement。TypeInfo 以 `templateArgumentsText` 保存包括尖括号在内的实参 token 文本，此时 `templateArguments` 保持为空；只有类型求值、模板绑定或类型操作确实需要实参结构时，才调用 `parseTemplateArguments()` 生成有序 `TemplateArgument`。求值结果以结构化参数为准，避免已绑定的参数仍显示原始形参文本。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
+Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的其它结构，不实例化模板，也不生成实例化 Statement。TypeInfo 以 `templateArgumentsText` 保存包括尖括号在内的实参文本，此时 `templateArguments` 保持为空。原文直接从预处理输出的原始行按起止 token 的 line/ch 截取，跨行时用空格分隔，避免逐 token 拼接；截取后立即保存 QString，不保留 TokenList 或源缓冲区引用。只有类型求值、模板绑定或类型操作确实需要实参结构时，才重新 tokenize 并调用 `parseTemplateArguments()` 生成有序 `TemplateArgument`。求值结果以结构化参数为准，避免已绑定的参数仍显示原始形参文本。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
 
 当前不支持 CTAD。deduction guide 的语法必须正确消费，但不生成 Statement：识别依据是函数 declarator 带 trailing return 且没有 decl-specifier 返回类型，不能误忽略普通 `auto f() -> T`。测试必须验证类定义和成员可查找、guide 不产生同名函数条目，以及普通 trailing-return 函数仍保留。
 
