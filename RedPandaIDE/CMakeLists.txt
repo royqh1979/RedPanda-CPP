@@ -27,6 +27,8 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/cpptokencursor
     src/parser/cpptypes
     src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
     # problems
@@ -239,6 +241,8 @@ target_qt_plain_cpp(test-editor
     src/parser/cpptokencursor
     src/parser/cpptypes
     src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
 
@@ -326,6 +330,8 @@ target_qt_plain_cpp(test-cpptokenizer
     src/parser/cpptokencursor
     src/parser/cpptypes
     src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppscopes
 )
 
 target_moc_classes(test-cpptokenizer
@@ -338,6 +344,12 @@ target_include_directories(test-cpptokenizer PRIVATE
 target_link_libraries(test-cpptokenizer PRIVATE
     Qt::Core
     Qt::Test)
+
+add_custom_command(
+    TARGET test-cpptokenizer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
+        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
 
 add_test(
     NAME test-cpptokenizer
@@ -360,6 +372,8 @@ target_qt_plain_cpp(test-cppparser
     src/parser/cpptokencursor
     src/parser/cpptypes
     src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
     )

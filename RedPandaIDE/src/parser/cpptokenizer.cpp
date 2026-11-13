@@ -24,7 +24,7 @@ void CppTokenizer::clear()
 {
     mBuffer.clear();
     mCurrent = nullptr;
-    mCurrentLine = 0;
+    mCurrentPosition = SourcePosition{0, 0};
     mCurrentFile.clear();
     mTokenList.clear();
     mUnmatchedBraces.clear();
@@ -49,7 +49,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         if (atEnd())
             break;
 
-        int line = mCurrentLine;
+        SourcePosition position = mCurrentPosition;
         if (startsWith("[[")) {
             skipAttribute();
             continue;
@@ -59,7 +59,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             QString text = readPreprocessor();
             TokenKind kind = text.startsWith("#include ")
                     ? TokenKind::FileBoundary : TokenKind::Preprocessor;
-            addToken(text, kind, line);
+            addToken(text, kind, position);
         } else if (*mCurrent == '"' || *mCurrent == '\''
                    || startsWith("R\"") || startsWith("LR\"")
                    || startsWith("uR\"") || startsWith("UR\"")
@@ -70,22 +70,22 @@ void CppTokenizer::tokenize(const QStringList &buffer)
                    || startsWith("u8'")) {
             TokenKind kind = TokenKind::StringLiteral;
             QString text = readLiteral(kind);
-            addToken(text, kind, line);
+            addToken(text, kind, position);
         } else if (isIdentifierStart(*mCurrent)) {
-            addToken(readIdentifier(), TokenKind::Identifier, line);
+            addToken(readIdentifier(), TokenKind::Identifier, position);
         } else if (mCurrent->isDigit()
                    || (*mCurrent == '.' && (mCurrent + 1)->isDigit())) {
             TokenKind kind = TokenKind::IntegerLiteral;
             QString text = readNumber(kind);
-            addToken(text, kind, line);
+            addToken(text, kind, position);
         } else {
-            addToken(readOperator(), TokenKind::Operator, line);
+            addToken(readOperator(), TokenKind::Operator, position);
         }
     }
     resolveUnmatchedPairs();
 }
 
-void CppTokenizer::addToken(const QString &text, TokenKind kind, int line)
+void CppTokenizer::addToken(const QString &text, TokenKind kind, const SourcePosition &position)
 {
     int index = mTokenList.count();
     int opening = -1;
@@ -110,7 +110,7 @@ void CppTokenizer::addToken(const QString &text, TokenKind kind, int line)
 
     Token token;
     token.text = text;
-    token.line = line;
+    token.position = position;
     token.kind = kind;
     token.fileName = mCurrentFile;
     token.matchIndex = opening;
@@ -143,8 +143,25 @@ int CppTokenizer::nextFileBoundary(int tokenIndex) const
 
 void CppTokenizer::skipWhitespace()
 {
-    while (mCurrent->isSpace())
-        advance();
+    while (true) {
+        if (mCurrent->isSpace()) {
+            advance();
+        } else if (startsWith("//")) {
+            while (!atEnd() && *mCurrent != '\n' && *mCurrent != '\r')
+                advance();
+        } else if (startsWith("/*")) {
+            advance();
+            advance();
+            while (!atEnd() && !startsWith("*/"))
+                advance();
+            if (startsWith("*/")) {
+                advance();
+                advance();
+            }
+        } else {
+            break;
+        }
+    }
 }
 
 void CppTokenizer::skipAttribute()
@@ -325,7 +342,7 @@ void CppTokenizer::readFileBoundary(const QString &text, int tokenIndex)
     bool ok = false;
     int line = QStringView(text.constBegin() + delimiter + 1, text.constEnd()).toInt(&ok);
     if (ok && line >= 0)
-        mCurrentLine = line - 1;
+        mCurrentPosition = SourcePosition{line - 1, 0};
 }
 
 bool CppTokenizer::startsWith(const QString &text) const
@@ -339,8 +356,12 @@ bool CppTokenizer::startsWith(const QString &text) const
 
 void CppTokenizer::advance()
 {
-    if (*mCurrent == '\n')
-        ++mCurrentLine;
+    if (*mCurrent == '\n') {
+        ++mCurrentPosition.line;
+        mCurrentPosition.ch = 0;
+    } else {
+        ++mCurrentPosition.ch;
+    }
     if (!atEnd())
         ++mCurrent;
 }

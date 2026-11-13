@@ -96,6 +96,8 @@ target("RedPandaIDE")
         "src/parser/cpptokencursor.cpp",
         "src/parser/cpptypes.cpp",
         "src/parser/cppdeclarationparser.cpp",
+        "src/parser/cppsyntaxparser.cpp",
+        "src/parser/cppscopes.cpp",
         "src/parser/parserutils.cpp",
         -- problems
         "src/problems/freeprojectsetformat.cpp",

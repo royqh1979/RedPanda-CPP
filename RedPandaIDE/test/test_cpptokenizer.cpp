@@ -1,5 +1,36 @@
 #include <QTest>
+#include <QFile>
 #include "test_cpptokenizer.h"
+
+namespace {
+const DeclarationInfo *findDeclaration(const QVector<DeclarationInfo> &declarations,
+                                       const QString &name)
+{
+    for (const DeclarationInfo &declaration : declarations) {
+        for (const DeclaratorInfo &declarator : declaration.declarators) {
+            QString qualifiedName = declarator.qualifier.isEmpty()
+                    ? declarator.name : declarator.qualifier + "::" + declarator.name;
+            if (declarator.name == name || qualifiedName == name)
+                return &declaration;
+        }
+        if (const DeclarationInfo *child = findDeclaration(declaration.children, name))
+            return child;
+    }
+    return nullptr;
+}
+
+const DeclarationInfo *findTopLevelDeclaration(const QVector<DeclarationInfo> &declarations,
+                                               const QString &name)
+{
+    for (const DeclarationInfo &declaration : declarations) {
+        for (const DeclaratorInfo &declarator : declaration.declarators) {
+            if (declarator.name == name)
+                return &declaration;
+        }
+    }
+    return nullptr;
+}
+}
 
 TestCppTokenizer::TestCppTokenizer(QObject *parent)
     : QObject(parent)
@@ -26,6 +57,44 @@ bool TestCppTokenizer::parseDeclarationText(const QString &text, DeclarationInfo
     CppTokenCursor cursor(tokenizer);
     CppDeclarationParser parser(cursor);
     return parser.parseDeclaration(result);
+}
+
+bool TestCppTokenizer::parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result)
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize(text.split('\n'));
+    CppTokenCursor cursor(tokenizer);
+    CppSyntaxParser parser(cursor);
+    while (!cursor.atEnd()) {
+        if (cursor.current().kind == CppTokenizer::TokenKind::Preprocessor
+                || cursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
+            cursor.advance();
+            continue;
+        }
+        int before = cursor.index();
+        DeclarationInfo declaration;
+        if (!parser.parseDeclaration(declaration))
+            return false;
+        result.append(declaration);
+        if (cursor.currentText() == "{") {
+            cursor.skipToMatch();
+            if (!cursor.atEnd())
+                cursor.advance();
+        }
+        if (cursor.index() == before)
+            return false;
+    }
+    return true;
+}
+
+bool TestCppTokenizer::parseSyntaxFile(const QString &fileName, QVector<DeclarationInfo> &result)
+{
+    QFile file("resources/syntax/" + fileName);
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+    QString text = QString::fromUtf8(file.readAll());
+    text.remove('\r');
+    return parseSyntaxText(text, result);
 }
 
 void TestCppTokenizer::test_identifiers_and_operators()
@@ -88,7 +157,7 @@ void TestCppTokenizer::test_raw_string_with_custom_delimiter()
     QCOMPARE(mTokenizer[3].text, "R\"tag(first\nsecond)tag\"");
     QCOMPARE(mTokenizer[3].kind, CppTokenizer::TokenKind::StringLiteral);
     QCOMPARE(mTokenizer[6].text, "after");
-    QCOMPARE(mTokenizer[6].line, 2);
+    QCOMPARE(mTokenizer[6].position.line, 2);
 }
 
 void TestCppTokenizer::test_unterminated_raw_string()
@@ -133,7 +202,7 @@ void TestCppTokenizer::test_file_boundaries_and_file_names()
     QCOMPARE(mTokenizer[1].fileName, "/tmp/main.cpp");
     QCOMPARE(mTokenizer[5].fileName, "/tmp/a.h");
     QCOMPARE(mTokenizer[9].fileName, "/tmp/main.cpp");
-    QCOMPARE(mTokenizer[10].line, 1);
+    QCOMPARE(mTokenizer[10].position.line, 1);
 }
 
 void TestCppTokenizer::test_cross_file_match_indices()
@@ -194,8 +263,17 @@ void TestCppTokenizer::test_preprocessor_tokens()
 void TestCppTokenizer::test_line_numbers()
 {
     tokenize({"int first;", "int second;"});
-    QCOMPARE(mTokenizer[0].line, 0);
-    QCOMPARE(mTokenizer[3].line, 1);
+    QCOMPARE(mTokenizer[0].position.line, 0);
+    QCOMPARE(mTokenizer[3].position.line, 1);
+}
+
+void TestCppTokenizer::test_character_positions()
+{
+    tokenize({"int value; auto x = 1;"});
+    QCOMPARE(mTokenizer[0].position, (SourcePosition{0, 0}));
+    QCOMPARE(mTokenizer[1].position, (SourcePosition{0, 4}));
+    QCOMPARE(mTokenizer[3].position, (SourcePosition{0, 11}));
+    QCOMPARE(mTokenizer[6].position, (SourcePosition{0, 20}));
 }
 
 void TestCppTokenizer::test_cursor_advance_and_checkpoint()
@@ -589,4 +667,169 @@ void TestCppTokenizer::test_parse_template_specializations()
     QCOMPARE(declaration.templateKind, TemplateDeclarationKind::PartialSpecialization);
     QCOMPARE(declaration.templateParameters.count(), 1);
     QCOMPARE(declaration.declarators[0].name, "value<T *>");
+}
+
+void TestCppTokenizer::test_scope_range_queries()
+{
+    CppScopes scopes;
+    auto outer = std::make_shared<Statement>();
+    auto first = std::make_shared<Statement>();
+    auto second = std::make_shared<Statement>();
+    scopes.addScope({{0, 0}, {10, 0}}, outer);
+    scopes.addScope({{2, 0}, {4, 0}}, first, 0);
+    scopes.addScope({{6, 0}, {8, 0}}, second, 0);
+
+    QCOMPARE(scopes.findScopeAt({3, 0}), first);
+    QCOMPARE(scopes.findScopeAt({5, 0}), outer);
+    QCOMPARE(scopes.findScopeAt({6, 0}), second);
+    QVERIFY(!scopes.findScopeAt({11, 0}));
+}
+
+void TestCppTokenizer::test_scope_queries_same_line()
+{
+    CppScopes scopes;
+    auto outer = std::make_shared<Statement>();
+    auto first = std::make_shared<Statement>();
+    auto second = std::make_shared<Statement>();
+    scopes.addScope({{0, 0}, {0, 100}}, outer);
+    scopes.addScope({{0, 10}, {0, 20}}, first, 0);
+    scopes.addScope({{0, 30}, {0, 40}}, second, 0);
+
+    QCOMPARE(scopes.findScopeAt({0, 15}), first);
+    QCOMPARE(scopes.findScopeAt({0, 25}), outer);
+    QCOMPARE(scopes.findScopeAt({0, 35}), second);
+    QCOMPARE(scopes.findScopeAt({0, 99}), outer);
+    QVERIFY(!scopes.findScopeAt({0, 101}));
+}
+
+void TestCppTokenizer::test_syntax_class_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxFile("classes.cpp", declarations));
+    const DeclarationInfo *s = findDeclaration(declarations, "S");
+    QVERIFY(s);
+    QCOMPARE(s->kind, DeclarationKind::Class);
+    QCOMPARE(s->range.start, (SourcePosition{5, 0}));
+    QCOMPARE(s->bodyRange.start, (SourcePosition{6, 0}));
+    QCOMPARE(s->bodyRange.end, (SourcePosition{24, 0}));
+    for (const char *name : {"d1", "a", "d2", "f1", "d3", "d4", "f2",
+                             "NestedS", "d5", "d6", "value_type", "pointer_type"}) {
+        QVERIFY2(findDeclaration(s->children, QString::fromLatin1(name)), name);
+    }
+    const DeclarationInfo *m = findDeclaration(declarations, "M");
+    QVERIFY(m);
+    QVERIFY(findDeclaration(m->children, "operator()"));
+
+    const DeclarationInfo *derived = findDeclaration(declarations, "Derived");
+    QVERIFY(derived);
+    QCOMPARE(derived->baseClasses, QStringList{"public Base"});
+    QVERIFY(findDeclaration(derived->children, "Base::d"));
+
+    const DeclarationInfo *memberTemplates = findDeclaration(declarations, "MemberTemplates");
+    QVERIFY(memberTemplates);
+    const DeclarationInfo *nested = findDeclaration(memberTemplates->children, "NestedS");
+    QVERIFY(nested);
+    QCOMPARE(nested->templateKind, TemplateDeclarationKind::Primary);
+}
+
+void TestCppTokenizer::test_syntax_template_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxFile("templates.cpp", declarations));
+    const DeclarationInfo *a = findDeclaration(declarations, "A");
+    QVERIFY(a);
+    QCOMPARE(a->templateKind, TemplateDeclarationKind::Primary);
+    QVERIFY(findDeclaration(a->children, "f"));
+
+    const DeclarationInfo *specialization = findDeclaration(declarations, "A<MyClass>");
+    QVERIFY(specialization);
+    QCOMPARE(specialization->templateKind, TemplateDeclarationKind::ExplicitSpecialization);
+
+    const DeclarationInfo *ptr = findDeclaration(declarations, "Ptr");
+    QVERIFY(ptr);
+    QCOMPARE(ptr->kind, DeclarationKind::Alias);
+    QCOMPARE(ptr->specifiers.type.toString(), "T *");
+
+    const DeclarationInfo *variadic = findTopLevelDeclaration(declarations, "f");
+    QVERIFY(variadic);
+    QCOMPARE(variadic->templateParameters.count(), 1);
+    QVERIFY(variadic->templateParameters[0].parameterPack);
+}
+
+void TestCppTokenizer::test_syntax_namespace_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxFile("namespaces.cpp", declarations));
+    const DeclarationInfo *q = findDeclaration(declarations, "Q");
+    QVERIFY(q);
+    QCOMPARE(q->kind, DeclarationKind::Namespace);
+    QVERIFY(findDeclaration(q->children, "V"));
+    QVERIFY(findDeclaration(q->children, "V::f"));
+    QVERIFY(findDeclaration(q->children, "V::C::m"));
+
+    const DeclarationInfo *nested = findDeclaration(declarations, "A::B::C");
+    QVERIFY(nested);
+    QVERIFY(findDeclaration(nested->children, "nested_value"));
+
+    const DeclarationInfo *lib1 = findDeclaration(declarations, "Lib_1");
+    QVERIFY(lib1);
+    QVERIFY(lib1->specifiers.properties.testFlag(DeclSpecifierProperty::Inline));
+    QVERIFY(findDeclaration(declarations, "A<MyClass>"));
+}
+
+void TestCppTokenizer::test_syntax_enum_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxFile("enums.cpp", declarations));
+    const DeclarationInfo *color = findDeclaration(declarations, "color");
+    QVERIFY(color);
+    QCOMPARE(color->kind, DeclarationKind::Enum);
+    QCOMPARE(color->enumerators.count(), 4);
+    QCOMPARE(color->enumerators[2].name, "green");
+    QCOMPARE(color->enumerators[2].value, "20");
+    QCOMPARE(color->enumerators[3].name, "blue");
+
+    const DeclarationInfo *altitude = findDeclaration(declarations, "altitude");
+    QVERIFY(altitude);
+    QVERIFY(altitude->enumScoped);
+    QCOMPARE(altitude->enumerators[0].value, "'h'");
+    QVERIFY(findDeclaration(declarations, "E11"));
+}
+
+void TestCppTokenizer::test_syntax_using_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "using namespace std;\n"
+                "using enum fruit;\n"
+                "using Base::d;\n"
+                "template<typename T> using Ptr = T*;\n", declarations));
+    QCOMPARE(declarations.count(), 4);
+    QCOMPARE(declarations[0].kind, DeclarationKind::Using);
+    QCOMPARE(declarations[0].declarators[0].name, "std");
+    QCOMPARE(declarations[1].kind, DeclarationKind::Using);
+    QCOMPARE(declarations[1].declarators[0].name, "fruit");
+    QCOMPARE(declarations[2].kind, DeclarationKind::Using);
+    QCOMPARE(declarations[2].declarators[0].name, "Base::d");
+    QCOMPARE(declarations[3].kind, DeclarationKind::Alias);
+    QCOMPARE(declarations[3].templateKind, TemplateDeclarationKind::Primary);
+    QCOMPARE(declarations[3].specifiers.type.toString(), "T *");
+}
+
+void TestCppTokenizer::test_declaration_source_ranges()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("int f() { int value; }", declarations));
+    QCOMPARE(declarations.count(), 1);
+    QCOMPARE(declarations[0].declarators[0].position, (SourcePosition{0, 4}));
+    QCOMPARE(declarations[0].range.start, (SourcePosition{0, 0}));
+    QCOMPARE(declarations[0].range.end, (SourcePosition{0, 21}));
+    QCOMPARE(declarations[0].bodyRange.start, (SourcePosition{0, 8}));
+    QCOMPARE(declarations[0].bodyRange.end, (SourcePosition{0, 21}));
+
+    declarations.clear();
+    QVERIFY(parseSyntaxText("int main(){ int value;", declarations));
+    QCOMPARE(declarations[0].bodyRange.start, (SourcePosition{0, 10}));
+    QCOMPARE(declarations[0].bodyRange.end, (SourcePosition{0, 21}));
+    QCOMPARE(declarations[0].range.end, (SourcePosition{0, 21}));
 }

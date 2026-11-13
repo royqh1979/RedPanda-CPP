@@ -20,6 +20,7 @@
 #include <QString>
 #include <QVector>
 #include <memory>
+#include "cpptypes.h"
 
 class CppTokenizer
 {
@@ -38,7 +39,7 @@ public:
 
     struct Token {
         QString text;
-        int line = 0;
+        SourcePosition position;
         int matchIndex = -1;
         TokenKind kind = TokenKind::Operator;
         QString fileName;
@@ -66,7 +67,7 @@ public:
     void stopForParserReset() { mStopForParserReset = true; }
 
 private:
-    void addToken(const QString &text, TokenKind kind, int line);
+    void addToken(const QString &text, TokenKind kind, const SourcePosition &position);
     void resolveUnmatchedPairs();
     int nextFileBoundary(int tokenIndex) const;
 
@@ -90,7 +91,7 @@ private:
 private:
     QString mBuffer;
     const QChar *mCurrent = nullptr;
-    int mCurrentLine = 0;
+    SourcePosition mCurrentPosition;
     QString mCurrentFile;
     TokenList mTokenList;
     QVector<int> mUnmatchedBraces;

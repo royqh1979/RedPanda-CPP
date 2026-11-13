@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 #include <memory>
 #include <functional>
 #include "pptoken.h"
+#include "cpptypes.h"
+#include "cppscopes.h"
 
 using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 
@@ -198,8 +200,8 @@ struct Statement {
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
-    int line; // declaration
-    int definitionLine; // definition
+    SourceRange declarationRange;
+    SourceRange definitionRange;
     QString fileName; // declaration
     QString declarationBoundaryAncestor;
     QString definitionFileName; // definition
@@ -292,30 +294,6 @@ struct UsingNamespace {
 };
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;
 
-struct CppScope {
-    int startLine;
-    PStatement statement;
-};
-
-using PCppScope = std::shared_ptr<CppScope>;
-class CppScopes {
-public:
-    PStatement findScopeAtLine(int line) const;
-    void addScope(int line, PStatement scopeStatement);
-    PStatement lastScope() const {
-        if (mScopes.isEmpty())
-            return PStatement();
-        return mScopes.back()->statement;
-    }
-    void removeLastScope() {
-        if (!mScopes.isEmpty())
-            mScopes.pop_back();
-    }
-    void clear() { mScopes.clear(); }
-private:
-    QVector<PCppScope> mScopes;
-};
-
 struct ClassInheritanceInfo {
     std::weak_ptr<Statement> derivedClass;
     QString file;
@@ -339,11 +317,13 @@ public:
     void addInclude(const QString &fileName) { mIncludes.insert(fileName); }
     void addDirectInclude(const QString &fileName) { mDirectIncludes.append(fileName); }
     bool including(const QString &fileName) const { return mIncludes.contains(fileName); }
-    PStatement findScopeAtLine(int line) const { return mScopes.findScopeAtLine(line); }
+    PStatement findScopeAt(const SourcePosition &position) const { return mScopes.findScopeAt(position); }
     void addStatement(const PStatement &statement) { mStatements.insert(statement->fullName,statement); }
     void removeStatement(const PStatement &statement) { mStatements.remove(statement->fullName,statement); }
     void clearStatements() { mStatements.clear(); }
-    void addScope(int line, const PStatement &scope) { mScopes.addScope(line,scope); }
+    void addScope(const SourceRange &range, const PStatement &scope, int parentIndex = -1) {
+        mScopes.addScope(range, scope, parentIndex);
+    }
     void removeLastScope() { mScopes.removeLastScope(); }
     PStatement lastScope() const { return mScopes.lastScope(); }
     void addUsing(const QString &usingSymbol) { mUsings.insert(usingSymbol); }

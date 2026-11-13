@@ -27,17 +27,18 @@ public:
     explicit CppDeclarationParser(CppTokenCursor &cursor);
 
     bool parseDeclaration(DeclarationInfo &result);
+    bool parseSimpleDeclaration(DeclarationInfo &result);
+    bool parseTemplatePrefix(DeclarationInfo &result);
     bool parseDeclSpecifierSeq(DeclSpecifierInfo &result);
     bool parseDeclarator(DeclaratorInfo &result);
     bool parseParameter(ParameterInfo &result);
+    QString parseQualifiedNameText();
 
 private:
-    bool parseTemplatePrefix(DeclarationInfo &result);
     bool parseTypeName(TypeInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
     QString parseTemplateArgumentText();
     QString parseOperatorName();
-    QString parseQualifiedNameText();
     QString readBalancedToken(const QString &opening, const QString &closing);
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);

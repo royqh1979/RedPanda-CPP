@@ -1037,6 +1037,10 @@ void TestCppParser::test_cppreference_declarator_syntax()
 void TestCppParser::test_cppreference_function_syntax()
 {
     parseSyntaxResource(mParser, "functions.cpp");
+    PStatement f1 = mParser->findStatement("f1");
+    QVERIFY(f1);
+    QCOMPARE(f1->declarationRange.start.line, 9);
+    QCOMPARE(f1->definitionRange.start.line, 31);
     for (const char *name : {"f0", "f1", "fp03", "fp11", "main", "f2", "bar"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
@@ -1048,6 +1052,9 @@ void TestCppParser::test_cppreference_function_syntax()
 void TestCppParser::test_cppreference_class_syntax()
 {
     parseSyntaxResource(mParser, "classes.cpp");
+    PStatement d1 = mParser->findStatement("S::d1");
+    QVERIFY(d1);
+    QCOMPARE(d1->declarationRange.start.line, 7);
     for (const char *name : {
              "S::d1", "S::a", "S::d2", "S::f1", "S::d3", "S::d4", "S::f2",
              "S::NORTH", "S::NestedS", "S::NestedS::s", "S::d5", "S::d6",
@@ -1098,6 +1105,7 @@ void TestCppParser::test_cppreference_lambda_syntax()
 {
     QString file = parseSyntaxResource(mParser, "lambdas.cpp");
     QVERIFY(mParser->findStatement("main"));
+    QCOMPARE(mParser->findStatementOf(file, "x", 5)->declarationRange.start.line, 5);
     for (const char *name : {"x", "simple", "func1", "func2",
                              "nth_fibonacci", "generic", "y"}) {
         QVERIFY2(mParser->findStatementOf(file, QString::fromLatin1(name), 5), name);
@@ -1111,6 +1119,7 @@ void TestCppParser::test_cppreference_structured_binding_syntax()
     QString file = parseSyntaxResource(mParser, "structured_bindings.cpp");
     QVERIFY(mParser->findStatement("main"));
     QVERIFY(mParser->findStatementOf(file, "myset", 6));
+    QCOMPARE(mParser->findStatementOf(file, "myset", 6)->declarationRange.start.line, 6);
     QVERIFY(mParser->findStatementOf(file, "iter", 8));
     QVERIFY(mParser->findStatementOf(file, "success", 8));
     QVERIFY(mParser->findStatementOf(file, "BitFields", 12));

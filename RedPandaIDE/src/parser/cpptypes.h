@@ -19,12 +19,39 @@
 
 #include <QFlags>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <memory>
 
 struct Statement;
 struct TypeInfo;
 using PTypeInfo = std::shared_ptr<TypeInfo>;
+
+struct SourcePosition {
+    int line = -1;
+    int ch = -1;
+
+    bool isValid() const { return line >= 0 && ch >= 0; }
+    bool operator==(const SourcePosition &other) const {
+        return line == other.line && ch == other.ch;
+    }
+    bool operator<(const SourcePosition &other) const {
+        return line < other.line || (line == other.line && ch < other.ch);
+    }
+    bool operator<=(const SourcePosition &other) const {
+        return *this < other || *this == other;
+    }
+};
+
+struct SourceRange {
+    SourcePosition start;
+    SourcePosition end;
+
+    bool isValid() const { return start.isValid() && end.isValid() && start <= end; }
+    bool contains(const SourcePosition &position) const {
+        return isValid() && start <= position && position <= end;
+    }
+};
 
 enum class TypeQualifier {
     None = 0x0,
@@ -52,7 +79,7 @@ struct TemplateArgument {
 struct ParameterInfo {
     PTypeInfo type;
     QString name;
-    int line = 0;
+    SourcePosition position;
 
     QString toString(bool includeName = true) const;
 };
@@ -112,7 +139,7 @@ struct DeclaratorInfo {
     QString name;
     QString qualifier;
     bool globallyQualified = false;
-    int line = 0;
+    SourcePosition position;
     QVector<TypeDerivation> derivations;
 
     QString toString() const;
@@ -131,7 +158,8 @@ enum class DeclSpecifierProperty {
     Constexpr = 0x100,
     Consteval = 0x200,
     Constinit = 0x400,
-    Explicit = 0x800
+    Explicit = 0x800,
+    Typedef = 0x1000
 };
 Q_DECLARE_FLAGS(DeclSpecifierProperties, DeclSpecifierProperty)
 Q_DECLARE_OPERATORS_FOR_FLAGS(DeclSpecifierProperties)
@@ -160,11 +188,49 @@ enum class TemplateDeclarationKind {
     ExplicitSpecialization
 };
 
+enum class DeclarationKind {
+    Simple,
+    Class,
+    Enum,
+    Namespace,
+    NamespaceAlias,
+    Alias,
+    Using
+};
+
+enum class ClassKey {
+    None,
+    Class,
+    Struct,
+    Union
+};
+
+enum class DeclarationAccessibility {
+    Default,
+    Public,
+    Protected,
+    Private
+};
+
+struct EnumeratorInfo {
+    QString name;
+    QString value;
+};
+
 struct DeclarationInfo {
+    SourceRange range;
+    SourceRange bodyRange;
     DeclSpecifierInfo specifiers;
     QVector<DeclaratorInfo> declarators;
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
     QVector<TemplateParameterInfo> templateParameters;
+    DeclarationKind kind = DeclarationKind::Simple;
+    ClassKey classKey = ClassKey::None;
+    DeclarationAccessibility accessibility = DeclarationAccessibility::Default;
+    bool enumScoped = false;
+    QStringList baseClasses;
+    QVector<EnumeratorInfo> enumerators;
+    QVector<DeclarationInfo> children;
 };
 
 #endif // CPPTYPES_H

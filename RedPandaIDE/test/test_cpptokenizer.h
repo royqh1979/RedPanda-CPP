@@ -7,6 +7,9 @@
 #include "src/parser/cpptokencursor.h"
 #include "src/parser/cpptypes.h"
 #include "src/parser/cppdeclarationparser.h"
+#include "src/parser/cppsyntaxparser.h"
+#include "src/parser/cppscopes.h"
+#include "src/parser/parserutils.h"
 
 class TestCppTokenizer : public QObject
 {
@@ -32,6 +35,7 @@ private slots:
     void test_attributes_are_skipped();
     void test_preprocessor_tokens();
     void test_line_numbers();
+    void test_character_positions();
     void test_cursor_advance_and_checkpoint();
     void test_greater_token_split_and_rollback();
     void test_same_file_match_skip();
@@ -60,10 +64,20 @@ private slots:
     void test_parse_function_template();
     void test_parse_template_parameter_kinds();
     void test_parse_template_specializations();
+    void test_syntax_class_declarations();
+    void test_syntax_template_declarations();
+    void test_syntax_namespace_declarations();
+    void test_syntax_enum_declarations();
+    void test_syntax_using_declarations();
+    void test_scope_range_queries();
+    void test_scope_queries_same_line();
+    void test_declaration_source_ranges();
 
 private:
     void tokenize(const QStringList &lines);
     bool parseDeclarationText(const QString &text, DeclarationInfo &result);
+    bool parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result);
+    bool parseSyntaxFile(const QString &fileName, QVector<DeclarationInfo> &result);
     QStringList tokenTexts() const;
 
     CppTokenizer mTokenizer;

@@ -54,7 +54,7 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 - 对外提供最小词法类别：标识符、整数字面量、浮点数字面量、字符串/字符字面量、运算符或标点、预处理结果中的文件边界标记。关键字仍按文本判断，不为每个关键字建立 Token 类型。整数与浮点数按词法结构分类，包括指数、十六进制浮点和后缀；符号运算符不并入数字。
 - 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
 - 参数默认值不参与语义建模。Parameter Statement 不保存默认值；函数 `args` 在迁移期仍可能包含默认值文本，但它只是兼容和展示字符串。若以后需要高保真参数提示，应单独保存参数声明原文。
-- 保留 0 基行号和 `matchIndex`。列号、源码偏移和相邻空白等字段在实际需求出现前不加入。
+- Token 记录由 0 基 line/ch 组成的 SourcePosition，并保留 `matchIndex`。同一行内的嵌套声明、lambda 和块必须能通过 ch 区分；不另建一套偏移坐标。
 - Tokenizer 计算 `()`、`[]`、`{}` 配对，不计算 `<>` 配对。未闭合结构是正常输入状态，不能中止后续切分；文件内未配对结构以当前文件尾作为虚拟匹配位置。根文件尾由不进入 token 列表的静态 FileEnd 哨兵表示，Cursor 在该位置返回哨兵而不越界；include 文件尾继续使用 FileBoundary 标记。
 - matchIndex 按整个预处理 TU 的 token 流计算，使 Parser 能识别配对目标是否越过 include 文件边界。本 Parser 不支持跨文件配对；发现后记录诊断并跳到当前文件结束。include 文件随后返回包含者继续分析，根文件则自然分析到文件尾。
 - `#include` 文件边界标记的行号映射继续保留，其职责无语法歧义。
@@ -70,7 +70,7 @@ lambda 的识别由 Parser 根据上下文完成，删除 Tokenizer 的 `mLambda
 
 ### DeclaratorInfo
 
-`parseDeclarator()` 返回一个仅在声明解析期间存在的临时结果，不建立完整 AST。它由名称、外层限定作用域、是否全局限定、声明行号以及有序 derivation 列表组成。名称中的模板实例参数在迁移期保持现有格式。
+`parseDeclarator()` 返回一个仅在声明解析期间存在的临时结果，不建立完整 AST。它由名称、外层限定作用域、是否全局限定、SourcePosition 以及有序 derivation 列表组成。名称中的模板实例参数在迁移期保持现有格式。
 
 derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueReference、MemberPointer、Array 和 Function。顺序是语义的一部分：`int *a[5]` 为 Array→Pointer，而 `int (*a)[5]` 为 Pointer→Array；`int (*factory())(double)` 为 Function→Pointer→Function。不能用无序字段或单独的 pointerLevel/arraySuffix 替代。
 
@@ -153,6 +153,14 @@ Token 流只保留纯切分形式，Parser 直接使用 TokenCursor 和声明产
 StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、publicProperties、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。
 
 查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。失效时仍须删除对应索引项；weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
+
+### 源码位置与范围查询
+
+SourcePosition 由 0 基 line/ch 组成，SourceRange 使用包含端点的起止位置。Statement 分别记录声明和定义范围；class/namespace/function 的作用域使用 bodyRange。未闭合到文件尾时，范围在文件内最后 token 处结束，不产生无效跨文件位置。
+
+CppScope 保存完整 SourceRange 和父索引。查询先按起点二分找到最后一个起点不大于目标位置的 scope；若目标超出其结束位置，则沿父索引向外层回退，直到找到包含目标的范围或到达全局。复杂度为 O(log 节点数 + 嵌套深度)，不需要通用 interval tree。
+
+测试必须同时校验声明/定义位置、body 范围、嵌套和兄弟范围、范围外的全局位置，以及同一行内按 ch 区分的作用域。文件结束和 include 返回路径也纳入范围测试。
 
 ### 模板与类型推导
 

@@ -32,11 +32,21 @@ CppDeclarationParser::CppDeclarationParser(CppTokenCursor &cursor)
 
 bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
 {
-    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclarationInfo();
     if (!parseTemplatePrefix(result))
         return false;
-    if (!parseDeclSpecifierSeq(result.specifiers)) {
+    return parseSimpleDeclaration(result);
+}
+
+bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    bool withoutSpecifiers = mCursor.currentText() == "~"
+            || mCursor.currentText() == "operator"
+            || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
+                && !isBuiltinType(mCursor.currentText())
+                && mCursor.peek().text == "(");
+    if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
         mCursor.restore(start);
         return false;
     }
@@ -165,6 +175,7 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
         else if (text == "consteval") property = DeclSpecifierProperty::Consteval;
         else if (text == "constinit") property = DeclSpecifierProperty::Constinit;
         else if (text == "explicit") property = DeclSpecifierProperty::Explicit;
+        else if (text == "typedef") property = DeclSpecifierProperty::Typedef;
         if (property != DeclSpecifierProperty::None) {
             result.properties.setFlag(property);
             mCursor.advance();
@@ -209,7 +220,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 {
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclaratorInfo();
-    result.line = mCursor.atEnd() ? 0 : mCursor.current().line;
+    result.position = mCursor.current().position;
     QVector<TypeDerivation> prefix;
 
     while (!mCursor.atEnd()) {
@@ -364,7 +375,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 
 bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 {
-    int line = mCursor.atEnd() ? 0 : mCursor.current().line;
+    SourcePosition position = mCursor.current().position;
     DeclSpecifierInfo specifiers;
     if (!parseDeclSpecifierSeq(specifiers))
         return false;
@@ -375,7 +386,7 @@ bool CppDeclarationParser::parseParameter(ParameterInfo &result)
     result.type = std::make_shared<TypeInfo>(specifiers.type);
     appendTypeDerivation(*result.type, declarator);
     result.name = declarator.name;
-    result.line = line;
+    result.position = position;
     return true;
 }
 
