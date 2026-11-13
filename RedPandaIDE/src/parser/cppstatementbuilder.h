@@ -17,7 +17,7 @@
 #ifndef CPPSTATEMENTBUILDER_H
 #define CPPSTATEMENTBUILDER_H
 
-#include "statementmodel.h"
+#include "cppexpressionevaluator.h"
 
 struct StatementBuildContext {
     QString fileName;
@@ -39,6 +39,10 @@ public:
                                           const StatementBuildContext &context);
 
 private:
+    QList<std::weak_ptr<Statement>> buildUsing(const DeclarationInfo &declaration,
+                                               const StatementBuildContext &context);
+    PStatement createBlock(const DeclarationInfo &declaration,
+                           const StatementBuildContext &context);
     PStatement createStatement(const DeclarationInfo &declaration,
                                const DeclaratorInfo &declarator,
                                const StatementBuildContext &context,
@@ -53,11 +57,16 @@ private:
                                          const StatementBuildContext &context) const;
     QString fullName(const DeclaratorInfo &declarator,
                      const StatementBuildContext &context) const;
+    TypeInfo deduceAutoType(TypeInfo initializerType, const DeclaratorInfo &declarator,
+                            const DeclSpecifierInfo &specifiers) const;
     void buildChildren(const DeclarationInfo &declaration,
                        const StatementBuildContext &context,
                        const PStatement &parent);
 
     StatementModel &mModel;
+    CppTypeResolver mTypeResolver;
+    TypeOperationRegistry mTypeOperations;
+    CppExpressionEvaluator mExpressionEvaluator;
 };
 
 #endif // CPPSTATEMENTBUILDER_H

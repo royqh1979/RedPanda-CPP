@@ -172,6 +172,16 @@ CppScope 保存完整 SourceRange 和父索引。查询先按起点二分找到�
 
 测试必须同时校验声明/定义位置、body 范围、嵌套和兄弟范围、范围外的全局位置，以及同一行内按 ch 区分的作用域。文件结束和 include 返回路径也纳入范围测试。
 
+### 局部作用域、using 与 auto
+
+函数体中的局部声明和控制块参与 Statement/Scope 构建，表达式语句不建立语句 AST。CppScope 不另存作用域类型，直接从其 StatementKind 取得 namespace、class、function 或 Block 语义；StatementScope 只描述声明实体的 global/local/class-local 归属。Block 使用 DummyStatement 避免作为普通符号参与补全，但 children 和 bodyRange 正常用于查询。
+
+for 和 catch 各自拥有独立 local Block：普通 for 的初始化声明、range-for 的循环变量以及 catch 的异常参数都挂在该 Block 下，块外不可见。while、if、try 和普通嵌套 `{}` 也建立 Block，外层变量通过 parentIndex 链查找。普通 for 与 range-for 不在 Statement 层区分；临时 DeclarationInfo 以 Block、rangeExpression 和循环变量 declarator 表示 range-for，range 表达式在 for 外部上下文求值。
+
+using 不创建作用域。using namespace/using enum 记录到当前 Statement 的 usingList（全局则记录到 ParsedFileInfo），using alias 在当前作用域创建 Alias Statement，using declaration 引入目标名称及类型。名称查找沿词法父链处理这些指令，局部 using 不因函数体解析而丢失。
+
+`auto x = expression` 在创建变量 Statement 时求初始化表达式，普通 auto 去除结果引用和顶层 cv，auto 引用声明保留相应引用；算术运算应用通常算术转换，条件表达式合并两侧算术类型，并识别整数字面量和浮点字面量后缀。range-for 按声明形式使用 rangeValue 或 rangeReference。求值失败保留 auto，不影响其它声明。测试必须验证循环内部变量方法/属性、循环外不可见性、`while (++it != end)`、range-for、普通 for、catch 和局部 using。
+
 ### 模板与类型推导
 
 声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过表达式/函数体时无需配平 `<>`，只有解析声明时才判定；查不到时回退到结构配平。

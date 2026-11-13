@@ -243,6 +243,7 @@ bool CppSyntaxParser::parseUsing(DeclarationInfo &result)
     mCursor.advance();
     if (mCursor.consume("namespace")) {
         result.kind = DeclarationKind::Using;
+        result.usingKind = UsingDeclarationKind::Namespace;
         DeclaratorInfo declarator;
         declarator.name = mDeclarationParser.parseQualifiedNameText();
         result.declarators.append(declarator);
@@ -251,6 +252,7 @@ bool CppSyntaxParser::parseUsing(DeclarationInfo &result)
     }
     if (mCursor.consume("enum")) {
         result.kind = DeclarationKind::Using;
+        result.usingKind = UsingDeclarationKind::Enum;
         DeclaratorInfo declarator;
         declarator.name = mDeclarationParser.parseQualifiedNameText();
         result.declarators.append(declarator);
@@ -283,9 +285,7 @@ void CppSyntaxParser::finishRanges(DeclarationInfo &result, const SourcePosition
 {
     result.range.start = start;
     if (mCursor.currentText() == "{") {
-        result.bodyRange.start = mCursor.current().position;
-        skipBalanced();
-        result.bodyRange.end = mCursor.peek(-1).position;
+        parseBlock(result);
         mCursor.consume(";");
     }
     result.range.end = mCursor.peek(-1).position;
@@ -353,4 +353,155 @@ void CppSyntaxParser::skipDeclaration()
         else
             mCursor.advance();
     }
+}
+
+
+bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
+{
+    if (mCursor.currentText() != "{")
+        return false;
+    if (!result.range.start.isValid())
+        result.range.start = mCursor.current().position;
+    result.bodyRange.start = mCursor.current().position;
+    mCursor.advance();
+    while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+        if (mCursor.consume(";"))
+            continue;
+        DeclarationInfo child;
+        if (mCursor.currentText() == "for") {
+            if (!parseFor(child))
+                skipDeclaration();
+            else
+                result.children.append(child);
+            continue;
+        }
+        if (mCursor.currentText() == "try") {
+            mCursor.advance();
+            child.kind = DeclarationKind::Block;
+            if (mCursor.currentText() == "{")
+                parseBlock(child);
+            else
+                skipDeclaration();
+            result.children.append(child);
+            continue;
+        }
+        if (mCursor.currentText() == "catch") {
+            if (!parseCatch(child))
+                skipDeclaration();
+            else
+                result.children.append(child);
+            continue;
+        }
+        if (mCursor.currentText() == "while" || mCursor.currentText() == "if") {
+            if (!parseControlBlock(child))
+                skipDeclaration();
+            else
+                result.children.append(child);
+            continue;
+        }
+        if (mCursor.currentText() == "{") {
+            child.kind = DeclarationKind::Block;
+            if (!parseBlock(child))
+                skipBalanced();
+            else
+                result.children.append(child);
+            continue;
+        }
+        CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
+        if (parseDeclaration(child)) {
+            result.children.append(child);
+            continue;
+        }
+        mCursor.restore(checkpoint);
+        skipDeclaration();
+        mCursor.consume(";");
+    }
+    result.bodyRange.end = mCursor.currentText() == "}"
+            ? mCursor.current().position : mCursor.peek(-1).position;
+    mCursor.consume("}");
+    result.range.end = mCursor.peek(-1).position;
+    return true;
+}
+
+bool CppSyntaxParser::parseFor(DeclarationInfo &result)
+{
+    result.kind = DeclarationKind::Block;
+    result.range.start = mCursor.current().position;
+    mCursor.advance();
+    if (!mCursor.consume("("))
+        return false;
+
+    CppTokenCursor::Checkpoint declarationStart = mCursor.checkpoint();
+    DeclaratorInfo loopVariable;
+    if (mDeclarationParser.parseDeclSpecifierSeq(result.specifiers)
+            && mDeclarationParser.parseDeclarator(loopVariable)
+            && mCursor.consume(":")) {
+        result.declarators.append(loopVariable);
+        result.rangeExpression = readUntil({")"});
+        mCursor.consume(")");
+        return parseStatementBody(result);
+    }
+
+    mCursor.restore(declarationStart);
+    DeclarationInfo initializer;
+    CppTokenCursor::Checkpoint initializerStart = mCursor.checkpoint();
+    if (parseDeclaration(initializer)) {
+        result.children.append(initializer);
+    } else {
+        mCursor.restore(initializerStart);
+        readUntil({";"});
+        mCursor.consume(";");
+    }
+    readUntil({";"});
+    mCursor.consume(";");
+    readUntil({")"});
+    mCursor.consume(")");
+    return parseStatementBody(result);
+}
+
+bool CppSyntaxParser::parseCatch(DeclarationInfo &result)
+{
+    result.kind = DeclarationKind::Block;
+    result.range.start = mCursor.current().position;
+    mCursor.advance();
+    if (!mCursor.consume("("))
+        return false;
+    if (mCursor.currentText() == "...") {
+        mCursor.advance();
+    } else {
+        DeclarationInfo exception;
+        CppTokenCursor::Checkpoint exceptionStart = mCursor.checkpoint();
+        if (parseDeclaration(exception))
+            result.children.append(exception);
+        else
+            mCursor.restore(exceptionStart);
+    }
+    if (mCursor.currentText() != ")")
+        readUntil({")"});
+    mCursor.consume(")");
+    return parseStatementBody(result);
+}
+
+bool CppSyntaxParser::parseControlBlock(DeclarationInfo &result)
+{
+    result.kind = DeclarationKind::Block;
+    result.range.start = mCursor.current().position;
+    mCursor.advance();
+    if (mCursor.currentText() == "(")
+        skipBalanced();
+    return parseStatementBody(result);
+}
+
+bool CppSyntaxParser::parseStatementBody(DeclarationInfo &result)
+{
+    if (mCursor.currentText() == "{")
+        return parseBlock(result);
+    if (mCursor.atEnd() || mCursor.currentText() == "}")
+        return false;
+    result.bodyRange.start = mCursor.current().position;
+    skipDeclaration();
+    result.bodyRange.end = mCursor.peek(-1).position;
+    mCursor.consume(";");
+    result.range.end = mCursor.peek(-1).position;
+    return true;
 }

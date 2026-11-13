@@ -56,7 +56,8 @@ QString className(const DeclaratorInfo &declarator, const StatementBuildContext 
 }
 
 CppStatementBuilder::CppStatementBuilder(StatementModel &model)
-    : mModel(model)
+    : mModel(model), mTypeResolver(model), mTypeOperations(mTypeResolver),
+      mExpressionEvaluator(model, mTypeResolver, mTypeOperations)
 {
 }
 
@@ -65,7 +66,32 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
 {
     QList<std::weak_ptr<Statement>> result;
     if (declaration.kind == DeclarationKind::Using)
+        return buildUsing(declaration, context);
+    if (declaration.kind == DeclarationKind::Block) {
+        PStatement block = createBlock(declaration, context);
+        mModel.add(block);
+        if (context.fileInfo) {
+            context.fileInfo->addStatement(block);
+            context.fileInfo->addScope(declaration.bodyRange, block, context.parentScope);
+        }
+        result.append(block);
+        StatementBuildContext childContext = context;
+        childContext.parentScope = block;
+        childContext.scope = StatementScope::Local;
+        childContext.accessibility = StatementAccessibility::None;
+        if (!declaration.rangeExpression.isEmpty()) {
+            for (const DeclaratorInfo &declarator : declaration.declarators) {
+                PStatement variable = createStatement(declaration, declarator, childContext,
+                                                      StatementKind::LocalVariable);
+                mModel.add(variable);
+                if (context.fileInfo)
+                    context.fileInfo->addStatement(variable);
+            }
+        }
+        for (const DeclarationInfo &child : declaration.children)
+            build(child, childContext);
         return result;
+    }
 
     int firstVariable = 0;
     if (declaration.kind == DeclarationKind::Class
@@ -158,6 +184,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
                         context.fileInfo->addStatement(parameterStatement);
                 }
             }
+            if (declaration.bodyRange.isValid())
+                buildChildren(declaration, context, statement);
         }
     }
     return result;
@@ -207,6 +235,33 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                 statement->properties.setFlag(StatementProperty::FunctionPointer);
             } else if (derivation.kind == TypeDerivationKind::Array) {
                 statement->args += derivation.text;
+            }
+        }
+    }
+
+    if (declaration.specifiers.type.qualifiedName == "auto"
+            && (kind == StatementKind::Variable || kind == StatementKind::GlobalVariable
+                || kind == StatementKind::LocalVariable)) {
+        QString expression = declaration.rangeExpression.isEmpty()
+                ? declarator.initializerText : declaration.rangeExpression;
+        if (!expression.isEmpty()) {
+            CppTokenizer tokenizer;
+            tokenizer.tokenize(expression.split('\n'));
+            PStatement evaluationContext = context.parentScope;
+            if (!declaration.rangeExpression.isEmpty() && evaluationContext)
+                evaluationContext = evaluationContext->parentScope.lock();
+            EvalResult evaluated = mExpressionEvaluator.evaluate(tokenizer, evaluationContext);
+            if (evaluated.isValid()) {
+                TypeInfo initializerType = evaluated.type;
+                if (!declaration.rangeExpression.isEmpty()) {
+                    bool reference = !declarator.derivations.isEmpty()
+                            && (declarator.derivations.first().kind == TypeDerivationKind::LvalueReference
+                                || declarator.derivations.first().kind == TypeDerivationKind::RvalueReference);
+                    initializerType = reference ? mTypeOperations.rangeReference(initializerType)
+                                                : mTypeOperations.rangeValue(initializerType);
+                }
+                statement->typeInfo = deduceAutoType(initializerType, declarator,
+                                                     declaration.specifiers);
             }
         }
     }
@@ -307,10 +362,95 @@ void CppStatementBuilder::buildChildren(const DeclarationInfo &declaration,
 {
     StatementBuildContext childContext = context;
     childContext.parentScope = parent;
-    childContext.scope = parent->kind == StatementKind::Class
-            ? StatementScope::ClassLocal : StatementScope::Global;
+    if (parent->kind == StatementKind::Class)
+        childContext.scope = StatementScope::ClassLocal;
+    else if (parent->kind == StatementKind::Namespace)
+        childContext.scope = StatementScope::Global;
+    else
+        childContext.scope = StatementScope::Local;
     childContext.accessibility = parent->kind == StatementKind::Class
             ? parent->accessibility : StatementAccessibility::None;
     for (const DeclarationInfo &child : declaration.children)
         build(child, childContext);
+}
+
+
+QList<std::weak_ptr<Statement>> CppStatementBuilder::buildUsing(
+        const DeclarationInfo &declaration, const StatementBuildContext &context)
+{
+    QList<std::weak_ptr<Statement>> result;
+    if (declaration.declarators.isEmpty())
+        return result;
+    const QString &target = declaration.declarators.first().name;
+    if (declaration.usingKind == UsingDeclarationKind::Namespace
+            || declaration.usingKind == UsingDeclarationKind::Enum) {
+        if (context.parentScope)
+            context.parentScope->usingList.insert(target);
+        else if (context.fileInfo)
+            context.fileInfo->addUsing(target);
+        return result;
+    }
+
+    PStatement alias = createStatement(declaration, declaration.declarators.first(), context,
+                                       StatementKind::Alias);
+    int separator = target.lastIndexOf("::");
+    alias->command = separator >= 0 ? target.mid(separator + 2) : target;
+    alias->fullName = context.parentScope && !context.parentScope->fullName.isEmpty()
+            ? context.parentScope->fullName + "::" + alias->command : alias->command;
+    alias->value = target;
+    PStatement targetStatement = mTypeResolver.findStatement(target, context.parentScope);
+    if (targetStatement) {
+        if (targetStatement->kind == StatementKind::Class
+                || targetStatement->kind == StatementKind::EnumType
+                || targetStatement->kind == StatementKind::EnumClassType
+                || targetStatement->kind == StatementKind::Namespace) {
+            alias->typeInfo.qualifiedName = targetStatement->fullName;
+            alias->typeInfo.declaration = targetStatement;
+        } else {
+            alias->typeInfo = targetStatement->typeInfo;
+        }
+    } else {
+        alias->typeInfo.qualifiedName = target;
+    }
+    mModel.add(alias);
+    if (context.fileInfo)
+        context.fileInfo->addStatement(alias);
+    result.append(alias);
+    return result;
+}
+
+PStatement CppStatementBuilder::createBlock(const DeclarationInfo &declaration,
+                                            const StatementBuildContext &context)
+{
+    auto statement = std::make_shared<Statement>();
+    statement->parentScope = context.parentScope;
+    statement->command = "block";
+    statement->fullName = context.parentScope && !context.parentScope->fullName.isEmpty()
+            ? context.parentScope->fullName + "::block" : "block";
+    statement->kind = StatementKind::Block;
+    statement->scope = StatementScope::Local;
+    statement->accessibility = StatementAccessibility::None;
+    statement->declarationRange = declaration.range;
+    statement->fileName = context.fileName;
+    statement->declarationBoundaryAncestor = context.boundaryAncestor;
+    statement->properties.setFlag(StatementProperty::DummyStatement);
+    statement->properties.setFlag(StatementProperty::InProject, context.inProject);
+    statement->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
+    return statement;
+}
+
+TypeInfo CppStatementBuilder::deduceAutoType(TypeInfo initializerType,
+                                             const DeclaratorInfo &declarator,
+                                             const DeclSpecifierInfo &specifiers) const
+{
+    if (declarator.derivations.isEmpty()) {
+        while (!initializerType.derivations.isEmpty()
+                && (initializerType.derivations.first().kind == TypeDerivationKind::LvalueReference
+                    || initializerType.derivations.first().kind == TypeDerivationKind::RvalueReference))
+            initializerType.derivations.removeFirst();
+        initializerType.qualifiers = TypeQualifier::None;
+    }
+    initializerType.derivations += declarator.derivations;
+    initializerType.qualifiers |= specifiers.type.qualifiers;
+    return initializerType;
 }

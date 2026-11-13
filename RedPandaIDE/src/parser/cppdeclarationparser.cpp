@@ -19,6 +19,15 @@
 #include <algorithm>
 
 namespace {
+void appendToken(QString &target, const QString &text)
+{
+    if (!target.isEmpty() && !text.isEmpty()
+            && (target.back().isLetterOrNumber() || target.back() == '_')
+            && (text.front().isLetterOrNumber() || text.front() == '_'))
+        target += ' ';
+    target += text;
+}
+
 void appendTypeDerivation(TypeInfo &type, const DeclaratorInfo &declarator)
 {
     type.derivations += declarator.derivations;
@@ -61,7 +70,7 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         result.declarators.append(declarator);
 
         if (mCursor.consume("="))
-            skipExpression({",", ";"});
+            result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
         if (!mCursor.atEnd() && mCursor.currentText() == "{") {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
@@ -530,7 +539,7 @@ QString CppDeclarationParser::parseOperatorName()
     else if (mCursor.currentText() == "[")
         result += readBalancedToken("[", "]");
     else {
-        result += mCursor.currentText();
+        appendToken(result, mCursor.currentText());
         mCursor.advance();
     }
     return result;
@@ -570,7 +579,7 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
         QString result;
         while (!mCursor.atEnd()
                && mCursor.current().kind != CppTokenizer::TokenKind::FileBoundary) {
-            result += mCursor.currentText();
+            appendToken(result, mCursor.currentText());
             mCursor.advance();
         }
         return result;
@@ -578,12 +587,12 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
 
     QString result;
     while (!mCursor.atEnd() && mCursor.index() < target) {
-        result += mCursor.currentText();
+        appendToken(result, mCursor.currentText());
         mCursor.advance();
     }
     if (!mCursor.atEnd()
             && mCursor.current().kind != CppTokenizer::TokenKind::FileBoundary) {
-        result += mCursor.currentText();
+        appendToken(result, mCursor.currentText());
         mCursor.advance();
     }
     return result;
@@ -601,7 +610,7 @@ QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters
         else if (text == "{")
             result += readBalancedToken("{", "}");
         else {
-            result += text;
+            appendToken(result, text);
             mCursor.advance();
         }
     }

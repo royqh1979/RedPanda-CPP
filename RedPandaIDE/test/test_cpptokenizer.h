@@ -86,6 +86,7 @@ private slots:
     void test_type_resolver_binds_custom_template_members();
     void test_type_operations_resolve_container_and_iterator_chain();
     void test_expression_evaluator_follows_container_member_chain();
+    void test_function_scopes_auto_loops_catch_and_using();
 
 private:
     void tokenize(const QStringList &lines);

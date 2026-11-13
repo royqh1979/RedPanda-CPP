@@ -31,6 +31,11 @@ private:
     bool parseNamespace(DeclarationInfo &result);
     bool parseEnum(DeclarationInfo &result);
     bool parseUsing(DeclarationInfo &result);
+    bool parseBlock(DeclarationInfo &result);
+    bool parseFor(DeclarationInfo &result);
+    bool parseCatch(DeclarationInfo &result);
+    bool parseControlBlock(DeclarationInfo &result);
+    bool parseStatementBody(DeclarationInfo &result);
 
     QString readUntil(const QSet<QString> &delimiters);
     QStringList splitTopLevel(const QString &text);

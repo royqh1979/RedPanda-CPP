@@ -1214,3 +1214,132 @@ void TestCppTokenizer::test_expression_evaluator_follows_container_member_chain(
     QCOMPARE(evaluate("obj.*member").type.toString(), "int");
     QCOMPARE(evaluate("ptr->*member").type.toString(), "int");
 }
+
+
+void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  class string { public: unsigned long size(); };\n"
+                "  class exception { public: const char* what(); };\n"
+                "  template<typename T> class iterator {\n"
+                "  public:\n"
+                "    iterator<T> operator++();\n"
+                "    iterator<T> operator++(int);\n"
+                "    T* operator*();\n"
+                "    T* operator->();\n"
+                "  };\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    using value_type = T;\n"
+                "    T& front();\n"
+                "    iterator<T> begin();\n"
+                "    iterator<T> end();\n"
+                "  };\n"
+                "}\n"
+                "std::vector<std::string> lst;\n"
+                "void iterate() {\n"
+                "  auto it = lst.begin();\n"
+                "  while (++it != lst.end()) {\n"
+                "    it->size();\n"
+                "  }\n"
+                "  for (auto x : lst) {\n"
+                "    x.size();\n"
+                "  }\n"
+                "  for (auto i = lst.begin(); i != lst.end(); ++i) {\n"
+                "    i->size();\n"
+                "  }\n"
+                "  auto ratio = 10 / 2.0;\n"
+                "  auto flag = (1 < 2) && true;\n"
+                "  auto bits = (1 << 2) | 4;\n"
+                "  auto conditional = true ? 10 : 2.0; auto conditionalReverse = true ? 2.0 : 10;\n"
+                "  auto floating = 1.0f; auto unsignedValue = 1U;\n"
+                "  try { ratio = 1; }\n"
+                "  catch (const std::exception &error) {\n"
+                "    error.what();\n"
+                "  }\n"
+                "}\n"
+                "void localUsing() {\n"
+                "  using namespace std;\n"
+                "  auto text = string();\n"
+                "  using std::string;\n"
+                "  auto text2 = string();\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    ParsedFileInfo fileInfo("/tmp/main.cpp");
+    StatementBuildContext context;
+    context.fileName = fileInfo.fileName();
+    context.fileInfo = &fileInfo;
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text, const PStatement &scope) {
+        CppTokenizer expression;
+        expression.tokenize({text});
+        return evaluator.evaluate(expression, scope);
+    };
+    auto findBlock = [&](const PStatement &function, int line) {
+        const auto blocks = function->children.values("block");
+        for (const std::weak_ptr<Statement> &weakBlock : blocks) {
+            PStatement block = weakBlock.lock();
+            if (block && block->declarationRange.start.line == line)
+                return block;
+        }
+        return PStatement();
+    };
+
+    PStatement iterate = findStatement(model.childrenStatements(), "iterate");
+    QVERIFY(iterate);
+    PStatement it = findStatement(iterate->children, "it");
+    QVERIFY(it);
+    QCOMPARE(it->type(), "std::iterator<std::string>");
+    QCOMPARE(findStatement(iterate->children, "ratio")->type(), "double");
+    QCOMPARE(findStatement(iterate->children, "flag")->type(), "bool");
+    QCOMPARE(findStatement(iterate->children, "bits")->type(), "int");
+    QCOMPARE(findStatement(iterate->children, "conditional")->type(), "double");
+    QCOMPARE(findStatement(iterate->children, "conditionalReverse")->type(), "double");
+    QCOMPARE(findStatement(iterate->children, "floating")->type(), "float");
+    QCOMPARE(findStatement(iterate->children, "unsignedValue")->type(), "unsigned int");
+
+    PStatement whileBlock = findBlock(iterate, 21);
+    QVERIFY(whileBlock);
+    QCOMPARE(evaluate("++it != lst.end()", whileBlock).type.toString(), "bool");
+    QCOMPARE(evaluate("it->size()", whileBlock).type.toString(), "unsigned long");
+    QCOMPARE(fileInfo.findScopeAt({22, 2}), whileBlock);
+
+    PStatement rangeFor = findBlock(iterate, 24);
+    QVERIFY(rangeFor);
+    PStatement x = findStatement(rangeFor->children, "x");
+    QVERIFY(x);
+    QCOMPARE(x->type(), "std::string");
+    QCOMPARE(x->scope, StatementScope::Local);
+    QCOMPARE(evaluate("x.size()", rangeFor).type.toString(), "unsigned long");
+    QVERIFY(!evaluate("x.size()", iterate).isValid());
+    QCOMPARE(fileInfo.findScopeAt({25, 2}), rangeFor);
+
+    PStatement classicFor = findBlock(iterate, 27);
+    QVERIFY(classicFor);
+    PStatement i = findStatement(classicFor->children, "i");
+    QVERIFY(i);
+    QCOMPARE(i->type(), "std::iterator<std::string>");
+    QCOMPARE(evaluate("i->size()", classicFor).type.toString(), "unsigned long");
+    QVERIFY(!evaluate("i->size()", iterate).isValid());
+
+    PStatement catchBlock = findBlock(iterate, 36);
+    QVERIFY(catchBlock);
+    PStatement error = findStatement(catchBlock->children, "error");
+    QVERIFY(error);
+    QCOMPARE(error->type(), "const std::exception &");
+    QCOMPARE(evaluate("error.what()", catchBlock).type.toString(), "const char *");
+    QVERIFY(!evaluate("error.what()", iterate).isValid());
+    QCOMPARE(fileInfo.findScopeAt({37, 2}), catchBlock);
+
+    PStatement localUsing = findStatement(model.childrenStatements(), "localUsing");
+    QVERIFY(localUsing);
+    QCOMPARE(findStatement(localUsing->children, "text")->type(), "std::string");
+    QCOMPARE(findStatement(localUsing->children, "text2")->type(), "std::string");
+}

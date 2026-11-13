@@ -144,6 +144,7 @@ struct DeclaratorInfo {
     bool globallyQualified = false;
     SourcePosition position;
     QVector<TypeDerivation> derivations;
+    QString initializerText;
 
     QString toString() const;
 };
@@ -198,7 +199,14 @@ enum class DeclarationKind {
     Namespace,
     NamespaceAlias,
     Alias,
-    Using
+    Using,
+    Block
+};
+
+enum class UsingDeclarationKind {
+    Namespace,
+    Enum,
+    Member
 };
 
 enum class ClassKey {
@@ -229,9 +237,11 @@ struct DeclarationInfo {
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
     QVector<TemplateParameterInfo> templateParameters;
     DeclarationKind kind = DeclarationKind::Simple;
+    UsingDeclarationKind usingKind = UsingDeclarationKind::Member;
     ClassKey classKey = ClassKey::None;
     DeclarationAccessibility accessibility = DeclarationAccessibility::Default;
     bool enumScoped = false;
+    QString rangeExpression;
     QStringList baseClasses;
     QVector<EnumeratorInfo> enumerators;
     QVector<DeclarationInfo> children;

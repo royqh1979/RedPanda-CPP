@@ -56,6 +56,74 @@ bool hasPointer(const TypeInfo &type)
     }
     return false;
 }
+
+int arithmeticRank(const QString &name)
+{
+    if (name == "long double")
+        return 120;
+    if (name == "double")
+        return 110;
+    if (name == "float")
+        return 100;
+    if (name == "long long" || name == "unsigned long long")
+        return 90;
+    if (name == "long" || name == "unsigned long")
+        return 80;
+    if (name == "int" || name == "unsigned int" || name == "unsigned")
+        return 70;
+    return 10;
+}
+
+TypeInfo usualArithmeticType(const TypeInfo &left, const TypeInfo &right)
+{
+    const TypeInfo *selected = arithmeticRank(left.qualifiedName) >= arithmeticRank(right.qualifiedName)
+            ? &left : &right;
+    QString name = selected->qualifiedName;
+    if (arithmeticRank(left.qualifiedName) == arithmeticRank(right.qualifiedName)) {
+        if (left.qualifiedName.startsWith("unsigned"))
+            name = left.qualifiedName;
+        else if (right.qualifiedName.startsWith("unsigned"))
+            name = right.qualifiedName;
+    }
+    return primitiveType(name == "unsigned" ? "unsigned int" : name);
+}
+
+bool isArithmeticType(const TypeInfo &type)
+{
+    static const QSet<QString> names{
+        "bool", "char", "wchar_t", "char8_t", "char16_t", "char32_t", "short",
+        "unsigned short", "int", "unsigned int", "unsigned", "long", "unsigned long",
+        "long long", "unsigned long long", "float", "double", "long double"
+    };
+    return type.derivations.isEmpty() && names.contains(type.qualifiedName);
+}
+
+TypeInfo integerLiteralType(const QString &literal)
+{
+    QString suffix;
+    for (int i = literal.count() - 1; i >= 0 && literal[i].isLetter(); --i)
+        suffix.prepend(literal[i].toLower());
+    if (suffix == "ull" || suffix == "llu")
+        return primitiveType("unsigned long long");
+    if (suffix == "ll")
+        return primitiveType("long long");
+    if (suffix == "ul" || suffix == "lu")
+        return primitiveType("unsigned long");
+    if (suffix == "l")
+        return primitiveType("long");
+    if (suffix == "u")
+        return primitiveType("unsigned int");
+    return primitiveType("int");
+}
+
+TypeInfo floatingLiteralType(const QString &literal)
+{
+    if (literal.endsWith('f') || literal.endsWith('F'))
+        return primitiveType("float");
+    if (literal.endsWith('l') || literal.endsWith('L'))
+        return primitiveType("long double");
+    return primitiveType("double");
+}
 }
 
 CppExpressionEvaluator::CppExpressionEvaluator(const StatementModel &model,
@@ -93,6 +161,8 @@ EvalResult CppExpressionEvaluator::evaluateBinary(const TokenList &tokens, int &
             if (!whenFalse.isValid())
                 return {};
             left = applyBinary(left, whenFalse, operatorName);
+            if (isArithmeticType(whenTrue.type) && isArithmeticType(whenFalse.type))
+                left.type = usualArithmeticType(whenTrue.type, whenFalse.type);
             continue;
         }
         EvalResult right = evaluateBinary(tokens, index, context,
@@ -324,11 +394,11 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
     EvalResult result;
     switch (initial.kind) {
     case CppTokenizer::TokenKind::IntegerLiteral:
-        result.type = primitiveType("int");
+        result.type = integerLiteralType(initial.text);
         result.kind = EvalStatementKind::Literal;
         break;
     case CppTokenizer::TokenKind::FloatingLiteral:
-        result.type = primitiveType("double");
+        result.type = floatingLiteralType(initial.text);
         result.kind = EvalStatementKind::Literal;
         break;
     case CppTokenizer::TokenKind::StringLiteral:
@@ -443,10 +513,15 @@ EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const Eva
         result.kind = EvalStatementKind::Literal;
         return result;
     }
-    if ((operatorName == "+" || operatorName == "-") && !hasPointer(left.type) && hasPointer(right.type))
+    static const QSet<QString> arithmeticOperators{"+", "-", "*", "/", "%"};
+    if (arithmeticOperators.contains(operatorName) && !hasPointer(left.type) && !hasPointer(right.type)) {
+        result.type = usualArithmeticType(removeReferences(left.type), removeReferences(right.type));
+    } else if ((operatorName == "+" || operatorName == "-")
+               && !hasPointer(left.type) && hasPointer(right.type)) {
         result.type = right.type;
-    else
+    } else {
         result.type = removeReferences(left.type);
+    }
     result.kind = EvalStatementKind::Variable;
     return result;
 }
@@ -458,6 +533,15 @@ PStatement CppExpressionEvaluator::findVisibleStatement(const QString &name,
     while (scope) {
         if (PStatement result = findDirectStatement(scope, name))
             return result;
+        for (const QString &usingName : scope->usingList) {
+            PStatement target = mResolver.findStatement(usingName, scope);
+            if (target && (target->kind == StatementKind::Namespace
+                           || target->kind == StatementKind::EnumType
+                           || target->kind == StatementKind::EnumClassType)) {
+                if (PStatement result = findDirectStatement(target, name))
+                    return result;
+            }
+        }
         scope = scope->parentScope.lock();
     }
     return findDirectStatement({}, name);
