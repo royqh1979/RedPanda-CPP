@@ -33,6 +33,8 @@ public:
     TypeInfo subscriptValue(const TypeInfo &receiver) const;
     TypeInfo subscriptReference(const TypeInfo &receiver) const;
     TypeInfo invokeResult(const TypeInfo &callable, const QVector<TypeInfo> &arguments) const;
+    TypeInfo explicitTemplateResult(const EvalResult &target,
+                                    const QVector<TemplateArgument> &arguments) const;
     TypeInfo pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const;
 
 private:

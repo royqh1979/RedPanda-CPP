@@ -41,6 +41,8 @@ private:
     EvalResult createResult(const PStatement &statement) const;
     bool evaluateArguments(const TokenList &tokens, int &index, const PStatement &context,
                            QVector<TypeInfo> &arguments) const;
+    bool readNonTypeTemplateArguments(const TokenList &tokens, int &index,
+                                      QVector<TemplateArgument> &arguments) const;
     EvalResult applyBinary(const EvalResult &left, const EvalResult &right,
                            const QString &operatorName) const;
     PStatement findVisibleStatement(const QString &name, const PStatement &context) const;

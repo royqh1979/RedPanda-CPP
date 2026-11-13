@@ -79,6 +79,18 @@ TypeInfo TypeOperationRegistry::invokeResult(const TypeInfo &callable,
     return mResolver.invokeResult(callable, "operator()");
 }
 
+TypeInfo TypeOperationRegistry::explicitTemplateResult(
+        const EvalResult &target, const QVector<TemplateArgument> &arguments) const
+{
+    if (!target.baseStatement || target.baseStatement->fullName != "std::views::elements"
+            || arguments.count() != 1 || arguments.first().kind != TemplateArgumentKind::NonType)
+        return {};
+    TypeInfo result = target.type;
+    result.qualifiedName = "std::ranges::elements_fn";
+    result.templateArguments = arguments;
+    return result;
+}
+
 TypeInfo TypeOperationRegistry::pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const
 {
     if (adaptor.qualifiedName == "std::ranges::filter_closure"
@@ -92,6 +104,10 @@ TypeInfo TypeOperationRegistry::pipeResult(const TypeInfo &input, const TypeInfo
     if (adaptor.qualifiedName == "std::ranges::join_fn"
             || adaptor.qualifiedName == "std::ranges::join_closure")
         return makeView("std::ranges::join_view", {TemplateArgument::fromType(input)});
+    if (adaptor.qualifiedName == "std::ranges::elements_fn"
+            && adaptor.templateArguments.count() == 1)
+        return makeView("std::ranges::elements_view",
+                        {TemplateArgument::fromType(input), adaptor.templateArguments.first()});
     return {};
 }
 

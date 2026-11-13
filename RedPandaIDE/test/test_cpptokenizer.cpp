@@ -1412,23 +1412,29 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
                 "    class filter_fn {};\n"
                 "    class transform_fn {};\n"
                 "    class join_fn {};\n"
+                "    class elements_fn {};\n"
                 "  }\n"
                 "  namespace views {\n"
                 "    std::ranges::filter_fn filter;\n"
                 "    std::ranges::transform_fn transform;\n"
                 "    std::ranges::join_fn join;\n"
+                "    std::ranges::elements_fn elements;\n"
                 "  }\n"
                 "}\n"
                 "class Pred { public: bool operator()(std::string); };\n"
                 "class ToString { public: std::string operator()(std::string); };\n"
                 "std::vector<std::string> lst;\n"
                 "std::vector<std::vector<std::string>> nested;\n"
+                "std::vector<std::pair<std::string, int>> pairs;\n"
                 "Pred pred;\n"
                 "ToString convert;\n"
                 "auto filtered = lst | std::views::filter(pred);\n"
                 "auto transformed = filtered | std::views::transform(convert);\n"
                 "auto joined = nested | std::views::join;\n"
-                "void useTransformed() { for (auto x : transformed) { x.size(); } }\n", declarations));
+                "auto keys = pairs | std::views::elements<0>;\n"
+                "auto values = pairs | std::views::elements<1>;\n"
+                "void useTransformed() { for (auto x : transformed) { x.size(); } }\n"
+                "void useElements() { for (auto key : keys) { key.size(); } }\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
@@ -1448,6 +1454,13 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     QCOMPARE(operations.rangeValue(filtered->typeInfo).toString(), "std::string");
     QCOMPARE(operations.rangeValue(transformed->typeInfo).toString(), "std::string");
     QCOMPARE(operations.rangeValue(joined->typeInfo).toString(), "std::string");
+    PStatement keys = findStatement(model.childrenStatements(), "keys");
+    PStatement values = findStatement(model.childrenStatements(), "values");
+    QVERIFY(keys && values);
+    QCOMPARE(keys->typeInfo.qualifiedName, "std::ranges::elements_view");
+    QCOMPARE(values->typeInfo.qualifiedName, "std::ranges::elements_view");
+    QCOMPARE(operations.rangeValue(keys->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(values->typeInfo).toString(), "int");
 
     PStatement useTransformed = findStatement(model.childrenStatements(), "useTransformed");
     QVERIFY(useTransformed);
@@ -1460,4 +1473,12 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     CppTokenizer expression;
     expression.tokenize({"x.size()"});
     QCOMPARE(evaluator.evaluate(expression, loop).type.toString(), "unsigned long");
+
+    PStatement useElements = findStatement(model.childrenStatements(), "useElements");
+    QVERIFY(useElements);
+    PStatement elementLoop = findStatement(useElements->children, "block");
+    QVERIFY(elementLoop);
+    PStatement key = findStatement(elementLoop->children, "key");
+    QVERIFY(key);
+    QCOMPARE(key->type(), "std::string");
 }

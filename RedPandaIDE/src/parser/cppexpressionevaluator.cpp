@@ -258,6 +258,19 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
 {
     while (index < tokens.count() && result.isValid()) {
         const QString operation = tokens[index].text;
+        if (operation == "<") {
+            int start = index;
+            QVector<TemplateArgument> arguments;
+            if (readNonTypeTemplateArguments(tokens, index, arguments)) {
+                TypeInfo explicitResult = mOperations.explicitTemplateResult(result, arguments);
+                if (!explicitResult.qualifiedName.isEmpty()) {
+                    result.type = explicitResult;
+                    result.kind = EvalStatementKind::Variable;
+                    continue;
+                }
+            }
+            index = start;
+        }
         if (result.kind == EvalStatementKind::Type
                 && (operation == "const" || operation == "volatile")) {
             result.type.qualifiers.setFlag(operation == "const"
@@ -480,6 +493,47 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
         return {};
     }
     return result;
+}
+
+bool CppExpressionEvaluator::readNonTypeTemplateArguments(
+        const TokenList &tokens, int &index, QVector<TemplateArgument> &arguments) const
+{
+    if (index >= tokens.count() || tokens[index].text != "<")
+        return false;
+    int currentIndex = index + 1;
+    int nested = 0;
+    QString expression;
+    auto finishArgument = [&]() {
+        if (expression.trimmed().isEmpty())
+            return false;
+        arguments.append(TemplateArgument::fromConstant(expression.trimmed()));
+        expression.clear();
+        return true;
+    };
+    while (currentIndex < tokens.count()) {
+        const QString &text = tokens[currentIndex].text;
+        if (nested == 0 && text == ">") {
+            if (!finishArgument())
+                return false;
+            index = currentIndex + 1;
+            return true;
+        }
+        if (nested == 0 && text == ",") {
+            if (!finishArgument())
+                return false;
+            ++currentIndex;
+            continue;
+        }
+        if (text == "(" || text == "[" || text == "{")
+            ++nested;
+        else if (text == ")" || text == "]" || text == "}")
+            --nested;
+        if (nested < 0)
+            return false;
+        expression += text;
+        ++currentIndex;
+    }
+    return false;
 }
 
 bool CppExpressionEvaluator::evaluateArguments(const TokenList &tokens, int &index,
