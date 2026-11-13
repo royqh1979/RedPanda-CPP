@@ -29,11 +29,28 @@ public:
     EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {}) const;
 
 private:
+    using TokenList = QVector<CppTokenizer::Token>;
+
+    EvalResult evaluateBinary(const TokenList &tokens, int &index, const PStatement &context,
+                              int minimumPrecedence) const;
+    EvalResult evaluateUnary(const TokenList &tokens, int &index, const PStatement &context) const;
+    EvalResult evaluatePostfix(const TokenList &tokens, int &index, const PStatement &context) const;
+    EvalResult evaluatePostfixTail(EvalResult result, const TokenList &tokens, int &index,
+                                   const PStatement &context) const;
+    EvalResult evaluatePrimary(const TokenList &tokens, int &index, const PStatement &context) const;
+    EvalResult createResult(const PStatement &statement) const;
+    EvalResult applyBinary(const EvalResult &left, const EvalResult &right,
+                           const QString &operatorName) const;
     PStatement findVisibleStatement(const QString &name, const PStatement &context) const;
+    PStatement findDirectStatement(const PStatement &scope, const QString &name) const;
     TypeInfo memberReceiver(TypeInfo type, bool arrow) const;
     TypeInfo dereference(TypeInfo type) const;
+    TypeInfo addressOf(TypeInfo type) const;
+    TypeInfo applyIncrement(TypeInfo type, const QString &operatorName) const;
     TypeInfo removeReferences(TypeInfo type) const;
-    int skipBalanced(const QVector<CppTokenizer::Token> &tokens, int index) const;
+    int binaryPrecedence(const QString &operatorName) const;
+    bool isRightAssociative(const QString &operatorName) const;
+    int skipBalanced(const TokenList &tokens, int index) const;
 
     const StatementModel &mModel;
     const CppTypeResolver &mResolver;

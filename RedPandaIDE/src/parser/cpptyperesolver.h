@@ -37,6 +37,7 @@ public:
 
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
                      const PStatement &context = {}) const;
+    PStatement findStatement(const QString &qualifiedName, const PStatement &context = {}) const;
     TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
 

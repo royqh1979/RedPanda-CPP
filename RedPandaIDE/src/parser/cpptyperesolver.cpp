@@ -60,6 +60,12 @@ TypeInfo CppTypeResolver::resolve(const TypeInfo &type, const TemplateBindings &
     return resolveType(type, bindings, context, aliases);
 }
 
+PStatement CppTypeResolver::findStatement(const QString &qualifiedName,
+                                          const PStatement &context) const
+{
+    return findDeclaration(qualifiedName, context);
+}
+
 TypeInfo CppTypeResolver::memberType(const TypeInfo &receiver, const QString &memberName) const
 {
     TypeInfo resolvedReceiver = resolve(receiver);
@@ -129,8 +135,10 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindin
         target.derivations += result.derivations;
         return target;
     }
-    if (declaration)
+    if (declaration) {
         result.declaration = declaration;
+        result.qualifiedName = declaration->fullName;
+    }
     return result;
 }
 

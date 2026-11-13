@@ -1165,17 +1165,25 @@ void TestCppTokenizer::test_expression_evaluator_follows_container_member_chain(
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
-                "  class string { public: unsigned long size(); };\n"
+                "  class string { public: int value; unsigned long size(); };\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
                 "    T& front();\n"
                 "    T& operator[](unsigned long);\n"
                 "  };\n"
-                "  template<typename T> class iterator { public: T& operator*(); };\n"
+                "  template<typename T> class iterator {\n"
+                "  public:\n"
+                "    iterator<T> operator++(int);\n"
+                "    iterator<T> operator+(int);\n"
+                "    T* operator*();\n"
+                "  };\n"
                 "}\n"
                 "std::vector<std::string> lst;\n"
-                "std::iterator<std::string> it;\n", declarations));
+                "std::iterator<std::string> it;\n"
+                "std::string obj;\n"
+                "std::string* ptr;\n"
+                "int std::string::* member;\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
@@ -1196,5 +1204,13 @@ void TestCppTokenizer::test_expression_evaluator_follows_container_member_chain(
     QCOMPARE(front.baseStatement->command, "lst");
     QCOMPARE(evaluate("lst.front().size()").type.toString(), "unsigned long");
     QCOMPARE(evaluate("lst[0]").type.toString(), "std::string &");
-    QCOMPARE(evaluate("*it").type.toString(), "std::string &");
+    QCOMPARE(evaluate("*it").type.toString(), "std::string *");
+    QCOMPARE(evaluate("it++").type.toString(), "std::iterator<std::string>");
+    QCOMPARE(evaluate("it + 1").type.toString(), "std::iterator<std::string>");
+    QCOMPARE(evaluate("(*it++)->size()").type.toString(), "unsigned long");
+    QCOMPARE(evaluate("std::string()").type.toString(), "std::string");
+    QCOMPARE(evaluate("new std::string()").type.toString(), "std::string *");
+    QCOMPARE(evaluate("(std::string*)nullptr").type.toString(), "std::string *");
+    QCOMPARE(evaluate("obj.*member").type.toString(), "int");
+    QCOMPARE(evaluate("ptr->*member").type.toString(), "int");
 }

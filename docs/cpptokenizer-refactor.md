@@ -205,7 +205,9 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 表达式求值返回 EvalResult，包含 TypeInfo、表达式类别、原始 Statement 和必要的模板绑定上下文。容器元素、迭代器值/引用和 range 元素不增加固定字段，而由 containerValue、iteratorValue、iteratorReference、rangeReference、invokeResult 等统一类型操作计算。
 
-求值器按需消费标识符和 `.`、`->`、前缀 `*`、`[]`、`()` 后缀，利用 matchIndex 跳过实参和数组下标，不建立表达式 AST，也不在解析其它声明时预先计算。成员访问先按语言规则去除接收者引用；`->` 处理内建指针或 operator->，解引用处理内建指针或 operator*。每一步只保留下一步所需的 TypeInfo，因此 `container.front().size()` 等链条可以逐段计算。
+求值器保持旧实现的递归表达式语义，不建立表达式 AST，也不在解析其它声明时预先计算。二元运算按 comma、赋值、条件、逻辑、位运算、比较、移位、加减、乘除和成员指针的优先级递归；括号内调用完整子表达式，类型转换与普通分组分别处理。`new`、一元运算、字面量、类型/`::` 名称、函数调用、初始化、`[]`、`.`、`->` 和前后缀自增减都进入同一求值路径。实参和下标内容利用 matchIndex 跳过。
+
+类型解析先尝试相应的运算符重载，再应用内建指针、引用和算术规则。`->` 递归处理内建指针或 operator->，解引用处理内建指针或 operator*，自增减使用 operator++/operator-- 的返回类型。每一步只保留下一步所需的 TypeInfo，因此 `container.front().size()` 和 `(*it++)->size()` 等链条可以逐段计算。查不到声明或尚不支持的表达式返回无效 EvalResult，不把部分前缀当作完整结果。
 
 配套设计点：
 
