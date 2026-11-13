@@ -92,6 +92,11 @@ private slots:
     void test_lambda_inference_preserves_source_position();
     void test_function_template_argument_deduction_for_algorithms();
     void test_inline_namespace_member_lookup();
+    void test_nested_namespace_declaration();
+    void test_reopened_namespace_lookup_checks_all_declarations();
+    void test_reopened_nested_namespace_lookup_checks_all_branches();
+    void test_namespace_lookup_transparency_and_scope_boundaries();
+    void test_qualified_lookup_respects_lexical_and_local_scopes();
 
 private:
     void tokenize(const QStringList &lines);

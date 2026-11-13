@@ -50,6 +50,10 @@ private:
     TypeInfo resolveType(const TypeInfo &type, const TemplateBindings &bindings,
                          const PStatement &context, QSet<const Statement *> &aliases) const;
     PStatement findDeclaration(const QString &qualifiedName, const PStatement &context) const;
+    PStatement findInNamespaceScope(const PStatement &scope, const QStringList &parts,
+                                    bool &firstPartFound) const;
+    PStatement findDeclarationRemainder(const PStatement &statement,
+                                        const QStringList &parts) const;
     PStatement findMember(const PStatement &scope, const QString &name) const;
     PStatement findMemberRecursive(const PStatement &scope, const QString &name,
                                    QSet<const Statement *> &visited) const;

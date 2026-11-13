@@ -400,6 +400,9 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                 else if (mCursor.consume("noexcept")) {
                     if (mCursor.currentText() == "(")
                         readBalancedToken("(", ")");
+                } else if (mCursor.consume("override")) {
+                    function.functionProperties.setFlag(FunctionProperty::Override);
+                } else if (mCursor.consume("final")) {
                 } else {
                     break;
                 }

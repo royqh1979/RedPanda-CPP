@@ -254,6 +254,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
     QList<std::weak_ptr<Statement>> result;
     if (declaration.kind == DeclarationKind::Using)
         return buildUsing(declaration, context);
+    if (declaration.kind == DeclarationKind::Namespace)
+        return buildNamespace(declaration, context);
     if (declaration.kind == DeclarationKind::Block) {
         PStatement block = createBlock(declaration, context);
         mModel.add(block);
@@ -441,6 +443,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->parameters = function.parameters;
         statement->args = renderParameters(function, true);
         statement->noNameArgs = renderParameters(function, false);
+        statement->properties.setFlag(StatementProperty::Override,
+                                      function.functionProperties.testFlag(FunctionProperty::Override));
         if (!function.trailingReturnType.isEmpty()
                 && statement->typeInfo.qualifiedName == "auto")
             statement->typeInfo.qualifiedName = function.trailingReturnType;
@@ -570,8 +574,10 @@ QString CppStatementBuilder::fullName(const DeclaratorInfo &declarator,
         name = declarator.qualifier + "::";
     name += declarator.name;
     PStatement parent = context.parentScope;
-    if (!declarator.globallyQualified && parent && !parent->fullName.isEmpty())
-        return parent->fullName + "::" + name;
+    if (!declarator.globallyQualified && parent && !parent->fullName.isEmpty()) {
+        QString prefix = parent->fullName + "::";
+        return name.startsWith(prefix) ? name : prefix + name;
+    }
     return name;
 }
 
@@ -599,6 +605,45 @@ void CppStatementBuilder::buildChildren(const DeclarationInfo &declaration,
     }
 }
 
+
+QList<std::weak_ptr<Statement>> CppStatementBuilder::buildNamespace(
+        const DeclarationInfo &declaration, const StatementBuildContext &context)
+{
+    QList<std::weak_ptr<Statement>> result;
+    if (declaration.declarators.isEmpty())
+        return result;
+    StatementBuildContext current = context;
+    QStringList parts = declaration.declarators.first().name.split(
+                "::", Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+        parts.append("");
+    for (const QString &part : parts) {
+        DeclaratorInfo declarator = declaration.declarators.first();
+        declarator.name = part;
+        declarator.qualifier.clear();
+        declarator.globallyQualified = false;
+        PStatement statement = createStatement(declaration, declarator, current,
+                                               StatementKind::Namespace);
+        PStatement merged = mergeDeclaration(statement, current);
+        if (merged)
+            statement = merged;
+        else
+            mModel.add(statement);
+        if (current.fileInfo)
+            current.fileInfo->addStatement(statement);
+        current.parentScope = statement;
+        current.scope = StatementScope::Global;
+        result.clear();
+        result.append(statement);
+    }
+    if (!result.empty()) {
+        PStatement statement = result.first().lock();
+        if (context.fileInfo && declaration.bodyRange.isValid())
+            context.fileInfo->addScope(declaration.bodyRange, statement, current.parentScope);
+        buildChildren(declaration, current, statement);
+    }
+    return result;
+}
 
 QList<std::weak_ptr<Statement>> CppStatementBuilder::buildUsing(
         const DeclarationInfo &declaration, const StatementBuildContext &context)

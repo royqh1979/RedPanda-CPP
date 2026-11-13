@@ -584,6 +584,15 @@ void TestCppTokenizer::test_parse_direct_initialization_not_function()
     QCOMPARE(declaration.declarators[0].name, "value");
     QVERIFY(declaration.declarators[0].derivations.isEmpty());
     QCOMPARE(declaration.specifiers.type.toString(), "std::string");
+
+    QVERIFY(parseDeclarationText("Foo F(0);", declaration));
+    QCOMPARE(declaration.declarators.count(), 1);
+    QCOMPARE(declaration.declarators[0].name, "F");
+    QVERIFY(declaration.declarators[0].derivations.isEmpty());
+
+    QVERIFY(parseDeclarationText("Foo F();", declaration));
+    QCOMPARE(declaration.declarators[0].derivations.count(), 1);
+    QCOMPARE(declaration.declarators[0].derivations[0].kind, TypeDerivationKind::Function);
 }
 
 void TestCppTokenizer::test_parse_template_type_arguments()
@@ -972,12 +981,10 @@ void TestCppTokenizer::test_statement_model_owns_statements_and_weak_indexes()
     scopes.addScope({{0, 0}, {0, 9}}, value);
     QCOMPARE(fileInfo.statements().value("value").lock(), value);
     QCOMPARE(scopes.findScopeAt({0, 5}), value);
-    QCOMPARE(model.findByFullName("value"), value);
 
     fileInfo.removeStatement(value);
     model.deleteStatement(value);
     QVERIFY(!findStatement(model.childrenStatements(), "value"));
-    QVERIFY(!model.findByFullName("value"));
     QCOMPARE(model.count(), 0);
     value.reset();
     QVERIFY(built.first().expired());
@@ -1608,4 +1615,193 @@ void TestCppTokenizer::test_inline_namespace_member_lookup()
     QCOMPARE(string->fullName, "N::Inner::String");
     PStatement early = resolver.findStatement("N::Inner::early");
     QVERIFY(early);
+}
+
+
+void TestCppTokenizer::test_nested_namespace_declaration()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("namespace A::B::C { int value; }", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+
+    PStatement a = resolver.findStatement("A");
+    QVERIFY(a);
+    PStatement b = resolver.findStatement("A::B");
+    QVERIFY(b);
+    PStatement c = resolver.findStatement("A::B::C");
+    QVERIFY(c);
+    QCOMPARE(a->kind, StatementKind::Namespace);
+    QCOMPARE(b->parentScope.lock(), a);
+    QCOMPARE(c->parentScope.lock(), b);
+    QVERIFY(resolver.findStatement("A::B::C::value"));
+}
+
+
+void TestCppTokenizer::test_reopened_namespace_lookup_checks_all_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("namespace N { int first; }", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext firstContext;
+    firstContext.fileName = "/tmp/a.h";
+    firstContext.boundaryAncestor = "/tmp/a.h";
+    builder.build(declarations.first(), firstContext);
+    declarations.clear();
+    QVERIFY(parseSyntaxText("namespace N { int second; }", declarations));
+    StatementBuildContext secondContext;
+    secondContext.fileName = "/tmp/b.h";
+    secondContext.boundaryAncestor = "/tmp/b.h";
+    builder.build(declarations.first(), secondContext);
+    CppTypeResolver resolver(model);
+
+    QVERIFY(resolver.findStatement("N::first"));
+    QVERIFY(resolver.findStatement("N::second"));
+}
+
+
+void TestCppTokenizer::test_reopened_nested_namespace_lookup_checks_all_branches()
+{
+    for (bool reverseOrder : {false, true}) {
+        QVector<DeclarationInfo> declarations;
+        QVERIFY(parseSyntaxText(
+                    "namespace N { namespace Inner { namespace Leaf {} } }",
+                    declarations));
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        StatementBuildContext context;
+        context.fileName = "/tmp/base.h";
+        context.boundaryAncestor = "/tmp/base.h";
+        builder.build(declarations.first(), context);
+        CppTypeResolver resolver(model);
+        PStatement n = resolver.findStatement("N");
+        PStatement inner = resolver.findStatement("N::Inner");
+        QVERIFY(n && inner);
+
+        auto build = [&](const QString &text, const QString &fileName,
+                         const PStatement &parent) {
+            declarations.clear();
+            QVERIFY(parseSyntaxText(text, declarations));
+            context = StatementBuildContext();
+            context.fileName = fileName;
+            context.boundaryAncestor = fileName;
+            context.parentScope = parent;
+            builder.build(declarations.first(), context);
+        };
+        auto addFirst = [&] {
+            build("namespace Leaf { int first; }", "/tmp/first.h", inner);
+        };
+        auto addSecond = [&] {
+            build("namespace Inner { int second; }", "/tmp/second.h", n);
+        };
+        auto addThird = [&] {
+            build("namespace Leaf { int third; }", "/tmp/third.h", inner);
+        };
+        if (reverseOrder) {
+            addSecond();
+            addThird();
+            addFirst();
+        } else {
+            addFirst();
+            addSecond();
+            addThird();
+        }
+
+        QVERIFY(resolver.findStatement("N::Inner::Leaf::first"));
+        QVERIFY(resolver.findStatement("N::Inner::second"));
+        QVERIFY(resolver.findStatement("N::Inner::Leaf::third"));
+    }
+}
+
+
+void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
+{
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    QVector<DeclarationInfo> declarations;
+    auto build = [&](const QString &text, const QString &fileName) {
+        declarations.clear();
+        QVERIFY(parseSyntaxText(text, declarations));
+        StatementBuildContext context;
+        context.fileName = fileName;
+        context.boundaryAncestor = fileName;
+        for (const DeclarationInfo &declaration : declarations)
+            builder.build(declaration, context);
+    };
+    build("namespace N { inline namespace V { int inlineValue; } }", "/tmp/a.h");
+    build("namespace N { inline namespace V { struct C { int member; }; } }",
+          "/tmp/b.h");
+    build("namespace { int anonymousValue; }", "/tmp/c.h");
+    build("namespace N { namespace { int nestedAnonymous; } }", "/tmp/d.h");
+    build("void f() { int local; while (true) { int inner; } }", "/tmp/e.cpp");
+    build("auto lambda = []() { int lambdaLocal; };", "/tmp/e.cpp");
+    CppTypeResolver resolver(model);
+
+    QVERIFY(resolver.findStatement("N::inlineValue"));
+    QVERIFY(resolver.findStatement("N::V::inlineValue"));
+    QVERIFY(resolver.findStatement("N::C::member"));
+    QVERIFY(resolver.findStatement("anonymousValue"));
+    QVERIFY(resolver.findStatement("::anonymousValue"));
+    QVERIFY(resolver.findStatement("N::nestedAnonymous"));
+    QVERIFY(!resolver.findStatement("f::local"));
+    QVERIFY(!resolver.findStatement("f::block::inner"));
+    QVERIFY(!resolver.findStatement("lambda::lambdaLocal"));
+
+    PStatement function = resolver.findStatement("f");
+    QVERIFY(function);
+    QVERIFY(resolver.findStatement("local", function));
+    PStatement block = findStatement(function->children, "block");
+    QVERIFY(block);
+    QVERIFY(resolver.findStatement("inner", block));
+}
+
+
+void TestCppTokenizer::test_qualified_lookup_respects_lexical_and_local_scopes()
+{
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    QVector<DeclarationInfo> declarations;
+    auto build = [&](const QString &text, const QString &fileName) {
+        declarations.clear();
+        QVERIFY(parseSyntaxText(text, declarations));
+        StatementBuildContext context;
+        context.fileName = fileName;
+        context.boundaryAncestor = fileName;
+        for (const DeclarationInfo &declaration : declarations)
+            builder.build(declaration, context);
+    };
+    build("namespace N { int outer; }", "/tmp/a.h");
+    build("namespace Outer { namespace N { int inner; } }", "/tmp/b.h");
+    build("class Scope { public: class N { public: int inner; }; };",
+          "/tmp/c.h");
+    build("int value;", "/tmp/d.cpp");
+    build("void f() { int value; while (true) { int inner; } }", "/tmp/d.cpp");
+    CppTypeResolver resolver(model);
+
+    PStatement outerNamespace = resolver.findStatement("Outer");
+    QVERIFY(outerNamespace);
+    QVERIFY(resolver.findStatement("N::inner", outerNamespace));
+    QVERIFY(!resolver.findStatement("N::outer", outerNamespace));
+
+    PStatement classScope = resolver.findStatement("Scope");
+    QVERIFY(classScope);
+    QVERIFY(resolver.findStatement("N::inner", classScope));
+    QVERIFY(!resolver.findStatement("N::outer", classScope));
+    QVERIFY(resolver.findStatement("::N::outer", classScope));
+
+    PStatement function = resolver.findStatement("f");
+    QVERIFY(function);
+    PStatement local = resolver.findStatement("value", function);
+    QVERIFY(local);
+    QCOMPARE(local->parentScope.lock(), function);
+    QVERIFY(!resolver.findStatement("f::value"));
+    PStatement block = findStatement(function->children, "block");
+    QVERIFY(block);
+    QVERIFY(resolver.findStatement("inner", block));
+    QVERIFY(!resolver.findStatement("inner", function));
 }

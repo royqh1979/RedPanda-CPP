@@ -168,9 +168,27 @@ class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 
 
 ### Statement 所有权
 
-StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、fullName 索引、children、publicProperties、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。fullName 索引避免标准库规模下每次类型查找都线性扫描全部语句。
+StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、publicProperties、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立，fullName 查询复用作用域索引，不增加重复的全量名称索引。
 
 查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。失效时仍须删除对应索引项；weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
+
+### 重开 namespace 的限定名查找
+
+只有 namespace 会因重开而由多个 Statement 表示同一逻辑作用域。class/enum 的声明与定义应合并，函数重载不是同一作用域的重复节点，Block 只是局部作用域占位；它们不参与这种重名分支查找。namespace 不能声明在 class 内，因此 qualified name 的 namespace 分支只会出现在前部的 namespace 前缀中，进入 class/enum 等非 namespace 作用域后不再需要 namespace 回退。
+
+查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。
+
+本批只修正普通、inline 和匿名 namespace 的重开查找，不扩展到 Block、函数/lambda 局部作用域、通用多义符号查找或 namespace alias 的新能力。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。class 与变量/函数同名虽然合法，但属于明确不支持的低价值消歧场景；此类代码的限定名查找结果不作保证，也不为它增加候选类型过滤或额外回退。
+
+查找测试矩阵包括：顶层和第二、第三层重开 namespace；不同构建顺序；inline/匿名 namespace 的透明查找及重开分支；进入 class 后的普通成员查找；全局 `::`；最近词法作用域优先且不混入外层同名 namespace；局部变量 shadowing；函数、lambda 和 Block 的局部可见性与全局限定路径隔离。以上场景分别由 `test_reopened_namespace_lookup_checks_all_declarations`、`test_reopened_nested_namespace_lookup_checks_all_branches`、`test_namespace_lookup_transparency_and_scope_boundaries` 和 `test_qualified_lookup_respects_lexical_and_local_scopes` 固化。
+
+### 继承成员查找
+
+继承成员默认采用按需递归查找，不复制基类 children。derived 的直接成员优先，随后递归补充基类成员；override 按函数签名去重，inline/匿名 namespace 作为透明作用域处理。树形视图和补全列表通过统一的 membersOf(scope) 获得临时成员列表，不读取持久 children 作为继承结果。
+
+复制 children 虽然能降低单次查询成本，但会增加 Statement 和索引数量，并要求在基类变化时级联失效。它还必须处理 override 签名、继承访问级别、模板参数替换、声明范围和 boundary ancestor，容易破坏 replay 与唯一所有权模型。publicProperties 只保存当前类直接声明的 public 非静态成员，服务于结构化绑定，不能当作继承成员列表复制。
+
+递归查找的代价是单次查询为 O(继承深度)，生成补全列表需要遍历继承成员。若实测成为瓶颈，可以增加按 derived、receiver 实际模板参数和 parser 代次区分的缓存；缓存仅保存 weak_ptr 和有效访问信息，不复制 Statement。缓存不是默认前提，必须以性能数据决定。
 
 ### 源码位置与范围查询
 

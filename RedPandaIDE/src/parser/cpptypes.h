@@ -95,7 +95,8 @@ enum class ReferenceQualifier {
 
 enum class FunctionProperty {
     None = 0x0,
-    Variadic = 0x1
+    Variadic = 0x1,
+    Override = 0x2
 };
 Q_DECLARE_FLAGS(FunctionProperties, FunctionProperty)
 Q_DECLARE_OPERATORS_FOR_FLAGS(FunctionProperties)

@@ -49,24 +49,21 @@ public:
         }
         mStatements.clear();
         mGlobalStatements.clear();
-        mFullNameStatements.clear();
     }
     int count() const { return mCount; }
     const StatementList &statements() const { return mStatements; }
-    PStatement findByFullName(const QString &fullName) const;
 #ifdef QT_DEBUG
-    void dump(const QString& logFile);
-    void dumpAll(const QString& logFile);
+    void dump(const QString& logFile) const;
+    void dumpAll(const QString& logFile) const;
 #endif
 private:
     void addMember(StatementMap& map, const PStatement& statement);
     void deleteMember(StatementMap& map, const PStatement& statement);
-    void dumpStatementMap(const StatementMap& map, QTextStream& out, int level);
+    void dumpStatementMap(const StatementMap& map, QTextStream& out, int level) const;
 private:
     int mCount;
     StatementList mStatements;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
-    StatementMap mFullNameStatements;
 };
 
 #endif // STATEMENTMODEL_H

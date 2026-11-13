@@ -39,6 +39,8 @@ public:
                                           const StatementBuildContext &context);
 
 private:
+    QList<std::weak_ptr<Statement>> buildNamespace(const DeclarationInfo &declaration,
+                                                   const StatementBuildContext &context);
     QList<std::weak_ptr<Statement>> buildUsing(const DeclarationInfo &declaration,
                                                const StatementBuildContext &context);
     PStatement createBlock(const DeclarationInfo &declaration,

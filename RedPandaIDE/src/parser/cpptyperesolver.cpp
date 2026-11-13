@@ -17,16 +17,6 @@
 #include "cpptyperesolver.h"
 
 namespace {
-PStatement findInMap(const StatementMap &statements, const QString &name)
-{
-    const auto values = statements.values(name);
-    for (const std::weak_ptr<Statement> &statement : values) {
-        if (PStatement result = statement.lock())
-            return result;
-    }
-    return nullptr;
-}
-
 bool isAlias(const PStatement &statement)
 {
     return statement && (statement->kind == StatementKind::Alias
@@ -214,8 +204,6 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type, const TemplateBindin
 PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
                                             const PStatement &context) const
 {
-    if (PStatement exact = mModel.findByFullName(qualifiedName))
-        return exact;
     QString name = qualifiedName;
     PStatement initialContext = context;
     if (name.startsWith("::")) {
@@ -226,16 +214,78 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
     if (parts.isEmpty())
         return nullptr;
 
-    PStatement current;
     PStatement searchScope = initialContext;
     while (searchScope) {
-        current = findMember(searchScope, parts.first());
-        if (current)
-            break;
+        if (searchScope->kind == StatementKind::Namespace) {
+            bool firstPartFound = false;
+            PStatement result = findInNamespaceScope(searchScope, parts, firstPartFound);
+            if (result || firstPartFound)
+                return result;
+        } else if (PStatement current = findMember(searchScope, parts.first())) {
+            return findDeclarationRemainder(current, parts);
+        }
         searchScope = searchScope->parentScope.lock();
     }
-    if (!current)
-        current = findInMap(mModel.childrenStatements(), parts.first());
+    bool firstPartFound = false;
+    return findInNamespaceScope({}, parts, firstPartFound);
+}
+
+PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
+                                                 const QStringList &parts,
+                                                 bool &firstPartFound) const
+{
+    struct WorkItem {
+        PStatement scope;
+        int partIndex;
+    };
+    QVector<WorkItem> stack{{scope, 0}};
+    while (!stack.isEmpty()) {
+        WorkItem item = stack.takeLast();
+        const auto candidates = mModel.childrenStatements(item.scope).values(
+                    parts[item.partIndex]);
+        if (item.partIndex == 0 && !candidates.isEmpty())
+            firstPartFound = true;
+
+        QVector<WorkItem> namespaceBranches;
+        for (const std::weak_ptr<Statement> &weak : candidates) {
+            PStatement candidate = weak.lock();
+            if (!candidate)
+                continue;
+            if (candidate->kind != StatementKind::Namespace) {
+                return findDeclarationRemainder(candidate, parts.mid(item.partIndex));
+            }
+            if (item.partIndex + 1 == parts.count())
+                return candidate;
+            namespaceBranches.append({candidate, item.partIndex + 1});
+        }
+
+        QVector<WorkItem> transparentBranches;
+        for (const std::weak_ptr<Statement> &weak : mModel.childrenStatements(item.scope)) {
+            PStatement child = weak.lock();
+            if (child && child->kind == StatementKind::Namespace
+                    && (child->command.isEmpty()
+                        || child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline))) {
+                transparentBranches.append({child, item.partIndex});
+            }
+        }
+        for (int i = transparentBranches.count() - 1; i >= 0; --i)
+            stack.append(transparentBranches[i]);
+        for (int i = namespaceBranches.count() - 1; i >= 0; --i)
+            stack.append(namespaceBranches[i]);
+    }
+    return nullptr;
+}
+
+PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement,
+                                                     const QStringList &parts) const
+{
+    if (parts.count() > 1 && statement
+            && statement->kind != StatementKind::Class
+            && statement->kind != StatementKind::EnumType
+            && statement->kind != StatementKind::EnumClassType) {
+        return nullptr;
+    }
+    PStatement current = statement;
     for (int i = 1; current && i < parts.count(); ++i)
         current = findMember(current, parts[i]);
     return current;
@@ -253,12 +303,21 @@ PStatement CppTypeResolver::findMemberRecursive(const PStatement &scope, const Q
     if (!scope || visited.contains(scope.get()))
         return nullptr;
     visited.insert(scope.get());
-    if (PStatement result = findInMap(scope->children, name))
-        return result;
+    const auto directCandidates = scope->children.values(name);
+    for (const std::weak_ptr<Statement> &weak : directCandidates) {
+        PStatement candidate = weak.lock();
+        if (!candidate)
+            continue;
+        if (candidate->kind != StatementKind::Namespace || candidate->command == name)
+            return candidate;
+        if (PStatement result = findMemberRecursive(candidate, name, visited))
+            return result;
+    }
     for (const std::weak_ptr<Statement> &weakChild : scope->children) {
         PStatement child = weakChild.lock();
         if (child && child->kind == StatementKind::Namespace
-                && child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+                && (child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)
+                    || child->command.isEmpty())) {
             if (PStatement result = findMemberRecursive(child, name, visited))
                 return result;
         }
