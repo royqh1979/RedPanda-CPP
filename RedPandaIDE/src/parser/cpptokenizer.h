@@ -32,7 +32,8 @@ public:
         CharacterLiteral,
         Operator,
         Preprocessor,
-        FileBoundary
+        FileBoundary,
+        FileEnd
     };
 
     struct Token {
@@ -54,6 +55,14 @@ public:
     const Token &operator[](int index) const { return mTokenList[index]; }
     int tokenCount() const { return mTokenList.count(); }
     const TokenList &tokens() const { return mTokenList; }
+    static const Token &fileEndToken() {
+        static const Token token = [] {
+            Token result;
+            result.kind = TokenKind::FileEnd;
+            return result;
+        }();
+        return token;
+    }
     void stopForParserReset() { mStopForParserReset = true; }
 
 private:

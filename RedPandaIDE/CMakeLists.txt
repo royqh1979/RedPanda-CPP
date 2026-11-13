@@ -24,6 +24,9 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/pptoken
     src/parser/ppexpander
     src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
     src/parser/parserutils
     src/parser/statementmodel
     # problems
@@ -233,6 +236,9 @@ target_qt_plain_cpp(test-editor
     src/parser/pptoken
     src/parser/ppexpander
     src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
     src/parser/parserutils
     src/parser/statementmodel
 
@@ -317,6 +323,9 @@ add_executable(test-cpptokenizer test/test-cpptokenizer-main.cpp)
 
 target_qt_plain_cpp(test-cpptokenizer
     src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
 )
 
 target_moc_classes(test-cpptokenizer
@@ -348,6 +357,9 @@ target_qt_plain_cpp(test-cppparser
     src/parser/pptoken
     src/parser/ppexpander
     src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
     src/parser/parserutils
     src/parser/statementmodel
     )

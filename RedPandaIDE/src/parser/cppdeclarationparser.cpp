@@ -1,0 +1,634 @@
+/*
+ * Copyright (C) 2026 Roy Qu (royqh1979@gmail.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+#include "cppdeclarationparser.h"
+
+#include <algorithm>
+
+namespace {
+void appendTypeDerivation(TypeInfo &type, const DeclaratorInfo &declarator)
+{
+    type.derivations += declarator.derivations;
+}
+}
+
+CppDeclarationParser::CppDeclarationParser(CppTokenCursor &cursor)
+    : mCursor(cursor)
+{
+}
+
+bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result = DeclarationInfo();
+    if (!parseTemplatePrefix(result))
+        return false;
+    if (!parseDeclSpecifierSeq(result.specifiers)) {
+        mCursor.restore(start);
+        return false;
+    }
+
+    while (!mCursor.atEnd()) {
+        DeclaratorInfo declarator;
+        if (!parseDeclarator(declarator)) {
+            mCursor.restore(start);
+            result = DeclarationInfo();
+            return false;
+        }
+        result.declarators.append(declarator);
+
+        if (mCursor.consume("="))
+            skipExpression({",", ";"});
+        if (!mCursor.atEnd() && mCursor.currentText() == "{") {
+            bool function = !declarator.derivations.isEmpty()
+                    && declarator.derivations.first().kind == TypeDerivationKind::Function;
+            if (!function)
+                readBalancedToken("{", "}");
+        }
+        if (!mCursor.atEnd() && mCursor.currentText() == "(")
+            readBalancedToken("(", ")");
+        if (mCursor.consume(":")) {
+            bool function = !declarator.derivations.isEmpty()
+                    && declarator.derivations.first().kind == TypeDerivationKind::Function;
+            skipExpression(function ? QSet<QString>{"{"} : QSet<QString>{",", ";"});
+        }
+        if (mCursor.consume(","))
+            continue;
+        mCursor.consume(";");
+        break;
+    }
+    if (result.templateKind == TemplateDeclarationKind::Primary) {
+        for (const DeclaratorInfo &declarator : result.declarators) {
+            if (declarator.name.contains('<') && declarator.name.endsWith('>')) {
+                result.templateKind = TemplateDeclarationKind::PartialSpecialization;
+                break;
+            }
+        }
+    }
+    return !result.declarators.isEmpty();
+}
+
+bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    if (!mCursor.consume("template"))
+        return true;
+    if (!mCursor.consume("<")) {
+        mCursor.restore(start);
+        return false;
+    }
+    result.templateKind = TemplateDeclarationKind::Primary;
+    if (mCursor.consume(">")) {
+        result.templateKind = TemplateDeclarationKind::ExplicitSpecialization;
+        return true;
+    }
+
+    while (!mCursor.atEnd()) {
+        TemplateParameterInfo parameter;
+        if (mCursor.consume("template")) {
+            parameter.kind = TemplateParameterKind::TemplateTemplate;
+            if (mCursor.currentText() == "<")
+                parseTemplateArgumentText();
+            if (!mCursor.consume("class"))
+                mCursor.consume("typename");
+        } else if (mCursor.consume("class") || mCursor.consume("typename")) {
+            parameter.kind = TemplateParameterKind::Type;
+        } else {
+            parameter.kind = TemplateParameterKind::NonType;
+            DeclSpecifierInfo specifiers;
+            if (!parseDeclSpecifierSeq(specifiers)) {
+                mCursor.restore(start);
+                return false;
+            }
+            if (mCursor.consume("..."))
+                parameter.parameterPack = true;
+            DeclaratorInfo declarator;
+            if (!parseDeclarator(declarator)) {
+                mCursor.restore(start);
+                return false;
+            }
+            parameter.name = declarator.name;
+        }
+        if (mCursor.consume("..."))
+            parameter.parameterPack = true;
+        if (parameter.name.isEmpty() && !mCursor.atEnd()
+                && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+            parameter.name = mCursor.currentText();
+            mCursor.advance();
+        }
+        if (mCursor.consume("="))
+            skipExpression({",", ">", ">>"});
+        result.templateParameters.append(parameter);
+
+        if (mCursor.consume(","))
+            continue;
+        if (mCursor.currentText() == ">" || mCursor.currentText() == ">>") {
+            mCursor.consumeGreater();
+            break;
+        }
+        mCursor.restore(start);
+        return false;
+    }
+    return true;
+}
+
+bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result = DeclSpecifierInfo();
+    bool hasType = false;
+    while (!mCursor.atEnd()) {
+        QString text = mCursor.currentText();
+        DeclSpecifierProperty property = DeclSpecifierProperty::None;
+        if (text == "static") property = DeclSpecifierProperty::Static;
+        else if (text == "extern") property = DeclSpecifierProperty::Extern;
+        else if (text == "register") property = DeclSpecifierProperty::Register;
+        else if (text == "thread_local") property = DeclSpecifierProperty::ThreadLocal;
+        else if (text == "mutable") property = DeclSpecifierProperty::Mutable;
+        else if (text == "inline") property = DeclSpecifierProperty::Inline;
+        else if (text == "virtual") property = DeclSpecifierProperty::Virtual;
+        else if (text == "friend") property = DeclSpecifierProperty::Friend;
+        else if (text == "constexpr") property = DeclSpecifierProperty::Constexpr;
+        else if (text == "consteval") property = DeclSpecifierProperty::Consteval;
+        else if (text == "constinit") property = DeclSpecifierProperty::Constinit;
+        else if (text == "explicit") property = DeclSpecifierProperty::Explicit;
+        if (property != DeclSpecifierProperty::None) {
+            result.properties.setFlag(property);
+            mCursor.advance();
+            continue;
+        }
+        if (text == "const" || text == "volatile") {
+            result.type.qualifiers.setFlag(text == "const"
+                    ? TypeQualifier::Const : TypeQualifier::Volatile);
+            mCursor.advance();
+            continue;
+        }
+
+        bool typeWord = isBuiltinType(text) || text == "struct" || text == "class"
+                || text == "union" || text == "enum" || text == "decltype"
+                || text == "typename"
+                || mCursor.current().kind == CppTokenizer::TokenKind::Identifier;
+        if (!typeWord || (hasType && !isBuiltinType(text)))
+            break;
+
+        TypeInfo part;
+        if (!parseTypeName(part)) {
+            mCursor.restore(start);
+            return false;
+        }
+        if (hasType && isBuiltinType(part.qualifiedName)) {
+            result.type.qualifiedName += " " + part.qualifiedName;
+        } else {
+            TypeQualifiers qualifiers = result.type.qualifiers;
+            result.type = part;
+            result.type.qualifiers |= qualifiers;
+        }
+        hasType = true;
+    }
+    if (!hasType) {
+        mCursor.restore(start);
+        return false;
+    }
+    return true;
+}
+
+bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result = DeclaratorInfo();
+    result.line = mCursor.atEnd() ? 0 : mCursor.current().line;
+    QVector<TypeDerivation> prefix;
+
+    while (!mCursor.atEnd()) {
+        TypeDerivation derivation;
+        if (mCursor.consume("*")) {
+            derivation = TypeDerivation::pointer();
+        } else if (mCursor.consume("&&")) {
+            derivation = TypeDerivation::rvalueReference();
+        } else if (mCursor.consume("&")) {
+            derivation = TypeDerivation::lvalueReference();
+        } else {
+            break;
+        }
+        while (!mCursor.atEnd()) {
+            if (mCursor.consume("const"))
+                derivation.qualifiers.setFlag(TypeQualifier::Const);
+            else if (mCursor.consume("volatile"))
+                derivation.qualifiers.setFlag(TypeQualifier::Volatile);
+            else
+                break;
+        }
+        prefix.append(derivation);
+    }
+
+    if (!mCursor.atEnd()
+            && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+        CppTokenCursor::Checkpoint memberStart = mCursor.checkpoint();
+        QString memberClass = parseQualifiedNameText();
+        if (memberClass.endsWith("::") && mCursor.consume("*")) {
+            memberClass.chop(2);
+            TypeDerivation derivation = TypeDerivation::memberPointer(memberClass);
+            while (!mCursor.atEnd()) {
+                if (mCursor.consume("const"))
+                    derivation.qualifiers.setFlag(TypeQualifier::Const);
+                else if (mCursor.consume("volatile"))
+                    derivation.qualifiers.setFlag(TypeQualifier::Volatile);
+                else
+                    break;
+            }
+            prefix.append(derivation);
+        } else {
+            mCursor.restore(memberStart);
+        }
+    }
+
+    if (mCursor.consume("(")) {
+        if (!parseDeclarator(result)) {
+            mCursor.restore(start);
+            return false;
+        }
+        if (!mCursor.consume(")")) {
+            mCursor.restore(start);
+            return false;
+        }
+    } else if (!mCursor.atEnd()) {
+        if (mCursor.currentText() == "operator") {
+            result.name = parseOperatorName();
+        } else if (mCursor.consume("~")) {
+            result.name = "~" + parseQualifiedNameText();
+        } else if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
+                   || isBuiltinType(mCursor.currentText())) {
+            QString qualified = parseQualifiedNameText();
+            int last = qualified.lastIndexOf("::");
+            if (last >= 0) {
+                result.qualifier = qualified.left(last);
+                result.name = qualified.mid(last + 2);
+            } else {
+                result.name = qualified;
+            }
+            result.globallyQualified = qualified.startsWith("::");
+            if (result.globallyQualified) {
+                result.qualifier.remove(0, 2);
+                if (result.name.startsWith("::"))
+                    result.name.remove(0, 2);
+            }
+        }
+    }
+
+    while (!mCursor.atEnd()) {
+        if (mCursor.currentText() == "[") {
+            result.derivations.append(TypeDerivation::array(readBalancedToken("[", "]")));
+            continue;
+        }
+        if (mCursor.currentText() == "(") {
+            CppTokenCursor::Checkpoint suffixStart = mCursor.checkpoint();
+            TypeDerivation function = TypeDerivation::function();
+            mCursor.advance();
+            bool valid = true;
+            if (!mCursor.consume(")")) {
+                while (!mCursor.atEnd()) {
+                    if (mCursor.consume("...")) {
+                        function.functionProperties.setFlag(FunctionProperty::Variadic);
+                    } else {
+                        ParameterInfo parameter;
+                        if (!parseParameter(parameter)) {
+                            valid = false;
+                            break;
+                        }
+                        function.parameters.append(parameter);
+                    }
+                    if (mCursor.consume("="))
+                        skipExpression({",", ")"});
+                    if (mCursor.consume(")"))
+                        break;
+                    if (!mCursor.consume(",")) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+            if (!valid) {
+                mCursor.restore(suffixStart);
+                break;
+            }
+
+            while (!mCursor.atEnd()) {
+                if (mCursor.consume("const"))
+                    function.qualifiers.setFlag(TypeQualifier::Const);
+                else if (mCursor.consume("volatile"))
+                    function.qualifiers.setFlag(TypeQualifier::Volatile);
+                else if (mCursor.consume("&&"))
+                    function.refQualifier = ReferenceQualifier::Rvalue;
+                else if (mCursor.consume("&"))
+                    function.refQualifier = ReferenceQualifier::Lvalue;
+                else if (mCursor.consume("noexcept")) {
+                    if (mCursor.currentText() == "(")
+                        readBalancedToken("(", ")");
+                } else {
+                    break;
+                }
+            }
+            if (mCursor.consume("->"))
+                applyTrailingReturn(function);
+            result.derivations.append(function);
+            continue;
+        }
+        break;
+    }
+
+    std::reverse(prefix.begin(), prefix.end());
+    result.derivations += prefix;
+    if (result.name.isEmpty() && result.qualifier.isEmpty()
+            && result.derivations.isEmpty()
+            && (mCursor.atEnd() || isDeclarationDelimiter(mCursor.currentText())))
+        return true;
+    if (result.name.isEmpty() && result.derivations.isEmpty()) {
+        mCursor.restore(start);
+        return false;
+    }
+    return true;
+}
+
+bool CppDeclarationParser::parseParameter(ParameterInfo &result)
+{
+    int line = mCursor.atEnd() ? 0 : mCursor.current().line;
+    DeclSpecifierInfo specifiers;
+    if (!parseDeclSpecifierSeq(specifiers))
+        return false;
+    DeclaratorInfo declarator;
+    if (!parseDeclarator(declarator))
+        return false;
+    result = ParameterInfo();
+    result.type = std::make_shared<TypeInfo>(specifiers.type);
+    appendTypeDerivation(*result.type, declarator);
+    result.name = declarator.name;
+    result.line = line;
+    return true;
+}
+
+bool CppDeclarationParser::parseTypeName(TypeInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result = TypeInfo();
+    QString prefix;
+    if (mCursor.currentText() == "struct" || mCursor.currentText() == "class"
+            || mCursor.currentText() == "union") {
+        prefix = mCursor.currentText();
+        mCursor.advance();
+    } else if (mCursor.consume("enum")) {
+        prefix = "enum";
+        if (mCursor.currentText() == "class" || mCursor.currentText() == "struct") {
+            prefix += " " + mCursor.currentText();
+            mCursor.advance();
+        }
+    } else if (mCursor.consume("typename")) {
+        prefix = "typename";
+    }
+
+    if (mCursor.consume("decltype")) {
+        result.qualifiedName = "decltype";
+        if (mCursor.currentText() == "(")
+            result.qualifiedName += readBalancedToken("(", ")");
+        if (!prefix.isEmpty())
+            result.qualifiedName = prefix + " " + result.qualifiedName;
+        return true;
+    }
+
+    QString name;
+    if (mCursor.consume("::"))
+        name = "::";
+    while (!mCursor.atEnd()) {
+        QString text = mCursor.currentText();
+        if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
+                && !isBuiltinType(text))
+            break;
+        name += text;
+        mCursor.advance();
+        if (mCursor.currentText() == "<" && !parseTemplateArguments(result)) {
+            mCursor.restore(start);
+            return false;
+        }
+        if (mCursor.consume("::"))
+            name += "::";
+        else
+            break;
+    }
+    if (name.isEmpty()) {
+        mCursor.restore(start);
+        return false;
+    }
+    result.qualifiedName = name;
+    if (!prefix.isEmpty())
+        result.qualifiedName = prefix + " " + result.qualifiedName;
+    return !result.qualifiedName.isEmpty();
+}
+
+bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    if (!mCursor.consume("<"))
+        return false;
+
+    auto appendArgument = [&result](QString text) {
+        text = text.trimmed();
+        if (text.isEmpty())
+            return;
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        CppTokenCursor cursor(tokenizer);
+        CppDeclarationParser parser(cursor);
+        DeclSpecifierInfo specifiers;
+        if (parser.parseDeclSpecifierSeq(specifiers)) {
+            DeclaratorInfo declarator;
+            if (parser.parseDeclarator(declarator) && cursor.atEnd()) {
+                TypeInfo type = specifiers.type;
+                appendTypeDerivation(type, declarator);
+                result.templateArguments.append(TemplateArgument::fromType(type));
+                return;
+            }
+        }
+        result.templateArguments.append(TemplateArgument::fromConstant(text));
+    };
+
+    QString argument;
+    int level = 1;
+    while (!mCursor.atEnd()) {
+        QString text = mCursor.currentText();
+        if (text == "(" || text == "[" || text == "{") {
+            argument += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
+            continue;
+        }
+        if (text == "<") {
+            ++level;
+            argument += text;
+            mCursor.advance();
+            continue;
+        }
+        if (text == ">" || text == ">>") {
+            mCursor.consumeGreater();
+            --level;
+            if (level == 0) {
+                appendArgument(argument);
+                return true;
+            }
+            argument += ">";
+            continue;
+        }
+        if (text == "," && level == 1) {
+            appendArgument(argument);
+            argument.clear();
+            mCursor.advance();
+            continue;
+        }
+        argument += text;
+        mCursor.advance();
+    }
+    mCursor.restore(start);
+    return false;
+}
+
+QString CppDeclarationParser::parseTemplateArgumentText()
+{
+    TypeInfo result;
+    if (!parseTemplateArguments(result))
+        return QString();
+    return result.toString();
+}
+
+QString CppDeclarationParser::parseOperatorName()
+{
+    QString result = "operator";
+    mCursor.advance();
+    if (mCursor.atEnd())
+        return result;
+    if (mCursor.currentText() == "(")
+        result += readBalancedToken("(", ")");
+    else if (mCursor.currentText() == "[")
+        result += readBalancedToken("[", "]");
+    else {
+        result += mCursor.currentText();
+        mCursor.advance();
+    }
+    return result;
+}
+
+QString CppDeclarationParser::parseQualifiedNameText()
+{
+    QString result;
+    if (mCursor.consume("::"))
+        result = "::";
+    while (!mCursor.atEnd()) {
+        QString text = mCursor.currentText();
+        if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
+                && !isBuiltinType(text))
+            break;
+        result += text;
+        mCursor.advance();
+        if (mCursor.currentText() == "<")
+            result += parseTemplateArgumentText();
+        if (mCursor.consume("::"))
+            result += "::";
+        else
+            break;
+    }
+    return result;
+}
+
+QString CppDeclarationParser::readBalancedToken(const QString &opening, const QString &closing)
+{
+    Q_UNUSED(closing);
+    if (mCursor.atEnd() || mCursor.currentText() != opening)
+        return QString();
+
+    CppTokenCursor::MatchStatus status = mCursor.matchStatus();
+    int target = mCursor.current().matchIndex;
+    if (status == CppTokenCursor::MatchStatus::CrossFile) {
+        QString result;
+        while (!mCursor.atEnd()
+               && mCursor.current().kind != CppTokenizer::TokenKind::FileBoundary) {
+            result += mCursor.currentText();
+            mCursor.advance();
+        }
+        return result;
+    }
+
+    QString result;
+    while (!mCursor.atEnd() && mCursor.index() < target) {
+        result += mCursor.currentText();
+        mCursor.advance();
+    }
+    if (!mCursor.atEnd()
+            && mCursor.current().kind != CppTokenizer::TokenKind::FileBoundary) {
+        result += mCursor.currentText();
+        mCursor.advance();
+    }
+    return result;
+}
+
+QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters)
+{
+    QString result;
+    while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
+        QString text = mCursor.currentText();
+        if (text == "(")
+            result += readBalancedToken("(", ")");
+        else if (text == "[")
+            result += readBalancedToken("[", "]");
+        else if (text == "{")
+            result += readBalancedToken("{", "}");
+        else {
+            result += text;
+            mCursor.advance();
+        }
+    }
+    return result;
+}
+
+void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
+{
+    readUntilDelimiter(delimiters);
+}
+
+void CppDeclarationParser::applyTrailingReturn(TypeDerivation &function)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    TypeInfo trailing;
+    if (!parseTypeName(trailing))
+        return;
+    DeclaratorInfo abstractDeclarator;
+    if (!parseDeclarator(abstractDeclarator)) {
+        mCursor.restore(start);
+        return;
+    }
+    appendTypeDerivation(trailing, abstractDeclarator);
+    function.trailingReturnType = trailing.toString();
+}
+
+bool CppDeclarationParser::isBuiltinType(const QString &text) const
+{
+    static const QSet<QString> types{
+        "auto", "void", "bool", "char", "wchar_t", "char8_t", "char16_t",
+        "char32_t", "short", "int", "long", "signed", "unsigned", "float",
+        "double"
+    };
+    return types.contains(text);
+}
+
+bool CppDeclarationParser::isDeclarationDelimiter(const QString &text) const
+{
+    static const QSet<QString> delimiters{",", ";", ")", "]", "}", "=", ":"};
+    return delimiters.contains(text);
+}
