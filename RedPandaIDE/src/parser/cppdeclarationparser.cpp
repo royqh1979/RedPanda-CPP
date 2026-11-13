@@ -17,8 +17,35 @@
 #include "cppdeclarationparser.h"
 
 #include <algorithm>
+#include <QDebug>
+#include <QElapsedTimer>
 
 namespace {
+struct DeclarationProfile {
+    qint64 simpleMs = 0;
+    qint64 specifiersMs = 0;
+    qint64 declaratorMs = 0;
+    qint64 parameterMs = 0;
+    qint64 constructorCheckMs = 0;
+    qint64 typeNameMs = 0;
+    qint64 templateArgumentsMs = 0;
+    ~DeclarationProfile()
+    {
+        qWarning() << "DECLARATION_PROFILE" << simpleMs << specifiersMs << declaratorMs << parameterMs
+                   << "constructorCheck" << constructorCheckMs << "typeName" << typeNameMs
+                   << "templateArguments" << templateArgumentsMs;
+    };
+};
+
+DeclarationProfile declarationProfile;
+
+struct DeclarationProfileScope {
+    explicit DeclarationProfileScope(qint64 &target) : target(target) { timer.start(); }
+    ~DeclarationProfileScope() { target += timer.restart(); }
+    qint64 &target;
+    QElapsedTimer timer;
+};
+
 void appendToken(QString &target, const QString &text)
 {
     if (!target.isEmpty() && !text.isEmpty()
@@ -49,6 +76,7 @@ bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
 
 bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.simpleMs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     bool withoutSpecifiers = mCursor.currentText() == "~"
             || mCursor.currentText() == "operator"
@@ -221,13 +249,29 @@ void CppDeclarationParser::setCurrentClassName(const QString &className)
 
 bool CppDeclarationParser::isConstructorDeclaration()
 {
+    DeclarationProfileScope profileScope(declarationProfile.constructorCheckMs);
     CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
-    QString name = parseQualifiedNameText();
-    bool constructorSyntax = mCursor.currentText() == "(";
-    mCursor.restore(checkpoint);
-    if (!constructorSyntax)
+    QStringList parts;
+    mCursor.consume("::");
+    while (mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+        parts.append(mCursor.currentText());
+        mCursor.advance();
+        if (mCursor.currentText() == "<") {
+            mCursor.skipToMatch();
+            if (mCursor.atEnd()) {
+                mCursor.restore(checkpoint);
+                return false;
+            }
+            mCursor.advance();
+        }
+        if (!mCursor.consume("::"))
+            break;
+    }
+    if (mCursor.currentText() != "(") {
+        mCursor.restore(checkpoint);
         return false;
-    QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    }
+    mCursor.restore(checkpoint);
     if (parts.isEmpty())
         return false;
     if (!mClassName.isEmpty())
@@ -237,6 +281,7 @@ bool CppDeclarationParser::isConstructorDeclaration()
 
 bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.specifiersMs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclSpecifierInfo();
     bool hasType = false;
@@ -300,6 +345,7 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
 
 bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.declaratorMs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclaratorInfo();
     result.position = mCursor.current().position;
@@ -460,6 +506,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 
 bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.parameterMs);
     SourcePosition position = mCursor.current().position;
     DeclSpecifierInfo specifiers;
     if (!parseDeclSpecifierSeq(specifiers))
@@ -477,6 +524,7 @@ bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 
 bool CppDeclarationParser::parseTypeName(TypeInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.typeNameMs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = TypeInfo();
     QString prefix;
@@ -536,6 +584,7 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
 
 bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
 {
+    DeclarationProfileScope profileScope(declarationProfile.templateArgumentsMs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     if (!mCursor.consume("<"))
         return false;

@@ -103,7 +103,7 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 ### 声明产生式与错误恢复
 
-`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。
+`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。
 
 前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
 

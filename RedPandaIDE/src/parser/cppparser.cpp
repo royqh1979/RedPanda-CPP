@@ -21,7 +21,9 @@
 #include "cppsyntaxparser.h"
 #include <qt_utils/utils.h>
 #include <QApplication>
+#include <QDebug>
 #include <QDate>
+#include <QElapsedTimer>
 #include <QQueue>
 #include <QTime>
 
@@ -103,11 +105,15 @@ void CppParser::internalParse(const QString &fileName)
 {
     if (fileName.isEmpty())
         return;
+    QElapsedTimer timer;
+    timer.start();
     mPreprocessor.setScanOptions(true, true);
     mPreprocessor.preprocess(fileName);
+    qint64 preprocessMs = timer.restart();
 
     CppTokenizer tokenizer;
     tokenizer.tokenize(mPreprocessor.result());
+    qint64 tokenizeMs = timer.restart();
 #ifdef REDPANDA_PARSER_TEST
     mPreprocessedForTest = mPreprocessor.result();
     mTokenizerTokensForTest = tokenizer.tokens();
@@ -115,6 +121,12 @@ void CppParser::internalParse(const QString &fileName)
     CppTokenCursor cursor(tokenizer);
     CppStatementBuilder builder(mStatementList);
     const QHash<QString, QStringList> &ancestors = mPreprocessor.boundaryAncestors();
+    qint64 parseDeclarationsMs = 0;
+    qint64 buildStatementsMs = 0;
+    QElapsedTimer stepTimer;
+    QHash<QString, qint64> declarationFileTimes;
+    QElapsedTimer declarationFileTimer;
+    declarationFileTimer.start();
     QHash<QString, int> occurrences;
     QString currentFile;
     QString currentAncestor;
@@ -123,6 +135,7 @@ void CppParser::internalParse(const QString &fileName)
             break;
         const CppTokenizer::Token &token = cursor.current();
         if (token.kind == CppTokenizer::TokenKind::FileBoundary) {
+            declarationFileTimes[currentFile] += declarationFileTimer.restart();
             currentFile = token.fileName;
             int occurrence = occurrences.value(currentFile, 0);
             occurrences[currentFile] = occurrence + 1;
@@ -170,7 +183,9 @@ void CppParser::internalParse(const QString &fileName)
         DeclarationInfo declaration;
         if (!mStopForReset) {
             CppSyntaxParser parser(cursor);
+            stepTimer.start();
             if (parser.parseDeclaration(declaration)) {
+                parseDeclarationsMs += stepTimer.restart();
                 StatementBuildContext context;
                 context.fileName = declaration.fileName.isEmpty() ? currentFile : declaration.fileName;
                 context.boundaryAncestor = currentAncestor;
@@ -178,13 +193,30 @@ void CppParser::internalParse(const QString &fileName)
                 context.inProject = mProjectFiles.contains(context.fileName);
                 context.inSystemHeader = !currentAncestor.isEmpty()
                         || ::isSystemHeaderFile(context.fileName, mPreprocessor.includePaths());
+                stepTimer.start();
                 builder.build(declaration, context);
+                buildStatementsMs += stepTimer.restart();
                 continue;
             }
         }
         cursor.advance();
     }
+    declarationFileTimes[currentFile] += declarationFileTimer.restart();
+    QList<QPair<QString, qint64>> sortedTimes;
+    for (auto it = declarationFileTimes.constBegin(); it != declarationFileTimes.constEnd(); ++it)
+        sortedTimes.append(qMakePair(it.key(), it.value()));
+    std::sort(sortedTimes.begin(), sortedTimes.end(), [](const auto &left, const auto &right) {
+        return left.second > right.second;
+    });
+    for (int i = 0; i < qMin(10, sortedTimes.count()); ++i)
+        qWarning() << "PARSE_FILE_TIMING" << sortedTimes[i].first << sortedTimes[i].second;
     mPreprocessor.clearTempResults();
+    qWarning() << "PARSE_TIMING" << fileName
+               << "preprocess" << preprocessMs
+               << "tokenize" << tokenizeMs
+               << "parseDeclarations" << parseDeclarationsMs
+               << "buildStatements" << buildStatementsMs
+               << "declarations" << timer.restart();
 }
 
 void CppParser::internalInvalidateFile(const QString &fileName)

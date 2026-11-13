@@ -17,8 +17,23 @@
 #include "cppstatementbuilder.h"
 
 #include <limits>
+#include <QDebug>
+#include <QElapsedTimer>
 
 namespace {
+struct MergeDeclarationProfile {
+    qint64 elapsedMs = 0;
+    ~MergeDeclarationProfile() { qWarning() << "MERGE_DECLARATION_PROFILE" << elapsedMs; }
+};
+
+MergeDeclarationProfile mergeDeclarationProfile;
+
+struct MergeDeclarationProfileScope {
+    explicit MergeDeclarationProfileScope() { timer.start(); }
+    ~MergeDeclarationProfileScope() { mergeDeclarationProfile.elapsedMs += timer.restart(); }
+    QElapsedTimer timer;
+};
+
 bool isFunction(const DeclaratorInfo &declarator)
 {
     return !declarator.derivations.isEmpty()
@@ -238,6 +253,7 @@ CppStatementBuilder::CppStatementBuilder(StatementModel &model)
 PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
                                                  const StatementBuildContext &context) const
 {
+    MergeDeclarationProfileScope profileScope;
     for (const PStatement &existing : mModel.statements()) {
         if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
                 || existing->noNameArgs != candidate->noNameArgs)
