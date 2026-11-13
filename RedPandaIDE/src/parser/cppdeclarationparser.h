@@ -33,9 +33,12 @@ public:
     bool parseDeclarator(DeclaratorInfo &result);
     bool parseParameter(ParameterInfo &result);
     QString parseQualifiedNameText();
+    void setCurrentClassName(const QString &className);
+    QString currentClassName() const { return mClassName; }
 
 private:
     bool parseTypeName(TypeInfo &result);
+    bool isConstructorDeclaration();
     bool parseStructuredBinding(DeclarationInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
     QString parseTemplateArgumentText();
@@ -49,6 +52,7 @@ private:
     bool isDeclarationDelimiter(const QString &text) const;
 
     CppTokenCursor &mCursor;
+    QString mClassName;
 };
 
 #endif // CPPDECLARATIONPARSER_H

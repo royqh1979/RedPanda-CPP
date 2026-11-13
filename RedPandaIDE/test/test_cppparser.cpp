@@ -1181,6 +1181,61 @@ void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
     QCOMPARE(mParser->statementList().count(), statementCount);
 }
 
+void TestCppParser::test_standard_library_string()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <string>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    int preprocessedReferences = 0;
+    bool inlineCxx11Preprocessed = false;
+    for (const QString &line : mParser->preprocessedForTest()) {
+        if (line.contains("basic_string"))
+            ++preprocessedReferences;
+        if (line.contains("inline namespace __cxx11"))
+            inlineCxx11Preprocessed = true;
+    }
+    QVERIFY(preprocessedReferences > 0);
+    QVERIFY(inlineCxx11Preprocessed);
+    bool forwardDeclarationTokens = false;
+    bool definitionTokens = false;
+    bool inlineCxx11Tokens = false;
+    int definitionTokenIndex = -1;
+    const CppTokenizer::TokenList &tokens = mParser->tokenizerTokensForTest();
+    for (int i = 0; i < tokens.count(); ++i) {
+        const CppTokenizer::Token &token = tokens[i];
+        if (token.text == "basic_string") {
+            if (token.fileName.endsWith("bits/stringfwd.h", Qt::CaseInsensitive))
+                forwardDeclarationTokens = true;
+            if (i > 0 && i + 1 < tokens.count() && tokens[i - 1].text == "class"
+                    && tokens[i + 1].text == "{"
+                    && token.fileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive)) {
+                definitionTokens = true;
+                definitionTokenIndex = i;
+            }
+        }
+        if (i > 1 && token.text == "__cxx11" && tokens[i - 1].text == "namespace"
+                && tokens[i - 2].text == "inline"
+                && token.fileName.endsWith("bits/c++config.h", Qt::CaseInsensitive)) {
+            inlineCxx11Tokens = true;
+        }
+    }
+    QVERIFY(forwardDeclarationTokens);
+    QVERIFY(definitionTokens);
+    QVERIFY(inlineCxx11Tokens);
+    PStatement basicString = mParser->findStatement("std::__cxx11::basic_string");
+    QVERIFY(basicString);
+    QVERIFY(basicString->hasDefinition());
+    QVERIFY(basicString->definitionFileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive));
+    QVERIFY(mParser->findStatement("std::string"));
+    QVERIFY(mParser->findStatement("std::basic_string"));
+    QVERIFY(mParser->findStatement("std::basic_string::size"));
+}
+
 void TestCppParser::test_standard_library_public_api_complete()
 {
     QTemporaryDir tmp;
@@ -1210,3 +1265,58 @@ void TestCppParser::test_standard_library_public_api_complete()
 }
 #endif
 
+
+
+void TestCppParser::test_member_declaration_definition_in_namespace()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString declaration = tmp.filePath("declare.h");
+    QString definition = tmp.filePath("define.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(declaration, {"namespace N { class C { public: int method(); }; }"}));
+    QVERIFY(writeLines(definition, {"namespace N { int C::method() { return 1; } }"}));
+    QVERIFY(writeLines(main, {"#include \"declare.h\"", "#include \"define.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement statement = mParser->findStatement("N::C::method");
+    QVERIFY(statement);
+    QVERIFY(statement->hasDefinition());
+    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
+    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+
+    mParser->invalidateFile(definition);
+    statement = mParser->findStatement("N::C::method");
+    QVERIFY(statement);
+    QVERIFY(!statement->hasDefinition());
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    statement = mParser->findStatement("N::C::method");
+    QVERIFY(statement);
+    QVERIFY(statement->hasDefinition());
+
+    mParser->invalidateFile(declaration);
+    QVERIFY(!mParser->findStatement("N::C::method"));
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    statement = mParser->findStatement("N::C::method");
+    QVERIFY(statement);
+    QVERIFY(statement->hasDefinition());
+    QCOMPARE(statement->fileName, declaration);
+    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
+    QCOMPARE(statement->definitionFileName, definition);
+    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    PStatement parent = statement->parentScope.lock();
+    QVERIFY(parent);
+    QCOMPARE(parent->fullName, QString("N::C"));
+    bool memberIndexed = false;
+    for (const std::weak_ptr<Statement> &weak : parent->children.values("method")) {
+        if (weak.lock() == statement) {
+            memberIndexed = true;
+            break;
+        }
+    }
+    QVERIFY(memberIndexed);
+}

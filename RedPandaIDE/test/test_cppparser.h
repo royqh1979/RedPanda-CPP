@@ -45,8 +45,10 @@ private slots:
     void test_cppreference_structured_binding_syntax();
     void test_cppreference_range_for_syntax();
     void test_cppreference_ranges_syntax();
+    void test_member_declaration_definition_in_namespace();
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
+    void test_standard_library_string();
     void test_standard_library_public_api_complete();
 #endif
 protected:

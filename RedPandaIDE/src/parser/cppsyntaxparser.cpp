@@ -161,6 +161,8 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     if (!mCursor.consume("{"))
         return false;
 
+    QString previousClassName = mDeclarationParser.currentClassName();
+    mDeclarationParser.setCurrentClassName(declarator.name);
     DeclarationAccessibility accessibility = result.classKey == ClassKey::Class
             ? DeclarationAccessibility::Private : DeclarationAccessibility::Public;
     while (!mCursor.atEnd()
@@ -214,12 +216,15 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     while (!mCursor.atEnd() && mCursor.currentText() != ";"
             && mCursor.currentText() != "}") {
         DeclaratorInfo trailing;
-        if (!mDeclarationParser.parseDeclarator(trailing))
+        if (!mDeclarationParser.parseDeclarator(trailing)) {
+            mDeclarationParser.setCurrentClassName(previousClassName);
             return false;
+        }
         result.declarators.append(trailing);
         if (!mCursor.consume(","))
             break;
     }
+    mDeclarationParser.setCurrentClassName(previousClassName);
     mCursor.consume(";");
     return true;
 }

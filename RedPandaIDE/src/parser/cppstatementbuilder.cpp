@@ -16,11 +16,20 @@
  */
 #include "cppstatementbuilder.h"
 
+#include <limits>
+
 namespace {
 bool isFunction(const DeclaratorInfo &declarator)
 {
     return !declarator.derivations.isEmpty()
             && declarator.derivations.first().kind == TypeDerivationKind::Function;
+}
+
+bool isDeductionGuide(const DeclarationInfo &declaration, const DeclaratorInfo &declarator)
+{
+    return isFunction(declarator)
+            && declaration.specifiers.type.qualifiedName.isEmpty()
+            && !declarator.derivations.first().trailingReturnType.isEmpty();
 }
 
 
@@ -130,6 +139,13 @@ private:
                 break;
             ++mIndex;
             qlonglong right = unary(ok);
+            if (!ok)
+                return 0;
+            if (operation != "*" && (right == 0
+                    || (result == std::numeric_limits<qlonglong>::min() && right == -1))) {
+                ok = false;
+                return 0;
+            }
             if (operation == "*")
                 result *= right;
             else if (operation == "/")
@@ -292,6 +308,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
 
     for (int i = 0; i < declaration.declarators.count(); ++i) {
         const DeclaratorInfo &declarator = declaration.declarators[i];
+        if (isDeductionGuide(declaration, declarator))
+            continue;
         StatementKind kind;
         if (i < firstVariable) {
             switch (declaration.kind) {

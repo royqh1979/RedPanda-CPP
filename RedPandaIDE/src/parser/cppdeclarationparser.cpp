@@ -211,12 +211,38 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
     return true;
 }
 
+void CppDeclarationParser::setCurrentClassName(const QString &className)
+{
+    mClassName = className.section("::", -1);
+    int templateStart = mClassName.indexOf('<');
+    if (templateStart >= 0)
+        mClassName.truncate(templateStart);
+}
+
+bool CppDeclarationParser::isConstructorDeclaration()
+{
+    CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
+    QString name = parseQualifiedNameText();
+    bool constructorSyntax = mCursor.currentText() == "(";
+    mCursor.restore(checkpoint);
+    if (!constructorSyntax)
+        return false;
+    QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+        return false;
+    if (!mClassName.isEmpty())
+        return parts.last() == mClassName;
+    return parts.count() >= 2 && parts.last() == parts[parts.count() - 2];
+}
+
 bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
 {
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclSpecifierInfo();
     bool hasType = false;
     while (!mCursor.atEnd()) {
+        if (isConstructorDeclaration())
+            break;
         QString text = mCursor.currentText();
         DeclSpecifierProperty property = DeclSpecifierProperty::None;
         if (text == "static") property = DeclSpecifierProperty::Static;
@@ -265,7 +291,7 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
         }
         hasType = true;
     }
-    if (!hasType) {
+    if (!hasType && !isConstructorDeclaration()) {
         mCursor.restore(start);
         return false;
     }

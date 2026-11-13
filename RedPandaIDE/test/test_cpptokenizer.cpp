@@ -1915,3 +1915,118 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     QVERIFY(!parser.parseDeclaration(declaration));
     QCOMPARE(cursor.index(), 0);
 }
+
+
+void TestCppTokenizer::test_constructor_declarations_with_specifiers()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "class C {\n"
+                "public:\n"
+                "  constexpr C();\n"
+                "  explicit inline C(int value);\n"
+                "};\n"
+                "constexpr C::C() { }\n"
+                "C::C(int value) { }\n"
+                "template<typename T> class Box { public: constexpr Box(); };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructors.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    PStatement c = resolver.findStatement("C");
+    QVERIFY(c);
+    const auto constructors = c->children.values("C");
+    QCOMPARE(constructors.count(), 2);
+    bool defaultConstructor = false;
+    bool explicitConstructor = false;
+    for (const std::weak_ptr<Statement> &weak : constructors) {
+        PStatement constructor = weak.lock();
+        QVERIFY(constructor);
+        QCOMPARE(constructor->kind, StatementKind::Constructor);
+        QVERIFY(constructor->hasDefinition());
+        if (constructor->parameters.isEmpty()) {
+            defaultConstructor = true;
+            QVERIFY(constructor->declSpecifierProperties.testFlag(DeclSpecifierProperty::Constexpr));
+        } else {
+            explicitConstructor = true;
+            QVERIFY(constructor->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit));
+        }
+    }
+    QVERIFY(defaultConstructor && explicitConstructor);
+    for (const std::weak_ptr<Statement> &weak : c->children)
+        QVERIFY(!weak.lock()->command.isEmpty());
+
+    PStatement box = resolver.findStatement("Box");
+    QVERIFY(box);
+    PStatement boxConstructor = findStatement(box->children, "Box");
+    QVERIFY(boxConstructor);
+    QCOMPARE(boxConstructor->kind, StatementKind::Constructor);
+}
+
+
+void TestCppTokenizer::test_integer_constant_expression_invalid_division()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "enum class E { divisionByZero = 1 / 0, moduloByZero = 1 % 0,"
+                " overflow = (-9223372036854775807 - 1) / -1,"
+                " unknownDivisor = 1 / unknown, unknownModulo = 1 % unknown, valid = 3 };",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/enum.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+
+    QVERIFY(resolver.findStatement("E::divisionByZero"));
+    QVERIFY(resolver.findStatement("E::moduloByZero"));
+    QVERIFY(resolver.findStatement("E::overflow"));
+    QVERIFY(resolver.findStatement("E::unknownDivisor"));
+    QVERIFY(resolver.findStatement("E::unknownModulo"));
+    PStatement valid = resolver.findStatement("E::valid");
+    QVERIFY(valid);
+    QCOMPARE(valid->value, QString("3"));
+}
+
+
+void TestCppTokenizer::test_deduction_guides_are_consumed_without_statements()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __cxx11 {\n"
+                "template<typename T> class basic_string { public: unsigned long size(); };\n"
+                "template<typename InputIterator, typename Allocator>\n"
+                "basic_string(InputIterator, InputIterator, Allocator) -> basic_string<InputIterator>;\n"
+                "template<typename T, typename Allocator>\n"
+                "basic_string(basic_string_view<T>, const Allocator&) -> basic_string<T>;\n"
+                "} }\n"
+                "auto make_value(int) -> int;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/guides.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    PStatement basicString = resolver.findStatement("std::basic_string");
+    QVERIFY(basicString);
+    QCOMPARE(basicString->kind, StatementKind::Class);
+    QVERIFY(basicString->hasDefinition());
+    QVERIFY(resolver.findStatement("std::basic_string::size"));
+    QVERIFY(resolver.findStatement("make_value"));
+    int entries = 0;
+    for (const PStatement &statement : model.statements()) {
+        if (statement->fullName == "std::__cxx11::basic_string") {
+            ++entries;
+            QCOMPARE(statement->kind, StatementKind::Class);
+        }
+    }
+    QCOMPARE(entries, 1);
+}

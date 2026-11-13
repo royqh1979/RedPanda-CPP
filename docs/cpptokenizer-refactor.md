@@ -222,6 +222,10 @@ Statement 需要区分非模板、主模板、部分特化和全特化，并保�
 
 Parser 解析声明时只保存模板声明、模板实参和结构化 TypeInfo，不实例化模板，也不生成实例化 Statement。为区分 `<` 是否模板参数而进行的名称查询不属于实例化。类模板绑定、别名展开、特化选择、成员类型和函数返回类型均在查找类型信息时按需计算。`auto x = expression` 是声明阶段的例外：需要立即求初始化表达式的类型来确定 x 的 TypeInfo，但同样只计算所需类型链，不生成模板实例。普通 auto 函数的返回类型仍留待后续专门能力处理，不做函数体推导。
 
+当前不支持 CTAD。deduction guide 的语法必须正确消费，但不生成 Statement：识别依据是函数 declarator 带 trailing return 且没有 decl-specifier 返回类型，不能误忽略普通 `auto f() -> T`。测试必须验证类定义和成员可查找、guide 不产生同名函数条目，以及普通 trailing-return 函数仍保留。
+
+未来若实现 CTAD，可在 Class Statement 内增加 `guides` 值列表，联合 class 构造函数和 guides 进行推导。guides 是与类关联的语义信息，不进入 children、fullName 或普通函数查找，也不作为独立 shared_ptr Statement 持有；每项保存模板参数、函数参数、推导结果类型、源码文件和位置。文件失效时按各自文件/边界祖先清理，Class 删除时随 Class 一并释放。该列表仅是后续可选设计，当前不实现。
+
 函数 Statement 同时保留结构化 ParameterInfo 列表，不只保存 args 文本。调用时逐参数比较 formal/actual TypeInfo：直接模板形参绑定实际类型，引用先去除，指针/数组按层递归，Container<T> 等实际模板参数继续递归绑定；返回 TypeInfo 再应用这些绑定。该机制用于 find_if、transform 等算法，不做重载决议、SFINAE、参数包展开或完整隐式转换序列。
 
 无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。
