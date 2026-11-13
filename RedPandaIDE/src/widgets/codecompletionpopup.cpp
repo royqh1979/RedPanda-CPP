@@ -675,7 +675,7 @@ void CodeCompletionPopup::getCompletionFor(
                 //add members of current scope that not added before
                 if (scopeStatement->kind == StatementKind::Namespace) {
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(scopeStatement->fullName);
+                            mParser->findNamespace(scopeStatement->fullName, true);
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
                         addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
@@ -688,7 +688,7 @@ void CodeCompletionPopup::getCompletionFor(
                 // add members of all usings (in current scope ) and not added before
                 foreach (const QString& namespaceName,scopeStatement->usingList) {
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(namespaceName);
+                            mParser->findNamespace(namespaceName, true);
                     if (!namespaceStatementsList)
                         continue;
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
@@ -764,7 +764,7 @@ void CodeCompletionPopup::getCompletionFor(
                 if (ownerStatement.kind==EvalStatementKind::Namespace) {
                     //there might be many statements corresponding to one namespace;
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(ownerStatement.type.qualifiedName);
+                            mParser->findNamespace(ownerStatement.type.qualifiedName, true);
                     if (namespaceStatementsList) {
                         foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                             addChildren(namespaceStatement, fileName, line);

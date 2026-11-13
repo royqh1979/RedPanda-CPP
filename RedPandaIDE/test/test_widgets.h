@@ -40,6 +40,7 @@ private slots:
     void test_code_completion_labels();
     void test_code_completion_function_without_definition();
     void test_code_completion_namespaces();
+    void test_code_completion_inline_namespaces();
     void test_code_completion_types();
     void test_code_completion_macros();
     void test_code_completion_normal_includes_macros();

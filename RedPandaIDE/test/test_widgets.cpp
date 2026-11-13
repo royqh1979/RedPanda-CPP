@@ -100,7 +100,9 @@ QSet<QString> completionNames(CodeCompletionPopup &popup, const QString &typeNam
                               const QString &fileName,
                               CodeCompletionType type = CodeCompletionType::Normal,
                               const QString &preWord = {}, const QString &searchText = {},
-                              const QSet<QString> &customKeywords = {}, int line = 0)
+                              const QSet<QString> &customKeywords = {}, int line = 0,
+                              const QString &memberOperator = ".",
+                              const QStringList &memberExpression = {"a"})
 {
     popup.setShowEditorCaretFunc([] {});
     popup.setKeypressedCallback([](QKeyEvent *) { return false; });
@@ -109,7 +111,8 @@ QSet<QString> completionNames(CodeCompletionPopup &popup, const QString &typeNam
         if (typeName.isEmpty()) {
             popup.prepareSearch(preWord, {}, "", {searchText}, fileName, line, type, customKeywords);
         } else {
-            popup.prepareSearch(preWord, {typeName}, ".", {"a"}, fileName, line, type, customKeywords);
+            popup.prepareSearch(preWord, {typeName}, memberOperator, memberExpression,
+                                fileName, line, type, customKeywords);
         }
     } else {
         popup.prepareSearch(preWord, {}, "", {typeName}, fileName, line, type, customKeywords);
@@ -285,6 +288,33 @@ void TestWidgets::test_code_completion_namespaces()
     QCOMPARE(completionNames(popup, "", mMainFile, CodeCompletionType::Namespaces,
                              "", "TestNamespace", {}, line),
              QSet<QString>{"TestNamespace"});
+}
+
+void TestWidgets::test_code_completion_inline_namespaces()
+{
+    mMainContent = QStringList{
+        "namespace std {",
+        "  inline namespace __cxx11 {",
+        "    class basic_string {};",
+        "    using string = basic_string;",
+        "  }",
+        "}"
+    };
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+        buffer = mMainContent;
+        return true;
+    });
+    mParser->addProjectFile(mMainFile, false);
+    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    PStatement namespaceStatement = mParser->findStatement("std");
+    QVERIFY(namespaceStatement);
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    QSet<QString> names = completionNames(popup, "std", mMainFile, CodeCompletionType::Normal,
+                                          {}, {}, {}, mMainContent.count(), "::", {});
+    QVERIFY(names.contains("basic_string"));
+    QVERIFY(names.contains("string"));
 }
 
 void TestWidgets::test_code_completion_types()
