@@ -57,8 +57,9 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 Static Release、GCC 8.1 直接运行并设置 `QT_FORCE_STDERR_LOGGING=1`、未启用详细 profile 的有效实测结果：
 
 - 独立 `<string>`：总计 299 毫秒；preprocess 70 毫秒、tokenize 69 毫秒、parseDeclarations 61 毫秒、buildStatements 4 毫秒。
-- GCC 8.1 完整公开接口验收：总计 1.393 秒；首次解析 1.284 秒，其中 preprocess 421 毫秒、tokenize 488 毫秒、parseDeclarations 165 毫秒、buildStatements 37 毫秒、clearTempResults 4 毫秒。
-- GCC 15.3 完整公开接口验收：总计 2.571 秒；首次解析 2.422 秒，其中 preprocess 1.167 秒、tokenize 626 毫秒、parseDeclarations 325 毫秒、buildStatements 62 毫秒、clearTempResults 4 毫秒；`templateText` 从限定名优化前的约 748 毫秒降为 23.8 毫秒。
+- GCC 8.1 完整公开接口验收：总计 1.420 秒；首次解析 1.273 秒，其中 preprocess 357 毫秒、tokenize 514 毫秒、parseDeclarations 168 毫秒、buildStatements 36 毫秒、clearTempResults 6 毫秒。
+- GCC 15.3 完整公开接口验收：总计 2.110 秒；首次解析 1.907 秒，其中 preprocess 656 毫秒、tokenize 642 毫秒、parseDeclarations 328 毫秒、buildStatements 57 毫秒、clearTempResults 7 毫秒；`templateText` 从限定名优化前的约 748 毫秒降为 23.8 毫秒。
+- `userMacroSnapshot()` 仅在边界入口计算。A/B 对比中，所有文件都计算快照时 preprocess 为 1118 毫秒，仅边界入口计算时为 656 毫秒，约降低 41%。非边界文件不生成 replay 条件，因此不需要快照。标准库 include 路径必须规范化，GCC 输出中的 `bin/../` 等片段会导致 replay 缓存键不一致；规范化后 scan=1、replay=1、invalidate=1，Statement 数保持一致。
 - 优化前完整验收约为 5.8 秒；namespace 索引后约为 3.572 秒，currentText 改为只读引用后又降至约 3.1 秒。配对括号改用 matchIndex 识别，尖括号文本比较统一到单个 Operator 分支后约为 3.0 秒。模板原文改为按 line/ch 直接截取预处理输出后约为 1.95 秒；限定名在格式一致时也直接截取后，GCC 8.1 最终约为 1.39 秒。
 - `mergeDeclaration()` 从优化前约 2.1 秒降为约 56 毫秒，不再是热点。完整验收的第二次 replay 为 26 毫秒，Statement 销毁为 21 毫秒；名称查找和名称收集也不是热点。
 - 非 auto 初始化及被丢弃的表达式现在只跳过 token，不再拼接临时文本；该调整没有明显独立提速，但消除了无意义工作。字符串 reserve 预分配没有收益，已撤回。

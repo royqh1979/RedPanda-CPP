@@ -68,7 +68,7 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
     for (const QByteArray &line : lines) {
         QByteArray path = line.trimmed();
         if (!path.isEmpty() && QDir(path).exists()) {
-            QString includePath = QString::fromUtf8(path);
+            QString includePath = QDir(path).canonicalPath();
             includePaths.append(includePath);
             parser->addIncludePath(includePath);
         }
@@ -76,12 +76,12 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
     for (const QString &includePath : includePaths) {
         QString candidate = includePath + "/bits/stdc++.h";
         if (QFileInfo::exists(candidate)) {
-            bitsStdcpp = candidate;
+            bitsStdcpp = QFileInfo(candidate).canonicalFilePath();
             break;
         }
         candidate = includePath + "/x86_64-w64-mingw32/bits/stdc++.h";
         if (QFileInfo::exists(candidate)) {
-            bitsStdcpp = candidate;
+            bitsStdcpp = QFileInfo(candidate).canonicalFilePath();
             break;
         }
     }

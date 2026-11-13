@@ -780,7 +780,8 @@ void CppPreprocessor::openInclude(QString fileName)
     parsedFile->fileInfo = fileInfo;
     parsedFile->boundaryEntry = boundaryEntry;
     parsedFile->boundaryAncestor = boundaryAncestor;
-    parsedFile->userMacros = userMacroSnapshot();
+    if (boundaryEntry)
+        parsedFile->userMacros = userMacroSnapshot();
     parsedFile->boundaryPrefix = mSession.boundaryPrefix;
 
     mSession.currentFileInfo = fileInfo;
