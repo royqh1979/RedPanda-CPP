@@ -22,15 +22,34 @@
 
 namespace {
 struct MergeDeclarationProfile {
-    qint64 elapsedMs = 0;
-    ~MergeDeclarationProfile() { qWarning() << "MERGE_DECLARATION_PROFILE" << elapsedMs; }
+    qint64 elapsedNs = 0;
+    ~MergeDeclarationProfile() { qWarning() << "MERGE_DECLARATION_PROFILE ms" << elapsedNs / 1000000.0; }
 };
 
 MergeDeclarationProfile mergeDeclarationProfile;
 
 struct MergeDeclarationProfileScope {
     explicit MergeDeclarationProfileScope() { timer.start(); }
-    ~MergeDeclarationProfileScope() { mergeDeclarationProfile.elapsedMs += timer.restart(); }
+    ~MergeDeclarationProfileScope() { mergeDeclarationProfile.elapsedNs += timer.nsecsElapsed(); }
+    QElapsedTimer timer;
+};
+
+struct StatementBuilderProfile {
+    qint64 createStatementNs = 0;
+    qint64 autoTypeNs = 0;
+    ~StatementBuilderProfile()
+    {
+        qWarning() << "STATEMENT_BUILDER_PROFILE createStatementMs" << createStatementNs / 1000000.0
+                   << "autoTypeMs" << autoTypeNs / 1000000.0;
+    }
+};
+
+StatementBuilderProfile statementBuilderProfile;
+
+struct StatementBuilderProfileScope {
+    explicit StatementBuilderProfileScope(qint64 &target) : target(target) { timer.start(); }
+    ~StatementBuilderProfileScope() { target += timer.nsecsElapsed(); }
+    qint64 &target;
     QElapsedTimer timer;
 };
 
@@ -250,34 +269,126 @@ CppStatementBuilder::CppStatementBuilder(StatementModel &model)
 {
 }
 
+QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
+        const PStatement &statement, const QStringList &parts) const
+{
+    QList<PStatement> result;
+    if (!statement || parts.isEmpty())
+        return result;
+    if (parts.count() == 1) {
+        const auto candidates = mModel.childrenStatements(statement->parentScope).values(
+                    statement->command);
+        for (const std::weak_ptr<Statement> &weak : candidates) {
+            if (PStatement candidate = weak.lock())
+                result.append(candidate);
+        }
+        return result;
+    }
+    if (statement->kind != StatementKind::Namespace
+            && statement->kind != StatementKind::Class
+            && statement->kind != StatementKind::EnumType
+            && statement->kind != StatementKind::EnumClassType) {
+        return result;
+    }
+
+    QList<PStatement> current{statement};
+    for (int i = 1; !current.isEmpty() && i < parts.count(); ++i) {
+        QList<PStatement> next;
+        for (const PStatement &scope : current) {
+            const auto candidates = mModel.childrenStatements(scope).values(parts[i]);
+            for (const std::weak_ptr<Statement> &weak : candidates) {
+                if (PStatement candidate = weak.lock())
+                    next.append(candidate);
+            }
+        }
+        current = next;
+    }
+    return current;
+}
+
+QList<PStatement> CppStatementBuilder::doFindStatements(const QString &qualifiedName) const
+{
+    QString name = qualifiedName;
+    if (name.startsWith("::"))
+        name.remove(0, 2);
+    const QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+        return {};
+
+    for (int namespacePartCount = parts.count(); namespacePartCount > 0; --namespacePartCount) {
+        QString namespaceName = parts.mid(0, namespacePartCount).join("::");
+        QList<PStatement> namespaces = mModel.namespaceStatements(namespaceName);
+        if (namespaces.isEmpty())
+            continue;
+        if (namespacePartCount == parts.count())
+            return namespaces;
+        QList<PStatement> result;
+        for (const PStatement &nameSpace : namespaces) {
+            result += doFindDeclarationRemainder(
+                        nameSpace, parts.mid(namespacePartCount - 1));
+        }
+        return result;
+    }
+
+    QList<PStatement> result;
+    const auto candidates = mModel.childrenStatements().values(parts.first());
+    for (const std::weak_ptr<Statement> &weak : candidates) {
+        if (PStatement candidate = weak.lock())
+            result += doFindDeclarationRemainder(candidate, parts);
+    }
+    return result;
+}
+
+PStatement CppStatementBuilder::doFindDeclarationToMerge(
+        const PStatement &candidate, const StatementBuildContext &context) const
+{
+    QList<PStatement> candidates;
+    if (context.scope == StatementScope::Local) {
+        const auto directCandidates = mModel.childrenStatements(context.parentScope).values(
+                    candidate->command);
+        for (const std::weak_ptr<Statement> &weak : directCandidates) {
+            if (PStatement existing = weak.lock())
+                candidates.append(existing);
+        }
+    } else {
+        candidates = doFindStatements(candidate->fullName);
+    }
+
+    for (const PStatement &existing : candidates) {
+        if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
+                || existing->noNameArgs != candidate->noNameArgs) {
+            continue;
+        }
+        bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
+                || existing->definitionBoundaryAncestor == context.boundaryAncestor;
+        bool declarationPair = existing->hasDefinition() != candidate->hasDefinition();
+        if (sameAncestor || declarationPair)
+            return existing;
+    }
+    return nullptr;
+}
+
 PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
                                                  const StatementBuildContext &context) const
 {
     MergeDeclarationProfileScope profileScope;
-    for (const PStatement &existing : mModel.statements()) {
-        if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
-                || existing->noNameArgs != candidate->noNameArgs)
-            continue;
-        bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
-                || existing->definitionBoundaryAncestor == context.boundaryAncestor;
-        bool declarationPair = existing->hasDefinition() != candidate->hasDefinition();
-        if (!sameAncestor && !declarationPair)
-            continue;
+    PStatement existing = doFindDeclarationToMerge(candidate, context);
+    if (!existing)
+        return nullptr;
 
-        if (candidate->hasDefinition()) {
-            existing->definitionRange = candidate->declarationRange;
-            existing->definitionFileName = context.fileName;
-            existing->definitionBoundaryAncestor = context.boundaryAncestor;
-            existing->setHasDefinition(true);
-        } else {
-            existing->declarationRange = candidate->declarationRange;
-            existing->fileName = context.fileName;
-            existing->declarationBoundaryAncestor = context.boundaryAncestor;
-        }
-        existing->declSpecifierProperties |= candidate->declSpecifierProperties;
-        return existing;
+    if (candidate->hasDefinition()) {
+        existing->definitionRange = candidate->declarationRange;
+        existing->definitionFileName = context.fileName;
+        existing->definitionBoundaryAncestor = context.boundaryAncestor;
+        existing->setHasDefinition(true);
+    } else {
+        existing->declarationRange = candidate->declarationRange;
+        existing->fileName = context.fileName;
+        existing->declarationBoundaryAncestor = context.boundaryAncestor;
     }
-    return {};
+    existing->declSpecifierProperties |= candidate->declSpecifierProperties;
+    mModel.updateNamespaceTransparency(existing);
+    return existing;
 }
 
 QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
@@ -457,6 +568,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                                                 const StatementBuildContext &context,
                                                 StatementKind kind)
 {
+    StatementBuilderProfileScope profileScope(statementBuilderProfile.createStatementNs);
     auto statement = std::make_shared<Statement>();
     statement->parentScope = context.parentScope;
     statement->command = declarator.name;
@@ -515,6 +627,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         QString expression = declaration.rangeExpression.isEmpty()
                 ? declarator.initializerText : declaration.rangeExpression;
         if (!expression.isEmpty()) {
+            StatementBuilderProfileScope autoProfileScope(statementBuilderProfile.autoTypeNs);
             CppTokenizer tokenizer;
             tokenizer.tokenize(expression.split('\n'));
             tokenizer.relocateTokens(context.fileName, declaration.rangeExpression.isEmpty()

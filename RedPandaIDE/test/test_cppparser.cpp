@@ -2,6 +2,7 @@
 #include <QTemporaryDir>
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 #include <QDir>
+#include <QElapsedTimer>
 #include <QProcess>
 #include <QTemporaryFile>
 #endif
@@ -1305,7 +1306,10 @@ void TestCppParser::test_standard_library_public_api_complete()
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
 
+    QElapsedTimer testTimer;
+    testTimer.start();
     CppParser::parseFileBlocking(mParser, main, true, "");
+    qWarning() << "STDLIB_TEST_TIMING firstParse" << testTimer.restart();
     for (const char *name : {
          "std::string", "std::vector", "std::map", "std::set",
          "std::sort", "std::find", "std::cout", "std::endl",
@@ -1313,15 +1317,21 @@ void TestCppParser::test_standard_library_public_api_complete()
          "std::vector::size", "std::vector::push_back", "std::map::find"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
+    qWarning() << "STDLIB_TEST_TIMING lookups" << testTimer.restart();
     QSet<QString> firstStatements = standardLibraryStatementNames(mParser);
+    qWarning() << "STDLIB_TEST_TIMING firstCollect" << testTimer.restart();
     QVERIFY(firstStatements.count() > 100);
     int statementCount = mParser->statementList().count();
 
     CppParser::parseFileBlocking(mParser, main, true, "");
+    qWarning() << "STDLIB_TEST_TIMING secondParse" << testTimer.restart();
     QCOMPARE(standardLibraryStatementNames(mParser), firstStatements);
+    qWarning() << "STDLIB_TEST_TIMING secondCollectAndCompare" << testTimer.restart();
     QCOMPARE(mParser->statementList().count(), statementCount);
     QCOMPARE(mParser->preprocessorEventCountsForTest(bitsStdcpp).scan, 1);
     QVERIFY(mParser->preprocessorEventCountsForTest(bitsStdcpp).replay > 0);
+    mParser.reset();
+    qWarning() << "STDLIB_TEST_TIMING destruction" << testTimer.restart();
 }
 #endif
 
@@ -1379,4 +1389,96 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
         }
     }
     QVERIFY(memberIndexed);
+}
+
+void TestCppParser::test_overloaded_declaration_definition_merge()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString declaration = tmp.filePath("declare.h");
+    QString otherDeclaration = tmp.filePath("declare_other.h");
+    QString definition = tmp.filePath("define.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(declaration, {"namespace N { int f(int); }"}));
+    QVERIFY(writeLines(otherDeclaration, {"namespace N { int f(double); }"}));
+    QVERIFY(writeLines(definition, {"namespace N { int f(double value) { return int(value); } }"}));
+    QVERIFY(writeLines(main, {"#include \"declare.h\"", "#include \"declare_other.h\"",
+                              "#include \"define.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatementList namespaces = mParser->findNamespace("N");
+    QVERIFY(namespaces && namespaces->count() >= 2);
+    auto overloadedFunctions = [&]() {
+        QList<PStatement> result;
+        for (const PStatement &nameSpace : *namespaces) {
+            for (const PStatement &statement : mParser->membersOfStatement(nameSpace)) {
+                if (statement->fullName == "N::f")
+                    result.append(statement);
+            }
+        }
+        return result;
+    };
+    PStatement intDeclaration;
+    PStatement doubleDefinition;
+    for (const PStatement &statement : overloadedFunctions()) {
+        if (statement->noNameArgs == "(int)")
+            intDeclaration = statement;
+        else if (statement->noNameArgs == "(double)")
+            doubleDefinition = statement;
+    }
+    QVERIFY(intDeclaration);
+    QVERIFY(doubleDefinition);
+    QVERIFY(intDeclaration != doubleDefinition);
+    QVERIFY(!intDeclaration->hasDefinition());
+    QVERIFY(doubleDefinition->hasDefinition());
+    QCOMPARE(doubleDefinition->declarationBoundaryAncestor, otherDeclaration);
+    QCOMPARE(doubleDefinition->definitionBoundaryAncestor, definition);
+    QCOMPARE(doubleDefinition->definitionFileName, definition);
+
+    mParser->invalidateFile(definition);
+    QVERIFY(!doubleDefinition->hasDefinition());
+    QVERIFY(!intDeclaration->hasDefinition());
+    QCOMPARE(overloadedFunctions().count(), 2);
+}
+
+void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"void f() {", "  { int value; }", "  { int value; }", "}"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    PStatement function = mParser->findStatement("f");
+    QVERIFY(function);
+    QList<PStatement> variables;
+    for (const std::weak_ptr<Statement> &weakBlock : function->children) {
+        PStatement block = weakBlock.lock();
+        if (!block || block->kind != StatementKind::Block)
+            continue;
+        for (const std::weak_ptr<Statement> &weak : block->children.values("value")) {
+            if (PStatement variable = weak.lock())
+                variables.append(variable);
+        }
+    }
+    QCOMPARE(variables.count(), 2);
+    QVERIFY(variables[0]->parentScope.lock() != variables[1]->parentScope.lock());
+}
+
+void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"namespace std { int value; }",
+                             "namespace std { inline namespace __cxx11 { int inlineValue; } }"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    QCOMPARE(mParser->findNamespace("std")->count(), 1);
+    QCOMPARE(mParser->findNamespace("std", true)->count(), 2);
+    QCOMPARE(mParser->findNamespace("std::__cxx11")->count(), 1);
+    mParser->invalidateFile("main.cpp");
+    QVERIFY(mParser->findNamespace("std")->isEmpty());
+    QVERIFY(mParser->findNamespace("std", true)->isEmpty());
+    QVERIFY(mParser->findNamespace("std::__cxx11")->isEmpty());
 }

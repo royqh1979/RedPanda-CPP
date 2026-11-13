@@ -63,7 +63,7 @@ public:
                                 const PStatement& currentScope) const;
     PStatement findFunctionAt(const QString& fileName, int line) const;
     int findLastOperator(const QString& phrase) const;
-    PStatementList findNamespace(const QString& name) const;
+    PStatementList findNamespace(const QString& name, bool includeInline = false) const;
     PStatement findStatement(const QString& fullname) const;
     QList<PStatement> membersOfStatement(const PStatement &scopeStatement) const;
     StatementAccessibility memberAccessibility(const PStatement &scopeStatement,
@@ -171,7 +171,7 @@ private:
     PStatement doFindStatementOf(const QString& fileName, const QStringList& expression, int line) const;
     EvalResult doEvalExpression(const QString& fileName, QStringList& expression,
                                 const PStatement& currentScope) const;
-    PStatementList doFindNamespace(const QString& name) const;
+    PStatementList doFindNamespace(const QString& name, bool includeInline = false) const;
     QList<PStatement> doMembersOfStatement(const PStatement &scopeStatement) const;
     PStatement findStatementStartingFrom(const QString& fileName, const QString& phrase,
                                          const PStatement& startScope) const;

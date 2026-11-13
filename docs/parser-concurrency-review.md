@@ -8,7 +8,7 @@
 
 只使用调用方传入的 Statement、且不读取 CppParser 共享状态的接口不机械加锁。例如 `prettyPrintStatement()` 和 `getFunctionParameterNames()` 不属于上述共享状态查询。
 
-`findStatementOf()` 与 `evalExpression()` 使用 public 包装和 private `do*` 实现。namespace 和继承成员查询也按同样方式拆分，避免内部 public 调用重复加锁。
+`findStatement()`、`findStatementOf()` 与 `evalExpression()` 使用 public 包装和 private `doFind*` / `doEval*` 实现。namespace 和继承成员查询也按同样方式拆分，避免内部 public 调用重复加锁。尤其在 `mParsing == true` 的 Statement 构建阶段，public 查询会按约定返回空结果，内部复用查询逻辑时必须直接调用无锁的 `doFindXXX()`，不能经过 public 包装。
 
 ## 待分析：解析入口与结束状态
 

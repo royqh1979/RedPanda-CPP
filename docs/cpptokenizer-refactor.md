@@ -148,6 +148,8 @@ CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxPars
 
 同一实体的声明和定义合并到一个 Statement，分别保存 declarationRange/definitionRange、实际文件和跨边界祖先，并合并声明说明符，避免重开 namespace 时丢失 inline 等信息；参数不重复创建。变量统一使用 StatementKind::Variable，global/local/class-local 由 StatementScope 区分。typeInfo.toString 保留完整结构化类型，Statement::type() 生成旧 API 所需的存储类别、返回类型及数组/函数指针兼容文本。
 
+merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
+
 class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
 
 实施批次按消费边界划分：
@@ -174,15 +176,15 @@ class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 
 
 ### Statement 所有权
 
-StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立，fullName 查询复用作用域索引，不增加重复的全量名称索引。
+StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立。除各作用域的 command 索引外，StatementModel 还维护 namespace 专用的 fullName 多值索引：每个 namespace 登记到自身 fullName，inline/匿名 namespace 同时登记到直接父 namespace 的 fullName 下。该索引只服务多候选 namespace 查询，不扩展为通用 fullName 索引。
 
-查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。失效时仍须删除对应索引项；weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
+查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。新增、声明属性合并、失效删除和 clear 都必须同步维护索引；父 namespace 先删除时也要清理父键下的透明子节点关联。weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
 
 ### 重开 namespace 的限定名查找
 
 只有 namespace 会因重开而由多个 Statement 表示同一逻辑作用域。class/enum 的声明与定义应合并，函数重载不是同一作用域的重复节点，Block 只是局部作用域占位；它们不参与这种重名分支查找。namespace 不能声明在 class 内，因此 qualified name 的 namespace 分支只会出现在前部的 namespace 前缀中，进入 class/enum 等非 namespace 作用域后不再需要 namespace 回退。
 
-查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。inline 是同一逻辑 namespace 的实体级属性：任意现存重开声明带 inline，其同名节点都可作为透明分支，不能只看当前 Statement 自身 flags，也不能把 inline 永久复制到其他节点。该判断直接使用当前 StatementModel，不增加持久 fullName 索引。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。
+查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。透明分支直接读取 namespace 索引，不再扫描全量 Statement 收集 inline flags，也不只看当前 Statement 自身 flags。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。public findNamespace 默认只返回实际 fullName 相同的节点，调用方可通过 includeInline 参数同时取得挂到父键下的 inline 节点。
 
 本批只修正普通、inline 和匿名 namespace 的重开查找，不扩展到 Block、函数/lambda 局部作用域、通用多义符号查找或 namespace alias 的新能力。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。class 与变量/函数同名虽然合法，但属于明确不支持的低价值消歧场景；此类代码的限定名查找结果不作保证，也不为它增加候选类型过滤或额外回退。
 

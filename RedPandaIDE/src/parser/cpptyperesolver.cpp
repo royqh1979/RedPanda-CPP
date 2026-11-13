@@ -365,24 +365,6 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
         int partIndex;
     };
     QVector<WorkItem> stack{{scope, 0}};
-    QSet<QString> inlineNamespaces;
-    bool inlineNamespacesLoaded = false;
-    auto isTransparent = [&](const PStatement &statement) {
-        if (statement->command.isEmpty()
-                || statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
-            return true;
-        }
-        if (!inlineNamespacesLoaded) {
-            for (const PStatement &candidate : mModel.statements()) {
-                if (candidate->kind == StatementKind::Namespace
-                        && candidate->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
-                    inlineNamespaces.insert(candidate->fullName);
-                }
-            }
-            inlineNamespacesLoaded = true;
-        }
-        return inlineNamespaces.contains(statement->fullName);
-    };
     while (!stack.isEmpty()) {
         WorkItem item = stack.takeLast();
         const auto candidates = mModel.childrenStatements(item.scope).values(
@@ -404,12 +386,12 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
         }
 
         QVector<WorkItem> transparentBranches;
-        for (const std::weak_ptr<Statement> &weak : mModel.childrenStatements(item.scope)) {
-            PStatement child = weak.lock();
-            if (child && child->kind == StatementKind::Namespace
-                    && isTransparent(child)) {
+        QString scopeName = item.scope ? item.scope->fullName : QString();
+        const QList<PStatement> transparentNamespaces =
+                mModel.transparentNamespaceStatements(scopeName);
+        for (const PStatement &child : transparentNamespaces) {
+            if (child != item.scope)
                 transparentBranches.append({child, item.partIndex});
-            }
         }
         for (int i = transparentBranches.count() - 1; i >= 0; --i)
             stack.append(transparentBranches[i]);
@@ -456,11 +438,10 @@ PStatement CppTypeResolver::findMemberRecursive(const PStatement &scope, const Q
         if (PStatement result = findMemberRecursive(candidate, name, visited))
             return result;
     }
-    for (const std::weak_ptr<Statement> &weakChild : scope->children) {
-        PStatement child = weakChild.lock();
-        if (child && child->kind == StatementKind::Namespace
-                && (child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)
-                    || child->command.isEmpty())) {
+    if (scope->kind == StatementKind::Namespace) {
+        const QList<PStatement> transparentNamespaces =
+                mModel.transparentNamespaceStatements(scope->fullName);
+        for (const PStatement &child : transparentNamespaces) {
             if (PStatement result = findMemberRecursive(child, name, visited))
                 return result;
         }

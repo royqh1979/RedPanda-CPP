@@ -16,6 +16,32 @@
  */
 #include "cppscopes.h"
 
+#include <QDebug>
+#include <QElapsedTimer>
+
+namespace {
+struct ScopesProfile {
+    qint64 insertNs = 0;
+    qint64 parentLookupNs = 0;
+    int insertCount = 0;
+    ~ScopesProfile()
+    {
+        qWarning() << "SCOPES_PROFILE insertMs" << insertNs / 1000000.0
+                   << "parentLookupMs" << parentLookupNs / 1000000.0
+                   << "count" << insertCount;
+    }
+};
+
+ScopesProfile scopesProfile;
+
+struct ScopesProfileScope {
+    explicit ScopesProfileScope(qint64 &target) : target(target) { timer.start(); }
+    ~ScopesProfileScope() { target += timer.nsecsElapsed(); }
+    qint64 &target;
+    QElapsedTimer timer;
+};
+}
+
 std::shared_ptr<Statement> CppScopes::findScopeAt(const SourcePosition &position) const
 {
     if (mScopes.isEmpty() || !position.isValid())
@@ -67,6 +93,8 @@ std::shared_ptr<Statement> CppScopes::findScopeAtLine(int line) const
 void CppScopes::addScope(const SourceRange &range,
                          const std::shared_ptr<Statement> &statement, int parentIndex)
 {
+    ScopesProfileScope profileScope(scopesProfile.insertNs);
+    ++scopesProfile.insertCount;
     int index = 0;
     while (index < mScopes.count() && mScopes[index].range.start <= range.start)
         ++index;
@@ -86,6 +114,7 @@ void CppScopes::addScope(const SourceRange &range,
 {
     int parentIndex = -1;
     if (parentScope) {
+        ScopesProfileScope profileScope(scopesProfile.parentLookupNs);
         for (int i = 0; i < mScopes.count(); ++i) {
             if (mScopes[i].statement.lock() == parentScope
                     && mScopes[i].range.contains(range.start))

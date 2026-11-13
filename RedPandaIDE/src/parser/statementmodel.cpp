@@ -18,6 +18,24 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
+#include <QElapsedTimer>
+
+namespace {
+struct StatementModelProfile {
+    qint64 addNs = 0;
+    int addCount = 0;
+    ~StatementModelProfile() { qWarning() << "STATEMENT_MODEL_PROFILE addMs" << addNs / 1000000.0 << "count" << addCount; }
+};
+
+StatementModelProfile statementModelProfile;
+
+struct StatementModelProfileScope {
+    StatementModelProfileScope() { timer.start(); }
+    ~StatementModelProfileScope() { statementModelProfile.addNs += timer.nsecsElapsed(); }
+    QElapsedTimer timer;
+};
+}
 
 StatementModel::StatementModel(QObject *parent) : QObject(parent)
 {
@@ -26,13 +44,19 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
 
 void StatementModel::add(const PStatement& statement)
 {
+    StatementModelProfileScope profileScope;
     if (!statement)
         return;
+    ++statementModelProfile.addCount;
     PStatement parent = statement->parentScope.lock();
     if (parent) {
         addMember(parent->children, statement);
     } else {
         addMember(mGlobalStatements, statement);
+    }
+    if (statement->kind == StatementKind::Namespace) {
+        addNamespaceStatement(statement->fullName, statement);
+        updateNamespaceTransparency(statement);
     }
     mStatements.append(statement);
     ++mCount;
@@ -48,8 +72,94 @@ void StatementModel::deleteStatement(const PStatement& statement)
     } else {
         deleteMember(mGlobalStatements, statement);
     }
+    if (statement->kind == StatementKind::Namespace) {
+        const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+        if (parent && parent->kind == StatementKind::Namespace) {
+            for (const PStatement &sibling : siblings)
+                deleteNamespaceStatement(parent->fullName, sibling);
+        }
+        for (auto it = mNamespaceStatements.find(statement->fullName);
+                it != mNamespaceStatements.end() && it.key() == statement->fullName;) {
+            PStatement indexed = it.value().lock();
+            if (indexed && indexed->parentScope.lock() == statement)
+                it = mNamespaceStatements.erase(it);
+            else
+                ++it;
+        }
+        deleteNamespaceStatement(statement->fullName, statement);
+        for (const PStatement &sibling : siblings) {
+            if (sibling != statement)
+                updateNamespaceTransparency(sibling);
+        }
+    }
     if (mStatements.removeOne(statement))
         --mCount;
+}
+
+void StatementModel::updateNamespaceTransparency(const PStatement &statement)
+{
+    if (!statement || statement->kind != StatementKind::Namespace)
+        return;
+    const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+    bool transparent = statement->command.isEmpty();
+    for (const PStatement &sibling : siblings) {
+        if (sibling->command.isEmpty()
+                || sibling->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+            transparent = true;
+            break;
+        }
+    }
+    if (!transparent)
+        return;
+    PStatement parent = statement->parentScope.lock();
+    if (parent && parent->kind == StatementKind::Namespace) {
+        for (const PStatement &sibling : siblings)
+            addNamespaceStatement(parent->fullName, sibling);
+    }
+}
+
+void StatementModel::addNamespaceStatement(const QString &fullName, const PStatement &statement)
+{
+    const auto statements = mNamespaceStatements.values(fullName);
+    for (const std::weak_ptr<Statement> &weak : statements) {
+        if (weak.lock() == statement)
+            return;
+    }
+    mNamespaceStatements.insert(fullName, statement);
+}
+
+void StatementModel::deleteNamespaceStatement(const QString &fullName, const PStatement &statement)
+{
+    for (auto it = mNamespaceStatements.find(fullName);
+            it != mNamespaceStatements.end() && it.key() == fullName;) {
+        PStatement indexed = it.value().lock();
+        if (!indexed || indexed == statement)
+            it = mNamespaceStatements.erase(it);
+        else
+            ++it;
+    }
+}
+
+QList<PStatement> StatementModel::namespaceStatements(const QString &fullName) const
+{
+    QList<PStatement> result;
+    const auto statements = mNamespaceStatements.values(fullName);
+    for (const std::weak_ptr<Statement> &weak : statements) {
+        if (PStatement statement = weak.lock())
+            result.append(statement);
+    }
+    return result;
+}
+
+QList<PStatement> StatementModel::transparentNamespaceStatements(const QString &fullName) const
+{
+    QList<PStatement> result;
+    const QList<PStatement> statements = namespaceStatements(fullName);
+    for (const PStatement &statement : statements) {
+        if (statement->command.isEmpty() || statement->fullName != fullName)
+            result.append(statement);
+    }
+    return result;
 }
 
 #ifdef QT_DEBUG

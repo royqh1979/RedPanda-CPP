@@ -210,12 +210,15 @@ void CppParser::internalParse(const QString &fileName)
     });
     for (int i = 0; i < qMin(10, sortedTimes.count()); ++i)
         qWarning() << "PARSE_FILE_TIMING" << sortedTimes[i].first << sortedTimes[i].second;
+    stepTimer.start();
     mPreprocessor.clearTempResults();
+    qint64 clearTempResultsMs = stepTimer.restart();
     qWarning() << "PARSE_TIMING" << fileName
                << "preprocess" << preprocessMs
                << "tokenize" << tokenizeMs
                << "parseDeclarations" << parseDeclarationsMs
                << "buildStatements" << buildStatementsMs
+               << "clearTempResults" << clearTempResultsMs
                << "declarations" << timer.restart();
 }
 
@@ -546,20 +549,24 @@ int CppParser::findLastOperator(const QString &phrase) const
     return phrase.lastIndexOf('.');
 }
 
-PStatementList CppParser::findNamespace(const QString &name) const
+PStatementList CppParser::findNamespace(const QString &name, bool includeInline) const
 {
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return std::make_shared<StatementList>();
-    return doFindNamespace(name);
+    return doFindNamespace(name, includeInline);
 }
 
-PStatementList CppParser::doFindNamespace(const QString &name) const
+PStatementList CppParser::doFindNamespace(const QString &name, bool includeInline) const
 {
     auto result = std::make_shared<StatementList>();
-    for (const PStatement &statement : mStatementList.statements()) {
-        if (statement->kind == StatementKind::Namespace && statement->fullName == name)
+    const QList<PStatement> statements = mStatementList.namespaceStatements(name);
+    for (const PStatement &statement : statements) {
+        if (statement->fullName == name
+                || (includeInline
+                    && statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline))) {
             result->append(statement);
+        }
     }
     return result;
 }

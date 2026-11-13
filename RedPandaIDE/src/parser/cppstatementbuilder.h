@@ -52,6 +52,11 @@ private:
     PStatement createParameter(const ParameterInfo &parameter,
                                const StatementBuildContext &context,
                                const PStatement &function);
+    QList<PStatement> doFindStatements(const QString &qualifiedName) const;
+    QList<PStatement> doFindDeclarationRemainder(const PStatement &statement,
+                                                 const QStringList &parts) const;
+    PStatement doFindDeclarationToMerge(const PStatement &candidate,
+                                        const StatementBuildContext &context) const;
     PStatement mergeDeclaration(const PStatement &candidate,
                                 const StatementBuildContext &context) const;
     StatementKind declaratorKind(const DeclarationInfo &declaration,

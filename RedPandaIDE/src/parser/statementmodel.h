@@ -47,9 +47,13 @@ public:
             statement->children.clear();
         mStatements.clear();
         mGlobalStatements.clear();
+        mNamespaceStatements.clear();
     }
     int count() const { return mCount; }
     const StatementList &statements() const { return mStatements; }
+    QList<PStatement> namespaceStatements(const QString &fullName) const;
+    QList<PStatement> transparentNamespaceStatements(const QString &fullName) const;
+    void updateNamespaceTransparency(const PStatement &statement);
 #ifdef QT_DEBUG
     void dump(const QString& logFile) const;
     void dumpAll(const QString& logFile) const;
@@ -57,11 +61,14 @@ public:
 private:
     void addMember(StatementMap& map, const PStatement& statement);
     void deleteMember(StatementMap& map, const PStatement& statement);
+    void addNamespaceStatement(const QString &fullName, const PStatement &statement);
+    void deleteNamespaceStatement(const QString &fullName, const PStatement &statement);
     void dumpStatementMap(const StatementMap& map, QTextStream& out, int level) const;
 private:
     int mCount;
     StatementList mStatements;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
+    StatementMap mNamespaceStatements;
 };
 
 #endif // STATEMENTMODEL_H

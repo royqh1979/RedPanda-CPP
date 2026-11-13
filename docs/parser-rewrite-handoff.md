@@ -36,7 +36,7 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 - TestCppTokenizer：85 passed
 - TestPpTokenizer：16 passed
 - TestPpExpander：24 passed
-- TestCppParser：39 passed
+- TestCppParser：42 passed
 - TestWidgets：18 passed
 - TestEditor：60 passed
 - QSynedit 全套测试通过
@@ -48,25 +48,27 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 
 ## Release 性能分析
 
-GCC 8.1 独立 `<string>` 测试的初次总耗时约 36 秒，其中 `parseDeclaration` 约 23.6 秒。旧 `isConstructorDeclaration()` 会先完整解析限定名及模板参数，再判断后续 token 是否为 `(`，单独消耗约 7.88 秒。
-
-改为仅收集标识符文本并跳过配对模板参数后，`constructorCheck` 降为 0，最近一次独立 `<string>` 总耗时约 21.3 秒，`parseDeclaration` 约 9.44 秒。主要剩余热点为 `basic_string.h`、`basic_string.tcc`、`stl_function.h` 中的 `parseTypeName`；后续只在既定类型推导范围内继续分析，不扩大模板参数实现。
-
-Static Release 的完整公开接口验收在惰性解析前约 114–126 秒，主干同环境约 32.4 秒。`parseTemplateArguments` 累计约 39.6 秒，是最大热点；`mergeDeclaration` 仅约 1 毫秒，不是优化方向。
-
 现已按既定设计实现惰性解析：声明阶段只在 `TypeInfo::templateArgumentsText` 中保存模板实参原文；类型求值、模板绑定及 range/tuple 类型操作需要结构时才调用 `parseTemplateArguments()`。函数模板的 `Container<T>` 递归绑定也会先取得结构，新增 `front_value(std::vector<T>)` 测试防止该路径因惰性保存而失效。
 
-Static Release、GCC 8.1 的实测结果：
+**性能测量必须直接运行 Release 可执行文件，不能在 gdb 下计时。** Windows 下直接运行时，Qt 的 `qWarning()` 默认可能只发往调试器；设置 `QT_FORCE_STDERR_LOGGING=1` 后可在终端取得 `PARSE_TIMING`、`DECLARATION_PROFILE` 等输出。此前 gdb 下得到的 12.7 秒 `<string>`、89.5 秒完整验收、63 秒 replay 和 21 秒销毁等数据均受调试器干扰，不能用于性能结论或优化前后比较。
 
-- 独立 `<string>`：总计 12.702 秒，此前约 21.3 秒；`parseDeclarations` 1.328 秒，声明阶段 `templateArguments` 为 0。
-- 完整公开接口验收：总计 89.521 秒，此前约 114–126 秒；preprocess 7.170 秒、tokenize 15.198 秒、parseDeclarations 22.932 秒、buildStatements 14.036 秒；`templateArguments` 降为 0.372 秒。
-- 两个验收测试均通过，但完整公开接口验收仍明显慢于主干的约 32.4 秒。后续性能工作应依据各阶段及声明解析内部的计时继续定位，不能把当前结果视为性能问题已经解决。
+Static Release、GCC 8.1 直接运行并设置 `QT_FORCE_STDERR_LOGGING=1` 的有效实测结果：
+
+- 独立 `<string>`：总计 299 毫秒；preprocess 70 毫秒、tokenize 69 毫秒、parseDeclarations 61 毫秒、buildStatements 4 毫秒。
+- 完整公开接口验收：总计 3.572 秒；首次解析 3.467 秒，其中 preprocess 401 毫秒、tokenize 484 毫秒、parseDeclarations 2.360 秒、buildStatements 39 毫秒、clearTempResults 2 毫秒。
+- `mergeDeclaration()` 从优化前约 2.1 秒降为 56 毫秒，不再是热点。完整验收的第二次 replay 为 27 毫秒，Statement 销毁为 20 毫秒；名称查找和名称收集也不是热点。
+- 同一 Direct Release 环境下，主干完整公开接口验收为 888 毫秒。当前首次解析仍慢于主干，剩余主要热点是 parseDeclarations，而不是 merge、replay、清理或销毁。
+- 惰性解析之前没有同条件的 Direct Release 数据，因此不能用旧的 gdb 数字声称本次优化的实际加速比例。
+
+细项计时必须使用 `QElapsedTimer::nsecsElapsed()` 累计；逐次 `restart()` 的毫秒取整会把大量微秒级操作错误记为 0。
+
+最终实现使用 namespace 专用的 fullName 多值 weak 索引：每个 namespace 登记到自身 fullName，inline/匿名 namespace 同时登记到直接父 namespace 键下；同名组整体更新，以支持 late inline 和删除后取消透明。merge 对局部声明只查当前词法作用域，对非局部声明按最长 namespace 前缀取得全部节点，再沿 children 枚举全部重载；没有全表扫描或失败兜底。CppTypeResolver 的透明分支也统一使用该索引。`test_overloaded_declaration_definition_merge`、`test_local_declarations_in_disjoint_blocks_remain_distinct` 和 `test_namespace_index_inline_filter_and_invalidation` 覆盖关键场景，既有 late-inline 测试继续验证删除后的语义。
 
 GCC 8.1 的单元测试 `test_standard_library_string` 通过，但用户实际 IDE 中 `std::string` / `std::basic_string` 缺失仍未复现，需要继续比较实际 Parser 配置和失效时序，不能宣称该问题已解决。
 
 ## 后续顺序
 
-1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，重点依据 parseDeclarations、tokenize 和 buildStatements 的实测热点定位，不扩大模板语义实现范围。
+1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，重点是 parseDeclarations；不要继续围绕已经降为数十毫秒的 merge 做优化。
 2. 逐项审查 `docs/parser-concurrency-review.md`：`mParsing` 读取必须持锁，但是否需要读取及如何判断逐场景分析；修改标志的临界区尽量小。
 3. 单独分析活动引用接口（尤其 `statementList()`）的合法使用时限，不能用一次入口加锁掩盖引用生命周期问题。
 4. 评估普通嵌套 Block 的既有问题：`void f() { int local; { int inner; } }` 中局部声明后的 `{` 可能被当作前一声明 body。不要与其他修复混合。
@@ -81,4 +83,6 @@ GCC 8.1 的单元测试 `test_standard_library_string` 通过，但用户实际 
 - 标准库测试开关：`REDPANDA_PARSER_STDLIB_TEST=ON`
 - 标准库接口验收以后优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug。
 - 标准库根目录：`REDPANDA_PARSER_STDLIB_MINGW_ROOT=D:/mingw`
-- 测试通过 gdb 运行；R 盘构建目录重启后可能需要重建。
+- Direct Release 标准库构建目录：`R:/build-redpanda-qt5-static-release-parser-stdlib-gcc81`；主干对照目录：`R:/build-redpanda-master-static-release-parser-stdlib-gcc81`。
+- 普通功能/崩溃测试可用 gdb；性能测试直接运行 Release，并设置 `QT_FORCE_STDERR_LOGGING=1` 取得 Qt 日志。完整命令见 `AGENTS.md` 的 Windows 测试说明。
+- R 盘构建目录重启后可能需要重建。
