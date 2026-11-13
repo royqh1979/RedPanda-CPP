@@ -8,6 +8,7 @@
 #include "src/parser/cpptypes.h"
 #include "src/parser/cppdeclarationparser.h"
 #include "src/parser/cppsyntaxparser.h"
+#include "src/parser/cppstatementbuilder.h"
 #include "src/parser/cppscopes.h"
 #include "src/parser/parserutils.h"
 
@@ -72,6 +73,10 @@ private slots:
     void test_scope_range_queries();
     void test_scope_queries_same_line();
     void test_declaration_source_ranges();
+    void test_statement_builder_expands_declarators_and_types();
+    void test_statement_builder_preserves_scopes_positions_and_ancestors();
+    void test_statement_model_owns_statements_and_weak_indexes();
+    void test_statement_builder_preserves_array_suffixes();
 
 private:
     void tokenize(const QStringList &lines);

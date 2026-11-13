@@ -48,6 +48,9 @@ struct SourceRange {
     SourcePosition end;
 
     bool isValid() const { return start.isValid() && end.isValid() && start <= end; }
+    bool operator==(const SourceRange &other) const {
+        return start == other.start && end == other.end;
+    }
     bool contains(const SourcePosition &position) const {
         return isValid() && start <= position && position <= end;
     }
@@ -215,6 +218,7 @@ enum class DeclarationAccessibility {
 struct EnumeratorInfo {
     QString name;
     QString value;
+    SourceRange range;
 };
 
 struct DeclarationInfo {

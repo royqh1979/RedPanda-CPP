@@ -97,8 +97,10 @@ target("RedPandaIDE")
         "src/parser/cpptypes.cpp",
         "src/parser/cppdeclarationparser.cpp",
         "src/parser/cppsyntaxparser.cpp",
+        "src/parser/cppstatementbuilder.cpp",
         "src/parser/cppscopes.cpp",
         "src/parser/parserutils.cpp",
+        "src/parser/statementmodel.cpp",
         -- problems
         "src/problems/freeprojectsetformat.cpp",
         "src/problems/problemcasevalidator.cpp",

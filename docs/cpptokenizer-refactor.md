@@ -85,6 +85,14 @@ trailing return type 保存在其左侧最近的 Function derivation 中，以�
 
 转换成现有 Statement 时，`command` 使用名称，`qualifier` 用于定位父作用域，声明说明符与有序 derivations 共同生成 TypeInfo。普通函数和函数指针变量都从对应 Function derivation 取得参数；数组变量继续将维度写入 `args`，函数指针变量继续设置 FunctionPointer 属性。
 
+### DeclarationInfo 与 Statement 的边界
+
+DeclarationInfo 是声明产生式的临时值对象，通常保存在栈上，declarators、children 和枚举值等成员也按值保存。它不是长期语义索引，不需要 shared_ptr。Statement 是进入名称查找、代码补全、类型推导和失效清理流程的单个命名实体，由 StatementModel 通过 shared_ptr 唯一持有；StatementMap 是 `command -> weak_ptr<Statement>` 的多重索引，不承担所有权。
+
+CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个可提交的 DeclarationInfo，就在继续后续声明前调用创建层，不积累整文件的 DeclarationInfo，也不延迟到代码补全时转换。转换后 DeclarationInfo 随作用域结束释放。解析失败的声明不提交；未闭合但已按文件尾恢复的有效声明仍可提交。
+
+转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
+
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
 初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。

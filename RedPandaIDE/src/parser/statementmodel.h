@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,17 @@ public:
             return statement->children;
         }
     }
-    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const { return childrenStatements(statement.lock()); }
+    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const {
+        return childrenStatements(statement.lock());
+    }
     void clear() {
         mCount=0;
+        for (const PStatement &statement : mStatements) {
+            statement->children.clear();
+            statement->publicProperties.clear();
+        }
+        mStatements.clear();
         mGlobalStatements.clear();
-#ifdef QT_DEBUG
-        mAllStatements.clear();
-#endif
     }
     int count() const { return mCount; }
 #ifdef QT_DEBUG
@@ -53,14 +57,12 @@ public:
 #endif
 private:
     void addMember(StatementMap& map, const PStatement& statement);
-    int deleteMember(StatementMap& map, const PStatement& statement);
-    void dumpStatementMap(StatementMap& map, QTextStream& out, int level);
+    void deleteMember(StatementMap& map, const PStatement& statement);
+    void dumpStatementMap(const StatementMap& map, QTextStream& out, int level);
 private:
     int mCount;
-    StatementMap mGlobalStatements;  //may have overloaded functions, so use PStatementList to store
-#ifdef QT_DEBUG
-    StatementList mAllStatements;
-#endif
+    StatementList mStatements;
+    StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
 };
 
 #endif // STATEMENTMODEL_H

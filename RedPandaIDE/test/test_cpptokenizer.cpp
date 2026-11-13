@@ -833,3 +833,167 @@ void TestCppTokenizer::test_declaration_source_ranges()
     QCOMPARE(declarations[0].bodyRange.end, (SourcePosition{0, 21}));
     QCOMPARE(declarations[0].range.end, (SourcePosition{0, 21}));
 }
+
+
+namespace {
+PStatement findStatement(const StatementMap &statements, const QString &name)
+{
+    const auto values = statements.values(name);
+    for (const std::weak_ptr<Statement> &statement : values) {
+        if (PStatement result = statement.lock())
+            return result;
+    }
+    return nullptr;
+}
+}
+
+void TestCppTokenizer::test_statement_builder_expands_declarators_and_types()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("int a = 1, *p, f(double value), (*pf)(char);", declarations));
+    QCOMPARE(declarations.count(), 1);
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    QCOMPARE(model.count(), 5);
+    const StatementMap &globals = model.childrenStatements();
+    PStatement a = findStatement(globals, "a");
+    PStatement p = findStatement(globals, "p");
+    PStatement f = findStatement(globals, "f");
+    PStatement pf = findStatement(globals, "pf");
+    QVERIFY(a && p && f && pf);
+    QCOMPARE(a->kind, StatementKind::GlobalVariable);
+    QCOMPARE(a->type(), "int");
+    QCOMPARE(p->type(), "int *");
+    QCOMPARE(f->kind, StatementKind::Function);
+    QCOMPARE(f->type(), "int");
+    QCOMPARE(f->args, "(double value)");
+    QCOMPARE(f->noNameArgs, "(double)");
+    QVERIFY(pf->properties.testFlag(StatementProperty::FunctionPointer));
+    QCOMPARE(pf->type(), "int (*)(char)");
+    QCOMPARE(pf->args, "(char)");
+    QCOMPARE(pf->noNameArgs, "(char)");
+
+    PStatement parameter = findStatement(f->children, "value");
+    QVERIFY(parameter);
+    QCOMPARE(parameter->kind, StatementKind::Parameter);
+    QCOMPARE(parameter->type(), "double");
+    QCOMPARE(parameter->fullName, "f::value");
+}
+
+void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_ancestors()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace N {\n"
+                "  class C {\n"
+                "  public:\n"
+                "    C(int value);\n"
+                "    int method() const { return 1; }\n"
+                "    static int count;\n"
+                "  };\n"
+                "}\n", declarations));
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/include.h";
+    context.boundaryAncestor = "/tmp/main.cpp";
+    context.inSystemHeader = true;
+    builder.build(declarations.first(), context);
+
+    PStatement n = findStatement(model.childrenStatements(), "N");
+    QVERIFY(n);
+    PStatement c = findStatement(n->children, "C");
+    QVERIFY(c);
+    QCOMPARE(c->fullName, "N::C");
+    QCOMPARE(c->scope, StatementScope::Global);
+    QCOMPARE(c->declarationRange.start, (SourcePosition{1, 2}));
+    QVERIFY(c->hasDefinition());
+
+    PStatement constructor = findStatement(c->children, "C");
+    QVERIFY(constructor);
+    QCOMPARE(constructor->kind, StatementKind::Constructor);
+    QCOMPARE(constructor->accessibility, StatementAccessibility::Public);
+    PStatement parameter = findStatement(constructor->children, "value");
+    QVERIFY(parameter);
+    QCOMPARE(parameter->declarationRange.start.line, 3);
+
+    PStatement method = findStatement(c->children, "method");
+    QVERIFY(method);
+    QCOMPARE(method->kind, StatementKind::Function);
+    QCOMPARE(method->fullName, "N::C::method");
+    QCOMPARE(method->declarationRange.start, (SourcePosition{4, 4}));
+    QCOMPARE(method->definitionRange, method->declarationRange);
+    QCOMPARE(method->fileName, "/tmp/include.h");
+    QCOMPARE(method->declarationBoundaryAncestor, "/tmp/main.cpp");
+    QCOMPARE(method->definitionFileName, "/tmp/include.h");
+    QCOMPARE(method->definitionBoundaryAncestor, "/tmp/main.cpp");
+    QVERIFY(method->inSystemHeader());
+
+    PStatement count = findStatement(c->children, "count");
+    QVERIFY(count);
+    QCOMPARE(count->kind, StatementKind::Variable);
+    QCOMPARE(count->scope, StatementScope::ClassLocal);
+    QVERIFY(count->isStatic());
+    QCOMPARE(c->publicProperties.count(), 1);
+    QCOMPARE(c->publicProperties.first().lock(), count);
+
+    std::weak_ptr<Statement> countReference = count;
+    model.clear();
+    QVERIFY(c->children.isEmpty());
+    QVERIFY(c->publicProperties.isEmpty());
+    count.reset();
+    QVERIFY(countReference.expired());
+}
+
+void TestCppTokenizer::test_statement_model_owns_statements_and_weak_indexes()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("int value;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    QList<std::weak_ptr<Statement>> built = builder.build(declarations.first(), context);
+    QCOMPARE(built.count(), 1);
+    QVERIFY(!built.first().expired());
+
+    PStatement value = built.first().lock();
+    ParsedFileInfo fileInfo(context.fileName);
+    fileInfo.addStatement(value);
+    CppScopes scopes;
+    scopes.addScope({{0, 0}, {0, 9}}, value);
+    QCOMPARE(fileInfo.statements().value("value").lock(), value);
+    QCOMPARE(scopes.findScopeAt({0, 5}), value);
+
+    fileInfo.removeStatement(value);
+    model.deleteStatement(value);
+    QVERIFY(!findStatement(model.childrenStatements(), "value"));
+    QCOMPARE(model.count(), 0);
+    value.reset();
+    QVERIFY(built.first().expired());
+    QVERIFY(!scopes.findScopeAt({0, 5}));
+}
+
+
+void TestCppTokenizer::test_statement_builder_preserves_array_suffixes()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("int values[2];", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    PStatement values = findStatement(model.childrenStatements(), "values");
+    QVERIFY(values);
+    QCOMPARE(values->args, "[2]");
+    QCOMPARE(values->typeInfo.derivations.count(), 1);
+    QCOMPARE(values->typeInfo.derivations.first().kind, TypeDerivationKind::Array);
+}

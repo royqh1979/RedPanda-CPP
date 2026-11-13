@@ -28,6 +28,7 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/cpptypes
     src/parser/cppdeclarationparser
     src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
@@ -242,6 +243,7 @@ target_qt_plain_cpp(test-editor
     src/parser/cpptypes
     src/parser/cppdeclarationparser
     src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
@@ -331,10 +333,12 @@ target_qt_plain_cpp(test-cpptokenizer
     src/parser/cpptypes
     src/parser/cppdeclarationparser
     src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
     src/parser/cppscopes
 )
 
 target_moc_classes(test-cpptokenizer
+    src/parser/statementmodel
     test/test_cpptokenizer
 )
 
@@ -373,6 +377,7 @@ target_qt_plain_cpp(test-cppparser
     src/parser/cpptypes
     src/parser/cppdeclarationparser
     src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel

@@ -189,14 +189,16 @@ struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QMultiMap<QString, PStatement>;
+using StatementMap = QMultiMap<QString, std::weak_ptr<Statement>>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
-    QString type; // type "int"
+    TypeInfo typeInfo;
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     QString templateSpecializationParams;
+    TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    QVector<TemplateParameterInfo> templateParameters;
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
@@ -207,13 +209,16 @@ struct Statement {
     QString definitionFileName; // definition
     QString definitionBoundaryAncestor;
     StatementMap children;
-    QList<PStatement> publicProperties;
+    QList<std::weak_ptr<Statement>> publicProperties;
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
     QString noNameArgs;// Args without name
     QSet<QString> lambdaCaptures;
     StatementProperties properties;
+
+    QString type() const { return typeInfo.toString(); }
+    void setType(const TypeInfo &type) { typeInfo = type; }
 
     // fields for code completion
     int usageCount; //Usage Count
@@ -319,7 +324,16 @@ public:
     bool including(const QString &fileName) const { return mIncludes.contains(fileName); }
     PStatement findScopeAt(const SourcePosition &position) const { return mScopes.findScopeAt(position); }
     void addStatement(const PStatement &statement) { mStatements.insert(statement->fullName,statement); }
-    void removeStatement(const PStatement &statement) { mStatements.remove(statement->fullName,statement); }
+    void removeStatement(const PStatement &statement) {
+        for (auto it = mStatements.find(statement->fullName);
+                it != mStatements.end() && it.key() == statement->fullName;) {
+            PStatement indexed = it.value().lock();
+            if (!indexed || indexed == statement)
+                it = mStatements.erase(it);
+            else
+                ++it;
+        }
+    }
     void clearStatements() { mStatements.clear(); }
     void addScope(const SourceRange &range, const PStatement &scope, int parentIndex = -1) {
         mScopes.addScope(range, scope, parentIndex);

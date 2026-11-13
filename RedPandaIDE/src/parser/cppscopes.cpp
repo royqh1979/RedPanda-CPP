@@ -35,7 +35,7 @@ std::shared_ptr<Statement> CppScopes::findScopeAt(const SourcePosition &position
     while (index >= 0) {
         const CppScope &scope = mScopes[index];
         if (scope.range.contains(position))
-            return scope.statement;
+            return scope.statement.lock();
         index = scope.parentIndex;
     }
     return nullptr;
@@ -61,7 +61,7 @@ std::shared_ptr<Statement> CppScopes::lastScope() const
 {
     if (mScopes.isEmpty())
         return nullptr;
-    return mScopes.back().statement;
+    return mScopes.back().statement.lock();
 }
 
 void CppScopes::removeLastScope()

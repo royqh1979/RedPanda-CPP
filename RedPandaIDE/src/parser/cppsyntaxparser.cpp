@@ -219,9 +219,11 @@ bool CppSyntaxParser::parseEnum(DeclarationInfo &result)
     while (!mCursor.atEnd() && mCursor.currentText() != "}") {
         EnumeratorInfo enumerator;
         enumerator.name = mCursor.currentText();
+        enumerator.range.start = mCursor.current().position;
         mCursor.advance();
         if (mCursor.consume("="))
             enumerator.value = readUntil({",", "}"});
+        enumerator.range.end = mCursor.peek(-1).position;
         result.enumerators.append(enumerator);
         if (mCursor.consume(","))
             continue;

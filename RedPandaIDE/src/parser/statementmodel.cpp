@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,41 +26,41 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
 
 void StatementModel::add(const PStatement& statement)
 {
-    if (!statement) {
-        return ;
-    }
+    if (!statement)
+        return;
     PStatement parent = statement->parentScope.lock();
     if (parent) {
-        addMember(parent->children,statement);
+        addMember(parent->children, statement);
         if (statement->kind == StatementKind::Variable
                 && statement->accessibility == StatementAccessibility::Public)
             parent->publicProperties.append(statement);
     } else {
-        addMember(mGlobalStatements,statement);
+        addMember(mGlobalStatements, statement);
     }
-    mCount++;
-#ifdef QT_DEBUG
-    mAllStatements.append(statement);
-#endif
+    mStatements.append(statement);
+    ++mCount;
 }
 
 void StatementModel::deleteStatement(const PStatement& statement)
 {
-    if (!statement) {
-        return ;
-    }
+    if (!statement)
+        return;
     PStatement parent = statement->parentScope.lock();
-    int count = 0;
     if (parent) {
-        count = deleteMember(parent->children,statement);
+        deleteMember(parent->children, statement);
+        for (auto it = parent->publicProperties.begin();
+                it != parent->publicProperties.end();) {
+            PStatement property = it->lock();
+            if (!property || property == statement)
+                it = parent->publicProperties.erase(it);
+            else
+                ++it;
+        }
     } else {
-        count = deleteMember(mGlobalStatements,statement);
+        deleteMember(mGlobalStatements, statement);
     }
-    mCount -= count;
-#ifdef QT_DEBUG
-    mAllStatements.removeOne(statement);
-#endif
-
+    if (mStatements.removeOne(statement))
+        --mCount;
 }
 
 #ifdef QT_DEBUG
@@ -69,7 +69,7 @@ void StatementModel::dump(const QString &logFile)
     QFile file(logFile);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream out(&file);
-        dumpStatementMap(mGlobalStatements,out,0);
+        dumpStatementMap(mGlobalStatements, out, 0);
     }
 }
 
@@ -78,24 +78,23 @@ void StatementModel::dumpAll(const QString &logFile)
     QFile file(logFile);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream out(&file);
-        std::sort(mAllStatements.begin(),mAllStatements.end(),
+        StatementList statements = mStatements;
+        std::sort(statements.begin(), statements.end(),
                   [](const PStatement &a, const PStatement &b) {
-                          if (a->fileName < b->fileName)
-                              return true;
-                          if (a->fileName==b->fileName)
-                              return a->line < b->line;
-                          return false;
-                      });
-        for (PStatement statement:mAllStatements) {
-            out<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
-             .arg(statement->command).arg(int(statement->kind))
-             .arg(statement->type).arg(statement->fullName)
-             .arg((size_t)(statement->parentScope.lock().get()))
-             .arg((int)statement->accessibility)
-             .arg(statement->fileName)
-             .arg(statement->line)
-             .arg(statement->definitionFileName)
-             .arg(statement->definitionLine)<<Qt::endl;
+            if (a->fileName != b->fileName)
+                return a->fileName < b->fileName;
+            return a->declarationRange.start < b->declarationRange.start;
+        });
+        for (const PStatement &statement : statements) {
+            out << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
+                   .arg(statement->command).arg(int(statement->kind))
+                   .arg(statement->type()).arg(statement->fullName)
+                   .arg((size_t)(statement->parentScope.lock().get()))
+                   .arg((int)statement->accessibility)
+                   .arg(statement->fileName)
+                   .arg(statement->declarationRange.start.line)
+                   .arg(statement->definitionFileName)
+                   .arg(statement->definitionRange.start.line) << Qt::endl;
         }
     }
 }
@@ -103,46 +102,46 @@ void StatementModel::dumpAll(const QString &logFile)
 
 void StatementModel::addMember(StatementMap &map, const PStatement& statement)
 {
-    if (!statement)
-        return ;
-    map.insert(statement->command,statement);
-//    QList<PStatement> lst = map.values(statement->command);
-//    if (!lst) {
-//        lst=std::make_shared<StatementList>();
-//        map.insert(,lst);
-//    }
-//    lst->append(statement);
+    if (statement)
+        map.insert(statement->command, statement);
 }
 
-int StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
+void StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
 {
     if (!statement)
-        return 0;
-    return map.remove(statement->command,statement);
+        return;
+    for (auto it = map.find(statement->command);
+            it != map.end() && it.key() == statement->command;) {
+        PStatement indexed = it.value().lock();
+        if (!indexed || indexed == statement)
+            it = map.erase(it);
+        else
+            ++it;
+    }
 }
 
-void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int level)
+void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out, int level)
 {
-    QString indent(level,'\t');
-    foreach (const PStatement& statement,map) {
-        out<<indent<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
-         .arg(statement->command).arg(int(statement->kind))
-         .arg(statement->type,
-              statement->fullName,
-              statement->noNameArgs,
-              statement->args)
-         .arg((size_t)(statement->parentScope.lock().get()))
-         .arg((int)statement->accessibility)
-         .arg(statement->fileName)
-         .arg(statement->line)
-         .arg(statement->definitionFileName)
-         .arg(statement->definitionLine);
-        out<<Qt::endl;
+    QString indent(level, '\t');
+    for (const std::weak_ptr<Statement> &weakStatement : map) {
+        PStatement statement = weakStatement.lock();
+        if (!statement)
+            continue;
+        out << indent << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
+               .arg(statement->command).arg(int(statement->kind))
+               .arg(statement->type(), statement->fullName,
+                    statement->noNameArgs, statement->args)
+               .arg((size_t)(statement->parentScope.lock().get()))
+               .arg((int)statement->accessibility)
+               .arg(statement->fileName)
+               .arg(statement->declarationRange.start.line)
+               .arg(statement->definitionFileName)
+               .arg(statement->definitionRange.start.line);
+        out << Qt::endl;
         if (statement->children.isEmpty())
             continue;
-        out<<indent<<statement->command<<" {"<<Qt::endl;
-        dumpStatementMap(statement->children,out,level+1);
-        out<<indent<<"}"<<Qt::endl;
-
+        out << indent << statement->command << " {" << Qt::endl;
+        dumpStatementMap(statement->children, out, level + 1);
+        out << indent << "}" << Qt::endl;
     }
 }

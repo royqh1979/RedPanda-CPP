@@ -21,7 +21,7 @@
 
 struct CppScope {
     SourceRange range;
-    std::shared_ptr<Statement> statement;
+    std::weak_ptr<Statement> statement;
     int parentIndex = -1;
 };
 
