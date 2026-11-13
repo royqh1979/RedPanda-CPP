@@ -1395,3 +1395,69 @@ void TestCppTokenizer::test_type_operations_resolve_standard_range_views()
                  "std::ranges::elements_view<std::vector<std::pair<std::string, int>>, 1> view;"))
              .toString(), "int");
 }
+
+
+void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  class string { public: unsigned long size(); };\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    using value_type = T;\n"
+                "    T& front();\n"
+                "  };\n"
+                "  namespace ranges {\n"
+                "    class filter_fn {};\n"
+                "    class transform_fn {};\n"
+                "    class join_fn {};\n"
+                "  }\n"
+                "  namespace views {\n"
+                "    std::ranges::filter_fn filter;\n"
+                "    std::ranges::transform_fn transform;\n"
+                "    std::ranges::join_fn join;\n"
+                "  }\n"
+                "}\n"
+                "class Pred { public: bool operator()(std::string); };\n"
+                "class ToString { public: std::string operator()(std::string); };\n"
+                "std::vector<std::string> lst;\n"
+                "std::vector<std::vector<std::string>> nested;\n"
+                "Pred pred;\n"
+                "ToString convert;\n"
+                "auto filtered = lst | std::views::filter(pred);\n"
+                "auto transformed = filtered | std::views::transform(convert);\n"
+                "auto joined = nested | std::views::join;\n"
+                "void useTransformed() { for (auto x : transformed) { x.size(); } }\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+
+    PStatement filtered = findStatement(model.childrenStatements(), "filtered");
+    PStatement transformed = findStatement(model.childrenStatements(), "transformed");
+    PStatement joined = findStatement(model.childrenStatements(), "joined");
+    QVERIFY(filtered && transformed && joined);
+    QCOMPARE(filtered->typeInfo.qualifiedName, "std::ranges::filter_view");
+    QCOMPARE(transformed->typeInfo.qualifiedName, "std::ranges::transform_view");
+    QCOMPARE(joined->typeInfo.qualifiedName, "std::ranges::join_view");
+    QCOMPARE(operations.rangeValue(filtered->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(transformed->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(joined->typeInfo).toString(), "std::string");
+
+    PStatement useTransformed = findStatement(model.childrenStatements(), "useTransformed");
+    QVERIFY(useTransformed);
+    PStatement loop = findStatement(useTransformed->children, "block");
+    QVERIFY(loop);
+    PStatement x = findStatement(loop->children, "x");
+    QVERIFY(x);
+    QCOMPARE(x->type(), "std::string");
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTokenizer expression;
+    expression.tokenize({"x.size()"});
+    QCOMPARE(evaluator.evaluate(expression, loop).type.toString(), "unsigned long");
+}

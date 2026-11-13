@@ -256,7 +256,6 @@ EvalResult CppExpressionEvaluator::evaluatePostfix(const TokenList &tokens, int 
 EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const TokenList &tokens,
                                                        int &index, const PStatement &context) const
 {
-    Q_UNUSED(context);
     while (index < tokens.count() && result.isValid()) {
         const QString operation = tokens[index].text;
         if (result.kind == EvalStatementKind::Type
@@ -326,14 +325,17 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             continue;
         }
         if (operation == "(") {
-            index = skipBalanced(tokens, index);
             if (result.kind == EvalStatementKind::Type) {
-                result.kind = EvalStatementKind::Variable;
+                index = skipBalanced(tokens, index);
+            } else if (result.kind == EvalStatementKind::Function) {
+                index = skipBalanced(tokens, index);
             } else {
-                if (result.kind != EvalStatementKind::Function)
-                    result.type = mResolver.invokeResult(result.type, "operator()");
-                result.kind = EvalStatementKind::Variable;
+                QVector<TypeInfo> arguments;
+                if (!evaluateArguments(tokens, index, context, arguments))
+                    return {};
+                result.type = mOperations.invokeResult(result.type, arguments);
             }
+            result.kind = EvalStatementKind::Variable;
             continue;
         }
         if (operation == "{") {
@@ -480,6 +482,35 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     return result;
 }
 
+bool CppExpressionEvaluator::evaluateArguments(const TokenList &tokens, int &index,
+                                               const PStatement &context,
+                                               QVector<TypeInfo> &arguments) const
+{
+    if (index >= tokens.count() || tokens[index].text != "(")
+        return false;
+    ++index;
+    if (index < tokens.count() && tokens[index].text == ")") {
+        ++index;
+        return true;
+    }
+    while (index < tokens.count()) {
+        EvalResult argument = evaluateBinary(tokens, index, context, 2);
+        if (!argument.isValid())
+            return false;
+        arguments.append(argument.type);
+        if (index < tokens.count() && tokens[index].text == ",") {
+            ++index;
+            continue;
+        }
+        if (index < tokens.count() && tokens[index].text == ")") {
+            ++index;
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
 EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const EvalResult &right,
                                                const QString &operatorName) const
 {
@@ -489,6 +520,14 @@ EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const Eva
         result.type = overloaded;
         result.kind = EvalStatementKind::Variable;
         return result;
+    }
+    if (operatorName == "|") {
+        TypeInfo piped = mOperations.pipeResult(left.type, right.type);
+        if (!piped.qualifiedName.isEmpty()) {
+            result.type = piped;
+            result.kind = EvalStatementKind::Variable;
+            return result;
+        }
     }
     if (operatorName == "," || operatorName == "?") {
         result = right;

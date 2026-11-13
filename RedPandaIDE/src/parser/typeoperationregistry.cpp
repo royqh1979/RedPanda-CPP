@@ -64,6 +64,46 @@ TypeInfo TypeOperationRegistry::subscriptReference(const TypeInfo &receiver) con
     return mResolver.invokeResult(receiver, "operator[]");
 }
 
+TypeInfo TypeOperationRegistry::invokeResult(const TypeInfo &callable,
+                                              const QVector<TypeInfo> &arguments) const
+{
+    if (arguments.count() == 1
+            && (callable.qualifiedName == "std::ranges::filter_fn"
+                || callable.qualifiedName == "std::ranges::transform_fn")) {
+        QString closure = callable.qualifiedName == "std::ranges::filter_fn"
+                ? "std::ranges::filter_closure" : "std::ranges::transform_closure";
+        return makeView(closure, {TemplateArgument::fromType(arguments.first())});
+    }
+    if (arguments.isEmpty() && callable.qualifiedName == "std::ranges::join_fn")
+        return makeView("std::ranges::join_closure", {});
+    return mResolver.invokeResult(callable, "operator()");
+}
+
+TypeInfo TypeOperationRegistry::pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const
+{
+    if (adaptor.qualifiedName == "std::ranges::filter_closure"
+            || adaptor.qualifiedName == "std::ranges::transform_closure") {
+        if (adaptor.templateArguments.count() != 1)
+            return {};
+        QString view = adaptor.qualifiedName == "std::ranges::filter_closure"
+                ? "std::ranges::filter_view" : "std::ranges::transform_view";
+        return makeView(view, {TemplateArgument::fromType(input), adaptor.templateArguments.first()});
+    }
+    if (adaptor.qualifiedName == "std::ranges::join_fn"
+            || adaptor.qualifiedName == "std::ranges::join_closure")
+        return makeView("std::ranges::join_view", {TemplateArgument::fromType(input)});
+    return {};
+}
+
+TypeInfo TypeOperationRegistry::makeView(const QString &name,
+                                         const QVector<TemplateArgument> &arguments) const
+{
+    TypeInfo result;
+    result.qualifiedName = name;
+    result.templateArguments = arguments;
+    return result;
+}
+
 TypeInfo TypeOperationRegistry::rangeElement(const TypeInfo &range, bool reference) const
 {
     const QVector<TemplateArgument> &arguments = range.templateArguments;

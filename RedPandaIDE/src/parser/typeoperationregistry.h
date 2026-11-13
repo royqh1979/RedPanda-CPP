@@ -32,8 +32,11 @@ public:
     TypeInfo rangeReference(const TypeInfo &range) const;
     TypeInfo subscriptValue(const TypeInfo &receiver) const;
     TypeInfo subscriptReference(const TypeInfo &receiver) const;
+    TypeInfo invokeResult(const TypeInfo &callable, const QVector<TypeInfo> &arguments) const;
+    TypeInfo pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const;
 
 private:
+    TypeInfo makeView(const QString &name, const QVector<TemplateArgument> &arguments) const;
     TypeInfo rangeElement(const TypeInfo &range, bool reference) const;
     TypeInfo callableResult(const TypeInfo &callable) const;
     TypeInfo tupleElement(const TypeInfo &tuple, int index) const;
