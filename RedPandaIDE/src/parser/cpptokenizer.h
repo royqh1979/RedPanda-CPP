@@ -74,6 +74,7 @@ private:
 
     void skipWhitespace();
     void skipAttribute();
+    void skipGnuAttribute();
     void skipQuoted(QChar quote);
     void skipRawString();
     QString readIdentifier();

@@ -82,7 +82,15 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             QString text = readLiteral(kind);
             addToken(text, kind, position);
         } else if (isIdentifierStart(*mCurrent)) {
-            addToken(readIdentifier(), TokenKind::Identifier, position);
+            QString identifier = readIdentifier();
+            if (identifier == "__attribute__") {
+                skipWhitespace();
+                if (*mCurrent == '(') {
+                    skipGnuAttribute();
+                    continue;
+                }
+            }
+            addToken(identifier, TokenKind::Identifier, position);
         } else if (mCurrent->isDigit()
                    || (*mCurrent == '.' && (mCurrent + 1)->isDigit())) {
             TokenKind kind = TokenKind::IntegerLiteral;
@@ -194,6 +202,24 @@ void CppTokenizer::skipAttribute()
         } else {
             advance();
         }
+    }
+}
+
+void CppTokenizer::skipGnuAttribute()
+{
+    int level = 0;
+    while (!atEnd()) {
+        if (*mCurrent == '"' || *mCurrent == '\'') {
+            skipQuoted(*mCurrent);
+            continue;
+        }
+        if (*mCurrent == '(')
+            ++level;
+        else if (*mCurrent == ')')
+            --level;
+        advance();
+        if (level == 0)
+            return;
     }
 }
 

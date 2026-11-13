@@ -94,6 +94,8 @@ public:
     CppPreprocessor::EventCounts preprocessorEventCountsForTest(const QString &fileName) const {
         return mPreprocessor.eventCounts(fileName);
     }
+    const QStringList &preprocessedForTest() const { return mPreprocessedForTest; }
+    const CppTokenizer::TokenList &tokenizerTokensForTest() const { return mTokenizerTokensForTest; }
 #endif
     bool isLineVisible(const QString& fileName, int line) const;
     bool isIncludeLine(const QString &line) const;
@@ -193,6 +195,10 @@ private:
     bool mStopForReset;
     PParseFileCommand mLastParseFileCommand;
     mutable QRecursiveMutex mMutex;
+#ifdef REDPANDA_PARSER_TEST
+    QStringList mPreprocessedForTest;
+    CppTokenizer::TokenList mTokenizerTokensForTest;
+#endif
 
     friend class CppFileListParserThread;
     friend class CppFileParserThread;

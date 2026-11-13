@@ -97,6 +97,9 @@ private slots:
     void test_reopened_nested_namespace_lookup_checks_all_branches();
     void test_namespace_lookup_transparency_and_scope_boundaries();
     void test_qualified_lookup_respects_lexical_and_local_scopes();
+    void test_template_forward_declaration_with_default_arguments();
+    void test_scope_recovery_preserves_following_declarations();
+    void test_failed_declaration_restores_cursor();
 
 private:
     void tokenize(const QStringList &lines);

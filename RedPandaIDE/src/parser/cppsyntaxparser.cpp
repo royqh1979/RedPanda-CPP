@@ -17,6 +17,9 @@
 #include "cppsyntaxparser.h"
 
 #include <QStringList>
+#ifdef PARSER_DEBUG_LOG
+#include <QDebug>
+#endif
 
 namespace {
 QString readBalanced(CppTokenCursor &cursor)
@@ -43,6 +46,44 @@ void appendToken(QString &target, const QString &text)
         target += ' ';
     target += text;
 }
+
+int matchedScopeClose(CppTokenCursor &cursor)
+{
+    if (cursor.matchStatus() != CppTokenCursor::MatchStatus::SameFile)
+        return -1;
+    int closeIndex = cursor.current().matchIndex;
+    Q_ASSERT(closeIndex > cursor.index());
+    Q_ASSERT(cursor.peek(closeIndex - cursor.index()).text == "}");
+    return closeIndex;
+}
+
+class ScopeRecovery
+{
+public:
+    ScopeRecovery(CppTokenCursor &cursor, int closeIndex, const char *scopeKind)
+        : mCursor(cursor), mCloseIndex(closeIndex), mScopeKind(scopeKind)
+    {
+    }
+
+    ~ScopeRecovery()
+    {
+        if (mCloseIndex < 0 || mCursor.index() <= mCloseIndex)
+            return;
+#ifdef PARSER_DEBUG_LOG
+        qDebug() << "Parser scope recovery:" << mScopeKind
+                 << mCursor.current().fileName << mCursor.current().position.line
+                 << mCursor.index() << "->" << mCloseIndex;
+#endif
+        mCursor.restore({mCloseIndex, 0});
+        Q_ASSERT(mCursor.index() == mCloseIndex);
+        Q_ASSERT(mCursor.currentText() == "}");
+    }
+
+private:
+    CppTokenCursor &mCursor;
+    int mCloseIndex;
+    const char *mScopeKind;
+};
 }
 
 CppSyntaxParser::CppSyntaxParser(CppTokenCursor &cursor)
@@ -52,17 +93,21 @@ CppSyntaxParser::CppSyntaxParser(CppTokenCursor &cursor)
 
 bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
 {
+    CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
     SourcePosition start = mCursor.current().position;
     result = DeclarationInfo();
     result.fileName = mCursor.current().fileName;
-    bool success = false;
-    if (!mDeclarationParser.parseTemplatePrefix(result))
+    if (!mDeclarationParser.parseTemplatePrefix(result)) {
+        mCursor.restore(checkpoint);
+        result = DeclarationInfo();
         return false;
+    }
     if (mCursor.currentText() == "inline"
             && mCursor.peek().text == "namespace") {
         result.specifiers.properties.setFlag(DeclSpecifierProperty::Inline);
         mCursor.advance();
     }
+    bool success = false;
     if (mCursor.currentText() == "namespace")
         success = parseNamespace(result);
     else if (mCursor.currentText() == "class" || mCursor.currentText() == "struct"
@@ -76,6 +121,10 @@ bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
         success = mDeclarationParser.parseSimpleDeclaration(result);
     if (success)
         finishRanges(result, start);
+    else {
+        mCursor.restore(checkpoint);
+        result = DeclarationInfo();
+    }
     return success;
 }
 
@@ -103,12 +152,15 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     if (mCursor.consume(";"))
         return true;
     SourcePosition bodyStart = mCursor.current().position;
+    int closeIndex = matchedScopeClose(mCursor);
     if (!mCursor.consume("{"))
         return false;
 
     DeclarationAccessibility accessibility = result.classKey == ClassKey::Class
             ? DeclarationAccessibility::Private : DeclarationAccessibility::Public;
-    while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+    while (!mCursor.atEnd()
+           && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
+        ScopeRecovery recovery(mCursor, closeIndex, "class");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
@@ -146,6 +198,10 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
             skipBalanced();
         mCursor.consume(";");
     }
+    if (closeIndex >= 0) {
+        Q_ASSERT(mCursor.index() == closeIndex);
+        Q_ASSERT(mCursor.currentText() == "}");
+    }
     SourcePosition bodyEnd = mCursor.currentText() == "}"
             ? mCursor.current().position : mCursor.peek(-1).position;
     result.bodyRange = SourceRange{bodyStart, bodyEnd};
@@ -179,9 +235,12 @@ bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
         return true;
     }
     SourcePosition bodyStart = mCursor.current().position;
+    int closeIndex = matchedScopeClose(mCursor);
     if (!mCursor.consume("{"))
         return false;
-    while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+    while (!mCursor.atEnd()
+           && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
+        ScopeRecovery recovery(mCursor, closeIndex, "namespace");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
@@ -198,6 +257,10 @@ bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
         if (mCursor.currentText() == "{")
             skipBalanced();
         mCursor.consume(";");
+    }
+    if (closeIndex >= 0) {
+        Q_ASSERT(mCursor.index() == closeIndex);
+        Q_ASSERT(mCursor.currentText() == "}");
     }
     SourcePosition bodyEnd = mCursor.currentText() == "}"
             ? mCursor.current().position : mCursor.peek(-1).position;
@@ -374,8 +437,11 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
     if (!result.range.start.isValid())
         result.range.start = mCursor.current().position;
     result.bodyRange.start = mCursor.current().position;
+    int closeIndex = matchedScopeClose(mCursor);
     mCursor.advance();
-    while (!mCursor.atEnd() && mCursor.currentText() != "}") {
+    while (!mCursor.atEnd()
+           && (closeIndex >= 0 ? mCursor.index() < closeIndex : mCursor.currentText() != "}")) {
+        ScopeRecovery recovery(mCursor, closeIndex, "block");
         if (mCursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
             mCursor.advance();
@@ -431,6 +497,10 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
         mCursor.restore(checkpoint);
         skipDeclaration();
         mCursor.consume(";");
+    }
+    if (closeIndex >= 0) {
+        Q_ASSERT(mCursor.index() == closeIndex);
+        Q_ASSERT(mCursor.currentText() == "}");
     }
     result.bodyRange.end = mCursor.currentText() == "}"
             ? mCursor.current().position : mCursor.peek(-1).position;

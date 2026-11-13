@@ -239,6 +239,24 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
         int partIndex;
     };
     QVector<WorkItem> stack{{scope, 0}};
+    QSet<QString> inlineNamespaces;
+    bool inlineNamespacesLoaded = false;
+    auto isTransparent = [&](const PStatement &statement) {
+        if (statement->command.isEmpty()
+                || statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+            return true;
+        }
+        if (!inlineNamespacesLoaded) {
+            for (const PStatement &candidate : mModel.statements()) {
+                if (candidate->kind == StatementKind::Namespace
+                        && candidate->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+                    inlineNamespaces.insert(candidate->fullName);
+                }
+            }
+            inlineNamespacesLoaded = true;
+        }
+        return inlineNamespaces.contains(statement->fullName);
+    };
     while (!stack.isEmpty()) {
         WorkItem item = stack.takeLast();
         const auto candidates = mModel.childrenStatements(item.scope).values(
@@ -263,8 +281,7 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
         for (const std::weak_ptr<Statement> &weak : mModel.childrenStatements(item.scope)) {
             PStatement child = weak.lock();
             if (child && child->kind == StatementKind::Namespace
-                    && (child->command.isEmpty()
-                        || child->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline))) {
+                    && isTransparent(child)) {
                 transparentBranches.append({child, item.partIndex});
             }
         }

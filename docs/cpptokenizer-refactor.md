@@ -42,7 +42,7 @@
 3. **`[...]` lambda capture 吞并**：token 起始处的单 `[` 走 `TokenType::LambdaCaptures` 分支，整段 `[...]` 被一个 token 吞掉并记入 `mLambdas`（cpptokenizer.cpp:302-313）。"`[` 是 lambda capture 还是数组下标"是解析决策。
 4. **`::` 限定名合并**：`getWord()` 循环合并 `A::B::C`（cpptokenizer.cpp:548-552）；case ':' 把 `::word` 前缀合并（cpptokenizer.cpp:262-273）。
 5. **`template<...>` 参数整体跳过**：`skipTemplateArgs()`（cpptokenizer.cpp:813），parser 拿不到模板形参列表的 token。
-6. `[[...]]` 属性整体跳过——纯词法决策，可保留在 tokenizer（不算越权）。
+6. `[[...]]` 和 GNU `__attribute__((...))` 属性整体跳过——纯词法决策，可保留在 tokenizer（不算越权）。属性参数中的括号和字符串必须正确配平，不能影响后续 inline namespace 等声明的起始位置。
 
 parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直接消费合并后 token 文本的字符串手术——`splitLastMember`、`removeTemplateParams`、`endsWith('>')`、`startsWith('[')`、`indexOf('<')`、`matchIndex` 导航等，集中在 `cppparser.cpp` 的 `handleVar`/`handleMethod`/`checkAndHandleMethodOrVar`/`handleStructs`/`handleInheritance` 等。
 
@@ -107,6 +107,8 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 函数体内通过声明关键字、可见类型查询和有限前瞻区分声明与表达式，不建立表达式 AST。确认的解析错误可以结束当前文件的错误路径，但不因此终止整个 TU。跨文件配对记录诊断并跳到当前文件尾；include 文件随后返回包含者继续分析。文件内未配对结构不是致命错误，当前文件尾就是其虚拟匹配位置，仍按正常流程分析到文件尾。
 
+声明入口失败时必须恢复起始 checkpoint 并丢弃临时 DeclarationInfo，不能把部分消费的位置留给调用方。class、namespace 和 Block 以开 `{` 的 matchIndex 作为闭合硬边界；子声明越界时恢复到匹配闭合符，防止一个未支持构造吞掉外层作用域和后续 include 文件。未支持语法属于可恢复错误，只在 `PARSER_DEBUG_LOG` 下记录日志；matchIndex 与闭合 token 类型、恢复后的游标位置等实现不变量使用断言检查，release 下仍执行安全恢复。
+
 编辑器以行输入触发重解析，因此不为缺少分号的残缺声明增加提前提交路径，也不为未闭合表达式设计按行恢复。输入未完成或文件存在语法错误时，不保证该文件后续内容的解析结果正确，等待修正后的重解析即可。
 
 文件结束和错误退出路径都必须正常展开游标、模板形参和作用域等临时状态。所有已经创建的 Statement 都必须具有有效的实际文件和跨边界祖先归属，后续 invalidate/rescan 能完整清理，并且不崩溃、不死循环。
@@ -119,6 +121,8 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 - `test_partial_statements_are_removed_after_correction_rescan`：先解析含错误文件，再通过编辑器内容回调修正并重扫；旧 Statement 完整清理，新 Statement 正确生成。
 - `test_repeated_error_rescan_does_not_duplicate_statements`：同一错误文件反复 invalidate/rescan，Statement 数量不增长，过期 weak 引用不会导致崩溃。
 - `test_expired_statement_indexes_are_ignored_during_invalidation`：文件失效时遇到已释放 Statement 的 weak 索引，安全跳过并移除索引。
+- `test_scope_recovery_preserves_following_declarations`：带说明符和初始化列表的构造函数发生误判时，类/namespace 闭合不被吞掉，后续声明仍可见。
+- `test_failed_declaration_restores_cursor`：声明入口失败后游标恢复到起始 checkpoint。
 
 ### 调试诊断
 
@@ -176,11 +180,11 @@ StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存
 
 只有 namespace 会因重开而由多个 Statement 表示同一逻辑作用域。class/enum 的声明与定义应合并，函数重载不是同一作用域的重复节点，Block 只是局部作用域占位；它们不参与这种重名分支查找。namespace 不能声明在 class 内，因此 qualified name 的 namespace 分支只会出现在前部的 namespace 前缀中，进入 class/enum 等非 namespace 作用域后不再需要 namespace 回退。
 
-查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。
+查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。inline 是同一逻辑 namespace 的实体级属性：任意现存重开声明带 inline，其同名节点都可作为透明分支，不能只看当前 Statement 自身 flags，也不能把 inline 永久复制到其他节点。该判断直接使用当前 StatementModel，不增加持久 fullName 索引。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。
 
 本批只修正普通、inline 和匿名 namespace 的重开查找，不扩展到 Block、函数/lambda 局部作用域、通用多义符号查找或 namespace alias 的新能力。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。class 与变量/函数同名虽然合法，但属于明确不支持的低价值消歧场景；此类代码的限定名查找结果不作保证，也不为它增加候选类型过滤或额外回退。
 
-查找测试矩阵包括：顶层和第二、第三层重开 namespace；不同构建顺序；inline/匿名 namespace 的透明查找及重开分支；进入 class 后的普通成员查找；全局 `::`；最近词法作用域优先且不混入外层同名 namespace；局部变量 shadowing；函数、lambda 和 Block 的局部可见性与全局限定路径隔离。以上场景分别由 `test_reopened_namespace_lookup_checks_all_declarations`、`test_reopened_nested_namespace_lookup_checks_all_branches`、`test_namespace_lookup_transparency_and_scope_boundaries` 和 `test_qualified_lookup_respects_lexical_and_local_scopes` 固化。
+查找测试矩阵包括：顶层和第二、第三层重开 namespace；不同构建顺序；inline/匿名 namespace 的透明查找及重开分支；直接 `B` 与 inline 中另一个 `B` 都参与查找；inline 声明先于或后于成员定义，以及删除 inline 声明后不再透明；进入 class 后的普通成员查找；全局 `::`；最近词法作用域优先且不混入外层同名 namespace；局部变量 shadowing；函数、lambda 和 Block 的局部可见性与全局限定路径隔离。以上场景分别由 `test_reopened_namespace_lookup_checks_all_declarations`、`test_reopened_nested_namespace_lookup_checks_all_branches`、`test_namespace_lookup_transparency_and_scope_boundaries`、`test_qualified_lookup_respects_lexical_and_local_scopes` 和 `test_template_forward_declaration_with_default_arguments` 固化。
 
 ### 继承成员查找
 
@@ -212,7 +216,7 @@ using 不创建作用域。using namespace/using enum 记录到当前 Statement 
 
 声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过表达式/函数体时无需配平 `<>`，只有解析声明时才判定；查不到时回退到结构配平。
 
-Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。`templateSpecializationParams` 继续表示名称上的实际参数，不与声明形参混用。默认模板实参和约束表达式在第一版中只正确消费，不持久保存。
+Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。`templateSpecializationParams` 继续表示名称上的实际参数，不与声明形参混用。默认模板实参和约束表达式在第一版中只正确消费，不持久保存。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 

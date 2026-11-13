@@ -251,6 +251,8 @@ void TestCppTokenizer::test_attributes_are_skipped()
 {
     tokenize({"[[maybe_unused]] int value;"});
     QCOMPARE(tokenTexts(), QStringList({"int", "value", ";"}));
+    tokenize({"inline namespace __cxx11 __attribute__((__abi_tag__(\"cxx11\"))) { }"});
+    QCOMPARE(tokenTexts(), QStringList({"inline", "namespace", "__cxx11", "{", "}"}));
 }
 
 void TestCppTokenizer::test_preprocessor_tokens()
@@ -1738,6 +1740,8 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
           "/tmp/b.h");
     build("namespace { int anonymousValue; }", "/tmp/c.h");
     build("namespace N { namespace { int nestedAnonymous; } }", "/tmp/d.h");
+    build("namespace A { namespace B { int direct; } "
+          "inline namespace I { namespace B { int viaInline; } } }", "/tmp/e.h");
     build("void f() { int local; while (true) { int inner; } }", "/tmp/e.cpp");
     build("auto lambda = []() { int lambdaLocal; };", "/tmp/e.cpp");
     CppTypeResolver resolver(model);
@@ -1748,6 +1752,8 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
     QVERIFY(resolver.findStatement("anonymousValue"));
     QVERIFY(resolver.findStatement("::anonymousValue"));
     QVERIFY(resolver.findStatement("N::nestedAnonymous"));
+    QVERIFY(resolver.findStatement("A::B::direct"));
+    QVERIFY(resolver.findStatement("A::B::viaInline"));
     QVERIFY(!resolver.findStatement("f::local"));
     QVERIFY(!resolver.findStatement("f::block::inner"));
     QVERIFY(!resolver.findStatement("lambda::lambdaLocal"));
@@ -1804,4 +1810,108 @@ void TestCppTokenizer::test_qualified_lookup_respects_lexical_and_local_scopes()
     QVERIFY(block);
     QVERIFY(resolver.findStatement("inner", block));
     QVERIFY(!resolver.findStatement("inner", function));
+}
+
+
+void TestCppTokenizer::test_template_forward_declaration_with_default_arguments()
+{
+    for (bool inlineFirst : {false, true}) {
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        QVector<DeclarationInfo> declarations;
+        PStatement inlineNamespace;
+        auto build = [&](const QString &text, const QString &fileName,
+                         PStatement *built = nullptr) {
+            declarations.clear();
+            QVERIFY(parseSyntaxText(text, declarations));
+            StatementBuildContext context;
+            context.fileName = fileName;
+            context.boundaryAncestor = fileName;
+            QList<std::weak_ptr<Statement>> result = builder.build(declarations.first(), context);
+            if (built && !result.isEmpty())
+                *built = result.first().lock();
+        };
+        auto buildInline = [&] {
+            build("namespace std {\n"
+                  "inline namespace __cxx11 __attribute__((__abi_tag__(\"cxx11\"))) {}\n"
+                  "}\n", "/tmp/c++config.h", &inlineNamespace);
+        };
+        auto buildMembers = [&] {
+            build("namespace std {\n"
+                  "namespace __cxx11 {\n"
+                  "template<typename _CharT, typename _Traits = char_traits<_CharT>,\n"
+                  "         typename _Alloc = allocator<_CharT> >\n"
+                  "class basic_string;\n"
+                  "template<typename T = int> class SimpleDefault;\n"
+                  "template<typename T = std::pair<int, std::string>> class NestedClosing;\n"
+                  "template<int N = 1 < 2> class Comparison;\n"
+                  "template<int N = foo(1, 2)> class CallDefault;\n"
+                  "}\n"
+                  "typedef basic_string<char> string;\n"
+                  "}\n", "/tmp/stringfwd.h");
+        };
+        if (inlineFirst) {
+            buildInline();
+            buildMembers();
+        } else {
+            buildMembers();
+            buildInline();
+        }
+        CppTypeResolver resolver(model);
+
+        PStatement string = resolver.findStatement("std::basic_string");
+        QVERIFY(string);
+        QCOMPARE(string->templateParameters.count(), 3);
+        QCOMPARE(string->declarationRange.start.line, 2);
+        QVERIFY(!string->parentScope.lock()->declSpecifierProperties.testFlag(
+                    DeclSpecifierProperty::Inline));
+        QVERIFY(resolver.findStatement("std::string"));
+        for (const char *name : {"SimpleDefault", "NestedClosing", "Comparison", "CallDefault"}) {
+            QVERIFY2(resolver.findStatement(QString("std::") + name), name);
+        }
+
+        inlineNamespace.reset();
+        for (const PStatement &statement : model.statements()) {
+            if (statement->kind == StatementKind::Namespace
+                    && statement->fullName == "std::__cxx11"
+                    && statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+                inlineNamespace = statement;
+                break;
+            }
+        }
+        QVERIFY(inlineNamespace);
+        model.deleteStatement(inlineNamespace);
+        QVERIFY(!resolver.findStatement("std::basic_string"));
+        QVERIFY(resolver.findStatement("std::__cxx11::basic_string"));
+    }
+}
+
+
+void TestCppTokenizer::test_scope_recovery_preserves_following_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace N { class C { int value; public: constexpr C() : value() { } }; }\n"
+                "int after;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/recovery.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    QVERIFY(resolver.findStatement("N::C"));
+    QVERIFY(resolver.findStatement("after"));
+}
+
+
+void TestCppTokenizer::test_failed_declaration_restores_cursor()
+{
+    tokenize({"namespace Broken ;"});
+    CppTokenCursor cursor(mTokenizer);
+    CppSyntaxParser parser(cursor);
+    DeclarationInfo declaration;
+    QVERIFY(!parser.parseDeclaration(declaration));
+    QCOMPARE(cursor.index(), 0);
 }

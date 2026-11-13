@@ -191,8 +191,12 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
             parameter.name = mCursor.currentText();
             mCursor.advance();
         }
-        if (mCursor.consume("="))
-            skipExpression({",", ">", ">>"});
+        if (mCursor.consume("=")) {
+            if (parameter.kind == TemplateParameterKind::NonType)
+                skipExpression({",", ">", ">>"});
+            else
+                skipTemplateDefaultArgument();
+        }
         result.templateParameters.append(parameter);
 
         if (mCursor.consume(","))
@@ -668,6 +672,41 @@ QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters
 void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
 {
     readUntilDelimiter(delimiters);
+}
+
+void CppDeclarationParser::skipTemplateDefaultArgument()
+{
+    int level = 0;
+    while (!mCursor.atEnd()) {
+        QString text = mCursor.currentText();
+        if (text == "(") {
+            readBalancedToken("(", ")");
+            continue;
+        }
+        if (text == "[") {
+            readBalancedToken("[", "]");
+            continue;
+        }
+        if (text == "{") {
+            readBalancedToken("{", "}");
+            continue;
+        }
+        if (text == "<") {
+            ++level;
+            mCursor.advance();
+            continue;
+        }
+        if (text == ">" || text == ">>") {
+            if (level == 0)
+                return;
+            mCursor.consumeGreater();
+            --level;
+            continue;
+        }
+        if (text == "," && level == 0)
+            return;
+        mCursor.advance();
+    }
 }
 
 void CppDeclarationParser::applyTrailingReturn(TypeDerivation &function)

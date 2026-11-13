@@ -108,6 +108,10 @@ void CppParser::internalParse(const QString &fileName)
 
     CppTokenizer tokenizer;
     tokenizer.tokenize(mPreprocessor.result());
+#ifdef REDPANDA_PARSER_TEST
+    mPreprocessedForTest = mPreprocessor.result();
+    mTokenizerTokensForTest = tokenizer.tokens();
+#endif
     CppTokenCursor cursor(tokenizer);
     CppStatementBuilder builder(mStatementList);
     const QHash<QString, QStringList> &ancestors = mPreprocessor.boundaryAncestors();

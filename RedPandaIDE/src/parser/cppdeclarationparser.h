@@ -43,6 +43,7 @@ private:
     QString readBalancedToken(const QString &opening, const QString &closing);
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);
+    void skipTemplateDefaultArgument();
     void applyTrailingReturn(TypeDerivation &function);
     bool isBuiltinType(const QString &text) const;
     bool isDeclarationDelimiter(const QString &text) const;
