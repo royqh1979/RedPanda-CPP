@@ -1158,3 +1158,43 @@ void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain
     QCOMPARE(operations.iteratorValue(iteratorVariable.specifiers.type).toString(),
              "std::string");
 }
+
+
+void TestCppTokenizer::test_expression_evaluator_follows_container_member_chain()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  class string { public: unsigned long size(); };\n"
+                "  template<typename T> class vector {\n"
+                "  public:\n"
+                "    using value_type = T;\n"
+                "    T& front();\n"
+                "    T& operator[](unsigned long);\n"
+                "  };\n"
+                "  template<typename T> class iterator { public: T& operator*(); };\n"
+                "}\n"
+                "std::vector<std::string> lst;\n"
+                "std::iterator<std::string> it;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer expression;
+        expression.tokenize({text});
+        return evaluator.evaluate(expression);
+    };
+    EvalResult front = evaluate("lst.front()");
+    QCOMPARE(front.type.toString(), "std::string &");
+    QCOMPARE(front.baseStatement->command, "lst");
+    QCOMPARE(evaluate("lst.front().size()").type.toString(), "unsigned long");
+    QCOMPARE(evaluate("lst[0]").type.toString(), "std::string &");
+    QCOMPARE(evaluate("*it").type.toString(), "std::string &");
+}

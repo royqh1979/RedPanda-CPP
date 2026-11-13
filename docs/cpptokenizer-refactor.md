@@ -205,6 +205,8 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 表达式求值返回 EvalResult，包含 TypeInfo、表达式类别、原始 Statement 和必要的模板绑定上下文。容器元素、迭代器值/引用和 range 元素不增加固定字段，而由 containerValue、iteratorValue、iteratorReference、rangeReference、invokeResult 等统一类型操作计算。
 
+求值器按需消费标识符和 `.`、`->`、前缀 `*`、`[]`、`()` 后缀，利用 matchIndex 跳过实参和数组下标，不建立表达式 AST，也不在解析其它声明时预先计算。成员访问先按语言规则去除接收者引用；`->` 处理内建指针或 operator->，解引用处理内建指针或 operator*。每一步只保留下一步所需的 TypeInfo，因此 `container.front().size()` 等链条可以逐段计算。
+
 配套设计点：
 
 - **解析顺序保证信息可用**：头文件先于包含者解析、文件内声明按出现顺序入表，遇到 `<` 时前序模板声明已在表中，同 phase 查找可行（与 clang 的 Parse/Sema 交织同理）。

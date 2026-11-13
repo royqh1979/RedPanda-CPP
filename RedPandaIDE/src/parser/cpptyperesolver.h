@@ -21,6 +21,15 @@
 
 using TemplateBindings = QHash<QString, TemplateArgument>;
 
+struct EvalResult {
+    TypeInfo type;
+    EvalStatementKind kind = EvalStatementKind::Literal;
+    PStatement baseStatement;
+    TemplateBindings templateBindings;
+
+    bool isValid() const { return !type.qualifiedName.isEmpty(); }
+};
+
 class CppTypeResolver
 {
 public:
