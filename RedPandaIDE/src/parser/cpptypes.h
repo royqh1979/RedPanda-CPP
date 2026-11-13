@@ -145,6 +145,7 @@ struct DeclaratorInfo {
     SourcePosition position;
     QVector<TypeDerivation> derivations;
     QString initializerText;
+    SourcePosition initializerPosition;
 
     QString toString() const;
 };
@@ -242,6 +243,7 @@ struct DeclarationInfo {
     DeclarationAccessibility accessibility = DeclarationAccessibility::Default;
     bool enumScoped = false;
     QString rangeExpression;
+    SourcePosition rangeExpressionPosition;
     QStringList baseClasses;
     QVector<EnumeratorInfo> enumerators;
     QVector<DeclarationInfo> children;

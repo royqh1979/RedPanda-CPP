@@ -23,7 +23,7 @@
 class CppExpressionEvaluator
 {
 public:
-    CppExpressionEvaluator(const StatementModel &model, const CppTypeResolver &resolver,
+    CppExpressionEvaluator(StatementModel &model, const CppTypeResolver &resolver,
                            const TypeOperationRegistry &operations);
 
     EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {}) const;
@@ -38,6 +38,8 @@ private:
     EvalResult evaluatePostfixTail(EvalResult result, const TokenList &tokens, int &index,
                                    const PStatement &context) const;
     EvalResult evaluatePrimary(const TokenList &tokens, int &index, const PStatement &context) const;
+    EvalResult evaluateLambda(const TokenList &tokens, int &index, const PStatement &context) const;
+    TypeInfo parseTypeText(const QString &text) const;
     EvalResult createResult(const PStatement &statement) const;
     bool evaluateArguments(const TokenList &tokens, int &index, const PStatement &context,
                            QVector<TypeInfo> &arguments) const;
@@ -56,7 +58,7 @@ private:
     bool isRightAssociative(const QString &operatorName) const;
     int skipBalanced(const TokenList &tokens, int index) const;
 
-    const StatementModel &mModel;
+    StatementModel &mModel;
     const CppTypeResolver &mResolver;
     const TypeOperationRegistry &mOperations;
 };

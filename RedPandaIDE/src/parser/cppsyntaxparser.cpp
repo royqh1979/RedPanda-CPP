@@ -437,6 +437,7 @@ bool CppSyntaxParser::parseFor(DeclarationInfo &result)
             && mDeclarationParser.parseDeclarator(loopVariable)
             && mCursor.consume(":")) {
         result.declarators.append(loopVariable);
+        result.rangeExpressionPosition = mCursor.current().position;
         result.rangeExpression = readUntil({")"});
         mCursor.consume(")");
         return parseStatementBody(result);

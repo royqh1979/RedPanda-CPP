@@ -1426,6 +1426,7 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
                 "std::vector<std::string> lst;\n"
                 "std::vector<std::vector<std::string>> nested;\n"
                 "std::vector<std::pair<std::string, int>> pairs;\n"
+                "std::vector<int> numbers;\n"
                 "Pred pred;\n"
                 "ToString convert;\n"
                 "auto filtered = lst | std::views::filter(pred);\n"
@@ -1433,8 +1434,11 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
                 "auto joined = nested | std::views::join;\n"
                 "auto keys = pairs | std::views::elements<0>;\n"
                 "auto values = pairs | std::views::elements<1>;\n"
+                "auto lambdaTransformed = lst | std::views::transform([](const std::string &text) { return text.size(); });\n"
+                "auto arithmeticTransformed = numbers | std::views::transform([](int value) { return value * 2.0; });\n"
                 "void useTransformed() { for (auto x : transformed) { x.size(); } }\n"
-                "void useElements() { for (auto key : keys) { key.size(); } }\n", declarations));
+                "void useElements() { for (auto key : keys) { key.size(); } }\n"
+                "void useLambda() { for (auto size : lambdaTransformed) { size; } }\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
@@ -1461,6 +1465,11 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     QCOMPARE(values->typeInfo.qualifiedName, "std::ranges::elements_view");
     QCOMPARE(operations.rangeValue(keys->typeInfo).toString(), "std::string");
     QCOMPARE(operations.rangeValue(values->typeInfo).toString(), "int");
+    PStatement lambdaTransformed = findStatement(model.childrenStatements(), "lambdaTransformed");
+    PStatement arithmeticTransformed = findStatement(model.childrenStatements(), "arithmeticTransformed");
+    QVERIFY(lambdaTransformed && arithmeticTransformed);
+    QCOMPARE(operations.rangeValue(lambdaTransformed->typeInfo).toString(), "unsigned long");
+    QCOMPARE(operations.rangeValue(arithmeticTransformed->typeInfo).toString(), "double");
 
     PStatement useTransformed = findStatement(model.childrenStatements(), "useTransformed");
     QVERIFY(useTransformed);
@@ -1481,4 +1490,49 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     PStatement key = findStatement(elementLoop->children, "key");
     QVERIFY(key);
     QCOMPARE(key->type(), "std::string");
+    PStatement useLambda = findStatement(model.childrenStatements(), "useLambda");
+    QVERIFY(useLambda);
+    PStatement lambdaLoop = findStatement(useLambda->children, "block");
+    QVERIFY(lambdaLoop);
+    PStatement size = findStatement(lambdaLoop->children, "size");
+    QVERIFY(size);
+    QCOMPARE(size->type(), "unsigned long");
+}
+
+
+void TestCppTokenizer::test_lambda_inference_preserves_source_position()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("auto callback = [](int value) { return value * 2.0; };", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    PStatement callback = findStatement(model.childrenStatements(), "callback");
+    QVERIFY(callback);
+    PStatement lambda = callback->typeInfo.declaration.lock();
+    QVERIFY(lambda);
+    QCOMPARE(lambda->kind, StatementKind::Lambda);
+    QCOMPARE(lambda->fileName, "/tmp/main.cpp");
+    QCOMPARE(lambda->declarationRange.start, (SourcePosition{0, 16}));
+    PStatement call = findStatement(lambda->children, "operator()");
+    QVERIFY(call);
+    QCOMPARE(call->type(), "double");
+    PStatement value = findStatement(call->children, "value");
+    QVERIFY(value);
+    QCOMPARE(value->type(), "int");
+
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTokenizer expression;
+    expression.tokenize({"callback(2)"});
+    QCOMPARE(evaluator.evaluate(expression).type.toString(), "double");
+
+    std::weak_ptr<Statement> lambdaReference = lambda;
+    lambda.reset();
+    model.clear();
+    QVERIFY(lambdaReference.expired());
 }

@@ -247,6 +247,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         if (!expression.isEmpty()) {
             CppTokenizer tokenizer;
             tokenizer.tokenize(expression.split('\n'));
+            tokenizer.relocateTokens(context.fileName, declaration.rangeExpression.isEmpty()
+                                     ? declarator.initializerPosition : declaration.rangeExpressionPosition);
             PStatement evaluationContext = context.parentScope;
             if (!declaration.rangeExpression.isEmpty() && evaluationContext)
                 evaluationContext = evaluationContext->parentScope.lock();

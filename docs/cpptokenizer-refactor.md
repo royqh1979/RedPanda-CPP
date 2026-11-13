@@ -198,6 +198,8 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 函数对象调用的实参也按完整表达式求值，逗号只分隔实参。TypeOperationRegistry 将 filter/transform 调用转换为带实际回调 TypeInfo 的闭包；operator| 再把输入 range 与闭包合成为 filter_view/transform_view，join adaptor 直接合成为 join_view。显式非类型模板实参仅在 Registry 确认目标支持时消费，否则 `<` 仍按比较运算处理；views::elements<N> 因此可以合成为带 N 的 elements_view。管道类型可以传给 auto 和 range-for，最终成员访问继续使用同一表达式求值路径。
 
+初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移，lambda 等 Statement 不会错误落到表达式副本的 0 行。lambda 是实际声明而非模板实例：StatementModel 持有 Lambda Statement，参数归属于其 operator()，返回表达式在该函数上下文复用完整求值器；显式 trailing return 优先，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
+
 完整模板实例化、SFINAE、concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
 
 验收以常用 STL 容器、C++20 range/view 以及 cppreference 的 container/iterator/algorithm 示例为目标。例如 `std::vector<std::string> lst; lst.front().` 应能列出 string 成员。range/view 的代表性场景取自：

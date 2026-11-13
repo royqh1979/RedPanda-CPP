@@ -34,6 +34,16 @@ void CppTokenizer::clear()
     mStopForParserReset = false;
 }
 
+void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition &start)
+{
+    for (Token &token : mTokenList) {
+        token.fileName = fileName;
+        if (token.position.line == 0)
+            token.position.ch += start.ch;
+        token.position.line += start.line;
+    }
+}
+
 void CppTokenizer::tokenize(const QStringList &buffer)
 {
     clear();

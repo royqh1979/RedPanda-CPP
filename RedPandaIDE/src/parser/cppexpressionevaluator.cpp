@@ -16,6 +16,8 @@
  */
 #include "cppexpressionevaluator.h"
 
+#include "cppdeclarationparser.h"
+
 namespace {
 PStatement findInMap(const StatementMap &statements, const QString &name)
 {
@@ -46,6 +48,15 @@ TypeInfo primitiveType(const QString &name)
     TypeInfo result;
     result.qualifiedName = name;
     return result;
+}
+
+void appendExpressionToken(QString &target, const QString &text)
+{
+    if (!target.isEmpty() && !text.isEmpty()
+            && (target.back().isLetterOrNumber() || target.back() == '_')
+            && (text.front().isLetterOrNumber() || text.front() == '_'))
+        target += ' ';
+    target += text;
 }
 
 bool hasPointer(const TypeInfo &type)
@@ -126,7 +137,7 @@ TypeInfo floatingLiteralType(const QString &literal)
 }
 }
 
-CppExpressionEvaluator::CppExpressionEvaluator(const StatementModel &model,
+CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
                                                const CppTypeResolver &resolver,
                                                const TypeOperationRegistry &operations)
     : mModel(model), mResolver(resolver), mOperations(operations)
@@ -374,6 +385,10 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
     if (index >= tokens.count())
         return {};
     const CppTokenizer::Token &initial = tokens[index++];
+    if (initial.text == "[") {
+        --index;
+        return evaluateLambda(tokens, index, context);
+    }
     if (initial.text == "(") {
         EvalResult result = evaluateBinary(tokens, index, context, 1);
         if (index >= tokens.count() || tokens[index].text != ")")
@@ -439,6 +454,194 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
     default:
         break;
     }
+    return result;
+}
+
+EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &index,
+                                                  const PStatement &context) const
+{
+    if (index >= tokens.count() || tokens[index].text != "[")
+        return {};
+    const CppTokenizer::Token &startToken = tokens[index];
+    int captureEnd = startToken.matchIndex;
+    if (captureEnd <= index || captureEnd >= tokens.count())
+        return {};
+    index = captureEnd + 1;
+
+    QString fileName = startToken.fileName;
+    if (fileName.isEmpty() && context)
+        fileName = context->fileName;
+    QString name = QString("__lambda_%1_%2_%3")
+            .arg(qHash(fileName), 0, 16).arg(startToken.position.line).arg(startToken.position.ch);
+    if (PStatement existing = findDirectStatement(context, name)) {
+        while (index < tokens.count() && tokens[index].text != "{")
+            ++index;
+        if (index < tokens.count()) {
+            int bodyEnd = tokens[index].matchIndex;
+            index = bodyEnd > index && bodyEnd < tokens.count() ? bodyEnd + 1 : tokens.count();
+        }
+        EvalResult cached;
+        cached.type.qualifiedName = existing->fullName;
+        cached.type.declaration = existing;
+        cached.baseStatement = existing;
+        cached.kind = EvalStatementKind::Variable;
+        return cached;
+    }
+
+    auto lambda = std::make_shared<Statement>();
+    lambda->parentScope = context;
+    lambda->command = name;
+    lambda->fullName = context && !context->fullName.isEmpty()
+            ? context->fullName + "::" + name : name;
+    lambda->kind = StatementKind::Lambda;
+    lambda->scope = context && (context->kind == StatementKind::Function
+                                || context->kind == StatementKind::Block)
+            ? StatementScope::Local : StatementScope::Global;
+    lambda->accessibility = StatementAccessibility::None;
+    lambda->fileName = fileName;
+    lambda->declarationBoundaryAncestor = context ? context->declarationBoundaryAncestor : QString();
+    lambda->declarationRange.start = startToken.position;
+    lambda->properties.setFlag(StatementProperty::DummyStatement);
+
+    auto call = std::make_shared<Statement>();
+    call->parentScope = lambda;
+    call->command = "operator()";
+    call->fullName = lambda->fullName + "::operator()";
+    call->kind = StatementKind::OverloadedOperator;
+    call->scope = StatementScope::ClassLocal;
+    call->accessibility = StatementAccessibility::Public;
+    call->fileName = fileName;
+    call->declarationBoundaryAncestor = lambda->declarationBoundaryAncestor;
+    call->declarationRange.start = startToken.position;
+    call->typeInfo.qualifiedName = "auto";
+    call->properties.setFlag(StatementProperty::OperatorOverloading);
+
+    if (index < tokens.count() && tokens[index].text == "(") {
+        int parametersEnd = tokens[index].matchIndex;
+        if (parametersEnd <= index || parametersEnd >= tokens.count())
+            return {};
+        int parameterStart = index + 1;
+        int segmentStart = parameterStart;
+        int nested = 0;
+        auto addParameter = [&](int first, int last) {
+            if (first >= last)
+                return;
+            int nameIndex = -1;
+            for (int i = last - 1; i >= first; --i) {
+                if (tokens[i].kind == CppTokenizer::TokenKind::Identifier) {
+                    nameIndex = i;
+                    break;
+                }
+            }
+            if (nameIndex < 0)
+                return;
+            QString typeText;
+            for (int i = first; i < nameIndex; ++i)
+                appendExpressionToken(typeText, tokens[i].text);
+            auto parameter = std::make_shared<Statement>();
+            parameter->parentScope = call;
+            parameter->command = tokens[nameIndex].text;
+            parameter->fullName = call->fullName + "::" + parameter->command;
+            parameter->kind = StatementKind::Parameter;
+            parameter->scope = StatementScope::Local;
+            parameter->accessibility = StatementAccessibility::None;
+            parameter->fileName = fileName;
+            parameter->declarationRange = SourceRange{tokens[nameIndex].position,
+                                                      tokens[nameIndex].position};
+            parameter->typeInfo = parseTypeText(typeText);
+            mModel.add(parameter);
+        };
+        for (int i = parameterStart; i <= parametersEnd; ++i) {
+            QString text = tokens[i].text;
+            if (text == "(" || text == "[" || text == "{")
+                ++nested;
+            else if (text == ")" || text == "]" || text == "}")
+                --nested;
+            if (i == parametersEnd || (text == "," && nested == 0)) {
+                addParameter(segmentStart, i);
+                segmentStart = i + 1;
+            }
+        }
+        index = parametersEnd + 1;
+    }
+
+    TypeInfo trailingReturn;
+    if (index < tokens.count() && tokens[index].text == "->") {
+        ++index;
+        QString returnText;
+        while (index < tokens.count() && tokens[index].text != "{") {
+            appendExpressionToken(returnText, tokens[index].text);
+            ++index;
+        }
+        trailingReturn = parseTypeText(returnText);
+    }
+    if (index >= tokens.count() || tokens[index].text != "{")
+        return {};
+    int bodyStart = index;
+    int bodyEnd = tokens[index].matchIndex;
+    if (bodyEnd <= bodyStart || bodyEnd >= tokens.count())
+        bodyEnd = tokens.count() - 1;
+
+    lambda->declarationRange.end = tokens[bodyEnd].position;
+    lambda->definitionRange = lambda->declarationRange;
+    lambda->definitionFileName = fileName;
+    lambda->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
+    lambda->setHasDefinition(true);
+    call->declarationRange = lambda->declarationRange;
+    call->definitionRange = lambda->declarationRange;
+    call->definitionFileName = fileName;
+    call->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
+    call->setHasDefinition(true);
+    mModel.add(lambda);
+    mModel.add(call);
+
+    if (!trailingReturn.qualifiedName.isEmpty()) {
+        call->typeInfo = trailingReturn;
+    } else {
+        bool foundReturn = false;
+        int nested = 0;
+        for (int i = bodyStart + 1; i < bodyEnd; ++i) {
+            const QString &text = tokens[i].text;
+            if (text == "(" || text == "[" || text == "{")
+                ++nested;
+            else if (text == ")" || text == "]" || text == "}")
+                --nested;
+            if (text == "return" && nested == 0) {
+                foundReturn = true;
+                int returnIndex = i + 1;
+                EvalResult returned = evaluateBinary(tokens, returnIndex, call, 1);
+                if (returned.isValid())
+                    call->typeInfo = returned.type;
+                break;
+            }
+        }
+        if (!foundReturn)
+            call->typeInfo = primitiveType("void");
+    }
+    index = bodyEnd + 1;
+
+    EvalResult result;
+    result.type.qualifiedName = lambda->fullName;
+    result.type.declaration = lambda;
+    result.baseStatement = lambda;
+    result.kind = EvalStatementKind::Variable;
+    return result;
+}
+
+TypeInfo CppExpressionEvaluator::parseTypeText(const QString &text) const
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({text});
+    CppTokenCursor cursor(tokenizer);
+    CppDeclarationParser parser(cursor);
+    DeclSpecifierInfo specifiers;
+    if (!parser.parseDeclSpecifierSeq(specifiers))
+        return {};
+    DeclaratorInfo declarator;
+    if (!parser.parseDeclarator(declarator))
+        return {};
+    TypeInfo result = specifiers.type;
+    result.derivations += declarator.derivations;
     return result;
 }
 

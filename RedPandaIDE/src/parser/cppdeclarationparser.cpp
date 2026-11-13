@@ -69,8 +69,10 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         }
         result.declarators.append(declarator);
 
-        if (mCursor.consume("="))
+        if (mCursor.consume("=")) {
+            result.declarators.last().initializerPosition = mCursor.current().position;
             result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
+        }
         if (!mCursor.atEnd() && mCursor.currentText() == "{") {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
