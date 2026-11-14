@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,8 +67,11 @@ PpToken PpTokenizer::next()
         }
         // accumulate whitespace
         if (line[mCol] == ' ' || line[mCol] == '\t') {
-            mWhitespace += line[mCol];
-            mCol++;
+            int start = mCol++;
+            while (mCol < line.length()
+                   && (line[mCol] == ' ' || line[mCol] == '\t'))
+                ++mCol;
+            mWhitespace += line.mid(start, mCol - start);
             continue;
         }
         break;

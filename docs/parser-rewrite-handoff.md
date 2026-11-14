@@ -56,11 +56,11 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 
 Direct Release、设置 `QT_FORCE_STDERR_LOGGING=1`、未启用详细 profile 的当前有效实测结果：
 
-- GCC 8.1 完整公开接口验收连续三次总计 1.066、0.946、0.938 秒；首次解析 936、820、808 毫秒。后两次 preprocess 为 332、329 毫秒，tokenize 为 95、91 毫秒，parseDeclarations 为 164、160 毫秒。首轮文件缓存较冷时 preprocess 为 450 毫秒，因此比较时应同时报告多次结果，不能只取首轮。
-- GCC 15.3 完整公开接口验收连续三次总计 1.507、1.514、1.506 秒；首次解析 1335、1327、1321 毫秒，preprocess 约 590 毫秒，tokenize 约 130 毫秒，parseDeclarations 约 323 毫秒，buildStatements 约 56 毫秒。
-- 本轮优化前，GCC 8.1 完整验收约 1.420 秒，GCC 15.3 约 2.110 秒；tokenize 分别约 514 和 642 毫秒。当前主要热点已转为 preprocess 和 parseDeclarations。
+- GCC 8.1 完整公开接口验收最近三次总计 0.941、0.934、0.948 秒；首次解析 815、802、810 毫秒，preprocess 约 330 毫秒，tokenize 约 90 毫秒，parseDeclarations 约 160 毫秒。文件缓存冷热会明显影响 preprocess，比较时应报告多次结果，不能只取首轮。
+- GCC 15.3 完整公开接口验收最近三次总计 1.455、1.498、1.490 秒；首次解析 1285、1302、1317 毫秒，preprocess 约 580 毫秒，tokenize 约 130 毫秒，parseDeclarations 约 305–325 毫秒，buildStatements 约 56 毫秒。
+- Tokenizer 优化前，GCC 8.1 完整验收约 1.420 秒，GCC 15.3 约 2.110 秒；tokenize 分别约 514 和 642 毫秒。当前主要热点已转为 preprocess 和 parseDeclarations。
 - Tokenizer 原先在每个非空白 token 上无条件检查所有字符串字面量前缀，并逐个扫描运算符表。`startsWith()` 最初调用约 1900 万次；运算符改为按首字符分派并保持最长匹配后约 1050 万次；字面量、attribute 和注释检测增加首字符守卫后降至约 12 万次。实际字面量只有 1791 个，这是 tokenize 降至约 130 毫秒的主要原因。详细插桩曾把运算符优化单独显示为约 250 毫秒收益，但未插桩结果没有同等幅度提升，说明嵌套计时开销会扭曲细项结论。
-- `TOKENIZER_PROFILE`、`TOKENIZER_STARTS_WITH` 和 `PREPROCESSOR_PROFILE` 与既有详细计时一样，仅在 `REDPANDA_PARSER_PROFILE=1` 时输出。GCC 15.3 当前插桩数据中，`openInclude()` 约 168 毫秒，`expandLineWithEngine()` 约 126 毫秒，`evaluateIf()` 约 60 毫秒，注释清理约 26 毫秒；这些是包含式耗时，不能直接相加。
+- `TOKENIZER_PROFILE`、`TOKENIZER_STARTS_WITH`、`PREPROCESSOR_PROFILE` 和 `EXPANDER_PROFILE` 与既有详细计时一样，仅在 `REDPANDA_PARSER_PROFILE=1` 时输出。GCC 15.3 当前插桩数据中，`openInclude()` 约 172 毫秒，其中文件读取约 116 毫秒、注释清理约 27 毫秒、边界判断约 12 毫秒、include 关系维护不足 1 毫秒；`expandLineWithEngine()` 约 127 毫秒，`evaluateIf()` 约 59 毫秒。对象宏 replacement text 重复切分约 30k 次但仅约 4 毫秒，不增加缓存。directive 的 command/tokens 和 PP token 前导连续空白已改为按范围截取，避免逐字符拼接；这些是包含式耗时，不能直接相加。
 - `userMacroSnapshot()` 仅在边界入口计算。A/B 对比中，所有文件都计算快照时 preprocess 为 1118 毫秒，仅边界入口计算时为 656 毫秒，约降低 41%。非边界文件不生成 replay 条件，因此不需要快照。标准库 include 路径必须规范化，GCC 输出中的 `bin/../` 等片段会导致 replay 缓存键不一致；规范化后 scan=1、replay=1、invalidate=1，Statement 数保持一致。
 - 优化前完整验收约为 5.8 秒；namespace 索引后约为 3.572 秒，currentText 改为只读引用后又降至约 3.1 秒。模板原文改为按 line/ch 直接截取预处理输出后约为 1.95 秒；限定名在格式一致时也直接截取后，GCC 8.1 当时约为 1.39 秒。
 - `mergeDeclaration()` 从优化前约 2.1 秒降为约 56 毫秒，不再是热点。名称查找和名称收集也不是热点。非 auto 初始化及被丢弃的表达式只跳过 token，不再拼接临时文本；该调整没有明显独立提速。字符串 reserve 预分配没有收益，已撤回。
@@ -74,7 +74,7 @@ Direct Release、设置 `QT_FORCE_STDERR_LOGGING=1`、未启用详细 profile �
 
 ## 后续顺序
 
-1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，优先分解 preprocess 的 include 打开、宏展开和条件求值，其次分析 parseDeclarations；tokenize、merge 和模板拼接已不是当前热点。
+1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，优先分解普通行宏展开、条件求值和 directive 分发，其次分析 parseDeclarations；文件读取、include 管理、对象宏重复切分、tokenize、merge 和模板拼接已不是当前优先方向。
 2. 逐项审查 `docs/parser-concurrency-review.md`：`mParsing` 读取必须持锁，但是否需要读取及如何判断逐场景分析；修改标志的临界区尽量小。
 3. 单独分析活动引用接口（尤其 `statementList()`）的合法使用时限，不能用一次入口加锁掩盖引用生命周期问题。
 4. 评估普通嵌套 Block 的既有问题：`void f() { int local; { int inner; } }` 中局部声明后的 `{` 可能被当作前一声明 body。不要与其他修复混合。

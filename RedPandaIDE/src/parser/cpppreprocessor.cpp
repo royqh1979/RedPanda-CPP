@@ -29,10 +29,24 @@ namespace {
 struct PreprocessorProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 openIncludeNs = 0;
+    qint64 closeIncludeNs = 0;
+    qint64 insideBoundaryNs = 0;
+    qint64 fileStampsNs = 0;
+    qint64 includeRelationsNs = 0;
+    qint64 readFileNs = 0;
+    qint64 handleDefineNs = 0;
+    qint64 handleIncludeNs = 0;
     qint64 replaceCommentsNs = 0;
     qint64 expandLineNs = 0;
     qint64 evaluateIfNs = 0;
     qint64 openIncludeCalls = 0;
+    qint64 closeIncludeCalls = 0;
+    qint64 insideBoundaryCalls = 0;
+    qint64 fileStampsCalls = 0;
+    qint64 includeRelationsCalls = 0;
+    qint64 readFileCalls = 0;
+    qint64 handleDefineCalls = 0;
+    qint64 handleIncludeCalls = 0;
     qint64 replaceCommentsCalls = 0;
     qint64 expandLineCalls = 0;
     qint64 evaluateIfCalls = 0;
@@ -42,11 +56,28 @@ struct PreprocessorProfile {
             return;
         qWarning() << "PREPROCESSOR_PROFILE"
                    << "openInclude" << openIncludeNs / 1000000.0
+                   << "closeInclude" << closeIncludeNs / 1000000.0
+                   << "insideBoundary" << insideBoundaryNs / 1000000.0
+                   << "fileStamps" << fileStampsNs / 1000000.0
+                   << "includeRelations" << includeRelationsNs / 1000000.0
+                   << "readFile" << readFileNs / 1000000.0
+                   << "handleDefine" << handleDefineNs / 1000000.0
+                   << "handleInclude" << handleIncludeNs / 1000000.0
                    << "replaceComments" << replaceCommentsNs / 1000000.0
                    << "expandLine" << expandLineNs / 1000000.0
-                   << "evaluateIf" << evaluateIfNs / 1000000.0
-                   << "calls" << openIncludeCalls << replaceCommentsCalls
-                   << expandLineCalls << evaluateIfCalls;
+                   << "evaluateIf" << evaluateIfNs / 1000000.0;
+        qWarning() << "PREPROCESSOR_PROFILE_CALLS"
+                   << "openInclude" << openIncludeCalls
+                   << "closeInclude" << closeIncludeCalls
+                   << "insideBoundary" << insideBoundaryCalls
+                   << "fileStamps" << fileStampsCalls
+                   << "includeRelations" << includeRelationsCalls
+                   << "readFile" << readFileCalls
+                   << "handleDefine" << handleDefineCalls
+                   << "handleInclude" << handleIncludeCalls
+                   << "replaceComments" << replaceCommentsCalls
+                   << "expandLine" << expandLineCalls
+                   << "evaluateIf" << evaluateIfCalls;
     }
 };
 
@@ -119,6 +150,8 @@ QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrenc
 
 bool CppPreprocessor::isInsideBoundary(const QString &fileName) const
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.insideBoundaryNs,
+                                          preprocessorProfile.insideBoundaryCalls);
     if (mRegistry.projectFiles.contains(fileName))
         return false;
     return isSystemHeaderFile(fileName, mIncludePaths)
@@ -137,6 +170,8 @@ QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
 
 bool CppPreprocessor::hasValidFileStamps(const PParsedFileInfo &fileInfo) const
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.fileStampsNs,
+                                          preprocessorProfile.fileStampsCalls);
     QSet<QString> files = fileInfo->includes();
     files.insert(fileInfo->fileName());
     for (const QString &fileName : files) {
@@ -459,6 +494,8 @@ QString CppPreprocessor::getNextPreprocessor()
 
 void CppPreprocessor::handleDefine(const QString &tokens)
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.handleDefineNs,
+                                          preprocessorProfile.handleDefineCalls);
     if (getCurrentBranch() == BranchResult::isTrue) {
         QString name,args,value;
         getDefineParts(tokens, name, args, value);
@@ -472,6 +509,8 @@ void CppPreprocessor::handleDefine(const QString &tokens)
 
 void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.handleIncludeNs,
+                                          preprocessorProfile.handleIncludeCalls);
     if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
 
@@ -783,6 +822,8 @@ void CppPreprocessor::openInclude(QString fileName)
 
     bool includeProtected = isIncludeProtected(fileName);
     if (mSession.includeStack.count() > 0) {
+        PreprocessorProfileScope relationsScope(preprocessorProfile.includeRelationsNs,
+                                                preprocessorProfile.includeRelationsCalls);
         for (PParsedFile &parsedFile : mSession.includeStack) {
             parsedFile->fileInfo->addInclude(fileName);
             for (const QString &includedFileName : fileInfo->includes())
@@ -857,6 +898,8 @@ void CppPreprocessor::openInclude(QString fileName)
         if (mOnGetFileStream && mOnGetFileStream(fileName, bufferedText))
             parsedFile->buffer = bufferedText;
         else {
+            PreprocessorProfileScope readScope(preprocessorProfile.readFileNs,
+                                               preprocessorProfile.readFileCalls);
             parsedFile->buffer = readFileToLines(fileName);
             QFileInfo diskInfo(fileName);
             mRegistry.fileMetadata.insert(fileName,
@@ -889,6 +932,8 @@ void CppPreprocessor::openInclude(QString fileName)
 
 void CppPreprocessor::closeInclude()
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.closeIncludeNs,
+                                          preprocessorProfile.closeIncludeCalls);
     if (mSession.includeStack.isEmpty())
         return;
     PParsedFile lastFile = mSession.includeStack.back();
@@ -1220,29 +1265,20 @@ void CppPreprocessor::preprocessBuffer()
             }
             s = getNextPreprocessor();
             if (isDirectiveLine(s)) {
-                QString command;
-                command.reserve(s.length());
-                QString tokens;
-                tokens.reserve(s.length());
-                auto it=s.constBegin();
-                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
-                    ++it; // skip leading spaces;
-                ++it; // skip  '#'
-                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
-                    ++it; // skip spaces;
-                while(it!=s.constEnd()) {
-                    if (*it>='a' && *it<='z' || *it=='_')
-                        command.append(*it);
-                    else
-                        break;
-                    ++it;
-                }
-                while(it!=s.constEnd() && (*it==' ' || *it=='\t'))
-                    ++it; // skip spaces;
-                while(it!=s.constEnd()) {
-                    tokens.append(*it);
-                    ++it; // skip spaces;
-                }
+                int pos = 0;
+                while (pos < s.length() && (s[pos] == ' ' || s[pos] == '\t'))
+                    ++pos;
+                ++pos;
+                while (pos < s.length() && (s[pos] == ' ' || s[pos] == '\t'))
+                    ++pos;
+                int commandStart = pos;
+                while (pos < s.length()
+                       && ((s[pos] >= 'a' && s[pos] <= 'z') || s[pos] == '_'))
+                    ++pos;
+                QString command = s.mid(commandStart, pos - commandStart);
+                while (pos < s.length() && (s[pos] == ' ' || s[pos] == '\t'))
+                    ++pos;
+                QString tokens = s.mid(pos);
                 if (!command.isEmpty()) {
                     handlePreprocessor(command, tokens);
                 }
