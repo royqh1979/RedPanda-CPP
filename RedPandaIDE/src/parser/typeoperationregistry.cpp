@@ -61,20 +61,7 @@ TypeInfo TypeOperationRegistry::subscriptValue(const TypeInfo &receiver) const
 
 TypeInfo TypeOperationRegistry::subscriptReference(const TypeInfo &receiver) const
 {
-    TypeInfo resolvedReceiver = mResolver.resolve(receiver);
-    if (resolvedReceiver.qualifiedName == "std::vector"
-            && !resolvedReceiver.templateArguments.isEmpty()) {
-        const TemplateArgument &element = resolvedReceiver.templateArguments.first();
-        if (element.kind == TemplateArgumentKind::Type && element.type
-                && element.type->qualifiedName != "bool") {
-            TypeInfo result = *element.type;
-            if (resolvedReceiver.qualifiers.testFlag(TypeQualifier::Const))
-                result.qualifiers |= TypeQualifier::Const;
-            result.derivations.append(TypeDerivation::lvalueReference());
-            return result;
-        }
-    }
-    return mResolver.invokeResult(resolvedReceiver, "operator[]");
+    return mResolver.invokeResult(receiver, "operator[]");
 }
 
 TypeInfo TypeOperationRegistry::invokeResult(const TypeInfo &callable,

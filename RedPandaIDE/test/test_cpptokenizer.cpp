@@ -1173,7 +1173,7 @@ void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain
 {
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
-                "namespace std {\n"
+                "namespace std { inline namespace __cxx11 {\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
@@ -1184,7 +1184,7 @@ void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain
                 "  public:\n"
                 "    T& operator*();\n"
                 "  };\n"
-                "}\n", declarations));
+                "} }\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
@@ -1193,6 +1193,12 @@ void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain
         builder.build(declaration, context);
     CppTypeResolver resolver(model);
     TypeOperationRegistry operations(resolver);
+    PStatement vector = resolver.findStatement("std::vector");
+    QVERIFY(vector);
+    QCOMPARE(vector->fullName, "std::__cxx11::vector");
+    PStatement inlineNamespace = resolver.findStatement("std::__cxx11");
+    QVERIFY(inlineNamespace);
+    QCOMPARE(inlineNamespace->fullName, "std::__cxx11");
 
     DeclarationInfo vectorVariable;
     QVERIFY(parseDeclarationText("std::vector<std::string> lst;", vectorVariable));

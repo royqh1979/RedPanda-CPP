@@ -146,8 +146,6 @@ Token 流只保留纯切分形式，Parser 直接使用 TokenCursor 和声明产
 
 `command`/`fullName` 的存储格式初期保持不变：实例化名仍可包含 `<...>`，`fullName` 仍用 `::` 连接。Statement::type() 提供的文本兼容只属于对外输出，不影响 token 流。模板声明需要新增模板类别和形参绑定信息；StatementMap 容器替换和键冗余消除不在同一批次进行。
 
-普通 Statement 的 `fullName` 是对外限定名，跳过祖先中的 inline/匿名 namespace，例如 `std::basic_string`、`std::vector`，供稳定比较、展示和 STL 公共接口规则匹配。namespace Statement 自身的 `fullName` 保留实际完整路径，例如 `std::__cxx11`，以维持 namespace 身份、重开、索引和失效清理。`parentScope` 始终保留真实嵌套关系；显式输入 `std::__cxx11::basic_string` 时沿真实 namespace 树查找，但返回的普通 Statement 仍使用对外 `fullName`。不另设与之重复的 publicFullName 字段或方法。
-
 不保留新旧两套生产解析路径。旧实现用于事先确定测试基线；新实现直接替换旧实现。对旧实现已经明确错误的行为，不以兼容性为理由保留。
 
 ### CppParser 生产接入
@@ -156,7 +154,7 @@ CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxPars
 
 同一实体的声明和定义合并到一个 Statement，分别保存 declarationRange/definitionRange、实际文件和跨边界祖先，并合并声明说明符，避免重开 namespace 时丢失 inline 等信息；参数不重复创建。变量统一使用 StatementKind::Variable，global/local/class-local 由 StatementScope 区分。typeInfo.toString 保留完整结构化类型，Statement::type() 生成旧 API 所需的存储类别、返回类型及数组/函数指针兼容文本。
 
-merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按对外 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
+merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
 
 class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；declarationBoundaryAncestor 为空时按声明实际文件是否位于 include 闭包判断。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。查询目标本身就是 namespace 时，终止 Statement 的 fullName 必须与该前缀精确相等；索引中的 inline/匿名关联节点只能用于继续查成员，不能替代终止 namespace。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
 
@@ -232,7 +230,7 @@ using 不创建作用域。using namespace/using enum 记录到当前 Statement 
 
 声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过表达式/函数体时无需配平 `<>`，只有解析声明时才判定；查不到时回退到结构配平。
 
-Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。`templateSpecializationParams` 继续表示名称上的实际参数，不与声明形参混用。默认模板实参和约束表达式在第一版中只正确消费，不持久保存。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。
+Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。`templateSpecializationParams` 继续表示名称上的实际参数，不与声明形参混用。默认模板实参只保存原文，不在声明阶段实例化；约束表达式只正确消费。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。模板求值的严格边界、本轮必要特性及 STL 依据见 `cpptemplate-evaluation-design.md`。
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 
@@ -244,7 +242,7 @@ Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的
 
 函数 Statement 同时保留结构化 ParameterInfo 列表，不只保存 args 文本。调用时逐参数比较 formal/actual TypeInfo：直接模板形参绑定实际类型，引用先去除，指针/数组按层递归，Container<T> 等实际模板参数继续递归绑定；返回 TypeInfo 再应用这些绑定。该机制用于 find_if、transform 等算法，不做重载决议、SFINAE、参数包展开或完整隐式转换序列。
 
-无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。`std::vector<T>::operator[]` 目前由专用规则直接生成 `T&`，const vector 则生成 `const T&`；`vector<bool>` 的代理 reference 不适用该规则，仍走通用成员返回类型解析。
+无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。
 
 rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类型；filter_view 递归保持输入 range 的元素或引用；transform_view 使用函数、函数指针或 operator() 的返回类型；join_view 连续两次取元素以展平内层 range；elements_view 从 tuple、pair 或 array 的实际模板实参中取第 N 项。查不到专用规则时回退到普通容器的 value_type/front，不把 view 名称识别代替通用声明解析。
 

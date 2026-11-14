@@ -1176,13 +1176,15 @@ void TestCppParser::test_find_statement_of_inline_namespace()
             "  inline namespace __cxx11 {",
             "    class basic_string {};",
             "    using string = basic_string;",
+            "    int inlineValue;",
             "  }",
             "  basic_string value;",
             "}",
             "std::string text;",
             "namespace std { namespace literals {",
             "  inline namespace string_view_literals { void f(); }",
-            "} }"
+            "} }",
+            "namespace { int anonymousValue; }"
         };
         return true;
     });
@@ -1191,8 +1193,13 @@ void TestCppParser::test_find_statement_of_inline_namespace()
     PStatement stdNamespace = mParser->findStatementOf("text.cpp", QStringList{"std"}, 0);
     QVERIFY(stdNamespace);
     QCOMPARE(stdNamespace->fullName, "std");
+    PStatement inlineNamespace = mParser->findStatement("std::__cxx11");
+    QVERIFY(inlineNamespace);
+    QCOMPARE(inlineNamespace->fullName, "std::__cxx11");
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
+    QCOMPARE(basicString->fullName, "std::__cxx11::basic_string");
+    QCOMPARE(mParser->findStatement("std::__cxx11::basic_string"), basicString);
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "basic_string"}, 0),
              basicString);
     QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"basic_string"}, 5),
@@ -1200,11 +1207,21 @@ void TestCppParser::test_find_statement_of_inline_namespace()
     PStatement value = mParser->findStatementOf("text.cpp", QStringList{"value"}, 5);
     QVERIFY(value);
     QCOMPARE(getKindOfStatement(value), StatementKind::GlobalVariable);
+    PStatement inlineValue = mParser->findStatement("std::inlineValue");
+    QVERIFY(inlineValue);
+    QCOMPARE(inlineValue->fullName, "std::__cxx11::inlineValue");
     PStatement stringAlias = mParser->findStatement("std::string");
     QVERIFY(stringAlias);
+    QCOMPARE(stringAlias->fullName, "std::__cxx11::string");
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "string"}, 0),
              stringAlias);
     QVERIFY(stringAlias->hasDefinition());
+    PStatement literalFunction = mParser->findStatement("std::literals::f");
+    QVERIFY(literalFunction);
+    QCOMPARE(literalFunction->fullName, "std::literals::string_view_literals::f");
+    PStatement anonymousValue = mParser->findStatement("anonymousValue");
+    QVERIFY(anonymousValue);
+    QCOMPARE(anonymousValue->fullName, "anonymousValue");
 }
 
 void TestCppParser::test_nested_namespace_scope_parentage()
@@ -1355,6 +1372,79 @@ void TestCppParser::test_standard_library_vector_subscript()
     QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
     QCOMPARE(mParser->findStatementOf(main, {"lst", "[", "0", "]", ".", "size"}, 5),
              mParser->findStatement("std::basic_string::size"));
+}
+
+void TestCppParser::test_standard_library_expression_chains()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    std::deque<std::string> deq;",
+        "    std::list<std::string> linked;",
+        "    std::map<std::string, std::string> mapping;",
+        "    std::array<std::string, 2> arr;",
+        "    lst.front().size();",
+        "    lst.back().size();",
+        "    lst.at(0).size();",
+        "    deq[0].size();",
+        "    linked.front().size();",
+        "    mapping[\"key\"].size();",
+        "    arr[0].size();",
+        "    auto shared = std::make_shared<std::string>(\"shared\");",
+        "    shared->size();",
+        "    (*shared).size();",
+        "    auto unique = std::make_unique<std::string>(\"unique\");",
+        "    unique->size();",
+        "    auto it = lst.begin();",
+        "    it->size();",
+        "    (*it).size();",
+        "    while (++it != lst.end()) {",
+        "        it->size();",
+        "    }",
+        "    for (auto &s : lst) {",
+        "        s.size();",
+        "    }",
+        "    for (auto i = lst.begin(); i != lst.end(); ++i) {",
+        "        i->size();",
+        "    }",
+        "    auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
+        "    found->size();",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    PStatement stringSize = mParser->findStatement("std::basic_string::size");
+    QVERIFY(stringSize);
+    auto expectStringSize = [&](int line, const QStringList &expression) {
+        PStatement scope = mParser->findScopeStatement(main, line);
+        QVERIFY2(scope, expression.join("").toUtf8().constData());
+        PStatement statement = mParser->findStatementOf(main, expression, line);
+        QVERIFY2(statement, expression.join("").toUtf8().constData());
+        QCOMPARE(statement, stringSize);
+    };
+    expectStringSize(8, {"lst", ".", "front", "(", ")", ".", "size"});
+    expectStringSize(9, {"lst", ".", "back", "(", ")", ".", "size"});
+    expectStringSize(10, {"lst", ".", "at", "(", "0", ")", ".", "size"});
+    expectStringSize(11, {"deq", "[", "0", "]", ".", "size"});
+    expectStringSize(12, {"linked", ".", "front", "(", ")", ".", "size"});
+    expectStringSize(13, {"mapping", "[", "\"key\"", "]", ".", "size"});
+    expectStringSize(14, {"arr", "[", "0", "]", ".", "size"});
+    expectStringSize(16, {"shared", "->", "size"});
+    expectStringSize(17, {"(", "*", "shared", ")", ".", "size"});
+    expectStringSize(19, {"unique", "->", "size"});
+    expectStringSize(21, {"it", "->", "size"});
+    expectStringSize(22, {"(", "*", "it", ")", ".", "size"});
+    expectStringSize(24, {"it", "->", "size"});
+    expectStringSize(27, {"s", ".", "size"});
+    expectStringSize(30, {"i", "->", "size"});
+    expectStringSize(33, {"found", "->", "size"});
 }
 
 void TestCppParser::test_standard_library_public_api_complete()
