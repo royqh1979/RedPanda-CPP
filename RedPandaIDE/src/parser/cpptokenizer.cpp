@@ -16,7 +16,71 @@
  */
 #include "cpptokenizer.h"
 
+#include <QDebug>
+#include <QElapsedTimer>
 #include <QStringList>
+
+namespace {
+struct TokenizerProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    qint64 identifierNs = 0;
+    qint64 numberNs = 0;
+    qint64 literalNs = 0;
+    qint64 preprocessorNs = 0;
+    qint64 operatorNs = 0;
+    qint64 addTokenNs = 0;
+    qint64 startsWithNs = 0;
+    qint64 advanceNs = 0;
+    qint64 identifierCalls = 0;
+    qint64 numberCalls = 0;
+    qint64 literalCalls = 0;
+    qint64 preprocessorCalls = 0;
+    qint64 operatorCalls = 0;
+    qint64 addTokenCalls = 0;
+    qint64 startsWithCalls = 0;
+    qint64 advanceCalls = 0;
+    QHash<QString, qint64> startsWithTextCalls;
+    ~TokenizerProfile()
+    {
+        if (!enabled)
+            return;
+        qWarning() << "TOKENIZER_PROFILE"
+                   << "identifier" << identifierNs / 1000000.0
+                   << "number" << numberNs / 1000000.0
+                   << "literal" << literalNs / 1000000.0
+                   << "preprocessor" << preprocessorNs / 1000000.0
+                   << "operator" << operatorNs / 1000000.0
+                   << "addToken" << addTokenNs / 1000000.0
+                   << "startsWith" << startsWithNs / 1000000.0
+                   << "advance" << advanceNs / 1000000.0
+                   << "calls" << identifierCalls << numberCalls << literalCalls
+                   << preprocessorCalls << operatorCalls << addTokenCalls
+                   << startsWithCalls << advanceCalls;
+        qWarning() << "TOKENIZER_STARTS_WITH" << startsWithTextCalls;
+    }
+};
+
+TokenizerProfile tokenizerProfile;
+
+struct TokenizerProfileScope {
+    TokenizerProfileScope(qint64 &target, qint64 &calls)
+        : target(target), calls(calls)
+    {
+        if (tokenizerProfile.enabled) {
+            ++calls;
+            timer.start();
+        }
+    }
+    ~TokenizerProfileScope()
+    {
+        if (tokenizerProfile.enabled)
+            target += timer.nsecsElapsed();
+    }
+    qint64 &target;
+    qint64 &calls;
+    QElapsedTimer timer;
+};
+}
 
 CppTokenizer::CppTokenizer() = default;
 
@@ -62,7 +126,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             break;
 
         SourcePosition position = mCurrentPosition;
-        if (startsWith("[[")) {
+        if (*mCurrent == '[' && startsWith("[[")) {
             skipAttribute();
             continue;
         }
@@ -73,13 +137,15 @@ void CppTokenizer::tokenize(const QStringList &buffer)
                     ? TokenKind::FileBoundary : TokenKind::Preprocessor;
             addToken(text, kind, position);
         } else if (*mCurrent == '"' || *mCurrent == '\''
-                   || startsWith("R\"") || startsWith("LR\"")
-                   || startsWith("uR\"") || startsWith("UR\"")
-                   || startsWith("u8R\"") || startsWith("L\"")
-                   || startsWith("u\"") || startsWith("U\"")
-                   || startsWith("u8\"") || startsWith("L'")
-                   || startsWith("u'") || startsWith("U'")
-                   || startsWith("u8'")) {
+                   || ((*mCurrent == 'R' || *mCurrent == 'L'
+                        || *mCurrent == 'u' || *mCurrent == 'U')
+                       && (startsWith("R\"") || startsWith("LR\"")
+                           || startsWith("uR\"") || startsWith("UR\"")
+                           || startsWith("u8R\"") || startsWith("L\"")
+                           || startsWith("u\"") || startsWith("U\"")
+                           || startsWith("u8\"") || startsWith("L'")
+                           || startsWith("u'") || startsWith("U'")
+                           || startsWith("u8'")))) {
             TokenKind kind = TokenKind::StringLiteral;
             QString text = readLiteral(kind);
             addToken(text, kind, position);
@@ -107,6 +173,8 @@ void CppTokenizer::tokenize(const QStringList &buffer)
 
 void CppTokenizer::addToken(const QString &text, TokenKind kind, const SourcePosition &position)
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.addTokenNs,
+                                       tokenizerProfile.addTokenCalls);
     int index = mTokenList.count();
     int opening = -1;
     if (kind == TokenKind::Operator) {
@@ -167,15 +235,15 @@ void CppTokenizer::skipWhitespace()
     while (true) {
         if (mCurrent->isSpace()) {
             advance();
-        } else if (startsWith("//")) {
+        } else if (*mCurrent == '/' && mCurrent[1] == '/') {
             while (!atEnd() && *mCurrent != '\n' && *mCurrent != '\r')
                 advance();
-        } else if (startsWith("/*")) {
+        } else if (*mCurrent == '/' && mCurrent[1] == '*') {
             advance();
             advance();
-            while (!atEnd() && !startsWith("*/"))
+            while (!atEnd() && !(*mCurrent == '*' && mCurrent[1] == '/'))
                 advance();
-            if (startsWith("*/")) {
+            if (*mCurrent == '*' && mCurrent[1] == '/') {
                 advance();
                 advance();
             }
@@ -269,6 +337,8 @@ void CppTokenizer::skipRawString()
 
 QString CppTokenizer::readIdentifier()
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.identifierNs,
+                                       tokenizerProfile.identifierCalls);
     int start = mCurrent - mBuffer.constData();
     while (isIdentifierPart(*mCurrent))
         advance();
@@ -277,6 +347,8 @@ QString CppTokenizer::readIdentifier()
 
 QString CppTokenizer::readNumber(TokenKind &kind)
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.numberNs,
+                                       tokenizerProfile.numberCalls);
     int start = mCurrent - mBuffer.constData();
     bool hexadecimal = startsWith("0x") || startsWith("0X");
     bool floating = *mCurrent == '.';
@@ -309,6 +381,8 @@ QString CppTokenizer::readNumber(TokenKind &kind)
 
 QString CppTokenizer::readLiteral(TokenKind &kind)
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.literalNs,
+                                       tokenizerProfile.literalCalls);
     int start = mCurrent - mBuffer.constData();
     if (startsWith("'") || startsWith("L'") || startsWith("u'")
             || startsWith("U'") || startsWith("u8'"))
@@ -336,6 +410,8 @@ QString CppTokenizer::readLiteral(TokenKind &kind)
 
 QString CppTokenizer::readPreprocessor()
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.preprocessorNs,
+                                       tokenizerProfile.preprocessorCalls);
     int start = mCurrent - mBuffer.constData();
     while (!atEnd()) {
         if (*mCurrent == '\n' || *mCurrent == '\r') {
@@ -353,20 +429,61 @@ QString CppTokenizer::readPreprocessor()
 
 QString CppTokenizer::readOperator()
 {
-    static const QStringList operators{
-        "<<=", ">>=", "<=>", "...", "->*", "##",
-        "::", "++", "--", "+=", "-=", "*=", "/=", "%=", "==", "!=",
-        "<=", ">=", "&&", "||", "&=", "|=", "^=", "<<", ">>", "->", ".*"
-    };
-    for (const QString &text : operators) {
-        if (startsWith(text)) {
-            for (int i = 0; i < text.length(); ++i)
-                advance();
-            return text;
+    TokenizerProfileScope profileScope(tokenizerProfile.operatorNs,
+                                       tokenizerProfile.operatorCalls);
+    int start = mCurrent - mBuffer.constData();
+    int length = 1;
+    QChar second = mCurrent[1];
+    switch (mCurrent->unicode()) {
+    case '<':
+        if (second == '<' || second == '=') {
+            length = ((second == '<' && mCurrent[2] == '=')
+                      || (second == '=' && mCurrent[2] == '>')) ? 3 : 2;
         }
+        break;
+    case '>':
+        if (second == '>' || second == '=')
+            length = (second == '>' && mCurrent[2] == '=') ? 3 : 2;
+        break;
+    case '.':
+        if (second == '.' && mCurrent[2] == '.')
+            length = 3;
+        else if (second == '*')
+            length = 2;
+        break;
+    case '-':
+        if (second == '>') {
+            length = mCurrent[2] == '*' ? 3 : 2;
+        } else if (second == '-' || second == '=') {
+            length = 2;
+        }
+        break;
+    case ':':
+    case '#':
+        if (second == mCurrent[0])
+            length = 2;
+        break;
+    case '+':
+    case '&':
+    case '|':
+        if (second == mCurrent[0] || second == '=')
+            length = 2;
+        break;
+    case '*':
+    case '/':
+    case '%':
+    case '=':
+    case '!':
+    case '^':
+        if (second == '=')
+            length = 2;
+        break;
+    default:
+        break;
     }
-    QString result(*mCurrent);
-    advance();
+    QString result = mBuffer.mid(start, length);
+    for (int i = 0; i < length; ++i)
+        advance();
     return result;
 }
 
@@ -386,6 +503,10 @@ void CppTokenizer::readFileBoundary(const QString &text, int tokenIndex)
 
 bool CppTokenizer::startsWith(const QString &text) const
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.startsWithNs,
+                                       tokenizerProfile.startsWithCalls);
+    if (tokenizerProfile.enabled)
+        ++tokenizerProfile.startsWithTextCalls[text];
     for (int i = 0; i < text.length(); ++i) {
         if (mCurrent[i] == 0 || mCurrent[i] != text[i])
             return false;
@@ -395,6 +516,8 @@ bool CppTokenizer::startsWith(const QString &text) const
 
 void CppTokenizer::advance()
 {
+    TokenizerProfileScope profileScope(tokenizerProfile.advanceNs,
+                                       tokenizerProfile.advanceCalls);
     if (*mCurrent == '\n') {
         ++mCurrentPosition.line;
         mCurrentPosition.ch = 0;

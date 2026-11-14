@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,57 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QMessageBox>
 #include <QMultiHash>
 #include <qt_utils/utils.h>
+
+namespace {
+struct PreprocessorProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    qint64 openIncludeNs = 0;
+    qint64 replaceCommentsNs = 0;
+    qint64 expandLineNs = 0;
+    qint64 evaluateIfNs = 0;
+    qint64 openIncludeCalls = 0;
+    qint64 replaceCommentsCalls = 0;
+    qint64 expandLineCalls = 0;
+    qint64 evaluateIfCalls = 0;
+    ~PreprocessorProfile()
+    {
+        if (!enabled)
+            return;
+        qWarning() << "PREPROCESSOR_PROFILE"
+                   << "openInclude" << openIncludeNs / 1000000.0
+                   << "replaceComments" << replaceCommentsNs / 1000000.0
+                   << "expandLine" << expandLineNs / 1000000.0
+                   << "evaluateIf" << evaluateIfNs / 1000000.0
+                   << "calls" << openIncludeCalls << replaceCommentsCalls
+                   << expandLineCalls << evaluateIfCalls;
+    }
+};
+
+PreprocessorProfile preprocessorProfile;
+
+struct PreprocessorProfileScope {
+    PreprocessorProfileScope(qint64 &target, qint64 &calls)
+        : target(target), calls(calls)
+    {
+        if (preprocessorProfile.enabled) {
+            ++calls;
+            timer.start();
+        }
+    }
+    ~PreprocessorProfileScope()
+    {
+        if (preprocessorProfile.enabled)
+            target += timer.nsecsElapsed();
+    }
+    qint64 &target;
+    qint64 &calls;
+    QElapsedTimer timer;
+};
+}
 
 CppPreprocessor::CppPreprocessor()
 {
@@ -684,6 +732,8 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
 
 void CppPreprocessor::openInclude(QString fileName)
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.openIncludeNs,
+                                          preprocessorProfile.openIncludeCalls);
     if (mStopForParserReset)
         return;
     if (mSession.includeStack.count() >= mMaxIncludeNestingDepth) {
@@ -1013,6 +1063,8 @@ QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
 
 void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.replaceCommentsNs,
+                                          preprocessorProfile.replaceCommentsCalls);
     ContentType currentType = ContentType::Other;
     QString delimiter;
     for (int lineIdx = 0; lineIdx < text.length(); lineIdx++) {
@@ -1229,6 +1281,8 @@ void CppPreprocessor::skipToPreprocessor()
 
 int CppPreprocessor::expandLineWithEngine(const QStringList &buffer, int startLine, QString &out)
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.expandLineNs,
+                                          preprocessorProfile.expandLineCalls);
     PpTokenizer tokenizer(buffer, startLine);
     PpExpander expander([this](const QString& name) {
         return getDefine(name);
@@ -1259,6 +1313,8 @@ bool CppPreprocessor::isNumberChar(const QChar &ch)
 
 bool CppPreprocessor::evaluateIf(const QString &line) const
 {
+    PreprocessorProfileScope profileScope(preprocessorProfile.evaluateIfNs,
+                                          preprocessorProfile.evaluateIfCalls);
     QString newLine = expandMacrosInConditioningExpression(line); // replace FOO by numerical value of FOO
     bool result = evaluateExpression(newLine);
     //qDebug()<<newLine<<line<<result;

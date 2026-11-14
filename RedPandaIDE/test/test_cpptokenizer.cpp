@@ -102,6 +102,19 @@ void TestCppTokenizer::test_identifiers_and_operators()
     tokenize({"value>>=1;"});
     QCOMPARE(tokenTexts(), QStringList({"value", ">>=", "1", ";"}));
     QCOMPARE(mTokenizer[1].kind, CppTokenizer::TokenKind::Operator);
+
+    const QStringList operators{
+        "<<=", ">>=", "<=>", "...", "->*",
+        "::", "++", "--", "+=", "-=", "*=", "/=", "%=", "==", "!=",
+        "<=", ">=", "&&", "||", "&=", "|=", "^=", "<<", ">>", "->", ".*"
+    };
+    tokenize({operators.join(' ')});
+    QCOMPARE(tokenTexts(), operators);
+    for (int i = 0; i < operators.count(); ++i)
+        QCOMPARE(mTokenizer[i].kind, CppTokenizer::TokenKind::Operator);
+
+    tokenize({"<== >>=="});
+    QCOMPARE(tokenTexts(), QStringList({"<=", "=", ">>=", "="}));
 }
 
 void TestCppTokenizer::test_qualified_names_and_templates_are_split()
