@@ -49,6 +49,7 @@ private:
     void skipBalancedToken();
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);
+    void skipRequiresClause();
     void skipTemplateDefaultArgument();
     void applyTrailingReturn(TypeDerivation &function);
     bool isBuiltinType(const QString &text) const;

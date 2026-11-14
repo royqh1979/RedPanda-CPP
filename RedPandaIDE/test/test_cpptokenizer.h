@@ -100,6 +100,8 @@ private slots:
     void test_template_forward_declaration_with_default_arguments();
     void test_scope_recovery_preserves_following_declarations();
     void test_failed_declaration_restores_cursor();
+    void test_non_declaration_keywords_are_rejected();
+    void test_requires_clauses_are_consumed();
     void test_constructor_declarations_with_specifiers();
     void test_integer_constant_expression_invalid_division();
     void test_deduction_guides_are_consumed_without_statements();

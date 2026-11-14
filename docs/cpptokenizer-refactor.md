@@ -105,9 +105,13 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 `parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。配对括号优先使用 matchIndex 识别；需要比较尖括号等运算符文本时，先判断 TokenKind::Operator，再在同一个分支中比较具体文本，避免对标识符和字面量做无意义比较。
 
+声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
+
+函数 declarator 的 requires 子句只消费不求值。扫描时区分函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保函数 bodyRange 和后续声明不受约束子句影响；这不扩展 concepts 求值或 dependent-name 语义。
+
 前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
 
-函数体内通过声明关键字、可见类型查询和有限前瞻区分声明与表达式，不建立表达式 AST。确认的解析错误可以结束当前文件的错误路径，但不因此终止整个 TU。跨文件配对记录诊断并跳到当前文件尾；include 文件随后返回包含者继续分析。文件内未配对结构不是致命错误，当前文件尾就是其虚拟匹配位置，仍按正常流程分析到文件尾。
+函数体内先由 for、catch、if/while、普通 Block 等专用产生式处理对应语句，其余位置通过声明入口的关键字分类和有限前瞻区分声明与表达式，不建立表达式 AST。确认的解析错误可以结束当前文件的错误路径，但不因此终止整个 TU。跨文件配对记录诊断并跳到当前文件尾；include 文件随后返回包含者继续分析。文件内未配对结构不是致命错误，当前文件尾就是其虚拟匹配位置，仍按正常流程分析到文件尾。
 
 声明入口失败时必须恢复起始 checkpoint 并丢弃临时 DeclarationInfo，不能把部分消费的位置留给调用方。class、namespace 和 Block 以开 `{` 的 matchIndex 作为闭合硬边界；子声明越界时恢复到匹配闭合符，防止一个未支持构造吞掉外层作用域和后续 include 文件。未支持语法属于可恢复错误，只在 `PARSER_DEBUG_LOG` 下记录日志。include 文件应是完整源码，debug 下越界恢复同时触发断言以尽早暴露分析错误；根文件可能正在编辑，只记录日志。matchIndex 与闭合 token 类型、恢复后的游标位置等实现不变量也使用断言检查。所有断言都只用于 debug，release 下无论根文件还是 include 文件都执行安全恢复，不能依赖断言避免崩溃。
 

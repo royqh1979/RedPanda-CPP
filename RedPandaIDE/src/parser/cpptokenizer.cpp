@@ -151,7 +151,10 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             addToken(text, kind, position);
         } else if (isIdentifierStart(*mCurrent)) {
             QString identifier = readIdentifier();
-            if (identifier == "__attribute__") {
+            if (identifier == "__extension__")
+                continue;
+            if (identifier == "__attribute__" || identifier == "__attribute"
+                    || identifier == "alignas" || identifier == "_Pragma") {
                 skipWhitespace();
                 if (*mCurrent == '(') {
                     skipGnuAttribute();

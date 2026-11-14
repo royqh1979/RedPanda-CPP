@@ -14,6 +14,7 @@ private slots:
     void init();
     void init_parser();
     void test_parse_var();
+    void test_global_variable_reference_scope();
     void test_parse_vars();
     void test_struct();
     void test_preprocessor_statements();

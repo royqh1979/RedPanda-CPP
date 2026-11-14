@@ -86,6 +86,24 @@ void appendTypeDerivation(TypeInfo &type, const DeclaratorInfo &declarator)
     type.derivations += declarator.derivations;
 }
 
+bool isNonDeclarationStartKeyword(const QString &text)
+{
+    static const QSet<QString> keywords{
+        "_Pragma", "__attribute", "__attribute__", "__asm",
+        "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel",
+        "atomic_commit", "atomic_noexcept", "bitand", "bitor", "break",
+        "case", "catch", "compl", "concept", "const_cast", "continue",
+        "co_await", "co_return", "co_yield", "default", "delete", "do",
+        "dynamic_cast", "else", "false", "for", "goto", "if",
+        "new", "noexcept", "not", "not_eq", "nullptr", "or", "or_eq",
+        "private", "protected", "public", "reflexpr", "reinterpret_cast",
+        "requires", "return", "sizeof", "static_assert", "static_cast",
+        "switch", "this", "throw", "true", "try", "typeid", "while",
+        "xor", "xor_eq"
+    };
+    return keywords.contains(text);
+}
+
 bool isNormalizedSourceText(const QString &text)
 {
     auto isWord = [](QChar ch) { return ch.isLetterOrNumber() || ch == '_'; };
@@ -122,6 +140,10 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
     ++declarationProfile.simpleCalls;
     qint64 templateTextTokensAtStart = declarationProfile.templateTextTokens;
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    if (isNonDeclarationStartKeyword(mCursor.currentText())) {
+        ++declarationProfile.simpleFailures;
+        return false;
+    }
     bool withoutSpecifiers = mCursor.currentText() == "~"
             || mCursor.currentText() == "operator"
             || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
@@ -228,6 +250,7 @@ bool CppDeclarationParser::parseStructuredBinding(DeclarationInfo &result)
 bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
 {
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    mCursor.consume("export");
     if (!mCursor.consume("template"))
         return true;
     if (!mCursor.consume("<")) {
@@ -539,6 +562,8 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
             }
             if (mCursor.consume("->"))
                 applyTrailingReturn(function);
+            if (mCursor.consume("requires"))
+                skipRequiresClause();
             result.derivations.append(function);
             continue;
         }
@@ -898,6 +923,30 @@ void CppDeclarationParser::skipBalancedToken()
 void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
 {
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
+        if (mCursor.current().matchIndex > mCursor.index())
+            skipBalancedToken();
+        else
+            mCursor.advance();
+    }
+}
+
+void CppDeclarationParser::skipRequiresClause()
+{
+    bool requiresExpression = false;
+    while (!mCursor.atEnd()) {
+        const QString &text = mCursor.currentText();
+        if (text == ";" || (text == "{" && !requiresExpression))
+            return;
+        if (text == "requires") {
+            requiresExpression = true;
+            mCursor.advance();
+            continue;
+        }
+        if (text == "{") {
+            skipBalancedToken();
+            requiresExpression = false;
+            continue;
+        }
         if (mCursor.current().matchIndex > mCursor.index())
             skipBalancedToken();
         else

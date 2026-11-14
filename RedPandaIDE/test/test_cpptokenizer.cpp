@@ -266,6 +266,14 @@ void TestCppTokenizer::test_attributes_are_skipped()
     QCOMPARE(tokenTexts(), QStringList({"int", "value", ";"}));
     tokenize({"inline namespace __cxx11 __attribute__((__abi_tag__(\"cxx11\"))) { }"});
     QCOMPARE(tokenTexts(), QStringList({"inline", "namespace", "__cxx11", "{", "}"}));
+    tokenize({"__attribute ((__abi_tag__(\"cxx11\"))) iterator erase(iterator position);"});
+    QCOMPARE(tokenTexts(), QStringList({"iterator", "erase", "(", "iterator", "position", ")", ";"}));
+    tokenize({"alignas(16) int value;"});
+    QCOMPARE(tokenTexts(), QStringList({"int", "value", ";"}));
+    tokenize({"__extension__ typedef int value;"});
+    QCOMPARE(tokenTexts(), QStringList({"typedef", "int", "value", ";"}));
+    tokenize({"_Pragma(\"GCC diagnostic push\") int value;"});
+    QCOMPARE(tokenTexts(), QStringList({"int", "value", ";"}));
 }
 
 void TestCppTokenizer::test_preprocessor_tokens()
@@ -1962,6 +1970,49 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     QCOMPARE(templateCursor.index(), 0);
 }
 
+
+void TestCppTokenizer::test_non_declaration_keywords_are_rejected()
+{
+    const QStringList keywords{
+        "_Pragma", "__attribute", "__attribute__", "__asm",
+        "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel",
+        "atomic_commit", "atomic_noexcept", "bitand", "bitor", "break",
+        "case", "catch", "compl", "concept", "const_cast", "continue",
+        "co_await", "co_return", "co_yield", "default", "delete", "do",
+        "dynamic_cast", "else", "false", "for", "goto", "if",
+        "new", "noexcept", "not", "not_eq", "nullptr", "or", "or_eq",
+        "private", "protected", "public", "reflexpr", "reinterpret_cast",
+        "requires", "return", "sizeof", "static_assert", "static_cast",
+        "switch", "this", "throw", "true", "try", "typeid", "while",
+        "xor", "xor_eq"
+    };
+    for (const QString &keyword : keywords) {
+        DeclarationInfo declaration;
+        QVERIFY2(!parseDeclarationText(keyword + " ttt;", declaration),
+                 keyword.toUtf8().constData());
+    }
+
+    DeclarationInfo declaration;
+    QVERIFY(parseDeclarationText("export template<typename T> int f();", declaration));
+    QCOMPARE(declaration.declarators.count(), 1);
+    QCOMPARE(declaration.declarators.first().name, "f");
+}
+
+void TestCppTokenizer::test_requires_clauses_are_consumed()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> int f() requires true { return 1; }\n"
+                "template<typename T> int g() requires requires(T value) { value + 1; } { return 2; }\n"
+                "int after;\n",
+                declarations));
+    QCOMPARE(declarations.count(), 3);
+    QCOMPARE(declarations[0].declarators.first().name, "f");
+    QVERIFY(declarations[0].bodyRange.isValid());
+    QCOMPARE(declarations[1].declarators.first().name, "g");
+    QVERIFY(declarations[1].bodyRange.isValid());
+    QCOMPARE(declarations[2].declarators.first().name, "after");
+}
 
 void TestCppTokenizer::test_constructor_declarations_with_specifiers()
 {

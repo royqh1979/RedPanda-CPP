@@ -87,6 +87,31 @@ void TestCppParser::test_parse_var()
 
 }
 
+void TestCppParser::test_global_variable_reference_scope()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "int ttt;",
+            "",
+            "int main() {",
+            "    return ttt;",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    QCOMPARE(mParser->statementList().count(), 2);
+    QVERIFY(!mParser->findStatement("main::ttt"));
+    PStatement declaration = mParser->findStatement("ttt");
+    QVERIFY(declaration);
+    PStatement reference = mParser->findStatementOf("text.cpp", QStringList{"ttt"}, 3);
+    QVERIFY(reference);
+    QCOMPARE(reference, declaration);
+    QCOMPARE(reference->scope, StatementScope::Global);
+    QCOMPARE(getKindOfStatement(reference), StatementKind::GlobalVariable);
+}
+
 void TestCppParser::test_parse_vars()
 {
     mParser->setOnGetFileStream(nullptr);
