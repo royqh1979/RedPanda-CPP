@@ -507,36 +507,6 @@ void TestWidgets::test_code_completion_operator_overloads_are_excluded()
              QSet<QString>{"operator\"\"_test"});
 }
 
-void TestWidgets::test_code_completion_exact_match_first()
-{
-    mMainContent = QStringList{"int s;"};
-    mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
-        buffer = mMainContent;
-        return true;
-    });
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
-
-    auto snippet = std::make_shared<CodeSnippet>();
-    snippet->prefix = "switch";
-    snippet->code = "switch (value) {}";
-    CodeCompletionPopup popup(mColorManager.get(), nullptr);
-    popup.setParser(mParser);
-    popup.setCodeSnippets({snippet});
-    popup.setShowEditorCaretFunc([] {});
-    popup.prepareSearch("", {}, "", {"s"}, mMainFile, 0,
-                        CodeCompletionType::Normal, {});
-    popup.search("s", false, "default");
-    QListView *view = popup.findChild<QListView *>();
-    QVERIFY(view);
-    auto *model = qobject_cast<CodeCompletionListModel *>(view->model());
-    QVERIFY(model);
-    QCOMPARE(model->rowCount({}), 2);
-    QCOMPARE(model->statement(model->index(0, 0))->command, "s");
-    QCOMPARE(model->statement(model->index(1, 0))->command, "switch");
-}
-
 void TestWidgets::test_class_browser_inherited_members()
 {
     ClassBrowserModel model;

@@ -311,7 +311,7 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 `getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。namespace 补全使用 includeInline 时返回索引中的全部关联节点，包括没有 Inline 标记的重开 namespace；不能只保留带标记的节点，否则会丢失其实际成员。
 
-普通补全不展示 OverloadedOperator 或 LiteralOperator，也不展示 command 为空的匿名 namespace 等无效候选项。现有 LiteralOperators 专用补全在字符串、字符和数字后缀输入语境中单独提供候选，不经普通补全的过滤器，不能因专用能力而让重载运算符泄漏到普通列表。变量及图标类别按 StatementScope 的 global/local/class-local 判定，不能用是否存在 parentScope 区分全局变量与类成员，否则 namespace 变量会被误标为 private。排序完成后对候选做 stable_partition，command 与完整输入精确匹配的项整体置前，再保留各排序策略和用户模板的相对顺序。
+普通补全不展示 OverloadedOperator 或 LiteralOperator，也不展示 command 为空的匿名 namespace 等无效候选项。现有 LiteralOperators 专用补全在字符串、字符和数字后缀输入语境中单独提供候选，不经普通补全的过滤器，不能因专用能力而让重载运算符泄漏到普通列表。变量及图标类别按 StatementScope 的 global/local/class-local 判定，不能用是否存在 parentScope 区分全局变量与类成员，否则 namespace 变量会被误标为 private。
 
 `gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
 
