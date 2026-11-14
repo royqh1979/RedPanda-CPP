@@ -1662,6 +1662,32 @@ void QSynEdit::unCollpaseAll()
     endInternalChanges();
 }
 
+namespace {
+CharPos gutterLineEnd(const QSynEdit *editor, int line)
+{
+    if (line + 1 < editor->lineCount())
+        return CharPos{0, line + 1};
+    return CharPos{editor->lineText(line).length(), line};
+}
+
+bool hasSingleFullLineSelection(const QSynEdit *editor)
+{
+    if (editor->activeSelectionMode() != SelectionMode::Normal)
+        return false;
+    CharPos start = editor->selBegin();
+    CharPos end = editor->selEnd();
+    if (end < start)
+        std::swap(start, end);
+    if (start.ch != 0)
+        return false;
+    if (end.line == start.line + 1)
+        return end.ch == 0;
+    if (end.line == start.line)
+        return end.ch == editor->lineText(start.line).length();
+    return false;
+}
+}
+
 void QSynEdit::processGutterClick(QMouseEvent *event)
 {
     int x = event->pos().x();
@@ -1680,6 +1706,7 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
             rect.setTop(row * mTextHeight - mTopPos);
             rect.setBottom(rect.top() + mTextHeight - 1);
             if (rect.contains(event->pos())) {
+                setCaretPos(CharPos{0, foldRange->fromLine});
                 if (foldRange->collapsed)
                     uncollapse(foldRange);
                 else
@@ -1687,6 +1714,24 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
                 return;
             }
         }
+    }
+
+    if (line >= 0 && line < mDocument->count()
+            && event->button() == Qt::LeftButton) {
+        CharPos start{0, line};
+        CharPos end = gutterLineEnd(this, line);
+        if (event->modifiers() == Qt::ShiftModifier
+                && hasSingleFullLineSelection(this)) {
+            CharPos selectedStart = std::min(selBegin(), selEnd());
+            CharPos selectedEnd = std::max(selBegin(), selEnd());
+            if (selectedStart < start)
+                start = selectedStart;
+            if (end < selectedEnd)
+                end = selectedEnd;
+        }
+        setActiveSelectionMode(SelectionMode::Normal);
+        setCaretAndSelection(caretPos(), start, end);
+        return;
     }
 
     // If not, check gutter marks
@@ -7420,6 +7465,11 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
     int x=event->pos().x();
     int y=event->pos().y();
 
+    if (button == Qt::LeftButton && x < mGutterWidth) {
+        processGutterClick(event);
+        return;
+    }
+
     QAbstractScrollArea::mousePressEvent(event);
 
     if (button == Qt::RightButton) {
@@ -7439,7 +7489,8 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             mMouseDownPos = event->pos();
         }
         CharPos caretBeforeDrag = caretPos();
-        computeCaret(event->pos());
+        if (x >= mGutterWidth)
+            computeCaret(event->pos());
         mStateFlags.setFlag(StateFlag::WaitForDragging,false);
         if (wasSel && mOptions.testFlag(EditorOption::DragDropEditing) && (x >= mGutterWidth + 2)
                 && (mActiveSelectionMode == SelectionMode::Normal) && inSelection(displayToBufferPos(pixelsToGlyphPos(x, y))) ) {
@@ -7452,10 +7503,8 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             internalSetCaretPos(caretBeforeDrag);
             mStateFlags.setFlag(StateFlag::WaitForDragging);
         } else {
-            if (event->modifiers() == Qt::ShiftModifier) {
-                //BlockBegin and BlockEnd are restored to their original position in the
-                //code from above and SetBlockEnd will take care of proper invalidation
-                internalSetSelEnd(caretPos());
+            if (event->modifiers() & Qt::ControlModifier) {
+            } else if (event->modifiers() == Qt::ShiftModifier) {
             } else {
                 if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
                     if (event->modifiers() == Qt::AltModifier && !mReadOnly)
@@ -7477,11 +7526,6 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     beginInternalChanges();
     QAbstractScrollArea::mouseReleaseEvent(event);
-    int x=event->pos().x();
-
-    if (!mMouseMoved && (x < mGutterWidth )) {
-        processGutterClick(event);
-    }
 
     if (mStateFlags.testFlag(StateFlag::WaitForDragging) &&
             !mStateFlags.testFlag(StateFlag::DblClicked)) {
@@ -8026,13 +8070,11 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
 
 void QSynEdit::shiftAnchorByChange(const DocumentChange &change, int &line, int &segment)
 {
-    // marker semantics, mirroring shiftPosByChange: lines inserted at or
-    // above the anchor push it down; a deletion band containing the anchor
-    // clamps it to the band start
+    // Insertions keep the current top line so newly inserted content is
+    // visible immediately. A deletion band containing the anchor clamps it
+    // to the band start
     switch (change.kind) {
     case DocumentChangeKind::Insert:
-        if (line >= change.line)
-            line += change.count;
         break;
     case DocumentChangeKind::Delete:
         if (line >= change.line + change.count) {

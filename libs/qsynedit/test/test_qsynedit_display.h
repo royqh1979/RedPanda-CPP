@@ -30,6 +30,9 @@ private slots:
     void test_mouse_alt_press_column_mode();
     void test_gutter_click_toggles_fold();
     void test_gutter_fold_button_paints();
+    void test_gutter_click_selects_line();
+    void test_gutter_shift_click_selects_line_range();
+    void test_gutter_shift_click_requires_full_line_selection();
     void test_wrap_selection_paints_on_start_segment();
     void test_dnd_drop_path();
     void test_dnd_undo_restores_content_and_folds();
@@ -65,6 +68,7 @@ private slots:
     void test_wrap_job_early_abort();
     void test_layout_with_zero_wrap_width();
     void test_enter_first_line_keeps_top();
+    void test_enter_first_line_repaints_old_first_line();
     void test_horizontal_scroll_painting();
     void test_wordwrap_paints_all_segments();
     void test_wordwrap_boundary_token_painting();

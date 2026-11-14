@@ -100,13 +100,15 @@ PATH="/d/qt/mingw64/bin:$PATH" cmake -G "MinGW Makefiles" \
   /e/workspaces/contributes/RedPanda-CPP
 ```
 
-- **运行 test-qsynedit 必须经过 gdb**：在本机 Git Bash 里直接运行 `test-qsynedit.exe` 会无任何输出直接退出。做法：
+- GUI 测试统一设置 `QT_QPA_FONTDIR=C:/Windows/Fonts`，避免本机 Qt 安装缺少 `lib/fonts` 时反复报告字体目录 warning；这只影响测试进程的字体查找，不修改 Qt 安装。`test-qsynedit` 尤其需要该设置。
+
+- **test-qsynedit 优先直接运行**，并设置 `QT_QPA_PLATFORM=offscreen`、`QT_QPA_FONTDIR=C:/Windows/Fonts` 和 `QT_FORCE_STDERR_LOGGING=1`。当前构建已验证可直接运行并通过；只有出现无输出退出、崩溃或需要栈信息时才使用 gdb：
 
 ```sh
 cd /r/build-redpanda-qt5-debug/libs/qsynedit
 PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
   QT_QPA_PLATFORM=offscreen QT_QPA_FONTDIR=C:/Windows/Fonts \
-  timeout 90 gdb -batch -ex run --args ./test-qsynedit.exe
+  QT_FORCE_STDERR_LOGGING=1 ./test-qsynedit.exe
 ```
 
   本机调试版 Qt 没有 `lib/fonts`；offscreen 后端否则会反复报告字体目录 warning。

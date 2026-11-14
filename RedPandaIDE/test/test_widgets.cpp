@@ -465,6 +465,36 @@ void TestWidgets::test_code_completion_operator_overloads_are_excluded()
              QSet<QString>{"operator\"\"_test"});
 }
 
+void TestWidgets::test_code_completion_exact_match_first()
+{
+    mMainContent = QStringList{"int s;"};
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+        buffer = mMainContent;
+        return true;
+    });
+    mParser->addProjectFile(mMainFile, false);
+    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+
+    auto snippet = std::make_shared<CodeSnippet>();
+    snippet->prefix = "switch";
+    snippet->code = "switch (value) {}";
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    popup.setCodeSnippets({snippet});
+    popup.setShowEditorCaretFunc([] {});
+    popup.prepareSearch("", {}, "", {"s"}, mMainFile, 0,
+                        CodeCompletionType::Normal, {});
+    popup.search("s", false, "default");
+    QListView *view = popup.findChild<QListView *>();
+    QVERIFY(view);
+    auto *model = qobject_cast<CodeCompletionListModel *>(view->model());
+    QVERIFY(model);
+    QCOMPARE(model->rowCount({}), 2);
+    QCOMPARE(model->statement(model->index(0, 0))->command, "s");
+    QCOMPARE(model->statement(model->index(1, 0))->command, "switch");
+}
+
 void TestWidgets::test_class_browser_inherited_members()
 {
     ClassBrowserModel model;
@@ -682,6 +712,29 @@ void TestWidgets::test_goto_statement_definitions()
     checkGoto(true, "int useDeleted() { return deleted(); }", "deleted", "");
     checkGoto(true, "Forward *forwardValue;", "Forward", "");
     checkGoto(false, "Forward *forwardValue;", "Forward", "class Forward;");
+}
+
+void TestWidgets::test_ctrl_hover_uses_pointing_hand_cursor()
+{
+    Editor editor;
+    editor.setEditorSettings(&pSettings->editor());
+    editor.setColorManager(mColorManager.get());
+    editor.setFilename(mMainFile);
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+    editor.applySettings();
+    editor.setFileType(FileType::CppSource);
+    editor.loadContent(mMainContent);
+    editor.setCppParser(mParser);
+    PStatement classStatement = mParser->findStatement("Foo");
+    QVERIFY(classStatement);
+    QSynedit::CharPos classPos{6, classStatement->declarationRange.start.line};
+    QPoint point = editor.displayCoordToPixels(editor.bufferToDisplayPos(classPos))
+            + QPoint(0, 2);
+    QMouseEvent event(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton,
+                      Qt::ControlModifier);
+    QApplication::sendEvent(editor.viewport(), &event);
+    QCOMPARE(editor.viewport()->cursor().shape(), Qt::PointingHandCursor);
 }
 
 void TestWidgets::test_function_tip_class()

@@ -22,6 +22,10 @@ Red Panda C++ Version 3.6
   - fix: Undoing a multi-line paste or selection replacement with auto-indent preserves existing text and uses valid caret positions.
   - fix: Undo correctly restores text removed by Trim Trailing Spaces.
   - fix: Undoing drag-and-drop editing restores the pre-drag caret, including reversed selections.
+  - fix: Ctrl+hover now shows the pointing-hand cursor on jumpable identifiers.
+  - fix: Inserting a line at the document start keeps the viewport at the first line.
+  - enhancement: Exact completion matches are listed before templates and other candidates.
+  - enhancement: Click line numbers to select whole lines, and Shift+click to select a range.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

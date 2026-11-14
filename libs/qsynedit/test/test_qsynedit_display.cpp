@@ -205,6 +205,7 @@ void TestQSyneditDisplay::test_gutter_click_toggles_fold()
     QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(x, y));
     // lines 3..4 hidden: line 5 now directly follows line 2
     QCOMPARE(mEdit->lineToRow(5), mEdit->lineToRow(2) + 1);
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 2));
     mEdit->unCollpaseAll();
 }
 
@@ -236,6 +237,53 @@ void TestQSyneditDisplay::test_gutter_fold_button_paints()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_gutter_click_selects_line()
+{
+    mEdit->loadContent(makeLines(5));
+    int h = mEdit->textHeight();
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      QPoint(0, h + 2));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 1));
+    QCOMPARE(mEdit->selEnd(), CharPos(0, 2));
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 0));
+    QCOMPARE(mEdit->activeSelectionMode(), SelectionMode::Normal);
+}
+
+void TestQSyneditDisplay::test_gutter_shift_click_selects_line_range()
+{
+    mEdit->loadContent(makeLines(5));
+    int h = mEdit->textHeight();
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      QPoint(0, h + 2));
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::ShiftModifier,
+                      QPoint(0, 3 * h + 2));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 1));
+    QCOMPARE(mEdit->selEnd(), CharPos(0, 4));
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 0));
+
+    clearContent();
+    mEdit->loadContent(makeLines(5));
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      QPoint(0, 3 * h + 2));
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::ShiftModifier,
+                      QPoint(0, h + 2));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 1));
+    QCOMPARE(mEdit->selEnd(), CharPos(0, 4));
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 0));
+}
+
+void TestQSyneditDisplay::test_gutter_shift_click_requires_full_line_selection()
+{
+    mEdit->loadContent(makeLines(5));
+    mEdit->setCaretAndSelection(CharPos{3, 1}, CharPos{1, 1}, CharPos{3, 1});
+    int h = mEdit->textHeight();
+    QTest::mouseClick(mEdit->viewport(), Qt::LeftButton, Qt::ShiftModifier,
+                      QPoint(0, 3 * h + 2));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 3));
+    QCOMPARE(mEdit->selEnd(), CharPos(0, 4));
+    QCOMPARE(mEdit->caretPos(), CharPos(3, 1));
 }
 
 void TestQSyneditDisplay::test_wrap_selection_paints_on_start_segment()
@@ -1121,37 +1169,43 @@ void TestQSyneditDisplay::test_wrap_toggle_preserves_anchor()
 
 void TestQSyneditDisplay::test_edit_shifts_anchor_marker_style()
 {
-    // an editing view without an explicit pending top keeps following its
-    // content marker-style
     mEdit->loadContent(makeLines(200));
     int h = mEdit->textHeight();
     mEdit->setTopPos(30 * h);
     QCOMPARE(mEdit->mTopLine, 30);
 
-    // insert above the anchor: the anchor follows its content
+    // insertion above the anchor keeps the current top line, making the
+    // inserted content immediately visible
     mEdit->beginEditing();
     mEdit->document()->insertLines(5, 3, false);
     mEdit->endEditing();
-    QCOMPARE(mEdit->mTopLine, 33);
+    QCOMPARE(mEdit->mTopLine, 30);
     QCOMPARE(mEdit->mTopSegment, 0);
-    QCOMPARE(mEdit->topPos(), 33 * h);
+    QCOMPARE(mEdit->topPos(), 30 * h);
     // the scrollbar tracks the derived pixel offset
-    QCOMPARE(mEdit->verticalScrollBar()->value(), 33 * h);
+    QCOMPARE(mEdit->verticalScrollBar()->value(), 30 * h);
 
     // delete above the anchor: the anchor moves back up
     mEdit->beginEditing();
     mEdit->document()->deleteLines(5, 3, false);
     mEdit->endEditing();
-    QCOMPARE(mEdit->mTopLine, 30);
-    QCOMPARE(mEdit->topPos(), 30 * h);
+    QCOMPARE(mEdit->mTopLine, 27);
+    QCOMPARE(mEdit->topPos(), 27 * h);
 
-    // delete a band containing the anchor: clamp to the band start
+    // insertion at the anchor keeps the current top line
+    mEdit->beginEditing();
+    mEdit->document()->insertLines(30, 1, false);
+    mEdit->endEditing();
+    QCOMPARE(mEdit->mTopLine, 27);
+    QCOMPARE(mEdit->topPos(), 27 * h);
+
+    // delete a band after the anchor: keep the anchor
     mEdit->beginEditing();
     mEdit->document()->deleteLines(28, 5, false);
     mEdit->endEditing();
-    QCOMPARE(mEdit->mTopLine, 28);
+    QCOMPARE(mEdit->mTopLine, 27);
     QCOMPARE(mEdit->mTopSegment, 0);
-    QCOMPARE(mEdit->topPos(), 28 * h);
+    QCOMPARE(mEdit->topPos(), 27 * h);
 
     // a user scroll drives the same derivation through onVScrolled
     mEdit->verticalScrollBar()->setValue(2 * h);
@@ -1423,8 +1477,8 @@ void TestQSyneditDisplay::test_batch_top_intent_preserves_command_order()
     // with it without a command-order checkpoint.
     mEdit->document()->insertLines(7, 3, false);
     mEdit->endEditing();
-    QCOMPARE(mEdit->mTopLine, 53);
-    QCOMPARE(mEdit->topPos(), 53 * mEdit->textHeight());
+    QCOMPARE(mEdit->mTopLine, 50);
+    QCOMPARE(mEdit->topPos(), 50 * mEdit->textHeight());
 
     mEdit->beginEditing();
     mEdit->document()->insertLines(5, 2, false);
@@ -1438,8 +1492,8 @@ void TestQSyneditDisplay::test_batch_top_intent_preserves_command_order()
     mEdit->setTopLineSegment(45, 0);
     mEdit->document()->insertLines(7, 3, false);
     mEdit->document()->endUpdate();
-    QCOMPARE(mEdit->mTopLine, 48);
-    QCOMPARE(mEdit->topPos(), 48 * mEdit->textHeight());
+    QCOMPARE(mEdit->mTopLine, 45);
+    QCOMPARE(mEdit->topPos(), 45 * mEdit->textHeight());
 }
 
 void TestQSyneditDisplay::test_shared_document_keeps_top_anchor()
@@ -2032,6 +2086,16 @@ void TestQSyneditDisplay::test_enter_first_line_keeps_top()
     QCOMPARE(mEdit->mTopPos, 0);
     opts.setFlag(QSynedit::EditorOption::ScrollPastEof, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_enter_first_line_repaints_old_first_line()
+{
+    mEdit->loadContent(QStringList{"first", "second"});
+    mEdit->setCaretPos(CharPos{0, 0});
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->content(), QStringList({"", "first", "second"}));
+    QCOMPARE(mEdit->mTopLine, 0);
+    QCOMPARE(mEdit->mTopPos, 0);
 }
 
 void TestQSyneditDisplay::test_horizontal_scroll_painting()

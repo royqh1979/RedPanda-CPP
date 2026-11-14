@@ -1325,7 +1325,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 {
     // if ctrl+clicked
     if (mCtrlClicking
-        && checkForCtrlClick(event, cursor() )) {
+        && checkForCtrlClick(event, viewport()->cursor() )) {
         CharPos p;
         if (mParser && pointToCharLine(event->pos(),p)) {
             cancelHoverLink();
@@ -1350,7 +1350,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 void Editor::mousePressEvent(QMouseEvent *event)
 {
     // if ctrl+clicked
-    mCtrlClicking = checkForCtrlClick(event, cursor());
+    mCtrlClicking = checkForCtrlClick(event, viewport()->cursor());
     QSynedit::QSynEdit::mousePressEvent(event);
 }
 
@@ -4320,7 +4320,7 @@ void Editor::onScrollBarValueChanged()
 
 void Editor::updateHoverLink(int line)
 {
-    setCursor(Qt::PointingHandCursor);
+    viewport()->setCursor(Qt::PointingHandCursor);
     if (mHoverModifiedLine!=line) invalidateLine(mHoverModifiedLine);
     mHoverModifiedLine=line;
     invalidateLine(mHoverModifiedLine);

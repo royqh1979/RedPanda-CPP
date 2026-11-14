@@ -620,6 +620,7 @@ Document 的 `changing/changed` 为所有挂接视图配对了 internal-change �
 
 顶部锚点的平移规则按视图角色区分：
 
+- 插入行时保持当前顶部锚点，不主动滚动视图，让新增内容自然进入视口；是否需要跟随光标滚动统一由 `ensureCaretVisible` 决定，不与锚点平移叠加。
 - 发起编辑的视图若没有 pending top，保留现有 marker 平移语义；caret/选区靠
   `mEditingCount>0` 获得发起者豁免。pending top 是显式视图指令，以
   `Document::createChangeCheckpoint()` 记录其在 changeSet 中的位置：指令之前的编辑
@@ -863,3 +864,13 @@ API 层而非格式化调用点，此后在列删除/列插入/undo-redo 恢复�
 插入记逐行 `Insert` item），一次输入是一个 undo 块。
 已知限制：连续输入的多个字符**不合并**（Normal 模式的单词级 GroupUndo 合并不覆盖
 列输入），每个字符是独立的 undo 步骤；如需合并另行设计。
+
+### 8.7 行号选择与折叠点击
+
+行号点击在 `mousePressEvent` 中处理，不能延迟到 release：此时原选区尚未被后续鼠标逻辑修改。
+普通左键把选区设为点击的完整行，选区从 `{0, line}` 到下一行 `{0, line+1}`，末行用行尾。
+仅当原选区恰好覆盖一个完整行时，Shift+点击另一行号按两边起止位置扩展为完整区域，
+不把“结束行”再加一次，避免反向选择多包一行。Shift 使用精确匹配，Shift+Ctrl 不进入该路径。
+Caret 保持点击前位置，只有选区发生变化。用于选择的左键不发送 `gutterClicked`，因此 Editor
+不会在同一次点击中切换断点；折叠按钮仍走独立分支，并把 caret 放到折叠块起始行，避免折叠后
+落在隐藏区域。

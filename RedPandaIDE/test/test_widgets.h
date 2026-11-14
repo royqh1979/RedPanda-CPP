@@ -50,10 +50,12 @@ private slots:
     void test_code_completion_normal_includes_macros();
     void test_code_completion_keywords_only();
     void test_code_completion_operator_overloads_are_excluded();
+    void test_code_completion_exact_match_first();
     void test_class_browser_inherited_members();
     void test_goto_class_declaration_and_definition();
     void test_goto_constructor_declaration_and_definition();
     void test_goto_statement_definitions();
+    void test_ctrl_hover_uses_pointing_hand_cursor();
     void test_function_tip_class();
     void test_rename_class_and_constructor();
     void test_rename_from_constructor();

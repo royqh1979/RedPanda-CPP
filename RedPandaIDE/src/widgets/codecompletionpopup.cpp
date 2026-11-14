@@ -564,6 +564,10 @@ void CodeCompletionPopup::filterList(const QString &member)
                   mCompletionStatementList.end(),
                   defaultComparator);
     }
+    std::stable_partition(mCompletionStatementList.begin(), mCompletionStatementList.end(),
+                          [&member](const PStatement &statement) {
+        return statement->command == member;
+    });
     //    }
 }
 
