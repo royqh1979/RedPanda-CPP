@@ -342,6 +342,7 @@ void TestWidgets::test_code_completion_standard_library_string()
                                           {}, {}, {}, 1000000, "::", {});
     QVERIFY(names.contains("basic_string"));
     QVERIFY(names.contains("string"));
+    QVERIFY(!names.contains(""));
 }
 
 void TestWidgets::test_goto_standard_library_string()
@@ -449,13 +450,16 @@ void TestWidgets::test_code_completion_keywords_only()
              QSet<QString>{"custom_keyword"});
 }
 
-void TestWidgets::test_code_completion_literal_operators()
+void TestWidgets::test_code_completion_operator_overloads_are_excluded()
 {
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
     QVERIFY(mParser->findStatement("operator\"\"_test"));
     int line = mMainContent.indexOf("int operator\"\"_test(const char*, unsigned long);");
     QVERIFY(line >= 0);
+    QCOMPARE(completionNames(popup, "", mMainFile, CodeCompletionType::Normal,
+                             "", "operator\"\"_test", {}, line),
+             QSet<QString>{});
     QCOMPARE(completionNames(popup, "", mMainFile, CodeCompletionType::LiteralOperators,
                              "", "operator\"\"_test", {}, line),
              QSet<QString>{"operator\"\"_test"});

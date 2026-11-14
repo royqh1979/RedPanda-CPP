@@ -372,8 +372,12 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
             continue;
         if (namespacePartCount > 0)
             firstPartFound = true;
-        if (namespacePartCount == parts.count())
-            return namespaces.first();
+        if (namespacePartCount == parts.count()) {
+            for (const PStatement &nameSpace : namespaces) {
+                if (nameSpace->fullName == namespaceName)
+                    return nameSpace;
+            }
+        }
         for (const PStatement &nameSpace : namespaces) {
             PStatement current = nameSpace;
             for (int i = namespacePartCount; current && i < parts.count(); ++i)

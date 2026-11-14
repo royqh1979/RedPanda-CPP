@@ -562,9 +562,7 @@ PStatementList CppParser::doFindNamespace(const QString &name, bool includeInlin
     auto result = std::make_shared<StatementList>();
     const QList<PStatement> statements = mStatementList.namespaceStatements(name);
     for (const PStatement &statement : statements) {
-        if (statement->fullName == name
-                || (includeInline
-                    && statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline))) {
+        if (statement->fullName == name || includeInline) {
             result->append(statement);
         }
     }

@@ -658,10 +658,10 @@ StatementKind getKindOfStatement(const PStatement& statement)
     if (!statement)
         return StatementKind::Unknown;
     if (statement->kind == StatementKind::Variable) {
-        if (!statement->parentScope.lock()) {
-            return StatementKind::GlobalVariable;
-        }  else if (statement->scope == StatementScope::Local) {
+        if (statement->scope == StatementScope::Local) {
             return StatementKind::LocalVariable;
+        } else if (statement->scope == StatementScope::Global) {
+            return StatementKind::GlobalVariable;
         } else {
             return StatementKind::Variable;
         }

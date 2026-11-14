@@ -158,7 +158,7 @@ CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxPars
 
 merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
 
-class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；declarationBoundaryAncestor 为空时按声明实际文件是否位于 include 闭包判断。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
+class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；declarationBoundaryAncestor 为空时按声明实际文件是否位于 include 闭包判断。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。查询目标本身就是 namespace 时，终止 Statement 的 fullName 必须与该前缀精确相等；索引中的 inline/匿名关联节点只能用于继续查成员，不能替代终止 namespace。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
 
 实施批次按消费边界划分：
 
@@ -311,7 +311,9 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 ## IDE 查询与重命名约定
 
-`getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。
+`getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。namespace 补全使用 includeInline 时返回索引中的全部关联节点，包括没有 Inline 标记的重开 namespace；不能只保留带标记的节点，否则会丢失其实际成员。
+
+普通补全不展示 OverloadedOperator 或 LiteralOperator，也不展示 command 为空的匿名 namespace 等无效候选项。现有 LiteralOperators 专用补全在字符串、字符和数字后缀输入语境中单独提供候选，不经普通补全的过滤器，不能因专用能力而让重载运算符泄漏到普通列表。变量及图标类别按 StatementScope 的 global/local/class-local 判定，不能用是否存在 parentScope 区分全局变量与类成员，否则 namespace 变量会被误标为 private。
 
 `gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
 

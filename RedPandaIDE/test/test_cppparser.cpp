@@ -1179,18 +1179,27 @@ void TestCppParser::test_find_statement_of_inline_namespace()
             "  }",
             "  basic_string value;",
             "}",
-            "std::string text;"
+            "std::string text;",
+            "namespace std { namespace literals {",
+            "  inline namespace string_view_literals { void f(); }",
+            "} }"
         };
         return true;
     });
     CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
 
+    PStatement stdNamespace = mParser->findStatementOf("text.cpp", QStringList{"std"}, 0);
+    QVERIFY(stdNamespace);
+    QCOMPARE(stdNamespace->fullName, "std");
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "basic_string"}, 0),
              basicString);
     QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"basic_string"}, 5),
              basicString);
+    PStatement value = mParser->findStatementOf("text.cpp", QStringList{"value"}, 5);
+    QVERIFY(value);
+    QCOMPARE(getKindOfStatement(value), StatementKind::GlobalVariable);
     PStatement stringAlias = mParser->findStatement("std::string");
     QVERIFY(stringAlias);
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "string"}, 0),

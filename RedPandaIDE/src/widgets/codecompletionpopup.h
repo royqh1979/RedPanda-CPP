@@ -150,7 +150,8 @@ private:
                      int line, bool onlyTypes=false);
     void addFunctionWithoutDefinitionChildren(const PStatement& scopeStatement, const QString& fileName,
                      int line);
-    void addStatement(const PStatement& statement, const QString& fileName, int line);
+    void addStatement(const PStatement& statement, const QString& fileName, int line,
+                      bool allowLiteralOperators = false);
     void filterList(const QString& member);
     void getKeywordCompletionFor(const QSet<QString>& customKeywords);
     void getMacroCompletionList(const QString &fileName, int line);

@@ -271,19 +271,18 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
     }
 }
 
-void CodeCompletionPopup::addStatement(const PStatement& statement, const QString &fileName, int line)
+void CodeCompletionPopup::addStatement(const PStatement& statement, const QString &fileName,
+                                       int line, bool allowLiteralOperators)
 {
-    if (mAddedStatements.contains(statement->command))
+    if (statement->command.isEmpty() || mAddedStatements.contains(statement->command))
         return;
     if (statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor
             || statement->kind == StatementKind::Label
             || statement->kind == StatementKind::Block
             || statement->kind == StatementKind::Lambda
-            || (
-                statement->properties.testFlag(StatementProperty::OperatorOverloading)
-                && statement->kind != StatementKind::LiteralOperator
-                )
+            || (statement->properties.testFlag(StatementProperty::OperatorOverloading)
+                && !allowLiteralOperators)
             || statement->properties.testFlag(StatementProperty::DummyStatement)
             )
         return;
@@ -1123,7 +1122,7 @@ void CodeCompletionPopup::getCompletionListForLiteralOperators(const QString &fi
         foreach(const PStatement& statement, statements) {
             if (isIncluded(statement->fileName)
                     || isIncluded(statement->definitionFileName)) {
-                addStatement(statement,fileName,line);
+                addStatement(statement,fileName,line,true);
             }
         }
     }
