@@ -302,7 +302,10 @@ void CppParser::invalidateFile(const QString &fileName)
     }
     QSet<QString> files = calculateFilesToBeReparsed(fileName);
     internalInvalidateFiles(files);
-    mParsing = false;
+    {
+        QMutexLocker locker(&mMutex);
+        mParsing = false;
+    }
 }
 
 QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
@@ -359,20 +362,22 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
     if (!mEnabled)
         return false;
     {
-        QMutexLocker locker(&mMutex);
-        if (mParsing) {
-            mLastParseFileCommand = std::make_unique<ParseFileCommand>();
-            mLastParseFileCommand->fileName = fileName;
-            mLastParseFileCommand->inProject = inProject;
-            mLastParseFileCommand->contextFilename = contextFilename;
-            mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
-            mLastParseFileCommand->updateView = updateView;
-            return false;
+        {
+            QMutexLocker locker(&mMutex);
+            if (mParsing) {
+                mLastParseFileCommand = std::make_unique<ParseFileCommand>();
+                mLastParseFileCommand->fileName = fileName;
+                mLastParseFileCommand->inProject = inProject;
+                mLastParseFileCommand->contextFilename = contextFilename;
+                mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
+                mLastParseFileCommand->updateView = updateView;
+                return false;
+            }
+            if (mLockCount > 0)
+                return false;
+            mParsing = true;
+            updateSerialId();
         }
-        if (mLockCount > 0)
-            return false;
-        mParsing = true;
-        updateSerialId();
         if (updateView)
             emit onBusy();
         emit parseStarted();
@@ -416,17 +421,22 @@ void CppParser::parseFileList(bool updateView)
     if (!mEnabled)
         return;
     {
-        QMutexLocker locker(&mMutex);
-        if (mParsing || mLockCount > 0)
-            return;
-        updateSerialId();
-        mParsing = true;
+        {
+            QMutexLocker locker(&mMutex);
+            if (mParsing || mLockCount > 0)
+                return;
+            updateSerialId();
+            mParsing = true;
+        }
         if (updateView)
             emit onBusy();
         emit parseStarted();
     }
     auto action = finally([&, this] {
-        mParsing = false;
+        {
+            QMutexLocker locker(&mMutex);
+            mParsing = false;
+        }
         emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
     });
     mFilesScannedCount = 0;
@@ -905,6 +915,7 @@ void CppParser::parseHardDefines()
 
 bool CppParser::parsing() const
 {
+    QMutexLocker locker(&mMutex);
     return mParsing;
 }
 
@@ -926,6 +937,7 @@ void CppParser::resetParser()
             app->processEvents();
     }
     auto action = finally([this] {
+        QMutexLocker locker(&mMutex);
         mParsing = false;
         mStopForReset = false;
     });
