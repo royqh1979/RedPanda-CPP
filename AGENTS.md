@@ -22,7 +22,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
     - `utils/` — 文件、字体、操作系统、终端、转义等辅助工具。
     - `addon/` — Lua 插件运行时集成（仅在启用 `LUA_ADDON` 时构建）。
     - `vcs/` — Git 集成（仅在启用 `VCS` 时构建）。
-  - `test/` — 单元测试（基于 Qt Test）：`test-editor` 和 `test-cppparser` 两个测试程序。
+  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-cppparser`，以及重写期间独立运行的 `test-cpptokenizer`。
   - `resources/`、`images/`、`*.qrc` — 嵌入资源（图标、主题、配色方案、字体、代码片段、项目模板）。
   - `translations/` — `.ts` 翻译文件。
 - `libs/qsynedit/` — 代码编辑器组件（QSynEdit 的深度改造分支）：文档模型、绘制器、行号栏、代码折叠、搜索器、导出器，以及语法高亮器（cpp、asm/gas/nasm、lua、makefile、glsl）。自带 Qt Test 测试套件，位于 `libs/qsynedit/test/`。
@@ -36,7 +36,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cpptokenizer-refactor.md`（Tokenizer 纯切分化与 Parser 声明级递归下降重构设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
 
 ## 构建
 
@@ -64,13 +64,13 @@ xmake
 - `MAKE_INTERFACE` — `unix` 与 `mingw32`（IDE 调用哪个 make）。
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
-- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。
+- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 
 ## 测试
 
-测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。
+测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
 
 ```sh
 # CMake：构建全部测试目标，然后运行（GUI 测试使用 offscreen）
@@ -116,7 +116,18 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 
 - **测试中 connect 的 lambda 不得既捕获局部变量、又以长命对象（如 `mEdit.get()`）作 context**：测试函数返回后连接仍然存活，死 lambda 会在之后每次信号触发时往已释放的栈地址写数据，造成堆/栈破坏——崩溃点往往远在肇事代码之后、且看似随机（真实案例见提交 `63e90e30`）。正确做法：以一个随测试函数销毁的局部 `QObject` 作 context（连接随之自动断开），或在测试结束前显式 `disconnect`。
 
-- **按测试类筛选**：test-qsynedit 和 test-editor 支持 `--suite=类名`（如 `--suite=TestDocument`、`--suite=TestEditorDisplay`）只跑指定测试类，不带参数则跑全部；`test-cppparser` 尚未支持此参数，修改它时应照此补上。
+- **按测试类筛选**：test-qsynedit、test-editor 和 test-cppparser 支持 `--suite=类名`（如 `--suite=TestDocument`、`--suite=TestCppParser`）只跑指定测试类，不带参数则跑全部。
+- **Windows 直接运行测试时取得 Qt 日志**：若 `qWarning()`/`qDebug()` 只发往调试器，给测试进程设置 `QT_FORCE_STDERR_LOGGING=1` 即可输出到 Git Bash 终端。性能测量必须直接运行 Release 可执行文件，不能在 gdb 下计时；gdb 只用于崩溃、断言和栈信息。例如：
+
+```sh
+cd /r/build-redpanda-qt5-static-release-parser-stdlib-gcc81/RedPandaIDE
+PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
+  QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 \
+  ./test-cppparser.exe --suite=TestCppParser test_standard_library_public_api_complete
+```
+
+  需要 `DECLARATION_PROFILE`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。
+
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
 
 - 剪贴板相关测试（列模式 paste/cut/copy-paste 等）偶发失败，多为外部程序（QQ、百度网盘等）抢占剪贴板所致，与代码无关；先重跑或排查占用程序，不要据此改代码。

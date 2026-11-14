@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
 #include <memory>
 #include <functional>
 #include "pptoken.h"
+#include "cpptypes.h"
+#include "cppscopes.h"
 
 using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
 
@@ -154,7 +156,9 @@ enum class EvalStatementKind {
     Type,
     Variable,
     Literal,
-    Function
+    Function,
+    Label,
+    Preprocessor
 };
 
 struct StatementMatchPosition{
@@ -187,31 +191,72 @@ struct Statement;
 using PStatement = std::shared_ptr<Statement>;
 using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QMultiMap<QString, PStatement>;
+using StatementMap = QMultiMap<QString, std::weak_ptr<Statement>>;
 struct Statement {
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
-    QString type; // type "int"
+    TypeInfo typeInfo;
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
+    QVector<ParameterInfo> parameters;
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     QString templateSpecializationParams;
+    TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    QVector<TemplateParameterInfo> templateParameters;
+    DeclSpecifierProperties declSpecifierProperties;
     StatementKind kind; // kind of statement class/variable/function/etc
+    ClassKey classKey = ClassKey::Class;
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
-    int line; // declaration
-    int definitionLine; // definition
+    SourceRange declarationRange;
+    SourceRange definitionRange;
     QString fileName; // declaration
     QString declarationBoundaryAncestor;
     QString definitionFileName; // definition
     QString definitionBoundaryAncestor;
     StatementMap children;
-    QList<PStatement> publicProperties;
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
+    QStringList baseClasses;
     QString noNameArgs;// Args without name
     QSet<QString> lambdaCaptures;
     StatementProperties properties;
+
+    QString type() const {
+        QString result;
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Static))
+            result = "static ";
+        else if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern))
+            result = "extern ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Register))
+            result += "register ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::ThreadLocal))
+            result += "thread_local ";
+        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Mutable))
+            result += "mutable ";
+        TypeInfo compatibleType = typeInfo;
+        bool hasArray = false;
+        bool hasPointer = false;
+        for (const TypeDerivation &derivation : compatibleType.derivations) {
+            hasArray |= derivation.kind == TypeDerivationKind::Array;
+            hasPointer |= derivation.kind == TypeDerivationKind::Pointer;
+        }
+        for (int i = compatibleType.derivations.count() - 1; i >= 0; --i) {
+            if (properties.testFlag(StatementProperty::FunctionPointer)
+                    && compatibleType.derivations[i].kind == TypeDerivationKind::Function) {
+                compatibleType.derivations.remove(0, i + 1);
+                break;
+            }
+            if (compatibleType.derivations[i].kind == TypeDerivationKind::Array
+                    || (hasArray && compatibleType.derivations[i].kind == TypeDerivationKind::Pointer))
+                compatibleType.derivations.remove(i);
+        }
+        QString typeText = compatibleType.toString();
+        if (hasArray && hasPointer)
+            typeText += " (*)";
+        return result + typeText;
+    }
+    void setType(const TypeInfo &type) { typeInfo = type; }
 
     // fields for code completion
     int usageCount; //Usage Count
@@ -292,30 +337,6 @@ struct UsingNamespace {
 };
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;
 
-struct CppScope {
-    int startLine;
-    PStatement statement;
-};
-
-using PCppScope = std::shared_ptr<CppScope>;
-class CppScopes {
-public:
-    PStatement findScopeAtLine(int line) const;
-    void addScope(int line, PStatement scopeStatement);
-    PStatement lastScope() const {
-        if (mScopes.isEmpty())
-            return PStatement();
-        return mScopes.back()->statement;
-    }
-    void removeLastScope() {
-        if (!mScopes.isEmpty())
-            mScopes.pop_back();
-    }
-    void clear() { mScopes.clear(); }
-private:
-    QVector<PCppScope> mScopes;
-};
-
 struct ClassInheritanceInfo {
     std::weak_ptr<Statement> derivedClass;
     QString file;
@@ -339,11 +360,26 @@ public:
     void addInclude(const QString &fileName) { mIncludes.insert(fileName); }
     void addDirectInclude(const QString &fileName) { mDirectIncludes.append(fileName); }
     bool including(const QString &fileName) const { return mIncludes.contains(fileName); }
+    PStatement findScopeAt(const SourcePosition &position) const { return mScopes.findScopeAt(position); }
     PStatement findScopeAtLine(int line) const { return mScopes.findScopeAtLine(line); }
     void addStatement(const PStatement &statement) { mStatements.insert(statement->fullName,statement); }
-    void removeStatement(const PStatement &statement) { mStatements.remove(statement->fullName,statement); }
+    void removeStatement(const PStatement &statement) {
+        for (auto it = mStatements.find(statement->fullName);
+                it != mStatements.end() && it.key() == statement->fullName;) {
+            PStatement indexed = it.value().lock();
+            if (!indexed || indexed == statement)
+                it = mStatements.erase(it);
+            else
+                ++it;
+        }
+    }
     void clearStatements() { mStatements.clear(); }
-    void addScope(int line, const PStatement &scope) { mScopes.addScope(line,scope); }
+    void addScope(const SourceRange &range, const PStatement &scope, int parentIndex = -1) {
+        mScopes.addScope(range, scope, parentIndex);
+    }
+    void addScope(const SourceRange &range, const PStatement &scope, const PStatement &parentScope) {
+        mScopes.addScope(range, scope, parentScope);
+    }
     void removeLastScope() { mScopes.removeLastScope(); }
     PStatement lastScope() const { return mScopes.lastScope(); }
     void addUsing(const QString &usingSymbol) { mUsings.insert(usingSymbol); }

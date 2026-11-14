@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,18 @@
 #include <QDebug>
 #include <QApplication>
 #include <QPainter>
+
+namespace {
+int pointerDepth(const TypeInfo &type)
+{
+    int result = 0;
+    for (const TypeDerivation &derivation : type.derivations) {
+        if (derivation.kind == TypeDerivationKind::Pointer)
+            ++result;
+    }
+    return result;
+}
+}
 
 CodeCompletionPopup::CodeCompletionPopup(ColorManager *colorManager,IconsManager *iconsManager,QWidget *parent) :
     QWidget(parent),
@@ -95,6 +107,8 @@ void CodeCompletionPopup::prepareSearch(
 
     mMemberPhrase = memberExpression.join("");
     mMemberOperator = memberOperator;
+    mIncludedFiles = mParser->getIncludedFiles(filename);
+    mIncludedFiles.insert(filename);
     switch(type) {
     case CodeCompletionType::ComplexKeyword:
         getCompletionListForComplexKeyword(preWord);
@@ -103,15 +117,12 @@ void CodeCompletionPopup::prepareSearch(
         getCompletionListForLabels(filename,line);
         break;
     case CodeCompletionType::Types:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForTypes(preWord,filename,line);
         break;
     case CodeCompletionType::FunctionWithoutDefinition:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionForFunctionWithoutDefinition(preWord, ownerExpression,memberOperator,memberExpression, filename,line);
         break;
     case CodeCompletionType::Namespaces:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForNamespaces(preWord,filename,line);
         break;
     case CodeCompletionType::KeywordsOnly:
@@ -119,15 +130,12 @@ void CodeCompletionPopup::prepareSearch(
         getKeywordCompletionFor(customKeywords);
         break;
     case CodeCompletionType::Macros:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getMacroCompletionList(filename, line);
         break;
     case CodeCompletionType::LiteralOperators:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForLiteralOperators(filename,line);
         break;
     default:
-        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
     }
     setCursor(oldCursor);
@@ -216,53 +224,19 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
         return;
-    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-    if (children.isEmpty())
-        return;
-
-    if (onlyTypes) {
-        if (!scopeStatement) { //Global scope
-            for (const PStatement& childStatement: children) {
-                if (!isTypeKind(childStatement->kind))
-                    continue;
-                if (childStatement->fileName.isEmpty()) {
-                    // hard defines
-                    addStatement(childStatement,fileName,-1);
-                } else if (
-                           isIncluded(childStatement->fileName)
-                           || isIncluded(childStatement->definitionFileName)
-                           ) {
-                    //we must check if the statement is included by the file
-                    addStatement(childStatement,fileName,line);
-                }
-            }
-        } else {
-            for (const PStatement& childStatement: children) {
-                if (!isTypeKind(childStatement->kind))
-                    continue;
-                addStatement(childStatement,fileName,line);
+    const StatementList children = mParser->membersOfStatement(scopeStatement);
+    for (const PStatement &childStatement : children) {
+        if (onlyTypes && !isTypeKind(childStatement->kind))
+            continue;
+        if (!scopeStatement) {
+            if (childStatement->fileName.isEmpty()) {
+                addStatement(childStatement, fileName, -1);
+            } else if (!isIncluded(childStatement->fileName)
+                       && !isIncluded(childStatement->definitionFileName)) {
+                continue;
             }
         }
-    } else {
-        if (!scopeStatement) { //Global scope
-            for (const PStatement& childStatement: children) {
-                if (childStatement->fileName.isEmpty()) {
-                    // hard defines
-                    addStatement(childStatement,fileName,-1);
-                } else if (
-                           isIncluded(childStatement->fileName)
-                           || isIncluded(childStatement->definitionFileName)
-                           ) {
-                    //we must check if the statement is included by the file
-                    addStatement(childStatement,fileName,line);
-                }
-            }
-        } else {
-            for (const PStatement& childStatement: children) {
-                addStatement(childStatement,fileName,line);
-            }
-        }
-
+        addStatement(childStatement, fileName, line);
     }
 }
 
@@ -271,11 +245,8 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
         return;
-    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
-    if (children.isEmpty())
-        return;
-
-    for (const PStatement& childStatement: children) {
+    const StatementList children = mParser->membersOfStatement(scopeStatement);
+    for (const PStatement &childStatement : children) {
         if (childStatement->inSystemHeader())
             continue;
         if (childStatement->fileName.isEmpty()) {
@@ -300,24 +271,23 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
     }
 }
 
-void CodeCompletionPopup::addStatement(const PStatement& statement, const QString &fileName, int line)
+void CodeCompletionPopup::addStatement(const PStatement& statement, const QString &fileName,
+                                       int line, bool allowLiteralOperators)
 {
-    if (mAddedStatements.contains(statement->command))
+    if (statement->command.isEmpty() || mAddedStatements.contains(statement->command))
         return;
     if (statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor
             || statement->kind == StatementKind::Label
             || statement->kind == StatementKind::Block
             || statement->kind == StatementKind::Lambda
-            || (
-                statement->properties.testFlag(StatementProperty::OperatorOverloading)
-                && statement->kind != StatementKind::LiteralOperator
-                )
+            || (statement->properties.testFlag(StatementProperty::OperatorOverloading)
+                && !allowLiteralOperators)
             || statement->properties.testFlag(StatementProperty::DummyStatement)
             )
         return;
     if ((line!=-1)
-            && (line < statement->line)
+            && (line < statement->declarationRange.start.line)
             && (fileName == statement->fileName))
         return;
     mAddedStatements.insert(statement->command);
@@ -610,7 +580,10 @@ void CodeCompletionPopup::getKeywordCompletionFor(const QSet<QString> &customKey
 void CodeCompletionPopup::getMacroCompletionList(const QString &fileName, int line)
 {
     const StatementMap& statementMap = mParser->statementList().childrenStatements(nullptr);
-    foreach(const PStatement& statement, statementMap.values()) {
+    foreach(const std::weak_ptr<Statement>& weakStatement, statementMap.values()) {
+        PStatement statement = weakStatement.lock();
+        if (!statement)
+            continue;
         if (statement->kind==StatementKind::Preprocessor)
             addStatement(statement,fileName,line);
     }
@@ -701,7 +674,7 @@ void CodeCompletionPopup::getCompletionFor(
                 //add members of current scope that not added before
                 if (scopeStatement->kind == StatementKind::Namespace) {
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(scopeStatement->fullName);
+                            mParser->findNamespace(scopeStatement->fullName, true);
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
                         addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
@@ -714,7 +687,7 @@ void CodeCompletionPopup::getCompletionFor(
                 // add members of all usings (in current scope ) and not added before
                 foreach (const QString& namespaceName,scopeStatement->usingList) {
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(namespaceName);
+                            mParser->findNamespace(namespaceName, true);
                     if (!namespaceStatementsList)
                         continue;
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
@@ -727,9 +700,9 @@ void CodeCompletionPopup::getCompletionFor(
                             continue;
                         PStatement statement = mParser->findStatementOf(
                             scopeStatement->fileName,
-                                phrase,scopeStatement->line);
+                                phrase,scopeStatement->declarationRange.start.line);
                         if (statement)
-                            addStatement(statement,scopeStatement->fileName, scopeStatement->line);
+                            addStatement(statement,scopeStatement->fileName, scopeStatement->declarationRange.start.line);
                     }
                     if (scopeStatement->lambdaCaptures.contains("&")
                             || scopeStatement->lambdaCaptures.contains("=")) {
@@ -779,18 +752,18 @@ void CodeCompletionPopup::getCompletionFor(
 
             PStatement scope = mCurrentScope;//the scope the expression in
             PStatement parentTypeStatement;
-            PEvalStatement ownerStatement = mParser->evalExpression(fileName,
+            EvalResult ownerStatement = mParser->evalExpression(fileName,
                                         ownerExpression,
                                         scope);
 
-            if(!ownerStatement || !ownerStatement->effectiveTypeStatement) {
+            if(!ownerStatement.isValid() || !ownerStatement.type.declaration.lock()) {
                 return;
             }
             if (memberOperator == "::") {
-                if (ownerStatement->kind==EvalStatementKind::Namespace) {
+                if (ownerStatement.kind==EvalStatementKind::Namespace) {
                     //there might be many statements corresponding to one namespace;
                     PStatementList namespaceStatementsList =
-                            mParser->findNamespace(ownerStatement->baseType);
+                            mParser->findNamespace(ownerStatement.type.qualifiedName, true);
                     if (namespaceStatementsList) {
                         foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                             addChildren(namespaceStatement, fileName, line);
@@ -808,23 +781,23 @@ void CodeCompletionPopup::getCompletionFor(
             if (
                     (memberOperator != "::")
                     && (
-                        ownerStatement->kind == EvalStatementKind::Variable)
+                        ownerStatement.kind == EvalStatementKind::Variable)
                     ) {
                 // Get type statement  of current (scope) statement
-                PStatement classTypeStatement = ownerStatement->effectiveTypeStatement;
+                PStatement classTypeStatement = ownerStatement.type.declaration.lock();
 
                 if (!classTypeStatement)
                     return;
                 // It's a iterator
-                if (ownerStatement
-                        && ownerStatement->typeStatement
-                        && STLIterators.contains(ownerStatement->typeStatement->command)
+                if (ownerStatement.isValid()
+                        && ownerStatement.type.declaration.lock()
+                        && STLIterators.contains(ownerStatement.type.declaration.lock()->command)
                         && (memberOperator == "->"
                             || memberOperator == "->*")
                 ) {
-                    PStatement parentScope = ownerStatement->typeStatement->parentScope.lock();
+                    PStatement parentScope = ownerStatement.type.declaration.lock()->parentScope.lock();
                     if (STLContainers.contains(parentScope->fullName)) {
-                        QString typeName=mParser->findFirstTemplateParamOf(fileName,ownerStatement->templateParams, parentScope);
+                        QString typeName=mParser->findFirstTemplateParamOf(fileName,ownerStatement.type.toString(), parentScope);
 //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         classTypeStatement=mParser->findTypeDefinitionOf(fileName, typeName,parentScope);
                         if (!classTypeStatement)
@@ -838,11 +811,11 @@ void CodeCompletionPopup::getCompletionFor(
                 } else if (STLPointers.contains(classTypeStatement->fullName)
                    && (memberOperator == "->"
                        || memberOperator == "->*")
-                        && ownerStatement->baseStatement) {
+                        && ownerStatement.baseStatement) {
                                    //is a smart pointer
                     QString typeName= mParser->findFirstTemplateParamOf(
                                 fileName,
-                                ownerStatement->baseStatement->type,
+                                ownerStatement.baseStatement->type(),
                                 scope);
                     classTypeStatement = mParser->findTypeDefinitionOf(
                                 fileName,
@@ -852,26 +825,26 @@ void CodeCompletionPopup::getCompletionFor(
                         return;
                 } else {
                     //normal member access
-                    if (memberOperator=="." && ownerStatement->pointerLevel !=0)
+                    if (memberOperator=="." && pointerDepth(ownerStatement.type) !=0)
                         return;
-                    if (memberOperator=="->" && ownerStatement->pointerLevel!=1)
+                    if (memberOperator=="->" && pointerDepth(ownerStatement.type)!=1)
                         return;
                 }
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
-                if ((classTypeStatement == scopeTypeStatement) || (ownerStatement->effectiveTypeStatement->command == "this")) {
+                if ((classTypeStatement == scopeTypeStatement) || (ownerStatement.type.declaration.lock()->command == "this")) {
                     //we can use all members
                     addChildren(classTypeStatement,fileName,-1);
                 } else { // we can only use public members
-                    const StatementMap& children = mParser->statementList().childrenStatements(classTypeStatement);
+                    const StatementList children = mParser->membersOfStatement(classTypeStatement);
                     if (children.isEmpty())
                         return;
-                    foreach (const PStatement& childStatement, children) {
-                        if ((childStatement->accessibility==StatementAccessibility::Public)
-                                && !(
-                                    childStatement->kind == StatementKind::Constructor
-                                    || childStatement->kind == StatementKind::Destructor)
+                    for (const PStatement &childStatement : children) {
+                        if (mParser->memberAccessibility(classTypeStatement, childStatement)
+                                == StatementAccessibility::Public
+                                && childStatement->kind != StatementKind::Constructor
+                                && childStatement->kind != StatementKind::Destructor
                                 && !mAddedStatements.contains(childStatement->command)) {
                             addStatement(childStatement,fileName,-1);
                         }
@@ -879,9 +852,9 @@ void CodeCompletionPopup::getCompletionFor(
                 }
             //todo friend
             } else if ((memberOperator == "::")
-                       && (ownerStatement->kind == EvalStatementKind::Type)) {
+                       && (ownerStatement.kind == EvalStatementKind::Type)) {
                 //we can add all child enum definess
-                PStatement classTypeStatement = ownerStatement->effectiveTypeStatement;
+                PStatement classTypeStatement = ownerStatement.type.declaration.lock();
                 if (!classTypeStatement)
                     return;
                 if (!isIncluded(classTypeStatement->fileName) &&
@@ -889,18 +862,15 @@ void CodeCompletionPopup::getCompletionFor(
                     return;
                 if (classTypeStatement->kind == StatementKind::EnumType
                         || classTypeStatement->kind == StatementKind::EnumClassType) {
-                    const StatementMap& children =
-                            mParser->statementList().childrenStatements(classTypeStatement);
-                    foreach (const PStatement& child,children) {
+                    const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                    for (const PStatement &child : children)
                         addStatement(child,fileName,line);
-                    }
                 } else {
                     //class
                     if (classTypeStatement == scopeTypeStatement) {
                         //we can use all static members
-                        const StatementMap& children =
-                                mParser->statementList().childrenStatements(classTypeStatement);
-                        foreach (const PStatement& childStatement, children) {
+                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        for (const PStatement &childStatement : children) {
                             if (
                               (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::Typedef
@@ -914,9 +884,8 @@ void CodeCompletionPopup::getCompletionFor(
                         }
                     } else {
                         // we can only use public static members
-                        const StatementMap& children =
-                                mParser->statementList().childrenStatements(classTypeStatement);
-                        foreach (const PStatement& childStatement,children) {
+                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        for (const PStatement &childStatement : children) {
                             if (
                               (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::Typedef
@@ -925,8 +894,10 @@ void CodeCompletionPopup::getCompletionFor(
                                 || childStatement->kind == StatementKind::EnumClassType
                                 || childStatement->kind == StatementKind::EnumType
                                    )) {
-                                if (childStatement->accessibility == StatementAccessibility::Public)
+                                if (mParser->memberAccessibility(classTypeStatement, childStatement)
+                                        == StatementAccessibility::Public) {
                                     addStatement(childStatement,fileName,-1);
+                                }
                             }
                         }
                     }
@@ -998,25 +969,25 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
 
             PStatement scope = mCurrentScope;//the scope the expression in
             PStatement parentTypeStatement;
-            PEvalStatement ownerStatement = mParser->evalExpression(fileName,
+            EvalResult ownerStatement = mParser->evalExpression(fileName,
                                         ownerExpression,
                                         scope);
-            if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
+            if(!ownerStatement.isValid() || !ownerStatement.type.declaration.lock()) {
                 return;
             }
-            if (ownerStatement->kind==EvalStatementKind::Namespace) {
+            if (ownerStatement.kind==EvalStatementKind::Namespace) {
                 //there might be many statements corresponding to one namespace;
                 PStatementList namespaceStatementsList =
-                        mParser->findNamespace(ownerStatement->baseType);
+                        mParser->findNamespace(ownerStatement.type.qualifiedName);
                 if (namespaceStatementsList) {
                     foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
                         addFunctionWithoutDefinitionChildren(namespaceStatement, fileName, line);
                     }
                 }
                 return;
-            } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::Class) {
+            } else if (ownerStatement.type.declaration.lock()->kind == StatementKind::Class) {
                 addKeyword("operator");
-                addFunctionWithoutDefinitionChildren(ownerStatement->effectiveTypeStatement, fileName, line);
+                addFunctionWithoutDefinitionChildren(ownerStatement.type.declaration.lock(), fileName, line);
             }
         }
     }
@@ -1039,7 +1010,10 @@ void CodeCompletionPopup::getCompletionListForLabels(const QString &fileName, in
                 || scopeStatement->kind == StatementKind::Destructor
                 || scopeStatement->kind == StatementKind::Lambda)
                 ) {
-            foreach(const PStatement &child, scopeStatement->children) {
+            foreach(const std::weak_ptr<Statement> &weakChild, scopeStatement->children) {
+                PStatement child = weakChild.lock();
+                if (!child)
+                    continue;
                 if (child->kind == StatementKind::Label) {
                     mFullCompletionStatementList.append(child);
                 }
@@ -1148,7 +1122,7 @@ void CodeCompletionPopup::getCompletionListForLiteralOperators(const QString &fi
         foreach(const PStatement& statement, statements) {
             if (isIncluded(statement->fileName)
                     || isIncluded(statement->definitionFileName)) {
-                addStatement(statement,fileName,line);
+                addStatement(statement,fileName,line,true);
             }
         }
     }

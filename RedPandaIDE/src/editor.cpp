@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -650,7 +650,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         if (mParser)
                             function = mParser->findFunctionAt(mFilename,caretLine()+1);
                         if (function) {
-                            bool isVoid = (function->type  == "void");
+                            bool isVoid = (function->type() == "void");
                             QStringList params = mParser->getFunctionParameterNames(function);
                             insertStrings.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
                             if (!params.isEmpty())
@@ -3909,17 +3909,17 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
     PStatement statement = mParser->findStatementOf(
                 mFilename,expression,
                 p.line);
-    statement = constructorToClass(statement, p);
+    statement = resolveClassOrConstructorAt(statement, p);
     if (!statement)
         return result;
     if (statement->kind == StatementKind::Function
             || statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor) {
           result = getHintForFunction(statement,mFilename,p.line);
-    } else if (statement->line>=0) {
+    } else if (statement->declarationRange.start.line>=0) {
         QFileInfo fileInfo(statement->fileName);
         result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
-                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
+                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
@@ -3962,7 +3962,7 @@ QString Editor::getHintForFunction(const PStatement &statement, const QString& f
     QFileInfo fileInfo(statement->fileName);
     QString result;
     result = mParser->prettyPrintStatement(statement,filename,line) + " - "
-            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line+1)
+            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
             + tr("Ctrl+click for more info");
     return result;
 }
@@ -4170,7 +4170,7 @@ void Editor::updateFunctionTip(bool showTip)
             mFunctionTooltip->addTip(
                         statement->command,
                         statement->fullName,
-                        statement->type,
+                        statement->type(),
                         statement->args,
                         statement->noNameArgs);
         }
@@ -4428,18 +4428,23 @@ bool Editor::needReparse() const
                        || (!mParser->isFileParsed(mFilename)));
 }
 
-PStatement Editor::constructorToClass(PStatement statement, const CharPos& p)
+PStatement Editor::resolveClassOrConstructorAt(const PStatement &statement, const CharPos &pos)
 {
     if (statement && statement->kind == StatementKind::Constructor) {
         QString token;
         int start;
         QSynedit::PTokenAttribute attri;
-        if (getTokenAttr(p,token,start,attri)) {
-            QString s = lineText(p.line);
-            int pos = start+token.length()-1;
-            while (pos<s.length() && CppParser::isSpaceChar(s[pos]))
-                pos++;
-            if (pos >= s.length() || (s[pos]!='(' && s[pos]!='{')) {
+        if (getTokenAttr(pos,token,start,attri)) {
+            QString s = lineText(pos.line);
+            QString prefix = s.left(start).trimmed();
+            if (prefix.endsWith("class") || prefix.endsWith("struct")
+                    || prefix.endsWith("union")) {
+                return statement->parentScope.lock();
+            }
+            int nextPos = start+token.length();
+            while (nextPos<s.length() && CppParser::isSpaceChar(s[nextPos]))
+                nextPos++;
+            if (nextPos >= s.length() || (s[nextPos]!='(' && s[nextPos]!='{')) {
                 return statement->parentScope.lock();
             }
         }
@@ -4756,19 +4761,19 @@ void Editor::gotoDeclaration(const CharPos &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos);
+    statement = resolveClassOrConstructorAt(statement, pos);
 
-    if (!statement) {
+    if (!statement || !statement->declarationRange.start.isValid()) {
         return;
     }
     QString filename;
     int line;
-    if (statement->fileName == mFilename && statement->line == pos.line) {
+    if (statement->fileName == mFilename && statement->declarationRange.start.line == pos.line) {
             filename = statement->definitionFileName;
-            line = statement->definitionLine;
+            line = statement->definitionRange.start.line;
     } else {
         filename = statement->fileName;
-        line = statement->line;
+        line = statement->declarationRange.start.line;
     }
     openFileInContext(filename, CharPos{0,line});
 }
@@ -4784,18 +4789,19 @@ void Editor::gotoDefinition(const CharPos &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos);
-    if (!statement) {
+    statement = resolveClassOrConstructorAt(statement, pos);
+    if (!statement || !statement->hasDefinition()
+            || !statement->definitionRange.start.isValid()) {
         return;
     }
     QString filename;
     int line;
-    if (statement->definitionFileName == mFilename && statement->definitionLine == pos.line) {
+    if (statement->definitionFileName == mFilename && statement->definitionRange.start.line == pos.line) {
             filename = statement->fileName;
-            line = statement->line;
+            line = statement->declarationRange.start.line;
     } else {
         filename = statement->definitionFileName;
-        line = statement->definitionLine;
+        line = statement->definitionRange.start.line;
     }
     openFileInContext(filename,CharPos{0,line});
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,30 +144,30 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            if (!(node->statement->type.isEmpty())) {
+            if (!(node->statement->type().isEmpty())) {
                 if ( (node->statement->kind == StatementKind::Variable)
                      || (node->statement->kind == StatementKind::Typedef) ) {
                     if (node->statement->args.isEmpty())
-                        return node->statement->command + " : " + node->statement->type;
+                        return node->statement->command + " : " + node->statement->type();
                     else if (node->statement->args.startsWith("("))
                         return QString("%1 : %2 (*)%3").arg(node->statement->command,
-                                                            node->statement->type,
+                                                            node->statement->type(),
                                                             node->statement->args);
                     else
-                        return node->statement->command + " : " + node->statement->type + node->statement->args;
+                        return node->statement->command + " : " + node->statement->type() + node->statement->args;
                 } else if (node->statement->kind == StatementKind::Function) {
-                    return node->statement->command + node->statement->args + " : " + node->statement->type;
+                    return node->statement->command + node->statement->args + " : " + node->statement->type();
                 } else if (node->statement->kind == StatementKind::OverloadedOperator) {
                     if (!CppParser::isIdentifier(node->statement->command)) {
-                        return "operator"+node->statement->command + node->statement->args + " : " + node->statement->type;
+                        return "operator"+node->statement->command + node->statement->args + " : " + node->statement->type();
                     } else if (node->statement->command == "new"
                                || node->statement->command == "delete") {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type;
+                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type();
                     } else {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type + " " + node->statement->command;
+                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type() + " " + node->statement->command;
                     }
                 } else if (node->statement->kind == StatementKind::LiteralOperator) {
-                    return "operator \"\""+node->statement->command + node->statement->args + " : " + node->statement->type;
+                    return "operator \"\""+node->statement->command + node->statement->args + " : " + node->statement->type();
                 }
             }
             if (node->statement->kind == StatementKind::Enum) {
@@ -290,13 +290,13 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
                 .arg(statement->fullName,
                      statement->noNameArgs)
                 .arg((int)statement->kind),newNode);
-    mProcessedStatements.insert(statement.get());
+    mProcessedStatements[node].insert(statement.get());
     if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
     }
     //don't show enum type's children values (they are displayed in parent scope)
 //    if (statement->kind != StatementKind::skEnumType) {
-        filterChildren(newNode.get(), statement->children);
+        filterChildren(newNode.get(), mParser->membersOfStatement(statement));
 //    }
     return newNode;
 }
@@ -330,7 +330,7 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
         if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
             std::sort(node->children.begin(),node->children.end(),
                       [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                return (node1->statement->line < node2->statement->line);
+                return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
             });
         } else {
             std::sort(node->children.begin(),node->children.end(),
@@ -339,7 +339,7 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
                 if (comp<0)
                     return true;
                 else if (comp==0)
-                    return (node1->statement->line < node2->statement->line);
+                    return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
                 return false;
             });
         };
@@ -375,12 +375,24 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
 {
-    for (PStatement statement:statements) {
+    StatementList lockedStatements;
+    for (const std::weak_ptr<Statement> &weakStatement : statements) {
+        if (PStatement statement = weakStatement.lock())
+            lockedStatements.append(statement);
+    }
+    filterChildren(node, lockedStatements);
+}
+
+void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementList &statements)
+{
+    for (const PStatement &statement : statements) {
+        if (!statement)
+            continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statement->inProject())
             continue;
 
-        if (mProcessedStatements.contains(statement.get()))
+        if (mProcessedStatements.value(node).contains(statement.get()))
             continue;
 //        if (statement->properties.testFlag(StatementProperty::spDummyStatement))
 //            continue;
@@ -416,7 +428,10 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
-        if ( (parentScope!=node->statement)
+        bool memberOfNode = node->statement
+                && mParser->memberAccessibility(node->statement, statement)
+                != StatementAccessibility::None;
+        if (!memberOfNode && (parentScope!=node->statement)
                 && (!parentScope || !node->statement
                     || parentScope->fullName!=node->statement->fullName)) {
 //          //should not happend, just in case of error
@@ -440,7 +455,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
                 PStatement dummy = createDummy(statement);
                 scopeNode = addChild(parentNode,dummy);
             }
-            filterChildren(scopeNode.get(),statement->children);
+            filterChildren(scopeNode.get(), mParser->membersOfStatement(statement));
         } else {
             addChild(parentNode,statement);
         }
@@ -456,15 +471,23 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->noNameArgs = statement->noNameArgs;
     result->fullName = statement->fullName;
     result->kind = statement->kind;
-    result->type = statement->type;
+    result->classKey = statement->classKey;
+    result->baseClasses = statement->baseClasses;
+    result->typeInfo = statement->typeInfo;
+    result->declSpecifierProperties = statement->declSpecifierProperties;
     result->value = statement->value;
     result->scope = statement->scope;
-    result->accessibility = statement->accessibility;
+    if (statement->parentScope.lock()) {
+        result->accessibility = mParser->memberAccessibility(
+                    statement->parentScope.lock(), statement);
+    } else {
+        result->accessibility = statement->accessibility;
+    }
     result->properties = statement->properties;
     result->fileName= statement->fileName;
-    result->line = statement->line;
-    result->definitionFileName = statement->fileName;
-    result->definitionLine = statement->definitionLine;
+    result->declarationRange = statement->declarationRange;
+    result->definitionFileName = statement->definitionFileName;
+    result->definitionRange = statement->definitionRange;
     mDummyStatements.insert(result->fullName,result);
     return result;
 }

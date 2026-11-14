@@ -163,6 +163,13 @@
 - 预期：失效 A 后 B 的记录仍有效且 invalidate 计数不增加；重扫时 A、B 均扫描，B 的 invalidate 计数此时才增加，结果与全量扫描一致。
 - 测试：`test_scanned_prefix_entry_forces_lazy_suffix_rescan`。
 
+### P7a 声明头变化后的定义保留
+
+- 操作：main.cpp 依次包含声明头 A 和定义头 B，随后修改 A 并重扫。
+- 判定依据：与 P7 相同，A 已扫描而非 replay，后续 B 必须重扫，不能因 A、B 路径序列未变而 replay。Statement 的声明部分随 A 更新，定义部分在 B 重扫后继续合并到同一实体，不能因声明失效而丢失定义。
+- 预期：A、B 均扫描两次，B 的 replay 为 0；声明/定义范围及 ancestor 分别保留，函数仍有定义。
+- 测试：`test_auto_invalidation_preserves_definition_after_declaration_change`。
+
 ### P8 后续记录未再次包含
 
 - 操作：首轮 main.cpp 包含 A、B；随后 A 和 main 改变，main 不再包含 B。重扫 main 后，另一 TU 再按 A、B 的相同顺序包含。
@@ -279,6 +286,13 @@
 - 判定依据：自动 stamp 失效与编辑器显式失效必须具有相同的 Statement 生命周期语义，不能只清 Preprocessor 的宏和 Registry 记录。
 - 测试：`test_internal_header_disk_change_removes_stale_statements`。
 
+### F9 Parser reset 的完整清理与重建
+
+- 操作：Parser 已解析 root 和系统头后调用 resetParser，再按原配置重建并解析。
+- 预期：StatementMap、Registry 文件记录、scanned 状态、namespace 和项目文件集合均清空；重新配置后 root 与系统头重新扫描，符号正确恢复。
+- 判定依据：reset 是编译器/参数变化和 IDE 自动清空时的统一入口，不能只清 Statement 而留下可供 replay 的旧 Registry。
+- 测试：`test_reset_parser_clears_registry_and_statements`。
+
 ## 6. 循环与深度
 
 ### C1 保护文件形成环
@@ -361,6 +375,13 @@
 - 预期：所有公开类、方法、函数都能在 StatementMap 找到；重复扫描后数量不异常增长。
 - 判定依据：标准库验收直接检查公开接口集合，可发现局部 replay 中符号丢失或重复，而不仅是文本相同。
 - 测试：`test_standard_library_public_api_complete`（独立 CMake 开关，默认关闭）。
+
+### S7 声明变化触发自动失效时保留定义
+
+- 操作：声明和定义位于不同跨边界头；修改声明文件的磁盘内容，不显式调用 Parser 失效接口，然后重扫 root。
+- 预期：声明记录重扫，定义记录 replay；合并 Statement 仍有定义，声明侧和定义侧祖先分别指向正确文件，新增声明符号可见。
+- 判定依据：自动 stamp 失效必须复用声明/定义两侧清理规则，不能因 Preprocessor 自行失效而丢失另一侧定义。
+- 测试：`test_auto_invalidation_preserves_definition_after_declaration_change`。
 
 ## 8. 性能与缓存命中验收
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -543,48 +543,6 @@ bool isCFile(const QString& filename)
     return CppSourceExts->contains(fileInfo.suffix().toLower());
 }
 
-PStatement CppScopes::findScopeAtLine(int line) const
-{
-    if (mScopes.isEmpty())
-        return PStatement();
-    int start = 0;
-    int end = mScopes.size()-1;
-    while (start<=end) {
-        int mid = (start+end)/2;
-        PCppScope midScope = mScopes[mid];
-        if (midScope->startLine == line) {
-            while (mid<end && (mScopes[mid+1]->startLine == line)) {
-                mid++;
-            }
-            return mScopes[mid]->statement;
-        } else if (midScope->startLine > line) {
-            end = mid-1;
-        } else {
-            start = mid+1;
-        }
-    }
-    if (end>=0)
-        return mScopes[end]->statement;
-    else
-        return PStatement();
-}
-
-void CppScopes::addScope(int line, PStatement scopeStatement)
-{
-    PCppScope scope = std::make_shared<CppScope>();
-    scope->startLine = line;
-    scope->statement = scopeStatement;
-    mScopes.append(scope);
-#ifdef QT_DEBUG
-    if (!mScopes.isEmpty() && mScopes.back()->startLine > line) {
-        qDebug()<<QString("Error: new scope %1 at %2 which is less that last scope %3")
-                  .arg(scopeStatement->fullName)
-                  .arg(line)
-                  .arg(mScopes.back()->startLine);
-    }
-#endif
-}
-
 MemberOperatorType getOperatorType(const QString &phrase, int index)
 {
     if (index>=phrase.length())
@@ -700,10 +658,10 @@ StatementKind getKindOfStatement(const PStatement& statement)
     if (!statement)
         return StatementKind::Unknown;
     if (statement->kind == StatementKind::Variable) {
-        if (!statement->parentScope.lock()) {
-            return StatementKind::GlobalVariable;
-        }  else if (statement->scope == StatementScope::Local) {
+        if (statement->scope == StatementScope::Local) {
             return StatementKind::LocalVariable;
+        } else if (statement->scope == StatementScope::Global) {
+            return StatementKind::GlobalVariable;
         } else {
             return StatementKind::Variable;
         }

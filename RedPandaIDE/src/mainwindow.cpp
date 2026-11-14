@@ -5040,7 +5040,7 @@ void MainWindow::onClassBrowserGotoDeclaration()
         return;
     }
     QString filename = statement->fileName;
-    int line = statement->line;
+    int line = statement->declarationRange.start.line;
     Editor* e=openFile(filename);
     if (e) {
         mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
@@ -5060,7 +5060,7 @@ void MainWindow::onClassBrowserGotoDefinition()
         return;
     }
     QString filename = statement->definitionFileName;
-    int line = statement->definitionLine;
+    int line = statement->definitionRange.start.line;
     Editor* e=openFile(filename);
     if (e) {
         mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
@@ -7643,21 +7643,21 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
         if (statement->fileName == currentEditor->filename()
                 && statement->definitionFileName!=currentEditor->filename()) {
             filename = statement->fileName;
-            line = statement->line;
+            line = statement->declarationRange.start.line;
         } else if (statement->fileName != currentEditor->filename()
                 && statement->definitionFileName==currentEditor->filename()) {
             filename = statement->definitionFileName;
-            line = statement->definitionLine;
-        } else if (currentEditor->caretLine()==statement->line) {
+            line = statement->definitionRange.start.line;
+        } else if (currentEditor->caretLine()==statement->declarationRange.start.line) {
             filename = statement->definitionFileName;
-            line = statement->definitionLine;
+            line = statement->definitionRange.start.line;
         } else {
             filename = statement->fileName;
-            line = statement->line;
+            line = statement->declarationRange.start.line;
         }
     } else {
         filename = statement->fileName;
-        line = statement->line;
+        line = statement->declarationRange.start.line;
     }
     Editor* e = openFile(filename);
     if (e) {

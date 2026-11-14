@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -214,6 +214,9 @@ public:
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::CharPos& pos);
     void gotoDefinition(const QSynedit::CharPos& pos);
+    PStatement resolveClassOrConstructorAt(
+            const PStatement &statement, const QSynedit::CharPos &pos);
+    QString getParserHint(const QStringList& expression, const QSynedit::CharPos& p);
     void reparse();
     void reparseIfNeeded();
     void reparseTodo();
@@ -431,7 +434,6 @@ private:
     TipType getTipType(QPoint point, QSynedit::CharPos& pos);
     void cancelHint();
     QString getHeaderFileHint(const QString& s, bool fromNext);
-    QString getParserHint(const QStringList& expression, const QSynedit::CharPos& p);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement,
@@ -450,8 +452,6 @@ private:
     void doSetFileType(FileType newFileType);
 
     void openFileInContext(const QString& filename, const QSynedit::CharPos& caretPos);
-
-    PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::CharPos& p);
 
     int previousIdChars(const QSynedit::CharPos &pos);
 

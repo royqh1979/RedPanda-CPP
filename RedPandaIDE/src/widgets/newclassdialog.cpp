@@ -133,7 +133,10 @@ void NewClassCandidatesModel::fillClasses()
         return;
     if (!mParser->freeze())
         return;
-    foreach( const PStatement& s, mParser->statementList().childrenStatements()) {
+    foreach( const std::weak_ptr<Statement>& weakStatement, mParser->statementList().childrenStatements()) {
+        PStatement s = weakStatement.lock();
+        if (!s)
+            continue;
         if (s->kind==StatementKind::Class
                 && s->inProject()
                 && !s->command.startsWith("_")
@@ -158,7 +161,10 @@ void NewClassCandidatesModel::fillClasses()
 
 void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
 {
-    foreach( const PStatement& s, mParser->statementList().childrenStatements(ns)) {
+    foreach( const std::weak_ptr<Statement>& weakStatement, mParser->statementList().childrenStatements(ns)) {
+        PStatement s = weakStatement.lock();
+        if (!s)
+            continue;
         if (s->kind==StatementKind::Class
                 && s->inProject()
                 && !s->command.startsWith("_")

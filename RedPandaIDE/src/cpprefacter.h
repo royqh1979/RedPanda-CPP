@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,11 +46,10 @@ private:
             const QByteArray& fileEncoding,
             const PStatement& statement,
             const PCppParser& parser);
-    void renameSymbolInFile(
-            const QString& filename,
+    void renameSymbolInEditor(
+            Editor *editor,
             const PStatement& statement,
-            const QString& newWord,
-            const PCppParser& parser);
+            const QString& newWord);
 private:
     MainWindow *mMainWindow;
 };

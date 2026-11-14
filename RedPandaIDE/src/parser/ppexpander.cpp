@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "ppexpander.h"
+
+#include <QDebug>
+#include <QElapsedTimer>
+
+namespace {
+struct ExpanderProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    qint64 tokenizeTextNs = 0;
+    qint64 tokenizeTextCalls = 0;
+    qint64 tokenizeTextTokens = 0;
+    ~ExpanderProfile()
+    {
+        if (enabled)
+            qWarning() << "EXPANDER_PROFILE"
+                       << "tokenizeText" << tokenizeTextNs / 1000000.0
+                       << "calls" << tokenizeTextCalls
+                       << "tokens" << tokenizeTextTokens;
+    }
+};
+
+ExpanderProfile expanderProfile;
+}
 
 PpExpander::PpExpander(const DefineLookup &lookup)
     : mLookup(lookup)
@@ -481,6 +503,11 @@ QString PpExpander::stringize(const QVector<PpToken> &tokens) const
 
 QVector<PpToken> PpExpander::tokenizeText(const QString &text) const
 {
+    QElapsedTimer timer;
+    if (expanderProfile.enabled) {
+        ++expanderProfile.tokenizeTextCalls;
+        timer.start();
+    }
     QStringList lines{text};
     PpTokenizer tokenizer(lines);
     QVector<PpToken> tokens;
@@ -491,6 +518,10 @@ QVector<PpToken> PpExpander::tokenizeText(const QString &text) const
         if (token.kind == PpTokenKind::EndOfLine)
             continue;
         tokens.append(token);
+    }
+    if (expanderProfile.enabled) {
+        expanderProfile.tokenizeTextNs += timer.nsecsElapsed();
+        expanderProfile.tokenizeTextTokens += tokens.count();
     }
     return tokens;
 }

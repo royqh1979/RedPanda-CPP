@@ -1,0 +1,96 @@
+/*
+ * Copyright (C) 2026 Roy Qu (royqh1979@gmail.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+#ifndef TEST_PARSER_UTILS_H
+#define TEST_PARSER_UTILS_H
+
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+#include <QDir>
+#include <QProcess>
+#include <QTemporaryFile>
+#include "src/parser/cppparser.h"
+
+inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bitsStdcpp)
+{
+    QString root = QStringLiteral(REDPANDA_PARSER_STDLIB_MINGW_ROOT);
+    QString compiler = root + "/bin/g++.exe";
+    QTemporaryFile source(QDir::temp().filePath("redpanda-stdlib-XXXXXX.cpp"));
+    if (!source.open()) {
+        qWarning() << "Cannot create a temporary source for compiler defines";
+        return false;
+    }
+    source.write("\n");
+    source.close();
+
+    QProcess process;
+    process.start(compiler, {"-std=c++17", "-dM", "-E", source.fileName()});
+    if (!process.waitForStarted() || !process.waitForFinished(30000)
+            || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
+        qWarning() << "Cannot obtain compiler defines:" << process.errorString()
+                   << process.readAllStandardError();
+        return false;
+    }
+    const QStringList defines = QString::fromUtf8(process.readAllStandardOutput())
+            .split('\n', Qt::SkipEmptyParts);
+    for (const QString &define : defines)
+        parser->addHardDefineByLine(define);
+
+    process.start(compiler, {"-xc++", "-E", "-v", source.fileName()});
+    if (!process.waitForStarted() || !process.waitForFinished(30000)
+            || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
+        qWarning() << "Cannot obtain compiler include paths:" << process.errorString()
+                   << process.readAllStandardError();
+        return false;
+    }
+    QByteArray output = process.readAllStandardError();
+    int searchStart = output.indexOf("#include <...> search starts here:");
+    int searchEnd = output.indexOf("End of search list.");
+    if (searchStart < 0 || searchEnd < 0 || searchEnd <= searchStart) {
+        qWarning() << "Cannot parse compiler include paths";
+        return false;
+    }
+    searchStart += QByteArray("#include <...> search starts here:").length();
+    QStringList includePaths;
+    const QList<QByteArray> lines = output.mid(searchStart, searchEnd - searchStart).split('\n');
+    for (const QByteArray &line : lines) {
+        QByteArray path = line.trimmed();
+        if (!path.isEmpty() && QDir(path).exists()) {
+            QString includePath = QDir(path).canonicalPath();
+            includePaths.append(includePath);
+            parser->addIncludePath(includePath);
+        }
+    }
+    for (const QString &includePath : includePaths) {
+        QString candidate = includePath + "/bits/stdc++.h";
+        if (QFileInfo::exists(candidate)) {
+            bitsStdcpp = QFileInfo(candidate).canonicalFilePath();
+            break;
+        }
+        candidate = includePath + "/x86_64-w64-mingw32/bits/stdc++.h";
+        if (QFileInfo::exists(candidate)) {
+            bitsStdcpp = QFileInfo(candidate).canonicalFilePath();
+            break;
+        }
+    }
+    if (bitsStdcpp.isEmpty()) {
+        qWarning() << "Cannot find bits/stdc++.h in compiler include paths";
+        return false;
+    }
+    return true;
+}
+#endif
+
+#endif // TEST_PARSER_UTILS_H

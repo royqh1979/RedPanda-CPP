@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Roy Qu (royqh1979@gmail.com)
+ * Copyright (C) 2020-2026 Roy Qu (royqh1979@gmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,34 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
+#include <QElapsedTimer>
+
+namespace {
+struct StatementModelProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    qint64 addNs = 0;
+    int addCount = 0;
+    ~StatementModelProfile() {
+        if (enabled)
+            qWarning() << "STATEMENT_MODEL_PROFILE addMs" << addNs / 1000000.0 << "count" << addCount;
+    }
+};
+
+StatementModelProfile statementModelProfile;
+
+struct StatementModelProfileScope {
+    StatementModelProfileScope() {
+        if (statementModelProfile.enabled)
+            timer.start();
+    }
+    ~StatementModelProfileScope() {
+        if (statementModelProfile.enabled)
+            statementModelProfile.addNs += timer.nsecsElapsed();
+    }
+    QElapsedTimer timer;
+};
+}
 
 StatementModel::StatementModel(QObject *parent) : QObject(parent)
 {
@@ -26,76 +54,156 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
 
 void StatementModel::add(const PStatement& statement)
 {
-    if (!statement) {
-        return ;
-    }
+    StatementModelProfileScope profileScope;
+    if (!statement)
+        return;
+    ++statementModelProfile.addCount;
     PStatement parent = statement->parentScope.lock();
     if (parent) {
-        addMember(parent->children,statement);
-        if (statement->kind == StatementKind::Variable
-                && statement->accessibility == StatementAccessibility::Public)
-            parent->publicProperties.append(statement);
+        addMember(parent->children, statement);
     } else {
-        addMember(mGlobalStatements,statement);
+        addMember(mGlobalStatements, statement);
     }
-    mCount++;
-#ifdef QT_DEBUG
-    mAllStatements.append(statement);
-#endif
+    if (statement->kind == StatementKind::Namespace) {
+        addNamespaceStatement(statement->fullName, statement);
+        updateNamespaceTransparency(statement);
+    }
+    mStatements.append(statement);
+    ++mCount;
 }
 
 void StatementModel::deleteStatement(const PStatement& statement)
 {
-    if (!statement) {
-        return ;
-    }
+    if (!statement)
+        return;
     PStatement parent = statement->parentScope.lock();
-    int count = 0;
     if (parent) {
-        count = deleteMember(parent->children,statement);
+        deleteMember(parent->children, statement);
     } else {
-        count = deleteMember(mGlobalStatements,statement);
+        deleteMember(mGlobalStatements, statement);
     }
-    mCount -= count;
-#ifdef QT_DEBUG
-    mAllStatements.removeOne(statement);
-#endif
+    if (statement->kind == StatementKind::Namespace) {
+        const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+        if (parent && parent->kind == StatementKind::Namespace) {
+            for (const PStatement &sibling : siblings)
+                deleteNamespaceStatement(parent->fullName, sibling);
+        }
+        for (auto it = mNamespaceStatements.find(statement->fullName);
+                it != mNamespaceStatements.end() && it.key() == statement->fullName;) {
+            PStatement indexed = it.value().lock();
+            if (indexed && indexed->parentScope.lock() == statement)
+                it = mNamespaceStatements.erase(it);
+            else
+                ++it;
+        }
+        deleteNamespaceStatement(statement->fullName, statement);
+        for (const PStatement &sibling : siblings) {
+            if (sibling != statement)
+                updateNamespaceTransparency(sibling);
+        }
+    }
+    if (mStatements.removeOne(statement))
+        --mCount;
+}
 
+void StatementModel::updateNamespaceTransparency(const PStatement &statement)
+{
+    if (!statement || statement->kind != StatementKind::Namespace)
+        return;
+    const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+    bool transparent = statement->command.isEmpty();
+    for (const PStatement &sibling : siblings) {
+        if (sibling->command.isEmpty()
+                || sibling->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+            transparent = true;
+            break;
+        }
+    }
+    if (!transparent)
+        return;
+    PStatement parent = statement->parentScope.lock();
+    if (parent && parent->kind == StatementKind::Namespace) {
+        for (const PStatement &sibling : siblings)
+            addNamespaceStatement(parent->fullName, sibling);
+    }
+}
+
+void StatementModel::addNamespaceStatement(const QString &fullName, const PStatement &statement)
+{
+    const auto statements = mNamespaceStatements.values(fullName);
+    for (const std::weak_ptr<Statement> &weak : statements) {
+        if (weak.lock() == statement)
+            return;
+    }
+    mNamespaceStatements.insert(fullName, statement);
+}
+
+void StatementModel::deleteNamespaceStatement(const QString &fullName, const PStatement &statement)
+{
+    for (auto it = mNamespaceStatements.find(fullName);
+            it != mNamespaceStatements.end() && it.key() == fullName;) {
+        PStatement indexed = it.value().lock();
+        if (!indexed || indexed == statement)
+            it = mNamespaceStatements.erase(it);
+        else
+            ++it;
+    }
+}
+
+QList<PStatement> StatementModel::namespaceStatements(const QString &fullName) const
+{
+    QList<PStatement> result;
+    const auto statements = mNamespaceStatements.values(fullName);
+    for (const std::weak_ptr<Statement> &weak : statements) {
+        if (PStatement statement = weak.lock())
+            result.append(statement);
+    }
+    return result;
+}
+
+QList<PStatement> StatementModel::transparentNamespaceStatements(const QString &fullName) const
+{
+    QList<PStatement> result;
+    const QList<PStatement> statements = namespaceStatements(fullName);
+    for (const PStatement &statement : statements) {
+        if (statement->command.isEmpty() || statement->fullName != fullName)
+            result.append(statement);
+    }
+    return result;
 }
 
 #ifdef QT_DEBUG
-void StatementModel::dump(const QString &logFile)
+void StatementModel::dump(const QString &logFile) const
 {
     QFile file(logFile);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream out(&file);
-        dumpStatementMap(mGlobalStatements,out,0);
+        dumpStatementMap(mGlobalStatements, out, 0);
     }
 }
 
-void StatementModel::dumpAll(const QString &logFile)
+void StatementModel::dumpAll(const QString &logFile) const
 {
     QFile file(logFile);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream out(&file);
-        std::sort(mAllStatements.begin(),mAllStatements.end(),
+        StatementList statements = mStatements;
+        std::sort(statements.begin(), statements.end(),
                   [](const PStatement &a, const PStatement &b) {
-                          if (a->fileName < b->fileName)
-                              return true;
-                          if (a->fileName==b->fileName)
-                              return a->line < b->line;
-                          return false;
-                      });
-        for (PStatement statement:mAllStatements) {
-            out<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
-             .arg(statement->command).arg(int(statement->kind))
-             .arg(statement->type).arg(statement->fullName)
-             .arg((size_t)(statement->parentScope.lock().get()))
-             .arg((int)statement->accessibility)
-             .arg(statement->fileName)
-             .arg(statement->line)
-             .arg(statement->definitionFileName)
-             .arg(statement->definitionLine)<<Qt::endl;
+            if (a->fileName != b->fileName)
+                return a->fileName < b->fileName;
+            return a->declarationRange.start < b->declarationRange.start;
+        });
+        for (const PStatement &statement : statements) {
+            out << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
+                   .arg(statement->command).arg(int(statement->kind))
+                   .arg(statement->type()).arg(statement->fullName)
+                   .arg((size_t)(statement->parentScope.lock().get()))
+                   .arg((int)statement->accessibility)
+                   .arg(statement->fileName)
+                   .arg(statement->declarationRange.start.line)
+                   .arg(statement->definitionFileName)
+                   .arg(statement->definitionRange.start.line) << Qt::endl;
         }
     }
 }
@@ -103,46 +211,46 @@ void StatementModel::dumpAll(const QString &logFile)
 
 void StatementModel::addMember(StatementMap &map, const PStatement& statement)
 {
-    if (!statement)
-        return ;
-    map.insert(statement->command,statement);
-//    QList<PStatement> lst = map.values(statement->command);
-//    if (!lst) {
-//        lst=std::make_shared<StatementList>();
-//        map.insert(,lst);
-//    }
-//    lst->append(statement);
+    if (statement)
+        map.insert(statement->command, statement);
 }
 
-int StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
+void StatementModel::deleteMember(StatementMap &map, const PStatement& statement)
 {
     if (!statement)
-        return 0;
-    return map.remove(statement->command,statement);
+        return;
+    for (auto it = map.find(statement->command);
+            it != map.end() && it.key() == statement->command;) {
+        PStatement indexed = it.value().lock();
+        if (!indexed || indexed == statement)
+            it = map.erase(it);
+        else
+            ++it;
+    }
 }
 
-void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int level)
+void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out, int level) const
 {
-    QString indent(level,'\t');
-    foreach (const PStatement& statement,map) {
-        out<<indent<<QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
-         .arg(statement->command).arg(int(statement->kind))
-         .arg(statement->type,
-              statement->fullName,
-              statement->noNameArgs,
-              statement->args)
-         .arg((size_t)(statement->parentScope.lock().get()))
-         .arg((int)statement->accessibility)
-         .arg(statement->fileName)
-         .arg(statement->line)
-         .arg(statement->definitionFileName)
-         .arg(statement->definitionLine);
-        out<<Qt::endl;
+    QString indent(level, '\t');
+    for (const std::weak_ptr<Statement> &weakStatement : map) {
+        PStatement statement = weakStatement.lock();
+        if (!statement)
+            continue;
+        out << indent << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
+               .arg(statement->command).arg(int(statement->kind))
+               .arg(statement->type(), statement->fullName,
+                    statement->noNameArgs, statement->args)
+               .arg((size_t)(statement->parentScope.lock().get()))
+               .arg((int)statement->accessibility)
+               .arg(statement->fileName)
+               .arg(statement->declarationRange.start.line)
+               .arg(statement->definitionFileName)
+               .arg(statement->definitionRange.start.line);
+        out << Qt::endl;
         if (statement->children.isEmpty())
             continue;
-        out<<indent<<statement->command<<" {"<<Qt::endl;
-        dumpStatementMap(statement->children,out,level+1);
-        out<<indent<<"}"<<Qt::endl;
-
+        out << indent << statement->command << " {" << Qt::endl;
+        dumpStatementMap(statement->children, out, level + 1);
+        out << indent << "}" << Qt::endl;
     }
 }
