@@ -343,6 +343,49 @@ void TestWidgets::test_code_completion_standard_library_string()
     QVERIFY(names.contains("basic_string"));
     QVERIFY(names.contains("string"));
 }
+
+void TestWidgets::test_goto_standard_library_string()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QStringList content{"#include <string>", "std::string value;"};
+    QFile file(main);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write(content.join('\n').toUtf8());
+    file.close();
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement stringAlias = mParser->findStatementOf(main, {"std", "::", "string"}, 1);
+    QVERIFY(stringAlias);
+    QVERIFY(stringAlias->hasDefinition());
+
+    QString targetFile;
+    QSynedit::CharPos target{-1, -1};
+    QObject context;
+    Editor editor;
+    editor.setEditorSettings(&pSettings->editor());
+    editor.setColorManager(mColorManager.get());
+    editor.setFilename(main);
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+    editor.applySettings();
+    editor.setFileType(FileType::CppSource);
+    editor.loadContent(content);
+    editor.setCppParser(mParser);
+    connect(&editor, &Editor::openFileRequested, &context,
+            [&targetFile, &target](const QString &fileName, FileType, const QString &,
+                                   const QSynedit::CharPos &caretPos) {
+        targetFile = fileName;
+        target = caretPos;
+    });
+    editor.gotoDefinition({5, 1});
+    QCOMPARE(targetFile, stringAlias->definitionFileName);
+    QCOMPARE(target.line, stringAlias->definitionRange.start.line);
+}
 #endif
 
 void TestWidgets::test_code_completion_types()

@@ -158,7 +158,7 @@ CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxPars
 
 merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
 
-class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
+class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；declarationBoundaryAncestor 为空时按声明实际文件是否位于 include 闭包判断。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
 
 实施批次按消费边界划分：
 

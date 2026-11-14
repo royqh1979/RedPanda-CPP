@@ -841,7 +841,7 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::buildNamespace(
     if (!result.empty()) {
         PStatement statement = result.first().lock();
         if (context.fileInfo && declaration.bodyRange.isValid())
-            context.fileInfo->addScope(declaration.bodyRange, statement, current.parentScope);
+            context.fileInfo->addScope(declaration.bodyRange, statement, statement->parentScope.lock());
         buildChildren(declaration, current, statement);
     }
     return result;

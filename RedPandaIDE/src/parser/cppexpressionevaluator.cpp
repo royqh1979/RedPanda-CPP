@@ -861,7 +861,7 @@ PStatement CppExpressionEvaluator::findVisibleStatement(const QString &name,
 PStatement CppExpressionEvaluator::findDirectStatement(const PStatement &scope,
                                                        const QString &name) const
 {
-    return scope ? findInMap(scope->children, name) : findInMap(mModel.childrenStatements(), name);
+    return mResolver.findStatement(name, scope);
 }
 
 TypeInfo CppExpressionEvaluator::memberReceiver(TypeInfo type, bool arrow) const

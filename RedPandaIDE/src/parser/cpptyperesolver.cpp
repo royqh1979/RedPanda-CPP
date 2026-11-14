@@ -360,43 +360,37 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
                                                  const QStringList &parts,
                                                  bool &firstPartFound) const
 {
-    struct WorkItem {
-        PStatement scope;
-        int partIndex;
-    };
-    QVector<WorkItem> stack{{scope, 0}};
-    while (!stack.isEmpty()) {
-        WorkItem item = stack.takeLast();
-        const auto candidates = mModel.childrenStatements(item.scope).values(
-                    parts[item.partIndex]);
-        if (item.partIndex == 0 && !candidates.isEmpty())
+    for (int namespacePartCount = parts.count(); namespacePartCount >= 0; --namespacePartCount) {
+        QString namespaceName = scope ? scope->fullName : QString();
+        if (namespacePartCount > 0) {
+            if (!namespaceName.isEmpty())
+                namespaceName += "::";
+            namespaceName += parts.mid(0, namespacePartCount).join("::");
+        }
+        const QList<PStatement> namespaces = mModel.namespaceStatements(namespaceName);
+        if (namespaces.isEmpty())
+            continue;
+        if (namespacePartCount > 0)
             firstPartFound = true;
+        if (namespacePartCount == parts.count())
+            return namespaces.first();
+        for (const PStatement &nameSpace : namespaces) {
+            PStatement current = nameSpace;
+            for (int i = namespacePartCount; current && i < parts.count(); ++i)
+                current = findMember(current, parts[i]);
+            if (current)
+                return current;
+        }
+    }
 
-        QVector<WorkItem> namespaceBranches;
+    if (!scope) {
+        const auto candidates = mModel.childrenStatements().values(parts.first());
         for (const std::weak_ptr<Statement> &weak : candidates) {
-            PStatement candidate = weak.lock();
-            if (!candidate)
-                continue;
-            if (candidate->kind != StatementKind::Namespace) {
-                return findDeclarationRemainder(candidate, parts.mid(item.partIndex));
+            if (PStatement candidate = weak.lock()) {
+                if (PStatement result = findDeclarationRemainder(candidate, parts))
+                    return result;
             }
-            if (item.partIndex + 1 == parts.count())
-                return candidate;
-            namespaceBranches.append({candidate, item.partIndex + 1});
         }
-
-        QVector<WorkItem> transparentBranches;
-        QString scopeName = item.scope ? item.scope->fullName : QString();
-        const QList<PStatement> transparentNamespaces =
-                mModel.transparentNamespaceStatements(scopeName);
-        for (const PStatement &child : transparentNamespaces) {
-            if (child != item.scope)
-                transparentBranches.append({child, item.partIndex});
-        }
-        for (int i = transparentBranches.count() - 1; i >= 0; --i)
-            stack.append(transparentBranches[i]);
-        for (int i = namespaceBranches.count() - 1; i >= 0; --i)
-            stack.append(namespaceBranches[i]);
     }
     return nullptr;
 }

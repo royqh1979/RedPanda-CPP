@@ -1150,8 +1150,10 @@ PStatement CppParser::visibleStatement(const QString &fileName,
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return statement;
-    if (statement->declarationBoundaryAncestor.isEmpty())
-        return statement->fileName == fileName ? statement : PStatement();
+    if (statement->declarationBoundaryAncestor.isEmpty()) {
+        return statement->fileName == fileName || info->including(statement->fileName)
+                ? statement : PStatement();
+    }
     const QString &ancestor = statement->declarationBoundaryAncestor;
     return ancestor == fileName || info->including(ancestor) ? statement : PStatement();
 }

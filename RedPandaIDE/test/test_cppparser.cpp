@@ -1168,6 +1168,69 @@ void TestCppParser::test_cppreference_ranges_syntax()
     QVERIFY(mParser->findStatementOf(file, "value", 26));
 }
 
+void TestCppParser::test_find_statement_of_inline_namespace()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace std {",
+            "  inline namespace __cxx11 {",
+            "    class basic_string {};",
+            "    using string = basic_string;",
+            "  }",
+            "  basic_string value;",
+            "}",
+            "std::string text;"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement basicString = mParser->findStatement("std::basic_string");
+    QVERIFY(basicString);
+    QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "basic_string"}, 0),
+             basicString);
+    QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"basic_string"}, 5),
+             basicString);
+    PStatement stringAlias = mParser->findStatement("std::string");
+    QVERIFY(stringAlias);
+    QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "string"}, 0),
+             stringAlias);
+    QVERIFY(stringAlias->hasDefinition());
+}
+
+void TestCppParser::test_nested_namespace_scope_parentage()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace A {",
+            "namespace B {",
+            "namespace C {",
+            "namespace D {",
+            "class X {};",
+            "}",
+            "int cValue;",
+            "}",
+            "int bValue;",
+            "}",
+            "int aValue;",
+            "}",
+            "int global;"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    const QStringList expectedScopes{
+        "A", "A::B", "A::B::C", "A::B::C::D", "A::B::C::D::X",
+        "A::B::C::D", "A::B::C", "A::B::C", "A::B", "A::B",
+        "A", "A", ""
+    };
+    for (int line = 0; line < expectedScopes.count(); ++line) {
+        PStatement scope = mParser->findScopeStatement("text.cpp", line);
+        QCOMPARE(scope ? scope->fullName : QString(), expectedScopes[line]);
+    }
+}
+
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
 {
@@ -1239,9 +1302,18 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(basicString);
     QVERIFY(basicString->hasDefinition());
     QVERIFY(basicString->definitionFileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive));
+    QCOMPARE(mParser->findStatementOf(
+                 main, {"std", "::", "__cxx11", "::", "basic_string"}, 0), basicString);
     QVERIFY(mParser->findStatement("std::string"));
+    PStatement stringAlias = mParser->findStatementOf(main, {"std", "::", "string"}, 0);
+    QVERIFY(stringAlias);
+    QVERIFY(stringAlias->hasDefinition());
     QVERIFY(mParser->findStatement("std::basic_string"));
-    QVERIFY(mParser->findStatement("std::basic_string::size"));
+    QCOMPARE(mParser->findStatementOf(main, {"std", "::", "basic_string"}, 0), basicString);
+    PStatement size = mParser->findStatement("std::basic_string::size");
+    QVERIFY(size);
+    QCOMPARE(mParser->findStatementOf(
+                 main, {"std", "::", "basic_string", "::", "size"}, 0), size);
 }
 
 void TestCppParser::test_standard_library_public_api_complete()
