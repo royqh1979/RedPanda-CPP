@@ -493,6 +493,17 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             kind = declaratorKind(declaration, declarator, context);
         }
 
+        if (declarator.definitionKind == DeclaratorDefinitionKind::Deleted) {
+            PStatement deleted = createStatement(declaration, declarator, context, kind);
+            PStatement existing = mergeDeclaration(deleted, context);
+            if (existing) {
+                if (context.fileInfo)
+                    context.fileInfo->removeStatement(existing);
+                mModel.deleteStatement(existing);
+            }
+            continue;
+        }
+
         StatementBuildContext declarationContext = context;
         if (isFunction(declarator) && context.scope == StatementScope::Local
                 && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)) {
@@ -544,6 +555,10 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
                 enumStatement->declarationRange = enumerator.range;
                 enumStatement->fileName = context.fileName;
                 enumStatement->declarationBoundaryAncestor = context.boundaryAncestor;
+                enumStatement->definitionRange = enumStatement->declarationRange;
+                enumStatement->definitionFileName = context.fileName;
+                enumStatement->definitionBoundaryAncestor = context.boundaryAncestor;
+                enumStatement->setHasDefinition(true);
                 enumStatement->typeInfo.qualifiedName = declaration.declarators.first().name;
                 qlonglong numericValue = nextEnumeratorValue;
                 if (!enumerator.value.isEmpty()) {
@@ -670,10 +685,17 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         }
     }
 
+    bool variable = kind == StatementKind::Variable || kind == StatementKind::GlobalVariable
+            || kind == StatementKind::LocalVariable;
+    bool declarationOnly = variable
+            && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern);
     bool hasBodyDefinition = isFunction(declarator) || kind == StatementKind::Class
             || kind == StatementKind::Namespace || kind == StatementKind::EnumType
             || kind == StatementKind::EnumClassType;
-    if (hasBodyDefinition && declaration.bodyRange.isValid()) {
+    if (hasBodyDefinition && !declaration.bodyRange.isValid()
+            && declarator.definitionKind == DeclaratorDefinitionKind::None)
+        declarationOnly = true;
+    if (!declarationOnly) {
         statement->definitionRange = declaration.range;
         statement->definitionFileName = context.fileName;
         statement->definitionBoundaryAncestor = context.boundaryAncestor;
@@ -700,6 +722,10 @@ PStatement CppStatementBuilder::createParameter(const ParameterInfo &parameter,
     statement->declarationRange = SourceRange{parameter.position, parameter.position};
     statement->fileName = context.fileName;
     statement->declarationBoundaryAncestor = context.boundaryAncestor;
+    statement->definitionRange = statement->declarationRange;
+    statement->definitionFileName = context.fileName;
+    statement->definitionBoundaryAncestor = context.boundaryAncestor;
+    statement->setHasDefinition(true);
     if (parameter.type)
         statement->typeInfo = *parameter.type;
     statement->properties.setFlag(StatementProperty::InProject, context.inProject);

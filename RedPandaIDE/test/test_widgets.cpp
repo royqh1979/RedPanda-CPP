@@ -510,6 +510,133 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
     QVERIFY(hint.contains("constructor"));
 }
 
+void TestWidgets::test_goto_statement_definitions()
+{
+    mMainContent = QStringList{
+        "extern int external;",
+        "int global;",
+        "typedef int IntAlias;",
+        "using DoubleAlias = double;",
+        "enum Color { red, green };",
+        "namespace LongName { int value; }",
+        "namespace Short = LongName;",
+        "class Forward;",
+        "struct Defaulted { Defaulted() = default; };",
+        "void deleted();",
+        "void deleted() = delete;",
+        "void declared();",
+        "void withParam(int param) {",
+        "    int local = param;",
+        "    return local;",
+        "}",
+        "void labelFunction() {",
+        "    retry: ;",
+        "    goto retry;",
+        "}",
+        "#define MACRO_VALUE 1",
+        "int use() { return global + red + MACRO_VALUE; }",
+        "IntAlias aliasValue;",
+        "DoubleAlias doubleValue;",
+        "int namespaceValue = Short::value;",
+        "Forward *forwardValue;",
+        "int useExternal() { return external; }",
+        "int useDeclared() { return declared(); }",
+        "int useDeleted() { return deleted(); }"
+    };
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+        buffer = mMainContent;
+        return true;
+    });
+    mParser->addProjectFile(mMainFile, false);
+    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+
+    QVERIFY(!mParser->findStatement("deleted"));
+    for (const char *name : {"global", "IntAlias", "DoubleAlias", "red", "Short",
+                             "Defaulted::Defaulted"}) {
+        PStatement statement = mParser->findStatement(QString::fromLatin1(name));
+        QVERIFY2(statement, name);
+        QVERIFY2(statement->hasDefinition(), name);
+    }
+    for (int line : {13, 14, 18}) {
+        QString name = line == 13 ? "param" : line == 14 ? "local" : "retry";
+        PStatement statement = mParser->findStatementOf(mMainFile, QStringList{name}, line);
+        QVERIFY2(statement, name.toUtf8().constData());
+        QVERIFY(statement->hasDefinition());
+    }
+    for (const char *name : {"external", "declared", "Forward"}) {
+        PStatement statement = mParser->findStatement(QString::fromLatin1(name));
+        QVERIFY2(statement, name);
+        QVERIFY2(!statement->hasDefinition(), name);
+    }
+
+    QSynedit::CharPos target{-1, -1};
+    QObject context;
+    Editor editor;
+    editor.setEditorSettings(&pSettings->editor());
+    editor.setColorManager(mColorManager.get());
+    editor.setFilename(mMainFile);
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+    editor.applySettings();
+    editor.setFileType(FileType::CppSource);
+    editor.loadContent(mMainContent);
+    editor.setCppParser(mParser);
+    connect(&editor, &Editor::openFileRequested, &context,
+            [&target](const QString &, FileType, const QString &,
+                      const QSynedit::CharPos &caretPos) {
+        target = caretPos;
+    });
+
+    auto positionOf = [&](const QString &lineText,
+                          const QString &identifier) -> QSynedit::CharPos {
+        int line = mMainContent.indexOf(lineText);
+        if (line < 0)
+            return {-1, -1};
+        int ch = lineText.indexOf(identifier);
+        if (ch < 0)
+            return {-1, -1};
+        return QSynedit::CharPos{ch, line};
+    };
+    auto checkGoto = [&](bool definition, const QString &lineText,
+                         const QString &identifier, const QString &expectedLineText) {
+        target = {-1, -1};
+        QSynedit::CharPos pos = positionOf(lineText, identifier);
+        QVERIFY2(pos.line >= 0, lineText.toUtf8().constData());
+        if (definition)
+            editor.gotoDefinition(pos);
+        else
+            editor.gotoDeclaration(pos);
+        int expectedLine = expectedLineText.isEmpty()
+                ? -1 : mMainContent.indexOf(expectedLineText);
+        QCOMPARE(target.line, expectedLine);
+    };
+
+    const QString useLine = "int use() { return global + red + MACRO_VALUE; }";
+    checkGoto(true, useLine, "global", "int global;");
+    checkGoto(false, useLine, "global", "int global;");
+    checkGoto(true, useLine, "red", "enum Color { red, green };");
+    checkGoto(true, useLine, "MACRO_VALUE", "#define MACRO_VALUE 1");
+    checkGoto(true, "IntAlias aliasValue;", "IntAlias", "typedef int IntAlias;");
+    checkGoto(true, "DoubleAlias doubleValue;", "DoubleAlias", "using DoubleAlias = double;");
+    checkGoto(true, "int namespaceValue = Short::value;", "Short",
+              "namespace Short = LongName;");
+    checkGoto(true, "    int local = param;", "param", "void withParam(int param) {");
+    checkGoto(true, "    return local;", "local", "    int local = param;");
+    checkGoto(true, "    goto retry;", "retry", "    retry: ;");
+    checkGoto(true, "struct Defaulted { Defaulted() = default; };", "Defaulted()",
+              "struct Defaulted { Defaulted() = default; };");
+    checkGoto(true, "int useExternal() { return external; }", "external", "");
+    checkGoto(false, "int useExternal() { return external; }", "external",
+              "extern int external;");
+    checkGoto(true, "int useDeclared() { return declared(); }", "declared", "");
+    checkGoto(false, "int useDeclared() { return declared(); }", "declared",
+              "void declared();");
+    checkGoto(true, "int useDeleted() { return deleted(); }", "deleted", "");
+    checkGoto(true, "Forward *forwardValue;", "Forward", "");
+    checkGoto(false, "Forward *forwardValue;", "Forward", "class Forward;");
+}
+
 void TestWidgets::test_function_tip_class()
 {
     Editor editor;

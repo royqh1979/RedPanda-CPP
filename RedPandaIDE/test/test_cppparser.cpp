@@ -105,6 +105,9 @@ void TestCppParser::test_global_variable_reference_scope()
     QVERIFY(!mParser->findStatement("main::ttt"));
     PStatement declaration = mParser->findStatement("ttt");
     QVERIFY(declaration);
+    QVERIFY(declaration->hasDefinition());
+    QCOMPARE(declaration->definitionFileName, "text.cpp");
+    QCOMPARE(declaration->definitionRange, declaration->declarationRange);
     PStatement reference = mParser->findStatementOf("text.cpp", QStringList{"ttt"}, 3);
     QVERIFY(reference);
     QCOMPARE(reference, declaration);
@@ -1048,9 +1051,10 @@ void TestCppParser::test_cppreference_function_syntax()
     QVERIFY(f1);
     QCOMPARE(f1->declarationRange.start.line, 9);
     QCOMPARE(f1->definitionRange.start.line, 31);
-    for (const char *name : {"f0", "f1", "fp03", "fp11", "main", "f2", "bar"}) {
+    for (const char *name : {"f0", "f1", "fp03", "fp11", "main", "f2"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
+    QVERIFY(!mParser->findStatement("bar"));
     QCOMPARE(mParser->findStatement("f0")->kind, StatementKind::Function);
     QCOMPARE(mParser->findStatement("fp03")->kind, StatementKind::Function);
     QCOMPARE(mParser->findStatement("fp11")->kind, StatementKind::Function);

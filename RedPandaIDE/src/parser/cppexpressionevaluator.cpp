@@ -701,6 +701,12 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
         result.type = mResolver.resolve(statement->typeInfo, {}, statement->parentScope.lock());
         result.kind = EvalStatementKind::Variable;
         break;
+    case StatementKind::Label:
+        result.kind = EvalStatementKind::Label;
+        break;
+    case StatementKind::Preprocessor:
+        result.kind = EvalStatementKind::Preprocessor;
+        break;
     default:
         return {};
     }

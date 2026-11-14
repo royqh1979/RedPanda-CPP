@@ -172,11 +172,23 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         result.declarators.append(declarator);
 
         if (mCursor.consume("=")) {
-            if (result.specifiers.type.qualifiedName == "auto") {
-                result.declarators.last().initializerPosition = mCursor.current().position;
-                result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
-            } else {
-                skipExpression({",", ";"});
+            bool function = !declarator.derivations.isEmpty()
+                    && declarator.derivations.first().kind == TypeDerivationKind::Function;
+            bool explicitDefinition = false;
+            if (function && mCursor.consume("default")) {
+                result.declarators.last().definitionKind = DeclaratorDefinitionKind::Defaulted;
+                explicitDefinition = true;
+            } else if (function && mCursor.consume("delete")) {
+                result.declarators.last().definitionKind = DeclaratorDefinitionKind::Deleted;
+                explicitDefinition = true;
+            }
+            if (!explicitDefinition) {
+                if (result.specifiers.type.qualifiedName == "auto") {
+                    result.declarators.last().initializerPosition = mCursor.current().position;
+                    result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
+                } else {
+                    skipExpression({",", ";"});
+                }
             }
         }
         if (!mCursor.atEnd() && mCursor.currentText() == "{") {

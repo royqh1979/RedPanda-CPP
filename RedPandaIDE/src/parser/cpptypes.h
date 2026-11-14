@@ -140,6 +140,12 @@ struct TypeInfo {
     QString toString() const;
 };
 
+enum class DeclaratorDefinitionKind {
+    None,
+    Defaulted,
+    Deleted
+};
+
 struct DeclaratorInfo {
     QString name;
     QString qualifier;
@@ -148,6 +154,7 @@ struct DeclaratorInfo {
     QVector<TypeDerivation> derivations;
     QString initializerText;
     SourcePosition initializerPosition;
+    DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;
     int structuredBindingIndex = -1;
 
     QString toString() const;

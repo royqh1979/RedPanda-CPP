@@ -93,6 +93,10 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
 
+普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definitionFileName、definitionRange 及对应边界祖先并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 不生成最终 Statement，若此前已解析同名声明则一并移除，不能留下可补全或可跳转条目。没有有效源码位置的 hard define 不参与跳转。
+
+Label 和 Preprocessor 在表达式名称解析中使用各自独立的结果类别，只提供 Statement 供 goto 等声明导航，不伪装成变量、函数或类型，也不提供表达式类型。gotoDefinition 只接受 HasDefinition 且定义位置有效的 Statement；gotoDeclaration 同样要求声明位置有效。
+
 创建层同时把 Statement 写入实际源码文件的 ParsedFileInfo。class、namespace 和函数只以 bodyRange 建立代码作用域，父节点按父 Statement 的身份关联；声明范围仍覆盖完整声明。不同 include 文件的位置和作用域分别写入各自的 ParsedFileInfo，不跨文件比较 SourcePosition。`struct S {} value;` 中类体只属于 S 的定义，不会被当作变量 value 的函数定义。
 
 internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
@@ -313,4 +317,4 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 重命名按 syntax token 工作：只处理 `TokenType::Identifier`，用该位置表达式查找 Statement，并比较声明文件与声明位置，不能只按文本相同替换。`findOccurenceInFile` 和 `renameSymbolInEditor` 都采用该规则。`renameSymbol` 只允许声明和定义位于当前文件的符号，私有实现直接操作传入的当前 Editor，不再通过 MainWindow 二次查找，也不处理未打开文件。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
 
-补全和类浏览器使用统一的临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。
+补全和类浏览器使用统一的临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。goto 测试覆盖变量、typedef/using/namespace 别名、枚举值、参数、标签、宏、普通及 `=default` 函数，以及 extern、前置声明和 `=delete` 等无定义的拒绝路径。

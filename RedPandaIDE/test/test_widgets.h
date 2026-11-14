@@ -52,6 +52,7 @@ private slots:
     void test_class_browser_inherited_members();
     void test_goto_class_declaration_and_definition();
     void test_goto_constructor_declaration_and_definition();
+    void test_goto_statement_definitions();
     void test_function_tip_class();
     void test_rename_class_and_constructor();
     void test_rename_from_constructor();

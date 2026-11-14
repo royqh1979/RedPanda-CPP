@@ -4763,7 +4763,7 @@ void Editor::gotoDeclaration(const CharPos &pos)
                 pos.line);
     statement = resolveClassOrConstructorAt(statement, pos);
 
-    if (!statement) {
+    if (!statement || !statement->declarationRange.start.isValid()) {
         return;
     }
     QString filename;
@@ -4790,7 +4790,8 @@ void Editor::gotoDefinition(const CharPos &pos)
                 expression,
                 pos.line);
     statement = resolveClassOrConstructorAt(statement, pos);
-    if (!statement) {
+    if (!statement || !statement->hasDefinition()
+            || !statement->definitionRange.start.isValid()) {
         return;
     }
     QString filename;

@@ -28,7 +28,10 @@ struct EvalResult {
     PStatement statement;
     TemplateBindings templateBindings;
 
-    bool isValid() const { return !type.qualifiedName.isEmpty(); }
+    bool isValid() const {
+        return !type.qualifiedName.isEmpty() || kind == EvalStatementKind::Label
+                || kind == EvalStatementKind::Preprocessor;
+    }
 };
 
 class CppTypeResolver

@@ -156,7 +156,9 @@ enum class EvalStatementKind {
     Type,
     Variable,
     Literal,
-    Function
+    Function,
+    Label,
+    Preprocessor
 };
 
 struct StatementMatchPosition{

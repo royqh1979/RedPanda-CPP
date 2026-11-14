@@ -1121,8 +1121,8 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     PStatement value = findStatement(model.childrenStatements(), "value");
     QVERIFY(s && value);
     QVERIFY(s->hasDefinition());
-    QVERIFY(!value->hasDefinition());
-    QVERIFY(!value->definitionRange.isValid());
+    QVERIFY(value->hasDefinition());
+    QCOMPARE(value->definitionRange, value->declarationRange);
     QCOMPARE(value->type(), "S");
 }
 
