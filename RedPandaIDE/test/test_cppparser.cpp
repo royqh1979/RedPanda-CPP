@@ -1150,6 +1150,8 @@ void TestCppParser::test_cppreference_range_for_syntax()
     QVERIFY(mParser->findStatementOf(file, "i", 7));
     QVERIFY(mParser->findStatementOf(file, "n", 14));
     QVERIFY(mParser->findStatementOf(file, "elem_t", 23));
+    QCOMPARE(mParser->findStatementOf(file, "v", 5)->typeInfo.qualifiedNameText,
+             "std::vector<int>");
     QCOMPARE(mParser->findStatementOf(file, "v", 5)->type(), "std::vector<int>");
     QCOMPARE(mParser->findStatementOf(file, "a", 16)->args, "[]");
 }

@@ -131,9 +131,9 @@ struct TypeDerivation {
 
 struct TypeInfo {
     QString qualifiedName;
+    QString qualifiedNameText;
     std::weak_ptr<Statement> declaration;
     QVector<TemplateArgument> templateArguments;
-    QString templateArgumentsText;
     QVector<TypeDerivation> derivations;
     TypeQualifiers qualifiers = TypeQualifier::None;
 
@@ -194,6 +194,8 @@ struct TemplateParameterInfo {
     QString name;
     TemplateParameterKind kind = TemplateParameterKind::Type;
     bool parameterPack = false;
+    PTypeInfo type;
+    QString defaultArgumentText;
 };
 
 enum class TemplateDeclarationKind {

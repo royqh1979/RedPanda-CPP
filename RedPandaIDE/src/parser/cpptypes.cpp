@@ -93,10 +93,10 @@ QString renderType(const TypeInfo &type, const QString &name = QString())
         result += "const ";
     if (type.qualifiers.testFlag(TypeQualifier::Volatile))
         result += "volatile ";
-    result += type.qualifiedName;
-    if (!type.templateArgumentsText.isEmpty()) {
-        result += type.templateArgumentsText;
-    } else if (!type.templateArguments.isEmpty()) {
+    bool useQualifiedNameText = type.templateArguments.isEmpty()
+            && type.qualifiedNameText.contains('<');
+    result += useQualifiedNameText ? type.qualifiedNameText : type.qualifiedName;
+    if (!useQualifiedNameText && !type.templateArguments.isEmpty()) {
         QStringList arguments;
         for (const TemplateArgument &argument : type.templateArguments)
             arguments.append(argument.toString());

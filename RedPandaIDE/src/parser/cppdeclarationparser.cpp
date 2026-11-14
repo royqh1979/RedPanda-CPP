@@ -300,6 +300,8 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
                 return false;
             }
             parameter.name = declarator.name;
+            parameter.type = std::make_shared<TypeInfo>(specifiers.type);
+            appendTypeDerivation(*parameter.type, declarator);
         }
         if (mCursor.consume("..."))
             parameter.parameterPack = true;
@@ -309,10 +311,12 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
             mCursor.advance();
         }
         if (mCursor.consume("=")) {
+            CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
             if (parameter.kind == TemplateParameterKind::NonType)
                 skipExpression({",", ">", ">>"});
             else
                 skipTemplateDefaultArgument();
+            parameter.defaultArgumentText = readConsumedText(defaultStart);
         }
         result.templateParameters.append(parameter);
 
@@ -641,6 +645,7 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
             result.qualifiedName += "::" + parseQualifiedNameText();
         if (!prefix.isEmpty())
             result.qualifiedName = prefix + " " + result.qualifiedName;
+        result.qualifiedNameText = readConsumedText(start);
         return true;
     }
 
@@ -655,22 +660,24 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
         name += text;
         mCursor.advance();
         if (mCursor.currentText() == "<") {
-            result.templateArgumentsText = readBalancedToken("<", ">", true);
-            if (result.templateArgumentsText.isEmpty()) {
+            if (readBalancedToken("<", ">", true).isEmpty()) {
                 mCursor.restore(start);
                 return false;
             }
         }
-        if (mCursor.consume("::"))
+        if (mCursor.consume("::")) {
             name += "::";
-        else
+            mCursor.consume("template");
+        } else {
             break;
+        }
     }
     if (name.isEmpty()) {
         mCursor.restore(start);
         return false;
     }
     result.qualifiedName = name;
+    result.qualifiedNameText = readConsumedText(start);
     if (!prefix.isEmpty())
         result.qualifiedName = prefix + " " + result.qualifiedName;
     return !result.qualifiedName.isEmpty();
@@ -782,6 +789,33 @@ QString CppDeclarationParser::parseQualifiedNameText()
     return result;
 }
 
+QString CppDeclarationParser::readConsumedText(const CppTokenCursor::Checkpoint &start)
+{
+    CppTokenCursor::Checkpoint end = mCursor.checkpoint();
+    CppTokenizer::Token endToken = mCursor.greaterConsumed() > 0
+            ? mCursor.current() : mCursor.peek(-1);
+    if (mCursor.greaterConsumed() > 0)
+        endToken.text = ">";
+    const CppTokenizer::Token &startToken = mCursor.peek(start.index - mCursor.index());
+    QString result = readSourceText(startToken, endToken);
+    if (!result.isEmpty())
+        return result;
+
+    mCursor.restore(start);
+    while (mCursor.index() < end.index
+            || (mCursor.index() == end.index
+                && mCursor.greaterConsumed() < end.greaterConsumed)) {
+        QString text = mCursor.currentText();
+        appendToken(result, text);
+        if (text == ">" || text == ">>")
+            mCursor.consumeGreater();
+        else
+            mCursor.advance();
+    }
+    mCursor.restore(end);
+    return result;
+}
+
 QString CppDeclarationParser::readSourceText(const CppTokenizer::Token &startToken,
                                              const CppTokenizer::Token &endToken) const
 {
@@ -792,6 +826,12 @@ QString CppDeclarationParser::readSourceText(const CppTokenizer::Token &startTok
     }
     const QStringList &lines = mCursor.sourceLines();
     if (startToken.position.line >= lines.count() || endToken.position.line >= lines.count())
+        return QString();
+    auto matchesSource = [&lines](const CppTokenizer::Token &token) {
+        return lines[token.position.line].mid(
+                    token.position.ch, token.text.length()) == token.text;
+    };
+    if (!matchesSource(startToken) || !matchesSource(endToken))
         return QString();
     if (startToken.position.line == endToken.position.line) {
         return lines[startToken.position.line].mid(

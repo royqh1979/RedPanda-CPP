@@ -46,6 +46,7 @@ private:
                               bool useSourceText = false, bool requireNormalized = false);
     QString readSourceText(const CppTokenizer::Token &startToken,
                            const CppTokenizer::Token &endToken) const;
+    QString readConsumedText(const CppTokenCursor::Checkpoint &start);
     void skipBalancedToken();
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);

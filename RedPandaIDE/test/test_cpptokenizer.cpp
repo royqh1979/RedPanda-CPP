@@ -624,9 +624,24 @@ void TestCppTokenizer::test_parse_template_type_arguments()
     QVERIFY(parseDeclarationText("std::vector<std::vector<int>> values;", declaration));
     QCOMPARE(declaration.declarators[0].name, "values");
     QCOMPARE(declaration.specifiers.type.qualifiedName, "std::vector");
-    QCOMPARE(declaration.specifiers.type.templateArgumentsText, "<std::vector<int>>");
+    QCOMPARE(declaration.specifiers.type.qualifiedNameText, "std::vector<std::vector<int>>");
     QVERIFY(declaration.specifiers.type.templateArguments.isEmpty());
     QCOMPARE(declaration.specifiers.type.toString(), "std::vector<std::vector<int>>");
+
+    DeclarationInfo dependent;
+    QVERIFY(parseDeclarationText("typename A<T>::template B<U>::type value;", dependent));
+    QCOMPARE(dependent.declarators[0].name, "value");
+    QCOMPARE(dependent.specifiers.type.qualifiedName, "typename A::B::type");
+    QCOMPARE(dependent.specifiers.type.qualifiedNameText,
+             "typename A<T>::template B<U>::type");
+
+    DeclarationInfo multiSegment;
+    QVERIFY(parseDeclarationText(
+                "typename A<B<int>>::template C<D<E<int>>>::type value;", multiSegment));
+    QCOMPARE(multiSegment.declarators[0].name, "value");
+    QCOMPARE(multiSegment.specifiers.type.qualifiedName, "typename A::C::type");
+    QCOMPARE(multiSegment.specifiers.type.qualifiedNameText,
+             "typename A<B<int>>::template C<D<E<int>>>::type");
 
     StatementModel model;
     CppStatementBuilder builder(model);
@@ -643,7 +658,7 @@ void TestCppTokenizer::test_parse_template_type_arguments()
 
     DeclarationInfo multiline;
     QVERIFY(parseDeclarationText("std::vector<\n  std::vector<int>\n> values;", multiline));
-    QCOMPARE(multiline.specifiers.type.templateArgumentsText, "<   std::vector<int> >");
+    QCOMPARE(multiline.specifiers.type.qualifiedNameText, "std::vector<   std::vector<int> >");
     QCOMPARE(multiline.declarators[0].name, "values");
     TypeInfo resolvedMultiline = resolver.resolve(multiline.specifiers.type);
     QCOMPARE(resolvedMultiline.templateArguments.count(), 1);
@@ -703,6 +718,8 @@ void TestCppTokenizer::test_parse_template_parameter_kinds()
     QCOMPARE(declaration.templateParameters.count(), 2);
     QCOMPARE(declaration.templateParameters[0].kind, TemplateParameterKind::NonType);
     QCOMPARE(declaration.templateParameters[0].name, "Size");
+    QVERIFY(declaration.templateParameters[0].type);
+    QCOMPARE(declaration.templateParameters[0].type->qualifiedName, "int");
     QCOMPARE(declaration.templateParameters[1].kind, TemplateParameterKind::TemplateTemplate);
     QCOMPARE(declaration.templateParameters[1].name, "Container");
 }
@@ -1915,10 +1932,25 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
         QCOMPARE(string->declarationRange.start.line, 2);
         QVERIFY(!string->parentScope.lock()->declSpecifierProperties.testFlag(
                     DeclSpecifierProperty::Inline));
+        QCOMPARE(string->templateParameters[1].defaultArgumentText, "char_traits<_CharT>");
+        QCOMPARE(string->templateParameters[2].defaultArgumentText, "allocator<_CharT>");
         QVERIFY(resolver.findStatement("std::string"));
-        for (const char *name : {"SimpleDefault", "NestedClosing", "Comparison", "CallDefault"}) {
-            QVERIFY2(resolver.findStatement(QString("std::") + name), name);
-        }
+
+        PStatement simpleDefault = resolver.findStatement("std::SimpleDefault");
+        QVERIFY(simpleDefault);
+        QCOMPARE(simpleDefault->templateParameters[0].defaultArgumentText, "int");
+        PStatement nestedClosing = resolver.findStatement("std::NestedClosing");
+        QVERIFY(nestedClosing);
+        QCOMPARE(nestedClosing->templateParameters[0].defaultArgumentText,
+                 "std::pair<int, std::string>");
+        PStatement comparison = resolver.findStatement("std::Comparison");
+        QVERIFY(comparison);
+        QCOMPARE(comparison->templateParameters[0].defaultArgumentText, "1 < 2");
+        QVERIFY(comparison->templateParameters[0].type);
+        QCOMPARE(comparison->templateParameters[0].type->qualifiedName, "int");
+        PStatement callDefault = resolver.findStatement("std::CallDefault");
+        QVERIFY(callDefault);
+        QCOMPARE(callDefault->templateParameters[0].defaultArgumentText, "foo(1, 2)");
 
         inlineNamespace.reset();
         for (const PStatement &statement : model.statements()) {

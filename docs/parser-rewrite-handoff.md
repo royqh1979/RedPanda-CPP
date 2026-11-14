@@ -48,7 +48,7 @@ Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`
 
 ## Release 性能分析
 
-现已按既定设计实现惰性解析：声明阶段只在 `TypeInfo::templateArgumentsText` 中保存模板实参原文；类型求值、模板绑定及 range/tuple 类型操作需要结构时才调用 `parseTemplateArguments()`。函数模板的 `Container<T>` 递归绑定也会先取得结构，新增 `front_value(std::vector<T>)` 测试防止该路径因惰性保存而失效。
+现已按既定设计实现惰性解析：声明阶段只在 `TypeInfo::qualifiedNameText` 中保存包含各段模板实参的完整限定名原文；类型求值、模板绑定及 range/tuple 类型操作需要结构时才调用 `parseTemplateArguments()`。函数模板的 `Container<T>` 递归绑定也会先取得结构，新增 `front_value(std::vector<T>)` 测试防止该路径因惰性保存而失效。
 
 **性能测量必须直接运行 Release 可执行文件，不能在 gdb 下计时。** Windows 下直接运行时，Qt 的 `qWarning()` 默认可能只发往调试器；设置 `QT_FORCE_STDERR_LOGGING=1` 后可在终端取得日志。此前 gdb 下得到的 12.7 秒 `<string>`、89.5 秒完整验收、63 秒 replay 和 21 秒销毁等数据均受调试器干扰，不能用于性能结论或优化前后比较。
 

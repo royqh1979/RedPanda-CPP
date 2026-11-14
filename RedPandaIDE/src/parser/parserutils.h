@@ -199,7 +199,6 @@ struct Statement {
     QString args; // args "(int a,float b)"
     QVector<ParameterInfo> parameters;
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
-    QString templateSpecializationParams;
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
     QVector<TemplateParameterInfo> templateParameters;
     DeclSpecifierProperties declSpecifierProperties;

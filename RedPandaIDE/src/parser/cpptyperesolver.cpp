@@ -41,14 +41,34 @@ bool isInvocable(const PStatement &statement)
 
 void materializeTemplateArguments(TypeInfo &type)
 {
-    if (!type.templateArguments.isEmpty() || type.templateArgumentsText.isEmpty())
+    if (!type.templateArguments.isEmpty() || !type.qualifiedNameText.contains('<'))
         return;
     CppTokenizer tokenizer;
-    tokenizer.tokenize({type.templateArgumentsText});
+    tokenizer.tokenize({type.qualifiedNameText});
+    const CppTokenizer::TokenList &tokens = tokenizer.tokens();
+    int templateStart = -1;
+    int templateLevel = 0;
+    for (int i = 0; i < tokens.count(); ++i) {
+        const QString &text = tokens[i].text;
+        if (text == "<") {
+            if (templateLevel == 0)
+                templateStart = i;
+            ++templateLevel;
+            continue;
+        }
+        if (text == ">" || text == ">>") {
+            templateLevel = qMax(0, templateLevel - text.length());
+            continue;
+        }
+        if (tokens[i].matchIndex > i)
+            i = tokens[i].matchIndex;
+    }
+    if (templateStart < 0)
+        return;
     CppTokenCursor cursor(tokenizer);
+    cursor.restore({templateStart, 0});
     CppDeclarationParser parser(cursor);
-    if (parser.parseTemplateArguments(type))
-        type.templateArgumentsText.clear();
+    parser.parseTemplateArguments(type);
 }
 }
 
