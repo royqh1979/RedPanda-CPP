@@ -1325,6 +1325,38 @@ void TestCppParser::test_standard_library_string()
                  main, {"std", "::", "basic_string", "::", "size"}, 0), size);
 }
 
+void TestCppParser::test_standard_library_vector_subscript()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    std::string s;",
+        "    lst[0].size();",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement scope = mParser->findScopeStatement(main, 5);
+    QVERIFY(scope);
+    QCOMPARE(scope->fullName, "main");
+    QStringList expression{"lst", "[", "0", "]"};
+    EvalResult result = mParser->evalExpression(main, expression, scope);
+    PStatement basicString = mParser->findStatement("std::basic_string");
+    QVERIFY(basicString);
+    QCOMPARE(result.type.declaration.lock(), basicString);
+    QVERIFY(!result.type.derivations.isEmpty());
+    QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
+    QCOMPARE(mParser->findStatementOf(main, {"lst", "[", "0", "]", ".", "size"}, 5),
+             mParser->findStatement("std::basic_string::size"));
+}
+
 void TestCppParser::test_standard_library_public_api_complete()
 {
     QTemporaryDir tmp;

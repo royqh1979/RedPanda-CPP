@@ -22,7 +22,7 @@
 
 设计说明位于：
 
-- `docs/cpptokenizer-refactor.md`
+- `docs/cppparser-design.md`
 - `docs/parser-concurrency-review.md`
 
 Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`；后者没有行列位置。

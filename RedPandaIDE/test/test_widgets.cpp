@@ -345,6 +345,48 @@ void TestWidgets::test_code_completion_standard_library_string()
     QVERIFY(!names.contains(""));
 }
 
+void TestWidgets::test_code_completion_standard_library_vector_subscript()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QFile file(main);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write("#include <bits/stdc++.h>\n\n"
+               "int main() {\n"
+               "    std::vector<std::string> lst;\n"
+               "    std::string s;\n"
+               "    lst[0].\n"
+               "}\n");
+    file.close();
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    popup.setShowEditorCaretFunc([] {});
+    popup.setKeypressedCallback([](QKeyEvent *) { return false; });
+    popup.setCurrentScope(mParser->findScopeStatement(main, 5));
+    popup.prepareSearch("", {"lst", "[", "0", "]"}, ".", {}, main, 5,
+                        CodeCompletionType::Normal, {});
+    popup.search("", false, "default");
+    QListView *view = popup.findChild<QListView *>();
+    QVERIFY(view);
+    CodeCompletionListModel *model = qobject_cast<CodeCompletionListModel *>(view->model());
+    QVERIFY(model);
+    QSet<QString> names;
+    for (int i = 0; i < model->rowCount({}); ++i) {
+        PStatement statement = model->statement(model->index(i, 0));
+        if (statement)
+            names.insert(statement->command);
+    }
+    QVERIFY(names.contains("size"));
+    QVERIFY(names.contains("empty"));
+}
+
 void TestWidgets::test_goto_standard_library_string()
 {
     QTemporaryDir tmp;

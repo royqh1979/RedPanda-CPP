@@ -31,12 +31,12 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `tools/consolepauser/` — 辅助程序，用于在用户程序退出后保持控制台窗口不关闭。
 - `tools/redpanda-git-askpass/`、`tools/redpanda-win-git-askpass/` — git askpass 辅助程序（仅在启用 `VCS` 时构建）。
 - `tools/gdb-scripts/` — gdb pretty-printer / 辅助脚本。
-- `addon/` — Lua 插件支持：`defs/` 中的 Teal（`.tl`）API 类型定义（见 `docs/addon.md`）、示例插件（`theme/`、`compiler_hint/`），以及用于生成插件代码的 `gen.sh`（CI 会检查其一致性）。
+- `addon/` — Lua 插件支持：`defs/` 中的 Teal（`.tl`）API 类型定义、示例插件（`theme/`、`compiler_hint/`），以及用于生成插件代码的 `gen.sh`（CI 会检查其一致性）。
 - `assets/` — 打包用的捆绑工具链/资源（astyle、MinGW 发行版）。
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cpptokenizer-refactor.md`（Tokenizer 纯切分化与 Parser 声明级递归下降重构设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）；`addon.md`、`qsynedit-redesign.txt` 已过期，仅供参考。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）。
 
 ## 构建
 
@@ -155,7 +155,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
   1. `connect()`/`QTimer::singleShot()` 等以 lambda 作槽时必须传入 QObject context 对象（context 析构即断开连接），它约束按值捕获的 `this`/裸指针。无 context 的连接只随 sender 存亡，sender 可能比捕获的对象长寿——案例：todoparser 的 `connect(mThread, finished, [this]{...})`，TodoParser 先析构则 `this` 悬空。
   2. connected lambda 不得用 `&` 引用捕获局部变量——context 保护不了比它早死的栈对象（真实崩溃案例见提交 `63e90e30`：测试 lambda 以长命的 `mEdit.get()` 为 context、引用捕获局部变量，函数返回后信号触发写已释放栈地址）。确需写回局部变量时，用一个在函数开头声明的局部 `QObject` 作 context（作用域结束时断开，与局部变量同生共死）。
   残余注意：按值捕获的裸指针不在两条规则覆盖内，要求指针指向的对象明显比 context 长寿；优先捕获值类型或 shared_ptr。
-- Lua 插件 API 用 Teal 标注类型；API 定义位于 `addon/defs/*.d.tl`，文档见 `docs/addon.md`。插件 API 的版本规则很严格——修改接口前请先阅读 `docs/addon.md`。
+- Lua 插件 API 用 Teal 标注类型；API 定义位于 `addon/defs/*.d.tl`。插件 API 的版本规则很严格，修改接口前须核对现有定义和调用方。
 
 ## 安全注意事项
 

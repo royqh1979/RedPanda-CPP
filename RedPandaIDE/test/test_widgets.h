@@ -43,6 +43,7 @@ private slots:
     void test_code_completion_inline_namespaces();
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_code_completion_standard_library_string();
+    void test_code_completion_standard_library_vector_subscript();
     void test_goto_standard_library_string();
 #endif
     void test_code_completion_types();
