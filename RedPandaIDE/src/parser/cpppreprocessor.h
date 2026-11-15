@@ -310,9 +310,6 @@ private:
     bool evalExpr(const QString &expr, NumberType& result, int& pos) const;
 
     bool evaluateExpression(QString line) const;
-
-    static QByteArray fileContentHash(const QString &fileName);
-
 private:
     struct Session {
         int index = 0;
@@ -353,7 +350,6 @@ private:
         struct FileMetadata {
             QDateTime lastModified;
             qint64 size = -1;
-            QByteArray contentHash;
             bool includeProtected = false;
         };
         QHash<QString, PParsedFileInfo> replayRecords;

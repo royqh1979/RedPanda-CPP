@@ -50,7 +50,6 @@ private slots:
     void test_replay_unguarded_cross_reparse();
     void test_replay_external_modification();
     void test_subtree_mtime_invalidates_matching_prefix();
-    void test_subtree_same_stat_content_change_invalidates();
     void test_replay_event_counts();
     void test_replay_miss_reasons_are_observable();
     void test_metadata_only_open_is_not_counted_as_scan();

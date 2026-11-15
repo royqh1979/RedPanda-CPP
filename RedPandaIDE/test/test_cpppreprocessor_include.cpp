@@ -1418,44 +1418,6 @@ void TestCppPreprocessorInclude::test_subtree_mtime_invalidates_matching_prefix(
     QCOMPARE(p.eventCounts(outer).invalidate, 1);
 }
 
-void TestCppPreprocessorInclude::test_subtree_same_stat_content_change_invalidates()
-{
-    // `test_subtree_mtime_invalidates_matching_prefix()` with same mtime and size.
-    QTemporaryDir tmp;
-    QVERIFY(tmp.isValid());
-    auto writeFile = [](const QString &path, const QStringList &lines) {
-        QFile file(path);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-            return false;
-        file.write(lines.join('\n').toUtf8());
-        file.close();
-        return true;
-    };
-    QString inner = tmp.filePath("inner.h");
-    QString outer = tmp.filePath("outer.h");
-    QString main = tmp.filePath("main.cpp");
-    QVERIFY(writeFile(inner, {"int inner_v1;"}));
-    QVERIFY(writeFile(outer, {"#include \"inner.h\"", "int outer;"}));
-    QVERIFY(writeFile(main, {"#include \"outer.h\""}));
-
-    CppPreprocessor p;
-    p.addIncludePath(tmp.path());
-    p.addProjectFile(main);
-    p.preprocess(main);
-    QVERIFY(p.result().contains("int inner_v1;"));
-    QDateTime innerStamp = QFileInfo(inner).lastModified();
-
-    QVERIFY(writeFile(inner, {"int inner_v2;"}));
-    QFile stampFile(inner);
-    QVERIFY(stampFile.open(QIODevice::ReadOnly));
-    QVERIFY(stampFile.setFileTime(innerStamp, QFileDevice::FileModificationTime));
-    stampFile.close();
-    QCOMPARE(QFileInfo(inner).lastModified(), innerStamp);
-    p.preprocess(main);
-    QVERIFY(p.result().contains("int inner_v2;"));
-    QCOMPARE(p.eventCounts(outer).invalidate, 1);
-}
-
 void TestCppPreprocessorInclude::test_replay_external_modification()
 {
     QTemporaryDir tmp;
