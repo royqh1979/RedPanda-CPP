@@ -1595,6 +1595,35 @@ void TestCppParser::test_standard_library_expression_chains()
     QCOMPARE(flip, mParser->findStatement("std::_Bit_reference::flip"));
 }
 
+void TestCppParser::test_standard_library_parse_baseline()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    lst.front().append(\"llala\");",
+        "    std::cout<<lst.size()<<std::endl;",
+        "    return 0;",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+
+    QElapsedTimer timer;
+    timer.start();
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    qWarning() << "STDLIB_TEST_TIMING completeParseMs" << timer.elapsed();
+    QVERIFY(mParser->findStatement("std::vector"));
+    QVERIFY(mParser->findStatement("std::basic_string::append"));
+    PStatement variable = mParser->findStatementOf(main, "lst", 4);
+    QVERIFY(variable);
+    QCOMPARE(variable->command, "lst");
+}
+
 void TestCppParser::test_standard_library_public_api_complete()
 {
     QTemporaryDir tmp;

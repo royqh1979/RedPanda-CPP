@@ -39,6 +39,7 @@ public:
 
 private:
     bool parseTypeName(TypeInfo &result);
+    bool skipTemplateArguments();
     bool isConstructorDeclaration();
     bool parseStructuredBinding(DeclarationInfo &result);
     QString parseOperatorName();

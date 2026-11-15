@@ -63,6 +63,7 @@ private slots:
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();
     void test_standard_library_expression_chains();
+    void test_standard_library_parse_baseline();
     void test_standard_library_public_api_complete();
 #endif
 protected:

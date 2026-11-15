@@ -337,6 +337,35 @@ void CppDeclarationParser::setCurrentClassName(const QString &className)
         mClassName.truncate(templateStart);
 }
 
+bool CppDeclarationParser::skipTemplateArguments()
+{
+    if (mCursor.atEnd() || mCursor.currentText() != "<")
+        return false;
+    int level = 0;
+    while (!mCursor.atEnd()) {
+        const QString &text = mCursor.currentText();
+        if (mCursor.current().matchIndex > mCursor.index()) {
+            skipBalancedToken();
+            continue;
+        }
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
+            if (text == "<") {
+                ++level;
+                mCursor.advance();
+                continue;
+            }
+            if (text == ">" || text == ">>") {
+                mCursor.consumeGreater();
+                if (--level == 0)
+                    return true;
+                continue;
+            }
+        }
+        mCursor.advance();
+    }
+    return false;
+}
+
 bool CppDeclarationParser::isConstructorDeclaration()
 {
     DeclarationProfileScope profileScope(declarationProfile.constructorCheckMs);
@@ -352,8 +381,7 @@ bool CppDeclarationParser::isConstructorDeclaration()
         }
         parts.append(mCursor.currentText());
         mCursor.advance();
-        if (mCursor.currentText() == "<"
-                && readBalancedToken("<", ">").isEmpty()) {
+        if (mCursor.currentText() == "<" && !skipTemplateArguments()) {
             mCursor.restore(checkpoint);
             return false;
         }

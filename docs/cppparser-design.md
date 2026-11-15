@@ -105,7 +105,7 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 ### 声明产生式与错误恢复
 
-`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。配对括号优先使用 matchIndex 识别；需要比较尖括号等运算符文本时，先判断 TokenKind::Operator，再在同一个分支中比较具体文本，避免对标识符和字面量做无意义比较。
+`parseScope()` 分别分发 namespace、class、enum、using/alias、template 和普通声明。普通声明由 `parseDeclSpecifierSeq()`、`parseDeclarator()` 和声明后缀组成；一条声明共享 DeclSpecifierInfo，每个 declarator 分别生成 TypeInfo 和 Statement。namespace/class/enum 保留各自产生式，不强行套入普通 declarator。构造函数识别只收集限定名各段的标识符文本，并跳过配对模板参数；只有这些文本用于判断类内名称是否等于当前类名、类外是否符合 `A::A`。模板参数不参与构造函数识别，避免在每次说明符循环中重复进行类型语义解析。识别路径只配平并推进游标，不生成模板原文；只有真正的类型解析需要保存类型信息时才读取原文。配对括号优先使用 matchIndex 识别；需要比较尖括号等运算符文本时，先判断 TokenKind::Operator，再在同一个分支中比较具体文本，避免对标识符和字面量做无意义比较。
 
 声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
 
