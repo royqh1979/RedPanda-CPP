@@ -222,6 +222,12 @@ void TestCppPreprocessor::test_evaluate_constant_expression_1()
     QCOMPARE(preprocessor.evaluateIf("0?0:1"), true);
     QCOMPARE(preprocessor.evaluateIf("1?1:0"), true);
     QCOMPARE(preprocessor.evaluateIf("0?1:0"), false);
+    QCOMPARE(preprocessor.evaluateIf("0 && 1 || 1"), true);
+    QCOMPARE(preprocessor.evaluateIf("0 && (1 || 1) || 1"), true);
+    QCOMPARE(preprocessor.evaluateIf("0 && 1 && 1 || 1"), true);
+    QCOMPARE(preprocessor.evaluateIf("1 || 0 && 0"), true);
+    QCOMPARE(preprocessor.evaluateIf("0 ? 0 : 1 ? 0 : 1"), false);
+    QCOMPARE(preprocessor.evaluateIf("1 ? 1 : 0 ? 0 : 1"), true);
 
 }
 
