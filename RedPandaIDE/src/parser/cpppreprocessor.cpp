@@ -23,9 +23,11 @@
 #include <QElapsedTimer>
 #include <QMessageBox>
 #include <QMultiHash>
+#include <QCryptographicHash>
 #include <qt_utils/utils.h>
 
 namespace {
+
 struct PreprocessorProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 openIncludeNs = 0;
@@ -180,9 +182,14 @@ bool CppPreprocessor::hasValidFileStamps(const PParsedFileInfo &fileInfo) const
         const Registry::FileMetadata &stamp = mRegistry.fileMetadata[fileName];
         if (stamp.size < 0)
             continue;
+
+        // fast path: mtime or size mismatch
         QFileInfo diskInfo(fileName);
         if (!diskInfo.exists() || diskInfo.lastModified() != stamp.lastModified
                 || diskInfo.size() != stamp.size)
+            return false;
+
+        if (fileContentHash(fileName) != stamp.contentHash)
             return false;
     }
     return true;
@@ -903,7 +910,8 @@ void CppPreprocessor::openInclude(QString fileName)
             parsedFile->buffer = readFileToLines(fileName);
             QFileInfo diskInfo(fileName);
             mRegistry.fileMetadata.insert(fileName,
-                    Registry::FileMetadata{diskInfo.lastModified(), diskInfo.size()});
+                    Registry::FileMetadata{diskInfo.lastModified(), diskInfo.size(),
+                                           fileContentHash(fileName)});
         }
         combineLinesEndingWithBackslash(parsedFile->buffer);
         replaceCommentsBySpaceChar(parsedFile->buffer);
@@ -1937,4 +1945,13 @@ bool CppPreprocessor::evaluateExpression(QString line) const
     return result;
 }
 
-
+QByteArray CppPreprocessor::fileContentHash(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly))
+        return QByteArray();
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (!hash.addData(&file))
+        return QByteArray();
+    return hash.result();
+}
