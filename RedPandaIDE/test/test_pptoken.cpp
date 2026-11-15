@@ -140,6 +140,142 @@ void TestPpTokenizer::test_end_of_line_markers()
                  "id:a", "eol:", "eol:", "id:b", "eol:", "eof:"}));
 }
 
+void TestPpTokenizer::test_empty_and_whitespace_only_lines()
+{
+    QCOMPARE(dumpTokens({}), QStringList({"eof:"}));
+    QCOMPARE(dumpTokens({""}), QStringList({"eol:", "eof:"}));
+    QStringList lines{" \t "};
+    PpTokenizer tokenizer(lines);
+    PpToken eol = tokenizer.next();
+    QCOMPARE(eol.kind, PpTokenKind::EndOfLine);
+    QCOMPARE(eol.whitespaceBefore, " \t ");
+    QCOMPARE(tokenizer.next().kind, PpTokenKind::EndOfInput);
+}
+
+void TestPpTokenizer::test_exact_whitespace()
+{
+    QStringList lines{" \t a  b \t"};
+    PpTokenizer tokenizer(lines);
+    PpToken a = tokenizer.next();
+    QCOMPARE(a.kind, PpTokenKind::Identifier);
+    QCOMPARE(a.text, "a");
+    QCOMPARE(a.whitespaceBefore, " \t ");
+    PpToken b = tokenizer.next();
+    QCOMPARE(b.text, "b");
+    QCOMPARE(b.whitespaceBefore, "  ");
+    PpToken eol = tokenizer.next();
+    QCOMPARE(eol.kind, PpTokenKind::EndOfLine);
+    QCOMPARE(eol.whitespaceBefore, " \t");
+}
+
+void TestPpTokenizer::test_number_exponents_and_separators()
+{
+    QCOMPARE(dumpTokens({"1e+2 0x1p-2 1+2 1'e+3"}),
+             QStringList({
+                 "num:1e+2", "num+:0x1p-2", "num+:1", "pun:+", "num:2",
+                 "num+:1'e+3", "eol:", "eof:"}));
+}
+
+void TestPpTokenizer::test_identifiers_and_punctuation()
+{
+    QCOMPARE(dumpTokens({"_x x1 中文 + - * / % ^ & | ~ ! = < > [ ] ( ) { } , ; : . ?"}),
+             QStringList({
+                 "id:_x", "id+:x1", "id+:中文",
+                 "pun+:+", "pun+:-", "pun+:*", "pun+:/", "pun+:%", "pun+:^",
+                 "pun+:&", "pun+:|", "pun+:~", "pun+:!", "pun+:=", "pun+:<",
+                 "pun+:>", "pun+:[", "pun+:]", "pun+:(", "pun+:)", "pun+:{",
+                 "pun+:}", "pun+:,", "pun+:;", "pun+::", "pun+:.", "pun+:?",
+                 "eol:", "eof:"}));
+}
+
+void TestPpTokenizer::test_unterminated_escape()
+{
+    QCOMPARE(dumpTokens({"\"abc\\", "'x\\"}),
+             QStringList({"str:\"abc\\", "eol:", "chr:'x\\", "eol:", "eof:"}));
+}
+
+void TestPpTokenizer::test_raw_string_prefixes_and_delimiter_validation()
+{
+    QCOMPARE(dumpTokens({"LR\"(x)\" uR\"(y)\" UR\"(z)\" u8R\"(w)\""}),
+             QStringList({
+                 "raw:LR\"(", "raw:x)\"", "raw+:uR\"(", "raw:y)\"",
+                 "raw+:UR\"(", "raw:z)\"", "raw+:u8R\"(", "raw:w)\"",
+                 "eol:", "eof:"}));
+    QCOMPARE(dumpTokens({"R\"abcdefghijklmnop(x)abcdefghijklmnop\""}),
+             QStringList({"raw:R\"abcdefghijklmnop(", "raw:x)abcdefghijklmnop\"",
+                          "eol:", "eof:"}));
+    QCOMPARE(dumpTokens({"R\"abcdefghijklmnopq(x)abcdefghijklmnopq\""}),
+             QStringList({"id:R", "str:\"abcdefghijklmnopq(x)abcdefghijklmnopq\"",
+                          "eol:", "eof:"}));
+    QCOMPARE(dumpTokens({"R\"a b(x)a b\""}),
+             QStringList({"id:R", "str:\"a b(x)a b\"", "eol:", "eof:"}));
+}
+
+void TestPpTokenizer::test_raw_string_empty_and_unterminated()
+{
+    QCOMPARE(dumpTokens({"R\"()\""}),
+             QStringList({"raw:R\"(", "raw:)\"", "eol:", "eof:"}));
+    QCOMPARE(dumpTokens({"R\"(a", "", "b)\""}),
+             QStringList({"raw:R\"(", "raw:a", "eol:", "eol:",
+                          "raw:b)\"", "eol:", "eof:"}));
+    QCOMPARE(dumpTokens({"R\"(abc", "def"}),
+             QStringList({"raw:R\"(", "raw:abc", "eol:", "raw:def", "eol:", "eof:"}));
+}
+
+void TestPpTokenizer::test_start_position_and_line_text()
+{
+    QStringList lines{"skip", "  int x"};
+    PpTokenizer tokenizer(lines, 1, 2);
+    QCOMPARE(tokenizer.line(), 1);
+    QCOMPARE(tokenizer.lineText(0), "skip");
+    QCOMPARE(tokenizer.lineText(1), "  int x");
+    QCOMPARE(tokenizer.lineText(-1), QString());
+    QCOMPARE(tokenizer.lineText(2), QString());
+    PpToken first = tokenizer.next();
+    QCOMPARE(first.kind, PpTokenKind::Identifier);
+    QCOMPARE(first.text, "int");
+    QCOMPARE(tokenizer.next().text, "x");
+    QCOMPARE(tokenizer.next().kind, PpTokenKind::EndOfLine);
+    QCOMPARE(tokenizer.line(), 2);
+    QCOMPARE(tokenizer.next().kind, PpTokenKind::EndOfInput);
+}
+
+void TestPpTokenizer::test_prefix_before()
+{
+    QStringList lines{" \t int  value = alpha+1;"};
+    PpTokenizer tokenizer(lines);
+    QCOMPARE(tokenizer.next().text, "int");
+    QCOMPARE(tokenizer.next().text, "value");
+    QCOMPARE(tokenizer.next().text, "=");
+    PpToken alpha = tokenizer.next();
+    QCOMPARE(alpha.text, "alpha");
+    QCOMPARE(tokenizer.prefixBefore(alpha), " \t int  value =");
+    PpToken plus = tokenizer.next();
+    QCOMPARE(tokenizer.prefixBefore(plus), " \t int  value = alpha");
+    QStringList leadingLines{"  x"};
+    PpTokenizer leadingWhitespace(leadingLines);
+    PpToken x = leadingWhitespace.next();
+    QCOMPARE(leadingWhitespace.prefixBefore(x), QString());
+}
+
+void TestPpTokenizer::test_end_of_input_is_stable_and_predicates()
+{
+    QStringList lines{"a"};
+    PpTokenizer tokenizer(lines);
+    PpToken word = tokenizer.next();
+    QVERIFY(word.isWordLike());
+    PpToken eol = tokenizer.next();
+    QVERIFY(!eol.isWordLike());
+    QCOMPARE(tokenizer.next().kind, PpTokenKind::EndOfInput);
+    QCOMPARE(tokenizer.next().kind, PpTokenKind::EndOfInput);
+    QCOMPARE(tokenizer.line(), 1);
+    QVERIFY(PpTokenizer::isIdentStartChar('_'));
+    QVERIFY(PpTokenizer::isIdentStartChar('a'));
+    QVERIFY(!PpTokenizer::isIdentStartChar('1'));
+    QVERIFY(PpTokenizer::isWordChar('1'));
+    QVERIFY(!PpTokenizer::isWordChar('+'));
+}
+
 QStringList TestPpTokenizer::dumpRepl(const ReplTokenList &entries)
 {
     QStringList result;

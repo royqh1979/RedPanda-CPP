@@ -95,20 +95,26 @@ PpToken PpTokenizer::next()
     PpToken token;
     if (isIdentStartChar(ch)) {
         token = readWord(line);
-        // raw string literal: R"delim(...)delim"
-        // (only a bare R, not an R inside an identifier)
-        if (token.text == QLatin1String("R")
-                && mCol < line.length() && line[mCol] == '"') {
+        bool rawPrefix = token.text == QLatin1String("R")
+                || token.text == QLatin1String("LR")
+                || token.text == QLatin1String("uR")
+                || token.text == QLatin1String("UR")
+                || token.text == QLatin1String("u8R");
+        if (rawPrefix && mCol < line.length() && line[mCol] == '"') {
+            auto validDelimiterChar = [](QChar ch) {
+                return ch.isPrint() && ch != ' ' && ch != '(' && ch != ')' && ch != '\\';
+            };
             int p = mCol + 1;
             QString delimiter;
             while (p < line.length() && line[p] != '('
-                   && delimiter.length() <= 16) {
+                   && delimiter.length() < 16 && validDelimiterChar(line[p])) {
                 delimiter += line[p];
                 p++;
             }
             if (p < line.length() && line[p] == '(') {
+                int prefixLength = token.text.length();
                 token.kind = PpTokenKind::RawStringFragment;
-                token.text = line.mid(mCol - 1, p - mCol + 2); // R"delim(
+                token.text = line.mid(mCol - prefixLength, p - mCol + prefixLength + 1);
                 mCol = p + 1;
                 mState = State::Raw;
                 mRawDelimiter = delimiter;
@@ -140,12 +146,12 @@ PpToken PpTokenizer::readWord(const QString &line)
 
 PpToken PpTokenizer::readNumber(const QString &line)
 {
-    // pp-number: digits plus letters/underscore/dot, and a sign after
-    // an exponent marker (e/E/p/P)
+    // pp-number: digits plus letters/underscore/dot/digit separators,
+    // and a sign after an exponent marker (e/E/p/P)
     int start = mCol;
     while (mCol < line.length()) {
         QChar ch = line[mCol];
-        if (isWordChar(ch) || ch == '.') {
+        if (isWordChar(ch) || ch == '.' || ch == '\'') {
             mCol++;
         } else if ((ch == '+' || ch == '-')
                    && mCol > start

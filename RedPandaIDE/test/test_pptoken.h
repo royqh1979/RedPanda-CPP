@@ -22,6 +22,16 @@ private slots:
     void test_raw_string_multiline();
     void test_raw_string_ill_formed();
     void test_end_of_line_markers();
+    void test_empty_and_whitespace_only_lines();
+    void test_exact_whitespace();
+    void test_number_exponents_and_separators();
+    void test_identifiers_and_punctuation();
+    void test_unterminated_escape();
+    void test_raw_string_prefixes_and_delimiter_validation();
+    void test_raw_string_empty_and_unterminated();
+    void test_start_position_and_line_text();
+    void test_prefix_before();
+    void test_end_of_input_is_stable_and_predicates();
     void test_split_macro_params();
     void test_compile_replacement_list();
 private:
