@@ -128,6 +128,15 @@ Prerequisites:
    ```
 2. Install Qt 6.11+ via Qt.io installer, or aqtinstall.
 
+Installing Qt with aqtinstall (scriptable, no GUI required):
+
+```zsh
+python3 -m pip install --user aqtinstall
+aqt install-qt mac desktop 6.11.0 clang_64 -m qtbase qtsvg qttools qttranslations
+```
+
+Qt is installed to `~/Qt/6.11.0/macos` by default. On Qt 6 the `GuiPrivate` headers ship with `qtbase` and need no separate installation.
+
 To build:
 ```zsh
 ./packages/macos/build.sh --qt-dir ~/Qt/6.11.0/macos
@@ -136,6 +145,25 @@ To build:
 Arguments:
 - `-c`, `--clean`: clean directories before building.
 - `--qt-dir <dir>`: Qt library directory.
+
+The result is `dist/RedPandaIDE-<version>.tar.xz`, where the version comes from `version.json`; extracting it yields `RedPandaIDE.app`.
+
+First launch:
+
+Apps downloaded from the internet carry a quarantine flag. Double-clicking shows "Apple could not verify ... is free of malware". Use either of these:
+
+- Right-click the app in Finder, choose "Open", then confirm in the dialog;
+- Or drop the quarantine attribute:
+  ```zsh
+  xattr -dr com.apple.quarantine /path/to/RedPandaIDE.app
+  ```
+
+Red Panda C++ invokes the system `clang` as the compiler on macOS, so Xcode Command Line Tools must be installed before running it.
+
+Troubleshooting:
+
+- **`Could not find a package configuration file provided by "Qt6"`**: `--qt-dir` must point to the directory containing `bin/qmake` (e.g. `~/Qt/6.11.0/macos`), not a subdirectory of it.
+- **Single-architecture output**: the packaging script derives `CMAKE_OSX_ARCHITECTURES` from `uname -m`, so an Apple Silicon host produces arm64 only. For a universal binary, build on both Intel and Apple Silicon, or pass `-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"` manually.
 
 ## Manual Build Commands
 
