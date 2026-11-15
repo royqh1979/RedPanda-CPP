@@ -319,7 +319,12 @@ target_compile_definitions(test-editor PRIVATE
     LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
     REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
     ARCH_X86_64=1
-    ARCH_X86=1)
+    ARCH_X86=1
+
+    # pacman makepkg adds `-ffile-prefix-map=$srcdir=/usr/src/debug/$pkgname`
+    # `QFINDTESTDATA` won't find test data without explicitly setting the paths
+    QT_TESTCASE_SOURCEDIR="${CMAKE_CURRENT_SOURCE_DIR}/test"
+    QT_TESTCASE_BUILDDIR="${CMAKE_CURRENT_BINARY_DIR}")
 
 add_test(
     NAME test-editor
