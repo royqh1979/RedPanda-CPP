@@ -590,6 +590,11 @@ TypeInfo CppTypeResolver::resolveSegments(
         instance.declaration = declaration;
         instance.templateArguments = segment.arguments;
         for (TemplateArgument &argument : instance.templateArguments) {
+            if (argument.kind == TemplateArgumentKind::NonType) {
+                argument.constantExpression = resolveConstantExpression(
+                        argument.constantExpression, bindings, context, evaluation);
+                continue;
+            }
             if (argument.kind != TemplateArgumentKind::Type || !argument.type)
                 continue;
             const TemplateArgument *binding = findBinding(bindings, argument.type->qualifiedName);

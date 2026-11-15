@@ -1624,6 +1624,12 @@ void TestCppTokenizer::test_type_resolver_computes_bounded_traits()
                 "  template<typename T> struct add_lvalue_reference {};\n"
                 "  template<typename T> struct is_array {};\n"
                 "  template<typename T> struct is_void {};\n"
+                "  template<bool Cond, typename T = void> struct enable_if {};\n"
+                "  template<typename T> struct enable_if<true, T> { using type = T; };\n"
+                "  template<bool Cond, typename T = void>\n"
+                "  using __enable_if_t = typename enable_if<Cond, T>::type;\n"
+                "  template<typename T>\n"
+                "  using _NonArray = __enable_if_t<!is_array<T>::value, T>;\n"
                 "}\n"
                 "template<typename T> struct Pointer {\n"
                 "  typename std::add_lvalue_reference<T>::type get();\n"
@@ -1655,6 +1661,12 @@ void TestCppTokenizer::test_type_resolver_computes_bounded_traits()
             return TypeInfo();
         return resolver.memberType(variable.specifiers.type, "type");
     };
+    auto resolvedType = [&](const QString &declarationText) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText(declarationText, variable))
+            return TypeInfo();
+        return resolver.resolve(variable.specifiers.type);
+    };
     PStatement access = findStatement(model.childrenStatements(), "Access");
     QVERIFY(access);
     QCOMPARE(access->templateParameters[1].defaultArgumentText, "std::is_array<T>::value");
@@ -1664,6 +1676,12 @@ void TestCppTokenizer::test_type_resolver_computes_bounded_traits()
     QCOMPARE(memberType("VoidAccess<void> value;").toString(), "std::string");
     QCOMPARE(memberType("VoidAccess<int> value;").toString(), "int");
     QCOMPARE(memberType("LockDerived<Default> value;").toString(), "int");
+    QCOMPARE(memberType("std::enable_if<true, std::string> value;").toString(), "std::string");
+    QCOMPARE(resolvedType("std::__enable_if_t<true, std::string> value;").toString(), "std::string");
+    QCOMPARE(resolvedType("std::__enable_if_t<!std::is_array<std::string>::value, std::string> value;").toString(),
+             "std::string");
+    QCOMPARE(resolvedType("std::_NonArray<std::string> value;").toString(), "std::string");
+    QVERIFY(resolvedType("std::_NonArray<std::string[]> value;").qualifiedName.isEmpty());
 }
 
 

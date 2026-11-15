@@ -388,6 +388,35 @@ void TestWidgets::test_code_completion_standard_library_vector_subscript()
     QVERIFY(names.contains("empty"));
 }
 
+void TestWidgets::test_code_completion_standard_library_make_shared()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QFile file(main);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write("#include <bits/stdc++.h>\n\n"
+               "int main() {\n"
+               "    std::vector<std::string> lst;\n"
+               "    auto p = std::make_shared<std::string>();\n"
+               "    p->\n"
+               "}\n");
+    file.close();
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    QSet<QString> names = completionNames(popup, "p", main, CodeCompletionType::Normal,
+                                          {}, {}, {}, 5, "->", {});
+    QVERIFY(names.contains("size"));
+    QVERIFY(names.contains("empty"));
+    QVERIFY(names.contains("append"));
+}
+
 void TestWidgets::test_goto_standard_library_string()
 {
     QTemporaryDir tmp;

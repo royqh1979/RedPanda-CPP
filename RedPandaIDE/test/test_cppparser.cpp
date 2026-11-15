@@ -1442,6 +1442,50 @@ void TestCppParser::test_standard_library_vector_subscript()
              mParser->findStatement("std::basic_string::size"));
 }
 
+void TestCppParser::test_standard_library_make_shared_default()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    auto p = std::make_shared<std::string>();",
+        "    p->size();",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    PStatement basicString = mParser->findStatement("std::basic_string");
+    QVERIFY(basicString);
+    QCOMPARE(mParser->findTypeDefinitionOf(
+                 main, "std::enable_if<true, std::string>::type", {}), basicString);
+    QCOMPARE(mParser->findTypeDefinitionOf(
+                 main,
+                 "std::enable_if_t<!std::is_array<std::string>::value, std::string>", {}),
+             basicString);
+    PStatement sharedPtr = mParser->findStatement("std::shared_ptr");
+    QVERIFY(sharedPtr);
+    PStatement scope = mParser->findScopeStatement(main, 5);
+    QVERIFY(scope);
+    QStringList factoryExpression{
+        "std", "::", "make_shared", "<", "std", "::", "string", ">", "(", ")"};
+    EvalResult factory = mParser->evalExpression(main, factoryExpression, scope);
+    QCOMPARE(factory.type.declaration.lock(), sharedPtr);
+    QStringList variableExpression{"p"};
+    EvalResult variable = mParser->evalExpression(main, variableExpression, scope);
+    QCOMPARE(variable.type.declaration.lock(), sharedPtr);
+    QStringList arrowExpression{"p", "->"};
+    EvalResult arrow = mParser->evalExpression(main, arrowExpression, scope);
+    QCOMPARE(arrow.type.declaration.lock(), basicString);
+    QCOMPARE(mParser->findStatementOf(main, {"p", "->", "size"}, 5),
+             mParser->findStatement("std::basic_string::size"));
+}
+
 void TestCppParser::test_standard_library_expression_chains()
 {
     QTemporaryDir tmp;

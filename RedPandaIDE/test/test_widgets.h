@@ -44,6 +44,7 @@ private slots:
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_code_completion_standard_library_string();
     void test_code_completion_standard_library_vector_subscript();
+    void test_code_completion_standard_library_make_shared();
     void test_goto_standard_library_string();
     void test_standard_library_template_consumers();
 #endif
