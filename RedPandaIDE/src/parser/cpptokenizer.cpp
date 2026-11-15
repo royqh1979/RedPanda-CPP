@@ -40,27 +40,37 @@ struct TokenizerProfile {
     qint64 startsWithCalls = 0;
     qint64 advanceCalls = 0;
     QHash<QString, qint64> startsWithTextCalls;
+    QHash<QString, qint64> tokenizeTextCalls;
     ~TokenizerProfile()
     {
-        if (!enabled)
-            return;
-        qWarning() << "TOKENIZER_PROFILE"
-                   << "identifier" << identifierNs / 1000000.0
-                   << "number" << numberNs / 1000000.0
-                   << "literal" << literalNs / 1000000.0
-                   << "preprocessor" << preprocessorNs / 1000000.0
-                   << "operator" << operatorNs / 1000000.0
-                   << "addToken" << addTokenNs / 1000000.0
-                   << "startsWith" << startsWithNs / 1000000.0
-                   << "advance" << advanceNs / 1000000.0
-                   << "calls" << identifierCalls << numberCalls << literalCalls
-                   << preprocessorCalls << operatorCalls << addTokenCalls
-                   << startsWithCalls << advanceCalls;
-        qWarning() << "TOKENIZER_STARTS_WITH" << startsWithTextCalls;
+        if (enabled) {
+            qWarning() << "TOKENIZER_PROFILE"
+                       << "identifier" << identifierNs / 1000000.0
+                       << "number" << numberNs / 1000000.0
+                       << "literal" << literalNs / 1000000.0
+                       << "preprocessor" << preprocessorNs / 1000000.0
+                       << "operator" << operatorNs / 1000000.0
+                       << "addToken" << addTokenNs / 1000000.0
+                       << "startsWith" << startsWithNs / 1000000.0
+                       << "advance" << advanceNs / 1000000.0
+                       << "calls" << identifierCalls << numberCalls << literalCalls
+                       << preprocessorCalls << operatorCalls << addTokenCalls
+                       << startsWithCalls << advanceCalls;
+            qWarning() << "TOKENIZER_STARTS_WITH" << startsWithTextCalls;
+        }
+        for (auto it = tokenizeTextCalls.constBegin(); it != tokenizeTextCalls.constEnd(); ++it)
+            qWarning().noquote() << "TOKENIZE_TEXT" << it.value()
+                                 << it.key().toUtf8().toBase64();
     }
 };
 
 TokenizerProfile tokenizerProfile;
+
+void traceTokenization(const QString &text)
+{
+    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+        ++tokenizerProfile.tokenizeTextCalls[text];
+}
 
 struct TokenizerProfileScope {
     TokenizerProfileScope(qint64 &target, qint64 &calls)
@@ -114,6 +124,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     clear();
     mBufferLines = buffer;
     mBuffer = buffer.join('\n');
+    traceTokenization(mBuffer);
     mCurrent = mBuffer.constData();
 
     while (true) {

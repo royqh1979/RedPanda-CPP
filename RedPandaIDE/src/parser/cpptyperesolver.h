@@ -21,8 +21,25 @@
 
 using TemplateBindings = QHash<QString, TemplateArgument>;
 
+struct TemplateBindingFrame;
+using PTemplateBindingFrame = std::shared_ptr<TemplateBindingFrame>;
+
+struct ClassInstance {
+    TypeInfo type;
+    PStatement declaration;
+    PTemplateBindingFrame bindings;
+};
+
+struct TemplateBindingFrame {
+    const Statement *owner = nullptr;
+    TemplateBindings values;
+    QHash<QString, ClassInstance> resolvedValues;
+    std::shared_ptr<TemplateBindingFrame> parent;
+};
+
 struct EvalResult {
     TypeInfo type;
+    ClassInstance instance;
     EvalStatementKind kind = EvalStatementKind::Literal;
     PStatement baseStatement;
     PStatement statement;
@@ -37,50 +54,58 @@ struct EvalResult {
 struct MemberEvalResult {
     PStatement statement;
     TypeInfo type;
+    ClassInstance instance;
 };
 
 class CppTypeResolver
 {
 public:
+    struct EvaluationContext {
+        QSet<QString> aliases;
+        QSet<QString> resolvingTypes;
+        QHash<const Statement *, TypeInfo> specializationPatterns;
+        int operationCount = 0;
+        bool resolutionFailed = false;
+    };
+    using ClassInstance = ::ClassInstance;
+    using PTemplateBindingFrame = ::PTemplateBindingFrame;
+
     explicit CppTypeResolver(const StatementModel &model);
 
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
-                     const PStatement &context = {}) const;
+                     const PStatement &context = {}, EvaluationContext *evaluation = nullptr) const;
+    ClassInstance resolveInstance(const TypeInfo &type, const TemplateBindings &bindings = {},
+                                  const PStatement &context = {},
+                                  EvaluationContext *evaluation = nullptr) const;
     PStatement findStatement(const QString &qualifiedName, const PStatement &context = {}) const;
-    PStatement memberStatement(const TypeInfo &receiver, const QString &memberName) const;
-    TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
-    TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
+    PStatement memberStatement(const TypeInfo &receiver, const QString &memberName,
+                               EvaluationContext *evaluation = nullptr) const;
+    TypeInfo memberType(const TypeInfo &receiver, const QString &memberName,
+                        EvaluationContext *evaluation = nullptr) const;
+    TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName,
+                          EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult invokeResult(const ClassInstance &receiver, const QString &memberName,
+                                  EvaluationContext *evaluation = nullptr) const;
     MemberEvalResult resolveMember(const TypeInfo &receiver, const QString &memberName,
-                                   bool call, const QVector<TypeInfo> &arguments = {}) const;
+                                   bool call, const QVector<TypeInfo> &arguments = {},
+                                   EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
+                                   bool call, const QVector<TypeInfo> &arguments = {},
+                                   EvaluationContext *evaluation = nullptr) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments,
-                            const QVector<TemplateArgument> &explicitArguments = {}) const;
+                            const QVector<TemplateArgument> &explicitArguments = {},
+                            EvaluationContext *evaluation = nullptr,
+                            ClassInstance *resultInstance = nullptr) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
     StatementAccessibility memberAccessibility(const PStatement &scope,
                                                const PStatement &member) const;
 
 private:
-    struct TemplateBindingFrame {
-        const Statement *owner = nullptr;
-        TemplateBindings values;
-        std::shared_ptr<TemplateBindingFrame> parent;
-    };
-    using PTemplateBindingFrame = std::shared_ptr<TemplateBindingFrame>;
-    struct EvaluationContext {
-        QSet<QString> aliases;
-        QSet<QString> resolvingTypes;
-        int operationCount = 0;
-        bool resolutionFailed = false;
-    };
     struct TypeNameSegment {
         QString name;
         QVector<TemplateArgument> arguments;
         bool hasTemplateArguments = false;
         bool templateKeyword = false;
-    };
-    struct ClassInstance {
-        TypeInfo type;
-        PStatement declaration;
-        PTemplateBindingFrame bindings;
     };
     struct MemberResolution {
         PStatement statement;
@@ -108,7 +133,9 @@ private:
     QList<PStatement> functionCandidates(const PStatement &function) const;
     TypeInfo invokeFunctionCandidate(const PStatement &function, const QVector<TypeInfo> &arguments,
                                      const QVector<TemplateArgument> &explicitArguments,
-                                     const PTemplateBindingFrame &outerBindings = {}) const;
+                                     EvaluationContext &evaluation,
+                                     const PTemplateBindingFrame &outerBindings = {},
+                                     ClassInstance *resultInstance = nullptr) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
                                              EvaluationContext &evaluation,
@@ -118,9 +145,11 @@ private:
                             EvaluationContext &evaluation) const;
     TypeInfo resolveType(const TypeInfo &type, const PTemplateBindingFrame &bindings,
                          const PStatement &context, EvaluationContext &evaluation) const;
-    TypeInfo resolveSegments(const TypeInfo &reference, const QVector<TypeNameSegment> &segments,
-                             bool globallyQualified, const PTemplateBindingFrame &bindings,
-                             const PStatement &context, EvaluationContext &evaluation) const;
+    ClassInstance resolveTypeInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,
+                                      const PStatement &context, EvaluationContext &evaluation) const;
+    ClassInstance resolveSegments(const TypeInfo &reference, const QVector<TypeNameSegment> &segments,
+                                  bool globallyQualified, const PTemplateBindingFrame &bindings,
+                                  const PStatement &context, EvaluationContext &evaluation) const;
     bool parseTypeNameSegments(const QString &text, QVector<TypeNameSegment> &segments,
                                bool &globallyQualified) const;
     TypeInfo parseTypeText(const QString &text) const;
@@ -135,12 +164,17 @@ private:
                                         const QString &name) const;
     ClassInstance classInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,
                                 const PStatement &context, EvaluationContext &evaluation) const;
+    ClassInstance classInstanceFromResolvedType(const TypeInfo &type,
+                                                const PTemplateBindingFrame &bindings,
+                                                const PStatement &context,
+                                                EvaluationContext &evaluation) const;
     ClassInstance selectSpecialization(const ClassInstance &primary,
                                        EvaluationContext &evaluation) const;
     SpecializationMatch matchSpecialization(const PStatement &specialization,
                                             const QVector<TemplateArgument> &arguments,
                                             const PStatement &context,
-                                            TemplateBindings &bindings) const;
+                                            TemplateBindings &bindings,
+                                            EvaluationContext &evaluation) const;
     SpecializationMatch matchType(const TypeInfo &pattern, const TypeInfo &actual,
                                   const QSet<QString> &parameters, TemplateBindings &bindings,
                                   const PStatement &context) const;

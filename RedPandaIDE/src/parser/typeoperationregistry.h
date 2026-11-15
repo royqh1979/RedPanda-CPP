@@ -24,24 +24,39 @@ class TypeOperationRegistry
 public:
     explicit TypeOperationRegistry(const CppTypeResolver &resolver);
 
-    TypeInfo containerValue(const TypeInfo &container) const;
-    TypeInfo containerReference(const TypeInfo &container) const;
-    TypeInfo iteratorValue(const TypeInfo &iterator) const;
-    TypeInfo iteratorReference(const TypeInfo &iterator) const;
-    TypeInfo rangeValue(const TypeInfo &range) const;
-    TypeInfo rangeReference(const TypeInfo &range) const;
-    TypeInfo subscriptValue(const TypeInfo &receiver) const;
-    TypeInfo subscriptReference(const TypeInfo &receiver) const;
-    TypeInfo invokeResult(const TypeInfo &callable, const QVector<TypeInfo> &arguments) const;
+    TypeInfo containerValue(const TypeInfo &container,
+                            CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo containerReference(const TypeInfo &container,
+                                CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo iteratorValue(const TypeInfo &iterator,
+                           CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo iteratorReference(const TypeInfo &iterator,
+                               CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo rangeValue(const TypeInfo &range,
+                        CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo rangeReference(const TypeInfo &range,
+                            CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo subscriptValue(const TypeInfo &receiver,
+                            CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo subscriptReference(const TypeInfo &receiver,
+                                CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo invokeResult(const TypeInfo &callable, const QVector<TypeInfo> &arguments,
+                          CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
     TypeInfo explicitTemplateResult(const EvalResult &target,
-                                    const QVector<TemplateArgument> &arguments) const;
-    TypeInfo pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const;
+                                    const QVector<TemplateArgument> &arguments,
+                                    CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+    TypeInfo pipeResult(const TypeInfo &input, const TypeInfo &adaptor,
+                        CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
 
 private:
-    TypeInfo makeView(const QString &name, const QVector<TemplateArgument> &arguments) const;
-    TypeInfo rangeElement(const TypeInfo &range, bool reference) const;
-    TypeInfo callableResult(const TypeInfo &callable) const;
-    TypeInfo tupleElement(const TypeInfo &tuple, int index) const;
+    TypeInfo makeView(const QString &name, const QVector<TemplateArgument> &arguments,
+                      CppTypeResolver::EvaluationContext *evaluation) const;
+    TypeInfo rangeElement(const TypeInfo &range, bool reference,
+                          CppTypeResolver::EvaluationContext *evaluation) const;
+    TypeInfo callableResult(const TypeInfo &callable,
+                            CppTypeResolver::EvaluationContext *evaluation) const;
+    TypeInfo tupleElement(const TypeInfo &tuple, int index,
+                          CppTypeResolver::EvaluationContext *evaluation) const;
     TypeInfo valueFromReference(TypeInfo type) const;
 
     const CppTypeResolver &mResolver;

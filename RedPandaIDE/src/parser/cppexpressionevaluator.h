@@ -26,33 +26,45 @@ public:
     CppExpressionEvaluator(StatementModel &model, const CppTypeResolver &resolver,
                            const TypeOperationRegistry &operations);
 
-    EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {}) const;
+    EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {},
+                        CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
 
 private:
     using TokenList = QVector<CppTokenizer::Token>;
 
     EvalResult evaluateBinary(const TokenList &tokens, int &index, const PStatement &context,
-                              int minimumPrecedence) const;
-    EvalResult evaluateUnary(const TokenList &tokens, int &index, const PStatement &context) const;
-    EvalResult evaluatePostfix(const TokenList &tokens, int &index, const PStatement &context) const;
+                              int minimumPrecedence,
+                              CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult evaluateUnary(const TokenList &tokens, int &index, const PStatement &context,
+                             CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult evaluatePostfix(const TokenList &tokens, int &index, const PStatement &context,
+                               CppTypeResolver::EvaluationContext *evaluation) const;
     EvalResult evaluatePostfixTail(EvalResult result, const TokenList &tokens, int &index,
-                                   const PStatement &context) const;
-    EvalResult evaluatePrimary(const TokenList &tokens, int &index, const PStatement &context) const;
-    EvalResult evaluateLambda(const TokenList &tokens, int &index, const PStatement &context) const;
+                                   const PStatement &context,
+                                   CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult evaluatePrimary(const TokenList &tokens, int &index, const PStatement &context,
+                               CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult evaluateLambda(const TokenList &tokens, int &index, const PStatement &context,
+                              CppTypeResolver::EvaluationContext *evaluation) const;
     TypeInfo parseTypeText(const QString &text) const;
-    EvalResult createResult(const PStatement &statement) const;
+    EvalResult createResult(const PStatement &statement,
+                            CppTypeResolver::EvaluationContext *evaluation) const;
     bool evaluateArguments(const TokenList &tokens, int &index, const PStatement &context,
-                           QVector<TypeInfo> &arguments) const;
+                           QVector<TypeInfo> &arguments,
+                           CppTypeResolver::EvaluationContext *evaluation) const;
     bool readTemplateArguments(const TokenList &tokens, int &index,
                                QVector<TemplateArgument> &arguments) const;
     EvalResult applyBinary(const EvalResult &left, const EvalResult &right,
-                           const QString &operatorName) const;
+                           const QString &operatorName,
+                           CppTypeResolver::EvaluationContext *evaluation) const;
     PStatement findVisibleStatement(const QString &name, const PStatement &context) const;
     PStatement findDirectStatement(const PStatement &scope, const QString &name) const;
-    TypeInfo memberReceiver(TypeInfo type, bool arrow) const;
-    TypeInfo dereference(TypeInfo type) const;
-    TypeInfo addressOf(TypeInfo type) const;
-    TypeInfo applyIncrement(TypeInfo type, const QString &operatorName) const;
+    ClassInstance memberReceiver(const EvalResult &result, bool arrow,
+                                 CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult dereference(EvalResult result, CppTypeResolver::EvaluationContext *evaluation) const;
+    TypeInfo addressOf(TypeInfo type, CppTypeResolver::EvaluationContext *evaluation) const;
+    EvalResult applyIncrement(EvalResult result, const QString &operatorName,
+                              CppTypeResolver::EvaluationContext *evaluation) const;
     TypeInfo removeReferences(TypeInfo type) const;
     int binaryPrecedence(const QString &operatorName) const;
     bool isRightAssociative(const QString &operatorName) const;

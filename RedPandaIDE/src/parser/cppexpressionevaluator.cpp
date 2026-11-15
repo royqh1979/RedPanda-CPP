@@ -144,19 +144,23 @@ CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
 {
 }
 
-EvalResult CppExpressionEvaluator::evaluate(const CppTokenizer &tokenizer,
-                                            const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluate(
+        const CppTokenizer &tokenizer, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
+    CppTypeResolver::EvaluationContext localEvaluation;
+    if (!evaluation)
+        evaluation = &localEvaluation;
     int index = 0;
-    EvalResult result = evaluateBinary(tokenizer.tokens(), index, context, 1);
+    EvalResult result = evaluateBinary(tokenizer.tokens(), index, context, 1, evaluation);
     return result.isValid() && index == tokenizer.tokenCount() ? result : EvalResult();
 }
 
-EvalResult CppExpressionEvaluator::evaluateBinary(const TokenList &tokens, int &index,
-                                                  const PStatement &context,
-                                                  int minimumPrecedence) const
+EvalResult CppExpressionEvaluator::evaluateBinary(
+        const TokenList &tokens, int &index, const PStatement &context,
+        int minimumPrecedence, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    EvalResult left = evaluateUnary(tokens, index, context);
+    EvalResult left = evaluateUnary(tokens, index, context, evaluation);
     while (index < tokens.count() && left.isValid()) {
         QString operatorName = tokens[index].text;
         int precedence = binaryPrecedence(operatorName);
@@ -164,54 +168,62 @@ EvalResult CppExpressionEvaluator::evaluateBinary(const TokenList &tokens, int &
             break;
         ++index;
         if (operatorName == "?") {
-            EvalResult whenTrue = evaluateBinary(tokens, index, context, 1);
+            EvalResult whenTrue = evaluateBinary(tokens, index, context, 1, evaluation);
             if (!whenTrue.isValid() || index >= tokens.count() || tokens[index].text != ":")
                 return {};
             ++index;
-            EvalResult whenFalse = evaluateBinary(tokens, index, context, precedence);
+            EvalResult whenFalse = evaluateBinary(tokens, index, context, precedence, evaluation);
             if (!whenFalse.isValid())
                 return {};
-            left = applyBinary(left, whenFalse, operatorName);
-            if (isArithmeticType(whenTrue.type) && isArithmeticType(whenFalse.type))
+            left = applyBinary(left, whenFalse, operatorName, evaluation);
+            if (isArithmeticType(whenTrue.type) && isArithmeticType(whenFalse.type)) {
                 left.type = usualArithmeticType(whenTrue.type, whenFalse.type);
+                left.instance = {};
+            }
             continue;
         }
         EvalResult right = evaluateBinary(tokens, index, context,
-                                          precedence + (isRightAssociative(operatorName) ? 0 : 1));
+                                          precedence + (isRightAssociative(operatorName) ? 0 : 1),
+                                          evaluation);
         if (!right.isValid())
             return {};
-        left = applyBinary(left, right, operatorName);
+        left = applyBinary(left, right, operatorName, evaluation);
     }
     return left;
 }
 
-EvalResult CppExpressionEvaluator::evaluateUnary(const TokenList &tokens, int &index,
-                                                 const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluateUnary(
+        const TokenList &tokens, int &index, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (index >= tokens.count())
         return {};
     QString unaryOperator = tokens[index].text;
     if (unaryOperator == "const" || unaryOperator == "volatile") {
         ++index;
-        EvalResult result = evaluateUnary(tokens, index, context);
+        EvalResult result = evaluateUnary(tokens, index, context, evaluation);
         if (result.kind == EvalStatementKind::Type) {
             result.type.qualifiers.setFlag(unaryOperator == "const"
                                            ? TypeQualifier::Const : TypeQualifier::Volatile);
+            result.instance.type = result.type;
         }
         return result;
     }
     if (unaryOperator == "new" || unaryOperator == "delete" || unaryOperator == "sizeof") {
         ++index;
-        EvalResult result = evaluateUnary(tokens, index, context);
+        EvalResult result = evaluateUnary(tokens, index, context, evaluation);
         if (!result.isValid())
             return result;
         if (unaryOperator == "new") {
             result.type.derivations.prepend(TypeDerivation::pointer());
+            result.instance.type = result.type;
             result.kind = EvalStatementKind::Variable;
         } else if (unaryOperator == "delete") {
             result.type = primitiveType("void");
+            result.instance = {};
         } else {
             result.type = primitiveType("std::size_t");
+            result.instance = {};
         }
         result.kind = EvalStatementKind::Variable;
         return result;
@@ -220,14 +232,15 @@ EvalResult CppExpressionEvaluator::evaluateUnary(const TokenList &tokens, int &i
         int close = tokens[index].matchIndex;
         if (close > index && close < tokens.count()) {
             int typeIndex = index + 1;
-            EvalResult type = evaluateBinary(tokens, typeIndex, context, 1);
+            EvalResult type = evaluateBinary(tokens, typeIndex, context, 1, evaluation);
             if (type.isValid() && type.kind == EvalStatementKind::Type && typeIndex == close) {
                 index = close + 1;
-                EvalResult result = evaluateUnary(tokens, index, context);
+                EvalResult result = evaluateUnary(tokens, index, context, evaluation);
                 if (result.isValid()) {
                     result.type = type.type;
+                    result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
                     result.kind = EvalStatementKind::Variable;
-                    return evaluatePostfixTail(result, tokens, index, context);
+                    return evaluatePostfixTail(result, tokens, index, context, evaluation);
                 }
             }
         }
@@ -235,37 +248,48 @@ EvalResult CppExpressionEvaluator::evaluateUnary(const TokenList &tokens, int &i
     static const QSet<QString> unaryOperators{"*", "&", "++", "--", "+", "-", "!", "~"};
     if (unaryOperators.contains(unaryOperator)) {
         ++index;
-        EvalResult result = evaluateUnary(tokens, index, context);
+        EvalResult result = evaluateUnary(tokens, index, context, evaluation);
         if (!result.isValid())
             return result;
-        if (unaryOperator == "*")
-            result.type = dereference(result.type);
-        else if (unaryOperator == "&")
-            result.type = addressOf(result.type);
-        else if (unaryOperator == "++" || unaryOperator == "--")
-            result.type = applyIncrement(result.type, "operator" + unaryOperator);
-        else {
-            TypeInfo overloaded = mResolver.invokeResult(result.type, "operator" + unaryOperator);
-            if (!overloaded.qualifiedName.isEmpty())
-                result.type = overloaded;
-            else if (unaryOperator == "!")
+        if (unaryOperator == "*") {
+            result = dereference(result, evaluation);
+        } else if (unaryOperator == "&") {
+            result.type = addressOf(result.type, evaluation);
+            result.instance.type = result.type;
+        } else if (unaryOperator == "++" || unaryOperator == "--") {
+            result = applyIncrement(result, "operator" + unaryOperator, evaluation);
+        } else {
+            MemberEvalResult overloaded = mResolver.invokeResult(
+                        memberReceiver(result, false, evaluation), "operator" + unaryOperator,
+                        evaluation);
+            if (!overloaded.type.qualifiedName.isEmpty()) {
+                result.statement = overloaded.statement;
+                result.type = overloaded.type;
+                result.instance = overloaded.instance;
+            } else if (unaryOperator == "!") {
                 result.type = primitiveType("bool");
-            else
+                result.instance = {};
+            } else {
                 result.type = removeReferences(result.type);
+                result.instance.type = result.type;
+            }
         }
         return result;
     }
-    return evaluatePostfix(tokens, index, context);
+    return evaluatePostfix(tokens, index, context, evaluation);
 }
 
-EvalResult CppExpressionEvaluator::evaluatePostfix(const TokenList &tokens, int &index,
-                                                   const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluatePostfix(
+        const TokenList &tokens, int &index, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return evaluatePostfixTail(evaluatePrimary(tokens, index, context), tokens, index, context);
+    return evaluatePostfixTail(evaluatePrimary(tokens, index, context, evaluation),
+                               tokens, index, context, evaluation);
 }
 
-EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const TokenList &tokens,
-                                                       int &index, const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluatePostfixTail(
+        EvalResult result, const TokenList &tokens, int &index, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     while (index < tokens.count() && result.isValid()) {
         const QString operation = tokens[index].text;
@@ -277,9 +301,11 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
                     result.explicitTemplateArguments = arguments;
                     continue;
                 }
-                TypeInfo explicitResult = mOperations.explicitTemplateResult(result, arguments);
+                TypeInfo explicitResult = mOperations.explicitTemplateResult(result, arguments,
+                                                                             evaluation);
                 if (!explicitResult.qualifiedName.isEmpty()) {
                     result.type = explicitResult;
+                    result.instance = mResolver.resolveInstance(explicitResult, {}, {}, evaluation);
                     result.kind = EvalStatementKind::Variable;
                     continue;
                 }
@@ -290,6 +316,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
                 && (operation == "const" || operation == "volatile")) {
             result.type.qualifiers.setFlag(operation == "const"
                                            ? TypeQualifier::Const : TypeQualifier::Volatile);
+            result.instance.type = result.type;
             ++index;
             continue;
         }
@@ -301,6 +328,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
                 result.type.derivations.append(TypeDerivation::lvalueReference());
             else
                 result.type.derivations.append(TypeDerivation::rvalueReference());
+            result.instance.type = result.type;
             ++index;
             continue;
         }
@@ -316,17 +344,18 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             PStatement member = findDirectStatement(scope, tokens[index++].text);
             if (!member)
                 return {};
-            result = createResult(member);
+            result = createResult(member, evaluation);
             continue;
         }
         if (operation == "." || operation == "->") {
             bool arrow = operation == "->";
             ++index;
-            TypeInfo receiver = memberReceiver(result.type, arrow);
+            ClassInstance receiver = memberReceiver(result, arrow, evaluation);
             if (index >= tokens.count()) {
-                if (receiver.qualifiedName.isEmpty())
+                if (receiver.type.qualifiedName.isEmpty())
                     return {};
-                result.type = receiver;
+                result.type = receiver.type;
+                result.instance = receiver;
                 result.statement.reset();
                 result.kind = EvalStatementKind::Variable;
                 continue;
@@ -334,11 +363,13 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             QString memberName = tokens[index++].text;
             bool call = index < tokens.count() && tokens[index].text == "(";
             QVector<TypeInfo> arguments;
-            if (call && !evaluateArguments(tokens, index, context, arguments))
+            if (call && !evaluateArguments(tokens, index, context, arguments, evaluation))
                 return {};
-            MemberEvalResult member = mResolver.resolveMember(receiver, memberName, call, arguments);
+            MemberEvalResult member = mResolver.resolveMember(receiver, memberName, call, arguments,
+                                                              evaluation);
             result.statement = member.statement;
             result.type = member.type;
+            result.instance = member.instance;
             result.kind = !call && isFunction(result.statement)
                     ? EvalStatementKind::Function : EvalStatementKind::Variable;
             if (result.kind == EvalStatementKind::Function)
@@ -349,15 +380,22 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             index = skipBalanced(tokens, index);
             if (result.kind == EvalStatementKind::Type) {
                 result.type.derivations.append(TypeDerivation::array("[]"));
+                result.instance.type = result.type;
             } else {
                 result.type = removeReferences(result.type);
+                result.instance.type = removeReferences(result.instance.type);
                 if (!result.type.derivations.isEmpty()
                         && (result.type.derivations.first().kind == TypeDerivationKind::Array
                             || result.type.derivations.first().kind == TypeDerivationKind::Pointer)) {
                     result.type.derivations.removeFirst();
                     result.type.derivations.prepend(TypeDerivation::lvalueReference());
+                    result.instance.type = result.type;
                 } else {
-                    result.type = mOperations.subscriptReference(result.type);
+                    MemberEvalResult element = mResolver.invokeResult(
+                                memberReceiver(result, false, evaluation), "operator[]", evaluation);
+                    result.statement = element.statement;
+                    result.type = element.type;
+                    result.instance = element.instance;
                 }
                 result.kind = EvalStatementKind::Variable;
             }
@@ -368,15 +406,19 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
                 index = skipBalanced(tokens, index);
             } else if (result.kind == EvalStatementKind::Function) {
                 QVector<TypeInfo> arguments;
-                if (!evaluateArguments(tokens, index, context, arguments))
+                if (!evaluateArguments(tokens, index, context, arguments, evaluation))
                     return {};
+                ClassInstance called;
                 result.type = mResolver.invokeFunction(result.baseStatement, arguments,
-                                                       result.explicitTemplateArguments);
+                                                       result.explicitTemplateArguments, evaluation,
+                                                       &called);
+                result.instance = called;
             } else {
                 QVector<TypeInfo> arguments;
-                if (!evaluateArguments(tokens, index, context, arguments))
+                if (!evaluateArguments(tokens, index, context, arguments, evaluation))
                     return {};
-                result.type = mOperations.invokeResult(result.type, arguments);
+                result.type = mOperations.invokeResult(result.type, arguments, evaluation);
+                result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
             }
             result.kind = EvalStatementKind::Variable;
             continue;
@@ -390,7 +432,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
         }
         if (operation == "++" || operation == "--") {
             ++index;
-            result.type = applyIncrement(result.type, "operator" + operation);
+            result = applyIncrement(result, "operator" + operation, evaluation);
             continue;
         }
         break;
@@ -398,18 +440,19 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
     return result;
 }
 
-EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int &index,
-                                                   const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluatePrimary(
+        const TokenList &tokens, int &index, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (index >= tokens.count())
         return {};
     const CppTokenizer::Token &initial = tokens[index++];
     if (initial.text == "[") {
         --index;
-        return evaluateLambda(tokens, index, context);
+        return evaluateLambda(tokens, index, context, evaluation);
     }
     if (initial.text == "(") {
-        EvalResult result = evaluateBinary(tokens, index, context, 1);
+        EvalResult result = evaluateBinary(tokens, index, context, 1, evaluation);
         if (index >= tokens.count() || tokens[index].text != ")")
             return {};
         ++index;
@@ -418,13 +461,14 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
     if (initial.text == "::") {
         if (index >= tokens.count())
             return {};
-        return createResult(findDirectStatement({}, tokens[index++].text));
+        return createResult(findDirectStatement({}, tokens[index++].text), evaluation);
     }
     if (initial.text == "this") {
         if (!context)
             return {};
-        EvalResult result = createResult(context);
+        EvalResult result = createResult(context, evaluation);
         result.type.derivations.prepend(TypeDerivation::pointer());
+        result.instance.type = result.type;
         result.kind = EvalStatementKind::Variable;
         return result;
     }
@@ -467,7 +511,7 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
             result.type = primitiveType("std::nullptr_t");
             result.kind = EvalStatementKind::Literal;
         } else {
-            result = createResult(findVisibleStatement(initial.text, context));
+            result = createResult(findVisibleStatement(initial.text, context), evaluation);
         }
         break;
     default:
@@ -476,8 +520,9 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(const TokenList &tokens, int 
     return result;
 }
 
-EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &index,
-                                                  const PStatement &context) const
+EvalResult CppExpressionEvaluator::evaluateLambda(
+        const TokenList &tokens, int &index, const PStatement &context,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (index >= tokens.count() || tokens[index].text != "[")
         return {};
@@ -637,7 +682,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &
             if (text == "return" && nested == 0) {
                 foundReturn = true;
                 int returnIndex = i + 1;
-                EvalResult returned = evaluateBinary(tokens, returnIndex, call, 1);
+                EvalResult returned = evaluateBinary(tokens, returnIndex, call, 1, evaluation);
                 if (returned.isValid())
                     call->typeInfo = returned.type;
                 break;
@@ -674,7 +719,8 @@ TypeInfo CppExpressionEvaluator::parseTypeText(const QString &text) const
     return result;
 }
 
-EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) const
+EvalResult CppExpressionEvaluator::createResult(
+        const PStatement &statement, CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (!statement)
         return {};
@@ -703,14 +749,16 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     case StatementKind::Alias:
         result.type.qualifiedName = statement->fullName;
         result.type.declaration = statement;
-        result.type = mResolver.resolve(result.type, {}, statement->parentScope.lock());
+        result.instance = mResolver.resolveInstance(result.type, {}, statement->parentScope.lock(),
+                                                    evaluation);
+        result.type = result.instance.type;
         result.kind = EvalStatementKind::Type;
         break;
     case StatementKind::Constructor: {
         PStatement parent = statement->parentScope.lock();
         if (!parent)
             return {};
-        EvalResult parentResult = createResult(parent);
+        EvalResult parentResult = createResult(parent, evaluation);
         parentResult.baseStatement = statement;
         parentResult.statement = statement;
         return parentResult;
@@ -726,7 +774,9 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     case StatementKind::LocalVariable:
     case StatementKind::Parameter:
     case StatementKind::Enum:
-        result.type = mResolver.resolve(statement->typeInfo, {}, statement->parentScope.lock());
+        result.instance = mResolver.resolveInstance(statement->typeInfo, {},
+                                                    statement->parentScope.lock(), evaluation);
+        result.type = result.instance.type;
         result.kind = EvalStatementKind::Variable;
         break;
     case StatementKind::Label:
@@ -805,9 +855,9 @@ bool CppExpressionEvaluator::readTemplateArguments(
     return false;
 }
 
-bool CppExpressionEvaluator::evaluateArguments(const TokenList &tokens, int &index,
-                                               const PStatement &context,
-                                               QVector<TypeInfo> &arguments) const
+bool CppExpressionEvaluator::evaluateArguments(
+        const TokenList &tokens, int &index, const PStatement &context,
+        QVector<TypeInfo> &arguments, CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (index >= tokens.count() || tokens[index].text != "(")
         return false;
@@ -817,7 +867,7 @@ bool CppExpressionEvaluator::evaluateArguments(const TokenList &tokens, int &ind
         return true;
     }
     while (index < tokens.count()) {
-        EvalResult argument = evaluateBinary(tokens, index, context, 2);
+        EvalResult argument = evaluateBinary(tokens, index, context, 2, evaluation);
         if (!argument.isValid())
             return false;
         arguments.append(argument.type);
@@ -834,20 +884,25 @@ bool CppExpressionEvaluator::evaluateArguments(const TokenList &tokens, int &ind
     return false;
 }
 
-EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const EvalResult &right,
-                                               const QString &operatorName) const
+EvalResult CppExpressionEvaluator::applyBinary(
+        const EvalResult &left, const EvalResult &right, const QString &operatorName,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     EvalResult result = left;
-    TypeInfo overloaded = mResolver.invokeResult(left.type, "operator" + operatorName);
-    if (!overloaded.qualifiedName.isEmpty()) {
-        result.type = overloaded;
+    MemberEvalResult overloaded = mResolver.invokeResult(
+                memberReceiver(left, false, evaluation), "operator" + operatorName, evaluation);
+    if (!overloaded.type.qualifiedName.isEmpty()) {
+        result.statement = overloaded.statement;
+        result.type = overloaded.type;
+        result.instance = overloaded.instance;
         result.kind = EvalStatementKind::Variable;
         return result;
     }
     if (operatorName == "|") {
-        TypeInfo piped = mOperations.pipeResult(left.type, right.type);
+        TypeInfo piped = mOperations.pipeResult(left.type, right.type, evaluation);
         if (!piped.qualifiedName.isEmpty()) {
             result.type = piped;
+            result.instance = mResolver.resolveInstance(piped, {}, {}, evaluation);
             result.kind = EvalStatementKind::Variable;
             return result;
         }
@@ -864,6 +919,7 @@ EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const Eva
             result.type.derivations.removeFirst();
         else
             return {};
+        result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
         result.kind = EvalStatementKind::Variable;
         return result;
     }
@@ -872,17 +928,21 @@ EvalResult CppExpressionEvaluator::applyBinary(const EvalResult &left, const Eva
     };
     if (booleanOperators.contains(operatorName)) {
         result.type = primitiveType("bool");
+        result.instance = {};
         result.kind = EvalStatementKind::Literal;
         return result;
     }
     static const QSet<QString> arithmeticOperators{"+", "-", "*", "/", "%"};
     if (arithmeticOperators.contains(operatorName) && !hasPointer(left.type) && !hasPointer(right.type)) {
         result.type = usualArithmeticType(removeReferences(left.type), removeReferences(right.type));
+        result.instance = {};
     } else if ((operatorName == "+" || operatorName == "-")
                && !hasPointer(left.type) && hasPointer(right.type)) {
         result.type = right.type;
+        result.instance = right.instance;
     } else {
         result.type = removeReferences(left.type);
+        result.instance.type = result.type;
     }
     result.kind = EvalStatementKind::Variable;
     return result;
@@ -915,47 +975,72 @@ PStatement CppExpressionEvaluator::findDirectStatement(const PStatement &scope,
     return mResolver.findStatement(name, scope);
 }
 
-TypeInfo CppExpressionEvaluator::memberReceiver(TypeInfo type, bool arrow) const
+ClassInstance CppExpressionEvaluator::memberReceiver(
+        const EvalResult &result, bool arrow, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    type = removeReferences(type);
-    if (!arrow)
-        return type;
+    ClassInstance current = result.instance;
+    current.type = removeReferences(result.type);
+    if (!arrow) {
+        if (!current.declaration)
+            return mResolver.resolveInstance(current.type, {}, {}, evaluation);
+        return current;
+    }
     for (int depth = 0; depth < 8; ++depth) {
-        if (!type.derivations.isEmpty()
-                && type.derivations.first().kind == TypeDerivationKind::Pointer) {
-            type.derivations.removeFirst();
-            return type;
+        if (!current.type.derivations.isEmpty()
+                && current.type.derivations.first().kind == TypeDerivationKind::Pointer) {
+            current.type.derivations.removeFirst();
+            return mResolver.resolveInstance(current.type, {}, {}, evaluation);
         }
-        type = removeReferences(mResolver.invokeResult(type, "operator->"));
-        if (type.qualifiedName.isEmpty())
+        MemberEvalResult member = mResolver.resolveMember(current, "operator->", true, {}, evaluation);
+        if (member.type.qualifiedName.isEmpty())
             return {};
+        current = member.instance;
+        current.type = removeReferences(member.type);
     }
     return {};
 }
 
-TypeInfo CppExpressionEvaluator::dereference(TypeInfo type) const
+EvalResult CppExpressionEvaluator::dereference(
+        EvalResult result, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    type = removeReferences(type);
-    if (!type.derivations.isEmpty()
-            && type.derivations.first().kind == TypeDerivationKind::Pointer) {
-        type.derivations.removeFirst();
-        type.derivations.prepend(TypeDerivation::lvalueReference());
-        return type;
+    result.type = removeReferences(result.type);
+    result.instance.type = removeReferences(result.instance.type);
+    if (!result.type.derivations.isEmpty()
+            && result.type.derivations.first().kind == TypeDerivationKind::Pointer) {
+        result.type.derivations.removeFirst();
+        result.type.derivations.prepend(TypeDerivation::lvalueReference());
+        result.instance.type = result.type;
+        return result;
     }
-    return mOperations.iteratorReference(type);
+    MemberEvalResult overloaded = mResolver.invokeResult(
+                memberReceiver(result, false, evaluation), "operator*", evaluation);
+    result.statement = overloaded.statement;
+    result.type = overloaded.type;
+    result.instance = overloaded.instance;
+    return result;
 }
 
-TypeInfo CppExpressionEvaluator::addressOf(TypeInfo type) const
+TypeInfo CppExpressionEvaluator::addressOf(
+        TypeInfo type, CppTypeResolver::EvaluationContext *evaluation) const
 {
+    Q_UNUSED(evaluation);
     type = removeReferences(type);
     type.derivations.prepend(TypeDerivation::pointer());
     return type;
 }
 
-TypeInfo CppExpressionEvaluator::applyIncrement(TypeInfo type, const QString &operatorName) const
+EvalResult CppExpressionEvaluator::applyIncrement(
+        EvalResult result, const QString &operatorName,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
-    TypeInfo overloaded = mResolver.invokeResult(type, operatorName);
-    return overloaded.qualifiedName.isEmpty() ? type : overloaded;
+    MemberEvalResult overloaded = mResolver.invokeResult(
+                memberReceiver(result, false, evaluation), operatorName, evaluation);
+    if (!overloaded.type.qualifiedName.isEmpty()) {
+        result.statement = overloaded.statement;
+        result.type = overloaded.type;
+        result.instance = overloaded.instance;
+    }
+    return result;
 }
 
 TypeInfo CppExpressionEvaluator::removeReferences(TypeInfo type) const

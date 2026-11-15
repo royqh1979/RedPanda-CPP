@@ -819,15 +819,19 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
             PStatement evaluationContext = context.parentScope;
             if (!declaration.rangeExpression.isEmpty() && evaluationContext)
                 evaluationContext = evaluationContext->parentScope.lock();
-            EvalResult evaluated = mExpressionEvaluator.evaluate(tokenizer, evaluationContext);
+            CppTypeResolver::EvaluationContext evaluation;
+            EvalResult evaluated = mExpressionEvaluator.evaluate(tokenizer, evaluationContext,
+                                                                 &evaluation);
             if (evaluated.isValid()) {
                 TypeInfo initializerType = evaluated.type;
                 if (!declaration.rangeExpression.isEmpty()) {
                     bool reference = !declarator.derivations.isEmpty()
                             && (declarator.derivations.first().kind == TypeDerivationKind::LvalueReference
                                 || declarator.derivations.first().kind == TypeDerivationKind::RvalueReference);
-                    initializerType = reference ? mTypeOperations.rangeReference(initializerType)
-                                                : mTypeOperations.rangeValue(initializerType);
+                    initializerType = reference ? mTypeOperations.rangeReference(initializerType,
+                                                                                 &evaluation)
+                                                : mTypeOperations.rangeValue(initializerType,
+                                                                             &evaluation);
                 }
                 statement->typeInfo = deduceAutoType(initializerType, declarator,
                                                      declaration.specifiers);

@@ -21,67 +21,78 @@ TypeOperationRegistry::TypeOperationRegistry(const CppTypeResolver &resolver)
 {
 }
 
-TypeInfo TypeOperationRegistry::containerValue(const TypeInfo &container) const
+TypeInfo TypeOperationRegistry::containerValue(
+        const TypeInfo &container, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    TypeInfo value = mResolver.memberType(container, "value_type");
+    TypeInfo value = mResolver.memberType(container, "value_type", evaluation);
     if (!value.qualifiedName.isEmpty())
         return value;
-    return valueFromReference(containerReference(container));
+    return valueFromReference(containerReference(container, evaluation));
 }
 
-TypeInfo TypeOperationRegistry::containerReference(const TypeInfo &container) const
+TypeInfo TypeOperationRegistry::containerReference(
+        const TypeInfo &container, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return mResolver.invokeResult(container, "front");
+    return mResolver.invokeResult(container, "front", evaluation);
 }
 
-TypeInfo TypeOperationRegistry::iteratorValue(const TypeInfo &iterator) const
+TypeInfo TypeOperationRegistry::iteratorValue(
+        const TypeInfo &iterator, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return valueFromReference(iteratorReference(iterator));
+    return valueFromReference(iteratorReference(iterator, evaluation));
 }
 
-TypeInfo TypeOperationRegistry::iteratorReference(const TypeInfo &iterator) const
+TypeInfo TypeOperationRegistry::iteratorReference(
+        const TypeInfo &iterator, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return mResolver.invokeResult(iterator, "operator*");
+    return mResolver.invokeResult(iterator, "operator*", evaluation);
 }
 
-TypeInfo TypeOperationRegistry::rangeValue(const TypeInfo &range) const
+TypeInfo TypeOperationRegistry::rangeValue(
+        const TypeInfo &range, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return rangeElement(range, false);
+    return rangeElement(range, false, evaluation);
 }
 
-TypeInfo TypeOperationRegistry::rangeReference(const TypeInfo &range) const
+TypeInfo TypeOperationRegistry::rangeReference(
+        const TypeInfo &range, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return rangeElement(range, true);
+    return rangeElement(range, true, evaluation);
 }
 
-TypeInfo TypeOperationRegistry::subscriptValue(const TypeInfo &receiver) const
+TypeInfo TypeOperationRegistry::subscriptValue(
+        const TypeInfo &receiver, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return valueFromReference(subscriptReference(receiver));
+    return valueFromReference(subscriptReference(receiver, evaluation));
 }
 
-TypeInfo TypeOperationRegistry::subscriptReference(const TypeInfo &receiver) const
+TypeInfo TypeOperationRegistry::subscriptReference(
+        const TypeInfo &receiver, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return mResolver.invokeResult(receiver, "operator[]");
+    return mResolver.invokeResult(receiver, "operator[]", evaluation);
 }
 
-TypeInfo TypeOperationRegistry::invokeResult(const TypeInfo &callable,
-                                              const QVector<TypeInfo> &arguments) const
+TypeInfo TypeOperationRegistry::invokeResult(
+        const TypeInfo &callable, const QVector<TypeInfo> &arguments,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (arguments.count() == 1
             && (callable.qualifiedName == "std::ranges::filter_fn"
                 || callable.qualifiedName == "std::ranges::transform_fn")) {
         QString closure = callable.qualifiedName == "std::ranges::filter_fn"
                 ? "std::ranges::filter_closure" : "std::ranges::transform_closure";
-        return makeView(closure, {TemplateArgument::fromType(arguments.first())});
+        return makeView(closure, {TemplateArgument::fromType(arguments.first())}, evaluation);
     }
     if (arguments.isEmpty() && callable.qualifiedName == "std::ranges::join_fn")
-        return makeView("std::ranges::join_closure", {});
-    return mResolver.invokeResult(callable, "operator()");
+        return makeView("std::ranges::join_closure", {}, evaluation);
+    return mResolver.invokeResult(callable, "operator()", evaluation);
 }
 
 TypeInfo TypeOperationRegistry::explicitTemplateResult(
-        const EvalResult &target, const QVector<TemplateArgument> &arguments) const
+        const EvalResult &target, const QVector<TemplateArgument> &arguments,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
+    Q_UNUSED(evaluation);
     if (!target.baseStatement || target.baseStatement->fullName != "std::views::elements"
             || arguments.count() != 1 || arguments.first().kind != TemplateArgumentKind::NonType)
         return {};
@@ -91,7 +102,9 @@ TypeInfo TypeOperationRegistry::explicitTemplateResult(
     return result;
 }
 
-TypeInfo TypeOperationRegistry::pipeResult(const TypeInfo &input, const TypeInfo &adaptor) const
+TypeInfo TypeOperationRegistry::pipeResult(
+        const TypeInfo &input, const TypeInfo &adaptor,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (adaptor.qualifiedName == "std::ranges::filter_closure"
             || adaptor.qualifiedName == "std::ranges::transform_closure") {
@@ -99,30 +112,36 @@ TypeInfo TypeOperationRegistry::pipeResult(const TypeInfo &input, const TypeInfo
             return {};
         QString view = adaptor.qualifiedName == "std::ranges::filter_closure"
                 ? "std::ranges::filter_view" : "std::ranges::transform_view";
-        return makeView(view, {TemplateArgument::fromType(input), adaptor.templateArguments.first()});
+        return makeView(view, {TemplateArgument::fromType(input), adaptor.templateArguments.first()},
+                        evaluation);
     }
     if (adaptor.qualifiedName == "std::ranges::join_fn"
             || adaptor.qualifiedName == "std::ranges::join_closure")
-        return makeView("std::ranges::join_view", {TemplateArgument::fromType(input)});
+        return makeView("std::ranges::join_view", {TemplateArgument::fromType(input)}, evaluation);
     if (adaptor.qualifiedName == "std::ranges::elements_fn"
             && adaptor.templateArguments.count() == 1)
         return makeView("std::ranges::elements_view",
-                        {TemplateArgument::fromType(input), adaptor.templateArguments.first()});
+                        {TemplateArgument::fromType(input), adaptor.templateArguments.first()},
+                        evaluation);
     return {};
 }
 
-TypeInfo TypeOperationRegistry::makeView(const QString &name,
-                                         const QVector<TemplateArgument> &arguments) const
+TypeInfo TypeOperationRegistry::makeView(
+        const QString &name, const QVector<TemplateArgument> &arguments,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
+    Q_UNUSED(evaluation);
     TypeInfo result;
     result.qualifiedName = name;
     result.templateArguments = arguments;
     return result;
 }
 
-TypeInfo TypeOperationRegistry::rangeElement(const TypeInfo &range, bool reference) const
+TypeInfo TypeOperationRegistry::rangeElement(
+        const TypeInfo &range, bool reference,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
-    TypeInfo resolvedRange = mResolver.resolve(range);
+    TypeInfo resolvedRange = mResolver.resolve(range, {}, {}, evaluation);
     const QVector<TemplateArgument> &arguments = resolvedRange.templateArguments;
     auto typeArgument = [&](int index) {
         return index < arguments.count() && arguments[index].kind == TemplateArgumentKind::Type
@@ -131,24 +150,26 @@ TypeInfo TypeOperationRegistry::rangeElement(const TypeInfo &range, bool referen
     if (resolvedRange.qualifiedName == "std::ranges::iota_view")
         return typeArgument(0);
     if (resolvedRange.qualifiedName == "std::ranges::filter_view" && !arguments.isEmpty())
-        return rangeElement(typeArgument(0), reference);
+        return rangeElement(typeArgument(0), reference, evaluation);
     if (resolvedRange.qualifiedName == "std::ranges::transform_view" && arguments.count() >= 2)
-        return callableResult(typeArgument(1));
+        return callableResult(typeArgument(1), evaluation);
     if (resolvedRange.qualifiedName == "std::ranges::join_view" && !arguments.isEmpty()) {
-        TypeInfo inner = rangeElement(typeArgument(0), reference);
-        return rangeElement(inner, reference);
+        TypeInfo inner = rangeElement(typeArgument(0), reference, evaluation);
+        return rangeElement(inner, reference, evaluation);
     }
     if (resolvedRange.qualifiedName == "std::ranges::elements_view" && arguments.count() >= 2
             && arguments[1].kind == TemplateArgumentKind::NonType) {
-        TypeInfo tuple = rangeElement(typeArgument(0), false);
-        return tupleElement(tuple, arguments[1].constantExpression.toInt());
+        TypeInfo tuple = rangeElement(typeArgument(0), false, evaluation);
+        return tupleElement(tuple, arguments[1].constantExpression.toInt(), evaluation);
     }
-    return reference ? containerReference(resolvedRange) : containerValue(resolvedRange);
+    return reference ? containerReference(resolvedRange, evaluation)
+                     : containerValue(resolvedRange, evaluation);
 }
 
-TypeInfo TypeOperationRegistry::callableResult(const TypeInfo &callable) const
+TypeInfo TypeOperationRegistry::callableResult(
+        const TypeInfo &callable, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    TypeInfo result = mResolver.invokeResult(callable, "operator()");
+    TypeInfo result = mResolver.invokeResult(callable, "operator()", evaluation);
     if (!result.qualifiedName.isEmpty())
         return result;
     for (int i = 0; i < callable.derivations.count(); ++i) {
@@ -164,11 +185,13 @@ TypeInfo TypeOperationRegistry::callableResult(const TypeInfo &callable) const
     return {};
 }
 
-TypeInfo TypeOperationRegistry::tupleElement(const TypeInfo &tuple, int index) const
+TypeInfo TypeOperationRegistry::tupleElement(
+        const TypeInfo &tuple, int index,
+        CppTypeResolver::EvaluationContext *evaluation) const
 {
     if (index < 0)
         return {};
-    TypeInfo resolved = mResolver.resolve(tuple);
+    TypeInfo resolved = mResolver.resolve(tuple, {}, {}, evaluation);
     if (resolved.qualifiedName == "std::array")
         index = 0;
     else if (resolved.qualifiedName != "std::tuple" && resolved.qualifiedName != "std::pair")

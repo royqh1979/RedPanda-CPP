@@ -1636,6 +1636,8 @@ void TestCppParser::test_standard_library_vector_subscript()
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
     QCOMPARE(result.type.declaration.lock(), basicString);
+    QCOMPARE(result.instance.declaration, basicString);
+    QCOMPARE(result.instance.type.declaration.lock(), basicString);
     QVERIFY(!result.type.derivations.isEmpty());
     QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
     QCOMPARE(mParser->findStatementOf(main, {"lst", "[", "0", "]", ".", "size"}, 5),
@@ -1759,9 +1761,21 @@ void TestCppParser::test_standard_library_expression_chains()
     QStringList listFrontExpression{"linked", ".", "front", "(", ")"};
     EvalResult listFrontResult = mParser->evalExpression(
                 main, listFrontExpression, mParser->findScopeStatement(main, 12));
-    QCOMPARE(listFrontResult.type.declaration.lock(), mParser->findStatement("std::basic_string"));
+    PStatement basicString = mParser->findStatement("std::basic_string");
+    QCOMPARE(listFrontResult.type.declaration.lock(), basicString);
+    QCOMPARE(listFrontResult.instance.declaration, basicString);
     QVERIFY(!listFrontResult.type.derivations.isEmpty());
     QCOMPARE(listFrontResult.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
+    QStringList sharedDereference{"(", "*", "shared", ")"};
+    EvalResult sharedResult = mParser->evalExpression(
+                main, sharedDereference, mParser->findScopeStatement(main, 17));
+    QCOMPARE(sharedResult.type.declaration.lock(), basicString);
+    QCOMPARE(sharedResult.instance.declaration, basicString);
+    QStringList iteratorDereference{"(", "*", "it", ")"};
+    EvalResult dereferencedIterator = mParser->evalExpression(
+                main, iteratorDereference, mParser->findScopeStatement(main, 22));
+    QCOMPARE(dereferencedIterator.type.declaration.lock(), basicString);
+    QCOMPARE(dereferencedIterator.instance.declaration, basicString);
     auto expectStringSize = [&](int line, const QStringList &expression) {
         PStatement scope = mParser->findScopeStatement(main, line);
         QVERIFY2(scope, expression.join("").toUtf8().constData());
@@ -1900,7 +1914,12 @@ void TestCppParser::test_standard_library_container_eval_profile()
         QVERIFY2(scope, test.name);
         qint64 started = timer.nsecsElapsed();
         QStringList expression = test.expression;
+        bool trace = qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE");
+        if (trace)
+            qputenv("REDPANDA_PARSER_TRACE_ACTIVE", "1");
         EvalResult result = mParser->evalExpression(main, expression, scope);
+        if (trace)
+            qunsetenv("REDPANDA_PARSER_TRACE_ACTIVE");
         qWarning() << "STDLIB_CONTAINER_EVAL" << test.name
                    << timer.nsecsElapsed() - started;
         if (!result.isValid() || result.type.declaration.lock() != basicString) {
