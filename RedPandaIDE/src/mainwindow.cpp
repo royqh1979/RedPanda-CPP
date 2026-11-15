@@ -1108,8 +1108,10 @@ public:
             };
             if (mixed)
                 painter->drawLine(point(0.25, 0.50), point(0.75, 0.50));
-            else
-                painter->drawPolyline(QPolygonF{point(0.23, 0.50), point(0.43, 0.70), point(0.77, 0.30)});
+            else {
+                const QPointF points[] = {point(0.23, 0.50), point(0.43, 0.70), point(0.77, 0.30)};
+                painter->drawPolyline(points, 3);
+            }
         }
         painter->restore();
     }
