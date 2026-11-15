@@ -96,22 +96,33 @@ int PpExpander::expandLine(PpTokenizer &input, QString &outText)
     QVector<PpToken> out;
     int linesConsumed = 1;
     QString pendingWhitespace;
+    QString prefix;
+    bool expandSuffix = mConditionMode;
     while (true) {
         PpToken token = nextToken();
         if (token.kind == PpTokenKind::EndOfInput)
             break;
         if (token.kind == PpTokenKind::EndOfLine) {
-            // line boundary: emit any whitespace the boundary carries
-            // (whitespace-only lines and trailing whitespace)
-            if (!token.whitespaceBefore.isEmpty()) {
-                PpToken ws;
-                ws.kind = PpTokenKind::Punct;
-                ws.whitespaceBefore = token.whitespaceBefore;
-                out.append(ws);
+            if (expandSuffix) {
+                // line boundary: emit any whitespace the boundary carries
+                // (whitespace-only lines and trailing whitespace)
+                if (!token.whitespaceBefore.isEmpty()) {
+                    PpToken ws;
+                    ws.kind = PpTokenKind::Punct;
+                    ws.whitespaceBefore = token.whitespaceBefore;
+                    out.append(ws);
+                }
+            } else {
+                prefix = input.lineText(input.line() - 1);
             }
             break;
         }
-        linesConsumed += processToken(token, out, pendingWhitespace);
+        if (!expandSuffix && token.kind == PpTokenKind::Identifier && mLookup(token.text)) {
+            prefix = input.prefixBefore(token);
+            expandSuffix = true;
+        }
+        if (expandSuffix)
+            linesConsumed += processToken(token, out, pendingWhitespace);
     }
     if (!pendingWhitespace.isEmpty()) {
         PpToken token;
@@ -119,7 +130,7 @@ int PpExpander::expandLine(PpTokenizer &input, QString &outText)
         token.whitespaceBefore = pendingWhitespace;
         out.append(token);
     }
-    outText = tokensToString(out);
+    outText = prefix + tokensToString(out);
     return linesConsumed;
 }
 

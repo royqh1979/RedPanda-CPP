@@ -53,6 +53,9 @@ void TestPpExpander::test_object_macro()
     QHash<QString, PDefine> defs{{"N", makeDefine("N", "", "12")}};
     QCOMPARE(expand(defs, "x N y"), "x 12 y");
     QCOMPARE(expand(defs, "N N"), "12 12");
+    QCOMPARE(expand(defs, "  int\t x  =  N + 1;  "), "  int\t x  =  12 + 1;  ");
+    QCOMPARE(expand(defs, "  int\t x  =  1;  "), "  int\t x  =  1;  ");
+    QCOMPARE(expand(defs, "auto s = R\"(N)\"; N"), "auto s = R\"(N)\"; 12");
 }
 
 void TestPpExpander::test_empty_body_macro()

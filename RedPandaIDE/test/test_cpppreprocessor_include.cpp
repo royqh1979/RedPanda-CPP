@@ -1412,6 +1412,7 @@ void TestCppPreprocessorInclude::test_subtree_mtime_invalidates_matching_prefix(
     p.preprocess(main);
     QVERIFY(p.result().contains("int inner_v1;"));
 
+    QTest::qWait(500);
     QVERIFY(writeFile(inner, {"int inner_v2;"}));
     p.preprocess(main);
     QVERIFY(p.result().contains("int inner_v2;"));

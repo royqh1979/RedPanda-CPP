@@ -64,6 +64,8 @@ public:
     PpToken next();
     // current position (line of the next token to read)
     int line() const { return mLine; }
+    QString prefixBefore(const PpToken &token) const;
+    QString lineText(int line) const;
 
     static bool isIdentStartChar(const QChar& ch) { return ch.isLetter() || ch == '_'; }
     static bool isWordChar(const QChar& ch) {

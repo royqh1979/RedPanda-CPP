@@ -292,25 +292,21 @@ static QStringList tryLoadFileByEncoding(QByteArray encodingName, QFile& file, b
     if (!decoder.isValid())
         return result;
     file.reset();
-    while (true) {
-        if (file.atEnd()){
-            break;
-        }
-        QByteArray line = file.readLine();
-        if (line.endsWith("\r\n")) {
-            line.remove(line.length()-2,2);
-        } else if (line.endsWith("\r")) {
-            line.remove(line.length()-1,1);
-        } else if (line.endsWith("\n")){
-            line.remove(line.length()-1,1);
-        }
-        auto [ok, newLine] = decoder.decode(line);
-        if (!ok) {
-            return QStringList();
-        }
-        result.append(newLine);
+    auto [ok, text] = decoder.decode(file.readAll());
+    if (!ok)
+        return result;
+    if (text.isEmpty()) {
+        *isOk = true;
+        return result;
     }
-    *isOk=true;
+    result = text.split('\n', Qt::KeepEmptyParts);
+    if (result.last().isEmpty())
+        result.removeLast();
+    for (QString &line : result) {
+        if (line.endsWith('\r'))
+            line.chop(1);
+    }
+    *isOk = true;
     return result;
 }
 

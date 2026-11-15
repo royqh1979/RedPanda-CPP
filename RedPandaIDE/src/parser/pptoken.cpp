@@ -21,6 +21,19 @@ PpTokenizer::PpTokenizer(const QStringList &lines, int startLine, int startCol)
 {
 }
 
+QString PpTokenizer::prefixBefore(const PpToken &token) const
+{
+    if (mLine < 0 || mLine >= mLines->count())
+        return QString();
+    int prefixLength = mCol - token.text.length() - token.whitespaceBefore.length();
+    return (*mLines)[mLine].left(qMax(0, prefixLength));
+}
+
+QString PpTokenizer::lineText(int line) const
+{
+    return line >= 0 && line < mLines->count() ? (*mLines)[line] : QString();
+}
+
 PpToken PpTokenizer::makeSimple(PpTokenKind kind, const QString &text) const
 {
     PpToken token;
