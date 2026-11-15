@@ -272,7 +272,11 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
         if (operation == "<") {
             int start = index;
             QVector<TemplateArgument> arguments;
-            if (readNonTypeTemplateArguments(tokens, index, arguments)) {
+            if (readTemplateArguments(tokens, index, arguments)) {
+                if (result.kind == EvalStatementKind::Function) {
+                    result.explicitTemplateArguments = arguments;
+                    continue;
+                }
                 TypeInfo explicitResult = mOperations.explicitTemplateResult(result, arguments);
                 if (!explicitResult.qualifiedName.isEmpty()) {
                     result.type = explicitResult;
@@ -318,10 +322,16 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
         if (operation == "." || operation == "->") {
             bool arrow = operation == "->";
             ++index;
-            if (index >= tokens.count())
-                return {};
-            QString memberName = tokens[index++].text;
             TypeInfo receiver = memberReceiver(result.type, arrow);
+            if (index >= tokens.count()) {
+                if (receiver.qualifiedName.isEmpty())
+                    return {};
+                result.type = receiver;
+                result.statement.reset();
+                result.kind = EvalStatementKind::Variable;
+                continue;
+            }
+            QString memberName = tokens[index++].text;
             bool call = index < tokens.count() && tokens[index].text == "(";
             if (call)
                 index = skipBalanced(tokens, index);
@@ -356,7 +366,8 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
                 QVector<TypeInfo> arguments;
                 if (!evaluateArguments(tokens, index, context, arguments))
                     return {};
-                result.type = mResolver.invokeFunction(result.baseStatement, arguments);
+                result.type = mResolver.invokeFunction(result.baseStatement, arguments,
+                                                       result.explicitTemplateArguments);
             } else {
                 QVector<TypeInfo> arguments;
                 if (!evaluateArguments(tokens, index, context, arguments))
@@ -519,6 +530,9 @@ EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &
     call->declarationRange.start = startToken.position;
     call->typeInfo.qualifiedName = "auto";
     call->properties.setFlag(StatementProperty::OperatorOverloading);
+    call->properties.setFlag(StatementProperty::Const);
+    call->args = "() const";
+    call->normalizedArgs = "() const";
 
     if (index < tokens.count() && tokens[index].text == "(") {
         int parametersEnd = tokens[index].matchIndex;
@@ -567,6 +581,12 @@ EvalResult CppExpressionEvaluator::evaluateLambda(const TokenList &tokens, int &
             }
         }
         index = parametersEnd + 1;
+    }
+    if (index < tokens.count() && tokens[index].text == "mutable") {
+        call->properties.setFlag(StatementProperty::Const, false);
+        call->args = "()";
+        call->normalizedArgs = "()";
+        ++index;
     }
 
     TypeInfo trailingReturn;
@@ -671,6 +691,10 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     case StatementKind::Class:
     case StatementKind::EnumType:
     case StatementKind::EnumClassType:
+        result.type.qualifiedName = statement->fullName;
+        result.type.declaration = statement;
+        result.kind = EvalStatementKind::Type;
+        break;
     case StatementKind::Typedef:
     case StatementKind::Alias:
         result.type.qualifiedName = statement->fullName;
@@ -690,7 +714,7 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     case StatementKind::Function:
     case StatementKind::OverloadedOperator:
     case StatementKind::LiteralOperator:
-        result.type = mResolver.resolve(statement->typeInfo, {}, statement->parentScope.lock());
+        result.type = statement->typeInfo;
         result.kind = EvalStatementKind::Function;
         break;
     case StatementKind::Variable:
@@ -713,42 +737,65 @@ EvalResult CppExpressionEvaluator::createResult(const PStatement &statement) con
     return result;
 }
 
-bool CppExpressionEvaluator::readNonTypeTemplateArguments(
+bool CppExpressionEvaluator::readTemplateArguments(
         const TokenList &tokens, int &index, QVector<TemplateArgument> &arguments) const
 {
     if (index >= tokens.count() || tokens[index].text != "<")
         return false;
     int currentIndex = index + 1;
-    int nested = 0;
+    int level = 1;
     QString expression;
     auto finishArgument = [&]() {
-        if (expression.trimmed().isEmpty())
+        QString text = expression.trimmed();
+        if (text.isEmpty())
             return false;
-        arguments.append(TemplateArgument::fromConstant(expression.trimmed()));
+        TypeInfo type = parseTypeText(text);
+        if (!type.qualifiedName.isEmpty()) {
+            TemplateArgument argument = TemplateArgument::fromType(type);
+            argument.constantExpression = text;
+            arguments.append(argument);
+        } else {
+            arguments.append(TemplateArgument::fromConstant(text));
+        }
         expression.clear();
         return true;
     };
     while (currentIndex < tokens.count()) {
         const QString &text = tokens[currentIndex].text;
-        if (nested == 0 && text == ">") {
-            if (!finishArgument())
-                return false;
-            index = currentIndex + 1;
-            return true;
+        if (tokens[currentIndex].matchIndex > currentIndex && text != "<") {
+            int close = tokens[currentIndex].matchIndex;
+            for (; currentIndex <= close && currentIndex < tokens.count(); ++currentIndex)
+                appendExpressionToken(expression, tokens[currentIndex].text);
+            continue;
         }
-        if (nested == 0 && text == ",") {
+        if (text == "<") {
+            ++level;
+            appendExpressionToken(expression, text);
+            ++currentIndex;
+            continue;
+        }
+        if (text == ">" || text == ">>") {
+            int closingCount = text.length();
+            ++currentIndex;
+            while (closingCount-- > 0) {
+                --level;
+                if (level == 0) {
+                    if (!finishArgument())
+                        return false;
+                    index = currentIndex;
+                    return true;
+                }
+                appendExpressionToken(expression, ">");
+            }
+            continue;
+        }
+        if (text == "," && level == 1) {
             if (!finishArgument())
                 return false;
             ++currentIndex;
             continue;
         }
-        if (text == "(" || text == "[" || text == "{")
-            ++nested;
-        else if (text == ")" || text == "]" || text == "}")
-            --nested;
-        if (nested < 0)
-            return false;
-        expression += text;
+        appendExpressionToken(expression, text);
         ++currentIndex;
     }
     return false;

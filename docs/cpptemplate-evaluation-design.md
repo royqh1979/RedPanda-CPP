@@ -301,11 +301,32 @@ for (const QString &text : selectedTokens)
 `readBalancedToken(opening, closing, false)` 取得片段后追加。
 
 expression eval 按需把完整原文 tokenize 为临时 `TypeNameSegment` 列表。每段记录自己的名字、
-实参和 `templateKeyword`，但该列表只存在于求值上下文中，不写入 StatementModel。这样
-`A<T>::template B<U>::type` 中 `T` 属于 `A`，`U` 属于 `B`，最终 `type` 没有实参。
+实参、是否显式写出实参列表和 `templateKeyword`，但该列表只存在于求值上下文中，不写入 StatementModel。
+这样 `A<T>::template B<U>::type` 中 `T` 属于 `A`，`U` 属于 `B`，最终 `type` 没有实参。
+若结构化 `TypeInfo` 已带有实参，也必须同步标记为显式实参，不能仅因名称原文省略了 `<...>` 就按无实参处理。
+
+类作用域内的 injected-class-name（例如 `vector<T>` 定义内单独写 `vector`）表示当前实例化，复用当前类
+绑定帧中的实参；只有未显式写出实参列表时才适用。普通类名查找不要求实例化：Class/Enum 的表达式结果
+直接保留声明，只有 Alias/Typedef 才展开目标。using declaration 引入类模板时，引用处的实参继续传给目标；
+普通别名模板仍按自己的绑定帧解释，不能套用这条转发规则。
 
 `Statement::fullName` 不变，仍表示声明的真实作用域路径。上述结构调整只针对类型引用，不压缩
 inline namespace，也不改变 Statement 树。
+
+### 函数签名的规范化
+
+`Statement::args` 保留普通参数名和模板形参名，用于函数提示等界面显示。`Statement::normalizedArgs`
+仅用于声明合并、重载区分和内部索引：普通参数名省略，cv/ref、指针、数组、函数修饰和参数包等
+签名结构保留，默认实参不参与比较。模板形参按声明位置规范化为内部占位符：类型、非类型和模板
+模板形参分别使用 `@T0`、`@N0`、`@TT0` 等形式。占位符不是合法 C++ 标识符，避免与源码中的真实
+类型冲突；替换按 token 精确进行，不做全字符串替换。
+
+因此，同一函数模板在声明与定义中可以使用不同的模板形参名，仍合并为一个 Statement；真正不同的
+重载必须保持不同的 `normalizedArgs`。该规范化不实例化模板，也不改变 `args` 的显示内容。
+
+函数后缀的 const、volatile、`&` 和 `&&` 同时保存在现有 `Statement::properties` 位标志中，
+不另设平行的函数类型对象。`Statement::typeInfo` 继续只表示函数返回类型；static、extern 等声明
+说明符仍由既有声明属性保存，访问级别仍由 `accessibility` 保存。
 
 ### 声明期只补充原文信息
 
@@ -421,6 +442,11 @@ struct TemplateBindingFrame {
 匹配结果是三态：匹配、不匹配、无法判断。任一可能影响结果的候选为“无法判断”时，不得直接退回
 主模板并伪造成功。
 
+偏特化优先级是明确的后续工作，本轮不实现。典型场景是 `iterator_traits<T*>` 与
+`iterator_traits<const T*>` 同时匹配 `const std::string*`；当前必须保持未解析，不能按声明顺序或
+const 数量猜测。后续设计至少需要区分“声明结构相同、cv 更具体”和结构不同的候选，并验证
+`T*` 与 `const T` 等反例，避免把简单的 cv 计数误当成 C++ 偏序规则。
+
 类型模式匹配按结构递归：
 
 - 模板形参捕获对应实际类型；重复出现时，各次绑定必须相同；
@@ -442,7 +468,9 @@ struct TemplateBindingFrame {
 5. 成员类型和成员函数返回类型只在它自己的所属环境中解析。
 
 直接成员优先于继承成员，继承访问控制和构造函数/析构函数不继承等现有规则保持不变。
-查找到重载函数时返回候选列表，不能由第一个同名成员遮蔽其余候选。
+查找到重载函数时返回候选列表，不能由第一个同名成员遮蔽其余候选。当前有限成员选择只额外处理
+函数 const 后缀：const 接收对象排除非 const 非静态成员；非 const 接收对象优先选择非 const
+重载，没有时才使用 const 重载。完整 cv/ref 重载决议仍不在本轮范围内。
 
 补全列表可以从选中特化及其基类收集 Statement 用于展示，但表达式求值必须保留对应的
 `MemberResolution`，否则会在后续 `front()`、`operator*` 等返回类型处丢失基类绑定。
@@ -521,6 +549,14 @@ invalidate 和 Registry 生命周期均不因该缓存改变。
 3. 补全只使用展示所需的 Statement 信息；
 4. goto/ParserHint 使用 `MemberResolution` 中的真实声明位置；
 5. 函数调用和 function tips 共用候选收集，但只有表达式求值执行模板绑定和返回类型解析。
+
+补全将 owner 表达式与 `.`/`->` 一并交给表达式求值器。以成员操作符结尾的不完整表达式返回成员接收
+类型，供成员列表枚举；带最终成员名的完整表达式仍返回该成员的类型。裸指针和重载 `operator->` 共用
+同一接收类型路径，不按 STL 名称特判，也不需要单独的公开接收类型查询。裸指针误用 `.` 仍由补全层拒绝。
+
+function tips 使用函数名位置的完整表达式（例如 `std::find_if`、`it->size`）先解析目标函数，再收集
+其实际 namespace/class 中的全部可见重载。声明是否覆盖调用行不参与筛选；头文件声明和成员调用与当前
+文件中的函数使用同一规则。展示继续使用原始 `args`，声明合并和候选区分使用 `normalizedArgs`。
 
 任何求值前后，StatementModel 的 Statement 数量、声明级 `TypeInfo` 和模板实参原文都必须保持不变。
 

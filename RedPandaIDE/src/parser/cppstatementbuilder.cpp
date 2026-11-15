@@ -93,7 +93,69 @@ QString renderParameters(const TypeDerivation &function, bool includeNames)
         parameters.append(parameter.toString(includeNames));
     if (function.functionProperties.testFlag(FunctionProperty::Variadic))
         parameters.append("...");
-    return "(" + parameters.join(",") + ")";
+    QString result = "(" + parameters.join(",") + ")";
+    if (function.qualifiers.testFlag(TypeQualifier::Const))
+        result += " const";
+    if (function.qualifiers.testFlag(TypeQualifier::Volatile))
+        result += " volatile";
+    if (function.refQualifier == ReferenceQualifier::Lvalue)
+        result += " &";
+    else if (function.refQualifier == ReferenceQualifier::Rvalue)
+        result += " &&";
+    return result;
+}
+
+QString replaceIdentifiers(const QString &text, const QHash<QString, QString> &replacements)
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({text});
+    QString result;
+    auto identifierPart = [](QChar ch) {
+        return ch.isLetterOrNumber() || ch == '_' || ch == '@';
+    };
+    for (const CppTokenizer::Token &token : tokenizer.tokens()) {
+        QString tokenText = token.text;
+        if (token.kind == CppTokenizer::TokenKind::Identifier) {
+            auto replacement = replacements.constFind(tokenText);
+            if (replacement != replacements.constEnd())
+                tokenText = replacement.value();
+        }
+        if (!result.isEmpty() && !tokenText.isEmpty()
+                && identifierPart(result.back()) && identifierPart(tokenText.front())) {
+            result += ' ';
+        }
+        result += tokenText;
+    }
+    return result;
+}
+
+QString renderNormalizedParameters(const TypeDerivation &function,
+                                   const QVector<TemplateParameterInfo> &templateParameters)
+{
+    QString rendered = renderParameters(function, false);
+    if (templateParameters.isEmpty())
+        return rendered;
+
+    QHash<QString, QString> normalizedNames;
+    for (int i = 0; i < templateParameters.count(); ++i) {
+        const TemplateParameterInfo &parameter = templateParameters[i];
+        if (parameter.name.isEmpty())
+            continue;
+        QString prefix;
+        switch (parameter.kind) {
+        case TemplateParameterKind::Type:
+            prefix = "@T";
+            break;
+        case TemplateParameterKind::NonType:
+            prefix = "@N";
+            break;
+        case TemplateParameterKind::TemplateTemplate:
+            prefix = "@TT";
+            break;
+        }
+        normalizedNames.insert(parameter.name, prefix + QString::number(i));
+    }
+    return replaceIdentifiers(rendered, normalizedNames);
 }
 
 QString withoutTemplateArguments(QString name)
@@ -375,7 +437,7 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
 
     for (const PStatement &existing : candidates) {
         if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
-                || existing->noNameArgs != candidate->noNameArgs) {
+                || existing->normalizedArgs != candidate->normalizedArgs) {
             continue;
         }
         bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
@@ -395,16 +457,65 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
     if (!existing)
         return nullptr;
 
+    bool hadDefinition = existing->hasDefinition();
     if (candidate->hasDefinition()) {
         existing->definitionRange = candidate->declarationRange;
         existing->definitionFileName = context.fileName;
         existing->definitionBoundaryAncestor = context.boundaryAncestor;
         existing->setHasDefinition(true);
+        existing->typeInfo = candidate->typeInfo;
+        existing->parameters = candidate->parameters;
+        existing->args = candidate->args;
+        existing->normalizedArgs = candidate->normalizedArgs;
     } else {
         existing->declarationRange = candidate->declarationRange;
         existing->fileName = context.fileName;
         existing->declarationBoundaryAncestor = context.boundaryAncestor;
     }
+    if (!candidate->baseClasses.isEmpty())
+        existing->baseClasses = candidate->baseClasses;
+
+    bool useCandidate = candidate->hasDefinition() || !hadDefinition;
+    QVector<TemplateParameterInfo> merged = useCandidate
+            ? candidate->templateParameters : existing->templateParameters;
+    QVector<QString> inherited(merged.count());
+    int count = qMin(qMin(existing->templateParameters.count(),
+                          candidate->templateParameters.count()), merged.count());
+    for (int i = 0; i < count; ++i) {
+        QHash<QString, QString> previousNames;
+        for (int j = 0; j < count; ++j) {
+            const QString &oldName = existing->templateParameters[j].name;
+            const QString &newName = merged[j].name;
+            if (!oldName.isEmpty() && !newName.isEmpty() && oldName != newName)
+                previousNames.insert(oldName, newName);
+        }
+        QHash<QString, QString> candidateNames;
+        for (int j = 0; j < count; ++j) {
+            const QString &oldName = candidate->templateParameters[j].name;
+            const QString &newName = merged[j].name;
+            if (!oldName.isEmpty() && !newName.isEmpty() && oldName != newName)
+                candidateNames.insert(oldName, newName);
+        }
+
+        QString previousDefault;
+        if (i < existing->inheritedDefaultArgumentTexts.count()
+                && !existing->inheritedDefaultArgumentTexts[i].isEmpty()) {
+            previousDefault = existing->inheritedDefaultArgumentTexts[i];
+        } else {
+            previousDefault = existing->templateParameters[i].defaultArgumentText;
+        }
+        if (!merged[i].defaultArgumentText.isEmpty())
+            continue;
+        if (!previousDefault.isEmpty())
+            inherited[i] = replaceIdentifiers(previousDefault, previousNames);
+        if (inherited[i].isEmpty() && i < candidate->templateParameters.count())
+            inherited[i] = replaceIdentifiers(
+                        candidate->templateParameters[i].defaultArgumentText, candidateNames);
+        if (!merged[i].type)
+            merged[i].type = existing->templateParameters[i].type;
+    }
+    existing->templateParameters = merged;
+    existing->inheritedDefaultArgumentTexts = inherited;
     existing->declSpecifierProperties |= candidate->declSpecifierProperties;
     mModel.updateNamespaceTransparency(existing);
     return existing;
@@ -495,8 +606,8 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
 
         if (declarator.definitionKind == DeclaratorDefinitionKind::Deleted) {
             PStatement deleted = createStatement(declaration, declarator, context, kind);
-            PStatement existing = mergeDeclaration(deleted, context);
-            if (existing) {
+            PStatement existing = doFindDeclarationToMerge(deleted, context);
+            if (existing && !existing->hasDefinition()) {
                 if (context.fileInfo)
                     context.fileInfo->removeStatement(existing);
                 mModel.deleteStatement(existing);
@@ -505,6 +616,28 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
         }
 
         StatementBuildContext declarationContext = context;
+        if (isFunction(declarator) && !declarator.qualifier.isEmpty()) {
+            QString qualifiedClassName = declarator.qualifier;
+            PStatement lexicalParent = context.parentScope;
+            if (!declarator.globallyQualified && lexicalParent
+                    && lexicalParent->kind == StatementKind::Namespace
+                    && !lexicalParent->fullName.isEmpty()) {
+                QString prefix = lexicalParent->fullName + "::";
+                if (!qualifiedClassName.startsWith(prefix))
+                    qualifiedClassName = prefix + qualifiedClassName;
+            }
+            QList<PStatement> classCandidates = doFindStatements(qualifiedClassName);
+            if (classCandidates.isEmpty())
+                classCandidates = doFindStatements(withoutTemplateArguments(qualifiedClassName));
+            QString expectedClassName = className(declarator, declarationContext);
+            for (const PStatement &candidate : classCandidates) {
+                if (candidate->kind == StatementKind::Class
+                        && withoutTemplateArguments(candidate->command) == expectedClassName) {
+                    declarationContext.parentScope = candidate;
+                    break;
+                }
+            }
+        }
         if (isFunction(declarator) && context.scope == StatementScope::Local
                 && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)) {
             declarationContext.scope = StatementScope::Global;
@@ -608,6 +741,13 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     statement->command = declarator.name;
     statement->fullName = fullName(declarator, context);
     statement->kind = kind;
+    if (kind == StatementKind::Constructor || kind == StatementKind::Destructor) {
+        PStatement parent = context.parentScope;
+        bool validParent = parent && parent->kind == StatementKind::Class
+                && withoutTemplateArguments(parent->command) == className(declarator, context);
+        Q_ASSERT(validParent);
+        Q_ASSERT(!parent || statement->fullName != parent->fullName);
+    }
     statement->classKey = declaration.classKey;
     statement->scope = context.scope;
     statement->accessibility = accessibility(declaration, context);
@@ -634,9 +774,18 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->typeInfo.derivations.removeFirst();
         statement->parameters = function.parameters;
         statement->args = renderParameters(function, true);
-        statement->noNameArgs = renderParameters(function, false);
+        statement->normalizedArgs = renderNormalizedParameters(function,
+                                                               declaration.templateParameters);
         statement->properties.setFlag(StatementProperty::Override,
                                       function.functionProperties.testFlag(FunctionProperty::Override));
+        statement->properties.setFlag(StatementProperty::Const,
+                                      function.qualifiers.testFlag(TypeQualifier::Const));
+        statement->properties.setFlag(StatementProperty::Volatile,
+                                      function.qualifiers.testFlag(TypeQualifier::Volatile));
+        statement->properties.setFlag(StatementProperty::LvalueReference,
+                                      function.refQualifier == ReferenceQualifier::Lvalue);
+        statement->properties.setFlag(StatementProperty::RvalueReference,
+                                      function.refQualifier == ReferenceQualifier::Rvalue);
         if (!function.trailingReturnType.isEmpty()
                 && statement->typeInfo.qualifiedName == "auto")
             statement->typeInfo.qualifiedName = function.trailingReturnType;
@@ -646,7 +795,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                 bool empty = derivation.parameters.isEmpty()
                         && !derivation.functionProperties.testFlag(FunctionProperty::Variadic);
                 statement->args += empty ? "( )" : renderParameters(derivation, true);
-                statement->noNameArgs += empty ? "( )" : renderParameters(derivation, false);
+                statement->normalizedArgs += empty
+                        ? "( )" : renderNormalizedParameters(derivation, declaration.templateParameters);
                 statement->properties.setFlag(StatementProperty::FunctionPointer);
             } else if (derivation.kind == TypeDerivationKind::Array) {
                 statement->args += derivation.text;
@@ -747,7 +897,7 @@ StatementKind CppStatementBuilder::declaratorKind(
     }
     if (declarator.name.startsWith('~'))
         return StatementKind::Destructor;
-    if (declarator.name == className(declarator, context))
+    if (!declarator.name.isEmpty() && declarator.name == className(declarator, context))
         return StatementKind::Constructor;
     return StatementKind::Function;
 }
@@ -771,11 +921,13 @@ StatementAccessibility CppStatementBuilder::accessibility(
 QString CppStatementBuilder::fullName(const DeclaratorInfo &declarator,
                                       const StatementBuildContext &context) const
 {
+    PStatement parent = context.parentScope;
+    if (parent && parent->kind == StatementKind::Class && !declarator.qualifier.isEmpty())
+        return parent->fullName + "::" + declarator.name;
     QString name;
     if (!declarator.qualifier.isEmpty())
         name = declarator.qualifier + "::";
     name += declarator.name;
-    PStatement parent = context.parentScope;
     if (!declarator.globallyQualified && parent && !parent->fullName.isEmpty()) {
         QString prefix = parent->fullName + "::";
         return name.startsWith(prefix) ? name : prefix + name;

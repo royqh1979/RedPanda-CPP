@@ -178,7 +178,11 @@ enum class StatementProperty {
     Constexpr =           0x0080,
     FunctionPointer =     0x0100,
     OperatorOverloading = 0x0200,
-    DummyStatement     =  0x0400
+    DummyStatement     =  0x0400,
+    Const =               0x0800,
+    Volatile =            0x1000,
+    LvalueReference =     0x2000,
+    RvalueReference =     0x4000
 };
 
 Q_DECLARE_FLAGS(StatementProperties, StatementProperty)
@@ -201,6 +205,7 @@ struct Statement {
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
     QVector<TemplateParameterInfo> templateParameters;
+    QVector<QString> inheritedDefaultArgumentTexts;
     DeclSpecifierProperties declSpecifierProperties;
     StatementKind kind; // kind of statement class/variable/function/etc
     ClassKey classKey = ClassKey::Class;
@@ -217,7 +222,7 @@ struct Statement {
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
     QStringList baseClasses;
-    QString noNameArgs;// Args without name
+    QString normalizedArgs;// Canonical parameter signature without ordinary parameter names
     QSet<QString> lambdaCaptures;
     StatementProperties properties;
 

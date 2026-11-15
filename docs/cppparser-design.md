@@ -74,7 +74,7 @@ derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueR
 
 - Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
 - Array 保存维度文本，迁移期不要求值。
-- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/noNameArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 只保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号；默认值不参与语义建模。
+- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/normalizedArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 只保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号；默认值不参与语义建模。
 - Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
 
 trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。
@@ -91,7 +91,7 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
 
-普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definitionFileName、definitionRange 及对应边界祖先并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 不生成最终 Statement，若此前已解析同名声明则一并移除，不能留下可补全或可跳转条目。没有有效源码位置的 hard define 不参与跳转。
+普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definitionFileName、definitionRange 及对应边界祖先并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 不生成新 Statement；若匹配的已有声明仍为 declaration-only，则移除该声明，已有定义及其它重载不受影响。没有有效源码位置的 hard define 不参与跳转。
 
 Label 和 Preprocessor 在表达式名称解析中使用各自独立的结果类别，只提供 Statement 供 goto 等声明导航，不伪装成变量、函数或类型，也不提供表达式类型。gotoDefinition 只接受 HasDefinition 且定义位置有效的 Statement；gotoDeclaration 同样要求声明位置有效。
 
@@ -154,7 +154,7 @@ CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxPars
 
 同一实体的声明和定义合并到一个 Statement，分别保存 declarationRange/definitionRange、实际文件和跨边界祖先，并合并声明说明符，避免重开 namespace 时丢失 inline 等信息；参数不重复创建。变量统一使用 StatementKind::Variable，global/local/class-local 由 StatementScope 区分。typeInfo.toString 保留完整结构化类型，Statement::type() 生成旧 API 所需的存储类别、返回类型及数组/函数指针兼容文本。
 
-merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、noNameArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
+merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、normalizedArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
 
 class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；declarationBoundaryAncestor 为空时按声明实际文件是否位于 include 闭包判断。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。查询目标本身就是 namespace 时，终止 Statement 的 fullName 必须与该前缀精确相等；索引中的 inline/匿名关联节点只能用于继续查成员，不能替代终止 namespace。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
 

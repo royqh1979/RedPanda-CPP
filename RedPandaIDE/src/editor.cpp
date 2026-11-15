@@ -4155,6 +4155,9 @@ void Editor::updateFunctionTip(bool showTip)
             }
         }
     }
+    QStringList functionExpression = getExpressionAtPosition(functionNamePos);
+    if (!functionExpression.isEmpty())
+        s = functionExpression.join("");
 
     // Don't bother scanning the database when there's no identifier to scan for
 
@@ -4172,7 +4175,7 @@ void Editor::updateFunctionTip(bool showTip)
                         statement->fullName,
                         statement->type(),
                         statement->args,
-                        statement->noNameArgs);
+                        statement->normalizedArgs);
         }
     }
 

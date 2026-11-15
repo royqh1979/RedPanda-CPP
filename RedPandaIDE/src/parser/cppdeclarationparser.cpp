@@ -312,10 +312,7 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
         }
         if (mCursor.consume("=")) {
             CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-            if (parameter.kind == TemplateParameterKind::NonType)
-                skipExpression({",", ">", ">>"});
-            else
-                skipTemplateDefaultArgument();
+            skipTemplateDefaultArgument(parameter.kind == TemplateParameterKind::NonType);
             parameter.defaultArgumentText = readConsumedText(defaultStart);
         }
         result.templateParameters.append(parameter);
@@ -346,16 +343,19 @@ bool CppDeclarationParser::isConstructorDeclaration()
     CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
     QStringList parts;
     mCursor.consume("::");
-    while (mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+    while (mCursor.currentText() == "~"
+           || mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+        mCursor.consume("~");
+        if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier) {
+            mCursor.restore(checkpoint);
+            return false;
+        }
         parts.append(mCursor.currentText());
         mCursor.advance();
-        if (mCursor.currentText() == "<") {
-            mCursor.skipToMatch();
-            if (mCursor.atEnd()) {
-                mCursor.restore(checkpoint);
-                return false;
-            }
-            mCursor.advance();
+        if (mCursor.currentText() == "<"
+                && readBalancedToken("<", ">").isEmpty()) {
+            mCursor.restore(checkpoint);
+            return false;
         }
         if (!mCursor.consume("::"))
             break;
@@ -367,6 +367,8 @@ bool CppDeclarationParser::isConstructorDeclaration()
     mCursor.restore(checkpoint);
     if (parts.isEmpty())
         return false;
+    if (parts.last() == "operator")
+        return true;
     if (!mClassName.isEmpty())
         return parts.last() == mClassName;
     return parts.count() >= 2 && parts.last() == parts[parts.count() - 2];
@@ -487,6 +489,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
         }
     }
 
+    mCursor.consume("...");
     if (mCursor.consume("(")) {
         if (!parseDeclarator(result)) {
             mCursor.restore(start);
@@ -517,6 +520,16 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                 if (result.name.startsWith("::"))
                     result.name.remove(0, 2);
             }
+        }
+    }
+    if (result.name == "operator") {
+        if (mCursor.currentText() == "(")
+            result.name += readBalancedToken("(", ")");
+        else if (mCursor.currentText() == "[")
+            result.name += readBalancedToken("[", "]");
+        else if (!mCursor.atEnd()) {
+            appendToken(result.name, mCursor.currentText());
+            mCursor.advance();
         }
     }
 
@@ -716,13 +729,14 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
     while (!mCursor.atEnd()) {
         const QString &text = mCursor.currentText();
         if (mCursor.current().matchIndex > mCursor.index()) {
-            argument += readBalancedToken(text, text == "(" ? ")" : text == "[" ? "]" : "}");
+            appendToken(argument, readBalancedToken(
+                    text, text == "(" ? ")" : text == "[" ? "]" : "}"));
             continue;
         }
         if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
             if (text == "<") {
                 ++level;
-                argument += text;
+                appendToken(argument, text);
                 mCursor.advance();
                 continue;
             }
@@ -733,7 +747,7 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
                     appendArgument(argument);
                     return true;
                 }
-                argument += ">";
+                appendToken(argument, ">");
                 continue;
             }
         }
@@ -743,7 +757,7 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
             mCursor.advance();
             continue;
         }
-        argument += text;
+        appendToken(argument, text);
         mCursor.advance();
     }
     mCursor.restore(start);
@@ -773,6 +787,8 @@ QString CppDeclarationParser::parseQualifiedNameText()
     if (mCursor.consume("::"))
         result = "::";
     while (!mCursor.atEnd()) {
+        if (mCursor.consume("~"))
+            result += "~";
         const QString &text = mCursor.currentText();
         if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
                 && !isBuiltinType(text))
@@ -806,11 +822,13 @@ QString CppDeclarationParser::readConsumedText(const CppTokenCursor::Checkpoint 
             || (mCursor.index() == end.index
                 && mCursor.greaterConsumed() < end.greaterConsumed)) {
         QString text = mCursor.currentText();
-        appendToken(result, text);
-        if (text == ">" || text == ">>")
+        if (text == ">" || text == ">>") {
+            appendToken(result, ">");
             mCursor.consumeGreater();
-        else
+        } else {
+            appendToken(result, text);
             mCursor.advance();
+        }
     }
     mCursor.restore(end);
     return result;
@@ -1006,7 +1024,7 @@ void CppDeclarationParser::skipRequiresClause()
     }
 }
 
-void CppDeclarationParser::skipTemplateDefaultArgument()
+void CppDeclarationParser::skipTemplateDefaultArgument(bool nonType)
 {
     int level = 0;
     while (!mCursor.atEnd()) {
@@ -1017,7 +1035,11 @@ void CppDeclarationParser::skipTemplateDefaultArgument()
         }
         if (mCursor.current().kind == CppTokenizer::TokenKind::Operator) {
             if (text == "<") {
-                ++level;
+                bool templateOpening = !nonType
+                        || (mCursor.peek(-1).kind == CppTokenizer::TokenKind::Identifier
+                            && mCursor.peek().kind == CppTokenizer::TokenKind::Identifier);
+                if (templateOpening)
+                    ++level;
                 mCursor.advance();
                 continue;
             }

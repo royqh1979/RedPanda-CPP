@@ -288,7 +288,7 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     mNodeIndex.insert(
                 QString("%1+%2+%3")
                 .arg(statement->fullName,
-                     statement->noNameArgs)
+                     statement->normalizedArgs)
                 .arg((int)statement->kind),newNode);
     mProcessedStatements[node].insert(statement.get());
     if (isScopeStatement(statement)) {
@@ -468,7 +468,7 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->parentScope = statement->parentScope;
     result->command = statement->command;
     result->args = statement->args;
-    result->noNameArgs = statement->noNameArgs;
+    result->normalizedArgs = statement->normalizedArgs;
     result->fullName = statement->fullName;
     result->kind = statement->kind;
     result->classKey = statement->classKey;

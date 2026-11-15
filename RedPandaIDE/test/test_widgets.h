@@ -45,6 +45,7 @@ private slots:
     void test_code_completion_standard_library_string();
     void test_code_completion_standard_library_vector_subscript();
     void test_goto_standard_library_string();
+    void test_standard_library_template_consumers();
 #endif
     void test_code_completion_types();
     void test_code_completion_macros();

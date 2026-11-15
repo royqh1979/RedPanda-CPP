@@ -25,7 +25,7 @@ struct FunctionInfo {
     QString name;
     QString fullname;
     QStringList params;
-    QStringList nonameParams;
+    QStringList normalizedParams;
     QString returnType;
 };
 
@@ -38,7 +38,7 @@ public:
     explicit FunctionTooltipWidget(QWidget *parent = nullptr);
     void addTip(const QString& name, const QString& fullName,
                 const QString& returnType, const QString& args,
-                const QString& noNameArgs);
+                const QString& normalizedArgs);
     void clearTips();
     int tipCount();
     int paramPos() const;

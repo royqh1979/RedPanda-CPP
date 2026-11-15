@@ -463,29 +463,40 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
 {
     QMutexLocker locker(&mMutex);
     QList<PStatement> result;
-    if (mParsing)
+    if (mParsing || phrase.isEmpty())
         return result;
-    PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
-    if (!info)
+    PStatement function = doFindStatementOf(fileName, phrase, line);
+    if (!function)
         return result;
-    for (const std::weak_ptr<Statement> &weak : info->statements()) {
-        PStatement statement = weak.lock();
-        if (!statement || statement->command != phrase)
-            continue;
-        if (statement->kind != StatementKind::Function
-                && statement->kind != StatementKind::Constructor
-                && statement->kind != StatementKind::Destructor
-                && statement->kind != StatementKind::OverloadedOperator
-                && statement->kind != StatementKind::LiteralOperator)
-            continue;
-        bool declarationMatches = statement->declarationRange.isValid()
-                && statement->declarationRange.start.line <= line
-                && line <= statement->declarationRange.end.line;
-        bool definitionMatches = statement->hasDefinition()
-                && statement->definitionRange.start.line <= line
-                && line <= statement->definitionRange.end.line;
-        if (declarationMatches || definitionMatches)
-            result.append(statement);
+
+    QList<PStatement> scopes;
+    PStatement parent = function->parentScope.lock();
+    if (parent && parent->kind == StatementKind::Namespace) {
+        scopes += mStatementList.namespaceStatements(parent->fullName);
+        scopes += mStatementList.transparentNamespaceStatements(parent->fullName);
+    } else {
+        scopes.append(parent);
+    }
+
+    QSet<const Statement *> seen;
+    for (const PStatement &scope : scopes) {
+        const auto candidates = mStatementList.childrenStatements(scope).values(function->command);
+        for (const std::weak_ptr<Statement> &weak : candidates) {
+            PStatement candidate = weak.lock();
+            if (!candidate || seen.contains(candidate.get()))
+                continue;
+            if (candidate->kind != StatementKind::Function
+                    && candidate->kind != StatementKind::Constructor
+                    && candidate->kind != StatementKind::Destructor
+                    && candidate->kind != StatementKind::OverloadedOperator
+                    && candidate->kind != StatementKind::LiteralOperator) {
+                continue;
+            }
+            if (!visibleStatement(fileName, candidate))
+                continue;
+            seen.insert(candidate.get());
+            result.append(candidate);
+        }
     }
     return result;
 }

@@ -239,7 +239,7 @@ void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out,
         out << indent << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
                .arg(statement->command).arg(int(statement->kind))
                .arg(statement->type(), statement->fullName,
-                    statement->noNameArgs, statement->args)
+                    statement->normalizedArgs, statement->args)
                .arg((size_t)(statement->parentScope.lock().get()))
                .arg((int)statement->accessibility)
                .arg(statement->fileName)

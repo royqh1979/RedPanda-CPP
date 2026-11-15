@@ -119,6 +119,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 - **测试中 connect 的 lambda 不得既捕获局部变量、又以长命对象（如 `mEdit.get()`）作 context**：测试函数返回后连接仍然存活，死 lambda 会在之后每次信号触发时往已释放的栈地址写数据，造成堆/栈破坏——崩溃点往往远在肇事代码之后、且看似随机（真实案例见提交 `63e90e30`）。正确做法：以一个随测试函数销毁的局部 `QObject` 作 context（连接随之自动断开），或在测试结束前显式 `disconnect`。
 
 - **按测试类筛选**：test-qsynedit、test-editor 和 test-cppparser 支持 `--suite=类名`（如 `--suite=TestDocument`、`--suite=TestCppParser`）只跑指定测试类，不带参数则跑全部。
+- **调试产生的有效验证场景必须保留**：修复问题后不得连同临时日志一起删除这些场景。将调试输出整理为正式断言，按职责放入合适的测试目标；通用根因用最小声明覆盖，真实工具链差异用对应真实头文件覆盖。中间类型、作用域归属和声明绑定等关键分层检查也应保留，不能只保留最终端到端结果。
 - **Windows 直接运行测试时取得 Qt 日志**：若 `qWarning()`/`qDebug()` 只发往调试器，给测试进程设置 `QT_FORCE_STDERR_LOGGING=1` 即可输出到 Git Bash 终端。性能测量必须直接运行 Release 可执行文件，不能在 gdb 下计时；gdb 只用于崩溃、断言和栈信息。例如：
 
 ```sh

@@ -60,14 +60,14 @@ FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
 }
 
 void FunctionTooltipWidget::addTip(const QString &name, const QString& fullname,
-                                   const QString &returnType, const QString &args, const QString &noNameArgs)
+                                   const QString &returnType, const QString &args, const QString &normalizedArgs)
 {
     PFunctionInfo info = std::make_shared<FunctionInfo>();
     info->name = name;
     info->fullname = fullname;
     info->returnType = returnType;
     info->params = splitArgs(args);
-    info->nonameParams = splitArgs(noNameArgs);
+    info->normalizedParams = splitArgs(normalizedArgs);
     mInfos.append(info);
 }
 

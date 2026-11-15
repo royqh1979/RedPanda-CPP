@@ -32,6 +32,7 @@
 #include "src/settings.h"
 #include "src/widgets/classbrowser.h"
 #include "src/widgets/codecompletionpopup.h"
+#include "src/widgets/functiontooltipwidget.h"
 #include "src/widgets/searchresultview.h"
 #include <qsynedit/formatter/cppformatter.h>
 #include <qsynedit/syntaxer/cpp.h>
@@ -428,6 +429,103 @@ void TestWidgets::test_goto_standard_library_string()
     editor.gotoDefinition({5, 1});
     QCOMPARE(targetFile, stringAlias->definitionFileName);
     QCOMPARE(target.line, stringAlias->definitionRange.start.line);
+}
+
+void TestWidgets::test_standard_library_template_consumers()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QStringList content{
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    auto unique = std::make_unique<std::string>(\"unique\");",
+        "    auto it = lst.begin();",
+        "    it->size();",
+        "    auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
+        "    found->size();",
+        "}"
+    };
+    QFile file(main);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write(content.join('\n').toUtf8());
+    file.close();
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    popup.setShowEditorCaretFunc([] {});
+    popup.setKeypressedCallback([](QKeyEvent *) { return false; });
+    popup.setCurrentScope(mParser->findScopeStatement(main, 6));
+    popup.prepareSearch("", {"it"}, "->", {}, main, 6, CodeCompletionType::Normal, {});
+    popup.search("", false, "default");
+    QListView *view = popup.findChild<QListView *>();
+    QVERIFY(view);
+    CodeCompletionListModel *model = qobject_cast<CodeCompletionListModel *>(view->model());
+    QVERIFY(model);
+    QSet<QString> names;
+    for (int i = 0; i < model->rowCount({}); ++i) {
+        PStatement statement = model->statement(model->index(i, 0));
+        if (statement)
+            names.insert(statement->command);
+    }
+    QVERIFY(names.contains("size"));
+    QVERIFY(names.contains("empty"));
+
+    QString targetFile;
+    QSynedit::CharPos target{-1, -1};
+    QObject context;
+    Editor editor;
+    editor.setEditorSettings(&pSettings->editor());
+    editor.setColorManager(mColorManager.get());
+    editor.setFilename(main);
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+    editor.applySettings();
+    editor.setFileType(FileType::CppSource);
+    editor.loadContent(content);
+    editor.setCppParser(mParser);
+    connect(&editor, &Editor::openFileRequested, &context,
+            [&targetFile, &target](const QString &fileName, FileType, const QString &,
+                                   const QSynedit::CharPos &caretPos) {
+        targetFile = fileName;
+        target = caretPos;
+    });
+
+    QSynedit::CharPos sizePos{content[6].indexOf("size"), 6};
+    QCOMPARE(editor.getExpressionAtPosition(sizePos), QStringList({"it", "->", "size"}));
+    PStatement size = mParser->findStatement("std::basic_string::size");
+    QVERIFY(size);
+    editor.gotoDefinition(sizePos);
+    QCOMPARE(targetFile, size->definitionFileName);
+    QCOMPARE(target.line, size->definitionRange.start.line);
+    target = {-1, -1};
+    targetFile.clear();
+    editor.gotoDeclaration(sizePos);
+    QCOMPARE(targetFile, size->fileName);
+    QCOMPARE(target.line, size->declarationRange.start.line);
+    QString hint = editor.getParserHint({"it", "->", "size"}, sizePos);
+    QVERIFY(hint.contains("size"));
+
+    FunctionTooltipWidget tooltip;
+    editor.setFunctionTooltip(&tooltip);
+    editor.setCaretPos({content[7].indexOf("lst.begin"), 7});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QVERIFY(tooltip.tipCount() > 0);
+    QLabel *label = tooltip.findChild<QLabel *>();
+    QVERIFY(label);
+    QVERIFY(label->text().contains("find_if"));
+
+    editor.setCaretPos({content[6].indexOf(")"), 6});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QVERIFY(tooltip.tipCount() > 0);
+    QVERIFY(label->text().contains("size"));
 }
 #endif
 

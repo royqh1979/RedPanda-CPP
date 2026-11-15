@@ -5121,7 +5121,7 @@ void MainWindow::onClassBrowserRefreshStart()
         return;
     }
     mClassBrowserCurrentStatement=QString("%1+%2+%3")
-            .arg(statement->fullName, statement->noNameArgs)
+            .arg(statement->fullName, statement->normalizedArgs)
             .arg((int)statement->kind);
 }
 

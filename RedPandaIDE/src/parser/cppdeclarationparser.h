@@ -51,7 +51,7 @@ private:
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);
     void skipRequiresClause();
-    void skipTemplateDefaultArgument();
+    void skipTemplateDefaultArgument(bool nonType = false);
     void applyTrailingReturn(TypeDerivation &function);
     bool isBuiltinType(const QString &text) const;
     bool isDeclarationDelimiter(const QString &text) const;

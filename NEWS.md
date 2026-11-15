@@ -25,6 +25,8 @@ Red Panda C++ Version 3.6
   - fix: Ctrl+hover now shows the pointing-hand cursor on jumpable identifiers.
   - fix: Inserting a line at the document start keeps the viewport at the first line.
   - enhancement: Click line numbers to select whole lines, and Shift+click to select a range.
+  - enhancement: Resolve common STL container, iterator, smart pointer, and traditional algorithm expression chains for completion, navigation, hints, and function tips.
+  - fix: Completion and function tips now follow overloaded operator-> and collect function overloads from the actual namespace or class scope.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

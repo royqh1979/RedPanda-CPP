@@ -1416,6 +1416,10 @@ void TestCppParser::test_standard_library_expression_chains()
         "    }",
         "    auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
         "    found->size();",
+        "    auto output = std::transform(lst.begin(), lst.end(), lst.begin(), [](const std::string &s) { return s; });",
+        "    output->size();",
+        "    std::vector<bool> flags;",
+        "    flags[0].flip();",
         "}"
     }));
     QString bitsStdcpp;
@@ -1424,6 +1428,30 @@ void TestCppParser::test_standard_library_expression_chains()
 
     PStatement stringSize = mParser->findStatement("std::basic_string::size");
     QVERIFY(stringSize);
+    PStatement iteratorScope = mParser->findScopeStatement(main, 20);
+    QVERIFY(iteratorScope);
+    QStringList beginExpression{"lst", ".", "begin", "(", ")"};
+    QStringList iteratorExpression{"it"};
+    EvalResult beginResult = mParser->evalExpression(main, beginExpression, iteratorScope);
+    EvalResult iteratorResult = mParser->evalExpression(main, iteratorExpression, iteratorScope);
+    QCOMPARE(beginResult.type.qualifiedName, "__gnu_cxx::__normal_iterator");
+    QCOMPARE(iteratorResult.type.toString(), beginResult.type.toString());
+    PStatement foundScope = mParser->findScopeStatement(main, 33);
+    QVERIFY(foundScope);
+    QStringList foundExpression{"found"};
+    EvalResult foundResult = mParser->evalExpression(main, foundExpression, foundScope);
+    QCOMPARE(foundResult.type.toString(), beginResult.type.toString());
+    QList<PStatement> findIfOverloads = mParser->getListOfFunctions(main, "std::find_if", 32);
+    bool hasClassicFindIf = false;
+    for (const PStatement &overload : findIfOverloads)
+        hasClassicFindIf |= overload->normalizedArgs == "(@T0,@T0,@T1)";
+    QVERIFY(hasClassicFindIf);
+    QStringList listFrontExpression{"linked", ".", "front", "(", ")"};
+    EvalResult listFrontResult = mParser->evalExpression(
+                main, listFrontExpression, mParser->findScopeStatement(main, 12));
+    QCOMPARE(listFrontResult.type.declaration.lock(), mParser->findStatement("std::basic_string"));
+    QVERIFY(!listFrontResult.type.derivations.isEmpty());
+    QCOMPARE(listFrontResult.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
     auto expectStringSize = [&](int line, const QStringList &expression) {
         PStatement scope = mParser->findScopeStatement(main, line);
         QVERIFY2(scope, expression.join("").toUtf8().constData());
@@ -1447,6 +1475,14 @@ void TestCppParser::test_standard_library_expression_chains()
     expectStringSize(27, {"s", ".", "size"});
     expectStringSize(30, {"i", "->", "size"});
     expectStringSize(33, {"found", "->", "size"});
+    expectStringSize(35, {"output", "->", "size"});
+    QStringList flagElementExpression{"flags", "[", "0", "]"};
+    EvalResult flagElement = mParser->evalExpression(
+                main, flagElementExpression, mParser->findScopeStatement(main, 37));
+    PStatement flip = mParser->findStatementOf(
+                main, {"flags", "[", "0", "]", ".", "flip"}, 37);
+    QVERIFY2(flip, flagElement.type.toString().toUtf8().constData());
+    QCOMPARE(flip, mParser->findStatement("std::_Bit_reference::flip"));
 }
 
 void TestCppParser::test_standard_library_public_api_complete()
@@ -1575,9 +1611,9 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     PStatement intDeclaration;
     PStatement doubleDefinition;
     for (const PStatement &statement : overloadedFunctions()) {
-        if (statement->noNameArgs == "(int)")
+        if (statement->normalizedArgs == "(int)")
             intDeclaration = statement;
-        else if (statement->noNameArgs == "(double)")
+        else if (statement->normalizedArgs == "(double)")
             doubleDefinition = statement;
     }
     QVERIFY(intDeclaration);

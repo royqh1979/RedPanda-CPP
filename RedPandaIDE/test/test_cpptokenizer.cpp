@@ -944,18 +944,91 @@ void TestCppTokenizer::test_statement_builder_expands_declarators_and_types()
     QCOMPARE(f->kind, StatementKind::Function);
     QCOMPARE(f->type(), "int");
     QCOMPARE(f->args, "(double value)");
-    QCOMPARE(f->noNameArgs, "(double)");
+    QCOMPARE(f->normalizedArgs, "(double)");
     QVERIFY(pf->properties.testFlag(StatementProperty::FunctionPointer));
     QCOMPARE(pf->typeInfo.toString(), "int (*)(char)");
     QCOMPARE(pf->type(), "int");
     QCOMPARE(pf->args, "(char)");
-    QCOMPARE(pf->noNameArgs, "(char)");
+    QCOMPARE(pf->normalizedArgs, "(char)");
 
     PStatement parameter = findStatement(f->children, "value");
     QVERIFY(parameter);
     QCOMPARE(parameter->kind, StatementKind::Parameter);
     QCOMPARE(parameter->type(), "double");
     QCOMPARE(parameter->fullName, "f::value");
+}
+
+void TestCppTokenizer::test_statement_builder_preserves_function_and_access_properties()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "class C {\n"
+                "public:\n"
+                "  int overload();\n"
+                "  int overload() const;\n"
+                "  int qualifiers() const volatile &;\n"
+                "  int rvalue() &&;\n"
+                "  static int count;\n"
+                "protected:\n"
+                "  void protectedMethod();\n"
+                "private:\n"
+                "  void privateMethod();\n"
+                "};\n"
+                "extern int external;\n"
+                "static int internal;\n", declarations));
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    PStatement c = findStatement(model.childrenStatements(), "C");
+    QVERIFY(c);
+    const auto overloads = c->children.values("overload");
+    QCOMPARE(overloads.count(), 2);
+    PStatement constOverload;
+    PStatement nonConstOverload;
+    for (const std::weak_ptr<Statement> &weak : overloads) {
+        PStatement overload = weak.lock();
+        QVERIFY(overload);
+        if (overload->properties.testFlag(StatementProperty::Const))
+            constOverload = overload;
+        else
+            nonConstOverload = overload;
+    }
+    QVERIFY(constOverload && nonConstOverload);
+    QCOMPARE(constOverload->args, "() const");
+    QCOMPARE(constOverload->normalizedArgs, "() const");
+    QCOMPARE(nonConstOverload->args, "()");
+    QCOMPARE(nonConstOverload->normalizedArgs, "()");
+
+    PStatement qualifiers = findStatement(c->children, "qualifiers");
+    QVERIFY(qualifiers);
+    QVERIFY(qualifiers->properties.testFlag(StatementProperty::Const));
+    QVERIFY(qualifiers->properties.testFlag(StatementProperty::Volatile));
+    QVERIFY(qualifiers->properties.testFlag(StatementProperty::LvalueReference));
+    QVERIFY(!qualifiers->properties.testFlag(StatementProperty::RvalueReference));
+    QCOMPARE(qualifiers->normalizedArgs, "() const volatile &");
+    PStatement rvalue = findStatement(c->children, "rvalue");
+    QVERIFY(rvalue);
+    QVERIFY(rvalue->properties.testFlag(StatementProperty::RvalueReference));
+    QVERIFY(!rvalue->properties.testFlag(StatementProperty::LvalueReference));
+
+    PStatement count = findStatement(c->children, "count");
+    QVERIFY(count && count->isStatic());
+    QVERIFY(count->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
+    QCOMPARE(findStatement(c->children, "protectedMethod")->accessibility,
+             StatementAccessibility::Protected);
+    QCOMPARE(findStatement(c->children, "privateMethod")->accessibility,
+             StatementAccessibility::Private);
+    PStatement external = findStatement(model.childrenStatements(), "external");
+    QVERIFY(external);
+    QVERIFY(external->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    PStatement internal = findStatement(model.childrenStatements(), "internal");
+    QVERIFY(internal && internal->isStatic());
+    QVERIFY(internal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
 }
 
 void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_ancestors()
@@ -1020,6 +1093,88 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
     count.reset();
     QVERIFY(countReference.expired());
 }
+
+void TestCppTokenizer::test_statement_builder_assigns_out_of_line_special_members_to_class()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace N {\n"
+                "  template<typename T> class C {\n"
+                "  public:\n"
+                "    C();\n"
+                "    ~C();\n"
+                "    int operator()(int value) const;\n"
+                "  };\n"
+                "  template<typename T> C<T>::C() {}\n"
+                "  template<typename T> C<T>::~C() {}\n"
+                "  template<typename T> int C<T>::operator()(int value) const { return value; }\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    PStatement n = findStatement(model.childrenStatements(), "N");
+    QVERIFY(n);
+    PStatement c = findStatement(n->children, "C");
+    QVERIFY(c);
+    QCOMPARE(c->kind, StatementKind::Class);
+    QCOMPARE(n->children.values("C").count(), 1);
+    PStatement constructor = findStatement(c->children, "C");
+    PStatement destructor = findStatement(c->children, "~C");
+    QVERIFY(constructor && destructor);
+    QCOMPARE(c->children.values("C").count(), 1);
+    QCOMPARE(c->children.values("~C").count(), 1);
+    QVERIFY(constructor->hasDefinition());
+    QVERIFY(destructor->hasDefinition());
+    QCOMPARE(constructor->parentScope.lock(), c);
+    QCOMPARE(destructor->parentScope.lock(), c);
+    QCOMPARE(constructor->fullName, "N::C::C");
+    QCOMPARE(destructor->fullName, "N::C::~C");
+    QVERIFY(constructor->fullName != c->fullName);
+    QVERIFY(destructor->fullName != c->fullName);
+    PStatement callOperator = findStatement(c->children, "operator()");
+    QVERIFY(callOperator);
+    QCOMPARE(callOperator->kind, StatementKind::OverloadedOperator);
+    QVERIFY(callOperator->hasDefinition());
+    QCOMPARE(callOperator->parentScope.lock(), c);
+    QCOMPARE(callOperator->fullName, "N::C::operator()");
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("C<int> value;", variable));
+    QCOMPARE(resolver.resolve(variable.specifiers.type, {}, c).declaration.lock(), c);
+}
+
+
+void TestCppTokenizer::test_statement_builder_merges_forward_class_with_definition()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> class Base { public: using value_type = T; };\n"
+                "template<typename T, typename U = T> class C;\n"
+                "template<typename T, typename U> class C : Base<U> {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    PStatement c = findStatement(model.childrenStatements(), "C");
+    QVERIFY(c);
+    QCOMPARE(c->baseClasses, QStringList{"Base<U>"});
+    QCOMPARE(c->templateParameters.count(), 2);
+    QVERIFY(c->templateParameters[1].defaultArgumentText.isEmpty());
+    QCOMPARE(c->inheritedDefaultArgumentTexts[1], "T");
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("C<std::string> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "value_type").toString(),
+             "std::string");
+}
+
 
 void TestCppTokenizer::test_statement_model_owns_statements_and_weak_indexes()
 {
@@ -1186,16 +1341,429 @@ void TestCppTokenizer::test_type_resolver_binds_custom_template_members()
 }
 
 
+void TestCppTokenizer::test_type_resolver_applies_default_template_arguments()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T, typename U = T> class Box {\n"
+                "public:\n"
+                "  using ValueType = U;\n"
+                "  U& front();\n"
+                "};\n"
+                "struct Value { using value_type = int; };\n"
+                "template<typename T, typename = typename T::value_type> struct DependentDefault {\n"
+                "  using reference = typename T::value_type&;\n"
+                "  reference front();\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo boxVariable;
+    QVERIFY(parseDeclarationText("Box<std::string> value;", boxVariable));
+    PStatement box = findStatement(model.childrenStatements(), "Box");
+    QVERIFY(box);
+    QCOMPARE(box->templateParameters[1].defaultArgumentText, "T");
+    int statementCount = model.count();
+    QCOMPARE(resolver.memberType(boxVariable.specifiers.type, "ValueType").toString(),
+             "std::string");
+    QCOMPARE(resolver.invokeResult(boxVariable.specifiers.type, "front").toString(),
+             "std::string &");
+    QCOMPARE(model.count(), statementCount);
+    QCOMPARE(box->templateParameters[1].defaultArgumentText, "T");
+    DeclarationInfo dependentVariable;
+    QVERIFY(parseDeclarationText("DependentDefault<Value> value;", dependentVariable));
+    QCOMPARE(resolver.invokeResult(dependentVariable.specifiers.type, "front").toString(), "int &");
+}
+
+
+void TestCppTokenizer::test_type_resolver_resolves_multisegment_aliases()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct Outer {\n"
+                "  template<typename U> struct Inner { using type = U; };\n"
+                "};\n"
+                "template<typename T> struct Traits {\n"
+                "  using value_type = T;\n"
+                "  using reference = T&;\n"
+                "};\n"
+                "template<typename T> struct Vector {\n"
+                "  using traits = Traits<T>;\n"
+                "  typename traits::reference front();\n"
+                "  typename Outer<T>::template Inner<std::string>::type nested();\n"
+                "};\n"
+                "struct Value { using value_type = int; };\n"
+                "template<typename T> struct Dependent { typename T::value_type get(); };\n"
+                "template<typename T> struct BaseValue { using value_type = T; };\n"
+                "template<typename T> struct AliasDerived {\n"
+                "  using BaseType = BaseValue<T>;\n"
+                "  using value_type = typename BaseType::value_type;\n"
+                "};\n"
+                "namespace Reopened {}\n"
+                "namespace Reopened { struct Value { using value_type = int; }; }\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo vectorVariable;
+    QVERIFY(parseDeclarationText("Vector<int> values;", vectorVariable));
+    QCOMPARE(resolver.invokeResult(vectorVariable.specifiers.type, "front").toString(), "int &");
+    QCOMPARE(resolver.invokeResult(vectorVariable.specifiers.type, "nested").toString(),
+             "std::string");
+    DeclarationInfo dependentVariable;
+    QVERIFY(parseDeclarationText("Dependent<Value> value;", dependentVariable));
+    QCOMPARE(resolver.invokeResult(dependentVariable.specifiers.type, "get").toString(), "int");
+    DeclarationInfo aliasDerived;
+    QVERIFY(parseDeclarationText("AliasDerived<std::string> value;", aliasDerived));
+    QCOMPARE(resolver.memberType(aliasDerived.specifiers.type, "value_type").toString(),
+             "std::string");
+    DeclarationInfo aliasVariable;
+    QVERIFY(parseDeclarationText(
+                "typename Outer<int>::template Inner<std::string>::type value;", aliasVariable));
+    QCOMPARE(resolver.resolve(aliasVariable.specifiers.type).toString(), "std::string");
+    DeclarationInfo reopenedVariable;
+    QVERIFY(parseDeclarationText("Reopened::Value value;", reopenedVariable));
+    PStatement reopenedDeclaration = resolver.resolve(reopenedVariable.specifiers.type).declaration.lock();
+    QVERIFY(reopenedDeclaration);
+    QCOMPARE(reopenedDeclaration->fullName, "Reopened::Value");
+}
+
+
+void TestCppTokenizer::test_type_resolver_binds_dependent_base_members()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct Base {\n"
+                "  Base();\n"
+                "  using reference = T&;\n"
+                "  reference get();\n"
+                "};\n"
+                "template<typename T> struct Derived : Base<T> {};\n"
+                "template<typename T> struct StdAlloc { using value_type = T; };\n"
+                "template<typename A> struct Traits { using value_type = typename A::value_type; };\n"
+                "template<typename A, typename = typename A::value_type> struct Alloc : Traits<A> {\n"
+                "  using reference = value_type&;\n"
+                "  template<typename U> struct rebind { using other = StdAlloc<U>; };\n"
+                "};\n"
+                "template<typename T, typename _Alloc> struct ListBase {\n"
+                "  using _Tp_alloc_type = typename Alloc<_Alloc>::template rebind<T>::other;\n"
+                "  using _Tp_alloc_traits = Alloc<_Tp_alloc_type>;\n"
+                "};\n"
+                "template<typename T, typename _Allocator = StdAlloc<T>> struct List;\n"
+                "template<typename T, typename _Alloc2> struct List;\n"
+                "template<typename T, typename _Alloc> struct List : ListBase<T, _Alloc> {\n"
+                "  using _Base = ListBase<T, _Alloc>;\n"
+                "  using _Tp_alloc_traits = typename _Base::_Tp_alloc_traits;\n"
+                "  using reference = typename _Tp_alloc_traits::reference;\n"
+                "  reference front();\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo derivedVariable;
+    QVERIFY(parseDeclarationText("Derived<std::string> value;", derivedVariable));
+    QCOMPARE(resolver.memberType(derivedVariable.specifiers.type, "reference").toString(),
+             "std::string &");
+    QCOMPARE(resolver.invokeResult(derivedVariable.specifiers.type, "get").toString(),
+             "std::string &");
+    DeclarationInfo allocVariable;
+    QVERIFY(parseDeclarationText("Alloc<StdAlloc<std::string>> value;", allocVariable));
+    QCOMPARE(resolver.memberType(allocVariable.specifiers.type, "reference").toString(),
+             "std::string &");
+    DeclarationInfo listBaseVariable;
+    QVERIFY(parseDeclarationText("ListBase<std::string, StdAlloc<std::string>> value;", listBaseVariable));
+    QCOMPARE(resolver.memberType(listBaseVariable.specifiers.type, "_Tp_alloc_type").toString(),
+             "StdAlloc<std::string>");
+    QCOMPARE(resolver.memberType(listBaseVariable.specifiers.type, "_Tp_alloc_traits").toString(),
+             "Alloc<StdAlloc<std::string>,std::string>");
+    PStatement listClass = resolver.findStatement("List");
+    QVERIFY(listClass);
+    QCOMPARE(listClass->templateParameters[1].name, "_Alloc");
+    QVERIFY(listClass->templateParameters[1].defaultArgumentText.isEmpty());
+    QCOMPARE(listClass->inheritedDefaultArgumentTexts[1], "StdAlloc<T>");
+    DeclarationInfo listVariable;
+    QVERIFY(parseDeclarationText("List<std::string> value;", listVariable));
+    QCOMPARE(resolver.memberType(listVariable.specifiers.type, "reference").toString(),
+             "std::string &");
+    QCOMPARE(resolver.invokeResult(listVariable.specifiers.type, "front").toString(),
+             "std::string &");
+}
+
+
+void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct Forward { T&& get(); };\n"
+                "using First = Second;\n"
+                "using Second = First;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo rvalue;
+    QVERIFY(parseDeclarationText("Forward<std::string> value;", rvalue));
+    QCOMPARE(resolver.invokeResult(rvalue.specifiers.type, "get").toString(), "std::string &&");
+    DeclarationInfo lvalue;
+    QVERIFY(parseDeclarationText("Forward<std::string&> value;", lvalue));
+    QCOMPARE(resolver.invokeResult(lvalue.specifiers.type, "get").toString(), "std::string &");
+    DeclarationInfo cycle;
+    QVERIFY(parseDeclarationText("First value;", cycle));
+    QVERIFY(resolver.resolve(cycle.specifiers.type).qualifiedName.isEmpty());
+    DeclarationInfo dependent;
+    QVERIFY(parseDeclarationText("std::move_iterator<_InputIterator> value;", dependent));
+    TemplateBindings bindings;
+    bindings.insert("_InputIterator", TemplateArgument::fromType(dependent.specifiers.type));
+    QVERIFY(resolver.resolve(dependent.specifiers.type, bindings).qualifiedName.isEmpty());
+}
+
+
+void TestCppTokenizer::test_type_resolver_selects_specializations_and_rebind()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct Allocator {\n"
+                "  using value_type = T;\n"
+                "  template<typename U> struct rebind { using other = Allocator<U>; };\n"
+                "};\n"
+                "template<typename T, typename = typename T::value_type>\n"
+                "struct AllocTraits : Allocator<T> {};\n"
+                "template<typename T> struct Holder {\n"
+                "  using alloc = AllocTraits<Allocator<T>>;\n"
+                "  typename alloc::template rebind<std::string>::other::value_type rebound();\n"
+                "  typename alloc::template rebind<T>::other::value_type current();\n"
+                "};\n"
+                "template<typename T> struct Traits { using type = T; };\n"
+                "template<typename T> struct Traits<T*> { using type = T; };\n"
+                "template<> struct Traits<int> { using type = std::string; };\n"
+                "template<typename T, typename U> struct BoolTraits { using type = T; };\n"
+                "template<typename U> struct BoolTraits<bool, U> { using type = std::string; };\n"
+                "template<int N> struct Size { using type = N; };\n"
+                "template<> struct Size<2> { using type = std::string; };\n"
+                "template<typename T> struct Ambiguous { using type = T; };\n"
+                "template<typename T> struct Ambiguous<T*> { using type = T; };\n"
+                "template<typename T> struct Ambiguous<const T> { using type = T; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto memberType = [&](const QString &declarationText) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText(declarationText, variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+
+    PStatement pointerSpecialization = findStatement(model.childrenStatements(), "Traits<T*>");
+    QVERIFY(pointerSpecialization);
+    QCOMPARE(pointerSpecialization->templateKind, TemplateDeclarationKind::PartialSpecialization);
+    DeclarationInfo holder;
+    QVERIFY(parseDeclarationText("Holder<int> value;", holder));
+    QCOMPARE(resolver.invokeResult(holder.specifiers.type, "rebound").toString(), "std::string");
+    QCOMPARE(resolver.invokeResult(holder.specifiers.type, "current").toString(), "int");
+    QCOMPARE(memberType("Traits<int> value;").toString(), "std::string");
+    QCOMPARE(memberType("Traits<int*> value;").toString(), "int");
+    QCOMPARE(memberType("Traits<std::string> value;").toString(), "std::string");
+    QCOMPARE(memberType("BoolTraits<bool, int> value;").toString(), "std::string");
+    QCOMPARE(memberType("Size<2> value;").toString(), "std::string");
+    QVERIFY(memberType("Size<1+1> value;").qualifiedName.isEmpty());
+    QVERIFY(memberType("Ambiguous<const int*> value;").qualifiedName.isEmpty());
+}
+
+
+void TestCppTokenizer::test_type_resolver_selects_specializations_across_reopened_namespaces()
+{
+    QVector<DeclarationInfo> declarations;
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    auto build = [&](const QString &text, const QString &fileName) {
+        declarations.clear();
+        QVERIFY(parseSyntaxText(text, declarations));
+        StatementBuildContext context;
+        context.fileName = fileName;
+        context.boundaryAncestor = fileName;
+        builder.build(declarations.first(), context);
+    };
+    build("namespace N { template<typename T> struct Traits { using type = T; }; }", "/tmp/a.h");
+    build("namespace N { template<typename T> struct Traits<T*> { using type = std::string; }; }",
+          "/tmp/b.h");
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("N::Traits<int*> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").toString(), "std::string");
+}
+
+
+void TestCppTokenizer::test_type_resolver_computes_bounded_traits()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct add_lvalue_reference {};\n"
+                "  template<typename T> struct is_array {};\n"
+                "  template<typename T> struct is_void {};\n"
+                "}\n"
+                "template<typename T> struct Pointer {\n"
+                "  typename std::add_lvalue_reference<T>::type get();\n"
+                "};\n"
+                "template<typename T, bool Array = std::is_array<T>::value>\n"
+                "struct Access { using type = std::string; };\n"
+                "template<typename T> struct Access<T, false> { using type = T; };\n"
+                "template<typename T, bool Void = std::is_void<T>::value>\n"
+                "struct VoidAccess { using type = T; };\n"
+                "template<typename T> struct VoidAccess<T, true> { using type = std::string; };\n"
+                "enum Lock { Default };\n"
+                "template<Lock L> struct LockBase {};\n"
+                "template<Lock L> struct LockDerived : LockBase<L> { using type = int; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo pointer;
+    QVERIFY(parseDeclarationText("Pointer<std::string> value;", pointer));
+    QCOMPARE(resolver.invokeResult(pointer.specifiers.type, "get").toString(), "std::string &");
+    auto memberType = [&](const QString &declarationText) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText(declarationText, variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement access = findStatement(model.childrenStatements(), "Access");
+    QVERIFY(access);
+    QCOMPARE(access->templateParameters[1].defaultArgumentText, "std::is_array<T>::value");
+    QCOMPARE(memberType("Access<int,false> value;").toString(), "int");
+    QCOMPARE(memberType("Access<int> value;").toString(), "int");
+    QCOMPARE(memberType("Access<int[]> value;").toString(), "std::string");
+    QCOMPARE(memberType("VoidAccess<void> value;").toString(), "std::string");
+    QCOMPARE(memberType("VoidAccess<int> value;").toString(), "int");
+    QCOMPARE(memberType("LockDerived<Default> value;").toString(), "int");
+}
+
+
+void TestCppTokenizer::test_function_template_explicit_arguments()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct shared_ptr {\n"
+                "    T* operator->();\n"
+                "    T& operator*();\n"
+                "  };\n"
+                "  template<typename T> struct default_delete {};\n"
+                "  template<typename T, typename D = default_delete<T>> struct unique_ptr {\n"
+                "    T* operator->();\n"
+                "    T& operator*();\n"
+                "  };\n"
+                "  template<typename T> struct _MakeUniq { using __single_object = unique_ptr<T>; };\n"
+                "  template<typename T, typename... Args>\n"
+                "  shared_ptr<T> make_shared(Args&&... args);\n"
+                "  template<typename T, typename... Args>\n"
+                "  typename _MakeUniq<T>::__single_object make_unique(Args&&... args) { return {}; }\n"
+                "  template<typename T, typename... Args>\n"
+                "  void make_unique(Args&&...) = delete;\n"
+                "}\n"
+                "auto shared = std::make_shared<std::string>();\n"
+                "auto unique = std::make_unique<std::string>();\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer expression;
+        expression.tokenize({text});
+        return evaluator.evaluate(expression);
+    };
+    DeclarationInfo stringVariable;
+    QVERIFY(parseDeclarationText("std::string value;", stringVariable));
+    PStatement makeShared = resolver.findStatement("std::make_shared");
+    QVERIFY(makeShared);
+    QCOMPARE(makeShared->kind, StatementKind::Function);
+    QCOMPARE(resolver.invokeFunction(makeShared, {},
+             {TemplateArgument::fromType(stringVariable.specifiers.type)}).toString(),
+             "std::shared_ptr<std::string>");
+    QCOMPARE(evaluate("std::make_shared<std::string>()").type.toString(),
+             "std::shared_ptr<std::string>");
+    QCOMPARE(evaluate("std::make_unique<std::string>()").type.toString(),
+             "std::unique_ptr<std::string,std::default_delete<std::string>>");
+    QCOMPARE(evaluate("std::make_unique<std::string>(\"unique\")").type.toString(),
+             "std::unique_ptr<std::string,std::default_delete<std::string>>");
+    PStatement shared = findStatement(model.childrenStatements(), "shared");
+    PStatement unique = findStatement(model.childrenStatements(), "unique");
+    QVERIFY(shared && unique);
+    QCOMPARE(shared->type(), "std::shared_ptr<std::string>");
+    QCOMPARE(unique->type(), "std::unique_ptr<std::string,std::default_delete<std::string>>");
+}
+
+
 void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain()
 {
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename I> struct iterator_traits;\n"
+                "  template<typename T> struct iterator_traits<T*> {\n"
+                "    using value_type = T;\n"
+                "    using pointer = T*;\n"
+                "    using reference = T&;\n"
+                "  };\n"
+                "}\n"
+                "namespace __gnu_cxx {\n"
+                "  using std::iterator_traits;\n"
+                "  template<typename I, typename C> class __normal_iterator {\n"
+                "    using __traits_type = iterator_traits<I>;\n"
+                "  public:\n"
+                "    using value_type = typename __traits_type::value_type;\n"
+                "    using pointer = typename __traits_type::pointer;\n"
+                "    using reference = typename __traits_type::reference;\n"
+                "    pointer operator->();\n"
+                "    reference operator*();\n"
+                "  };\n"
+                "}\n"
                 "namespace std { inline namespace __cxx11 {\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
+                "    using pointer = T*;\n"
+                "    using iterator = __gnu_cxx::__normal_iterator<pointer, vector>;\n"
+                "    using const_iterator = const T*;\n"
+                "    iterator begin();\n"
+                "    const_iterator begin() const;\n"
                 "    T& front();\n"
                 "    T& operator[](unsigned long);\n"
+                "    const T& operator[](unsigned long) const;\n"
                 "  };\n"
                 "  template<typename T> class iterator {\n"
                 "  public:\n"
@@ -1220,6 +1788,21 @@ void TestCppTokenizer::test_type_operations_resolve_container_and_iterator_chain
     DeclarationInfo vectorVariable;
     QVERIFY(parseDeclarationText("std::vector<std::string> lst;", vectorVariable));
     const TypeInfo &vectorType = vectorVariable.specifiers.type;
+    TypeInfo beginType = resolver.invokeResult(vectorType, "begin");
+    QCOMPARE(beginType.qualifiedName, "__gnu_cxx::__normal_iterator");
+    QCOMPARE(beginType.templateArguments.count(), 2);
+    QCOMPARE(beginType.templateArguments[0].type->toString(), "std::string *");
+    QCOMPARE(beginType.templateArguments[1].type->toString(), "std::__cxx11::vector<std::string>");
+    DeclarationInfo constVectorVariable;
+    QVERIFY(parseDeclarationText("const std::vector<std::string> constLst;", constVectorVariable));
+    QCOMPARE(resolver.invokeResult(constVectorVariable.specifiers.type, "begin").toString(),
+             "const std::string *");
+    QCOMPARE(resolver.invokeResult(constVectorVariable.specifiers.type, "operator[]").toString(),
+             "const std::string &");
+    QCOMPARE(resolver.invokeResult(beginType, "operator->").toString(), "std::string *");
+    QCOMPARE(resolver.invokeResult(beginType, "operator*").toString(), "std::string &");
+    QCOMPARE(operations.iteratorReference(beginType).toString(), "std::string &");
+    QCOMPARE(operations.iteratorValue(beginType).toString(), "std::string");
     QCOMPARE(operations.containerValue(vectorType).toString(), "std::string");
     QCOMPARE(operations.containerReference(vectorType).toString(), "std::string &");
     QCOMPARE(operations.rangeValue(vectorType).toString(), "std::string");
@@ -1287,6 +1870,7 @@ void TestCppTokenizer::test_expression_evaluator_follows_container_member_chain(
     QCOMPARE(evaluate("std::string()").type.toString(), "std::string");
     QCOMPARE(evaluate("new std::string()").type.toString(), "std::string *");
     QCOMPARE(evaluate("(std::string*)nullptr").type.toString(), "std::string *");
+    QCOMPARE(evaluate("ptr->").type.toString(), "std::string");
     QCOMPARE(evaluate("obj.*member").type.toString(), "int");
     QCOMPARE(evaluate("ptr->*member").type.toString(), "int");
 }
@@ -1298,7 +1882,7 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
                 "  class string { public: unsigned long size(); };\n"
-                "  class exception { public: const char* what(); };\n"
+                "  class exception { public: const char* what() const; };\n"
                 "  template<typename T> class iterator {\n"
                 "  public:\n"
                 "    iterator<T> operator++();\n"
@@ -1478,7 +2062,7 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
-                "  class string { public: unsigned long size(); };\n"
+                "  class string { public: unsigned long size() const; };\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
@@ -1579,12 +2163,16 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
 void TestCppTokenizer::test_lambda_inference_preserves_source_position()
 {
     QVector<DeclarationInfo> declarations;
-    QVERIFY(parseSyntaxText("auto callback = [](int value) { return value * 2.0; };", declarations));
+    QVERIFY(parseSyntaxText(
+                "auto callback = [](int value) { return value * 2.0; };\n"
+                "auto mutableCallback = [](int value) mutable { return value; };",
+                declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
     context.fileName = "/tmp/main.cpp";
-    builder.build(declarations.first(), context);
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
 
     PStatement callback = findStatement(model.childrenStatements(), "callback");
     QVERIFY(callback);
@@ -1596,9 +2184,19 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     PStatement call = findStatement(lambda->children, "operator()");
     QVERIFY(call);
     QCOMPARE(call->type(), "double");
+    QVERIFY(call->properties.testFlag(StatementProperty::Const));
+    QCOMPARE(call->normalizedArgs, "() const");
     PStatement value = findStatement(call->children, "value");
     QVERIFY(value);
     QCOMPARE(value->type(), "int");
+    PStatement mutableCallback = findStatement(model.childrenStatements(), "mutableCallback");
+    QVERIFY(mutableCallback);
+    PStatement mutableLambda = mutableCallback->typeInfo.declaration.lock();
+    QVERIFY(mutableLambda);
+    PStatement mutableCall = findStatement(mutableLambda->children, "operator()");
+    QVERIFY(mutableCall);
+    QVERIFY(!mutableCall->properties.testFlag(StatementProperty::Const));
+    QCOMPARE(mutableCall->normalizedArgs, "()");
 
     CppTypeResolver resolver(model);
     TypeOperationRegistry operations(resolver);
@@ -1630,8 +2228,10 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
                 "    iterator<T> begin();\n"
                 "    iterator<T> end();\n"
                 "  };\n"
+                "  template<typename II, typename Pred>\n"
+                "  II find_if(II, II, Pred);\n"
                 "  template<typename InputIt, typename UnaryOp>\n"
-                "  InputIt find_if(InputIt first, InputIt last, UnaryOp pred);\n"
+                "  InputIt find_if(InputIt first, InputIt last, UnaryOp pred) { return first; }\n"
                 "  template<typename InputIt, typename OutputIt, typename UnaryOp>\n"
                 "  OutputIt transform(InputIt first, InputIt last, OutputIt result, UnaryOp op);\n"
                 "  template<typename T> T front_value(std::vector<T> values);\n"
@@ -1659,11 +2259,53 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
     QCOMPARE(dereferenced->type(), "std::string");
 
     CppTypeResolver resolver(model);
+    PStatement findIf = resolver.findStatement("std::find_if");
+    QVERIFY(findIf);
+    QCOMPARE(findIf->normalizedArgs, "(@T0,@T0,@T1)");
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(model, resolver, operations);
     CppTokenizer expression;
     expression.tokenize({"found->size()"});
     QCOMPARE(evaluator.evaluate(expression).type.toString(), "unsigned long");
+}
+
+
+void TestCppTokenizer::test_normalized_template_function_signatures()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace N {\n"
+                "  template<typename T, int Size, template<typename> class Container>\n"
+                "  void f(Container<T> values, T (&items)[Size]);\n"
+                "  template<typename U, int Length, template<typename> class Sequence>\n"
+                "  void f(Sequence<U> values, U (&items)[Length]);\n"
+                "  template<typename T> void f(T value);\n"
+                "  template<typename T, int Size, template<typename> class Container>\n"
+                "  void f(Container<T> values, T (&items)[Size], int extra);\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement nameSpace = resolver.findStatement("N");
+    QVERIFY(nameSpace);
+    const auto overloads = nameSpace->children.values("f");
+    QCOMPARE(overloads.count(), 3);
+    PStatement merged;
+    int mergedCount = 0;
+    for (const std::weak_ptr<Statement> &weak : overloads) {
+        PStatement statement = weak.lock();
+        if (statement && statement->parameters.count() == 2) {
+            merged = statement;
+            ++mergedCount;
+        }
+    }
+    QCOMPARE(mergedCount, 1);
+    QVERIFY(merged);
+    QCOMPARE(merged->normalizedArgs, "(@TT2<@T0>,@T0(&)[@N1])");
 }
 
 
@@ -1966,6 +2608,15 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
         QVERIFY(!resolver.findStatement("std::basic_string"));
         QVERIFY(resolver.findStatement("std::__cxx11::basic_string"));
     }
+
+    CppTokenizer relocated;
+    relocated.tokenize({"template<typename T, typename D = default_delete<T>> class unique_ptr;"});
+    relocated.relocateTokens("/tmp/relocated.h", {10, 0});
+    CppTokenCursor cursor(relocated);
+    CppDeclarationParser parser(cursor);
+    DeclarationInfo declaration;
+    QVERIFY(parser.parseDeclaration(declaration));
+    QCOMPARE(declaration.templateParameters[1].defaultArgumentText, "default_delete<T>");
 }
 
 

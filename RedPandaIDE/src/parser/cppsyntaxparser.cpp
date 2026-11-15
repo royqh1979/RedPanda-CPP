@@ -124,9 +124,17 @@ bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
         success = parseUsing(result);
     else
         success = mDeclarationParser.parseSimpleDeclaration(result);
-    if (success)
+    if (success) {
+        if (result.templateKind == TemplateDeclarationKind::Primary) {
+            for (const DeclaratorInfo &declarator : result.declarators) {
+                if (declarator.name.contains('<') && declarator.name.endsWith('>')) {
+                    result.templateKind = TemplateDeclarationKind::PartialSpecialization;
+                    break;
+                }
+            }
+        }
         finishRanges(result, start);
-    else {
+    } else {
         mCursor.restore(checkpoint);
         result = DeclarationInfo();
     }

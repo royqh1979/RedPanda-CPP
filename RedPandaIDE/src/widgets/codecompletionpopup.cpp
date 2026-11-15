@@ -752,6 +752,8 @@ void CodeCompletionPopup::getCompletionFor(
 
             PStatement scope = mCurrentScope;//the scope the expression in
             PStatement parentTypeStatement;
+            if (memberOperator == "." || memberOperator == "->")
+                ownerExpression.append(memberOperator);
             EvalResult ownerStatement = mParser->evalExpression(fileName,
                                         ownerExpression,
                                         scope);
@@ -788,48 +790,8 @@ void CodeCompletionPopup::getCompletionFor(
 
                 if (!classTypeStatement)
                     return;
-                // It's a iterator
-                if (ownerStatement.isValid()
-                        && ownerStatement.type.declaration.lock()
-                        && STLIterators.contains(ownerStatement.type.declaration.lock()->command)
-                        && (memberOperator == "->"
-                            || memberOperator == "->*")
-                ) {
-                    PStatement parentScope = ownerStatement.type.declaration.lock()->parentScope.lock();
-                    if (STLContainers.contains(parentScope->fullName)) {
-                        QString typeName=mParser->findFirstTemplateParamOf(fileName,ownerStatement.type.toString(), parentScope);
-//                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
-                        classTypeStatement=mParser->findTypeDefinitionOf(fileName, typeName,parentScope);
-                        if (!classTypeStatement)
-                            return;
-                    } else if (STLMaps.contains(parentScope->fullName)) {
-                        QString typeName="std::pair";
-                        classTypeStatement=mParser->findTypeDefinitionOf(fileName, typeName,parentScope);
-                        if (!classTypeStatement)
-                            return;
-                    }
-                } else if (STLPointers.contains(classTypeStatement->fullName)
-                   && (memberOperator == "->"
-                       || memberOperator == "->*")
-                        && ownerStatement.baseStatement) {
-                                   //is a smart pointer
-                    QString typeName= mParser->findFirstTemplateParamOf(
-                                fileName,
-                                ownerStatement.baseStatement->type(),
-                                scope);
-                    classTypeStatement = mParser->findTypeDefinitionOf(
-                                fileName,
-                                typeName,
-                                scope);
-                    if (!classTypeStatement)
-                        return;
-                } else {
-                    //normal member access
-                    if (memberOperator=="." && pointerDepth(ownerStatement.type) !=0)
-                        return;
-                    if (memberOperator=="->" && pointerDepth(ownerStatement.type)!=1)
-                        return;
-                }
+                if (memberOperator == "." && pointerDepth(ownerStatement.type) != 0)
+                    return;
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
