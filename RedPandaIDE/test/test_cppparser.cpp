@@ -115,6 +115,31 @@ void TestCppParser::test_global_variable_reference_scope()
     QCOMPARE(getKindOfStatement(reference), StatementKind::GlobalVariable);
 }
 
+void TestCppParser::test_unresolved_member_function_reference()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<class T> using Result = typename T::type;",
+            "struct C {",
+            "    template<class T> Result<T> append();",
+            "};",
+            "C c;",
+            "int main() {",
+            "    c.append;",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement reference = mParser->findStatementOf(
+                "text.cpp", QStringList{"c", ".", "append"}, 6);
+    QVERIFY(reference);
+    QCOMPARE(reference->command, "append");
+    QCOMPARE(reference->kind, StatementKind::Function);
+    QCOMPARE(reference->parentScope.lock(), mParser->findStatement("C"));
+}
+
 void TestCppParser::test_parse_vars()
 {
     mParser->setOnGetFileStream(nullptr);
@@ -1342,6 +1367,47 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(size);
     QCOMPARE(mParser->findStatementOf(
                  main, {"std", "::", "basic_string", "::", "size"}, 0), size);
+}
+
+void TestCppParser::test_standard_library_front_append()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <string>",
+        "#include <vector>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    lst.front().append(\"llala\");",
+        "    std::cout<<lst.size()<<std::endl;",
+        "    return 0;",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    PStatement append = mParser->findStatement("std::basic_string::append");
+    QVERIFY(append);
+    QElapsedTimer timer;
+    timer.start();
+    PStatement variable = mParser->findStatementOf(main, "lst", 5);
+    qWarning() << "STDLIB_TEST_TIMING listLookupNs" << timer.nsecsElapsed();
+    QVERIFY(variable);
+    QCOMPARE(variable->command, "lst");
+    timer.restart();
+    PStatement front = mParser->findStatementOf(main, "lst.front()", 5);
+    qWarning() << "STDLIB_TEST_TIMING frontLookupNs" << timer.nsecsElapsed();
+    QVERIFY(front);
+    QCOMPARE(front->command, "front");
+    timer.restart();
+    PStatement appendReference = mParser->findStatementOf(main, "lst.front().append", 5);
+    qWarning() << "STDLIB_TEST_TIMING appendReferenceLookupNs" << timer.nsecsElapsed();
+    QVERIFY(appendReference);
+    QCOMPARE(appendReference->command, "append");
+    QCOMPARE(appendReference->parentScope.lock(), append->parentScope.lock());
 }
 
 void TestCppParser::test_standard_library_vector_subscript()

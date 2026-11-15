@@ -338,7 +338,10 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             result.statement = mResolver.memberStatement(receiver, memberName);
             result.type = call ? mResolver.invokeResult(receiver, memberName)
                                : mResolver.memberType(receiver, memberName);
-            result.kind = EvalStatementKind::Variable;
+            result.kind = !call && isFunction(result.statement)
+                    ? EvalStatementKind::Function : EvalStatementKind::Variable;
+            if (result.kind == EvalStatementKind::Function)
+                result.baseStatement = result.statement;
             continue;
         }
         if (operation == "[") {

@@ -758,12 +758,20 @@ EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &exp
                                        const PStatement &currentScope) const
 {
     Q_UNUSED(fileName);
+    const bool profile = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    QElapsedTimer timer;
+    if (profile)
+        timer.start();
     CppTypeResolver resolver(mStatementList);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(mStatementList, resolver, operations);
     CppTokenizer tokenizer;
-    tokenizer.tokenize({expression.join(' ')});
-    return evaluator.evaluate(tokenizer, currentScope);
+    const QString expressionText = expression.join(' ');
+    tokenizer.tokenize({expressionText});
+    EvalResult result = evaluator.evaluate(tokenizer, currentScope);
+    if (profile)
+        qWarning() << "EVAL_PROFILE" << timer.nsecsElapsed() / 1000000.0 << expressionText;
+    return result;
 }
 
 PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QString &typeName,

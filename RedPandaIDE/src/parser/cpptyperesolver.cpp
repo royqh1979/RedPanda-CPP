@@ -18,7 +18,60 @@
 #include "cppdeclarationparser.h"
 #include "cpptokencursor.h"
 
+#include <QDebug>
+#include <QElapsedTimer>
+
 namespace {
+struct ResolverProfile {
+    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    qint64 resolveTypeNs = 0;
+    qint64 parseSegmentsNs = 0;
+    qint64 classInstanceNs = 0;
+    qint64 specializationNs = 0;
+    qint64 memberLookupNs = 0;
+    qint64 declarationLookupNs = 0;
+    qint64 parseTypeTextNs = 0;
+    qint64 resolveTypeCalls = 0;
+    qint64 parseSegmentsCalls = 0;
+    qint64 classInstanceCalls = 0;
+    qint64 specializationCalls = 0;
+    qint64 memberLookupCalls = 0;
+    qint64 declarationLookupCalls = 0;
+    qint64 parseTypeTextCalls = 0;
+    ~ResolverProfile()
+    {
+        if (!enabled)
+            return;
+        qWarning() << "RESOLVER_PROFILE resolveType" << resolveTypeNs / 1000000.0 << resolveTypeCalls
+                   << "parseSegments" << parseSegmentsNs / 1000000.0 << parseSegmentsCalls
+                   << "classInstance" << classInstanceNs / 1000000.0 << classInstanceCalls
+                   << "specialization" << specializationNs / 1000000.0 << specializationCalls
+                   << "memberLookup" << memberLookupNs / 1000000.0 << memberLookupCalls
+                   << "declarationLookup" << declarationLookupNs / 1000000.0 << declarationLookupCalls
+                   << "parseTypeText" << parseTypeTextNs / 1000000.0 << parseTypeTextCalls;
+    }
+};
+
+ResolverProfile resolverProfile;
+
+struct ResolverProfileScope {
+    ResolverProfileScope(qint64 &elapsed, qint64 &calls) : elapsed(elapsed), calls(calls)
+    {
+        if (resolverProfile.enabled) {
+            ++calls;
+            timer.start();
+        }
+    }
+    ~ResolverProfileScope()
+    {
+        if (resolverProfile.enabled)
+            elapsed += timer.nsecsElapsed();
+    }
+    qint64 &elapsed;
+    qint64 &calls;
+    QElapsedTimer timer;
+};
+
 bool isAlias(const PStatement &statement)
 {
     return statement && (statement->kind == StatementKind::Alias
@@ -447,6 +500,8 @@ TypeInfo CppTypeResolver::resolveType(const TypeInfo &type,
                                       const PStatement &context,
                                       EvaluationContext &evaluation) const
 {
+    ResolverProfileScope profileScope(resolverProfile.resolveTypeNs,
+                                      resolverProfile.resolveTypeCalls);
     if (++evaluation.operationCount > 4096)
         return {};
     QString resolutionKey = (context ? context->fullName : QString()) + "|" + type.toString()
@@ -679,6 +734,8 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
                                             QVector<TypeNameSegment> &segments,
                                             bool &globallyQualified) const
 {
+    ResolverProfileScope profileScope(resolverProfile.parseSegmentsNs,
+                                      resolverProfile.parseSegmentsCalls);
     CppTokenizer tokenizer;
     tokenizer.tokenize({text});
     const CppTokenizer::TokenList &tokens = tokenizer.tokens();
@@ -802,6 +859,8 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
 
 TypeInfo CppTypeResolver::parseTypeText(const QString &text) const
 {
+    ResolverProfileScope profileScope(resolverProfile.parseTypeTextNs,
+                                      resolverProfile.parseTypeTextCalls);
     CppTokenizer tokenizer;
     tokenizer.tokenize({text});
     CppTokenCursor cursor(tokenizer);
@@ -821,6 +880,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::classInstance(
         const TypeInfo &type, const PTemplateBindingFrame &bindings,
         const PStatement &context, EvaluationContext &evaluation) const
 {
+    ResolverProfileScope profileScope(resolverProfile.classInstanceNs,
+                                      resolverProfile.classInstanceCalls);
     ClassInstance result;
     result.type = resolveType(type, bindings, context, evaluation);
     result.declaration = result.type.declaration.lock();
@@ -850,6 +911,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::classInstance(
 CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
         const ClassInstance &primary, EvaluationContext &evaluation) const
 {
+    ResolverProfileScope profileScope(resolverProfile.specializationNs,
+                                      resolverProfile.specializationCalls);
     if (!primary.declaration || primary.declaration->kind != StatementKind::Class
             || primary.declaration->templateKind != TemplateDeclarationKind::Primary) {
         return primary;
@@ -1073,6 +1136,8 @@ CppTypeResolver::MemberResolution CppTypeResolver::findMember(
         const ClassInstance &instance, const QString &name, QSet<QString> &visited,
         EvaluationContext &evaluation) const
 {
+    ResolverProfileScope profileScope(resolverProfile.memberLookupNs,
+                                      resolverProfile.memberLookupCalls);
     if (!instance.declaration)
         return {};
     QString instanceKey = instance.declaration->fullName + "<" + instance.type.toString() + ">";
@@ -1156,6 +1221,8 @@ void CppTypeResolver::applyReference(TypeInfo &target, const TypeInfo &reference
 PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
                                             const PStatement &context, bool typesOnly) const
 {
+    ResolverProfileScope profileScope(resolverProfile.declarationLookupNs,
+                                      resolverProfile.declarationLookupCalls);
     QString name = qualifiedName;
     PStatement initialContext = context;
     if (name.startsWith("::")) {
@@ -1417,11 +1484,6 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
         TemplateArgument argument;
         if (i < materialized.templateArguments.count()) {
             argument = materialized.templateArguments[i];
-            if (parameter.kind == TemplateParameterKind::Type
-                    && argument.kind == TemplateArgumentKind::Type && argument.type) {
-                argument.type = std::make_shared<TypeInfo>(resolveType(
-                        *argument.type, outerBindings, declaration->parentScope.lock(), evaluation));
-            }
         } else {
             QString defaultText = parameter.defaultArgumentText;
             if (defaultText.isEmpty() && i < declaration->inheritedDefaultArgumentTexts.count())

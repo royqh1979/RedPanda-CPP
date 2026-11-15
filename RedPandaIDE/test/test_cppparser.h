@@ -15,6 +15,7 @@ private slots:
     void init_parser();
     void test_parse_var();
     void test_global_variable_reference_scope();
+    void test_unresolved_member_function_reference();
     void test_parse_vars();
     void test_struct();
     void test_preprocessor_statements();
@@ -58,6 +59,7 @@ private slots:
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_string();
+    void test_standard_library_front_append();
     void test_standard_library_vector_subscript();
     void test_standard_library_expression_chains();
     void test_standard_library_public_api_complete();

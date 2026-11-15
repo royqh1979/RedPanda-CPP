@@ -29,8 +29,8 @@ struct EvalResult {
     QVector<TemplateArgument> explicitTemplateArguments;
 
     bool isValid() const {
-        return !type.qualifiedName.isEmpty() || kind == EvalStatementKind::Label
-                || kind == EvalStatementKind::Preprocessor;
+        return !type.qualifiedName.isEmpty() || kind == EvalStatementKind::Function
+                || kind == EvalStatementKind::Label || kind == EvalStatementKind::Preprocessor;
     }
 };
 
