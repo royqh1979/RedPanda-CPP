@@ -16,6 +16,12 @@ private slots:
     void test_parse_var();
     void test_global_variable_reference_scope();
     void test_unresolved_member_function_reference();
+    void test_forward_declaration_prefers_definition_for_eval();
+    void test_base_member_return_uses_declaration_bindings();
+    void test_member_overload_resolution();
+    void test_unknown_non_type_default_preserves_alias_resolution();
+    void test_variable_template_specialization_name();
+    void test_member_alias_template_specialization();
     void test_parse_vars();
     void test_struct();
     void test_preprocessor_statements();
@@ -63,6 +69,7 @@ private slots:
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();
     void test_standard_library_expression_chains();
+    void test_standard_library_container_eval_profile();
     void test_standard_library_parse_baseline();
     void test_standard_library_public_api_complete();
 #endif

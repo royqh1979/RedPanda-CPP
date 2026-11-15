@@ -140,6 +140,125 @@ void TestCppParser::test_unresolved_member_function_reference()
     QCOMPARE(reference->parentScope.lock(), mParser->findStatement("C"));
 }
 
+void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "class C;",
+            "class C {",
+            "public:",
+            "    constexpr explicit operator bool() const noexcept { return true; }",
+            "    constexpr const int& value() const& { return x; }",
+            "    constexpr int& value() & { return x; }",
+            "    int x;",
+            "};",
+            "C c;",
+            "template<class T> class Box;",
+            "template<class T> class Box { public: int value(); };",
+            "Box<int> box;",
+            "int main() {",
+            "    c.value();",
+            "    box.value();",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement reference = mParser->findStatementOf(
+                "text.cpp", QStringList{"c", ".", "value", "(", ")"}, 13);
+    QVERIFY(reference);
+    QCOMPARE(reference->command, "value");
+    QCOMPARE(reference->kind, StatementKind::Function);
+    QCOMPARE(reference->declarationRange.start.line, 5);
+    PStatement templateReference = mParser->findStatementOf(
+                "text.cpp", QStringList{"box", ".", "value", "(", ")"}, 14);
+    QVERIFY(templateReference);
+    QCOMPARE(templateReference->command, "value");
+    QCOMPARE(templateReference->declarationRange.start.line, 10);
+}
+
+void TestCppParser::test_base_member_return_uses_declaration_bindings()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<class K, class V> struct Pair { using type = V; };",
+            "template<class K, class V> struct Base {",
+            "    using value_type = V;",
+            "    using iterator = Pair<K, value_type>;",
+            "    iterator find();",
+            "};",
+            "template<class K, class V> struct Derived : Base<K, V> {};",
+            "Derived<int, std::string> d;",
+            "int main() {",
+            "    d.find();",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement scope = mParser->findScopeStatement("text.cpp", 9);
+    QVERIFY(scope);
+    QStringList expression{"d", ".", "find", "(", ")"};
+    EvalResult result = mParser->evalExpression("text.cpp", expression, scope);
+    QVERIFY(result.isValid());
+    PStatement declaration = result.type.declaration.lock();
+    QVERIFY(declaration);
+    QCOMPARE(declaration->fullName, "Pair");
+    QCOMPARE(result.statement->command, "find");
+}
+
+void TestCppParser::test_member_overload_resolution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Implicit { Implicit(const char *); };",
+            "struct Explicit { explicit Explicit(const char *); };",
+            "struct Other { Other(const char *); };",
+            "struct Overloads {",
+            "    int convert(Implicit);",
+            "    template<class T> long convert(T);",
+            "    int ambiguous(Implicit);",
+            "    int ambiguous(Other);",
+            "    int explicitOnly(Explicit);",
+            "    int value();",
+            "    long value() const;",
+            "    int rvalueOnly() &&;",
+            "};",
+            "Overloads object;",
+            "const Overloads constObject;",
+            "int main() {",
+            "    object.convert(\"x\");",
+            "    object.ambiguous(\"x\");",
+            "    object.explicitOnly(\"x\");",
+            "    object.value();",
+            "    constObject.value();",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement scope = mParser->findScopeStatement("text.cpp", 15);
+    QVERIFY(scope);
+    auto evaluate = [&](QStringList expression) {
+        return mParser->evalExpression("text.cpp", expression, scope);
+    };
+    EvalResult conversion = evaluate({"object", ".", "convert", "(", "\"x\"", ")"});
+    QVERIFY(conversion.isValid());
+    QCOMPARE(conversion.type.qualifiedName, "int");
+    EvalResult value = evaluate({"object", ".", "value", "(", ")"});
+    QVERIFY(value.isValid());
+    QCOMPARE(value.type.qualifiedName, "int");
+    EvalResult constValue = evaluate({"constObject", ".", "value", "(", ")"});
+    QVERIFY(constValue.isValid());
+    QCOMPARE(constValue.type.qualifiedName, "long");
+    QVERIFY(!evaluate({"object", ".", "explicitOnly", "(", "\"x\"", ")"}).isValid());
+    QVERIFY(!evaluate({"object", ".", "ambiguous", "(", "\"x\"", ")"}).isValid());
+    QVERIFY(!evaluate({"object", ".", "rvalueOnly", "(", ")"}).isValid());
+}
+
 void TestCppParser::test_parse_vars()
 {
     mParser->setOnGetFileStream(nullptr);
@@ -1284,6 +1403,87 @@ void TestCppParser::test_nested_namespace_scope_parentage()
     }
 }
 
+void TestCppParser::test_variable_template_specialization_name()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace Detail { struct Identity {}; }",
+            "template<typename A, typename B> struct is_same;",
+            "template<typename T> struct HashTable {",
+            "    using key_type = T;",
+            "    template<typename Arg, typename DArg = key_type, typename = Detail::Identity>",
+            "    static constexpr bool is_key = false;",
+            "    template<typename Arg>",
+            "    static constexpr bool is_key<Arg, key_type, Detail::Identity> = is_same<Arg, key_type>::value;",
+            "};"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    PStatement specialization;
+    for (const PStatement &statement : mParser->statementList().statements()) {
+        if (statement->fullName == "HashTable::is_key<Arg,key_type,Detail::Identity>")
+            specialization = statement;
+    }
+
+    PStatement keyType = mParser->findStatement("HashTable::key_type");
+    QVERIFY(keyType);
+    QCOMPARE(keyType->kind, StatementKind::Alias);
+    PStatement primary = mParser->findStatement("HashTable::is_key");
+    QVERIFY(primary);
+    QCOMPARE(primary->kind, StatementKind::Variable);
+    QVERIFY(specialization);
+    QCOMPARE(specialization->kind, StatementKind::Variable);
+}
+
+void TestCppParser::test_member_alias_template_specialization()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace std {",
+            "    template<bool> struct __conditional {",
+            "        template<typename T, typename> using type = T;",
+            "    };",
+            "    template<> struct __conditional<false> {",
+            "        template<typename, typename U> using type = U;",
+            "    };",
+            "    template<bool C, typename I, typename E>",
+            "    using __conditional_t = typename __conditional<C>::template type<I, E>;",
+            "}",
+            "struct Value {};"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement value = mParser->findStatement("Value");
+    QVERIFY(value);
+    QCOMPARE(mParser->findTypeDefinitionOf(
+                 "text.cpp", "std::__conditional_t<false,int,Value>", {}), value);
+}
+
+void TestCppParser::test_unknown_non_type_default_preserves_alias_resolution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename...> struct And {};",
+            "template<bool> struct BoolConstant {};",
+            "template<typename T> using CacheDefault = BoolConstant<!And<T>::value>;",
+            "template<bool> struct Traits {};",
+            "template<typename T, typename TTraits = Traits<CacheDefault<T>::value>>",
+            "struct HashTable : And<T> { using key_type = T; };",
+            "template<typename T> using Unordered = HashTable<T>;",
+            "struct Value {};"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement value = mParser->findStatement("Value");
+    QVERIFY(value);
+    QCOMPARE(mParser->findTypeDefinitionOf("text.cpp", "Unordered<Value>::key_type", {}), value);
+}
+
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
 {
@@ -1593,6 +1793,122 @@ void TestCppParser::test_standard_library_expression_chains()
                 main, {"flags", "[", "0", "]", ".", "flip"}, 37);
     QVERIFY2(flip, flagElement.type.toString().toUtf8().constData());
     QCOMPARE(flip, mParser->findStatement("std::_Bit_reference::flip"));
+}
+
+void TestCppParser::test_standard_library_container_eval_profile()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    std::deque<std::string> deq;",
+        "    std::list<std::string> linked;",
+        "    std::forward_list<std::string> forward;",
+        "    std::array<std::string, 2> arr;",
+        "    std::map<std::string, std::string> mapping;",
+        "    std::multimap<std::string, std::string> multiMapping;",
+        "    std::unordered_map<std::string, std::string> unorderedMapping;",
+        "    std::set<std::string> ordered;",
+        "    std::multiset<std::string> multiSet;",
+        "    std::unordered_set<std::string> unorderedSet;",
+        "    std::unordered_multiset<std::string> unorderedMultiSet;",
+        "    std::stack<std::string> stack;",
+        "    std::queue<std::string> queue;",
+        "    std::priority_queue<std::string> priority;",
+        "    std::optional<std::string> optional;",
+        "    auto shared = std::make_shared<std::string>();",
+        "    auto unique = std::make_unique<std::string>();",
+        "    auto it = lst.begin();",
+        "    while (++it != lst.end()) {",
+        "        it->size();",
+        "    }",
+        "    for (auto &s : lst) {",
+        "        s.size();",
+        "    }",
+        "    for (auto i = lst.begin(); i != lst.end(); ++i) {",
+        "        i->size();",
+        "    }",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement basicString = mParser->findStatement("std::basic_string");
+    QVERIFY(basicString);
+    struct Case {
+        const char *name;
+        int line;
+        QStringList expression;
+    };
+    const QVector<Case> cases{
+        {"vector.front", 21, {"lst", ".", "front", "(", ")"}},
+        {"vector.back", 21, {"lst", ".", "back", "(", ")"}},
+        {"vector.at", 21, {"lst", ".", "at", "(", "0", ")"}},
+        {"vector.subscript", 21, {"lst", "[", "0", "]"}},
+        {"vector.iterator_deref", 21, {"(", "*", "lst", ".", "begin", "(", ")", ")"}},
+        {"deque.front", 21, {"deq", ".", "front", "(", ")"}},
+        {"deque.back", 21, {"deq", ".", "back", "(", ")"}},
+        {"deque.at", 21, {"deq", ".", "at", "(", "0", ")"}},
+        {"deque.subscript", 21, {"deq", "[", "0", "]"}},
+        {"list.front", 21, {"linked", ".", "front", "(", ")"}},
+        {"list.back", 21, {"linked", ".", "back", "(", ")"}},
+        {"list.iterator_deref", 21, {"(", "*", "linked", ".", "begin", "(", ")", ")"}},
+        {"forward_list.front", 21, {"forward", ".", "front", "(", ")"}},
+        {"forward_list.iterator_deref", 21,
+         {"(", "*", "forward", ".", "begin", "(", ")", ")"}},
+        {"array.subscript", 21, {"arr", "[", "0", "]"}},
+        {"map.subscript", 21, {"mapping", "[", "\"key\"", "]"}},
+        {"map.find_second", 21,
+         {"mapping", ".", "find", "(", "\"key\"", ")", "->", "second"}},
+        {"multimap.find_second", 21,
+         {"multiMapping", ".", "find", "(", "\"key\"", ")", "->", "second"}},
+        {"unordered_map.find_second", 21,
+         {"unorderedMapping", ".", "find", "(", "\"key\"", ")", "->", "second"}},
+        {"set.find", 21, {"ordered", ".", "find", "(", "\"key\"", ")", "->"}},
+        {"multiset.find", 21, {"multiSet", ".", "find", "(", "\"key\"", ")", "->"}},
+        {"unordered_set.find", 21, {"unorderedSet", ".", "find", "(", "\"key\"", ")", "->"}},
+        {"unordered_multiset.find", 21,
+         {"unorderedMultiSet", ".", "find", "(", "\"key\"", ")", "->"}},
+        {"stack.top", 21, {"stack", ".", "top", "(", ")"}},
+        {"queue.front", 21, {"queue", ".", "front", "(", ")"}},
+        {"queue.back", 21, {"queue", ".", "back", "(", ")"}},
+        {"priority_queue.top", 21, {"priority", ".", "top", "(", ")"}},
+        {"optional.arrow", 21, {"optional", "->"}},
+        {"optional.value", 21, {"optional", ".", "value", "(", ")"}},
+        {"shared_ptr.arrow", 21, {"shared", "->"}},
+        {"shared_ptr.deref", 21, {"(", "*", "shared", ")"}},
+        {"unique_ptr.arrow", 21, {"unique", "->"}},
+        {"unique_ptr.deref", 21, {"(", "*", "unique", ")"}},
+        {"while.iterator_arrow", 23, {"it", "->"}},
+        {"while.iterator_deref", 23, {"(", "*", "it", ")"}},
+        {"while.prefix_increment_arrow", 23, {"(", "++", "it", ")", "->"}},
+        {"range_for.element", 26, {"s"}},
+        {"classic_for.iterator_arrow", 29, {"i", "->"}}
+    };
+    QElapsedTimer timer;
+    timer.start();
+    int failures = 0;
+    QByteArray caseFilter = qgetenv("REDPANDA_STDLIB_CONTAINER_CASE");
+    for (const Case &test : cases) {
+        if (!caseFilter.isEmpty() && caseFilter != test.name)
+            continue;
+        PStatement scope = mParser->findScopeStatement(main, test.line);
+        QVERIFY2(scope, test.name);
+        qint64 started = timer.nsecsElapsed();
+        QStringList expression = test.expression;
+        EvalResult result = mParser->evalExpression(main, expression, scope);
+        qWarning() << "STDLIB_CONTAINER_EVAL" << test.name
+                   << timer.nsecsElapsed() - started;
+        if (!result.isValid() || result.type.declaration.lock() != basicString) {
+            ++failures;
+            qWarning() << "STDLIB_CONTAINER_INVALID" << test.name << result.type.toString();
+        }
+    }
+    QCOMPARE(failures, 0);
 }
 
 void TestCppParser::test_standard_library_parse_baseline()

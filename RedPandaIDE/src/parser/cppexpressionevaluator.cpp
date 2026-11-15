@@ -333,11 +333,12 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(EvalResult result, const 
             }
             QString memberName = tokens[index++].text;
             bool call = index < tokens.count() && tokens[index].text == "(";
-            if (call)
-                index = skipBalanced(tokens, index);
-            result.statement = mResolver.memberStatement(receiver, memberName);
-            result.type = call ? mResolver.invokeResult(receiver, memberName)
-                               : mResolver.memberType(receiver, memberName);
+            QVector<TypeInfo> arguments;
+            if (call && !evaluateArguments(tokens, index, context, arguments))
+                return {};
+            MemberEvalResult member = mResolver.resolveMember(receiver, memberName, call, arguments);
+            result.statement = member.statement;
+            result.type = member.type;
             result.kind = !call && isFunction(result.statement)
                     ? EvalStatementKind::Function : EvalStatementKind::Variable;
             if (result.kind == EvalStatementKind::Function)

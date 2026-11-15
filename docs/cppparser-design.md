@@ -51,7 +51,7 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 - Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。
 - 对外提供最小词法类别：标识符、整数字面量、浮点数字面量、字符串/字符字面量、运算符或标点、预处理结果中的文件边界标记。关键字仍按文本判断，不为每个关键字建立 Token 类型。整数与浮点数按词法结构分类，包括指数、十六进制浮点和后缀；符号运算符不并入数字。
 - 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
-- 参数默认值不参与语义建模。Parameter Statement 不保存默认值；函数 `args` 在迁移期仍可能包含默认值文本，但它只是兼容和展示字符串。若以后需要高保真参数提示，应单独保存参数声明原文。
+- 参数默认值不做通用表达式求值。Parameter Statement 不保存默认值；函数 ParameterInfo 以 `defaultArgumentText` 保存原文，供有限重载筛选和构造转换使用；函数 `args` 中的默认值文本只用于兼容和展示，不参与签名比较。
 - Token 记录由 0 基 line/ch 组成的 SourcePosition，并保留 `matchIndex`。同一行内的嵌套声明、lambda 和块必须能通过 ch 区分；不另建一套偏移坐标。
 - Tokenizer 计算 `()`、`[]`、`{}` 配对，不计算 `<>` 配对。未闭合结构是正常输入状态，不能中止后续切分；文件内未配对结构以当前文件尾作为虚拟匹配位置。根文件尾由不进入 token 列表的静态 FileEnd 哨兵表示，Cursor 在该位置返回哨兵而不越界；include 文件尾继续使用 FileBoundary 标记。
 - matchIndex 按整个预处理 TU 的 token 流计算，使 Parser 能识别配对目标是否越过 include 文件边界。本 Parser 不支持跨文件配对；发现后记录诊断并跳到当前文件结束。include 文件随后返回包含者继续分析，根文件则自然分析到文件尾。
@@ -74,7 +74,7 @@ derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueR
 
 - Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
 - Array 保存维度文本，迁移期不要求值。
-- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/normalizedArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 只保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号；默认值不参与语义建模。
+- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/normalizedArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
 - Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
 
 trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。
@@ -101,7 +101,7 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
-初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。只有 auto 变量声明需要保存 initializerText 供类型推导；非 auto 初始化、默认参数和被丢弃的括号表达式只跳过 token，不拼接临时文本。TokenCursor::currentText 返回只读引用，避免声明解析中大量无意义的 QString 引用计数操作。
+初始化表达式、auto 类型推导、Statement 创建及声明/定义合并不属于 DeclaratorInfo 或 DeclSpecifierInfo，由 `parseDeclaration()` 在 declarator 完成后处理。auto 变量声明保存 initializerText 供类型推导；默认参数保存 `defaultArgumentText` 供有限调用筛选。非 auto 初始化和被丢弃的括号表达式只跳过 token，不拼接临时文本。TokenCursor::currentText 返回只读引用，避免声明解析中大量无意义的 QString 引用计数操作。
 
 ### 声明产生式与错误恢复
 
@@ -228,7 +228,7 @@ using 不创建作用域。using namespace/using enum 记录到当前 Statement 
 
 ### 模板与类型推导
 
-声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过表达式/函数体时无需配平 `<>`，只有解析声明时才判定；查不到时回退到结构配平。
+声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过函数体时无需配平 `<>`；声明初始化器和默认参数的边界扫描需要识别标识符后的可配平模板实参区域，避免把模板实参中的逗号误当作 declarator 或参数分隔符。无法配平时按普通运算符处理，查不到模板声明时回退到结构配平。
 
 Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。特化实参保留在 Statement 的 `command/fullName` 完整特化名中，不另设重复字段；eval 需要匹配时从该名称现场解析，不与声明形参混用。默认模板实参只保存原文，不在声明阶段实例化；约束表达式只正确消费。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。模板求值的严格边界、本轮必要特性及 STL 依据见 `cpptemplate-evaluation-design.md`。
 
@@ -240,7 +240,9 @@ Parser 解析声明时只保存模板声明、模板实参原文和 TypeInfo 的
 
 未来若实现 CTAD，可在 Class Statement 内增加 `guides` 值列表，联合 class 构造函数和 guides 进行推导。guides 是与类关联的语义信息，不进入 children、fullName 或普通函数查找，也不作为独立 shared_ptr Statement 持有；每项保存模板参数、函数参数、推导结果类型、源码文件和位置。文件失效时按各自文件/边界祖先清理，Class 删除时随 Class 一并释放。该列表仅是后续可选设计，当前不实现。
 
-函数 Statement 同时保留结构化 ParameterInfo 列表，不只保存 args 文本。调用时逐参数比较 formal/actual TypeInfo：直接模板形参绑定实际类型，引用先去除，指针/数组按层递归，Container<T> 等实际模板参数继续递归绑定；返回 TypeInfo 再应用这些绑定。该机制用于 find_if、transform 等算法，不做重载决议、SFINAE、参数包展开或完整隐式转换序列。
+函数 Statement 同时保留结构化 ParameterInfo 列表，不只保存 args 文本。调用时逐参数比较 formal/actual TypeInfo：直接模板形参绑定实际类型，引用先去除，指针/数组按层递归，Container<T> 等实际模板参数继续递归绑定；返回 TypeInfo 再应用这些绑定。该机制用于 find_if、transform 等算法，不做 SFINAE、参数包展开或完整隐式转换序列。
+
+成员调用先递归求出实参类型，再收集当前类及依赖基类的同名候选，并按实际声明类建立模板绑定。const 用于筛选成员；当前变量成员访问按左值处理，排除仅 `&&` 限定的候选，不扩展为通用右值重载决议。非模板候选组优先于函数模板候选组；每组必须只有一个可行候选才返回，多个可行候选按歧义处理，不能取第一个或靠跳过失败候选伪造成功。类型结构相同且可行时，额外允许一种有限用户定义转换：目标形参为类类型、实参为指针式类型，且目标类存在可接受该实参的单参数非 explicit 构造函数；构造函数后续参数必须都有默认值。除此之外不实现隐式转换序列排名。
 
 无法仅从声明签名得到的规则通过可插拔的 TypeOperationRegistry 添加，例如算法回调的调用参数、range adaptor 的元素转换和 tuple/range 类型操作。专用规则按标准库操作集中注册，不散落成各成员函数的硬编码。通用机制过于复杂的局部能力可以先由专用规则实现，但对外使用同一类型操作接口。
 
@@ -271,7 +273,7 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 表达式求值返回 EvalResult，包含 TypeInfo、表达式类别、原始 Statement 和必要的模板绑定上下文。容器元素、迭代器值/引用和 range 元素不增加固定字段，而由 containerValue、iteratorValue、iteratorReference、rangeReference、invokeResult 等统一类型操作计算。
 
-求值器保持旧实现的递归表达式语义，不建立表达式 AST，也不在解析其它声明时预先计算。二元运算按 comma、赋值、条件、逻辑、位运算、比较、移位、加减、乘除和成员指针的优先级递归；括号内调用完整子表达式，类型转换与普通分组分别处理。`new`、一元运算、字面量、类型/`::` 名称、函数调用、初始化、`[]`、`.`、`->` 和前后缀自增减都进入同一求值路径。实参和下标内容利用 matchIndex 跳过。
+求值器保持旧实现的递归表达式语义，不建立表达式 AST，也不在解析其它声明时预先计算。二元运算按 comma、赋值、条件、逻辑、位运算、比较、移位、加减、乘除和成员指针的优先级递归；括号内调用完整子表达式，类型转换与普通分组分别处理。`new`、一元运算、字面量、类型/`::` 名称、函数调用、初始化、`[]`、`.`、`->` 和前后缀自增减都进入同一求值路径。下标内容利用 matchIndex 跳过；成员调用的各实参分别递归求值，逗号只作为实参分隔符。
 
 类型解析先尝试相应的运算符重载，再应用内建指针、引用和算术规则。`->` 递归处理内建指针或 operator->，解引用处理内建指针或 operator*，自增减使用 operator++/operator-- 的返回类型。每一步只保留下一步所需的 TypeInfo，因此 `container.front().size()` 和 `(*it++)->size()` 等链条可以逐段计算。查不到声明或尚不支持的表达式返回无效 EvalResult，不把部分前缀当作完整结果。无调用括号的成员函数访问是函数引用，即使模板返回类型尚不能推导，只要成员 Statement 已找到，表达式结果仍有效；实际调用仍必须成功解析返回类型。
 
@@ -282,9 +284,9 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 ## 性能测量
 
-设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找及类型文本解析的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询。
+设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找、声明绑定、模板实参结构化和类型键文本生成的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询，`STDLIB_CONTAINER_EVAL` 记录各容器表达式求值耗时。
 
-优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。
+优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
 
 ## cppreference 语法覆盖测试
 

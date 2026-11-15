@@ -388,6 +388,10 @@ bool CppDeclarationParser::isConstructorDeclaration()
         if (!mCursor.consume("::"))
             break;
     }
+    if (parts.contains("operator")) {
+        mCursor.restore(checkpoint);
+        return true;
+    }
     if (mCursor.currentText() != "(") {
         mCursor.restore(checkpoint);
         return false;
@@ -395,8 +399,6 @@ bool CppDeclarationParser::isConstructorDeclaration()
     mCursor.restore(checkpoint);
     if (parts.isEmpty())
         return false;
-    if (parts.last() == "operator")
-        return true;
     if (!mClassName.isEmpty())
         return parts.last() == mClassName;
     return parts.count() >= 2 && parts.last() == parts[parts.count() - 2];
@@ -535,7 +537,19 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
         } else if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
                    || isBuiltinType(mCursor.currentText())) {
             QString qualified = parseQualifiedNameText();
-            int last = qualified.lastIndexOf("::");
+            int last = -1;
+            int templateDepth = 0;
+            for (int i = qualified.length() - 1; i > 0; --i) {
+                if (qualified[i] == '>') {
+                    ++templateDepth;
+                } else if (qualified[i] == '<') {
+                    templateDepth = qMax(0, templateDepth - 1);
+                } else if (qualified[i] == ':' && qualified[i - 1] == ':'
+                           && templateDepth == 0) {
+                    last = i - 1;
+                    break;
+                }
+            }
             if (last >= 0) {
                 result.qualifier = qualified.left(last);
                 result.name = qualified.mid(last + 2);
@@ -583,8 +597,11 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                         }
                         function.parameters.append(parameter);
                     }
-                    if (mCursor.consume("="))
+                    if (mCursor.consume("=")) {
+                        CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
                         skipExpression({",", ")"});
+                        function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
+                    }
                     if (mCursor.consume(")"))
                         break;
                     if (!mCursor.consume(",")) {
@@ -992,21 +1009,9 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
 
 QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters)
 {
-    QString result;
-    while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
-        const QString &text = mCursor.currentText();
-        if (text == "(")
-            result += readBalancedToken("(", ")");
-        else if (text == "[")
-            result += readBalancedToken("[", "]");
-        else if (text == "{")
-            result += readBalancedToken("{", "}");
-        else {
-            appendToken(result, text);
-            mCursor.advance();
-        }
-    }
-    return result;
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    skipExpression(delimiters);
+    return readConsumedText(start);
 }
 
 void CppDeclarationParser::skipBalancedToken()
@@ -1021,10 +1026,18 @@ void CppDeclarationParser::skipBalancedToken()
 void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
 {
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
-        if (mCursor.current().matchIndex > mCursor.index())
+        if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalancedToken();
-        else
-            mCursor.advance();
+            continue;
+        }
+        if (mCursor.currentText() == "<"
+                && mCursor.peek(-1).kind == CppTokenizer::TokenKind::Identifier) {
+            CppTokenCursor::Checkpoint templateStart = mCursor.checkpoint();
+            if (skipTemplateArguments())
+                continue;
+            mCursor.restore(templateStart);
+        }
+        mCursor.advance();
     }
 }
 
@@ -1112,6 +1125,6 @@ bool CppDeclarationParser::isBuiltinType(const QString &text) const
 
 bool CppDeclarationParser::isDeclarationDelimiter(const QString &text) const
 {
-    static const QSet<QString> delimiters{",", ";", ")", "]", "}", "=", ":"};
+    static const QSet<QString> delimiters{",", ";", ")", "]", "}", ">", ">>", "=", ":"};
     return delimiters.contains(text);
 }

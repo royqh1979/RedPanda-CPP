@@ -83,6 +83,7 @@ struct ParameterInfo {
     PTypeInfo type;
     QString name;
     SourcePosition position;
+    QString defaultArgumentText;
 
     QString toString(bool includeName = true) const;
 };

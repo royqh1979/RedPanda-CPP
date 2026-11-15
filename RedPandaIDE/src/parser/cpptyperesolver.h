@@ -34,6 +34,11 @@ struct EvalResult {
     }
 };
 
+struct MemberEvalResult {
+    PStatement statement;
+    TypeInfo type;
+};
+
 class CppTypeResolver
 {
 public:
@@ -45,6 +50,8 @@ public:
     PStatement memberStatement(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo memberType(const TypeInfo &receiver, const QString &memberName) const;
     TypeInfo invokeResult(const TypeInfo &receiver, const QString &memberName) const;
+    MemberEvalResult resolveMember(const TypeInfo &receiver, const QString &memberName,
+                                   bool call, const QVector<TypeInfo> &arguments = {}) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments,
                             const QVector<TemplateArgument> &explicitArguments = {}) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
@@ -100,7 +107,12 @@ private:
                            const QSet<QString> &templateParameters, TemplateBindings &bindings) const;
     QList<PStatement> functionCandidates(const PStatement &function) const;
     TypeInfo invokeFunctionCandidate(const PStatement &function, const QVector<TypeInfo> &arguments,
-                                     const QVector<TemplateArgument> &explicitArguments) const;
+                                     const QVector<TemplateArgument> &explicitArguments,
+                                     const PTemplateBindingFrame &outerBindings = {}) const;
+    QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
+                                             QSet<QString> &visited,
+                                             EvaluationContext &evaluation,
+                                             bool stopAtDirectMember = false) const;
     bool compatibleArgument(const TypeInfo &parameter, const TypeInfo &argument,
                             const PTemplateBindingFrame &bindings, const PStatement &context,
                             EvaluationContext &evaluation) const;
