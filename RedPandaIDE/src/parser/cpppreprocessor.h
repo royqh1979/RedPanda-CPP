@@ -114,6 +114,8 @@ public:
         return mSession.defines.value(name,PDefine());
     }
 
+    int cppVersion() const { return mCppVersion; }
+
     QString expandMacros(QString text) const;
 
     const QStringList& result() const{
@@ -383,7 +385,7 @@ private:
 
     bool mParseSystem;
     bool mParseLocal;
-    bool mSupportCPP23;
+    int mCppVersion = 0;
 
     bool mStopForParserReset;
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;

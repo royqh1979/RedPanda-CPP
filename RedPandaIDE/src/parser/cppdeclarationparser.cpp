@@ -147,6 +147,7 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
     bool withoutSpecifiers = mCursor.currentText() == "~"
             || mCursor.currentText() == "operator"
             || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
+                && mCursor.currentText() != "explicit"
                 && !isBuiltinType(mCursor.currentText())
                 && mCursor.peek().text == "(");
     if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
@@ -272,60 +273,61 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
     result.templateKind = TemplateDeclarationKind::Primary;
     if (mCursor.consume(">")) {
         result.templateKind = TemplateDeclarationKind::ExplicitSpecialization;
-        return true;
-    }
-
-    while (!mCursor.atEnd()) {
-        TemplateParameterInfo parameter;
-        if (mCursor.consume("template")) {
-            parameter.kind = TemplateParameterKind::TemplateTemplate;
-            if (mCursor.currentText() == "<")
-                readBalancedToken("<", ">");
-            if (!mCursor.consume("class"))
-                mCursor.consume("typename");
-        } else if (mCursor.consume("class") || mCursor.consume("typename")) {
-            parameter.kind = TemplateParameterKind::Type;
-        } else {
-            parameter.kind = TemplateParameterKind::NonType;
-            DeclSpecifierInfo specifiers;
-            if (!parseDeclSpecifierSeq(specifiers)) {
-                mCursor.restore(start);
-                return false;
+    } else {
+        while (!mCursor.atEnd()) {
+            TemplateParameterInfo parameter;
+            if (mCursor.consume("template")) {
+                parameter.kind = TemplateParameterKind::TemplateTemplate;
+                if (mCursor.currentText() == "<")
+                    readBalancedToken("<", ">");
+                if (!mCursor.consume("class"))
+                    mCursor.consume("typename");
+            } else if (mCursor.consume("class") || mCursor.consume("typename")) {
+                parameter.kind = TemplateParameterKind::Type;
+            } else {
+                parameter.kind = TemplateParameterKind::NonType;
+                DeclSpecifierInfo specifiers;
+                if (!parseDeclSpecifierSeq(specifiers)) {
+                    mCursor.restore(start);
+                    return false;
+                }
+                if (mCursor.consume("..."))
+                    parameter.parameterPack = true;
+                DeclaratorInfo declarator;
+                if (!parseDeclarator(declarator)) {
+                    mCursor.restore(start);
+                    return false;
+                }
+                parameter.name = declarator.name;
+                parameter.type = std::make_shared<TypeInfo>(specifiers.type);
+                appendTypeDerivation(*parameter.type, declarator);
             }
             if (mCursor.consume("..."))
                 parameter.parameterPack = true;
-            DeclaratorInfo declarator;
-            if (!parseDeclarator(declarator)) {
-                mCursor.restore(start);
-                return false;
+            if (parameter.name.isEmpty() && !mCursor.atEnd()
+                    && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+                parameter.name = mCursor.currentText();
+                mCursor.advance();
             }
-            parameter.name = declarator.name;
-            parameter.type = std::make_shared<TypeInfo>(specifiers.type);
-            appendTypeDerivation(*parameter.type, declarator);
-        }
-        if (mCursor.consume("..."))
-            parameter.parameterPack = true;
-        if (parameter.name.isEmpty() && !mCursor.atEnd()
-                && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
-            parameter.name = mCursor.currentText();
-            mCursor.advance();
-        }
-        if (mCursor.consume("=")) {
-            CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-            skipTemplateDefaultArgument(parameter.kind == TemplateParameterKind::NonType);
-            parameter.defaultArgumentText = readConsumedText(defaultStart);
-        }
-        result.templateParameters.append(parameter);
+            if (mCursor.consume("=")) {
+                CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
+                skipTemplateDefaultArgument(parameter.kind == TemplateParameterKind::NonType);
+                parameter.defaultArgumentText = readConsumedText(defaultStart);
+            }
+            result.templateParameters.append(parameter);
 
-        if (mCursor.consume(","))
-            continue;
-        if (mCursor.currentText() == ">" || mCursor.currentText() == ">>") {
-            mCursor.consumeGreater();
-            break;
+            if (mCursor.consume(","))
+                continue;
+            if (mCursor.currentText() == ">" || mCursor.currentText() == ">>") {
+                mCursor.consumeGreater();
+                break;
+            }
+            mCursor.restore(start);
+            return false;
         }
-        mCursor.restore(start);
-        return false;
     }
+    if (mCursor.consume("requires"))
+        skipTemplateRequiresClause();
     return true;
 }
 
@@ -431,6 +433,8 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
         if (property != DeclSpecifierProperty::None) {
             result.properties.setFlag(property);
             mCursor.advance();
+            if (property == DeclSpecifierProperty::Explicit && mCursor.currentText() == "(")
+                skipBalancedToken();
             continue;
         }
         if (text == "const" || text == "volatile") {
@@ -1060,6 +1064,77 @@ void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
             mCursor.restore(templateStart);
         }
         mCursor.advance();
+    }
+}
+
+void CppDeclarationParser::skipTemplateRequiresClause()
+{
+    static const QSet<QString> declarationStarts{
+        "class", "struct", "union", "enum", "namespace", "using",
+        "static", "extern", "register", "thread_local", "mutable",
+        "inline", "virtual", "friend", "constexpr", "consteval",
+        "constinit", "explicit", "typedef", "const", "volatile",
+        "decltype", "typename", "operator"
+    };
+    static const QSet<QString> wordOperators{
+        "and", "and_eq", "bitand", "bitor", "compl", "not", "not_eq",
+        "or", "or_eq", "xor", "xor_eq"
+    };
+    bool expectOperand = true;
+    while (!mCursor.atEnd()) {
+        if (mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary)
+            return;
+        const QString &text = mCursor.currentText();
+        if (text == ";" || text == "}")
+            return;
+        if (expectOperand) {
+            if (text == "requires") {
+                mCursor.advance();
+                if (mCursor.currentText() == "(")
+                    skipBalancedToken();
+                if (mCursor.currentText() == "{")
+                    skipBalancedToken();
+                expectOperand = false;
+                continue;
+            }
+            if (mCursor.current().matchIndex > mCursor.index()) {
+                skipBalancedToken();
+                expectOperand = false;
+                continue;
+            }
+            if (text == "::" || wordOperators.contains(text)
+                    || (mCursor.current().kind == CppTokenizer::TokenKind::Operator
+                        && (text == "!" || text == "~" || text == "+" || text == "-"
+                            || text == "*" || text == "&" || text == "++" || text == "--"))) {
+                mCursor.advance();
+                continue;
+            }
+            mCursor.advance();
+            expectOperand = false;
+            continue;
+        }
+        if (declarationStarts.contains(text) || isBuiltinType(text)
+                || mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+            if (!wordOperators.contains(text))
+                return;
+        }
+        if (mCursor.current().matchIndex > mCursor.index()) {
+            skipBalancedToken();
+            continue;
+        }
+        if (text == "<" && mCursor.peek(-1).kind == CppTokenizer::TokenKind::Identifier) {
+            CppTokenCursor::Checkpoint templateStart = mCursor.checkpoint();
+            if (skipTemplateArguments())
+                continue;
+            mCursor.restore(templateStart);
+        }
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Operator
+                || wordOperators.contains(text)) {
+            mCursor.advance();
+            expectOperand = text != "..." && text != "++" && text != "--";
+            continue;
+        }
+        return;
     }
 }
 

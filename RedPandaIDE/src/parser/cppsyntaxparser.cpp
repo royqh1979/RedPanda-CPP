@@ -445,10 +445,13 @@ void CppSyntaxParser::skipDeclaration()
         const QString &text = mCursor.currentText();
         if (text == ";" || text == "}")
             return;
-        if (mCursor.current().matchIndex > mCursor.index())
+        if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalanced();
-        else
+            if (text == "{")
+                return;
+        } else {
             mCursor.advance();
+        }
     }
 }
 

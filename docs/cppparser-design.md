@@ -109,7 +109,9 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
 
-函数 declarator 的 requires 子句只消费不求值。扫描时区分函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保函数 bodyRange 和后续声明不受约束子句影响；这不扩展 concepts 求值或 dependent-name 语义。
+模板参数列表后和函数 declarator 后的 requires 子句只消费不求值。扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响；这不扩展 concepts 求值或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+
+CppPreprocessor 从 hard define `__cplusplus` 保存去除整数后缀后的版本值，并通过 `cppVersion()` 提供查询；CppParser 的同名公共接口在锁内读取该值。测试依据 Parser 实际取得的版本选择对应标准库场景，不根据请求使用的 `-std=` 参数猜测实际预处理结果。
 
 前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
 

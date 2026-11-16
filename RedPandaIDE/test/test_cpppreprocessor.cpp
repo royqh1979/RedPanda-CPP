@@ -322,6 +322,17 @@ void TestCppPreprocessor::test_compare_cpp_version()
 
 }
 
+void TestCppPreprocessor::test_cpp_version_value()
+{
+    CppPreprocessor preprocessor;
+    for (int version : {199711, 201103, 201402, 201703, 202002, 202302, 202400}) {
+        preprocessor.clear();
+        QCOMPARE(preprocessor.cppVersion(), 0);
+        preprocessor.addHardDefineByLine(QString("#define __cplusplus %1L").arg(version));
+        QCOMPARE(preprocessor.cppVersion(), version);
+    }
+}
+
 QStringList TestCppPreprocessor::filterIncludes(const QStringList &text)
 {
     QStringList result;
@@ -927,11 +938,6 @@ void TestCppPreprocessor::test_char_constant_in_if()
 
 void TestCppPreprocessor::test_elifdef_elifndef_supported()
 {
-    // NOTE: the C++23 detection in addDefineByParts uses
-    // QString::toLong() on the whole __cplusplus value, which fails for
-    // real-world values with the 'L' suffix (see
-    // test_elifdef_cpp23_detection). The supported path is only reached
-    // with a suffix-less value.
     CppPreprocessor p;
     p.addHardDefineByLine("#define __cplusplus 202302");
     QCOMPARE(preprocessContent(p, {

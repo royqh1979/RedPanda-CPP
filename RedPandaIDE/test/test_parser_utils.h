@@ -35,8 +35,12 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
     source.write("\n");
     source.close();
 
+    QString standard = qEnvironmentVariable("REDPANDA_PARSER_TEST_CXX_STANDARD");
+    if (standard.isEmpty())
+        standard = "c++17";
+
     QProcess process;
-    process.start(compiler, {"-std=c++17", "-dM", "-E", source.fileName()});
+    process.start(compiler, {"-std=" + standard, "-dM", "-E", source.fileName()});
     if (!process.waitForStarted() || !process.waitForFinished(30000)
             || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
         qWarning() << "Cannot obtain compiler defines:" << process.errorString()

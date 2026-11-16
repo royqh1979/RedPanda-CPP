@@ -26,6 +26,7 @@ private slots:
     void test_evaluate_constant_expression_1();
     void test_evaluate_constant_expression_2();
     void test_compare_cpp_version();
+    void test_cpp_version_value();
     // group A: line continuation
     void test_combine_backslash_trailing_space();
     void test_combine_backslash_multiple();

@@ -1673,6 +1673,10 @@ void TestCppParser::test_standard_library_make_shared_default()
              basicString);
     PStatement sharedPtr = mParser->findStatement("std::shared_ptr");
     QVERIFY(sharedPtr);
+    if (mParser->cppVersion() >= 202002) {
+        QVERIFY(mParser->findStatement("std::_NonArray"));
+        QCOMPARE(mParser->findTypeDefinitionOf(main, "std::_NonArray<std::string>", {}), basicString);
+    }
     PStatement scope = mParser->findScopeStatement(main, 5);
     QVERIFY(scope);
     QStringList factoryExpression{

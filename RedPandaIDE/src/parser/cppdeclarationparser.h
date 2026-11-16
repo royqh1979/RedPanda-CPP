@@ -53,6 +53,7 @@ private:
     void skipBalancedToken();
     QString readUntilDelimiter(const QSet<QString> &delimiters);
     void skipExpression(const QSet<QString> &delimiters);
+    void skipTemplateRequiresClause();
     void skipRequiresClause();
     void skipTemplateDefaultArgument(bool nonType = false);
     void applyTrailingReturn(TypeDerivation &function);

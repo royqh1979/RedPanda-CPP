@@ -132,7 +132,7 @@ void CppPreprocessor::clear()
     mIncludePathList.clear();
     mProjectIncludePathList.clear();
     mIncludePaths.clear();
-    mSupportCPP23=false;
+    mCppVersion = 0;
 }
 
 void CppPreprocessor::clearTempResults()
@@ -281,7 +281,7 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
                 v.chop(1);
             bool ok;
             long version = v.toLong(&ok);
-            mSupportCPP23 = (ok && version >=202302);
+            mCppVersion = ok ? static_cast<int>(version) : 0;
         }
     } else {
         PParsedFileInfo fileInfo = replayRecordForFile(mSession.fileName);
@@ -1239,7 +1239,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 
 bool CppPreprocessor::supportCPP23() const
 {
-    return mSupportCPP23;
+    return mCppVersion >= 202302;
 }
 
 // Whitespace before '#' is allowed: a line whose first non-blank

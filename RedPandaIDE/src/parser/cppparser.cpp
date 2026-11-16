@@ -936,6 +936,12 @@ bool CppParser::parsing() const
     return mParsing;
 }
 
+int CppParser::cppVersion() const
+{
+    QMutexLocker locker(&mMutex);
+    return mPreprocessor.cppVersion();
+}
+
 void CppParser::resetParser()
 {
     while (true) {

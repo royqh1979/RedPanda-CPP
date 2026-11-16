@@ -119,6 +119,9 @@ private slots:
     void test_failed_declaration_restores_cursor();
     void test_non_declaration_keywords_are_rejected();
     void test_requires_clauses_are_consumed();
+    void test_explicit_bool_declarations();
+    void test_requires_before_member_declaration();
+    void test_function_try_block_recovery();
     void test_constructor_declarations_with_specifiers();
     void test_integer_constant_expression_invalid_division();
     void test_deduction_guides_are_consumed_without_statements();

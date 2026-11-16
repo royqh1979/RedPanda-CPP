@@ -1840,8 +1840,10 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
                 "    T& operator*();\n"
                 "  };\n"
                 "  template<typename T> struct _MakeUniq { using __single_object = unique_ptr<T>; };\n"
+                "  template<typename T> constexpr bool is_array_v = false;\n"
+                "  template<typename T> requires (!is_array_v<T>) using _NonArray = T;\n"
                 "  template<typename T, typename... Args>\n"
-                "  shared_ptr<T> make_shared(Args&&... args);\n"
+                "  shared_ptr<_NonArray<T>> make_shared(Args&&... args);\n"
                 "  template<typename T, typename... Args>\n"
                 "  typename _MakeUniq<T>::__single_object make_unique(Args&&... args) { return {}; }\n"
                 "  template<typename T, typename... Args>\n"
@@ -2892,14 +2894,95 @@ void TestCppTokenizer::test_requires_clauses_are_consumed()
     QVERIFY(parseSyntaxText(
                 "template<typename T> int f() requires true { return 1; }\n"
                 "template<typename T> int g() requires requires(T value) { value + 1; } { return 2; }\n"
+                "template<typename T> requires (!is_array_v<T>) using NonArray = T;\n"
+                "template<typename T> requires requires(T value) { value + 1; } using Addable = T;\n"
+                "template<typename T> requires (!is_array_v<T>) class Constrained { public: Constrained(); };\n"
+                "template<typename T> requires is_same_v<T, int> T identity(T value);\n"
                 "int after;\n",
                 declarations));
-    QCOMPARE(declarations.count(), 3);
+    QCOMPARE(declarations.count(), 7);
     QCOMPARE(declarations[0].declarators.first().name, "f");
     QVERIFY(declarations[0].bodyRange.isValid());
     QCOMPARE(declarations[1].declarators.first().name, "g");
     QVERIFY(declarations[1].bodyRange.isValid());
-    QCOMPARE(declarations[2].declarators.first().name, "after");
+    QCOMPARE(declarations[2].kind, DeclarationKind::Alias);
+    QCOMPARE(declarations[2].declarators.first().name, "NonArray");
+    QCOMPARE(declarations[3].kind, DeclarationKind::Alias);
+    QCOMPARE(declarations[3].declarators.first().name, "Addable");
+    QCOMPARE(declarations[4].kind, DeclarationKind::Class);
+    QCOMPARE(declarations[4].declarators.first().name, "Constrained");
+    QCOMPARE(declarations[5].declarators.first().name, "identity");
+    QCOMPARE(declarations[6].declarators.first().name, "after");
+}
+
+void TestCppTokenizer::test_requires_before_member_declaration()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> class RequiresMember {\n"
+                "public:\n"
+                "  template<typename U> requires is_convertible_v<U, T>\n"
+                "  RequiresMember(const U&) { }\n"
+                "  T& operator*() &;\n"
+                "  int after;\n"
+                "};\n", declarations));
+    QCOMPARE(declarations.count(), 1);
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/requires_member.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+    QVERIFY(resolver.findStatement("RequiresMember::RequiresMember"));
+    QVERIFY(resolver.findStatement("RequiresMember::operator*"));
+    QVERIFY(resolver.findStatement("RequiresMember::after"));
+}
+
+void TestCppTokenizer::test_function_try_block_recovery()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "class TryBox {\n"
+                "public:\n"
+                "  TryBox() try { } catch (...) { }\n"
+                "  int after;\n"
+                "};\n", declarations));
+    QCOMPARE(declarations.count(), 1);
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/function_try_block.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+    QVERIFY(resolver.findStatement("TryBox::after"));
+}
+
+void TestCppTokenizer::test_explicit_bool_declarations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> class ExplicitBox {\n"
+                "public:\n"
+                "  explicit(true) ExplicitBox(int);\n"
+                "  T& operator*() &;\n"
+                "};\n", declarations));
+    QCOMPARE(declarations.count(), 1);
+    QCOMPARE(declarations.first().children.count(), 2);
+    QVERIFY(declarations.first().children.first().specifiers.properties.testFlag(
+                DeclSpecifierProperty::Explicit));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/explicit_bool.cpp";
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+    PStatement box = resolver.findStatement("ExplicitBox");
+    QVERIFY(box);
+    QVERIFY(resolver.findStatement("ExplicitBox::operator*"));
+    PStatement constructor = resolver.findStatement("ExplicitBox::ExplicitBox");
+    QVERIFY(constructor);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(
+                DeclSpecifierProperty::Explicit));
 }
 
 void TestCppTokenizer::test_constructor_declarations_with_specifiers()

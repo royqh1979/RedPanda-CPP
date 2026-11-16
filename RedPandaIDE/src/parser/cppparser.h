@@ -107,6 +107,7 @@ public:
     bool isSystemHeaderFile(const QString& fileName) const;
     void parseHardDefines();
     bool parsing() const;
+    int cppVersion() const;
     void resetParser();
     void unFreeze();
     bool fileScanned(const QString& fileName) const;
