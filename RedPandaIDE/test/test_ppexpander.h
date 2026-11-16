@@ -32,6 +32,7 @@ private slots:
     void test_word_boundaries();
     void test_empty_args();
     void test_condition_mode();
+    void test_condition_macro_rescan();
 private:
     static PDefine makeDefine(const QString& name, const QString& args,
                               const QString& value);

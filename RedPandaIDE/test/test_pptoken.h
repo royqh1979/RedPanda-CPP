@@ -26,6 +26,7 @@ private slots:
     void test_exact_whitespace();
     void test_number_exponents_and_separators();
     void test_identifiers_and_punctuation();
+    void test_multi_character_operators();
     void test_unterminated_escape();
     void test_raw_string_prefixes_and_delimiter_validation();
     void test_raw_string_empty_and_unterminated();

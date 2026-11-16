@@ -237,3 +237,15 @@ void TestPpExpander::test_condition_mode()
     QCOMPARE(expandCondition(defs, "1 and 1"), "1 && 1");
 }
 
+void TestPpExpander::test_condition_macro_rescan()
+{
+    QHash<QString, PDefine> defs{
+        {"EMPTY", makeDefine("EMPTY", "", "")},
+        {"SCAN", makeDefine("SCAN", "(x)", "x")},
+        {"EXAMPLE_", makeDefine("EXAMPLE_", "()", "EXAMPLE")},
+        {"EXAMPLE", makeDefine("EXAMPLE", "(n)", "EXAMPLE_ EMPTY()(n-1) (n)")}};
+    QCOMPARE(expandCondition(defs, "EXAMPLE(5)"), "EXAMPLE_ ()(5-1) (5)");
+    QCOMPARE(expandCondition(defs, "SCAN(EXAMPLE(5))"),
+             "EXAMPLE_ ()(5-1-1) (5-1) (5)");
+}
+

@@ -127,40 +127,13 @@ void TestCppPreprocessor::test_replace_macros_in_constant_expression_1()
     preprocessor.addHardDefineByLine("#define __GNUC__ 15");
     preprocessor.addHardDefineByLine("#define __GNUC_MINOR__ 3");
     preprocessor.addHardDefineByLine("#define __MINGW_GNUC_PREREQ(major, minor) (__GNUC__ > (major) || (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("__cplusplus"),
-             "201703L");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("__cplusplus > 201703L"),
-             "201703L > 201703L");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined(__cplusplus)"),
-             "1");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined __cplusplus"),
-             "1");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined(__cplus)"),
-             "0");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("defined __cplus"),
-             "0");
-
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("__has_builtin(__builtin_is_constant_evaluated)"),
-             "0");
-
-
-}
-
-void TestCppPreprocessor::test_replace_macros_in_constant_expression_2()
-{
-    CppPreprocessor preprocessor;
-    preprocessor.addHardDefineByLine("#define EMPTY");
-    preprocessor.addHardDefineByLine("#define SCAN(x)     x");
-    preprocessor.addHardDefineByLine("#define EXAMPLE_()  EXAMPLE");
-    preprocessor.addHardDefineByLine("#define EXAMPLE(n)  EXAMPLE_ EMPTY()(n-1) (n)");
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("EXAMPLE(5)"),
-             "EXAMPLE_ ()(5-1) (5)");
-    // NOTE: the unified pp-token engine produces a single space before
-    // the last argument (the old standalone conditioning expander used
-    // to produce a double space; the plain expandMacros path always
-    // produced a single one - see test_macro_replace_2).
-    QCOMPARE(preprocessor.expandMacrosInConditioningExpression("SCAN(EXAMPLE(5))"),
-             "EXAMPLE_ ()(5-1-1) (5-1) (5)");
+    QVERIFY(preprocessor.evaluateIf("__cplusplus == 201703L"));
+    QVERIFY(!preprocessor.evaluateIf("__cplusplus > 201703L"));
+    QVERIFY(preprocessor.evaluateIf("defined(__cplusplus)"));
+    QVERIFY(preprocessor.evaluateIf("defined __cplusplus"));
+    QVERIFY(!preprocessor.evaluateIf("defined(__cplus)"));
+    QVERIFY(!preprocessor.evaluateIf("defined __cplus"));
+    QVERIFY(!preprocessor.evaluateIf("__has_builtin(__builtin_is_constant_evaluated)"));
 }
 
 void TestCppPreprocessor::test_evaluate_constant_expression_1()
