@@ -464,13 +464,10 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
 
 PStatement ClassBrowserModel::createDummy(const PStatement& statement)
 {
-    PStatement result = std::make_shared<Statement>();
-    result->parentScope = statement->parentScope;
-    result->command = statement->command;
+    PStatement result = StatementFactory::create(
+                statement->kind, statement->parentScope.lock(), statement->command, statement->fullName);
     result->args = statement->args;
     result->normalizedArgs = statement->normalizedArgs;
-    result->fullName = statement->fullName;
-    result->kind = statement->kind;
     result->classKey = statement->classKey;
     result->baseClasses = statement->baseClasses;
     result->typeInfo = statement->typeInfo;

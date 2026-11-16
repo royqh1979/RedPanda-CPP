@@ -677,12 +677,10 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             QHash<QString, qlonglong> enumeratorValues;
             qlonglong nextEnumeratorValue = 0;
             for (const EnumeratorInfo &enumerator : declaration.enumerators) {
-                auto enumStatement = std::make_shared<Statement>();
-                enumStatement->parentScope = enumeratorParent;
-                enumStatement->command = enumerator.name;
-                enumStatement->fullName = enumeratorParent && !enumeratorParent->fullName.isEmpty()
-                        ? enumeratorParent->fullName + "::" + enumerator.name : enumerator.name;
-                enumStatement->kind = StatementKind::Enum;
+                auto enumStatement = StatementFactory::createEnum(
+                            enumeratorParent, enumerator.name,
+                            enumeratorParent && !enumeratorParent->fullName.isEmpty()
+                            ? enumeratorParent->fullName + "::" + enumerator.name : enumerator.name);
                 enumStatement->scope = context.scope;
                 enumStatement->accessibility = accessibility(declaration, context);
                 enumStatement->declarationRange = enumerator.range;
@@ -736,11 +734,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                                                 StatementKind kind)
 {
     StatementBuilderProfileScope profileScope(statementBuilderProfile.createStatementNs);
-    auto statement = std::make_shared<Statement>();
-    statement->parentScope = context.parentScope;
-    statement->command = declarator.name;
-    statement->fullName = fullName(declarator, context);
-    statement->kind = kind;
+    auto statement = StatementFactory::create(
+                kind, context.parentScope, declarator.name, fullName(declarator, context));
     if (kind == StatementKind::Constructor || kind == StatementKind::Destructor) {
         PStatement parent = context.parentScope;
         bool validParent = parent && parent->kind == StatementKind::Class
@@ -872,13 +867,9 @@ PStatement CppStatementBuilder::createParameter(const ParameterInfo &parameter,
                                                 const StatementBuildContext &context,
                                                 const PStatement &function)
 {
-    auto statement = std::make_shared<Statement>();
-    statement->parentScope = function;
-    statement->command = parameter.name;
-    statement->fullName = function->fullName + "::" + parameter.name;
-    statement->kind = StatementKind::Parameter;
+    auto statement = StatementFactory::createParameter(
+                function, parameter.name, function->fullName + "::" + parameter.name);
     statement->scope = StatementScope::Local;
-    statement->accessibility = StatementAccessibility::None;
     statement->declarationRange = SourceRange{parameter.position, parameter.position};
     statement->fileName = context.fileName;
     statement->declarationBoundaryAncestor = context.boundaryAncestor;
@@ -1056,14 +1047,11 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::buildUsing(
 PStatement CppStatementBuilder::createBlock(const DeclarationInfo &declaration,
                                             const StatementBuildContext &context)
 {
-    auto statement = std::make_shared<Statement>();
-    statement->parentScope = context.parentScope;
-    statement->command = "block";
-    statement->fullName = context.parentScope && !context.parentScope->fullName.isEmpty()
-            ? context.parentScope->fullName + "::block" : "block";
-    statement->kind = StatementKind::Block;
+    auto statement = StatementFactory::createBlock(
+                context.parentScope, "block",
+                context.parentScope && !context.parentScope->fullName.isEmpty()
+                ? context.parentScope->fullName + "::block" : "block");
     statement->scope = StatementScope::Local;
-    statement->accessibility = StatementAccessibility::None;
     statement->declarationRange = declaration.range;
     statement->fileName = context.fileName;
     statement->declarationBoundaryAncestor = context.boundaryAncestor;

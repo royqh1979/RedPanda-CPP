@@ -74,6 +74,7 @@ private slots:
     void test_syntax_namespace_declarations();
     void test_syntax_enum_declarations();
     void test_syntax_using_declarations();
+    void test_statement_factory_initializes_statements();
     void test_scope_range_queries();
     void test_scope_queries_same_line();
     void test_declaration_source_ranges();

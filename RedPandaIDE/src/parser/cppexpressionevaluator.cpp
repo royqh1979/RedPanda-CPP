@@ -554,26 +554,19 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     if (evaluation && !evaluation->allowModelChanges)
         return {};
 
-    auto lambda = std::make_shared<Statement>();
-    lambda->parentScope = context;
-    lambda->command = name;
-    lambda->fullName = context && !context->fullName.isEmpty()
-            ? context->fullName + "::" + name : name;
-    lambda->kind = StatementKind::Lambda;
+    auto lambda = StatementFactory::createLambda(
+                context, name, context && !context->fullName.isEmpty()
+                ? context->fullName + "::" + name : name);
     lambda->scope = context && (context->kind == StatementKind::Function
                                 || context->kind == StatementKind::Block)
             ? StatementScope::Local : StatementScope::Global;
-    lambda->accessibility = StatementAccessibility::None;
     lambda->fileName = fileName;
     lambda->declarationBoundaryAncestor = context ? context->declarationBoundaryAncestor : QString();
     lambda->declarationRange.start = startToken.position;
     lambda->properties.setFlag(StatementProperty::DummyStatement);
 
-    auto call = std::make_shared<Statement>();
-    call->parentScope = lambda;
-    call->command = "operator()";
-    call->fullName = lambda->fullName + "::operator()";
-    call->kind = StatementKind::OverloadedOperator;
+    auto call = StatementFactory::createOverloadedOperator(
+                lambda, "operator()", lambda->fullName + "::operator()");
     call->scope = StatementScope::ClassLocal;
     call->accessibility = StatementAccessibility::Public;
     call->fileName = fileName;
@@ -607,13 +600,9 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
             QString typeText;
             for (int i = first; i < nameIndex; ++i)
                 appendExpressionToken(typeText, tokens[i].text);
-            auto parameter = std::make_shared<Statement>();
-            parameter->parentScope = call;
-            parameter->command = tokens[nameIndex].text;
-            parameter->fullName = call->fullName + "::" + parameter->command;
-            parameter->kind = StatementKind::Parameter;
+            auto parameter = StatementFactory::createParameter(
+                        call, tokens[nameIndex].text, call->fullName + "::" + tokens[nameIndex].text);
             parameter->scope = StatementScope::Local;
-            parameter->accessibility = StatementAccessibility::None;
             parameter->fileName = fileName;
             parameter->declarationRange = SourceRange{tokens[nameIndex].position,
                                                       tokens[nameIndex].position};

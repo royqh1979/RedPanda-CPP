@@ -771,12 +771,60 @@ void TestCppTokenizer::test_parse_template_specializations()
     QVERIFY(nested.templateArguments.isEmpty());
 }
 
+void TestCppTokenizer::test_statement_factory_initializes_statements()
+{
+    PStatement parent = StatementFactory::createNamespace(PStatement(), "Parent", "Parent");
+    const QList<std::pair<StatementKind, PStatement>> statements = {
+        {StatementKind::Unknown, StatementFactory::createUnknown(parent, "value", "Parent::value")},
+        {StatementKind::Namespace, StatementFactory::createNamespace(parent, "value", "Parent::value")},
+        {StatementKind::NamespaceAlias, StatementFactory::createNamespaceAlias(parent, "value", "Parent::value")},
+        {StatementKind::Class, StatementFactory::createClass(parent, "value", "Parent::value")},
+        {StatementKind::Preprocessor, StatementFactory::createPreprocessor(parent, "value", "Parent::value")},
+        {StatementKind::EnumType, StatementFactory::createEnumType(parent, "value", "Parent::value")},
+        {StatementKind::EnumClassType, StatementFactory::createEnumClassType(parent, "value", "Parent::value")},
+        {StatementKind::Typedef, StatementFactory::createTypedef(parent, "value", "Parent::value")},
+        {StatementKind::Constructor, StatementFactory::createConstructor(parent, "value", "Parent::value")},
+        {StatementKind::Destructor, StatementFactory::createDestructor(parent, "value", "Parent::value")},
+        {StatementKind::Function, StatementFactory::createFunction(parent, "value", "Parent::value")},
+        {StatementKind::OverloadedOperator, StatementFactory::createOverloadedOperator(parent, "value", "Parent::value")},
+        {StatementKind::LiteralOperator, StatementFactory::createLiteralOperator(parent, "value", "Parent::value")},
+        {StatementKind::Variable, StatementFactory::createVariable(parent, "value", "Parent::value")},
+        {StatementKind::GlobalVariable, StatementFactory::createGlobalVariable(parent, "value", "Parent::value")},
+        {StatementKind::LocalVariable, StatementFactory::createLocalVariable(parent, "value", "Parent::value")},
+        {StatementKind::Enum, StatementFactory::createEnum(parent, "value", "Parent::value")},
+        {StatementKind::Operator, StatementFactory::createOperator(parent, "value", "Parent::value")},
+        {StatementKind::Parameter, StatementFactory::createParameter(parent, "value", "Parent::value")},
+        {StatementKind::Block, StatementFactory::createBlock(parent, "value", "Parent::value")},
+        {StatementKind::Lambda, StatementFactory::createLambda(parent, "value", "Parent::value")},
+        {StatementKind::Label, StatementFactory::createLabel(parent, "value", "Parent::value")},
+        {StatementKind::UserCodeSnippet, StatementFactory::createUserCodeSnippet(parent, "value", "Parent::value")},
+        {StatementKind::Keyword, StatementFactory::createKeyword(parent, "value", "Parent::value")},
+        {StatementKind::KeywordType, StatementFactory::createKeywordType(parent, "value", "Parent::value")},
+        {StatementKind::Alias, StatementFactory::createAlias(parent, "value", "Parent::value")}
+    };
+    for (const auto &entry : statements) {
+        const PStatement &statement = entry.second;
+        QVERIFY(statement);
+        QCOMPARE(statement->kind, entry.first);
+        QCOMPARE(statement->parentScope.lock(), parent);
+        QCOMPARE(statement->command, "value");
+        QCOMPARE(statement->fullName, "Parent::value");
+        QCOMPARE(statement->scope, StatementScope::Global);
+        QCOMPARE(statement->accessibility, StatementAccessibility::None);
+        QCOMPARE(statement->usageCount, 0);
+        QCOMPARE(statement->matchPosTotal, 0);
+        QCOMPARE(statement->matchPosSpan, 0);
+        QCOMPARE(statement->firstMatchLength, 0);
+        QCOMPARE(statement->caseMatched, 0);
+    }
+}
+
 void TestCppTokenizer::test_scope_range_queries()
 {
     CppScopes scopes;
-    auto outer = std::make_shared<Statement>();
-    auto first = std::make_shared<Statement>();
-    auto second = std::make_shared<Statement>();
+    auto outer = StatementFactory::createUnknown(PStatement(), QString(), QString());
+    auto first = StatementFactory::createUnknown(PStatement(), QString(), QString());
+    auto second = StatementFactory::createUnknown(PStatement(), QString(), QString());
     scopes.addScope({{0, 0}, {10, 0}}, outer);
     scopes.addScope({{2, 0}, {4, 0}}, first, 0);
     scopes.addScope({{6, 0}, {8, 0}}, second, 0);
@@ -790,9 +838,9 @@ void TestCppTokenizer::test_scope_range_queries()
 void TestCppTokenizer::test_scope_queries_same_line()
 {
     CppScopes scopes;
-    auto outer = std::make_shared<Statement>();
-    auto first = std::make_shared<Statement>();
-    auto second = std::make_shared<Statement>();
+    auto outer = StatementFactory::createUnknown(PStatement(), QString(), QString());
+    auto first = StatementFactory::createUnknown(PStatement(), QString(), QString());
+    auto second = StatementFactory::createUnknown(PStatement(), QString(), QString());
     scopes.addScope({{0, 0}, {0, 100}}, outer);
     scopes.addScope({{0, 10}, {0, 20}}, first, 0);
     scopes.addScope({{0, 30}, {0, 40}}, second, 0);
@@ -1570,21 +1618,14 @@ void TestCppTokenizer::test_member_lookup_cache_ignores_model_changes()
     StatementModel model;
     CppTypeResolver::EvaluationContext evaluation;
     CppTypeResolver resolver(model, &evaluation);
-    auto nameSpace = std::make_shared<Statement>();
-    nameSpace->kind = StatementKind::Namespace;
-    nameSpace->command = "N";
-    nameSpace->fullName = "N";
+    auto nameSpace = StatementFactory::createNamespace(PStatement(), "N", "N");
     model.add(nameSpace);
 
     QVERIFY(!resolver.findStatement("N::Missing"));
     QVERIFY(!resolver.findStatement("N::Missing"));
 
     evaluation.allowModelChanges = true;
-    auto missing = std::make_shared<Statement>();
-    missing->kind = StatementKind::Class;
-    missing->parentScope = nameSpace;
-    missing->command = "Missing";
-    missing->fullName = "N::Missing";
+    auto missing = StatementFactory::createClass(nameSpace, "Missing", "N::Missing");
     model.add(missing);
     QCOMPARE(resolver.findStatement("N::Missing"), missing);
 }

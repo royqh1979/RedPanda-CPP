@@ -632,12 +632,9 @@ void CodeCompletionPopup::getCompletionFor(
             //add custom code templates
             foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
                 if (!codeIn->code.isEmpty()) {
-                    PStatement statement = std::make_shared<Statement>();
-                    statement->command = codeIn->prefix;
+                    PStatement statement = StatementFactory::createUserCodeSnippet(
+                                PStatement(), codeIn->prefix, codeIn->prefix);
                     statement->value = codeIn->code;
-                    statement->kind = StatementKind::UserCodeSnippet;
-                    statement->fullName = codeIn->prefix;
-                    statement->usageCount = 0;
                     mFullCompletionStatementList.append(statement);
                 }
             }
@@ -1092,11 +1089,7 @@ void CodeCompletionPopup::getCompletionListForLiteralOperators(const QString &fi
 
 void CodeCompletionPopup::addKeyword(const QString &keyword)
 {
-    PStatement statement = std::make_shared<Statement>();
-    statement->command = keyword;
-    statement->kind = StatementKind::Keyword;
-    statement->fullName = keyword;
-    statement->usageCount = 0;
+    PStatement statement = StatementFactory::createKeyword(PStatement(), keyword, keyword);
     mFullCompletionStatementList.append(statement);
 }
 

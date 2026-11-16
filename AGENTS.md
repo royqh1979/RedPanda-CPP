@@ -36,7 +36,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）。
 
 ## 构建
 

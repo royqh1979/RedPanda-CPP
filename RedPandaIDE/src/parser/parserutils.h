@@ -304,6 +304,52 @@ struct Statement {
 
 };
 
+class StatementFactory {
+public:
+    static PStatement create(StatementKind kind, const PStatement &parentScope,
+                             const QString &command, const QString &fullName) {
+        PStatement statement = std::make_shared<Statement>();
+        statement->parentScope = parentScope;
+        statement->command = command;
+        statement->fullName = fullName;
+        statement->kind = kind;
+        statement->scope = StatementScope::Global;
+        statement->accessibility = StatementAccessibility::None;
+        statement->usageCount = 0;
+        statement->matchPosTotal = 0;
+        statement->matchPosSpan = 0;
+        statement->firstMatchLength = 0;
+        statement->caseMatched = 0;
+        return statement;
+    }
+    static PStatement createUnknown(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Unknown, parentScope, command, fullName); }
+    static PStatement createNamespace(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Namespace, parentScope, command, fullName); }
+    static PStatement createNamespaceAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::NamespaceAlias, parentScope, command, fullName); }
+    static PStatement createClass(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Class, parentScope, command, fullName); }
+    static PStatement createPreprocessor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Preprocessor, parentScope, command, fullName); }
+    static PStatement createEnumType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::EnumType, parentScope, command, fullName); }
+    static PStatement createEnumClassType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::EnumClassType, parentScope, command, fullName); }
+    static PStatement createTypedef(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Typedef, parentScope, command, fullName); }
+    static PStatement createConstructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Constructor, parentScope, command, fullName); }
+    static PStatement createDestructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Destructor, parentScope, command, fullName); }
+    static PStatement createFunction(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Function, parentScope, command, fullName); }
+    static PStatement createOverloadedOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::OverloadedOperator, parentScope, command, fullName); }
+    static PStatement createLiteralOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::LiteralOperator, parentScope, command, fullName); }
+    static PStatement createVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Variable, parentScope, command, fullName); }
+    static PStatement createGlobalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::GlobalVariable, parentScope, command, fullName); }
+    static PStatement createLocalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::LocalVariable, parentScope, command, fullName); }
+    static PStatement createEnum(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Enum, parentScope, command, fullName); }
+    static PStatement createOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Operator, parentScope, command, fullName); }
+    static PStatement createParameter(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Parameter, parentScope, command, fullName); }
+    static PStatement createBlock(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Block, parentScope, command, fullName); }
+    static PStatement createLambda(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Lambda, parentScope, command, fullName); }
+    static PStatement createLabel(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Label, parentScope, command, fullName); }
+    static PStatement createUserCodeSnippet(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::UserCodeSnippet, parentScope, command, fullName); }
+    static PStatement createKeyword(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Keyword, parentScope, command, fullName); }
+    static PStatement createKeywordType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::KeywordType, parentScope, command, fullName); }
+    static PStatement createAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Alias, parentScope, command, fullName); }
+};
+
 struct EvalStatement;
 using PEvalStatement = std::shared_ptr<EvalStatement>;
 /**

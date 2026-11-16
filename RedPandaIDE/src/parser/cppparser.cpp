@@ -148,12 +148,7 @@ void CppParser::internalParse(const QString &fileName)
                 QString name, args, value;
                 mPreprocessor.getDefineParts(token.text.mid(7).trimmed(), name, args, value);
                 if (!name.isEmpty()) {
-                    auto statement = std::make_shared<Statement>();
-                    statement->command = name;
-                    statement->fullName = name;
-                    statement->kind = StatementKind::Preprocessor;
-                    statement->scope = StatementScope::Global;
-                    statement->accessibility = StatementAccessibility::None;
+                    auto statement = StatementFactory::createPreprocessor(PStatement(), name, name);
                     statement->args = args;
                     statement->value = value;
                     statement->fileName = currentFile;
@@ -920,12 +915,7 @@ void CppParser::parseHardDefines()
     if (mParsing)
         return;
     for (const PDefine &define : mPreprocessor.hardDefines()) {
-        auto statement = std::make_shared<Statement>();
-        statement->command = define->name;
-        statement->fullName = define->name;
-        statement->kind = StatementKind::Preprocessor;
-        statement->scope = StatementScope::Global;
-        statement->accessibility = StatementAccessibility::None;
+        auto statement = StatementFactory::createPreprocessor(PStatement(), define->name, define->name);
         statement->args = define->args;
         statement->value = define->value;
         statement->declarationRange = SourceRange{{-1, -1}, {-1, -1}};
