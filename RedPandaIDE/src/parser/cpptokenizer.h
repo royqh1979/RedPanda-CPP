@@ -70,7 +70,7 @@ public:
     void stopForParserReset() { mStopForParserReset = true; }
 
 private:
-    void addToken(const QString &text, TokenKind kind, const SourcePosition &position);
+    void addToken(QString text, TokenKind kind, const SourcePosition &position);
     void resolveUnmatchedPairs();
     int nextFileBoundary(int tokenIndex) const;
 
@@ -106,6 +106,8 @@ private:
     QVector<int> mFileBoundaries;
     bool mStopForParserReset = false;
 };
+
+Q_DECLARE_TYPEINFO(CppTokenizer::Token, Q_RELOCATABLE_TYPE);
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;
 

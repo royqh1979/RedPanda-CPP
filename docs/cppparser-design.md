@@ -48,7 +48,7 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 
 ### Token 模型
 
-- Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。
+- Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。`addToken()` 按值接收文本并移动构造 Token，调用点也移动局部 QString，避免局部 Token 和 append 的重复复制；FileBoundary 改从向量中保存的文本读取边界信息。Token 声明为 `Q_RELOCATABLE_TYPE`，QVector 扩容时可整体重定位，避免逐个复制含 QString 的 Token。
 - 对外提供最小词法类别：标识符、整数字面量、浮点数字面量、字符串/字符字面量、运算符或标点、预处理结果中的文件边界标记。关键字仍按文本判断，不为每个关键字建立 Token 类型。整数与浮点数按词法结构分类，包括指数、十六进制浮点和后缀；符号运算符不并入数字。
 - 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
 - 参数默认值不做通用表达式求值。Parameter Statement 不保存默认值；函数 ParameterInfo 以 `defaultArgumentText` 保存原文，供有限重载筛选和构造转换使用；函数 `args` 中的默认值文本只用于兼容和展示，不参与签名比较。
@@ -295,7 +295,7 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
 
-GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1059 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
+GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1050 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 
 对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
 
@@ -304,6 +304,8 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 该修改的详细 profile 中，identifier 读取由 332,140 次降为 328,735 次，addToken 由 368,323 次降为 365,369 次，advance 由 5,650,510 次降为 5,617,553 次，证明基类列表的重复词法处理已消除。无插桩第二次完整解析为 1089 ms，与 1082 ms 基线相比没有可见收益；修改仍予保留，因为它消除了确定冗余并统一了单遍 token 处理路径，而不是以总体耗时作为唯一保留依据。
 
 标识符、运算符和空白批量推进后，`advance()` 调用量进一步由 5,617,553 次降为 **2,083,831 次**；详细 identifier 读取由约 96 ms 降至 21 ms，operator 由约 34 ms 降至 20 ms，Tokenizer 阶段由约 352 ms 降至 255 ms。单纯内联 `advance()` 没有明确收益，已撤回；有效修改是直接减少逐字符调用及行列更新次数，而非只消除函数调用。
+
+`addToken()` 改为移动文本和 Token，并将 Token 声明为可重定位类型后，其详细耗时由约 64.5 ms 降至 **43 ms**，Tokenizer 阶段进一步降至约 232 ms。盲目 reserve 未采用：可重定位扩容已经消除了主要复制成本，而按字符数预留容易过度分配内存。
 
 ## cppreference 语法覆盖测试
 
