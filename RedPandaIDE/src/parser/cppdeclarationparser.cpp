@@ -536,7 +536,9 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
             result.name = "~" + parseQualifiedNameText();
         } else if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
                    || isBuiltinType(mCursor.currentText())) {
+            CppTokenCursor::Checkpoint nameStart = mCursor.checkpoint();
             QString qualified = parseQualifiedNameText();
+            CppTokenCursor::Checkpoint nameEnd = mCursor.checkpoint();
             int last = -1;
             int templateDepth = 0;
             for (int i = qualified.length() - 1; i > 0; --i) {
@@ -562,6 +564,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                 if (result.name.startsWith("::"))
                     result.name.remove(0, 2);
             }
+            parseTemplatePattern(result, nameStart, nameEnd);
         }
     }
     if (result.name == "operator") {
@@ -824,6 +827,25 @@ QString CppDeclarationParser::parseOperatorName()
         mCursor.advance();
     }
     return result;
+}
+
+bool CppDeclarationParser::parseTemplatePattern(
+        DeclaratorInfo &result, const CppTokenCursor::Checkpoint &nameStart,
+        const CppTokenCursor::Checkpoint &nameEnd)
+{
+    if (!result.name.contains('<') || !result.name.endsWith('>'))
+        return false;
+    TypeInfo pattern;
+    pattern.qualifiedName = result.name.section('<', 0, 0);
+    pattern.qualifiedNameText = result.name;
+    mCursor.restore(nameStart);
+    while (!mCursor.atEnd() && mCursor.currentText() != "<")
+        mCursor.advance();
+    bool success = mCursor.currentText() == "<" && parseTemplateArguments(pattern);
+    mCursor.restore(nameEnd);
+    if (success)
+        result.templatePattern = pattern;
+    return success;
 }
 
 QString CppDeclarationParser::parseQualifiedNameText()

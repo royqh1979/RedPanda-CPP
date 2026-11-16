@@ -75,8 +75,6 @@ public:
     struct EvaluationContext {
         QSet<QString> aliases;
         QSet<QString> resolvingTypes;
-        std::shared_ptr<QHash<const Statement *, TypeInfo>> specializationPatterns =
-                std::make_shared<QHash<const Statement *, TypeInfo>>();
         std::shared_ptr<QHash<QString, TypeInfo>> parsedTypeTexts =
                 std::make_shared<QHash<QString, TypeInfo>>();
         std::shared_ptr<QHash<QString, ParsedTypeName>> parsedTypeNames =
@@ -89,6 +87,7 @@ public:
                 std::make_shared<QHash<QString, ClassInstance>>();
         int operationCount = 0;
         bool resolutionFailed = false;
+        bool allowModelChanges = false;
     };
     using ClassInstance = ::ClassInstance;
     using PTemplateBindingFrame = ::PTemplateBindingFrame;
@@ -216,8 +215,6 @@ private:
     PStatement findDeclarationRemainder(const PStatement &statement,
                                         const QStringList &parts, bool typesOnly) const;
     PStatement findMember(const PStatement &scope, const QString &name, bool typesOnly = false) const;
-    PStatement findMemberRecursive(const PStatement &scope, const QString &name,
-                                   QSet<const Statement *> &visited, bool typesOnly) const;
     PTemplateBindingFrame declarationBindings(const PStatement &declaration,
                                               const TypeInfo &instance,
                                               const PTemplateBindingFrame &outerBindings,

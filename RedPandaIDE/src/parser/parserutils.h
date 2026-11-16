@@ -204,6 +204,7 @@ struct Statement {
     QVector<ParameterInfo> parameters;
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    TypeInfo templatePattern;
     QVector<TemplateParameterInfo> templateParameters;
     QVector<QString> inheritedDefaultArgumentTexts;
     DeclSpecifierProperties declSpecifierProperties;

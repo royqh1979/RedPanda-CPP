@@ -272,8 +272,9 @@ STL 依据：
 或其持有的持久 TypeInfo。这包括结构化模板实参、绑定帧、特化选择结果、基类绑定环境、
 候选筛选状态、递归检测和求值缓存。它们由一次求值的上下文持有，求值结束即释放。
 
-代码分析阶段应当填写的声明事实由 Statement 保存，包括模板形参、默认实参原文、特化声明原文、
-原始类型和基类。特化声明原文在 eval 中结构化的模式只属于求值上下文，不回写 Statement。
+代码分析阶段应当填写的声明事实由 Statement 保存，包括模板形参、默认实参原文、原始类型、
+基类，以及外层特化语法模式 `templatePattern`。模式直接由声明阶段已有 token 构造，不绑定实际实参、
+不选择特化、不求值非类型实参，也不生成实例化 Statement。嵌套模式继续在 eval 中按需解析，不提前递归展开。
 某个声明字段尚未实现填写，不表示它可以改为 eval 时回写。`auto` 变量的
 最终类型在 StatementBuilder 分析阶段已经求出，因此可以保存；其初始化表达式和求值过程不保存。
 
@@ -486,13 +487,29 @@ const 数量猜测。后续设计至少需要区分“声明结构相同、cv �
 - 非类型实参只比较字面量、已绑定形参和本轮可计算的 bool/枚举值；
 - 不执行 SFINAE、约束求值、用户定义转换或通用 constexpr。
 
-候选 Statement 的特化声明只在本次 `EvaluationContext` 中按外层结构解析一次，并以声明身份保存为
-`specializationPatterns`。实参初始只保留原文；匹配先比较当前节点的内置类型、声明身份、cv 和派生结构，
-节点不匹配时立即拒绝，只有继续比较子实参时才调用 `parseTypeText()`。内置类型不经过 Statement 查找，
-名称必然不同的内置类型在特化匹配中直接拒绝，不做无意义查询。
+候选 Statement 在声明阶段保存外层 `templatePattern`，eval 直接消费，不再 tokenize 外层声明。
+嵌套实参仍保留原文，只有外层节点匹配后才继续 lazy 解析；不匹配时立即拒绝。模式缺失表示声明解析
+存在缺陷，Debug 必须触发断言，Release 返回 `Unknown`，不得回退到运行时重新解析或伪造成功。
+内置类型不经过 Statement 查找，名称必然不同的内置类型在特化匹配中直接拒绝，不做无意义查询。
 
 `selectedSpecializations` 另以“主模板声明 + 完整实参 + 绑定帧”复用成功的选择结果；歧义和未知结果不缓存。
 语法模式、匹配尝试和成功选择是不同数据，profile 必须分别记录 attempt/hit，不能用命中隐藏重复匹配。
+
+### 声明期模式的范围与性能依据
+
+只保留外层模式是实测后的设计取舍。以下为 Direct Release 独立进程三次运行的中位数；parse 测试使用
+`#include <bits/stdc++.h>` 的完整解析，eval 测试使用 `unordered_map.find("key")->second`：
+
+| 阶段 | GCC 15.3 parse | GCC 8.1 parse | eval |
+|---|---:|---:|---:|
+| 声明模式改造前 | 1208 ms | 859 ms | 8.55 ms |
+| 仅外层模式 | 1206 ms | 875 ms | 7.26 ms |
+| 递归嵌套模式 | 1210 ms | 881 ms | 7.22 ms |
+
+外层模式把 eval entry 从 193 降到 109，耗时约降低 15%，parse 成本可接受。递归模式进一步把 entry
+降到 78，但 eval 仅再改善约 0.5%，已处于测量噪声范围，同时 GCC 8.1 parse 又增加约 6 ms。因此递归
+嵌套结构化不纳入当前实现；entry 数不能代替真实收益，是否扩大声明期工作必须同时比较 parse 成本与
+eval 收益。
 
 别名模板不能特化，本轮也不为它们引入特化候选逻辑。
 
@@ -597,14 +614,16 @@ alias 目标、函数返回类型和成员类型不得先退回 `TypeInfo` 再�
 - StatementBuilder 的 auto 初始化及随后的 range 类型操作，它们属于同一次初始化求值。
 
 `EvaluationContext` 是可供上述调用方传入的求值输入类型；具体临时结果仍由 resolver 和绑定帧内部持有，
-不要求 IDE 消费端接触。
+不要求 IDE 消费端接触。`allowModelChanges` 由 `mParsing` 决定；StatementBuilder 直接构建声明时显式允许，
+普通 IDE 查询禁止修改模型。`evaluateLambda()` 可以复用 parse 阶段已登记的 Lambda Statement，查询期如果
+对应 Statement 不存在则求值失败，不得为了补全临时结果而新建 Statement。模型不需要为此增加 revision。
 
 现有 public 单方法查询保留包装：调用方没有提供上下文时创建局部上下文；表达式求值路径必须传入顶层
 上下文，不能在 `resolveMember()`、`invokeFunctionCandidate()` 等每层重新创建。上下文随顶层求值结束销毁，
 不跨表达式、Parser 调用、root、文件或 StatementModel 代次共享。
 
-当前局部复用包括：绑定帧自己的 `resolvedValues`、语法解析表、`specializationPatterns`、完整
-`bindingFrames` 和成功的 `selectedSpecializations`。它们只依附于既有声明、不可变实参和词法父帧；
+当前局部复用包括：绑定帧自己的 `resolvedValues`、语法解析表、完整 `bindingFrames` 和成功的
+`selectedSpecializations`。它们只依附于既有声明、不可变实参和词法父帧；
 StatementBuilder 新增 lambda/auto Statement 不会改写这些既有数据，因此不需要引入 StatementModel 修改代次。
 若后续把 memo 扩大到声明查找、一般类型求值、成员和调用层，才需要增加单调代次并在模型修改后废弃旧结果，
 不能提前为未实现的缓存扩大模型接口。

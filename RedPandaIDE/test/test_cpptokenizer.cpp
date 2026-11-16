@@ -284,6 +284,16 @@ void TestCppTokenizer::test_preprocessor_tokens()
     QCOMPARE(tokenTexts().size(), 6);
 }
 
+void TestCppTokenizer::test_preprocessor_cursor_stays_valid_after_continued_lines()
+{
+    tokenize({"#define FIRST 1\\", "#define SECOND 2", "#define THIRD 3", "int value;"});
+    QCOMPARE(mTokenizer[0].kind, CppTokenizer::TokenKind::Preprocessor);
+    QCOMPARE(mTokenizer[0].text, "#define FIRST 1\\\n#define SECOND 2");
+    QCOMPARE(mTokenizer[1].kind, CppTokenizer::TokenKind::Preprocessor);
+    QCOMPARE(mTokenizer[1].text, "#define THIRD 3");
+    QCOMPARE(mTokenizer[2].text, "int");
+}
+
 void TestCppTokenizer::test_line_numbers()
 {
     tokenize({"int first;", "int second;"});
@@ -731,14 +741,34 @@ void TestCppTokenizer::test_parse_template_specializations()
     QCOMPARE(declaration.templateKind, TemplateDeclarationKind::ExplicitSpecialization);
     QVERIFY(declaration.templateParameters.isEmpty());
     QCOMPARE(declaration.declarators[0].name, "value<int>");
+    QCOMPARE(declaration.declarators[0].templatePattern.qualifiedName, "value");
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments.count(), 1);
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments[0].type->qualifiedName,
+             "int");
 
     QVERIFY(parseDeclarationText("template<typename T> int value<T*>;", declaration));
     QCOMPARE(declaration.templateKind, TemplateDeclarationKind::PartialSpecialization);
     QCOMPARE(declaration.templateParameters.count(), 1);
     QCOMPARE(declaration.declarators[0].name, "value<T*>");
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments.count(), 1);
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments[0].type->qualifiedName,
+             "T");
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments[0].type->derivations.count(),
+             1);
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments[0].type->derivations[0].kind,
+             TypeDerivationKind::Pointer);
 
     QVERIFY(parseDeclarationText("template<typename T> int value< T * >;", declaration));
     QCOMPARE(declaration.declarators[0].name, "value<T*>");
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments.count(), 1);
+    QCOMPARE(declaration.declarators[0].templatePattern.templateArguments[0].type->derivations.count(),
+             1);
+
+    QVERIFY(parseDeclarationText("template<typename T> int value<Optional<T*>>;", declaration));
+    const TypeInfo &nested = *declaration.declarators[0].templatePattern.templateArguments[0].type;
+    QCOMPARE(nested.qualifiedName, "Optional");
+    QCOMPARE(nested.qualifiedNameText, "Optional<T*>");
+    QVERIFY(nested.templateArguments.isEmpty());
 }
 
 void TestCppTokenizer::test_scope_range_queries()
@@ -2976,4 +3006,18 @@ void TestCppTokenizer::test_expression_evaluator_preserves_constructor_statement
     QCOMPARE(result.type.declaration.lock(), classStatement);
     QCOMPARE(result.statement, constructorStatement);
     QCOMPARE(result.baseStatement, constructorStatement);
+}
+
+
+void TestCppTokenizer::test_expression_evaluator_forbids_model_changes_outside_parse()
+{
+    StatementModel model;
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({"[](){ return 1; }()"});
+    EvalResult result = evaluator.evaluate(tokenizer);
+    QVERIFY(!result.isValid());
+    QCOMPARE(model.count(), 0);
 }

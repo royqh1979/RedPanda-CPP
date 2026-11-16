@@ -154,8 +154,11 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
         result.classKey = ClassKey::Union;
 
     DeclaratorInfo declarator;
+    CppTokenCursor::Checkpoint nameStart = mCursor.checkpoint();
     declarator.name = mDeclarationParser.parseQualifiedNameText();
+    CppTokenCursor::Checkpoint nameEnd = mCursor.checkpoint();
     declarator.position = mCursor.current().position;
+    mDeclarationParser.parseTemplatePattern(declarator, nameStart, nameEnd);
     result.declarators.append(declarator);
     mCursor.consume("final");
     if (mCursor.consume(":")) {

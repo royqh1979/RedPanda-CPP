@@ -23,6 +23,7 @@
 namespace {
 struct TokenizerProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    const bool traceEnabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE");
     qint64 identifierNs = 0;
     qint64 numberNs = 0;
     qint64 literalNs = 0;
@@ -41,6 +42,15 @@ struct TokenizerProfile {
     qint64 advanceCalls = 0;
     QHash<QString, qint64> startsWithTextCalls;
     QHash<QString, qint64> tokenizeTextCalls;
+    void reset()
+    {
+        identifierNs = numberNs = literalNs = preprocessorNs = operatorNs = 0;
+        addTokenNs = startsWithNs = advanceNs = 0;
+        identifierCalls = numberCalls = literalCalls = preprocessorCalls = 0;
+        operatorCalls = addTokenCalls = startsWithCalls = advanceCalls = 0;
+        startsWithTextCalls.clear();
+        tokenizeTextCalls.clear();
+    }
     ~TokenizerProfile()
     {
         if (enabled) {
@@ -68,7 +78,7 @@ TokenizerProfile tokenizerProfile;
 
 void traceTokenization(const QString &text)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+    if (tokenizerProfile.traceEnabled)
         ++tokenizerProfile.tokenizeTextCalls[text];
 }
 
@@ -121,6 +131,10 @@ void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition 
 
 void CppTokenizer::tokenize(const QStringList &buffer)
 {
+    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER")) {
+        tokenizerProfile.reset();
+        qunsetenv("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER");
+    }
     clear();
     mBufferLines = buffer;
     mBuffer = buffer.join('\n');
@@ -430,7 +444,8 @@ QString CppTokenizer::readPreprocessor()
     while (!atEnd()) {
         if (*mCurrent == '\n' || *mCurrent == '\r') {
             int beforeNewline = mCurrent - mBuffer.constData();
-            if (beforeNewline > start && mBuffer[beforeNewline - 1] == '\\') {
+            // Do not use operator[] here: it may detach mBuffer and invalidate mCurrent.
+            if (beforeNewline > start && mBuffer.at(beforeNewline - 1) == '\\') {
                 advance();
                 continue;
             }

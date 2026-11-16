@@ -755,6 +755,11 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     statement->fileName = context.fileName;
     statement->declarationBoundaryAncestor = context.boundaryAncestor;
     statement->templateKind = declaration.templateKind;
+    if (kind == StatementKind::Class
+            && (declaration.templateKind == TemplateDeclarationKind::PartialSpecialization
+                || declaration.templateKind == TemplateDeclarationKind::ExplicitSpecialization)) {
+        statement->templatePattern = declarator.templatePattern;
+    }
     statement->templateParameters = declaration.templateParameters;
     statement->declSpecifierProperties = declaration.specifiers.properties;
     statement->baseClasses = declaration.baseClasses;
@@ -820,6 +825,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
             if (!declaration.rangeExpression.isEmpty() && evaluationContext)
                 evaluationContext = evaluationContext->parentScope.lock();
             CppTypeResolver::EvaluationContext evaluation;
+            evaluation.allowModelChanges = true;
             EvalResult evaluated = mExpressionEvaluator.evaluate(tokenizer, evaluationContext,
                                                                  &evaluation);
             if (evaluated.isValid()) {

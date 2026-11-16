@@ -20,10 +20,12 @@
 
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QStack>
 
 namespace {
 struct ResolverProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
+    const bool traceEnabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE");
     qint64 resolveTypeNs = 0;
     qint64 parseSegmentsNs = 0;
     qint64 classInstanceNs = 0;
@@ -46,7 +48,16 @@ struct ResolverProfile {
     qint64 bindingsCalls = 0;
     qint64 materializeNs = 0;
     qint64 materializeCalls = 0;
+    qint64 namespaceLookupNs = 0;
+    qint64 namespaceLookupCalls = 0;
+    qint64 declarationRemainderNs = 0;
+    qint64 declarationRemainderCalls = 0;
+    qint64 memberDeclarationNs = 0;
+    qint64 memberDeclarationCalls = 0;
+    qint64 memberDfsNs = 0;
+    qint64 memberDfsCalls = 0;
     QHash<QString, qint64> declarationTrace;
+    QHash<QString, qint64> memberDeclarationTrace;
     QHash<QString, qint64> resolveTypeTrace;
     QHash<QString, qint64> tokenizeOriginTrace;
     QHash<QString, qint64> specializationTrace;
@@ -58,6 +69,32 @@ struct ResolverProfile {
     QHash<QString, qint64> syntaxAttemptTrace;
     QHash<QString, qint64> specializationAttemptTrace;
     QStringList resolveOriginStack;
+    void reset()
+    {
+        resolveTypeNs = parseSegmentsNs = classInstanceNs = specializationNs = 0;
+        memberLookupNs = declarationLookupNs = parseTypeTextNs = 0;
+        resolveTypeCalls = parseSegmentsCalls = classInstanceCalls = specializationCalls = 0;
+        memberLookupCalls = declarationLookupCalls = parseTypeTextCalls = 0;
+        keyTextNs = keyTextCalls = segmentsNs = segmentsCalls = 0;
+        bindingsNs = bindingsCalls = materializeNs = materializeCalls = 0;
+        namespaceLookupNs = namespaceLookupCalls = 0;
+        declarationRemainderNs = declarationRemainderCalls = 0;
+        memberDeclarationNs = memberDeclarationCalls = 0;
+        memberDfsNs = memberDfsCalls = 0;
+        declarationTrace.clear();
+        memberDeclarationTrace.clear();
+        resolveTypeTrace.clear();
+        tokenizeOriginTrace.clear();
+        specializationTrace.clear();
+        bindingTrace.clear();
+        argumentTrace.clear();
+        functionTrace.clear();
+        memberTrace.clear();
+        resolveOriginTrace.clear();
+        syntaxAttemptTrace.clear();
+        specializationAttemptTrace.clear();
+        resolveOriginStack.clear();
+    }
     ~ResolverProfile()
     {
         if (enabled) {
@@ -72,9 +109,18 @@ struct ResolverProfile {
                        << "segments" << segmentsNs / 1000000.0 << segmentsCalls
                        << "bindings" << bindingsNs / 1000000.0 << bindingsCalls
                        << "materialize" << materializeNs / 1000000.0 << materializeCalls;
+            qWarning() << "RESOLVER_DETAIL namespaceLookup" << namespaceLookupNs / 1000000.0
+                       << namespaceLookupCalls << "declarationRemainder"
+                       << declarationRemainderNs / 1000000.0 << declarationRemainderCalls
+                       << "memberDeclaration" << memberDeclarationNs / 1000000.0
+                       << memberDeclarationCalls << "memberDfs"
+                       << memberDfsNs / 1000000.0 << memberDfsCalls;
         }
         for (auto it = declarationTrace.constBegin(); it != declarationTrace.constEnd(); ++it)
             qWarning().noquote() << "FIND_DECLARATION" << it.value()
+                                 << it.key().toUtf8().toBase64();
+        for (auto it = memberDeclarationTrace.constBegin(); it != memberDeclarationTrace.constEnd(); ++it)
+            qWarning().noquote() << "MEMBER_DECLARATION" << it.value()
                                  << it.key().toUtf8().toBase64();
         for (auto it = resolveTypeTrace.constBegin(); it != resolveTypeTrace.constEnd(); ++it)
             qWarning().noquote() << "RESOLVE_TYPE" << it.value()
@@ -102,13 +148,13 @@ ResolverProfile resolverProfile;
 
 void traceEvent(QHash<QString, qint64> &trace, const QString &key)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+    if (resolverProfile.traceEnabled)
         ++trace[key];
 }
 
 void traceSyntaxAttempt(const QString &operation, const QString &text, bool cacheHit)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE")) {
+    if (resolverProfile.traceEnabled) {
         QString origin = resolverProfile.resolveOriginStack.isEmpty()
                 ? "external" : resolverProfile.resolveOriginStack.join(">");
         QString key = origin + "|" + operation + "|" + (cacheHit ? "hit" : "miss") + "|" + text;
@@ -118,19 +164,19 @@ void traceSyntaxAttempt(const QString &operation, const QString &text, bool cach
 
 void traceTokenizeOrigin(const QString &origin)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+    if (resolverProfile.traceEnabled)
         ++resolverProfile.tokenizeOriginTrace[origin];
 }
 
 void traceSpecialization(const QString &name)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+    if (resolverProfile.traceEnabled)
         ++resolverProfile.specializationTrace[name];
 }
 
 void traceDeclaration(const QString &name, const PStatement &context, bool typesOnly)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE")) {
+    if (resolverProfile.traceEnabled) {
         QString key = (context ? context->fullName : QString()) + "|" + name
                 + "|" + (typesOnly ? "types" : "all");
         ++resolverProfile.declarationTrace[key];
@@ -140,7 +186,7 @@ void traceDeclaration(const QString &name, const PStatement &context, bool types
 void traceResolveType(const QString &text, const PStatement &context,
                       const PTemplateBindingFrame &bindings)
 {
-    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE")) {
+    if (resolverProfile.traceEnabled) {
         QString origin = resolverProfile.resolveOriginStack.isEmpty()
                 ? "external" : resolverProfile.resolveOriginStack.join(">");
         QString key = (context ? context->fullName : QString()) + "|"
@@ -153,7 +199,7 @@ void traceResolveType(const QString &text, const PStatement &context,
 
 struct ResolveOriginScope {
     ResolveOriginScope(const QString &name)
-        : active(qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE_ACTIVE"))
+        : active(resolverProfile.traceEnabled)
     {
         if (active)
             resolverProfile.resolveOriginStack.append(name);
@@ -779,6 +825,10 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         const TypeInfo &type, const PTemplateBindingFrame &bindings,
         const PStatement &context, EvaluationContext &evaluation) const
 {
+    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE_RESET_RESOLVER")) {
+        resolverProfile.reset();
+        qunsetenv("REDPANDA_PARSER_PROFILE_RESET_RESOLVER");
+    }
     ResolverProfileScope profileScope(resolverProfile.resolveTypeNs,
                                       resolverProfile.resolveTypeCalls);
     if (++evaluation.operationCount > 4096)
@@ -1454,30 +1504,10 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchSpecialization(
         EvaluationContext &evaluation) const
 {
     traceEvent(resolverProfile.specializationAttemptTrace, specialization->command);
-    TypeInfo pattern;
-    auto cached = evaluation.specializationPatterns->constFind(specialization.get());
-    if (cached != evaluation.specializationPatterns->constEnd()) {
-        pattern = cached.value();
-    } else {
-        QVector<TypeNameSegment> segments;
-        bool globallyQualified = false;
-        if (!parseTypeNameSegments(specialization->command, segments, globallyQualified,
-                                   evaluation, false)) {
-            return SpecializationMatch::NoMatch;
-        }
-        QStringList names;
-        for (const TypeNameSegment &segment : segments)
-            names.append(segment.name);
-        pattern.qualifiedName = (globallyQualified ? "::" : "") + names.join("::");
-        pattern.qualifiedNameText = specialization->command;
-        for (const TypeNameSegment &segment : segments) {
-            if (segment.hasTemplateArguments) {
-                pattern.templateArguments = segment.arguments;
-                break;
-            }
-        }
-        evaluation.specializationPatterns->insert(specialization.get(), pattern);
-    }
+    TypeInfo pattern = specialization->templatePattern;
+    Q_ASSERT(!pattern.qualifiedName.isEmpty());
+    if (pattern.qualifiedName.isEmpty())
+        return SpecializationMatch::Unknown;
     if (pattern.templateArguments.count() != arguments.count())
         return SpecializationMatch::NoMatch;
     QSet<QString> parameters;
@@ -1744,6 +1774,7 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
 {
     ResolverProfileScope profileScope(resolverProfile.declarationLookupNs,
                                       resolverProfile.declarationLookupCalls);
+    ResolveOriginScope originScope("findDeclaration(" + qualifiedName + ")");
     traceDeclaration(qualifiedName, context, typesOnly);
     QString name = qualifiedName;
     PStatement initialContext = context;
@@ -1779,6 +1810,8 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
                                                  const QStringList &parts,
                                                  bool &firstPartFound, bool typesOnly) const
 {
+    ResolverProfileScope profileScope(resolverProfile.namespaceLookupNs,
+                                      resolverProfile.namespaceLookupCalls);
     for (int namespacePartCount = parts.count(); namespacePartCount >= 0; --namespacePartCount) {
         QString namespaceName = scope ? scope->fullName : QString();
         if (namespacePartCount > 0) {
@@ -1824,6 +1857,8 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
                                                      const QStringList &parts,
                                                      bool typesOnly) const
 {
+    ResolverProfileScope profileScope(resolverProfile.declarationRemainderNs,
+                                      resolverProfile.declarationRemainderCalls);
     if (typesOnly && !isTypeDeclaration(statement))
         return nullptr;
     if (parts.count() > 1 && statement
@@ -1841,48 +1876,57 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
 PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &name,
                                        bool typesOnly) const
 {
+    ResolverProfileScope profileScope(resolverProfile.memberDeclarationNs,
+                                      resolverProfile.memberDeclarationCalls);
+    if (resolverProfile.traceEnabled) {
+        QString origin = resolverProfile.resolveOriginStack.isEmpty()
+                ? "external" : resolverProfile.resolveOriginStack.join(">");
+        QString key = origin + "|" + QString::number(reinterpret_cast<quintptr>(scope.get()), 16)
+                + "|" + (scope ? scope->fullName : QString()) + "|" + name + "|"
+                + (typesOnly ? "types" : "all");
+        ++resolverProfile.memberDeclarationTrace[key];
+    }
     QSet<const Statement *> visited;
-    return findMemberRecursive(scope, name, visited, typesOnly);
-}
-
-PStatement CppTypeResolver::findMemberRecursive(const PStatement &scope, const QString &name,
-                                                QSet<const Statement *> &visited,
-                                                bool typesOnly) const
-{
-    if (!scope || visited.contains(scope.get()))
-        return nullptr;
-    visited.insert(scope.get());
-    const auto directCandidates = scope->children.values(name);
-    for (const std::weak_ptr<Statement> &weak : directCandidates) {
-        PStatement candidate = weak.lock();
-        if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
+    QStack<PStatement> pending;
+    pending.push(scope);
+    while (!pending.isEmpty()) {
+        PStatement current = pending.pop();
+        if (!current || visited.contains(current.get()))
             continue;
-        if (candidate->kind != StatementKind::Namespace || candidate->command == name)
-            return candidate;
-        if (PStatement result = findMemberRecursive(candidate, name, visited, typesOnly))
-            return result;
-    }
-    if (scope->kind == StatementKind::Namespace) {
-        const QList<PStatement> transparentNamespaces =
-                mModel.transparentNamespaceStatements(scope->fullName);
-        for (const PStatement &child : transparentNamespaces) {
-            if (PStatement result = findMemberRecursive(child, name, visited, typesOnly))
-                return result;
+        visited.insert(current.get());
+        ResolverProfileScope profileScope(resolverProfile.memberDfsNs,
+                                          resolverProfile.memberDfsCalls);
+        const auto directCandidates = current->children.values(name);
+        for (int i = directCandidates.count() - 1; i >= 0; --i) {
+            PStatement candidate = directCandidates[i].lock();
+            if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
+                continue;
+            if (candidate->kind != StatementKind::Namespace || candidate->command == name)
+                return candidate;
+            pending.push(candidate);
         }
-    }
-    for (QString baseName : scope->baseClasses) {
-        baseName = baseName.trimmed();
-        for (const QString &modifier : {QString("public"), QString("protected"),
-                                       QString("private"), QString("virtual")}) {
-            if (baseName.startsWith(modifier + ' '))
-                baseName = baseName.mid(modifier.length()).trimmed();
+        if (current->kind == StatementKind::Namespace) {
+            const QList<PStatement> transparentNamespaces =
+                    mModel.transparentNamespaceStatements(current->fullName);
+            for (int i = transparentNamespaces.count() - 1; i >= 0; --i)
+                pending.push(transparentNamespaces[i]);
         }
-        int templateStart = baseName.indexOf('<');
-        if (templateStart >= 0)
-            baseName.truncate(templateStart);
-        PStatement base = findDeclaration(baseName, scope->parentScope.lock(), typesOnly);
-        if (PStatement result = findMemberRecursive(base, name, visited, typesOnly))
-            return result;
+        QList<PStatement> bases;
+        for (QString baseName : current->baseClasses) {
+            baseName = baseName.trimmed();
+            for (const QString &modifier : {QString("public"), QString("protected"),
+                                           QString("private"), QString("virtual")}) {
+                if (baseName.startsWith(modifier + ' '))
+                    baseName = baseName.mid(modifier.length()).trimmed();
+            }
+            int templateStart = baseName.indexOf('<');
+            if (templateStart >= 0)
+                baseName.truncate(templateStart);
+            if (PStatement base = findDeclaration(baseName, current->parentScope.lock(), typesOnly))
+                bases.append(base);
+        }
+        for (int i = bases.count() - 1; i >= 0; --i)
+            pending.push(bases[i]);
     }
     return nullptr;
 }

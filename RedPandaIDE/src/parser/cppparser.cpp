@@ -768,7 +768,9 @@ EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &exp
     CppTokenizer tokenizer;
     const QString expressionText = expression.join(' ');
     tokenizer.tokenize({expressionText});
-    EvalResult result = evaluator.evaluate(tokenizer, currentScope);
+    CppTypeResolver::EvaluationContext evaluation;
+    evaluation.allowModelChanges = mParsing;
+    EvalResult result = evaluator.evaluate(tokenizer, currentScope, &evaluation);
     if (profile)
         qWarning() << "EVAL_PROFILE" << timer.nsecsElapsed() / 1000000.0 << expressionText;
     return result;

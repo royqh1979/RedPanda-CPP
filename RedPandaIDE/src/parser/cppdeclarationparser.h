@@ -33,6 +33,8 @@ public:
     bool parseDeclarator(DeclaratorInfo &result);
     bool parseParameter(ParameterInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
+    bool parseTemplatePattern(DeclaratorInfo &result, const CppTokenCursor::Checkpoint &nameStart,
+                              const CppTokenCursor::Checkpoint &nameEnd);
     QString parseQualifiedNameText();
     void setCurrentClassName(const QString &className);
     QString currentClassName() const { return mClassName; }

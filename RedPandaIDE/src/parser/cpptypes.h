@@ -157,6 +157,7 @@ struct DeclaratorInfo {
     SourcePosition initializerPosition;
     DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;
     int structuredBindingIndex = -1;
+    TypeInfo templatePattern;
 
     QString toString() const;
 };

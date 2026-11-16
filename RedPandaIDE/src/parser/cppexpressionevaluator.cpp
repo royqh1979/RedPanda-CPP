@@ -551,6 +551,8 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
         cached.kind = EvalStatementKind::Variable;
         return cached;
     }
+    if (evaluation && !evaluation->allowModelChanges)
+        return {};
 
     auto lambda = std::make_shared<Statement>();
     lambda->parentScope = context;

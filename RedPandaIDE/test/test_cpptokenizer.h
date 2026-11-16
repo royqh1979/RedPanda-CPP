@@ -38,6 +38,7 @@ private slots:
     void test_literal_prefixes();
     void test_attributes_are_skipped();
     void test_preprocessor_tokens();
+    void test_preprocessor_cursor_stays_valid_after_continued_lines();
     void test_line_numbers();
     void test_character_positions();
     void test_cursor_advance_and_checkpoint();
@@ -120,6 +121,7 @@ private slots:
     void test_deduction_guides_are_consumed_without_statements();
     void test_inherited_member_enumeration_and_access();
     void test_expression_evaluator_preserves_constructor_statement();
+    void test_expression_evaluator_forbids_model_changes_outside_parse();
 
 private:
     void tokenize(const QStringList &lines);

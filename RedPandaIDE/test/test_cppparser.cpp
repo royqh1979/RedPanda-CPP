@@ -1915,11 +1915,11 @@ void TestCppParser::test_standard_library_container_eval_profile()
         qint64 started = timer.nsecsElapsed();
         QStringList expression = test.expression;
         bool trace = qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE");
-        if (trace)
-            qputenv("REDPANDA_PARSER_TRACE_ACTIVE", "1");
+        if (trace) {
+            qputenv("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER", "1");
+            qputenv("REDPANDA_PARSER_PROFILE_RESET_RESOLVER", "1");
+        }
         EvalResult result = mParser->evalExpression(main, expression, scope);
-        if (trace)
-            qunsetenv("REDPANDA_PARSER_TRACE_ACTIVE");
         qWarning() << "STDLIB_CONTAINER_EVAL" << test.name
                    << timer.nsecsElapsed() - started;
         if (!result.isValid() || result.type.declaration.lock() != basicString) {
