@@ -16,6 +16,8 @@
  */
 #include "ppexpander.h"
 
+#include <utility>
+
 PpExpander::PpExpander(const DefineLookup &lookup)
     : mLookup(lookup)
 {
@@ -38,7 +40,7 @@ PpToken PpExpander::nextToken()
     while (mFrames.count() > mPopFloor) {
         Frame& top = mFrames.last();
         if (top.pos < top.tokens.count())
-            return top.tokens[top.pos++];
+            return std::move(top.tokens[top.pos++]);
         mFrames.removeLast();
     }
     if (mInput)
