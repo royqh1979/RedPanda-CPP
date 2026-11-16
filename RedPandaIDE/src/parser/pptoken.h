@@ -113,6 +113,8 @@ using ReplTokenList = QVector<ReplToken>;
  */
 QStringList splitMacroParams(const QString& args);
 
+QVector<PpToken> tokenizeMacroValue(const QString& value);
+
 /*
  * Compile a macro body into a replacement list: parameter references
  * become Argument entries (with stringize/pasteBefore flags from

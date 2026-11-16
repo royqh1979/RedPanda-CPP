@@ -14,7 +14,9 @@ PDefine TestPpExpander::makeDefine(const QString &name, const QString &args,
     define->name = name;
     define->args = args;
     define->value = value;
-    if (!args.isEmpty()) {
+    if (args.isEmpty()) {
+        define->valueTokens = tokenizeMacroValue(value);
+    } else {
         define->paramNames = splitMacroParams(args.mid(1, args.length()-2));
         define->replacementList = compileReplacementList(value, define->paramNames);
     }
@@ -50,9 +52,12 @@ QString TestPpExpander::expandCondition(const QHash<QString, PDefine> &defines,
 
 void TestPpExpander::test_object_macro()
 {
-    QHash<QString, PDefine> defs{{"N", makeDefine("N", "", "12")}};
+    QHash<QString, PDefine> defs{
+        {"N", makeDefine("N", "", "12")},
+        {"OP", makeDefine("OP", "", "+")}};
     QCOMPARE(expand(defs, "x N y"), "x 12 y");
     QCOMPARE(expand(defs, "N N"), "12 12");
+    QCOMPARE(expand(defs, "1 OP 2"), "1 + 2");
     QCOMPARE(expand(defs, "  int\t x  =  N + 1;  "), "  int\t x  =  12 + 1;  ");
     QCOMPARE(expand(defs, "  int\t x  =  1;  "), "  int\t x  =  1;  ");
     QCOMPARE(expand(defs, "auto s = R\"(N)\"; N"), "auto s = R\"(N)\"; 12");

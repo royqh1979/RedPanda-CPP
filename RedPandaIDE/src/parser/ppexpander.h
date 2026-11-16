@@ -95,7 +95,6 @@ private:
                                 const QVector<QVector<PpToken>>& args);
     PpToken mergeTokens(const PpToken& first, const PpToken& second);
     QString stringize(const QVector<PpToken>& tokens) const;
-    QVector<PpToken> tokenizeText(const QString& text) const;
     void handleDefined(QVector<PpToken>& out, const QString& whitespace);
     void handleHasInclude(QVector<PpToken>& out, const QString& whitespace);
 

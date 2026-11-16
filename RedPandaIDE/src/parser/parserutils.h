@@ -61,6 +61,7 @@ struct Define {
     QString filename;
     bool hardCoded;// if true, don't free memory (points to hard defines)
     // fields for the pp-token expansion engine (phase 0.6)
+    QVector<PpToken> valueTokens; // tokenized body of an object-like macro
     QStringList paramNames; // parameter names in order ("..." for variadics)
     ReplTokenList replacementList; // precompiled replacement list
 };

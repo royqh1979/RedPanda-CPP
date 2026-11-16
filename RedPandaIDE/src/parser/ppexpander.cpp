@@ -16,28 +16,6 @@
  */
 #include "ppexpander.h"
 
-#include <QDebug>
-#include <QElapsedTimer>
-
-namespace {
-struct ExpanderProfile {
-    bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
-    qint64 tokenizeTextNs = 0;
-    qint64 tokenizeTextCalls = 0;
-    qint64 tokenizeTextTokens = 0;
-    ~ExpanderProfile()
-    {
-        if (enabled)
-            qWarning() << "EXPANDER_PROFILE"
-                       << "tokenizeText" << tokenizeTextNs / 1000000.0
-                       << "calls" << tokenizeTextCalls
-                       << "tokens" << tokenizeTextTokens;
-    }
-};
-
-ExpanderProfile expanderProfile;
-}
-
 PpExpander::PpExpander(const DefineLookup &lookup)
     : mLookup(lookup)
 {
@@ -208,7 +186,7 @@ int PpExpander::processToken(const PpToken &token,
     if (define && !isPainted(define->name)) {
         if (define->args.isEmpty()) {
             // object-like macro
-            QVector<PpToken> replacement = tokenizeText(define->value);
+            QVector<PpToken> replacement = define->valueTokens;
             if (replacement.isEmpty()) {
                 // empty expansion: carry the whitespace over to the
                 // next emitted token
@@ -510,31 +488,6 @@ QString PpExpander::stringize(const QVector<PpToken> &tokens) const
     }
     result += '"';
     return result;
-}
-
-QVector<PpToken> PpExpander::tokenizeText(const QString &text) const
-{
-    QElapsedTimer timer;
-    if (expanderProfile.enabled) {
-        ++expanderProfile.tokenizeTextCalls;
-        timer.start();
-    }
-    QStringList lines{text};
-    PpTokenizer tokenizer(lines);
-    QVector<PpToken> tokens;
-    while (true) {
-        PpToken token = tokenizer.next();
-        if (token.kind == PpTokenKind::EndOfInput)
-            break;
-        if (token.kind == PpTokenKind::EndOfLine)
-            continue;
-        tokens.append(token);
-    }
-    if (expanderProfile.enabled) {
-        expanderProfile.tokenizeTextNs += timer.nsecsElapsed();
-        expanderProfile.tokenizeTextTokens += tokens.count();
-    }
-    return tokens;
 }
 
 void PpExpander::handleDefined(QVector<PpToken> &out, const QString &whitespace)

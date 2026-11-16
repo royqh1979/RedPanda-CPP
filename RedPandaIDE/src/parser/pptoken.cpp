@@ -264,6 +264,11 @@ static QVector<PpToken> tokenizeAll(const QString& text)
     return tokens;
 }
 
+QVector<PpToken> tokenizeMacroValue(const QString &value)
+{
+    return tokenizeAll(value);
+}
+
 QStringList splitMacroParams(const QString &args)
 {
     QStringList result;

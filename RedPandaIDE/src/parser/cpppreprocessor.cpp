@@ -609,7 +609,9 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     define->value = value;
     define->filename = mSession.fileName;
     define->hardCoded = hardCoded;
-    if (!args.isEmpty()) {
+    if (args.isEmpty()) {
+        define->valueTokens = tokenizeMacroValue(value);
+    } else {
         // precompile the replacement list for the pp-token engine
         define->paramNames = splitMacroParams(
                 define->args.mid(1, define->args.length()-2));
