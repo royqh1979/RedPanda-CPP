@@ -34,6 +34,33 @@ struct StatementModelProfile {
 
 StatementModelProfile statementModelProfile;
 
+QString namespaceOwner(const NamespaceOccurrence &occurrence)
+{
+    return occurrence.boundaryAncestor.isEmpty()
+            ? occurrence.fileName : occurrence.boundaryAncestor;
+}
+
+void updateNamespaceSource(const PStatement &statement, bool updateInline)
+{
+    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+    if (nameSpace->occurrences.isEmpty())
+        return;
+    const NamespaceOccurrence &current = *nameSpace->occurrences.constBegin();
+    statement->fileName = current.fileName;
+    statement->declarationRange = current.range;
+    statement->declarationBoundaryAncestor = current.boundaryAncestor;
+    statement->definitionRange = current.range;
+    statement->definitionFileName = current.fileName;
+    statement->definitionBoundaryAncestor = current.boundaryAncestor;
+    setStatementHasDefinition(statement, true);
+    if (updateInline) {
+        bool isInline = false;
+        for (const NamespaceOccurrence &occurrence : nameSpace->occurrences)
+            isInline |= occurrence.isInline;
+        nameSpace->declSpecifierProperties.setFlag(DeclSpecifierProperty::Inline, isInline);
+    }
+}
+
 struct StatementModelProfileScope {
     StatementModelProfileScope() {
         if (statementModelProfile.enabled)
@@ -52,6 +79,74 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
     mCount = 0;
 }
 
+void StatementModel::addNamespaceOccurrence(const PStatement &statement,
+                                            const QString &fileName,
+                                            const SourceRange &range,
+                                            const QString &boundaryAncestor,
+                                            bool isInline)
+{
+    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+    if (!nameSpace)
+        return;
+    NamespaceOccurrence occurrence{fileName, range, boundaryAncestor, isInline};
+    QString owner = namespaceOwner(occurrence);
+    const QList<NamespaceOccurrence> existing = nameSpace->occurrences.values(owner);
+    for (const NamespaceOccurrence &item : existing) {
+        if (item.fileName == fileName && item.range == range)
+            return;
+    }
+    nameSpace->occurrences.insert(owner, occurrence);
+    updateNamespaceSource(statement, true);
+}
+
+bool StatementModel::isInFile(const PStatement &statement, const QString &fileName) const
+{
+    if (statement->kind == StatementKind::Namespace) {
+        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+        return nameSpace->occurrences.contains(fileName);
+    }
+    bool declarationMatches = statement->declarationBoundaryAncestor == fileName
+            || (statement->declarationBoundaryAncestor.isEmpty()
+                && statement->fileName == fileName);
+    bool definitionMatches = statementHasDefinition(statement)
+            && (statement->definitionBoundaryAncestor == fileName
+                || (statement->definitionBoundaryAncestor.isEmpty()
+                    && statement->definitionFileName == fileName));
+    return declarationMatches || definitionMatches;
+}
+
+bool StatementModel::visibleFrom(const PStatement &statement, const QString &fileName,
+                                 const PParsedFileInfo &fileInfo) const
+{
+    if (!fileInfo)
+        return true;
+    if (statement->kind == StatementKind::Namespace) {
+        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+        for (const NamespaceOccurrence &occurrence : nameSpace->occurrences) {
+            QString owner = namespaceOwner(occurrence);
+            if (owner == fileName || fileInfo->including(owner))
+                return true;
+        }
+        return false;
+    }
+    QString owner = statement->declarationBoundaryAncestor.isEmpty()
+            ? statement->fileName : statement->declarationBoundaryAncestor;
+    return owner == fileName || fileInfo->including(owner);
+}
+
+bool StatementModel::removeNamespaceOccurrences(const PStatement &statement,
+                                                const QString &fileName)
+{
+    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+    if (!nameSpace)
+        return false;
+    nameSpace->occurrences.remove(fileName);
+    if (nameSpace->occurrences.isEmpty())
+        return false;
+    updateNamespaceSource(statement, false);
+    return true;
+}
+
 void StatementModel::add(const PStatement& statement)
 {
     StatementModelProfileScope profileScope;
@@ -66,10 +161,6 @@ void StatementModel::add(const PStatement& statement)
             addMember(std::dynamic_pointer_cast<Statement>(parent)->children, statement);
     } else {
         addMember(mGlobalStatements, statement);
-    }
-    if (statement->kind == StatementKind::Namespace) {
-        addNamespaceStatement(statement->fullName, statement);
-        updateNamespaceTransparency(statement);
     }
     mStatements.append(statement);
     ++mCount;
@@ -88,105 +179,8 @@ void StatementModel::deleteStatement(const PStatement& statement)
     } else {
         deleteMember(mGlobalStatements, statement);
     }
-    if (statement->kind == StatementKind::Namespace) {
-        const QList<PStatement> siblings = exactNamespaceStatements(statement->fullName);
-        if (parent && parent->kind == StatementKind::Namespace) {
-            for (const PStatement &sibling : siblings)
-                deleteNamespaceStatement(parent->fullName, sibling);
-        }
-        for (auto it = mNamespaceStatements.find(statement->fullName);
-                it != mNamespaceStatements.end() && it.key() == statement->fullName;) {
-            PStatement indexed = it.value().lock();
-            if (indexed && indexed->parentScope.lock() == statement)
-                it = mNamespaceStatements.erase(it);
-            else
-                ++it;
-        }
-        deleteNamespaceStatement(statement->fullName, statement);
-        for (const PStatement &sibling : siblings) {
-            if (sibling != statement)
-                updateNamespaceTransparency(sibling);
-        }
-    }
     if (mStatements.removeOne(statement))
         --mCount;
-}
-
-void StatementModel::updateNamespaceTransparency(const PStatement &statement)
-{
-    if (!statement || statement->kind != StatementKind::Namespace)
-        return;
-    const QList<PStatement> siblings = exactNamespaceStatements(statement->fullName);
-    bool transparent = statement->command.isEmpty();
-    for (const PStatement &sibling : siblings) {
-        if (sibling->command.isEmpty()
-                || std::dynamic_pointer_cast<NamespaceStatement>(sibling)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
-            transparent = true;
-            break;
-        }
-    }
-    if (!transparent)
-        return;
-    PStatement parent = statement->parentScope.lock();
-    if (parent && parent->kind == StatementKind::Namespace) {
-        for (const PStatement &sibling : siblings)
-            addNamespaceStatement(parent->fullName, sibling);
-    }
-}
-
-void StatementModel::addNamespaceStatement(const QString &fullName, const PStatement &statement)
-{
-    const auto statements = mNamespaceStatements.values(fullName);
-    for (const std::weak_ptr<AbstractStatement> &weak : statements) {
-        if (weak.lock() == statement)
-            return;
-    }
-    mNamespaceStatements.insert(fullName, statement);
-}
-
-void StatementModel::deleteNamespaceStatement(const QString &fullName, const PStatement &statement)
-{
-    for (auto it = mNamespaceStatements.find(fullName);
-            it != mNamespaceStatements.end() && it.key() == fullName;) {
-        PStatement indexed = it.value().lock();
-        if (!indexed || indexed == statement)
-            it = mNamespaceStatements.erase(it);
-        else
-            ++it;
-    }
-}
-
-QList<PStatement> StatementModel::namespaceStatements(const QString &fullName) const
-{
-    QList<PStatement> result;
-    const auto statements = mNamespaceStatements.values(fullName);
-    for (const std::weak_ptr<AbstractStatement> &weak : statements) {
-        if (PStatement statement = weak.lock())
-            result.append(statement);
-    }
-    return result;
-}
-
-QList<PStatement> StatementModel::exactNamespaceStatements(const QString &fullName) const
-{
-    QList<PStatement> result;
-    const QList<PStatement> statements = namespaceStatements(fullName);
-    for (const PStatement &statement : statements) {
-        if (statement->fullName == fullName)
-            result.append(statement);
-    }
-    return result;
-}
-
-QList<PStatement> StatementModel::transparentNamespaceStatements(const QString &fullName) const
-{
-    QList<PStatement> result;
-    const QList<PStatement> statements = namespaceStatements(fullName);
-    for (const PStatement &statement : statements) {
-        if (statement->command.isEmpty() || statement->fullName != fullName)
-            result.append(statement);
-    }
-    return result;
 }
 
 #ifdef QT_DEBUG

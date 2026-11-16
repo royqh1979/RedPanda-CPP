@@ -61,6 +61,11 @@ private slots:
     void test_local_declarations_in_disjoint_blocks_remain_distinct();
     void test_namespace_index_inline_filter_and_invalidation();
     void test_namespace_index_does_not_promote_inline_descendants();
+    void test_reopened_namespaces_share_unique_entity();
+    void test_namespace_occurrence_invalidation_across_roots();
+    void test_anonymous_namespaces_remain_distinct();
+    void test_inline_namespace_occurrence_invalidation();
+    void test_inline_namespace_overloads();
     void test_find_statement_of_inline_namespace();
     void test_nested_namespace_scope_parentage();
 #ifdef REDPANDA_PARSER_STDLIB_TEST

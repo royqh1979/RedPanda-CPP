@@ -657,6 +657,8 @@ StatementKind getKindOfStatement(const PStatement& statement)
 {
     if (!statement)
         return StatementKind::Unknown;
+    if (statement->kind == StatementKind::InlineAlias)
+        return StatementKind::Alias;
     if (statement->kind == StatementKind::Variable) {
         if (statement->scope == StatementScope::Local) {
             return StatementKind::LocalVariable;

@@ -71,14 +71,14 @@ std
 
 InlineAliasStatement：
 
-- 保存可见名称、来源和目标实际 fullName；
-- 复用普通 using 的名称解析步骤取得实际 Statement，不保存目标 weak_ptr；
+- 保存可见名称、来源和目标 weak_ptr，不拥有目标；
+- 通过目标指针直接取得实际 Statement，不进行 fullName 查找；
 - 不包装或转发目标的类型、参数、children 等属性；
 - 正常加入 StatementModel 和 FileInfo；
 - 正常参与失效、replay、补全、树形显示和声明位置更新；
 - 不需要额外的 SyntheticAliasKind。
 
-它由 inline namespace 处理自动生成。目标实际路径在创建时已知，但目标查找与普通源码 Alias 共用同一解析算法，不另建一套属性访问接口。
+它由 inline namespace 处理自动生成。目标在创建时已知，直接保存 weak_ptr；普通源码 Alias 仍按名称解析。两者共用外层 Alias 处理流程，但 InlineAlias 不进行名称查找，也不另建属性访问接口。
 
 ### 3.2 创建时机
 
@@ -90,7 +90,7 @@ InlineAliasStatement：
 - 类前置声明与定义合并：using 继续指向同一 Statement；
 - replay 未新增 Statement：不重复创建 using。
 
-同一 parent 中同一目标只能有一份对应用 using。创建前检查现有目标关联，保证重复构建和失效补齐不会重复插入。
+同一 parent 中同一目标只创建一份对应 using。该约束由创建路径保证：仅新增实际 Statement、或已有 namespace 首次获得 inline 标志时进入创建；merge 和 replay 不进入，因此不通过扫描 parent 做重复检查。
 
 using 的创建仍走普通 StatementFactory、StatementModel::add 和 FileInfo::addStatement。
 
@@ -104,7 +104,7 @@ B::value（using → C::value）
 A::value（using → C::value）
 ```
 
-中间节点也是 InlineAliasStatement，并记录最终实际目标的 fullName，不形成需要逐次解析的 alias 链。
+中间节点也是 InlineAliasStatement，并直接保存最终实际目标的 weak_ptr，不形成需要逐次解析的 alias 链。
 
 如果新增 using 位于 inline/匿名 namespace 中，它也属于该 namespace 的新增可见成员，因此按同一规则继续向直接 parent 投影。实际父子链无环，不需要全路径组合。
 
@@ -134,7 +134,7 @@ AbstractStatement
 
 AbstractStatement 是三种 Statement 的共同祖先，只保存真正公共的身份、可见名称、实际父子关系、分类和来源数据。
 
-Statement 保持普通语句的单声明/单定义模型，以及类型、参数、模板、children 等普通声明所需的数据。NamespaceStatement 保存多个 occurrence，并实现多定义来源语义。InlineAliasStatement 与 Statement 平级，只保存目标实际 fullName 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它的 StatementKind 仍为 Alias。
+Statement 保持普通语句的单声明/单定义模型，以及类型、参数、模板、children 等普通声明所需的数据。NamespaceStatement 保存多个 occurrence，并实现多定义来源语义。InlineAliasStatement 与 Statement 平级，只保存目标 weak_ptr 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它使用独立的 StatementKind::InlineAlias。
 
 本阶段不继续拆 VariableStatement、FunctionStatement、ClassStatement、ScopeStatement 等完整类系。普通 Statement 内部字段是否继续下沉属于后续独立重构，不与 namespace 唯一化同时进行。
 
@@ -147,9 +147,9 @@ Statement 保持普通语句的单声明/单定义模型，以及类型、参数
 - FileInfo 和 StatementModel 中条目的添加、删除由统一的公共流程执行；
 - StatementFactory 只负责创建与初始化，不承担失效或可见性逻辑。
 
-直接属性访问不得做成虚函数，不得引入 data() 或逐字段目标转发接口。children 仍是具体 Statement 类型的普通成员，不提供虚函数访问接口。调用方确需访问具体类型的属性或 children 时，显式使用 dynamic_pointer_cast。
+直接属性访问不得做成虚函数，不得引入 data() 或逐字段目标转发接口。children 仍是具体 Statement 类型的普通成员，不提供虚函数访问接口。调用方确需访问具体类型的属性或 children 时，先判断 StatementKind，再显式使用 dynamic_pointer_cast，不得以转换失败代替 Kind 判断。
 
-普通源码 Alias 与 InlineAliasStatement 共用名称解析算法。StatementKind 用于分类、显示和集中处理时的类型判断。集中类型处理的代价是新增行为不同的 Statement 类型时必须同步修改模型层；当前类系是封闭的有限集合，因此不提前为假设中的扩展建立虚函数体系。
+普通源码 Alias 按名称解析，InlineAliasStatement 直接读取目标 weak_ptr。StatementKind 用于分类、显示和集中处理时的类型判断；UI 需要时可将 InlineAlias 映射为 Alias 图标。集中类型处理的代价是新增行为不同的 Statement 类型时必须同步修改模型层；当前类系是封闭的有限集合，因此不提前为假设中的扩展建立虚函数体系。
 
 ### 4.3 StatementFactory
 
@@ -158,7 +158,7 @@ Statement 保持普通语句的单声明/单定义模型，以及类型、参数
 - createNamespace() → NamespaceStatement；
 - createClass()、createFunction()、createVariable() 等 → Statement；
 - createAlias() → Statement，用于现有源码 Alias；
-- createInlineAlias() → InlineAliasStatement，用于目标实际 fullName 已知的投影。
+- createInlineAlias() → InlineAliasStatement，用于目标已知的投影，显式传入目标 shared_ptr 并保存为 weak_ptr。
 
 工厂负责实际 C++ 类型与 StatementKind 的一致性，并通过必传参数 parentScope、command、fullName 完成公共成员初始赋值，同时初始化 scope、accessibility 和补全计数等基础默认值；工厂方法不得使用默认参数。Builder 负责从 DeclarationInfo 填充其它语义数据。不得先创建普通 Statement 再把 kind 改成 Namespace。
 
@@ -193,9 +193,9 @@ occurrence 可按失效归属建立 QMultiHash，value 保存实际文件、范�
 3. 存在则复用；
 4. 添加本次 occurrence；
 5. 将新 children 构建到该唯一实体；
-6. 根据全部 occurrence 更新当前 inline 属性。
+6. 本次带 inline 且实体此前没有 inline 标志时，为已有 children 补生成 InlineAlias；之后新增的实际成员在创建时直接投影。
 
-嵌套 namespace 逐层执行相同规则。
+嵌套 namespace 逐层执行相同规则。inline 标志一旦在合并时建立，本次实现不根据剩余 occurrence 反推或撤销。
 
 ### 5.3 文件失效
 
@@ -203,8 +203,8 @@ occurrence 可按失效归属建立 QMultiHash，value 保存实际文件、范�
 
 1. 通过 FileInfo 删除该文件贡献的普通 Statement 和 using；
 2. 从 NamespaceStatement 删除对应 occurrence；
-3. 若仍有 occurrence，保留 namespace 并重算 inline 属性、可见性和可用跳转位置；
-4. 若 occurrence 为空，删除 namespace 壳及其索引关联；
+3. 若仍有 occurrence，保留 namespace，更新可见性和可用跳转位置，但不重算已有 inline 标志；
+4. 若 occurrence 为空，删除 namespace 壳；
 5. 不使用 shared_ptr::use_count() 判断是否仍有来源。
 
 同一头文件被多个边界根包含时，occurrence 按归属分别保存。失效根 A 不得删除根 B 的贡献。
@@ -222,11 +222,12 @@ namespace 跳转可返回多个定义位置；若现有 API 只返回一个位�
 命名 namespace 唯一化后，实际路径查询沿 children 逐层进行：
 
 - 普通 namespace 子节点直接匹配名称段；
-- using Alias 解析到实际目标后继续；
+- InlineAlias 通过目标 weak_ptr 取得实际 Statement 后继续；
+- 同一级存在实际节点和 Alias 同名候选时，链式查询保留并遍历所有分支，按目标身份去重；
 - class/enum 成员沿用现有规则；
 - class 基类成员仍需基类图遍历。
 
-inline 成员已经通过 using 出现在直接 children 中，不再需要透明 namespace DFS。原 namespace 透明边索引和最长 fullName 前缀猜测应最终移除，避免与 using 形成第二套语义。
+inline 成员已经通过 using 出现在直接 children 中。不维护 namespace 透明索引，不执行透明 namespace DFS，也不通过最长 fullName 前缀猜测作用域；所有查询直接走 children/Alias 链。
 
 ### 6.2 findNamespace
 

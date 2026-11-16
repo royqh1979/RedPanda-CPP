@@ -825,10 +825,11 @@ void TestCppTokenizer::test_statement_factory_initializes_statements()
     PStatement genericNamespace = StatementFactory::create(
                 StatementKind::Namespace, parent, "Child", "Parent::Child");
     QVERIFY(std::dynamic_pointer_cast<NamespaceStatement>(genericNamespace));
+    PStatement target = StatementFactory::createClass(parent, "Actual", "Parent::Actual");
     auto alias = StatementFactory::createInlineAlias(
-                parent, "value", "Parent::value", "Parent::Actual::value");
-    QCOMPARE(alias->kind, StatementKind::Alias);
-    QCOMPARE(alias->targetName, "Parent::Actual::value");
+                parent, "Actual", "Parent::Alias", target);
+    QCOMPARE(alias->kind, StatementKind::InlineAlias);
+    QCOMPARE(alias->target.lock(), target);
     QVERIFY(std::dynamic_pointer_cast<InlineAliasStatement>(alias));
 }
 
@@ -2619,6 +2620,20 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
     QVERIFY(resolver.findStatement("::anonymousValue"));
     QVERIFY(resolver.findStatement("N::nestedAnonymous"));
     QVERIFY(resolver.findStatement("A::B::direct"));
+    PStatement a = resolver.findStatement("A");
+    QVERIFY(a);
+    const auto bCandidates = model.childrenStatements(a).values("B");
+    QCOMPARE(bCandidates.count(), 2);
+    bool foundInlineAlias = false;
+    for (const std::weak_ptr<AbstractStatement> &weak : bCandidates) {
+        PStatement candidate = weak.lock();
+        if (candidate && candidate->kind == StatementKind::InlineAlias) {
+            auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
+            QCOMPARE(alias->target.lock()->fullName, "A::I::B");
+            foundInlineAlias = true;
+        }
+    }
+    QVERIFY(foundInlineAlias);
     QVERIFY(resolver.findStatement("A::B::viaInline"));
     QVERIFY(!resolver.findStatement("f::local"));
     QVERIFY(!resolver.findStatement("f::block::inner"));
@@ -2692,11 +2707,10 @@ void TestCppTokenizer::test_namespace_delete_does_not_reinsert_transparent_desce
     CppTypeResolver resolver(model);
     PStatement regular = resolver.findStatement("outer::regular");
     QVERIFY(regular);
-    QCOMPARE(model.transparentNamespaceStatements("outer::regular").count(), 1);
+    QVERIFY(resolver.findStatement("outer::regular::value"));
 
     model.deleteStatement(regular);
     QVERIFY(resolver.findStatement("outer"));
-    QVERIFY(model.namespaceStatements("outer::regular").isEmpty());
     QVERIFY(!resolver.findStatement("outer::regular::value"));
 }
 
@@ -2751,8 +2765,13 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
         QVERIFY(string);
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters.count(), 3);
         QCOMPARE(string->declarationRange.start.line, 2);
-        QVERIFY(!std::dynamic_pointer_cast<NamespaceStatement>(string->parentScope.lock())->declSpecifierProperties.testFlag(
-                    DeclSpecifierProperty::Inline));
+        auto inlineParent = std::dynamic_pointer_cast<NamespaceStatement>(string->parentScope.lock());
+        QVERIFY(inlineParent->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
+        QCOMPARE(inlineParent->occurrences.count(), 2);
+        int inlineOccurrences = 0;
+        for (const NamespaceOccurrence &occurrence : inlineParent->occurrences)
+            inlineOccurrences += occurrence.isInline ? 1 : 0;
+        QCOMPARE(inlineOccurrences, 1);
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[1].defaultArgumentText, "char_traits<_CharT>");
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[2].defaultArgumentText, "allocator<_CharT>");
         QVERIFY(resolver.findStatement("std::string"));
@@ -2783,8 +2802,9 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
             }
         }
         QVERIFY(inlineNamespace);
-        model.deleteStatement(inlineNamespace);
-        QVERIFY(!resolver.findStatement("std::basic_string"));
+        QVERIFY(model.removeNamespaceOccurrences(inlineNamespace, "/tmp/c++config.h"));
+        QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(inlineNamespace)->occurrences.count(), 1);
+        QVERIFY(resolver.findStatement("std::basic_string"));
         QVERIFY(resolver.findStatement("std::__cxx11::basic_string"));
     }
 

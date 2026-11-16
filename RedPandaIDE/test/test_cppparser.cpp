@@ -37,7 +37,8 @@ void collectStatementNames(const PCppParser &parser, const PStatement &parent,
             continue;
         if (!statement->fullName.isEmpty())
             names.insert(statement->fullName);
-        collectStatementNames(parser, statement, names);
+        if (statement->kind != StatementKind::InlineAlias)
+            collectStatementNames(parser, statement, names);
     }
 }
 
@@ -2071,7 +2072,10 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     mParser->addProjectFile(main, false);
     CppParser::parseFileBlocking(mParser, main, true, "");
     PStatementList namespaces = mParser->findNamespace("N");
-    QVERIFY(namespaces && namespaces->count() >= 2);
+    QVERIFY(namespaces && namespaces->count() == 1);
+    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(namespaces->first());
+    QVERIFY(nameSpace);
+    QCOMPARE(nameSpace->occurrences.count(), 3);
     auto overloadedFunctions = [&]() {
         QList<PStatement> result;
         for (const PStatement &nameSpace : *namespaces) {
@@ -2137,7 +2141,8 @@ void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
     });
     CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
     QCOMPARE(mParser->findNamespace("std")->count(), 1);
-    QCOMPARE(mParser->findNamespace("std", true)->count(), 2);
+    QCOMPARE(mParser->findNamespace("std", true)->count(), 1);
+    QVERIFY(mParser->findStatement("std::inlineValue"));
     QCOMPARE(mParser->findNamespace("std::__cxx11")->count(), 1);
     mParser->invalidateFile("main.cpp");
     QVERIFY(mParser->findNamespace("std")->isEmpty());
@@ -2157,11 +2162,186 @@ void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
     QCOMPARE(mParser->findNamespace("outer")->count(), 1);
     QCOMPARE(mParser->findNamespace("outer", true)->count(), 1);
     QCOMPARE(mParser->findNamespace("outer::regular")->count(), 1);
-    QCOMPARE(mParser->findNamespace("outer::regular", true)->count(), 2);
+    QCOMPARE(mParser->findNamespace("outer::regular", true)->count(), 1);
     QVERIFY(mParser->findStatement("outer::regular::value"));
     QVERIFY(mParser->findStatement("outer::regular::reopened"));
     QVERIFY(!mParser->findStatement("outer::value"));
     mParser->invalidateFile("main.cpp");
     QVERIFY(mParser->findNamespace("outer", true)->isEmpty());
     QVERIFY(mParser->findNamespace("outer::regular", true)->isEmpty());
+}
+
+void TestCppParser::test_reopened_namespaces_share_unique_entity()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace A::B { int first; }",
+            "namespace A { namespace B { int second; } }",
+            "namespace A::B::C::D { int deep; }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement a = mParser->findStatement("A");
+    PStatement b = mParser->findStatement("A::B");
+    PStatement c = mParser->findStatement("A::B::C");
+    PStatement d = mParser->findStatement("A::B::C::D");
+    QVERIFY(a && b && c && d);
+    QCOMPARE(b->parentScope.lock(), a);
+    QCOMPARE(c->parentScope.lock(), b);
+    QCOMPARE(d->parentScope.lock(), c);
+    QCOMPARE(mParser->findNamespace("A")->count(), 1);
+    QCOMPARE(mParser->findNamespace("A::B")->count(), 1);
+    auto namespaceA = std::dynamic_pointer_cast<NamespaceStatement>(a);
+    auto namespaceB = std::dynamic_pointer_cast<NamespaceStatement>(b);
+    QCOMPARE(namespaceA->occurrences.count(), 3);
+    QCOMPARE(namespaceB->occurrences.count(), 3);
+    QSet<int> namespaceBLines;
+    for (const NamespaceOccurrence &occurrence : namespaceB->occurrences) {
+        QCOMPARE(occurrence.fileName, "text.cpp");
+        namespaceBLines.insert(occurrence.range.start.line);
+    }
+    QCOMPARE(namespaceBLines, QSet<int>({0, 1, 2}));
+    QVERIFY(mParser->findStatement("A::B::first"));
+    QVERIFY(mParser->findStatement("A::B::second"));
+    QVERIFY(mParser->findStatement("A::B::C::D::deep"));
+}
+
+void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
+{
+    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer) {
+        if (fileName == "a.cpp")
+            buffer = QStringList{"namespace N::Deep { int fromA; }"};
+        else if (fileName == "b.cpp")
+            buffer = QStringList{"namespace N { namespace Deep { int fromB; } }"};
+        else
+            return false;
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "a.cpp", false, "");
+    CppParser::parseFileBlocking(mParser, "b.cpp", false, "");
+
+    PStatement n = mParser->findStatement("N");
+    PStatement deep = mParser->findStatement("N::Deep");
+    QVERIFY(n && deep);
+    auto namespaceN = std::dynamic_pointer_cast<NamespaceStatement>(n);
+    auto namespaceDeep = std::dynamic_pointer_cast<NamespaceStatement>(deep);
+    QCOMPARE(namespaceN->occurrences.count(), 2);
+    QCOMPARE(namespaceDeep->occurrences.count(), 2);
+    QVERIFY(namespaceN->occurrences.contains("a.cpp"));
+    QVERIFY(namespaceN->occurrences.contains("b.cpp"));
+    QVERIFY(mParser->findStatement("N::Deep::fromA"));
+    QVERIFY(mParser->findStatement("N::Deep::fromB"));
+
+    mParser->invalidateFile("a.cpp");
+    QVERIFY(!mParser->findStatement("N::Deep::fromA"));
+    QVERIFY(mParser->findStatement("N::Deep::fromB"));
+    QCOMPARE(mParser->findStatement("N"), n);
+    QCOMPARE(mParser->findStatement("N::Deep"), deep);
+    QCOMPARE(namespaceDeep->occurrences.count(), 1);
+    QVERIFY(namespaceDeep->occurrences.contains("b.cpp"));
+    QCOMPARE(deep->fileName, "b.cpp");
+    QCOMPARE(deep->declarationRange.start.line, 0);
+
+    mParser->invalidateFile("b.cpp");
+    QVERIFY(!mParser->findStatement("N"));
+    QVERIFY(!mParser->findStatement("N::Deep"));
+}
+
+void TestCppParser::test_anonymous_namespaces_remain_distinct()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace { int first; }",
+            "namespace { int second; }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    const auto anonymous = mParser->statementList().childrenStatements().values("");
+    QCOMPARE(anonymous.count(), 2);
+    PStatement firstScope = mParser->findScopeStatement("text.cpp", 0);
+    PStatement secondScope = mParser->findScopeStatement("text.cpp", 1);
+    QVERIFY(firstScope && secondScope);
+    QVERIFY(firstScope != secondScope);
+    QVERIFY(mParser->findStatement("first"));
+    QVERIFY(mParser->findStatement("second"));
+}
+
+void TestCppParser::test_inline_namespace_occurrence_invalidation()
+{
+    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer) {
+        if (fileName == "plain.cpp")
+            buffer = QStringList{"namespace N { namespace V { int plain; } }"};
+        else if (fileName == "inline.cpp")
+            buffer = QStringList{"namespace N { inline namespace V { int visible; } }"};
+        else
+            return false;
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "plain.cpp", false, "");
+    CppParser::parseFileBlocking(mParser, "inline.cpp", false, "");
+
+    PStatement v = mParser->findStatement("N::V");
+    QVERIFY(v);
+    QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(v)->occurrences.count(), 2);
+    QVERIFY(mParser->findStatement("N::visible"));
+    QVERIFY(mParser->findStatement("N::plain"));
+
+    mParser->invalidateFile("inline.cpp");
+    QVERIFY(!mParser->findStatement("N::visible"));
+    QVERIFY(mParser->findStatement("N::V::plain"));
+    QCOMPARE(mParser->findStatement("N::V"), v);
+    auto namespaceV = std::dynamic_pointer_cast<NamespaceStatement>(v);
+    QCOMPARE(namespaceV->occurrences.count(), 1);
+    QVERIFY(namespaceV->occurrences.contains("plain.cpp"));
+    QVERIFY(namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
+    QCOMPARE(mParser->findNamespace("N", true)->count(), 1);
+
+    CppParser::parseFileBlocking(mParser, "inline.cpp", false, "");
+    QCOMPARE(mParser->findStatement("N::V"), v);
+    QCOMPARE(namespaceV->occurrences.count(), 2);
+    QVERIFY(namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
+    QVERIFY(mParser->findStatement("N::visible"));
+}
+
+void TestCppParser::test_inline_namespace_overloads()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace N { inline namespace V {",
+            "  void f(int);",
+            "  void f(double);",
+            "} }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement n = mParser->findStatement("N");
+    QVERIFY(n);
+    const auto aliases = mParser->statementList().childrenStatements(n).values("f");
+    QCOMPARE(aliases.count(), 2);
+    QSet<const AbstractStatement *> targets;
+    for (const std::weak_ptr<AbstractStatement> &weak : aliases) {
+        PStatement statement = weak.lock();
+        QVERIFY(statement && statement->kind == StatementKind::InlineAlias);
+        PStatement target = std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
+        QVERIFY(target);
+        targets.insert(target.get());
+    }
+    QCOMPARE(targets.count(), 2);
+    int visibleOverloads = 0;
+    for (const PStatement &statement : mParser->membersOfStatement(n)) {
+        if (statement->command == "f")
+            ++visibleOverloads;
+    }
+    QCOMPARE(visibleOverloads, 2);
+
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    n = mParser->findStatement("N");
+    QVERIFY(n);
+    QCOMPARE(mParser->statementList().childrenStatements(n).values("f").count(), 2);
 }

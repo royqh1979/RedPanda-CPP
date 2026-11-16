@@ -356,6 +356,11 @@ QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
     QList<PStatement> result;
     if (!statement || parts.isEmpty())
         return result;
+    if (statement && statement->kind == StatementKind::InlineAlias) {
+        auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(statement);
+        PStatement target = alias->target.lock();
+        return target ? doFindDeclarationRemainder(target, parts) : result;
+    }
     if (parts.count() == 1) {
         const auto candidates = mModel.childrenStatements(statement->parentScope).values(
                     statement->command);
@@ -395,21 +400,6 @@ QList<PStatement> CppStatementBuilder::doFindStatements(const QString &qualified
     const QStringList parts = name.split("::", Qt::SkipEmptyParts);
     if (parts.isEmpty())
         return {};
-
-    for (int namespacePartCount = parts.count(); namespacePartCount > 0; --namespacePartCount) {
-        QString namespaceName = parts.mid(0, namespacePartCount).join("::");
-        QList<PStatement> namespaces = mModel.namespaceStatements(namespaceName);
-        if (namespaces.isEmpty())
-            continue;
-        if (namespacePartCount == parts.count())
-            return namespaces;
-        QList<PStatement> result;
-        for (const PStatement &nameSpace : namespaces) {
-            result += doFindDeclarationRemainder(
-                        nameSpace, parts.mid(namespacePartCount - 1));
-        }
-        return result;
-    }
 
     QList<PStatement> result;
     const auto candidates = mModel.childrenStatements().values(parts.first());
@@ -470,14 +460,6 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
         existing->fileName = context.fileName;
         existing->declarationBoundaryAncestor = context.boundaryAncestor;
     }
-    if (candidate->kind == StatementKind::Namespace) {
-        auto existingNamespace = std::dynamic_pointer_cast<NamespaceStatement>(existing);
-        auto candidateNamespace = std::dynamic_pointer_cast<NamespaceStatement>(candidate);
-        existingNamespace->declSpecifierProperties |= candidateNamespace->declSpecifierProperties;
-        mModel.updateNamespaceTransparency(existing);
-        return existing;
-    }
-
     auto existingStatement = std::dynamic_pointer_cast<Statement>(existing);
     auto candidateStatement = std::dynamic_pointer_cast<Statement>(candidate);
     if (statementHasDefinition(candidate)) {
@@ -531,7 +513,6 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
     existingStatement->templateParameters = merged;
     existingStatement->inheritedDefaultArgumentTexts = inherited;
     existingStatement->declSpecifierProperties |= candidateStatement->declSpecifierProperties;
-    mModel.updateNamespaceTransparency(existing);
     return existing;
 }
 
@@ -668,10 +649,12 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
             std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName = declaration.declarators.first().name;
         }
         PStatement merged = mergeDeclaration(statement, context);
-        if (merged)
+        if (merged) {
             statement = merged;
-        else
+        } else {
             mModel.add(statement);
+            createInlineAliases(statement, declarationContext);
+        }
         if (context.fileInfo) {
             context.fileInfo->addStatement(statement);
             if (declaration.bodyRange.isValid()
@@ -719,6 +702,7 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                 enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
                                                   context.inSystemHeader);
                 mModel.add(enumStatement);
+                createInlineAliases(enumStatement, enumeratorContext);
                 if (context.fileInfo)
                     context.fileInfo->addStatement(enumStatement);
             }
@@ -964,6 +948,56 @@ QString CppStatementBuilder::fullName(const DeclaratorInfo &declarator,
     return name;
 }
 
+void CppStatementBuilder::createInlineAliases(const PStatement &statement,
+                                              const StatementBuildContext &context)
+{
+    PStatement target = statement;
+    if (target && target->kind == StatementKind::InlineAlias) {
+        auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(target);
+        target = alias->target.lock();
+        if (!target)
+            return;
+    }
+    PStatement scope = context.parentScope;
+    while (scope && scope->kind == StatementKind::Namespace) {
+        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(scope);
+        bool transparent = scope->command.isEmpty()
+                || nameSpace->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline);
+        if (!transparent)
+            break;
+        PStatement parent = scope->parentScope.lock();
+        QString fullName = !parent || parent->fullName.isEmpty()
+                ? target->command : parent->fullName + "::" + target->command;
+        auto alias = StatementFactory::createInlineAlias(
+                    parent, target->command, fullName, target);
+        alias->scope = target->scope;
+        alias->accessibility = target->accessibility;
+        alias->declarationRange = target->declarationRange;
+        alias->fileName = target->fileName;
+        alias->declarationBoundaryAncestor = context.boundaryAncestor;
+        alias->definitionRange = target->definitionRange;
+        alias->definitionFileName = target->definitionFileName;
+        alias->definitionBoundaryAncestor = context.boundaryAncestor;
+        alias->properties = target->properties;
+        mModel.add(alias);
+        if (context.fileInfo)
+            context.fileInfo->addStatement(alias);
+        scope = parent;
+    }
+}
+
+void CppStatementBuilder::createInlineAliasesForChildren(
+        const PStatement &nameSpace, const StatementBuildContext &context)
+{
+    StatementBuildContext childContext = context;
+    childContext.parentScope = nameSpace;
+    const auto children = mModel.childrenStatements(nameSpace).values();
+    for (const std::weak_ptr<AbstractStatement> &weak : children) {
+        if (PStatement child = weak.lock())
+            createInlineAliases(child, childContext);
+    }
+}
+
 void CppStatementBuilder::buildChildren(const DeclarationInfo &declaration,
                                         const StatementBuildContext &context,
                                         const PStatement &parent)
@@ -1005,13 +1039,33 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::buildNamespace(
         declarator.name = part;
         declarator.qualifier.clear();
         declarator.globallyQualified = false;
-        PStatement statement = createStatement(declaration, declarator, current,
-                                               StatementKind::Namespace);
-        PStatement merged = mergeDeclaration(statement, current);
-        if (merged)
-            statement = merged;
-        else
+        PStatement statement;
+        if (!part.isEmpty()) {
+            const auto candidates = mModel.childrenStatements(current.parentScope).values(part);
+            for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
+                PStatement candidate = weak.lock();
+                if (candidate && candidate->kind == StatementKind::Namespace) {
+                    statement = candidate;
+                    break;
+                }
+            }
+        }
+        bool isNew = !statement;
+        if (isNew) {
+            statement = createStatement(declaration, declarator, current,
+                                        StatementKind::Namespace);
             mModel.add(statement);
+        }
+        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+        bool becameInline = declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Inline)
+                && !nameSpace->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline);
+        mModel.addNamespaceOccurrence(
+                    statement, current.fileName, declaration.range, current.boundaryAncestor,
+                    declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Inline));
+        if (becameInline)
+            createInlineAliasesForChildren(statement, current);
+        if (isNew)
+            createInlineAliases(statement, current);
         if (current.fileInfo)
             current.fileInfo->addStatement(statement);
         current.parentScope = statement;
@@ -1069,6 +1123,7 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::buildUsing(
         std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName = target;
     }
     mModel.add(alias);
+    createInlineAliases(alias, context);
     if (context.fileInfo)
         context.fileInfo->addStatement(alias);
     result.append(alias);

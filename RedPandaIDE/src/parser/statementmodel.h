@@ -48,18 +48,21 @@ public:
         for (const PStatement &statement : mStatements) {
             if (statement->kind == StatementKind::Namespace)
                 std::dynamic_pointer_cast<NamespaceStatement>(statement)->children.clear();
-            else
+            else if (statement->kind != StatementKind::InlineAlias)
                 std::dynamic_pointer_cast<Statement>(statement)->children.clear();
         }
         mStatements.clear();
         mGlobalStatements.clear();
-        mNamespaceStatements.clear();
     }
     int count() const { return mCount; }
     const StatementList &statements() const { return mStatements; }
-    QList<PStatement> namespaceStatements(const QString &fullName) const;
-    QList<PStatement> transparentNamespaceStatements(const QString &fullName) const;
-    void updateNamespaceTransparency(const PStatement &statement);
+    void addNamespaceOccurrence(const PStatement &statement, const QString &fileName,
+                                const SourceRange &range, const QString &boundaryAncestor,
+                                bool isInline);
+    bool isInFile(const PStatement &statement, const QString &fileName) const;
+    bool visibleFrom(const PStatement &statement, const QString &fileName,
+                     const PParsedFileInfo &fileInfo) const;
+    bool removeNamespaceOccurrences(const PStatement &statement, const QString &fileName);
 #ifdef QT_DEBUG
     void dump(const QString& logFile) const;
     void dumpAll(const QString& logFile) const;
@@ -67,15 +70,11 @@ public:
 private:
     void addMember(StatementMap& map, const PStatement& statement);
     void deleteMember(StatementMap& map, const PStatement& statement);
-    void addNamespaceStatement(const QString &fullName, const PStatement &statement);
-    void deleteNamespaceStatement(const QString &fullName, const PStatement &statement);
-    QList<PStatement> exactNamespaceStatements(const QString &fullName) const;
     void dumpStatementMap(const StatementMap& map, QTextStream& out, int level) const;
 private:
     int mCount;
     StatementList mStatements;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
-    StatementMap mNamespaceStatements;
 };
 
 #endif // STATEMENTMODEL_H

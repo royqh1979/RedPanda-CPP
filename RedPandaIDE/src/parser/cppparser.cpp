@@ -223,6 +223,8 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         return;
     StatementList statements = mStatementList.statements();
     for (const PStatement &statement : statements) {
+        if (!mStatementList.isInFile(statement, fileName))
+            continue;
         bool declarationMatches = statement->declarationBoundaryAncestor == fileName
                 || (statement->declarationBoundaryAncestor.isEmpty()
                     && statement->fileName == fileName);
@@ -230,8 +232,15 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                 && (statement->definitionBoundaryAncestor == fileName
                     || (statement->definitionBoundaryAncestor.isEmpty()
                         && statement->definitionFileName == fileName));
-        if (!declarationMatches && !definitionMatches)
+        if (statement->kind == StatementKind::Namespace) {
+            PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(fileName);
+            if (fileInfo)
+                fileInfo->removeStatement(statement);
+            if (mStatementList.removeNamespaceOccurrences(statement, fileName))
+                continue;
+            mStatementList.deleteStatement(statement);
             continue;
+        }
 
         PParsedFileInfo declarationInfo = mPreprocessor.findFileInfo(
                     statement->declarationBoundaryAncestor.isEmpty()
@@ -466,18 +475,15 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
 
     QList<PStatement> scopes;
     PStatement parent = function->parentScope.lock();
-    if (parent && parent->kind == StatementKind::Namespace) {
-        scopes += mStatementList.namespaceStatements(parent->fullName);
-        scopes += mStatementList.transparentNamespaceStatements(parent->fullName);
-    } else {
-        scopes.append(parent);
-    }
+    scopes.append(parent);
 
     QSet<const AbstractStatement *> seen;
     for (const PStatement &scope : scopes) {
         const auto candidates = mStatementList.childrenStatements(scope).values(function->command);
         for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             PStatement candidate = weak.lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias)
+                candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
             if (!candidate || seen.contains(candidate.get()))
                 continue;
             if (candidate->kind != StatementKind::Function
@@ -575,13 +581,11 @@ PStatementList CppParser::findNamespace(const QString &name, bool includeInline)
 
 PStatementList CppParser::doFindNamespace(const QString &name, bool includeInline) const
 {
+    Q_UNUSED(includeInline);
     auto result = std::make_shared<StatementList>();
-    const QList<PStatement> statements = mStatementList.namespaceStatements(name);
-    for (const PStatement &statement : statements) {
-        if (statement->fullName == name || includeInline) {
-            result->append(statement);
-        }
-    }
+    PStatement statement = CppTypeResolver(mStatementList).findStatement(name);
+    if (statement && statement->kind == StatementKind::Namespace)
+        result->append(statement);
     return result;
 }
 
@@ -680,6 +684,8 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement) const
         return nullptr;
     if (!statement)
         return {};
+    if (statement->kind == StatementKind::InlineAlias)
+        return std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
     if (statement->kind != StatementKind::Alias && statement->kind != StatementKind::Typedef)
         return statement;
     CppTypeResolver resolver(mStatementList);
@@ -1043,6 +1049,9 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
     case StatementKind::Alias:
         result = "using " + statementType(statement);
         break;
+    case StatementKind::InlineAlias:
+        result = statement->command;
+        break;
     case StatementKind::Function:
     case StatementKind::Variable:
     case StatementKind::Parameter:
@@ -1169,14 +1178,7 @@ PStatement CppParser::visibleStatement(const QString &fileName,
     if (!statement)
         return {};
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
-    if (!info)
-        return statement;
-    if (statement->declarationBoundaryAncestor.isEmpty()) {
-        return statement->fileName == fileName || info->including(statement->fileName)
-                ? statement : PStatement();
-    }
-    const QString &ancestor = statement->declarationBoundaryAncestor;
-    return ancestor == fileName || info->including(ancestor) ? statement : PStatement();
+    return mStatementList.visibleFrom(statement, fileName, info) ? statement : PStatement();
 }
 
 TypeInfo CppParser::parseTypeInfo(const QString &text) const

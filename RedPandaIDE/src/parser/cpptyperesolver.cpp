@@ -289,6 +289,7 @@ bool isBuiltinType(const TypeInfo &type)
 bool isAlias(const PStatement &statement)
 {
     return statement && (statement->kind == StatementKind::Alias
+                         || statement->kind == StatementKind::InlineAlias
                          || statement->kind == StatementKind::Typedef);
 }
 
@@ -304,6 +305,7 @@ bool isTypeDeclaration(const PStatement &statement)
     case StatementKind::EnumClassType:
     case StatementKind::Typedef:
     case StatementKind::Alias:
+    case StatementKind::InlineAlias:
         return true;
     default:
         return false;
@@ -532,6 +534,10 @@ QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function
         const auto candidates = mModel.childrenStatements(scope).values(function->command);
         for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             PStatement candidate = weak.lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias) {
+                auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
+                candidate = alias->target.lock();
+            }
             if (isInvocable(candidate) && !seen.contains(candidate.get())) {
                 seen.insert(candidate.get());
                 result.append(candidate);
@@ -539,14 +545,7 @@ QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function
         }
     };
     PStatement parent = function->parentScope.lock();
-    if (parent && parent->kind == StatementKind::Namespace) {
-        for (const PStatement &nameSpace : mModel.namespaceStatements(parent->fullName))
-            appendScope(nameSpace);
-        for (const PStatement &nameSpace : mModel.transparentNamespaceStatements(parent->fullName))
-            appendScope(nameSpace);
-    } else {
-        appendScope(parent);
-    }
+    appendScope(parent);
     return result;
 }
 
@@ -777,6 +776,8 @@ void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
 
     for (const std::weak_ptr<AbstractStatement> &weak : mModel.childrenStatements(scope)) {
         PStatement statement = weak.lock();
+        if (statement && statement->kind == StatementKind::InlineAlias)
+            statement = std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
         if (!statement || (inherited && (statement->kind == StatementKind::Constructor
                                         || statement->kind == StatementKind::Destructor))) {
             continue;
@@ -1479,12 +1480,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
 
     PStatement parent = primary.declaration->parentScope.lock();
     QList<PStatement> scopes;
-    if (parent && parent->kind == StatementKind::Namespace) {
-        scopes += mModel.namespaceStatements(parent->fullName);
-        scopes += mModel.transparentNamespaceStatements(parent->fullName);
-    } else {
-        scopes.append(parent);
-    }
+    scopes.append(parent);
     QString prefix = primary.declaration->command + "<";
     QList<PStatement> partialMatches;
     bool unknown = false;
@@ -1493,6 +1489,10 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
         for (auto it = children.lowerBound(prefix);
              it != children.end() && it.key().startsWith(prefix); ++it) {
             PStatement candidate = it.value().lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias) {
+                auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
+                candidate = alias->target.lock();
+            }
             if (!candidate || candidate->kind != StatementKind::Class
                     || (std::dynamic_pointer_cast<Statement>(candidate)->templateKind != TemplateDeclarationKind::ExplicitSpecialization
                         && std::dynamic_pointer_cast<Statement>(candidate)->templateKind != TemplateDeclarationKind::PartialSpecialization)) {
@@ -1867,43 +1867,20 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
 {
     ResolverProfileScope profileScope(resolverProfile.namespaceLookupNs,
                                       resolverProfile.namespaceLookupCalls, "findInNamespaceScope");
-    for (int namespacePartCount = parts.count(); namespacePartCount >= 0; --namespacePartCount) {
-        QString namespaceName = scope ? scope->fullName : QString();
-        if (namespacePartCount > 0) {
-            if (!namespaceName.isEmpty())
-                namespaceName += "::";
-            namespaceName += parts.mid(0, namespacePartCount).join("::");
-        }
-        const QList<PStatement> namespaces = mModel.namespaceStatements(namespaceName);
-        if (namespaces.isEmpty())
+    if (parts.isEmpty())
+        return nullptr;
+    const auto candidates = mModel.childrenStatements(scope).values(parts.first());
+    for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
+        PStatement candidate = weak.lock();
+        if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
             continue;
-        if (namespacePartCount > 0)
-            firstPartFound = true;
-        if (namespacePartCount == parts.count()) {
-            for (const PStatement &nameSpace : namespaces) {
-                if (nameSpace->fullName == namespaceName)
-                    return nameSpace;
+        firstPartFound = true;
+        if (candidate && candidate->kind == StatementKind::InlineAlias) {
+                auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
+            candidate = alias->target.lock();
             }
-        }
-        for (const PStatement &nameSpace : namespaces) {
-            PStatement current = nameSpace;
-            for (int i = namespacePartCount; current && i < parts.count(); ++i)
-                current = findMember(current, parts[i], typesOnly);
-            if (current)
-                return current;
-        }
-    }
-
-    if (!scope) {
-        const auto candidates = mModel.childrenStatements().values(parts.first());
-        for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
-            if (PStatement candidate = weak.lock()) {
-                if (typesOnly && !isTypeDeclaration(candidate))
-                    continue;
-                if (PStatement result = findDeclarationRemainder(candidate, parts, typesOnly))
-                    return result;
-            }
-        }
+        if (PStatement result = findDeclarationRemainder(candidate, parts, typesOnly))
+            return result;
     }
     return nullptr;
 }
@@ -1915,18 +1892,44 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
     ResolverProfileScope profileScope(resolverProfile.declarationRemainderNs,
                                       resolverProfile.declarationRemainderCalls,
                                       "findDeclarationRemainder");
+    if (statement && statement->kind == StatementKind::InlineAlias) {
+        auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(statement);
+        return findDeclarationRemainder(alias->target.lock(), parts, typesOnly);
+    }
     if (typesOnly && !isTypeDeclaration(statement))
         return nullptr;
     if (parts.count() > 1 && statement
+            && statement->kind != StatementKind::Namespace
             && statement->kind != StatementKind::Class
             && statement->kind != StatementKind::EnumType
             && statement->kind != StatementKind::EnumClassType) {
         return nullptr;
     }
-    PStatement current = statement;
-    for (int i = 1; current && i < parts.count(); ++i)
-        current = findMember(current, parts[i], typesOnly);
-    return current;
+    QList<PStatement> current{statement};
+    for (int i = 1; !current.isEmpty() && i < parts.count(); ++i) {
+        QList<PStatement> next;
+        QSet<const AbstractStatement *> seen;
+        for (const PStatement &scope : current) {
+            const auto candidates = mModel.childrenStatements(scope).values(parts[i]);
+            for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
+                PStatement candidate = weak.lock();
+                if (candidate && candidate->kind == StatementKind::InlineAlias)
+                    candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
+                if (!candidate || seen.contains(candidate.get())
+                        || (typesOnly && !isTypeDeclaration(candidate)))
+                    continue;
+                seen.insert(candidate.get());
+                next.append(candidate);
+            }
+            PStatement inherited = findMember(scope, parts[i], typesOnly);
+            if (inherited && !seen.contains(inherited.get())) {
+                seen.insert(inherited.get());
+                next.append(inherited);
+            }
+        }
+        current = next;
+    }
+    return current.isEmpty() ? PStatement() : current.first();
 }
 
 PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &name,
@@ -1972,17 +1975,13 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
         const auto directCandidates = mModel.childrenStatements(current).values(name);
         for (int i = directCandidates.count() - 1; i >= 0; --i) {
             PStatement candidate = directCandidates[i].lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias) {
+                auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
+                candidate = alias->target.lock();
+            }
             if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
                 continue;
-            if (candidate->kind != StatementKind::Namespace || candidate->command == name)
-                return finish(candidate);
-            pending.push(candidate);
-        }
-        if (current->kind == StatementKind::Namespace) {
-            const QList<PStatement> transparentNamespaces =
-                    mModel.transparentNamespaceStatements(current->fullName);
-            for (int i = transparentNamespaces.count() - 1; i >= 0; --i)
-                pending.push(transparentNamespaces[i]);
+            return finish(candidate);
         }
         QList<PStatement> bases;
         if (current->kind != StatementKind::Namespace) {

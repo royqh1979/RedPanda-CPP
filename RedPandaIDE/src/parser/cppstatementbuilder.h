@@ -71,6 +71,10 @@ private:
     void buildChildren(const DeclarationInfo &declaration,
                        const StatementBuildContext &context,
                        const PStatement &parent);
+    void createInlineAliases(const PStatement &statement,
+                             const StatementBuildContext &context);
+    void createInlineAliasesForChildren(const PStatement &nameSpace,
+                                        const StatementBuildContext &context);
 
     StatementModel &mModel;
     CppTypeResolver mTypeResolver;
