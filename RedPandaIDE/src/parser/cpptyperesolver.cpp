@@ -23,6 +23,8 @@
 #include <QStack>
 
 namespace {
+struct ResolverProfileScope;
+
 struct ResolverProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     const bool traceEnabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE");
@@ -68,6 +70,8 @@ struct ResolverProfile {
     QHash<QString, qint64> resolveOriginTrace;
     QHash<QString, qint64> syntaxAttemptTrace;
     QHash<QString, qint64> specializationAttemptTrace;
+    QHash<const char *, qint64> selfNs;
+    ResolverProfileScope *activeScope = nullptr;
     QStringList resolveOriginStack;
     void reset()
     {
@@ -93,6 +97,8 @@ struct ResolverProfile {
         resolveOriginTrace.clear();
         syntaxAttemptTrace.clear();
         specializationAttemptTrace.clear();
+        selfNs.clear();
+        activeScope = nullptr;
         resolveOriginStack.clear();
     }
     ~ResolverProfile()
@@ -115,6 +121,8 @@ struct ResolverProfile {
                        << "memberDeclaration" << memberDeclarationNs / 1000000.0
                        << memberDeclarationCalls << "memberDfs"
                        << memberDfsNs / 1000000.0 << memberDfsCalls;
+            for (auto it = selfNs.constBegin(); it != selfNs.constEnd(); ++it)
+                qWarning().noquote() << "RESOLVER_SELF" << it.key() << it.value() / 1000000.0;
         }
         for (auto it = declarationTrace.constBegin(); it != declarationTrace.constEnd(); ++it)
             qWarning().noquote() << "FIND_DECLARATION" << it.value()
@@ -213,26 +221,39 @@ struct ResolveOriginScope {
 };
 
 struct ResolverProfileScope {
-    ResolverProfileScope(qint64 &elapsed, qint64 &calls) : elapsed(elapsed), calls(calls)
+    ResolverProfileScope(qint64 &elapsed, qint64 &calls, const char *label)
+        : elapsed(elapsed), calls(calls), label(label)
     {
         if (resolverProfile.enabled) {
             ++calls;
+            parent = resolverProfile.activeScope;
+            resolverProfile.activeScope = this;
             timer.start();
         }
     }
     ~ResolverProfileScope()
     {
-        if (resolverProfile.enabled)
-            elapsed += timer.nsecsElapsed();
+        if (resolverProfile.enabled) {
+            qint64 own = timer.nsecsElapsed();
+            elapsed += own;
+            resolverProfile.selfNs[label] += own - childNs;
+            if (parent)
+                parent->childNs += own;
+            resolverProfile.activeScope = parent;
+        }
     }
     qint64 &elapsed;
     qint64 &calls;
+    const char *label;
+    ResolverProfileScope *parent = nullptr;
+    qint64 childNs = 0;
     QElapsedTimer timer;
 };
 
 QString profiledTypeString(const TypeInfo &type)
 {
-    ResolverProfileScope profileScope(resolverProfile.keyTextNs, resolverProfile.keyTextCalls);
+    ResolverProfileScope profileScope(resolverProfile.keyTextNs, resolverProfile.keyTextCalls,
+                                      "typeToString");
     return type.toString();
 }
 
@@ -830,7 +851,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         qunsetenv("REDPANDA_PARSER_PROFILE_RESET_RESOLVER");
     }
     ResolverProfileScope profileScope(resolverProfile.resolveTypeNs,
-                                      resolverProfile.resolveTypeCalls);
+                                      resolverProfile.resolveTypeCalls, "resolveType");
     if (++evaluation.operationCount > 4096)
         return {};
     QString resolutionKey = (context ? context->fullName : QString()) + "|" + profiledTypeString(type)
@@ -906,7 +927,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
         bool globallyQualified, const PTemplateBindingFrame &bindings,
         const PStatement &context, EvaluationContext &evaluation) const
 {
-    ResolverProfileScope profileScope(resolverProfile.segmentsNs, resolverProfile.segmentsCalls);
+    ResolverProfileScope profileScope(resolverProfile.segmentsNs, resolverProfile.segmentsCalls,
+                                      "resolveSegments");
     ResolveOriginScope originScope("resolveSegments");
     int index = 0;
     PStatement declaration;
@@ -1126,7 +1148,7 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
         return !segments.isEmpty();
     }
     ResolverProfileScope profileScope(resolverProfile.parseSegmentsNs,
-                                      resolverProfile.parseSegmentsCalls);
+                                      resolverProfile.parseSegmentsCalls, "parseTypeNameSegments");
     traceTokenizeOrigin("parseTypeNameSegments");
     CppTokenizer tokenizer;
     tokenizer.tokenize({text});
@@ -1262,7 +1284,7 @@ void CppTypeResolver::materializeTemplateArguments(TypeInfo &type,
                                                    EvaluationContext &evaluation) const
 {
     ResolverProfileScope profileScope(resolverProfile.materializeNs,
-                                      resolverProfile.materializeCalls);
+                                      resolverProfile.materializeCalls, "materialize");
     if (!type.templateArguments.isEmpty() || !type.qualifiedNameText.contains('<'))
         return;
     QVector<TypeNameSegment> segments;
@@ -1346,7 +1368,7 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
         }
     }
     ResolverProfileScope profileScope(resolverProfile.parseTypeTextNs,
-                                      resolverProfile.parseTypeTextCalls);
+                                      resolverProfile.parseTypeTextCalls, "parseTypeText");
     traceTokenizeOrigin("parseTypeText");
     CppTokenizer tokenizer;
     tokenizer.tokenize({text});
@@ -1378,7 +1400,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::classInstanceFromResolvedType(
         const PStatement &context, EvaluationContext &evaluation) const
 {
     ResolverProfileScope profileScope(resolverProfile.classInstanceNs,
-                                      resolverProfile.classInstanceCalls);
+                                      resolverProfile.classInstanceCalls, "classInstance");
     ClassInstance result;
     result.type = type;
     result.declaration = result.type.declaration.lock();
@@ -1409,7 +1431,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
         const ClassInstance &primary, EvaluationContext &evaluation) const
 {
     ResolverProfileScope profileScope(resolverProfile.specializationNs,
-                                      resolverProfile.specializationCalls);
+                                      resolverProfile.specializationCalls, "selectSpecialization");
     if (!primary.declaration || primary.declaration->kind != StatementKind::Class
             || primary.declaration->templateKind != TemplateDeclarationKind::Primary) {
         return primary;
@@ -1673,7 +1695,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         EvaluationContext &evaluation, bool stopAtDirectMember) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberLookupNs,
-                                      resolverProfile.memberLookupCalls);
+                                      resolverProfile.memberLookupCalls, "memberCandidates");
     QList<MemberResolution> result;
     if (!instance.declaration)
         return result;
@@ -1773,7 +1795,7 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
                                             const PStatement &context, bool typesOnly) const
 {
     ResolverProfileScope profileScope(resolverProfile.declarationLookupNs,
-                                      resolverProfile.declarationLookupCalls);
+                                      resolverProfile.declarationLookupCalls, "findDeclaration");
     ResolveOriginScope originScope("findDeclaration(" + qualifiedName + ")");
     traceDeclaration(qualifiedName, context, typesOnly);
     QString name = qualifiedName;
@@ -1811,7 +1833,7 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
                                                  bool &firstPartFound, bool typesOnly) const
 {
     ResolverProfileScope profileScope(resolverProfile.namespaceLookupNs,
-                                      resolverProfile.namespaceLookupCalls);
+                                      resolverProfile.namespaceLookupCalls, "findInNamespaceScope");
     for (int namespacePartCount = parts.count(); namespacePartCount >= 0; --namespacePartCount) {
         QString namespaceName = scope ? scope->fullName : QString();
         if (namespacePartCount > 0) {
@@ -1858,7 +1880,8 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
                                                      bool typesOnly) const
 {
     ResolverProfileScope profileScope(resolverProfile.declarationRemainderNs,
-                                      resolverProfile.declarationRemainderCalls);
+                                      resolverProfile.declarationRemainderCalls,
+                                      "findDeclarationRemainder");
     if (typesOnly && !isTypeDeclaration(statement))
         return nullptr;
     if (parts.count() > 1 && statement
@@ -1877,7 +1900,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
                                        bool typesOnly) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberDeclarationNs,
-                                      resolverProfile.memberDeclarationCalls);
+                                      resolverProfile.memberDeclarationCalls, "findMember");
     if (resolverProfile.traceEnabled) {
         QString origin = resolverProfile.resolveOriginStack.isEmpty()
                 ? "external" : resolverProfile.resolveOriginStack.join(">");
@@ -1895,7 +1918,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
             continue;
         visited.insert(current.get());
         ResolverProfileScope profileScope(resolverProfile.memberDfsNs,
-                                          resolverProfile.memberDfsCalls);
+                                          resolverProfile.memberDfsCalls, "memberDfs");
         const auto directCandidates = current->children.values(name);
         for (int i = directCandidates.count() - 1; i >= 0; --i) {
             PStatement candidate = directCandidates[i].lock();
@@ -2051,7 +2074,8 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
         const PStatement &declaration, const TypeInfo &instance,
         const PTemplateBindingFrame &outerBindings, EvaluationContext &evaluation) const
 {
-    ResolverProfileScope profileScope(resolverProfile.bindingsNs, resolverProfile.bindingsCalls);
+    ResolverProfileScope profileScope(resolverProfile.bindingsNs, resolverProfile.bindingsCalls,
+                                      "declarationBindings");
     ResolveOriginScope originScope("declarationBindings");
     if (!declaration) {
         auto result = std::make_shared<TemplateBindingFrame>();
