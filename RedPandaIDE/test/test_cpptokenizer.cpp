@@ -1505,6 +1505,36 @@ void TestCppTokenizer::test_type_resolver_binds_dependent_base_members()
 }
 
 
+void TestCppTokenizer::test_type_resolver_namespace_defaults_do_not_capture_caller_bindings()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "using U = double;\n"
+                "namespace N {\n"
+                "template<typename T = U> struct Identity { using type = T; };\n"
+                "}\n"
+                "template<typename U> struct Caller { using type = N::Identity; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo integerCaller;
+    QVERIFY(parseDeclarationText("Caller<int> value;", integerCaller));
+    TypeInfo integerIdentity = resolver.memberType(integerCaller.specifiers.type, "type");
+    QCOMPARE(integerIdentity.toString(), "N::Identity<double>");
+    QCOMPARE(resolver.memberType(integerIdentity, "type").toString(), "double");
+    DeclarationInfo stringCaller;
+    QVERIFY(parseDeclarationText("Caller<std::string> value;", stringCaller));
+    TypeInfo stringIdentity = resolver.memberType(stringCaller.specifiers.type, "type");
+    QCOMPARE(stringIdentity.toString(), "N::Identity<double>");
+    QCOMPARE(resolver.memberType(stringIdentity, "type").toString(), "double");
+}
+
+
 void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
 {
     QVector<DeclarationInfo> declarations;

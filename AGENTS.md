@@ -130,6 +130,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
 ```
 
   需要 `DECLARATION_PROFILE`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。
+- **tokenize/profile 的目的首先是发现并消除不合理操作，不是让计数或耗时好看**：profile 本身不以预期收益决定是否进行；每个不同 entry 都必须核对触发来源和必要性，不能仅凭总次数下降判断优化完成。cache/memo 可以使用，但统计必须同时保留解析尝试、命中情况和调用链，不能用 cache 命中隐藏冗余查找或重复处理。先查清并消除无意义操作，再用 cache 复用必要工作的结果；是否修改设计和代码时，才根据证据评估收益、复杂度和风险。
 
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
 

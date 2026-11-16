@@ -30,6 +30,18 @@ struct ClassInstance {
     PTemplateBindingFrame bindings;
 };
 
+struct TypeNameSegment {
+    QString name;
+    QVector<TemplateArgument> arguments;
+    bool hasTemplateArguments = false;
+    bool templateKeyword = false;
+};
+
+struct ParsedTypeName {
+    QVector<TypeNameSegment> segments;
+    bool globallyQualified = false;
+};
+
 struct TemplateBindingFrame {
     const Statement *owner = nullptr;
     TemplateBindings values;
@@ -63,7 +75,18 @@ public:
     struct EvaluationContext {
         QSet<QString> aliases;
         QSet<QString> resolvingTypes;
-        QHash<const Statement *, TypeInfo> specializationPatterns;
+        std::shared_ptr<QHash<const Statement *, TypeInfo>> specializationPatterns =
+                std::make_shared<QHash<const Statement *, TypeInfo>>();
+        std::shared_ptr<QHash<QString, TypeInfo>> parsedTypeTexts =
+                std::make_shared<QHash<QString, TypeInfo>>();
+        std::shared_ptr<QHash<QString, ParsedTypeName>> parsedTypeNames =
+                std::make_shared<QHash<QString, ParsedTypeName>>();
+        std::shared_ptr<QHash<QString, ParsedTypeName>> parsedTypePatterns =
+                std::make_shared<QHash<QString, ParsedTypeName>>();
+        std::shared_ptr<QHash<QString, PTemplateBindingFrame>> bindingFrames =
+                std::make_shared<QHash<QString, PTemplateBindingFrame>>();
+        std::shared_ptr<QHash<QString, ClassInstance>> selectedSpecializations =
+                std::make_shared<QHash<QString, ClassInstance>>();
         int operationCount = 0;
         bool resolutionFailed = false;
     };
@@ -101,12 +124,6 @@ public:
                                                const PStatement &member) const;
 
 private:
-    struct TypeNameSegment {
-        QString name;
-        QVector<TemplateArgument> arguments;
-        bool hasTemplateArguments = false;
-        bool templateKeyword = false;
-    };
     struct MemberResolution {
         PStatement statement;
         ClassInstance owner;
@@ -129,7 +146,10 @@ private:
     StatementAccessibility applyInheritance(
             StatementAccessibility member, StatementAccessibility inheritance) const;
     void bindParameterType(const TypeInfo &parameter, const TypeInfo &argument,
-                           const QSet<QString> &templateParameters, TemplateBindings &bindings) const;
+                           const QSet<QString> &templateParameters, TemplateBindings &bindings,
+                           EvaluationContext &evaluation) const;
+    void materializeTemplateArguments(TypeInfo &type, EvaluationContext &evaluation) const;
+    void materializeTemplateArgumentPatterns(TypeInfo &type, EvaluationContext &evaluation) const;
     QList<PStatement> functionCandidates(const PStatement &function) const;
     TypeInfo invokeFunctionCandidate(const PStatement &function, const QVector<TypeInfo> &arguments,
                                      const QVector<TemplateArgument> &explicitArguments,
@@ -151,8 +171,9 @@ private:
                                   bool globallyQualified, const PTemplateBindingFrame &bindings,
                                   const PStatement &context, EvaluationContext &evaluation) const;
     bool parseTypeNameSegments(const QString &text, QVector<TypeNameSegment> &segments,
-                               bool &globallyQualified) const;
-    TypeInfo parseTypeText(const QString &text) const;
+                               bool &globallyQualified, EvaluationContext &evaluation,
+                               bool materializeArguments = true) const;
+    TypeInfo parseTypeText(const QString &text, EvaluationContext &evaluation) const;
     TemplateArgument resolveArgument(const QString &text, TemplateParameterKind kind,
                                      const PTemplateBindingFrame &bindings,
                                      const PStatement &context, EvaluationContext &evaluation) const;
@@ -177,11 +198,11 @@ private:
                                             EvaluationContext &evaluation) const;
     SpecializationMatch matchType(const TypeInfo &pattern, const TypeInfo &actual,
                                   const QSet<QString> &parameters, TemplateBindings &bindings,
-                                  const PStatement &context) const;
+                                  const PStatement &context, EvaluationContext &evaluation) const;
     SpecializationMatch matchArgument(const TemplateArgument &pattern,
                                       const TemplateArgument &actual,
                                       const QSet<QString> &parameters, TemplateBindings &bindings,
-                                      const PStatement &context) const;
+                                      const PStatement &context, EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,
                                 EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,

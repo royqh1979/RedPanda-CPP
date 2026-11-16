@@ -39,7 +39,7 @@
 
 本文的实例化仅指在求值上下文中生成临时的 `TypeInfo`、模板绑定和声明引用。它不是完整的 C++ 编译器实例化，不生成函数体 AST，不生成一套实例化 Statement，也不持久保存整棵实例化类型树。
 
-求值内复用只保存当前顶层表达式中的临时结果：绑定帧保存已解析实参实例，求值上下文保存已结构化的特化声明模式。不得把 Session 共享的实例化 Statement 作为缓存方案，也不做跨表达式缓存。通用语义 memo 仍是后续可选项，详见“求值上下文、终止与 memo”。
+求值内复用只保存当前顶层表达式中的临时结果：类型语法结构、已解析实参实例、完整绑定帧、特化声明模式和成功的特化选择。不得把 Session 共享的实例化 Statement 作为缓存方案，也不做跨表达式缓存。更广泛的通用语义 memo 仍是后续可选项，详见“求值上下文、终止与 memo”。
 
 ### 保留真实名称与作用域
 
@@ -315,6 +315,11 @@ expression eval 按需把完整原文 tokenize 为临时 `TypeNameSegment` 列�
 这样 `A<T>::template B<U>::type` 中 `T` 属于 `A`，`U` 属于 `B`，最终 `type` 没有实参。
 若结构化 `TypeInfo` 已带有实参，也必须同步标记为显式实参，不能仅因名称原文省略了 `<...>` 就按无实参处理。
 
+`parsedTypeTexts` 保存成功的纯声明文本解析，`parsedTypeNames` 保存已实体化实参的分段结果，
+`parsedTypePatterns` 保存实参仍为原文的惰性分段结果。它们在派生求值上下文间共享，但失败结果不缓存。
+`materializeTemplateArguments()` 直接消费分段实参，不再启动第二套 tokenizer/parser；简单“限定名 + 实参”
+的 `parseTypeText()` 也复用同一分段结果。普通实参与惰性模式使用不同表，不能混用。
+
 类作用域内的 injected-class-name（例如 `vector<T>` 定义内单独写 `vector`）表示当前实例化，复用当前类
 绑定帧中的实参；只有未显式写出实参列表时才适用。普通类名查找不要求实例化：Class/Enum 的表达式结果
 直接保留声明，只有 Alias/Typedef 才展开目标。using declaration 引入类模板时，引用处的实参继续传给目标；
@@ -385,9 +390,14 @@ struct TemplateBindingFrame {
 `std::string → basic_string → char_traits/allocator` 重新展开。该表不是跨帧、跨表达式通用 memo，
 不同声明的同名形参仍由各自帧隔离。
 
+上下文的 `bindingFrames` 以“声明身份 + 完整实参结构 + 词法父帧身份”复用完整成功建立的绑定帧。
+默认实参缺失、递归失败或预算耗尽的帧不写入。该 memo 只消除不同别名路径汇合到同一声明子图时的
+重复工作，不改变绑定环境。
+
 `owner` 只是求值上下文内的非 owning 指针；表达式求值持有 Parser 读锁，StatementModel 在此期间不变。
 父帧不是任意外层调用者，而是声明的词法模板环境：
 
+- namespace/global 级声明的父帧为空，不能使用调用方绑定帧，也不能捕获调用方的同名模板形参；
 - 类成员别名模板的父帧是该类的绑定帧；
 - 嵌套类可以连接外层类帧；
 - 基类成员使用由基类实参新建的基类帧，不能回退到派生类的同名形参；
@@ -475,9 +485,13 @@ const 数量猜测。后续设计至少需要区分“声明结构相同、cv �
 - 非类型实参只比较字面量、已绑定形参和本轮可计算的 bool/枚举值；
 - 不执行 SFINAE、约束求值、用户定义转换或通用 constexpr。
 
-候选 Statement 的特化声明原文只在本次 `EvaluationContext` 中结构化一次，并以声明身份保存为
-`specializationPatterns`。重复选择同一主模板时复用的是候选模式，不是特化选择结果；每个实际类型仍须
-逐一完成候选匹配。不得在每次匹配时重新 tokenize 候选声明及其模板实参。
+候选 Statement 的特化声明只在本次 `EvaluationContext` 中按外层结构解析一次，并以声明身份保存为
+`specializationPatterns`。实参初始只保留原文；匹配先比较当前节点的内置类型、声明身份、cv 和派生结构，
+节点不匹配时立即拒绝，只有继续比较子实参时才调用 `parseTypeText()`。内置类型不经过 Statement 查找，
+名称必然不同的内置类型在特化匹配中直接拒绝，不做无意义查询。
+
+`selectedSpecializations` 另以“主模板声明 + 完整实参 + 绑定帧”复用成功的选择结果；歧义和未知结果不缓存。
+语法模式、匹配尝试和成功选择是不同数据，profile 必须分别记录 attempt/hit，不能用命中隐藏重复匹配。
 
 别名模板不能特化，本轮也不为它们引入特化候选逻辑。
 
@@ -584,18 +598,20 @@ alias 目标、函数返回类型和成员类型不得先退回 `TypeInfo` 再�
 上下文，不能在 `resolveMember()`、`invokeFunctionCandidate()` 等每层重新创建。上下文随顶层求值结束销毁，
 不跨表达式、Parser 调用、root、文件或 StatementModel 代次共享。
 
-当前只有两类局部复用：绑定帧自己的 `resolvedValues` 和上下文自己的 `specializationPatterns`。前者依附于
-不可变的实参绑定，后者只依附于既有声明身份；StatementBuilder 新增 lambda/auto Statement 不会改变这些
-既有绑定和声明原文，因此不需要引入 StatementModel 修改代次。若后续实现下述通用语义 memo，才需要增加
-单调代次并在模型修改后废弃旧结果，不能提前为未实现的缓存扩大模型接口。
+当前局部复用包括：绑定帧自己的 `resolvedValues`、语法解析表、`specializationPatterns`、完整
+`bindingFrames` 和成功的 `selectedSpecializations`。它们只依附于既有声明、不可变实参和词法父帧；
+StatementBuilder 新增 lambda/auto Statement 不会改写这些既有数据，因此不需要引入 StatementModel 修改代次。
+若后续把 memo 扩大到声明查找、一般类型求值、成员和调用层，才需要增加单调代次并在模型修改后废弃旧结果，
+不能提前为未实现的缓存扩大模型接口。
 
 上下文包含当前活动递归栈、操作预算和上述局部临时结果。活动递归栈用于检测循环，已完成的复用结果
-不得与活动栈混用。
+不得与活动栈混用。所有语法和语义 memo 都必须保留 attempt/hit 与来源统计；cache 只复用已证明必要且
+输入完全相同的工作，不能用于掩盖不合理操作。
 
 ### memo 键与结果值
 
-以下通用语义 memo 仍是后续方案，当前未实现。其键必须由“操作种类 + 类型/声明身份 + 词法上下文 +
-绑定环境”中实际相关的部分组成：
+以下更广泛的通用语义 memo 仍是后续方案；当前只实现上述绑定帧和特化选择 memo。其键必须由“操作种类 +
+类型/声明身份 + 词法上下文 + 绑定环境”中实际相关的部分组成：
 
 - 类型键包含声明身份（若已解析）、完整结构化实参、cv、指针/引用/数组等 derivations；
 - 未解析名称保留其限定名原文和词法作用域，不能用去掉 inline namespace 的 `fullName` 代替；
@@ -660,13 +676,16 @@ memo 查询发生在实际计算之前。命中后直接返回结果，不重复
 1. 统一顶层上下文并贯通 evaluator、resolver、TypeOperationRegistry 和 auto 初始化，用完整测试证明行为不变。
 2. 让 `EvalResult` 和成员求值结果携带 `ClassInstance`，由 `resolveSegments/resolveTypeInstance` 直接产生实例，
    并保持所有表达式运算中的类型与实例同步。
-3. 在绑定帧中复用已解析实参实例，在求值上下文中复用特化声明模式；二者均不跨表达式，不修改 StatementModel。
-4. 重新测量；只有共享子图或成员/调用层仍是明确热点时，才设计通用语义 memo，并补充分类明确的失败语义、
+3. 统一类型分段和实参语法解析，内置类型直接返回；特化匹配自顶向下按需解析子实参，避免预先展开全部候选。
+4. 按声明词法环境连接父帧，namespace/global 不捕获调用方绑定；复用完全相同的绑定帧和成功特化结果，
+   全部 memo 保留 attempt/hit 与来源统计。
+5. 只有共享子图或成员/调用层仍是明确热点时，才设计更广泛的通用语义 memo，并补充分类明确的失败语义、
    完整键和模型代次失效规则，不预先扩大缓存面。
 
 每批都必须验证：同别名不同实参不串结果，同类型不同绑定不串结果，cv/ref/派生结构不串结果，重开
-namespace 和 inline namespace 不串上下文，活动递归失败不污染后续求值，局部复用不修改 StatementModel
-或声明级原文，且两次顶层表达式之间不共享结果。未来通用 memo 另需验证模型代次变化后的失效。
+namespace 和 inline namespace 不串上下文，namespace 默认实参不捕获调用方同名形参，活动递归失败不污染
+后续求值，局部复用不修改 StatementModel 或声明级原文，且两次顶层表达式之间不共享结果。未来通用 memo
+另需验证模型代次变化后的失效。
 
 ## IDE 查询的统一入口
 
