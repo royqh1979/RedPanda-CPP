@@ -296,6 +296,10 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1082 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 
+对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
+
+基类列表的 `readUntil()` 拼接后由 `splitTopLevel()` 再 tokenize，属于另一类明确的重复词法处理。若继续优化，应在当前 token 流中直接按顶层逗号切分并截取原文，单独补充位置与嵌套模板测试并建立性能基线，不与上述临时对象实验混合。
+
 ## cppreference 语法覆盖测试
 
 测试资源位于 `RedPandaIDE/test/resources/syntax/`，文件内记录来源链接。默认测试不依赖外部标准库文件。
