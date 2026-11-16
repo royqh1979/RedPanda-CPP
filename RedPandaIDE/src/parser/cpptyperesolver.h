@@ -85,6 +85,10 @@ public:
                 std::make_shared<QHash<QString, PTemplateBindingFrame>>();
         std::shared_ptr<QHash<QString, ClassInstance>> selectedSpecializations =
                 std::make_shared<QHash<QString, ClassInstance>>();
+        std::shared_ptr<QHash<QString, PStatement>> declarationResults =
+                std::make_shared<QHash<QString, PStatement>>();
+        std::shared_ptr<QHash<QString, PStatement>> memberResults =
+                std::make_shared<QHash<QString, PStatement>>();
         int operationCount = 0;
         bool resolutionFailed = false;
         bool allowModelChanges = false;
@@ -92,7 +96,7 @@ public:
     using ClassInstance = ::ClassInstance;
     using PTemplateBindingFrame = ::PTemplateBindingFrame;
 
-    explicit CppTypeResolver(const StatementModel &model);
+    explicit CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation = nullptr);
 
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
                      const PStatement &context = {}, EvaluationContext *evaluation = nullptr) const;
@@ -221,6 +225,7 @@ private:
                                               EvaluationContext &evaluation) const;
 
     const StatementModel &mModel;
+    EvaluationContext *mEvaluation;
 };
 
 #endif // CPPTYPERESOLVER_H

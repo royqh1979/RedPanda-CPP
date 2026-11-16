@@ -327,8 +327,8 @@ struct ResolutionGuard {
 
 }
 
-CppTypeResolver::CppTypeResolver(const StatementModel &model)
-    : mModel(model)
+CppTypeResolver::CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation)
+    : mModel(model), mEvaluation(evaluation)
 {
 }
 
@@ -1807,25 +1807,41 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
     const QStringList parts = name.split("::", Qt::SkipEmptyParts);
     if (parts.isEmpty())
         return nullptr;
+    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
+    QString cacheKey;
+    if (cacheEnabled) {
+        cacheKey = QString::number(reinterpret_cast<quintptr>(initialContext.get()), 16) + "|"
+                + name + "|" + (typesOnly ? "types" : "all");
+        auto cached = mEvaluation->declarationResults->constFind(cacheKey);
+        traceSyntaxAttempt("findDeclaration", cacheKey,
+                           cached != mEvaluation->declarationResults->constEnd());
+        if (cached != mEvaluation->declarationResults->constEnd())
+            return cached.value();
+    }
+    auto finish = [&](PStatement result) {
+        if (cacheEnabled)
+            mEvaluation->declarationResults->insert(cacheKey, result);
+        return result;
+    };
 
     PStatement searchScope = initialContext;
     while (searchScope) {
         if (typesOnly && searchScope->kind == StatementKind::Class
                 && searchScope->command.section('<', 0, 0) == parts.first()) {
-            return findDeclarationRemainder(searchScope, parts, typesOnly);
+            return finish(findDeclarationRemainder(searchScope, parts, typesOnly));
         }
         if (searchScope->kind == StatementKind::Namespace) {
             bool firstPartFound = false;
             PStatement result = findInNamespaceScope(searchScope, parts, firstPartFound, typesOnly);
             if (result || firstPartFound)
-                return result;
+                return finish(result);
         } else if (PStatement current = findMember(searchScope, parts.first(), typesOnly)) {
-            return findDeclarationRemainder(current, parts, typesOnly);
+            return finish(findDeclarationRemainder(current, parts, typesOnly));
         }
         searchScope = searchScope->parentScope.lock();
     }
     bool firstPartFound = false;
-    return findInNamespaceScope({}, parts, firstPartFound, typesOnly);
+    return finish(findInNamespaceScope({}, parts, firstPartFound, typesOnly));
 }
 
 PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
@@ -1909,6 +1925,21 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
                 + (typesOnly ? "types" : "all");
         ++resolverProfile.memberDeclarationTrace[key];
     }
+    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
+    QString cacheKey;
+    if (cacheEnabled) {
+        cacheKey = QString::number(reinterpret_cast<quintptr>(scope.get()), 16) + "|"
+                + name + "|" + (typesOnly ? "types" : "all");
+        auto cached = mEvaluation->memberResults->constFind(cacheKey);
+        traceSyntaxAttempt("findMember", cacheKey, cached != mEvaluation->memberResults->constEnd());
+        if (cached != mEvaluation->memberResults->constEnd())
+            return cached.value();
+    }
+    auto finish = [&](PStatement result) {
+        if (cacheEnabled)
+            mEvaluation->memberResults->insert(cacheKey, result);
+        return result;
+    };
     QSet<const Statement *> visited;
     QStack<PStatement> pending;
     pending.push(scope);
@@ -1925,7 +1956,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
             if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
                 continue;
             if (candidate->kind != StatementKind::Namespace || candidate->command == name)
-                return candidate;
+                return finish(candidate);
             pending.push(candidate);
         }
         if (current->kind == StatementKind::Namespace) {
@@ -1951,7 +1982,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
         for (int i = bases.count() - 1; i >= 0; --i)
             pending.push(bases[i]);
     }
-    return nullptr;
+    return finish(nullptr);
 }
 
 const TemplateArgument *CppTypeResolver::findBinding(

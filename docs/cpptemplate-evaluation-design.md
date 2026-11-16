@@ -622,10 +622,11 @@ alias 目标、函数返回类型和成员类型不得先退回 `TypeInfo` 再�
 上下文，不能在 `resolveMember()`、`invokeFunctionCandidate()` 等每层重新创建。上下文随顶层求值结束销毁，
 不跨表达式、Parser 调用、root、文件或 StatementModel 代次共享。
 
-当前局部复用包括：绑定帧自己的 `resolvedValues`、语法解析表、完整 `bindingFrames` 和成功的
-`selectedSpecializations`。它们只依附于既有声明、不可变实参和词法父帧；
-StatementBuilder 新增 lambda/auto Statement 不会改写这些既有数据，因此不需要引入 StatementModel 修改代次。
-若后续把 memo 扩大到声明查找、一般类型求值、成员和调用层，才需要增加单调代次并在模型修改后废弃旧结果，
+当前局部复用包括：绑定帧自己的 `resolvedValues`、语法解析表、完整 `bindingFrames`、成功的
+`selectedSpecializations`，以及声明和成员查询结果 `declarationResults/memberResults`。前四类依附于既有声明、
+不可变实参和词法父帧；后两类以作用域身份、完整名称和 `typesOnly` 为键，命中和 miss 都保存。
+声明/成员 memo 只在 `allowModelChanges=false` 的查询期启用，构建期禁用，因此不需要引入 StatementModel
+修改代次。若后续把 memo 扩大到允许模型修改的构建期，才需要增加单调代次并在模型修改后废弃旧结果，
 不能提前为未实现的缓存扩大模型接口。
 
 上下文包含当前活动递归栈、操作预算和上述局部临时结果。活动递归栈用于检测循环，已完成的复用结果

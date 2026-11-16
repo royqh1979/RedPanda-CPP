@@ -762,14 +762,14 @@ EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &exp
     QElapsedTimer timer;
     if (profile)
         timer.start();
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver::EvaluationContext evaluation;
+    evaluation.allowModelChanges = mParsing;
+    CppTypeResolver resolver(mStatementList, &evaluation);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(mStatementList, resolver, operations);
     CppTokenizer tokenizer;
     const QString expressionText = expression.join(' ');
     tokenizer.tokenize({expressionText});
-    CppTypeResolver::EvaluationContext evaluation;
-    evaluation.allowModelChanges = mParsing;
     EvalResult result = evaluator.evaluate(tokenizer, currentScope, &evaluation);
     if (profile)
         qWarning() << "EVAL_PROFILE" << timer.nsecsElapsed() / 1000000.0 << expressionText;

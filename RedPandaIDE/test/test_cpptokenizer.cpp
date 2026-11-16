@@ -1565,6 +1565,31 @@ void TestCppTokenizer::test_type_resolver_namespace_defaults_do_not_capture_call
 }
 
 
+void TestCppTokenizer::test_member_lookup_cache_ignores_model_changes()
+{
+    StatementModel model;
+    CppTypeResolver::EvaluationContext evaluation;
+    CppTypeResolver resolver(model, &evaluation);
+    auto nameSpace = std::make_shared<Statement>();
+    nameSpace->kind = StatementKind::Namespace;
+    nameSpace->command = "N";
+    nameSpace->fullName = "N";
+    model.add(nameSpace);
+
+    QVERIFY(!resolver.findStatement("N::Missing"));
+    QVERIFY(!resolver.findStatement("N::Missing"));
+
+    evaluation.allowModelChanges = true;
+    auto missing = std::make_shared<Statement>();
+    missing->kind = StatementKind::Class;
+    missing->parentScope = nameSpace;
+    missing->command = "Missing";
+    missing->fullName = "N::Missing";
+    model.add(missing);
+    QCOMPARE(resolver.findStatement("N::Missing"), missing);
+}
+
+
 void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
 {
     QVector<DeclarationInfo> declarations;

@@ -190,7 +190,7 @@ StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存
 
 只有 namespace 会因重开而由多个 Statement 表示同一逻辑作用域。class/enum 的声明与定义应合并，函数重载不是同一作用域的重复节点，Block 只是局部作用域占位；它们不参与这种重名分支查找。namespace 不能声明在 class 内，因此 qualified name 的 namespace 分支只会出现在前部的 namespace 前缀中，进入 class/enum 等非 namespace 作用域后不再需要 namespace 回退。
 
-查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。透明分支直接读取 namespace 索引，不再扫描全量 Statement 收集 inline flags，也不只看当前 Statement 自身 flags。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。public findNamespace 默认只返回实际 fullName 相同的节点，调用方可通过 includeInline 参数同时取得挂到父键下的 inline 节点。
+查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。透明分支直接读取 namespace 索引，不再扫描全量 Statement 收集 inline flags，也不只看当前 Statement 自身 flags。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。public findNamespace 默认只返回实际 fullName 相同的节点，调用方可通过 includeInline 参数同时取得挂到父键下的 inline 节点。声明和成员查询在 EvaluationContext 中按作用域身份、完整名称和 typesOnly 复用命中与 miss；只允许模型不变的查询期使用，构建期禁用，避免旧 miss 泄漏到新增声明之后。
 
 本批只修正普通、inline 和匿名 namespace 的重开查找，不扩展到 Block、函数/lambda 局部作用域、通用多义符号查找或 namespace alias 的新能力。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。class 与变量/函数同名虽然合法，但属于明确不支持的低价值消歧场景；此类代码的限定名查找结果不作保证，也不为它增加候选类型过滤或额外回退。
 
