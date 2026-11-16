@@ -634,6 +634,28 @@ void TestWidgets::test_code_completion_operator_overloads_are_excluded()
              QSet<QString>{"operator\"\"_test"});
 }
 
+void TestWidgets::test_class_browser_reopened_namespace_single_node()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace N { int first; }",
+            "namespace N { int second; }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", false, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile("classbrowser.cpp");
+    model.fillStatements();
+    QModelIndex root;
+    QCOMPARE(model.rowCount(root), 1);
+    QModelIndex n = findNode(model, root, "N");
+    QVERIFY(n.isValid());
+    QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
+}
+
 void TestWidgets::test_class_browser_inherited_members()
 {
     ClassBrowserModel model;

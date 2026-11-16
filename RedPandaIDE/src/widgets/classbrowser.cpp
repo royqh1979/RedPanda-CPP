@@ -246,7 +246,6 @@ void ClassBrowserModel::clear()
     mNodes.clear();
     mNodeIndex.clear();
     mProcessedStatements.clear();
-    mDummyStatements.clear();
     mScopeNodes.clear();
     endResetModel();
 }
@@ -453,52 +452,14 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
                 parentNode = dummyNode;
         }
         if (isScopeStatement(statement)) {
-            //PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
             PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
-            if (!scopeNode) {
-                PStatement dummy = createDummy(statement);
-                scopeNode = addChild(parentNode,dummy);
-            }
+            if (!scopeNode)
+                scopeNode = addChild(parentNode, statement);
             filterChildren(scopeNode.get(), mParser->membersOfStatement(statement));
         } else {
             addChild(parentNode,statement);
         }
     }
-}
-
-PStatement ClassBrowserModel::createDummy(const PStatement& statement)
-{
-    PStatement result = StatementFactory::create(
-                statement->kind, statement->parentScope.lock(), statement->command, statement->fullName);
-    if (statement->kind == StatementKind::Namespace) {
-        auto source = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-        auto target = std::dynamic_pointer_cast<NamespaceStatement>(result);
-        target->declSpecifierProperties = source->declSpecifierProperties;
-    } else {
-        auto source = std::dynamic_pointer_cast<Statement>(statement);
-        auto target = std::dynamic_pointer_cast<Statement>(result);
-        target->args = source->args;
-        target->normalizedArgs = source->normalizedArgs;
-        target->classKey = source->classKey;
-        target->baseClasses = source->baseClasses;
-        target->typeInfo = source->typeInfo;
-        target->declSpecifierProperties = source->declSpecifierProperties;
-        target->value = source->value;
-    }
-    result->scope = statement->scope;
-    if (statement->parentScope.lock()) {
-        result->accessibility = mParser->memberAccessibility(
-                    statement->parentScope.lock(), statement);
-    } else {
-        result->accessibility = statement->accessibility;
-    }
-    result->properties = statement->properties;
-    result->fileName= statement->fileName;
-    result->declarationRange = statement->declarationRange;
-    result->definitionFileName = statement->definitionFileName;
-    result->definitionRange = statement->definitionRange;
-    mDummyStatements.insert(result->fullName,result);
-    return result;
 }
 
 ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentStatement, int depth)
@@ -510,9 +471,8 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
 
     PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
     if (!parentNode) {
-        PStatement dummyParent = createDummy(parentStatement);
         ClassBrowserNode *grandNode = getParentNode(parentStatement->parentScope.lock(), depth+1);
-        parentNode = addChild(grandNode,dummyParent);
+        parentNode = addChild(grandNode, parentStatement);
     }
     return parentNode.get();
 }
