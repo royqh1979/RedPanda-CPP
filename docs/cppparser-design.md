@@ -64,6 +64,8 @@ Parser 通过 TokenCursor 消费 token，不再由各 handler 任意改写全局
 
 游标位置包含 token 索引和 `>>` 内已经消费的 `>` 数量，因此半 token 消费也能正确回滚。试探解析只能改变并回滚游标，不得创建 Statement、修改作用域或更新其它全局解析结果。
 
+TokenCursor 和 Tokenizer 的字面量文本匹配使用 `const char *`/`QLatin1String` 重载，不为每次 `consume("...")` 或 `startsWith("...")` 构造临时 QString；动态文本仍使用 QString 重载。该约束适用于声明解析的高频比较路径，不能以统一接口为由保留隐式字符串分配。
+
 lambda 的识别由 Parser 根据上下文完成，删除 Tokenizer 的 `mLambdas` 候选队列。表达式跳过仍使用括号和分隔符结构，不建立表达式 AST。
 
 ### DeclaratorInfo
@@ -291,6 +293,8 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找、声明绑定、模板实参结构化和类型键文本生成的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询，`STDLIB_CONTAINER_EVAL` 记录各容器表达式求值耗时。
 
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
+
+GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1082 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 
 ## cppreference 语法覆盖测试
 

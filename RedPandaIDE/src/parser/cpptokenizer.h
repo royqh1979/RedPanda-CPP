@@ -87,6 +87,7 @@ private:
     void readFileBoundary(const QString &text, int tokenIndex);
 
     bool atEnd() const { return *mCurrent == 0; }
+    bool startsWith(const char *text) const;
     bool startsWith(const QString &text) const;
     void advance();
     static bool isIdentifierStart(QChar ch) { return ch == '_' || ch.isLetter(); }

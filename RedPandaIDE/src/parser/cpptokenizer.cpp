@@ -530,6 +530,20 @@ void CppTokenizer::readFileBoundary(const QString &text, int tokenIndex)
         mCurrentPosition = SourcePosition{line, 0};
 }
 
+bool CppTokenizer::startsWith(const char *text) const
+{
+    TokenizerProfileScope profileScope(tokenizerProfile.startsWithNs,
+                                       tokenizerProfile.startsWithCalls);
+    if (tokenizerProfile.enabled)
+        ++tokenizerProfile.startsWithTextCalls[text];
+    QLatin1String latinText(text);
+    for (int i = 0; i < latinText.size(); ++i) {
+        if (mCurrent[i] != latinText[i])
+            return false;
+    }
+    return true;
+}
+
 bool CppTokenizer::startsWith(const QString &text) const
 {
     TokenizerProfileScope profileScope(tokenizerProfile.startsWithNs,
