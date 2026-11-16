@@ -245,7 +245,7 @@ class 补全的基类遍历不因本设计改变。
 
 树形视图同时显示实际声明和using。using 的类型解析、跳转、parse hint 和 function tips 均指向实际目标。
 
-唯一命名 namespace 实现后，class browser 直接显示唯一实体，不再需要为重开节点创建 dummy Statement。该调用方调整放在 parser 改造、完整测试和性能测量完成之后处理，不与 parser 核心阶段混合实施。
+唯一命名 namespace 实现后，class browser 直接显示唯一实体，不再需要为重开节点创建 dummy Statement。该调用方调整已完成；Block 和 Lambda 使用的 `DummyStatement` 属性与 namespace 展示无关，继续保留。
 
 refactor/rename 不属于本轮改造范围，后续统一完善。
 

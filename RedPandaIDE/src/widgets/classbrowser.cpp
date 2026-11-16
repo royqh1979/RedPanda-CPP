@@ -397,8 +397,6 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
 
         if (mProcessedStatements.value(node).contains(statement.get()))
             continue;
-//        if (statement->properties.testFlag(StatementProperty::spDummyStatement))
-//            continue;
 
         if (statement->kind == StatementKind::Block)
             continue;
