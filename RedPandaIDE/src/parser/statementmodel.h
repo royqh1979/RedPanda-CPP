@@ -63,6 +63,7 @@ private:
     void deleteMember(StatementMap& map, const PStatement& statement);
     void addNamespaceStatement(const QString &fullName, const PStatement &statement);
     void deleteNamespaceStatement(const QString &fullName, const PStatement &statement);
+    QList<PStatement> exactNamespaceStatements(const QString &fullName) const;
     void dumpStatementMap(const StatementMap& map, QTextStream& out, int level) const;
 private:
     int mCount;

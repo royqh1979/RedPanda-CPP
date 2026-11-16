@@ -2624,6 +2624,28 @@ void TestCppTokenizer::test_qualified_lookup_respects_lexical_and_local_scopes()
     QVERIFY(!resolver.findStatement("inner", function));
 }
 
+void TestCppTokenizer::test_namespace_delete_does_not_reinsert_transparent_descendants()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("namespace outer { namespace regular {"
+                            " inline namespace abi { int value; } } }", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    context.boundaryAncestor = context.fileName;
+    builder.build(declarations.first(), context);
+    CppTypeResolver resolver(model);
+    PStatement regular = resolver.findStatement("outer::regular");
+    QVERIFY(regular);
+    QCOMPARE(model.transparentNamespaceStatements("outer::regular").count(), 1);
+
+    model.deleteStatement(regular);
+    QVERIFY(resolver.findStatement("outer"));
+    QVERIFY(model.namespaceStatements("outer::regular").isEmpty());
+    QVERIFY(!resolver.findStatement("outer::regular::value"));
+}
+
 
 void TestCppTokenizer::test_template_forward_declaration_with_default_arguments()
 {

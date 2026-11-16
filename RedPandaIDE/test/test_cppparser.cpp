@@ -2144,3 +2144,24 @@ void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
     QVERIFY(mParser->findNamespace("std", true)->isEmpty());
     QVERIFY(mParser->findNamespace("std::__cxx11")->isEmpty());
 }
+
+void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"namespace outer { namespace regular { } }",
+                             "namespace outer::regular { inline namespace abi { int value; } }",
+                             "namespace outer::regular { int reopened; }"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    QCOMPARE(mParser->findNamespace("outer")->count(), 1);
+    QCOMPARE(mParser->findNamespace("outer", true)->count(), 1);
+    QCOMPARE(mParser->findNamespace("outer::regular")->count(), 1);
+    QCOMPARE(mParser->findNamespace("outer::regular", true)->count(), 2);
+    QVERIFY(mParser->findStatement("outer::regular::value"));
+    QVERIFY(mParser->findStatement("outer::regular::reopened"));
+    QVERIFY(!mParser->findStatement("outer::value"));
+    mParser->invalidateFile("main.cpp");
+    QVERIFY(mParser->findNamespace("outer", true)->isEmpty());
+    QVERIFY(mParser->findNamespace("outer::regular", true)->isEmpty());
+}

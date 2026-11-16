@@ -83,7 +83,7 @@ void StatementModel::deleteStatement(const PStatement& statement)
         deleteMember(mGlobalStatements, statement);
     }
     if (statement->kind == StatementKind::Namespace) {
-        const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+        const QList<PStatement> siblings = exactNamespaceStatements(statement->fullName);
         if (parent && parent->kind == StatementKind::Namespace) {
             for (const PStatement &sibling : siblings)
                 deleteNamespaceStatement(parent->fullName, sibling);
@@ -110,7 +110,7 @@ void StatementModel::updateNamespaceTransparency(const PStatement &statement)
 {
     if (!statement || statement->kind != StatementKind::Namespace)
         return;
-    const QList<PStatement> siblings = namespaceStatements(statement->fullName);
+    const QList<PStatement> siblings = exactNamespaceStatements(statement->fullName);
     bool transparent = statement->command.isEmpty();
     for (const PStatement &sibling : siblings) {
         if (sibling->command.isEmpty()
@@ -156,6 +156,17 @@ QList<PStatement> StatementModel::namespaceStatements(const QString &fullName) c
     const auto statements = mNamespaceStatements.values(fullName);
     for (const std::weak_ptr<Statement> &weak : statements) {
         if (PStatement statement = weak.lock())
+            result.append(statement);
+    }
+    return result;
+}
+
+QList<PStatement> StatementModel::exactNamespaceStatements(const QString &fullName) const
+{
+    QList<PStatement> result;
+    const QList<PStatement> statements = namespaceStatements(fullName);
+    for (const PStatement &statement : statements) {
+        if (statement->fullName == fullName)
             result.append(statement);
     }
     return result;

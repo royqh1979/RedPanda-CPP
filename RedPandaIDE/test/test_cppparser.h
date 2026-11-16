@@ -60,6 +60,7 @@ private slots:
     void test_overloaded_declaration_definition_merge();
     void test_local_declarations_in_disjoint_blocks_remain_distinct();
     void test_namespace_index_inline_filter_and_invalidation();
+    void test_namespace_index_does_not_promote_inline_descendants();
     void test_find_statement_of_inline_namespace();
     void test_nested_namespace_scope_parentage();
 #ifdef REDPANDA_PARSER_STDLIB_TEST
