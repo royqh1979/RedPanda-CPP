@@ -58,6 +58,8 @@ struct ResolverProfile {
     qint64 memberDeclarationCalls = 0;
     qint64 memberDfsNs = 0;
     qint64 memberDfsCalls = 0;
+    qint64 memberCacheNs = 0;
+    qint64 memberCacheCalls = 0;
     QHash<QString, qint64> declarationTrace;
     QHash<QString, qint64> memberDeclarationTrace;
     QHash<QString, qint64> resolveTypeTrace;
@@ -85,6 +87,7 @@ struct ResolverProfile {
         declarationRemainderNs = declarationRemainderCalls = 0;
         memberDeclarationNs = memberDeclarationCalls = 0;
         memberDfsNs = memberDfsCalls = 0;
+        memberCacheNs = memberCacheCalls = 0;
         declarationTrace.clear();
         memberDeclarationTrace.clear();
         resolveTypeTrace.clear();
@@ -120,7 +123,8 @@ struct ResolverProfile {
                        << declarationRemainderNs / 1000000.0 << declarationRemainderCalls
                        << "memberDeclaration" << memberDeclarationNs / 1000000.0
                        << memberDeclarationCalls << "memberDfs"
-                       << memberDfsNs / 1000000.0 << memberDfsCalls;
+                       << memberDfsNs / 1000000.0 << memberDfsCalls
+                       << "memberCache" << memberCacheNs / 1000000.0 << memberCacheCalls;
             for (auto it = selfNs.constBegin(); it != selfNs.constEnd(); ++it)
                 qWarning().noquote() << "RESOLVER_SELF" << it.key() << it.value() / 1000000.0;
         }
@@ -153,6 +157,12 @@ struct ResolverProfile {
 };
 
 ResolverProfile resolverProfile;
+
+QString lookupKeyText(const LookupKey &key)
+{
+    return QString::number(reinterpret_cast<quintptr>(key.scope), 16) + "|" + key.name + "|"
+            + (key.typesOnly ? "types" : "all");
+}
 
 void traceEvent(QHash<QString, qint64> &trace, const QString &key)
 {
@@ -1808,13 +1818,12 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
     if (parts.isEmpty())
         return nullptr;
     bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
-    QString cacheKey;
+    LookupKey cacheKey{initialContext.get(), name, typesOnly};
     if (cacheEnabled) {
-        cacheKey = QString::number(reinterpret_cast<quintptr>(initialContext.get()), 16) + "|"
-                + name + "|" + (typesOnly ? "types" : "all");
         auto cached = mEvaluation->declarationResults->constFind(cacheKey);
-        traceSyntaxAttempt("findDeclaration", cacheKey,
-                           cached != mEvaluation->declarationResults->constEnd());
+        if (resolverProfile.traceEnabled)
+            traceSyntaxAttempt("findDeclaration", lookupKeyText(cacheKey),
+                               cached != mEvaluation->declarationResults->constEnd());
         if (cached != mEvaluation->declarationResults->constEnd())
             return cached.value();
     }
@@ -1926,12 +1935,14 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
         ++resolverProfile.memberDeclarationTrace[key];
     }
     bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
-    QString cacheKey;
+    LookupKey cacheKey{scope.get(), name, typesOnly};
     if (cacheEnabled) {
-        cacheKey = QString::number(reinterpret_cast<quintptr>(scope.get()), 16) + "|"
-                + name + "|" + (typesOnly ? "types" : "all");
+        ResolverProfileScope profileScope(resolverProfile.memberCacheNs,
+                                          resolverProfile.memberCacheCalls, "memberCache");
         auto cached = mEvaluation->memberResults->constFind(cacheKey);
-        traceSyntaxAttempt("findMember", cacheKey, cached != mEvaluation->memberResults->constEnd());
+        if (resolverProfile.traceEnabled)
+            traceSyntaxAttempt("findMember", lookupKeyText(cacheKey),
+                               cached != mEvaluation->memberResults->constEnd());
         if (cached != mEvaluation->memberResults->constEnd())
             return cached.value();
     }

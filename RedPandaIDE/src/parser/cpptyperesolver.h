@@ -42,6 +42,23 @@ struct ParsedTypeName {
     bool globallyQualified = false;
 };
 
+struct LookupKey {
+    const Statement *scope = nullptr;
+    QString name;
+    bool typesOnly = false;
+
+    bool operator==(const LookupKey &other) const
+    {
+        return scope == other.scope && name == other.name && typesOnly == other.typesOnly;
+    }
+};
+
+inline uint qHash(const LookupKey &key, uint seed = 0) noexcept
+{
+    return qHash(key.name, seed) ^ qHash(reinterpret_cast<quintptr>(key.scope), seed)
+            ^ (key.typesOnly ? 1 : 0);
+}
+
 struct TemplateBindingFrame {
     const Statement *owner = nullptr;
     TemplateBindings values;
@@ -85,10 +102,10 @@ public:
                 std::make_shared<QHash<QString, PTemplateBindingFrame>>();
         std::shared_ptr<QHash<QString, ClassInstance>> selectedSpecializations =
                 std::make_shared<QHash<QString, ClassInstance>>();
-        std::shared_ptr<QHash<QString, PStatement>> declarationResults =
-                std::make_shared<QHash<QString, PStatement>>();
-        std::shared_ptr<QHash<QString, PStatement>> memberResults =
-                std::make_shared<QHash<QString, PStatement>>();
+        std::shared_ptr<QHash<LookupKey, PStatement>> declarationResults =
+                std::make_shared<QHash<LookupKey, PStatement>>();
+        std::shared_ptr<QHash<LookupKey, PStatement>> memberResults =
+                std::make_shared<QHash<LookupKey, PStatement>>();
         int operationCount = 0;
         bool resolutionFailed = false;
         bool allowModelChanges = false;
