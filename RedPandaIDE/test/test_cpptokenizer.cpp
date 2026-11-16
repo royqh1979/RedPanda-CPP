@@ -816,7 +816,20 @@ void TestCppTokenizer::test_statement_factory_initializes_statements()
         QCOMPARE(statement->matchPosSpan, 0);
         QCOMPARE(statement->firstMatchLength, 0);
         QCOMPARE(statement->caseMatched, 0);
+        if (entry.first == StatementKind::Namespace)
+            QVERIFY(std::dynamic_pointer_cast<NamespaceStatement>(statement));
+        else
+            QVERIFY(std::dynamic_pointer_cast<Statement>(statement));
     }
+
+    PStatement genericNamespace = StatementFactory::create(
+                StatementKind::Namespace, parent, "Child", "Parent::Child");
+    QVERIFY(std::dynamic_pointer_cast<NamespaceStatement>(genericNamespace));
+    auto alias = StatementFactory::createInlineAlias(
+                parent, "value", "Parent::value", "Parent::Actual::value");
+    QCOMPARE(alias->kind, StatementKind::Alias);
+    QCOMPARE(alias->targetName, "Parent::Actual::value");
+    QVERIFY(std::dynamic_pointer_cast<InlineAliasStatement>(alias));
 }
 
 void TestCppTokenizer::test_scope_range_queries()
@@ -989,7 +1002,7 @@ namespace {
 PStatement findStatement(const StatementMap &statements, const QString &name)
 {
     const auto values = statements.values(name);
-    for (const std::weak_ptr<Statement> &statement : values) {
+    for (const std::weak_ptr<AbstractStatement> &statement : values) {
         if (PStatement result = statement.lock())
             return result;
     }
@@ -1017,22 +1030,22 @@ void TestCppTokenizer::test_statement_builder_expands_declarators_and_types()
     PStatement pf = findStatement(globals, "pf");
     QVERIFY(a && p && f && pf);
     QCOMPARE(a->kind, StatementKind::Variable);
-    QCOMPARE(a->type(), "int");
-    QCOMPARE(p->type(), "int *");
+    QCOMPARE(statementType(a), "int");
+    QCOMPARE(statementType(p), "int *");
     QCOMPARE(f->kind, StatementKind::Function);
-    QCOMPARE(f->type(), "int");
-    QCOMPARE(f->args, "(double value)");
-    QCOMPARE(f->normalizedArgs, "(double)");
+    QCOMPARE(statementType(f), "int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(f)->args, "(double value)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(f)->normalizedArgs, "(double)");
     QVERIFY(pf->properties.testFlag(StatementProperty::FunctionPointer));
-    QCOMPARE(pf->typeInfo.toString(), "int (*)(char)");
-    QCOMPARE(pf->type(), "int");
-    QCOMPARE(pf->args, "(char)");
-    QCOMPARE(pf->normalizedArgs, "(char)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(pf)->typeInfo.toString(), "int (*)(char)");
+    QCOMPARE(statementType(pf), "int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(pf)->args, "(char)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(pf)->normalizedArgs, "(char)");
 
-    PStatement parameter = findStatement(f->children, "value");
+    PStatement parameter = findStatement(std::dynamic_pointer_cast<Statement>(f)->children, "value");
     QVERIFY(parameter);
     QCOMPARE(parameter->kind, StatementKind::Parameter);
-    QCOMPARE(parameter->type(), "double");
+    QCOMPARE(statementType(parameter), "double");
     QCOMPARE(parameter->fullName, "f::value");
 }
 
@@ -1064,11 +1077,11 @@ void TestCppTokenizer::test_statement_builder_preserves_function_and_access_prop
 
     PStatement c = findStatement(model.childrenStatements(), "C");
     QVERIFY(c);
-    const auto overloads = c->children.values("overload");
+    const auto overloads = std::dynamic_pointer_cast<Statement>(c)->children.values("overload");
     QCOMPARE(overloads.count(), 2);
     PStatement constOverload;
     PStatement nonConstOverload;
-    for (const std::weak_ptr<Statement> &weak : overloads) {
+    for (const std::weak_ptr<AbstractStatement> &weak : overloads) {
         PStatement overload = weak.lock();
         QVERIFY(overload);
         if (overload->properties.testFlag(StatementProperty::Const))
@@ -1077,36 +1090,36 @@ void TestCppTokenizer::test_statement_builder_preserves_function_and_access_prop
             nonConstOverload = overload;
     }
     QVERIFY(constOverload && nonConstOverload);
-    QCOMPARE(constOverload->args, "() const");
-    QCOMPARE(constOverload->normalizedArgs, "() const");
-    QCOMPARE(nonConstOverload->args, "()");
-    QCOMPARE(nonConstOverload->normalizedArgs, "()");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(constOverload)->args, "() const");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(constOverload)->normalizedArgs, "() const");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(nonConstOverload)->args, "()");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(nonConstOverload)->normalizedArgs, "()");
 
-    PStatement qualifiers = findStatement(c->children, "qualifiers");
+    PStatement qualifiers = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "qualifiers");
     QVERIFY(qualifiers);
     QVERIFY(qualifiers->properties.testFlag(StatementProperty::Const));
     QVERIFY(qualifiers->properties.testFlag(StatementProperty::Volatile));
     QVERIFY(qualifiers->properties.testFlag(StatementProperty::LvalueReference));
     QVERIFY(!qualifiers->properties.testFlag(StatementProperty::RvalueReference));
-    QCOMPARE(qualifiers->normalizedArgs, "() const volatile &");
-    PStatement rvalue = findStatement(c->children, "rvalue");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(qualifiers)->normalizedArgs, "() const volatile &");
+    PStatement rvalue = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "rvalue");
     QVERIFY(rvalue);
     QVERIFY(rvalue->properties.testFlag(StatementProperty::RvalueReference));
     QVERIFY(!rvalue->properties.testFlag(StatementProperty::LvalueReference));
 
-    PStatement count = findStatement(c->children, "count");
-    QVERIFY(count && count->isStatic());
-    QVERIFY(count->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
-    QCOMPARE(findStatement(c->children, "protectedMethod")->accessibility,
+    PStatement count = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "count");
+    QVERIFY(count && statementIsStatic(count));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(count)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
+    QCOMPARE(findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "protectedMethod")->accessibility,
              StatementAccessibility::Protected);
-    QCOMPARE(findStatement(c->children, "privateMethod")->accessibility,
+    QCOMPARE(findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "privateMethod")->accessibility,
              StatementAccessibility::Private);
     PStatement external = findStatement(model.childrenStatements(), "external");
     QVERIFY(external);
-    QVERIFY(external->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(external)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
     PStatement internal = findStatement(model.childrenStatements(), "internal");
-    QVERIFY(internal && internal->isStatic());
-    QVERIFY(internal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
+    QVERIFY(internal && statementIsStatic(internal));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(internal)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static));
 }
 
 void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_ancestors()
@@ -1132,22 +1145,22 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
 
     PStatement n = findStatement(model.childrenStatements(), "N");
     QVERIFY(n);
-    PStatement c = findStatement(n->children, "C");
+    PStatement c = findStatement(model.childrenStatements(n), "C");
     QVERIFY(c);
     QCOMPARE(c->fullName, "N::C");
     QCOMPARE(c->scope, StatementScope::Global);
     QCOMPARE(c->declarationRange.start, (SourcePosition{1, 2}));
-    QVERIFY(c->hasDefinition());
+    QVERIFY(statementHasDefinition(c));
 
-    PStatement constructor = findStatement(c->children, "C");
+    PStatement constructor = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "C");
     QVERIFY(constructor);
     QCOMPARE(constructor->kind, StatementKind::Constructor);
     QCOMPARE(constructor->accessibility, StatementAccessibility::Public);
-    PStatement parameter = findStatement(constructor->children, "value");
+    PStatement parameter = findStatement(std::dynamic_pointer_cast<Statement>(constructor)->children, "value");
     QVERIFY(parameter);
     QCOMPARE(parameter->declarationRange.start.line, 3);
 
-    PStatement method = findStatement(c->children, "method");
+    PStatement method = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "method");
     QVERIFY(method);
     QCOMPARE(method->kind, StatementKind::Function);
     QCOMPARE(method->fullName, "N::C::method");
@@ -1157,17 +1170,17 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
     QCOMPARE(method->declarationBoundaryAncestor, "/tmp/main.cpp");
     QCOMPARE(method->definitionFileName, "/tmp/include.h");
     QCOMPARE(method->definitionBoundaryAncestor, "/tmp/main.cpp");
-    QVERIFY(method->inSystemHeader());
+    QVERIFY(statementInSystemHeader(method));
 
-    PStatement count = findStatement(c->children, "count");
+    PStatement count = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "count");
     QVERIFY(count);
     QCOMPARE(count->kind, StatementKind::Variable);
     QCOMPARE(count->scope, StatementScope::ClassLocal);
-    QVERIFY(count->isStatic());
+    QVERIFY(statementIsStatic(count));
 
-    std::weak_ptr<Statement> countReference = count;
+    std::weak_ptr<AbstractStatement> countReference = count;
     model.clear();
-    QVERIFY(c->children.isEmpty());
+    QVERIFY(std::dynamic_pointer_cast<Statement>(c)->children.isEmpty());
     count.reset();
     QVERIFY(countReference.expired());
 }
@@ -1196,27 +1209,27 @@ void TestCppTokenizer::test_statement_builder_assigns_out_of_line_special_member
 
     PStatement n = findStatement(model.childrenStatements(), "N");
     QVERIFY(n);
-    PStatement c = findStatement(n->children, "C");
+    PStatement c = findStatement(model.childrenStatements(n), "C");
     QVERIFY(c);
     QCOMPARE(c->kind, StatementKind::Class);
-    QCOMPARE(n->children.values("C").count(), 1);
-    PStatement constructor = findStatement(c->children, "C");
-    PStatement destructor = findStatement(c->children, "~C");
+    QCOMPARE(model.childrenStatements(n).values("C").count(), 1);
+    PStatement constructor = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "C");
+    PStatement destructor = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "~C");
     QVERIFY(constructor && destructor);
-    QCOMPARE(c->children.values("C").count(), 1);
-    QCOMPARE(c->children.values("~C").count(), 1);
-    QVERIFY(constructor->hasDefinition());
-    QVERIFY(destructor->hasDefinition());
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(c)->children.values("C").count(), 1);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(c)->children.values("~C").count(), 1);
+    QVERIFY(statementHasDefinition(constructor));
+    QVERIFY(statementHasDefinition(destructor));
     QCOMPARE(constructor->parentScope.lock(), c);
     QCOMPARE(destructor->parentScope.lock(), c);
     QCOMPARE(constructor->fullName, "N::C::C");
     QCOMPARE(destructor->fullName, "N::C::~C");
     QVERIFY(constructor->fullName != c->fullName);
     QVERIFY(destructor->fullName != c->fullName);
-    PStatement callOperator = findStatement(c->children, "operator()");
+    PStatement callOperator = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "operator()");
     QVERIFY(callOperator);
     QCOMPARE(callOperator->kind, StatementKind::OverloadedOperator);
-    QVERIFY(callOperator->hasDefinition());
+    QVERIFY(statementHasDefinition(callOperator));
     QCOMPARE(callOperator->parentScope.lock(), c);
     QCOMPARE(callOperator->fullName, "N::C::operator()");
     CppTypeResolver resolver(model);
@@ -1242,10 +1255,10 @@ void TestCppTokenizer::test_statement_builder_merges_forward_class_with_definiti
 
     PStatement c = findStatement(model.childrenStatements(), "C");
     QVERIFY(c);
-    QCOMPARE(c->baseClasses, QStringList{"Base<U>"});
-    QCOMPARE(c->templateParameters.count(), 2);
-    QVERIFY(c->templateParameters[1].defaultArgumentText.isEmpty());
-    QCOMPARE(c->inheritedDefaultArgumentTexts[1], "T");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(c)->baseClasses, QStringList{"Base<U>"});
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(c)->templateParameters.count(), 2);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(c)->templateParameters[1].defaultArgumentText.isEmpty());
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(c)->inheritedDefaultArgumentTexts[1], "T");
     CppTypeResolver resolver(model);
     DeclarationInfo variable;
     QVERIFY(parseDeclarationText("C<std::string> value;", variable));
@@ -1262,7 +1275,7 @@ void TestCppTokenizer::test_statement_model_owns_statements_and_weak_indexes()
     CppStatementBuilder builder(model);
     StatementBuildContext context;
     context.fileName = "/tmp/main.cpp";
-    QList<std::weak_ptr<Statement>> built = builder.build(declarations.first(), context);
+    QList<std::weak_ptr<AbstractStatement>> built = builder.build(declarations.first(), context);
     QCOMPARE(built.count(), 1);
     QVERIFY(!built.first().expired());
 
@@ -1296,9 +1309,9 @@ void TestCppTokenizer::test_statement_builder_preserves_array_suffixes()
 
     PStatement values = findStatement(model.childrenStatements(), "values");
     QVERIFY(values);
-    QCOMPARE(values->args, "[2]");
-    QCOMPARE(values->typeInfo.derivations.count(), 1);
-    QCOMPARE(values->typeInfo.derivations.first().kind, TypeDerivationKind::Array);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(values)->args, "[2]");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(values)->typeInfo.derivations.count(), 1);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(values)->typeInfo.derivations.first().kind, TypeDerivationKind::Array);
 }
 
 
@@ -1323,9 +1336,9 @@ void TestCppTokenizer::test_statement_builder_registers_nested_body_scopes()
 
     PStatement n = findStatement(model.childrenStatements(), "N");
     QVERIFY(n);
-    PStatement c = findStatement(n->children, "C");
+    PStatement c = findStatement(model.childrenStatements(n), "C");
     QVERIFY(c);
-    PStatement method = findStatement(c->children, "method");
+    PStatement method = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "method");
     QVERIFY(method);
     QCOMPARE(fileInfo.statements().value("N::C::method").lock(), method);
     QCOMPARE(fileInfo.findScopeAt(namespaceDeclaration.bodyRange.start), n);
@@ -1352,7 +1365,7 @@ void TestCppTokenizer::test_statement_builder_scope_uses_recovered_file_end()
 
     PStatement main = findStatement(model.childrenStatements(), "main");
     QVERIFY(main);
-    QVERIFY(main->hasDefinition());
+    QVERIFY(statementHasDefinition(main));
     QCOMPARE(fileInfo.findScopeAt(declarations.first().bodyRange.start), main);
     QCOMPARE(fileInfo.findScopeAt(declarations.first().bodyRange.end), main);
 }
@@ -1370,10 +1383,10 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     PStatement s = findStatement(model.childrenStatements(), "S");
     PStatement value = findStatement(model.childrenStatements(), "value");
     QVERIFY(s && value);
-    QVERIFY(s->hasDefinition());
-    QVERIFY(value->hasDefinition());
+    QVERIFY(statementHasDefinition(s));
+    QVERIFY(statementHasDefinition(value));
     QCOMPARE(value->definitionRange, value->declarationRange);
-    QCOMPARE(value->type(), "S");
+    QCOMPARE(statementType(value), "S");
 }
 
 
@@ -1445,14 +1458,14 @@ void TestCppTokenizer::test_type_resolver_applies_default_template_arguments()
     QVERIFY(parseDeclarationText("Box<std::string> value;", boxVariable));
     PStatement box = findStatement(model.childrenStatements(), "Box");
     QVERIFY(box);
-    QCOMPARE(box->templateParameters[1].defaultArgumentText, "T");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(box)->templateParameters[1].defaultArgumentText, "T");
     int statementCount = model.count();
     QCOMPARE(resolver.memberType(boxVariable.specifiers.type, "ValueType").toString(),
              "std::string");
     QCOMPARE(resolver.invokeResult(boxVariable.specifiers.type, "front").toString(),
              "std::string &");
     QCOMPARE(model.count(), statementCount);
-    QCOMPARE(box->templateParameters[1].defaultArgumentText, "T");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(box)->templateParameters[1].defaultArgumentText, "T");
     DeclarationInfo dependentVariable;
     QVERIFY(parseDeclarationText("DependentDefault<Value> value;", dependentVariable));
     QCOMPARE(resolver.invokeResult(dependentVariable.specifiers.type, "front").toString(), "int &");
@@ -1571,9 +1584,9 @@ void TestCppTokenizer::test_type_resolver_binds_dependent_base_members()
              "Alloc<StdAlloc<std::string>,std::string>");
     PStatement listClass = resolver.findStatement("List");
     QVERIFY(listClass);
-    QCOMPARE(listClass->templateParameters[1].name, "_Alloc");
-    QVERIFY(listClass->templateParameters[1].defaultArgumentText.isEmpty());
-    QCOMPARE(listClass->inheritedDefaultArgumentTexts[1], "StdAlloc<T>");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(listClass)->templateParameters[1].name, "_Alloc");
+    QVERIFY(std::dynamic_pointer_cast<Statement>(listClass)->templateParameters[1].defaultArgumentText.isEmpty());
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(listClass)->inheritedDefaultArgumentTexts[1], "StdAlloc<T>");
     DeclarationInfo listVariable;
     QVERIFY(parseDeclarationText("List<std::string> value;", listVariable));
     QCOMPARE(resolver.memberType(listVariable.specifiers.type, "reference").toString(),
@@ -1704,7 +1717,7 @@ void TestCppTokenizer::test_type_resolver_selects_specializations_and_rebind()
 
     PStatement pointerSpecialization = findStatement(model.childrenStatements(), "Traits<T*>");
     QVERIFY(pointerSpecialization);
-    QCOMPARE(pointerSpecialization->templateKind, TemplateDeclarationKind::PartialSpecialization);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(pointerSpecialization)->templateKind, TemplateDeclarationKind::PartialSpecialization);
     DeclarationInfo holder;
     QVERIFY(parseDeclarationText("Holder<int> value;", holder));
     QCOMPARE(resolver.invokeResult(holder.specifiers.type, "rebound").toString(), "std::string");
@@ -1795,7 +1808,7 @@ void TestCppTokenizer::test_type_resolver_computes_bounded_traits()
     };
     PStatement access = findStatement(model.childrenStatements(), "Access");
     QVERIFY(access);
-    QCOMPARE(access->templateParameters[1].defaultArgumentText, "std::is_array<T>::value");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(access)->templateParameters[1].defaultArgumentText, "std::is_array<T>::value");
     QCOMPARE(memberType("Access<int,false> value;").toString(), "int");
     QCOMPARE(memberType("Access<int> value;").toString(), "int");
     QCOMPARE(memberType("Access<int[]> value;").toString(), "std::string");
@@ -1867,8 +1880,8 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
     PStatement shared = findStatement(model.childrenStatements(), "shared");
     PStatement unique = findStatement(model.childrenStatements(), "unique");
     QVERIFY(shared && unique);
-    QCOMPARE(shared->type(), "std::shared_ptr<std::string>");
-    QCOMPARE(unique->type(), "std::unique_ptr<std::string,std::default_delete<std::string>>");
+    QCOMPARE(statementType(shared), "std::shared_ptr<std::string>");
+    QCOMPARE(statementType(unique), "std::unique_ptr<std::string,std::default_delete<std::string>>");
 }
 
 
@@ -2087,8 +2100,8 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
         return evaluator.evaluate(expression, scope);
     };
     auto findBlock = [&](const PStatement &function, int line) {
-        const auto blocks = function->children.values("block");
-        for (const std::weak_ptr<Statement> &weakBlock : blocks) {
+        const auto blocks = std::dynamic_pointer_cast<Statement>(function)->children.values("block");
+        for (const std::weak_ptr<AbstractStatement> &weakBlock : blocks) {
             PStatement block = weakBlock.lock();
             if (block && block->declarationRange.start.line == line)
                 return block;
@@ -2098,16 +2111,16 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
 
     PStatement iterate = findStatement(model.childrenStatements(), "iterate");
     QVERIFY(iterate);
-    PStatement it = findStatement(iterate->children, "it");
+    PStatement it = findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "it");
     QVERIFY(it);
-    QCOMPARE(it->type(), "std::iterator<std::string>");
-    QCOMPARE(findStatement(iterate->children, "ratio")->type(), "double");
-    QCOMPARE(findStatement(iterate->children, "flag")->type(), "bool");
-    QCOMPARE(findStatement(iterate->children, "bits")->type(), "int");
-    QCOMPARE(findStatement(iterate->children, "conditional")->type(), "double");
-    QCOMPARE(findStatement(iterate->children, "conditionalReverse")->type(), "double");
-    QCOMPARE(findStatement(iterate->children, "floating")->type(), "float");
-    QCOMPARE(findStatement(iterate->children, "unsignedValue")->type(), "unsigned int");
+    QCOMPARE(statementType(it), "std::iterator<std::string>");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "ratio")), "double");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "flag")), "bool");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "bits")), "int");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "conditional")), "double");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "conditionalReverse")), "double");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "floating")), "float");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(iterate)->children, "unsignedValue")), "unsigned int");
 
     PStatement whileBlock = findBlock(iterate, 21);
     QVERIFY(whileBlock);
@@ -2117,9 +2130,9 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
 
     PStatement rangeFor = findBlock(iterate, 24);
     QVERIFY(rangeFor);
-    PStatement x = findStatement(rangeFor->children, "x");
+    PStatement x = findStatement(std::dynamic_pointer_cast<Statement>(rangeFor)->children, "x");
     QVERIFY(x);
-    QCOMPARE(x->type(), "std::string");
+    QCOMPARE(statementType(x), "std::string");
     QCOMPARE(x->scope, StatementScope::Local);
     QCOMPARE(evaluate("x.size()", rangeFor).type.toString(), "unsigned long");
     QVERIFY(!evaluate("x.size()", iterate).isValid());
@@ -2127,25 +2140,25 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
 
     PStatement classicFor = findBlock(iterate, 27);
     QVERIFY(classicFor);
-    PStatement i = findStatement(classicFor->children, "i");
+    PStatement i = findStatement(std::dynamic_pointer_cast<Statement>(classicFor)->children, "i");
     QVERIFY(i);
-    QCOMPARE(i->type(), "std::iterator<std::string>");
+    QCOMPARE(statementType(i), "std::iterator<std::string>");
     QCOMPARE(evaluate("i->size()", classicFor).type.toString(), "unsigned long");
     QVERIFY(!evaluate("i->size()", iterate).isValid());
 
     PStatement catchBlock = findBlock(iterate, 36);
     QVERIFY(catchBlock);
-    PStatement error = findStatement(catchBlock->children, "error");
+    PStatement error = findStatement(std::dynamic_pointer_cast<Statement>(catchBlock)->children, "error");
     QVERIFY(error);
-    QCOMPARE(error->type(), "const std::exception &");
+    QCOMPARE(statementType(error), "const std::exception &");
     QCOMPARE(evaluate("error.what()", catchBlock).type.toString(), "const char *");
     QVERIFY(!evaluate("error.what()", iterate).isValid());
     QCOMPARE(fileInfo.findScopeAt({37, 2}), catchBlock);
 
     PStatement localUsing = findStatement(model.childrenStatements(), "localUsing");
     QVERIFY(localUsing);
-    QCOMPARE(findStatement(localUsing->children, "text")->type(), "std::string");
-    QCOMPARE(findStatement(localUsing->children, "text2")->type(), "std::string");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(localUsing)->children, "text")), "std::string");
+    QCOMPARE(statementType(findStatement(std::dynamic_pointer_cast<Statement>(localUsing)->children, "text2")), "std::string");
 }
 
 
@@ -2256,32 +2269,32 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     PStatement transformed = findStatement(model.childrenStatements(), "transformed");
     PStatement joined = findStatement(model.childrenStatements(), "joined");
     QVERIFY(filtered && transformed && joined);
-    QCOMPARE(filtered->typeInfo.qualifiedName, "std::ranges::filter_view");
-    QCOMPARE(transformed->typeInfo.qualifiedName, "std::ranges::transform_view");
-    QCOMPARE(joined->typeInfo.qualifiedName, "std::ranges::join_view");
-    QCOMPARE(operations.rangeValue(filtered->typeInfo).toString(), "std::string");
-    QCOMPARE(operations.rangeValue(transformed->typeInfo).toString(), "std::string");
-    QCOMPARE(operations.rangeValue(joined->typeInfo).toString(), "std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(filtered)->typeInfo.qualifiedName, "std::ranges::filter_view");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(transformed)->typeInfo.qualifiedName, "std::ranges::transform_view");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(joined)->typeInfo.qualifiedName, "std::ranges::join_view");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(filtered)->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(transformed)->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(joined)->typeInfo).toString(), "std::string");
     PStatement keys = findStatement(model.childrenStatements(), "keys");
     PStatement values = findStatement(model.childrenStatements(), "values");
     QVERIFY(keys && values);
-    QCOMPARE(keys->typeInfo.qualifiedName, "std::ranges::elements_view");
-    QCOMPARE(values->typeInfo.qualifiedName, "std::ranges::elements_view");
-    QCOMPARE(operations.rangeValue(keys->typeInfo).toString(), "std::string");
-    QCOMPARE(operations.rangeValue(values->typeInfo).toString(), "int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(keys)->typeInfo.qualifiedName, "std::ranges::elements_view");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(values)->typeInfo.qualifiedName, "std::ranges::elements_view");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(keys)->typeInfo).toString(), "std::string");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(values)->typeInfo).toString(), "int");
     PStatement lambdaTransformed = findStatement(model.childrenStatements(), "lambdaTransformed");
     PStatement arithmeticTransformed = findStatement(model.childrenStatements(), "arithmeticTransformed");
     QVERIFY(lambdaTransformed && arithmeticTransformed);
-    QCOMPARE(operations.rangeValue(lambdaTransformed->typeInfo).toString(), "unsigned long");
-    QCOMPARE(operations.rangeValue(arithmeticTransformed->typeInfo).toString(), "double");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(lambdaTransformed)->typeInfo).toString(), "unsigned long");
+    QCOMPARE(operations.rangeValue(std::dynamic_pointer_cast<Statement>(arithmeticTransformed)->typeInfo).toString(), "double");
 
     PStatement useTransformed = findStatement(model.childrenStatements(), "useTransformed");
     QVERIFY(useTransformed);
-    PStatement loop = findStatement(useTransformed->children, "block");
+    PStatement loop = findStatement(std::dynamic_pointer_cast<Statement>(useTransformed)->children, "block");
     QVERIFY(loop);
-    PStatement x = findStatement(loop->children, "x");
+    PStatement x = findStatement(std::dynamic_pointer_cast<Statement>(loop)->children, "x");
     QVERIFY(x);
-    QCOMPARE(x->type(), "std::string");
+    QCOMPARE(statementType(x), "std::string");
     CppExpressionEvaluator evaluator(model, resolver, operations);
     CppTokenizer expression;
     expression.tokenize({"x.size()"});
@@ -2289,18 +2302,18 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
 
     PStatement useElements = findStatement(model.childrenStatements(), "useElements");
     QVERIFY(useElements);
-    PStatement elementLoop = findStatement(useElements->children, "block");
+    PStatement elementLoop = findStatement(std::dynamic_pointer_cast<Statement>(useElements)->children, "block");
     QVERIFY(elementLoop);
-    PStatement key = findStatement(elementLoop->children, "key");
+    PStatement key = findStatement(std::dynamic_pointer_cast<Statement>(elementLoop)->children, "key");
     QVERIFY(key);
-    QCOMPARE(key->type(), "std::string");
+    QCOMPARE(statementType(key), "std::string");
     PStatement useLambda = findStatement(model.childrenStatements(), "useLambda");
     QVERIFY(useLambda);
-    PStatement lambdaLoop = findStatement(useLambda->children, "block");
+    PStatement lambdaLoop = findStatement(std::dynamic_pointer_cast<Statement>(useLambda)->children, "block");
     QVERIFY(lambdaLoop);
-    PStatement size = findStatement(lambdaLoop->children, "size");
+    PStatement size = findStatement(std::dynamic_pointer_cast<Statement>(lambdaLoop)->children, "size");
     QVERIFY(size);
-    QCOMPARE(size->type(), "unsigned long");
+    QCOMPARE(statementType(size), "unsigned long");
 }
 
 
@@ -2320,27 +2333,27 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
 
     PStatement callback = findStatement(model.childrenStatements(), "callback");
     QVERIFY(callback);
-    PStatement lambda = callback->typeInfo.declaration.lock();
+    PStatement lambda = std::dynamic_pointer_cast<Statement>(callback)->typeInfo.declaration.lock();
     QVERIFY(lambda);
     QCOMPARE(lambda->kind, StatementKind::Lambda);
     QCOMPARE(lambda->fileName, "/tmp/main.cpp");
     QCOMPARE(lambda->declarationRange.start, (SourcePosition{0, 16}));
-    PStatement call = findStatement(lambda->children, "operator()");
+    PStatement call = findStatement(std::dynamic_pointer_cast<Statement>(lambda)->children, "operator()");
     QVERIFY(call);
-    QCOMPARE(call->type(), "double");
+    QCOMPARE(statementType(call), "double");
     QVERIFY(call->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(call->normalizedArgs, "() const");
-    PStatement value = findStatement(call->children, "value");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->normalizedArgs, "() const");
+    PStatement value = findStatement(std::dynamic_pointer_cast<Statement>(call)->children, "value");
     QVERIFY(value);
-    QCOMPARE(value->type(), "int");
+    QCOMPARE(statementType(value), "int");
     PStatement mutableCallback = findStatement(model.childrenStatements(), "mutableCallback");
     QVERIFY(mutableCallback);
-    PStatement mutableLambda = mutableCallback->typeInfo.declaration.lock();
+    PStatement mutableLambda = std::dynamic_pointer_cast<Statement>(mutableCallback)->typeInfo.declaration.lock();
     QVERIFY(mutableLambda);
-    PStatement mutableCall = findStatement(mutableLambda->children, "operator()");
+    PStatement mutableCall = findStatement(std::dynamic_pointer_cast<Statement>(mutableLambda)->children, "operator()");
     QVERIFY(mutableCall);
     QVERIFY(!mutableCall->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(mutableCall->normalizedArgs, "()");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "()");
 
     CppTypeResolver resolver(model);
     TypeOperationRegistry operations(resolver);
@@ -2349,7 +2362,7 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     expression.tokenize({"callback(2)"});
     QCOMPARE(evaluator.evaluate(expression).type.toString(), "double");
 
-    std::weak_ptr<Statement> lambdaReference = lambda;
+    std::weak_ptr<AbstractStatement> lambdaReference = lambda;
     lambda.reset();
     model.clear();
     QVERIFY(lambdaReference.expired());
@@ -2397,15 +2410,15 @@ void TestCppTokenizer::test_function_template_argument_deduction_for_algorithms(
     PStatement element = findStatement(model.childrenStatements(), "element");
     PStatement dereferenced = findStatement(model.childrenStatements(), "dereferenced");
     QVERIFY(found && output && element && dereferenced);
-    QCOMPARE(found->type(), "std::iterator<std::string>");
-    QCOMPARE(output->type(), "std::iterator<std::string>");
-    QCOMPARE(element->type(), "std::string");
-    QCOMPARE(dereferenced->type(), "std::string");
+    QCOMPARE(statementType(found), "std::iterator<std::string>");
+    QCOMPARE(statementType(output), "std::iterator<std::string>");
+    QCOMPARE(statementType(element), "std::string");
+    QCOMPARE(statementType(dereferenced), "std::string");
 
     CppTypeResolver resolver(model);
     PStatement findIf = resolver.findStatement("std::find_if");
     QVERIFY(findIf);
-    QCOMPARE(findIf->normalizedArgs, "(@T0,@T0,@T1)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(findIf)->normalizedArgs, "(@T0,@T0,@T1)");
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(model, resolver, operations);
     CppTokenizer expression;
@@ -2436,20 +2449,20 @@ void TestCppTokenizer::test_normalized_template_function_signatures()
     CppTypeResolver resolver(model);
     PStatement nameSpace = resolver.findStatement("N");
     QVERIFY(nameSpace);
-    const auto overloads = nameSpace->children.values("f");
+    const auto overloads = model.childrenStatements(nameSpace).values("f");
     QCOMPARE(overloads.count(), 3);
     PStatement merged;
     int mergedCount = 0;
-    for (const std::weak_ptr<Statement> &weak : overloads) {
+    for (const std::weak_ptr<AbstractStatement> &weak : overloads) {
         PStatement statement = weak.lock();
-        if (statement && statement->parameters.count() == 2) {
+        if (statement && std::dynamic_pointer_cast<Statement>(statement)->parameters.count() == 2) {
             merged = statement;
             ++mergedCount;
         }
     }
     QCOMPARE(mergedCount, 1);
     QVERIFY(merged);
-    QCOMPARE(merged->normalizedArgs, "(@TT2<@T0>,@T0(&)[@N1])");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(merged)->normalizedArgs, "(@TT2<@T0>,@T0(&)[@N1])");
 }
 
 
@@ -2614,7 +2627,7 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
     PStatement function = resolver.findStatement("f");
     QVERIFY(function);
     QVERIFY(resolver.findStatement("local", function));
-    PStatement block = findStatement(function->children, "block");
+    PStatement block = findStatement(std::dynamic_pointer_cast<Statement>(function)->children, "block");
     QVERIFY(block);
     QVERIFY(resolver.findStatement("inner", block));
 }
@@ -2659,7 +2672,7 @@ void TestCppTokenizer::test_qualified_lookup_respects_lexical_and_local_scopes()
     QVERIFY(local);
     QCOMPARE(local->parentScope.lock(), function);
     QVERIFY(!resolver.findStatement("f::value"));
-    PStatement block = findStatement(function->children, "block");
+    PStatement block = findStatement(std::dynamic_pointer_cast<Statement>(function)->children, "block");
     QVERIFY(block);
     QVERIFY(resolver.findStatement("inner", block));
     QVERIFY(!resolver.findStatement("inner", function));
@@ -2702,7 +2715,7 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
             StatementBuildContext context;
             context.fileName = fileName;
             context.boundaryAncestor = fileName;
-            QList<std::weak_ptr<Statement>> result = builder.build(declarations.first(), context);
+            QList<std::weak_ptr<AbstractStatement>> result = builder.build(declarations.first(), context);
             if (built && !result.isEmpty())
                 *built = result.first().lock();
         };
@@ -2736,35 +2749,35 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
 
         PStatement string = resolver.findStatement("std::basic_string");
         QVERIFY(string);
-        QCOMPARE(string->templateParameters.count(), 3);
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters.count(), 3);
         QCOMPARE(string->declarationRange.start.line, 2);
-        QVERIFY(!string->parentScope.lock()->declSpecifierProperties.testFlag(
+        QVERIFY(!std::dynamic_pointer_cast<NamespaceStatement>(string->parentScope.lock())->declSpecifierProperties.testFlag(
                     DeclSpecifierProperty::Inline));
-        QCOMPARE(string->templateParameters[1].defaultArgumentText, "char_traits<_CharT>");
-        QCOMPARE(string->templateParameters[2].defaultArgumentText, "allocator<_CharT>");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[1].defaultArgumentText, "char_traits<_CharT>");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[2].defaultArgumentText, "allocator<_CharT>");
         QVERIFY(resolver.findStatement("std::string"));
 
         PStatement simpleDefault = resolver.findStatement("std::SimpleDefault");
         QVERIFY(simpleDefault);
-        QCOMPARE(simpleDefault->templateParameters[0].defaultArgumentText, "int");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(simpleDefault)->templateParameters[0].defaultArgumentText, "int");
         PStatement nestedClosing = resolver.findStatement("std::NestedClosing");
         QVERIFY(nestedClosing);
-        QCOMPARE(nestedClosing->templateParameters[0].defaultArgumentText,
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(nestedClosing)->templateParameters[0].defaultArgumentText,
                  "std::pair<int, std::string>");
         PStatement comparison = resolver.findStatement("std::Comparison");
         QVERIFY(comparison);
-        QCOMPARE(comparison->templateParameters[0].defaultArgumentText, "1 < 2");
-        QVERIFY(comparison->templateParameters[0].type);
-        QCOMPARE(comparison->templateParameters[0].type->qualifiedName, "int");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(comparison)->templateParameters[0].defaultArgumentText, "1 < 2");
+        QVERIFY(std::dynamic_pointer_cast<Statement>(comparison)->templateParameters[0].type);
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(comparison)->templateParameters[0].type->qualifiedName, "int");
         PStatement callDefault = resolver.findStatement("std::CallDefault");
         QVERIFY(callDefault);
-        QCOMPARE(callDefault->templateParameters[0].defaultArgumentText, "foo(1, 2)");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(callDefault)->templateParameters[0].defaultArgumentText, "foo(1, 2)");
 
         inlineNamespace.reset();
         for (const PStatement &statement : model.statements()) {
             if (statement->kind == StatementKind::Namespace
                     && statement->fullName == "std::__cxx11"
-                    && statement->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+                    && std::dynamic_pointer_cast<NamespaceStatement>(statement)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
                 inlineNamespace = statement;
                 break;
             }
@@ -2892,30 +2905,30 @@ void TestCppTokenizer::test_constructor_declarations_with_specifiers()
 
     PStatement c = resolver.findStatement("C");
     QVERIFY(c);
-    const auto constructors = c->children.values("C");
+    const auto constructors = std::dynamic_pointer_cast<Statement>(c)->children.values("C");
     QCOMPARE(constructors.count(), 2);
     bool defaultConstructor = false;
     bool explicitConstructor = false;
-    for (const std::weak_ptr<Statement> &weak : constructors) {
+    for (const std::weak_ptr<AbstractStatement> &weak : constructors) {
         PStatement constructor = weak.lock();
         QVERIFY(constructor);
         QCOMPARE(constructor->kind, StatementKind::Constructor);
-        QVERIFY(constructor->hasDefinition());
-        if (constructor->parameters.isEmpty()) {
+        QVERIFY(statementHasDefinition(constructor));
+        if (std::dynamic_pointer_cast<Statement>(constructor)->parameters.isEmpty()) {
             defaultConstructor = true;
-            QVERIFY(constructor->declSpecifierProperties.testFlag(DeclSpecifierProperty::Constexpr));
+            QVERIFY(std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Constexpr));
         } else {
             explicitConstructor = true;
-            QVERIFY(constructor->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit));
+            QVERIFY(std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit));
         }
     }
     QVERIFY(defaultConstructor && explicitConstructor);
-    for (const std::weak_ptr<Statement> &weak : c->children)
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(c)->children)
         QVERIFY(!weak.lock()->command.isEmpty());
 
     PStatement box = resolver.findStatement("Box");
     QVERIFY(box);
-    PStatement boxConstructor = findStatement(box->children, "Box");
+    PStatement boxConstructor = findStatement(std::dynamic_pointer_cast<Statement>(box)->children, "Box");
     QVERIFY(boxConstructor);
     QCOMPARE(boxConstructor->kind, StatementKind::Constructor);
 }
@@ -2943,7 +2956,7 @@ void TestCppTokenizer::test_integer_constant_expression_invalid_division()
     QVERIFY(resolver.findStatement("E::unknownModulo"));
     PStatement valid = resolver.findStatement("E::valid");
     QVERIFY(valid);
-    QCOMPARE(valid->value, QString("3"));
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(valid)->value, QString("3"));
 }
 
 
@@ -2970,7 +2983,7 @@ void TestCppTokenizer::test_deduction_guides_are_consumed_without_statements()
     PStatement basicString = resolver.findStatement("std::basic_string");
     QVERIFY(basicString);
     QCOMPARE(basicString->kind, StatementKind::Class);
-    QVERIFY(basicString->hasDefinition());
+    QVERIFY(statementHasDefinition(basicString));
     QVERIFY(resolver.findStatement("std::basic_string::size"));
     QVERIFY(resolver.findStatement("make_value"));
     int entries = 0;
@@ -3015,17 +3028,17 @@ void TestCppTokenizer::test_inherited_member_enumeration_and_access()
     PStatement publicDerived = resolver.findStatement("PublicDerived");
     PStatement protectedDerived = resolver.findStatement("ProtectedDerived");
     QVERIFY(base && derived && publicDerived && protectedDerived);
-    QCOMPARE(base->classKey, ClassKey::Struct);
-    QCOMPARE(derived->classKey, ClassKey::Class);
-    PStatement basePublicValue = findStatement(base->children, "publicValue");
-    PStatement baseProtectedValue = findStatement(base->children, "protectedValue");
-    PStatement basePrivateValue = findStatement(base->children, "privateValue");
-    PStatement baseConstructor = findStatement(base->children, "Base");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(base)->classKey, ClassKey::Struct);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(derived)->classKey, ClassKey::Class);
+    PStatement basePublicValue = findStatement(std::dynamic_pointer_cast<Statement>(base)->children, "publicValue");
+    PStatement baseProtectedValue = findStatement(std::dynamic_pointer_cast<Statement>(base)->children, "protectedValue");
+    PStatement basePrivateValue = findStatement(std::dynamic_pointer_cast<Statement>(base)->children, "privateValue");
+    PStatement baseConstructor = findStatement(std::dynamic_pointer_cast<Statement>(base)->children, "Base");
     PStatement baseAction;
     PStatement baseIntOverload;
-    for (const std::weak_ptr<Statement> &weak : base->children.values("action")) {
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(base)->children.values("action")) {
         PStatement action = weak.lock();
-        if (action && action->parameters.isEmpty())
+        if (action && std::dynamic_pointer_cast<Statement>(action)->parameters.isEmpty())
             baseAction = action;
         else
             baseIntOverload = action;
@@ -3041,7 +3054,7 @@ void TestCppTokenizer::test_inherited_member_enumeration_and_access()
     QVERIFY(members.contains(baseIntOverload));
     PStatement override;
     for (const PStatement &member : members) {
-        if (member->command == "action" && member->parameters.isEmpty()) {
+        if (member->command == "action" && std::dynamic_pointer_cast<Statement>(member)->parameters.isEmpty()) {
             override = member;
             break;
         }
@@ -3083,7 +3096,7 @@ void TestCppTokenizer::test_expression_evaluator_preserves_constructor_statement
     CppExpressionEvaluator evaluator(model, resolver, operations);
     PStatement classStatement = resolver.findStatement("Foo");
     QVERIFY(classStatement);
-    PStatement constructorStatement = findStatement(classStatement->children, "Foo");
+    PStatement constructorStatement = findStatement(std::dynamic_pointer_cast<Statement>(classStatement)->children, "Foo");
     QVERIFY(constructorStatement);
     QCOMPARE(constructorStatement->kind, StatementKind::Constructor);
 

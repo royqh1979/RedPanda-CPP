@@ -144,42 +144,44 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            if (!(node->statement->type().isEmpty())) {
+            if (node->statement->kind == StatementKind::Namespace)
+                return node->statement->command;
+            if (!(statementType(node->statement).isEmpty())) {
                 if ( (node->statement->kind == StatementKind::Variable)
                      || (node->statement->kind == StatementKind::Typedef) ) {
-                    if (node->statement->args.isEmpty())
-                        return node->statement->command + " : " + node->statement->type();
-                    else if (node->statement->args.startsWith("("))
+                    if (std::dynamic_pointer_cast<Statement>(node->statement)->args.isEmpty())
+                        return node->statement->command + " : " + statementType(node->statement);
+                    else if (std::dynamic_pointer_cast<Statement>(node->statement)->args.startsWith("("))
                         return QString("%1 : %2 (*)%3").arg(node->statement->command,
-                                                            node->statement->type(),
-                                                            node->statement->args);
+                                                            statementType(node->statement),
+                                                            std::dynamic_pointer_cast<Statement>(node->statement)->args);
                     else
-                        return node->statement->command + " : " + node->statement->type() + node->statement->args;
+                        return node->statement->command + " : " + statementType(node->statement) + std::dynamic_pointer_cast<Statement>(node->statement)->args;
                 } else if (node->statement->kind == StatementKind::Function) {
-                    return node->statement->command + node->statement->args + " : " + node->statement->type();
+                    return node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + " : " + statementType(node->statement);
                 } else if (node->statement->kind == StatementKind::OverloadedOperator) {
                     if (!CppParser::isIdentifier(node->statement->command)) {
-                        return "operator"+node->statement->command + node->statement->args + " : " + node->statement->type();
+                        return "operator"+node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + " : " + statementType(node->statement);
                     } else if (node->statement->command == "new"
                                || node->statement->command == "delete") {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type();
+                        return "operator "+node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + " : " + statementType(node->statement);
                     } else {
-                        return "operator "+node->statement->command + node->statement->args + " : " + node->statement->type() + " " + node->statement->command;
+                        return "operator "+node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + " : " + statementType(node->statement) + " " + node->statement->command;
                     }
                 } else if (node->statement->kind == StatementKind::LiteralOperator) {
-                    return "operator \"\""+node->statement->command + node->statement->args + " : " + node->statement->type();
+                    return "operator \"\""+node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + " : " + statementType(node->statement);
                 }
             }
             if (node->statement->kind == StatementKind::Enum) {
-                if (!node->statement->value.isEmpty())
-                    return node->statement->command + node->statement->args + QString("(%1)").arg(node->statement->value);
+                if (!std::dynamic_pointer_cast<Statement>(node->statement)->value.isEmpty())
+                    return node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args + QString("(%1)").arg(std::dynamic_pointer_cast<Statement>(node->statement)->value);
                 else
                     return node->statement->command;
             }
             if (node->statement->command == "{") {
                 return "anonymous";
             }
-            return node->statement->command + node->statement->args;
+            return node->statement->command + std::dynamic_pointer_cast<Statement>(node->statement)->args;
         }
     } else if (role == Qt::ForegroundRole) {
         if (mColors && node->statement) {
@@ -285,10 +287,12 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
 //    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
+    QString normalizedArgs;
+    if (statement->kind != StatementKind::Namespace)
+        normalizedArgs = std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
     mNodeIndex.insert(
                 QString("%1+%2+%3")
-                .arg(statement->fullName,
-                     statement->normalizedArgs)
+                .arg(statement->fullName, normalizedArgs)
                 .arg((int)statement->kind),newNode);
     mProcessedStatements[node].insert(statement.get());
     if (isScopeStatement(statement)) {
@@ -376,7 +380,7 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
 {
     StatementList lockedStatements;
-    for (const std::weak_ptr<Statement> &weakStatement : statements) {
+    for (const std::weak_ptr<AbstractStatement> &weakStatement : statements) {
         if (PStatement statement = weakStatement.lock())
             lockedStatements.append(statement);
     }
@@ -389,7 +393,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
         if (!statement)
             continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
-                && !statement->inProject())
+                && !statementInProject(statement))
             continue;
 
         if (mProcessedStatements.value(node).contains(statement.get()))
@@ -401,7 +405,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
             continue;
         if (statement->kind == StatementKind::Lambda)
             continue;
-        if (statement->isInherited() && !pSettings->ui().classBrowserShowInherited())
+        if (statementIsInherited(statement) && !pSettings->ui().classBrowserShowInherited())
             continue;
 
         if (statement == node->statement) // prevent infinite recursion
@@ -466,13 +470,21 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
 {
     PStatement result = StatementFactory::create(
                 statement->kind, statement->parentScope.lock(), statement->command, statement->fullName);
-    result->args = statement->args;
-    result->normalizedArgs = statement->normalizedArgs;
-    result->classKey = statement->classKey;
-    result->baseClasses = statement->baseClasses;
-    result->typeInfo = statement->typeInfo;
-    result->declSpecifierProperties = statement->declSpecifierProperties;
-    result->value = statement->value;
+    if (statement->kind == StatementKind::Namespace) {
+        auto source = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+        auto target = std::dynamic_pointer_cast<NamespaceStatement>(result);
+        target->declSpecifierProperties = source->declSpecifierProperties;
+    } else {
+        auto source = std::dynamic_pointer_cast<Statement>(statement);
+        auto target = std::dynamic_pointer_cast<Statement>(result);
+        target->args = source->args;
+        target->normalizedArgs = source->normalizedArgs;
+        target->classKey = source->classKey;
+        target->baseClasses = source->baseClasses;
+        target->typeInfo = source->typeInfo;
+        target->declSpecifierProperties = source->declSpecifierProperties;
+        target->value = source->value;
+    }
     result->scope = statement->scope;
     if (statement->parentScope.lock()) {
         result->accessibility = mParser->memberAccessibility(

@@ -60,7 +60,10 @@ void StatementModel::add(const PStatement& statement)
     ++statementModelProfile.addCount;
     PStatement parent = statement->parentScope.lock();
     if (parent) {
-        addMember(parent->children, statement);
+        if (parent->kind == StatementKind::Namespace)
+            addMember(std::dynamic_pointer_cast<NamespaceStatement>(parent)->children, statement);
+        else
+            addMember(std::dynamic_pointer_cast<Statement>(parent)->children, statement);
     } else {
         addMember(mGlobalStatements, statement);
     }
@@ -78,7 +81,10 @@ void StatementModel::deleteStatement(const PStatement& statement)
         return;
     PStatement parent = statement->parentScope.lock();
     if (parent) {
-        deleteMember(parent->children, statement);
+        if (parent->kind == StatementKind::Namespace)
+            deleteMember(std::dynamic_pointer_cast<NamespaceStatement>(parent)->children, statement);
+        else
+            deleteMember(std::dynamic_pointer_cast<Statement>(parent)->children, statement);
     } else {
         deleteMember(mGlobalStatements, statement);
     }
@@ -114,7 +120,7 @@ void StatementModel::updateNamespaceTransparency(const PStatement &statement)
     bool transparent = statement->command.isEmpty();
     for (const PStatement &sibling : siblings) {
         if (sibling->command.isEmpty()
-                || sibling->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
+                || std::dynamic_pointer_cast<NamespaceStatement>(sibling)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline)) {
             transparent = true;
             break;
         }
@@ -131,7 +137,7 @@ void StatementModel::updateNamespaceTransparency(const PStatement &statement)
 void StatementModel::addNamespaceStatement(const QString &fullName, const PStatement &statement)
 {
     const auto statements = mNamespaceStatements.values(fullName);
-    for (const std::weak_ptr<Statement> &weak : statements) {
+    for (const std::weak_ptr<AbstractStatement> &weak : statements) {
         if (weak.lock() == statement)
             return;
     }
@@ -154,7 +160,7 @@ QList<PStatement> StatementModel::namespaceStatements(const QString &fullName) c
 {
     QList<PStatement> result;
     const auto statements = mNamespaceStatements.values(fullName);
-    for (const std::weak_ptr<Statement> &weak : statements) {
+    for (const std::weak_ptr<AbstractStatement> &weak : statements) {
         if (PStatement statement = weak.lock())
             result.append(statement);
     }
@@ -208,7 +214,7 @@ void StatementModel::dumpAll(const QString &logFile) const
         for (const PStatement &statement : statements) {
             out << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
                    .arg(statement->command).arg(int(statement->kind))
-                   .arg(statement->type()).arg(statement->fullName)
+                   .arg(statementType(statement)).arg(statement->fullName)
                    .arg((size_t)(statement->parentScope.lock().get()))
                    .arg((int)statement->accessibility)
                    .arg(statement->fileName)
@@ -243,14 +249,20 @@ void StatementModel::deleteMember(StatementMap &map, const PStatement& statement
 void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out, int level) const
 {
     QString indent(level, '\t');
-    for (const std::weak_ptr<Statement> &weakStatement : map) {
+    for (const std::weak_ptr<AbstractStatement> &weakStatement : map) {
         PStatement statement = weakStatement.lock();
         if (!statement)
             continue;
+        QString normalizedArgs;
+        QString args;
+        if (statement->kind != StatementKind::Namespace) {
+            auto normal = std::dynamic_pointer_cast<Statement>(statement);
+            normalizedArgs = normal->normalizedArgs;
+            args = normal->args;
+        }
         out << indent << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
                .arg(statement->command).arg(int(statement->kind))
-               .arg(statement->type(), statement->fullName,
-                    statement->normalizedArgs, statement->args)
+               .arg(statementType(statement), statement->fullName, normalizedArgs, args)
                .arg((size_t)(statement->parentScope.lock().get()))
                .arg((int)statement->accessibility)
                .arg(statement->fileName)
@@ -258,10 +270,11 @@ void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out,
                .arg(statement->definitionFileName)
                .arg(statement->definitionRange.start.line);
         out << Qt::endl;
-        if (statement->children.isEmpty())
+        const StatementMap &children = childrenStatements(statement);
+        if (children.isEmpty())
             continue;
         out << indent << statement->command << " {" << Qt::endl;
-        dumpStatementMap(statement->children, out, level + 1);
+        dumpStatementMap(children, out, level + 1);
         out << indent << "}" << Qt::endl;
     }
 }

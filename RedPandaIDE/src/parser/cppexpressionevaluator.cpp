@@ -22,7 +22,7 @@ namespace {
 PStatement findInMap(const StatementMap &statements, const QString &name)
 {
     const auto values = statements.values(name);
-    for (const std::weak_ptr<Statement> &statement : values) {
+    for (const std::weak_ptr<AbstractStatement> &statement : values) {
         if (PStatement result = statement.lock())
             return result;
     }
@@ -572,11 +572,11 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     call->fileName = fileName;
     call->declarationBoundaryAncestor = lambda->declarationBoundaryAncestor;
     call->declarationRange.start = startToken.position;
-    call->typeInfo.qualifiedName = "auto";
+    std::dynamic_pointer_cast<Statement>(call)->typeInfo.qualifiedName = "auto";
     call->properties.setFlag(StatementProperty::OperatorOverloading);
     call->properties.setFlag(StatementProperty::Const);
-    call->args = "() const";
-    call->normalizedArgs = "() const";
+    std::dynamic_pointer_cast<Statement>(call)->args = "() const";
+    std::dynamic_pointer_cast<Statement>(call)->normalizedArgs = "() const";
 
     if (index < tokens.count() && tokens[index].text == "(") {
         int parametersEnd = tokens[index].matchIndex;
@@ -606,7 +606,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
             parameter->fileName = fileName;
             parameter->declarationRange = SourceRange{tokens[nameIndex].position,
                                                       tokens[nameIndex].position};
-            parameter->typeInfo = parseTypeText(typeText);
+            std::dynamic_pointer_cast<Statement>(parameter)->typeInfo = parseTypeText(typeText);
             mModel.add(parameter);
         };
         for (int i = parameterStart; i <= parametersEnd; ++i) {
@@ -624,8 +624,8 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     }
     if (index < tokens.count() && tokens[index].text == "mutable") {
         call->properties.setFlag(StatementProperty::Const, false);
-        call->args = "()";
-        call->normalizedArgs = "()";
+        std::dynamic_pointer_cast<Statement>(call)->args = "()";
+        std::dynamic_pointer_cast<Statement>(call)->normalizedArgs = "()";
         ++index;
     }
 
@@ -650,17 +650,17 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     lambda->definitionRange = lambda->declarationRange;
     lambda->definitionFileName = fileName;
     lambda->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
-    lambda->setHasDefinition(true);
+    setStatementHasDefinition(lambda, true);
     call->declarationRange = lambda->declarationRange;
     call->definitionRange = lambda->declarationRange;
     call->definitionFileName = fileName;
     call->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
-    call->setHasDefinition(true);
+    setStatementHasDefinition(call, true);
     mModel.add(lambda);
     mModel.add(call);
 
     if (!trailingReturn.qualifiedName.isEmpty()) {
-        call->typeInfo = trailingReturn;
+        std::dynamic_pointer_cast<Statement>(call)->typeInfo = trailingReturn;
     } else {
         bool foundReturn = false;
         int nested = 0;
@@ -675,12 +675,12 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
                 int returnIndex = i + 1;
                 EvalResult returned = evaluateBinary(tokens, returnIndex, call, 1, evaluation);
                 if (returned.isValid())
-                    call->typeInfo = returned.type;
+                    std::dynamic_pointer_cast<Statement>(call)->typeInfo = returned.type;
                 break;
             }
         }
         if (!foundReturn)
-            call->typeInfo = primitiveType("void");
+            std::dynamic_pointer_cast<Statement>(call)->typeInfo = primitiveType("void");
     }
     index = bodyEnd + 1;
 
@@ -725,7 +725,7 @@ EvalResult CppExpressionEvaluator::createResult(
         result.kind = EvalStatementKind::Namespace;
         break;
     case StatementKind::NamespaceAlias:
-        result.type = statement->typeInfo;
+        result.type = std::dynamic_pointer_cast<Statement>(statement)->typeInfo;
         result.type.declaration = mResolver.findStatement(result.type.qualifiedName);
         result.kind = EvalStatementKind::Namespace;
         break;
@@ -757,7 +757,7 @@ EvalResult CppExpressionEvaluator::createResult(
     case StatementKind::Function:
     case StatementKind::OverloadedOperator:
     case StatementKind::LiteralOperator:
-        result.type = statement->typeInfo;
+        result.type = std::dynamic_pointer_cast<Statement>(statement)->typeInfo;
         result.kind = EvalStatementKind::Function;
         break;
     case StatementKind::Variable:
@@ -765,7 +765,7 @@ EvalResult CppExpressionEvaluator::createResult(
     case StatementKind::LocalVariable:
     case StatementKind::Parameter:
     case StatementKind::Enum:
-        result.instance = mResolver.resolveInstance(statement->typeInfo, {},
+        result.instance = mResolver.resolveInstance(std::dynamic_pointer_cast<Statement>(statement)->typeInfo, {},
                                                     statement->parentScope.lock(), evaluation);
         result.type = result.instance.type;
         result.kind = EvalStatementKind::Variable;
@@ -946,7 +946,10 @@ PStatement CppExpressionEvaluator::findVisibleStatement(const QString &name,
     while (scope) {
         if (PStatement result = findDirectStatement(scope, name))
             return result;
-        for (const QString &usingName : scope->usingList) {
+        const QSet<QString> *usingList = scope->kind == StatementKind::Namespace
+                ? &std::dynamic_pointer_cast<NamespaceStatement>(scope)->usingList
+                : &std::dynamic_pointer_cast<Statement>(scope)->usingList;
+        for (const QString &usingName : *usingList) {
             PStatement target = mResolver.findStatement(usingName, scope);
             if (target && (target->kind == StatementKind::Namespace
                            || target->kind == StatementKind::EnumType

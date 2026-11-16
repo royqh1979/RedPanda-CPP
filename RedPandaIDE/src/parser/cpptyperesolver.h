@@ -43,7 +43,7 @@ struct ParsedTypeName {
 };
 
 struct LookupKey {
-    const Statement *scope = nullptr;
+    const AbstractStatement *scope = nullptr;
     QString name;
     bool typesOnly = false;
 
@@ -60,7 +60,7 @@ inline uint qHash(const LookupKey &key, uint seed = 0) noexcept
 }
 
 struct TemplateBindingFrame {
-    const Statement *owner = nullptr;
+    const AbstractStatement *owner = nullptr;
     TemplateBindings values;
     QHash<QString, ClassInstance> resolvedValues;
     std::shared_ptr<TemplateBindingFrame> parent;
@@ -160,7 +160,7 @@ private:
     };
     using MemberEntryList = QList<MemberEntry>;
     void appendMembers(const PStatement &scope, bool inherited,
-                       QSet<const Statement *> &visited, MemberEntryList &result) const;
+                       QSet<const AbstractStatement *> &visited, MemberEntryList &result) const;
     PStatement baseClass(const PStatement &scope, const QString &baseSpecifier,
                          StatementAccessibility &inheritance) const;
     StatementAccessibility applyInheritance(

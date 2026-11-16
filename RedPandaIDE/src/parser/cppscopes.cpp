@@ -51,7 +51,7 @@ struct ScopesProfileScope {
 };
 }
 
-std::shared_ptr<Statement> CppScopes::findScopeAt(const SourcePosition &position) const
+std::shared_ptr<AbstractStatement> CppScopes::findScopeAt(const SourcePosition &position) const
 {
     if (mScopes.isEmpty() || !position.isValid())
         return nullptr;
@@ -76,7 +76,7 @@ std::shared_ptr<Statement> CppScopes::findScopeAt(const SourcePosition &position
     return nullptr;
 }
 
-std::shared_ptr<Statement> CppScopes::findScopeAtLine(int line) const
+std::shared_ptr<AbstractStatement> CppScopes::findScopeAtLine(int line) const
 {
     if (mScopes.isEmpty() || line < 0)
         return nullptr;
@@ -100,7 +100,7 @@ std::shared_ptr<Statement> CppScopes::findScopeAtLine(int line) const
 }
 
 void CppScopes::addScope(const SourceRange &range,
-                         const std::shared_ptr<Statement> &statement, int parentIndex)
+                         const std::shared_ptr<AbstractStatement> &statement, int parentIndex)
 {
     ScopesProfileScope profileScope(scopesProfile.insertNs);
     ++scopesProfile.insertCount;
@@ -118,8 +118,8 @@ void CppScopes::addScope(const SourceRange &range,
 }
 
 void CppScopes::addScope(const SourceRange &range,
-                         const std::shared_ptr<Statement> &statement,
-                         const std::shared_ptr<Statement> &parentScope)
+                         const std::shared_ptr<AbstractStatement> &statement,
+                         const std::shared_ptr<AbstractStatement> &parentScope)
 {
     int parentIndex = -1;
     if (parentScope) {
@@ -133,7 +133,7 @@ void CppScopes::addScope(const SourceRange &range,
     addScope(range, statement, parentIndex);
 }
 
-std::shared_ptr<Statement> CppScopes::lastScope() const
+std::shared_ptr<AbstractStatement> CppScopes::lastScope() const
 {
     if (mScopes.isEmpty())
         return nullptr;

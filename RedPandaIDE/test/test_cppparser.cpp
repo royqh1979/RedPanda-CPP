@@ -31,7 +31,7 @@ void collectStatementNames(const PCppParser &parser, const PStatement &parent,
                            QSet<QString> &names)
 {
     const StatementMap &children = parser->statementList().childrenStatements(parent);
-    for (const std::weak_ptr<Statement> &weak : children) {
+    for (const std::weak_ptr<AbstractStatement> &weak : children) {
         PStatement statement = weak.lock();
         if (!statement)
             continue;
@@ -105,7 +105,7 @@ void TestCppParser::test_global_variable_reference_scope()
     QVERIFY(!mParser->findStatement("main::ttt"));
     PStatement declaration = mParser->findStatement("ttt");
     QVERIFY(declaration);
-    QVERIFY(declaration->hasDefinition());
+    QVERIFY(statementHasDefinition(declaration));
     QCOMPARE(declaration->definitionFileName, "text.cpp");
     QCOMPARE(declaration->definitionRange, declaration->declarationRange);
     PStatement reference = mParser->findStatementOf("text.cpp", QStringList{"ttt"}, 3);
@@ -270,228 +270,228 @@ void TestCppParser::test_parse_vars()
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a1");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a2");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"const int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a3");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a3");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a4");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a4");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"extern const int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"extern const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a5");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a5");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int");
-    QCOMPARE(statement->args,"[4]");
+    QCOMPARE(statementType(statement),"static const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"[4]");
 
     statement = mParser->findStatement("a6");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a6");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int *");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a7");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a7");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int &");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int &");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a8");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a8");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int **");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int **");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a8");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a8");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int **");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int **");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a9");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a9");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a10");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a10");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int *");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("a11");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"a11");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const int &");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const int &");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b1");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b1");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"unsigned int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"unsigned int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b2");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"const unsigned int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"const unsigned int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b3");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b3");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const unsigned int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const unsigned int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b4");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b4");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"extern const unsigned int");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"extern const unsigned int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b5");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b5");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static unsigned int");
-    QCOMPARE(statement->args,"[4]");
+    QCOMPARE(statementType(statement),"static unsigned int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"[4]");
 
     statement = mParser->findStatement("b6");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b6");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static unsigned int *");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static unsigned int *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b7");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b7");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static unsigned int *const");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static unsigned int *const");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("b8");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"b8");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static unsigned int **");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static unsigned int **");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s1");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s1");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"std::string");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s2");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"const std::string");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"const std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s3");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s3");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const std::string");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s4");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s4");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const std::string");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s5");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s5");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const std::string");
-    QCOMPARE(statement->args,"[4]");
+    QCOMPARE(statementType(statement),"static const std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"[4]");
 
     statement = mParser->findStatement("s6");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s6");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const std::string *");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const std::string *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("s7");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"s7");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const std::string &");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const std::string &");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("f1");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"f1");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const struct FILE *");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const struct FILE *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("f2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"f2");
     QCOMPARE(statement->kind,StatementKind::Variable);
-    QCOMPARE(statement->type(),"static const struct FILE");
-    QCOMPARE(statement->args,"");
+    QCOMPARE(statementType(statement),"static const struct FILE");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
 
     statement = mParser->findStatement("ff1");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"ff1");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(statement->properties & StatementProperty::FunctionPointer);
-    QCOMPARE(statement->type(),"int");
-    QCOMPARE(statement->args,"( )");
+    QCOMPARE(statementType(statement),"int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"( )");
 
     statement = mParser->findStatement("ff2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"ff2");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(statement->properties & StatementProperty::FunctionPointer);
-    QCOMPARE(statement->type(),"static const int");
-    QCOMPARE(statement->args,"( )");
+    QCOMPARE(statementType(statement),"static const int");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"( )");
 
     statement = mParser->findStatement("ff3");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"ff3");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(statement->properties & StatementProperty::FunctionPointer);
-    QCOMPARE(statement->type(),"static const std::string");
-    QCOMPARE(statement->args,"( )");
+    QCOMPARE(statementType(statement),"static const std::string");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"( )");
 
     //TODO:: ff4 ff5
 
@@ -500,24 +500,24 @@ void TestCppParser::test_parse_vars()
     QCOMPARE(statement->fullName,"ff6");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(statement->properties & StatementProperty::FunctionPointer);
-    QCOMPARE(statement->type(),"int *");
-    QCOMPARE(statement->args,"( )");
+    QCOMPARE(statementType(statement),"int *");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"( )");
 
     statement = mParser->findStatement("aa1");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"aa1");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(!(statement->properties & StatementProperty::FunctionPointer));
-    QCOMPARE(statement->type(),"int (*)");
-    QCOMPARE(statement->args,"[5]");
+    QCOMPARE(statementType(statement),"int (*)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"[5]");
 
     statement = mParser->findStatement("aa2");
     QVERIFY(statement!=nullptr);
     QCOMPARE(statement->fullName,"aa2");
     QCOMPARE(statement->kind,StatementKind::Variable);
     QVERIFY(!(statement->properties & StatementProperty::FunctionPointer));
-    QCOMPARE(statement->type(),"static const std::string (*)");
-    QCOMPARE(statement->args,"[5]");
+    QCOMPARE(statementType(statement),"static const std::string (*)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"[5]");
 
 }
 
@@ -533,31 +533,31 @@ void TestCppParser::test_struct()
     QCOMPARE(statement->command, "TTT");
     QCOMPARE(statement->kind, StatementKind::Class);
     PStatement child;
-    child = statement->children.value("xxx").lock();
+    child = std::dynamic_pointer_cast<Statement>(statement)->children.value("xxx").lock();
     QCOMPARE(child->command,"xxx");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::xxx");
-    QCOMPARE(child->type(), "int");
+    QCOMPARE(statementType(child), "int");
     QCOMPARE(child->accessibility, StatementAccessibility::Public);
-    child = statement->children.value("yyy").lock();
+    child = std::dynamic_pointer_cast<Statement>(statement)->children.value("yyy").lock();
     QCOMPARE(child->command,"yyy");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::yyy");
-    QCOMPARE(child->type(), "short");
+    QCOMPARE(statementType(child), "short");
     QCOMPARE(child->accessibility, StatementAccessibility::Public);
-    child = statement->children.value("zzz").lock();
+    child = std::dynamic_pointer_cast<Statement>(statement)->children.value("zzz").lock();
     QCOMPARE(child->command,"zzz");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::zzz");
-    QCOMPARE(child->type(), "double");
+    QCOMPARE(statementType(child), "double");
     QCOMPARE(child->accessibility, StatementAccessibility::Public);
 
-    QCOMPARE(statement->children.count(),4);
-    child = statement->children.value("ppp").lock();
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->children.count(),4);
+    child = std::dynamic_pointer_cast<Statement>(statement)->children.value("ppp").lock();
     QCOMPARE(child->command,"ppp");
     QCOMPARE(child->kind,StatementKind::Variable);
     QCOMPARE(child->fullName,"TTT::ppp");
-    QCOMPARE(child->type(), "int");
+    QCOMPARE(statementType(child), "int");
     QCOMPARE(child->accessibility, StatementAccessibility::Private);
 
 }
@@ -755,14 +755,14 @@ void TestCppParser::test_statement_ownership_declaration_definition_invalidation
     CppParser::parseFileBlocking(mParser, main, false, "");
     PStatement statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
     QCOMPARE(statement->declarationBoundaryAncestor, declaration);
     QCOMPARE(statement->definitionBoundaryAncestor, definition);
 
     mParser->invalidateFile(definition);
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
-    QVERIFY(!statement->hasDefinition());
+    QVERIFY(!statementHasDefinition(statement));
     QCOMPARE(statement->declarationBoundaryAncestor, declaration);
     QVERIFY(statement->definitionBoundaryAncestor.isEmpty());
     QCOMPARE(statement->definitionFileName, statement->fileName);
@@ -770,13 +770,13 @@ void TestCppParser::test_statement_ownership_declaration_definition_invalidation
     CppParser::parseFileBlocking(mParser, main, false, "");
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
     QCOMPARE(statement->definitionBoundaryAncestor, definition);
 
     mParser->invalidateFileRecordForTest(declaration);
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
     QCOMPARE(statement->fileName, definition);
     QCOMPARE(statement->declarationBoundaryAncestor, definition);
 }
@@ -841,22 +841,22 @@ void TestCppParser::test_preprocessor_statements()
     PStatement object = mParser->findStatement("OBJECT_MACRO");
     QVERIFY(object);
     QCOMPARE(object->kind, StatementKind::Preprocessor);
-    QCOMPARE(object->args, "");
-    QCOMPARE(object->value, "7");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->args, "");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->value, "7");
     QCOMPARE(object->fileName, "macros.cpp");
     QCOMPARE(object->definitionFileName, "macros.cpp");
     QCOMPARE(object->declarationRange.start.line, 0);
-    QVERIFY(object->hasDefinition());
+    QVERIFY(statementHasDefinition(object));
 
     PStatement function = mParser->findStatement("FUNCTION_MACRO");
     QVERIFY(function);
     QCOMPARE(function->kind, StatementKind::Preprocessor);
-    QCOMPARE(function->args, "(x)");
-    QCOMPARE(function->value, "((x)+1)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->args, "(x)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->value, "((x)+1)");
     QCOMPARE(function->fileName, "macros.cpp");
     QCOMPARE(function->definitionFileName, "macros.cpp");
     QCOMPARE(function->declarationRange.start.line, 1);
-    QVERIFY(function->hasDefinition());
+    QVERIFY(statementHasDefinition(function));
 }
 
 void TestCppParser::test_label_statements()
@@ -873,7 +873,7 @@ void TestCppParser::test_label_statements()
 
     PStatement function = mParser->findStatement("f");
     QVERIFY(function);
-    PStatement label = function->children.value("retry").lock();
+    PStatement label = std::dynamic_pointer_cast<Statement>(function)->children.value("retry").lock();
     QVERIFY(label);
     QCOMPARE(label->kind, StatementKind::Label);
     QCOMPARE(label->fullName, "f::retry");
@@ -882,7 +882,7 @@ void TestCppParser::test_label_statements()
 
     PStatement notLabels = mParser->findStatement("g");
     QVERIFY(notLabels);
-    for (const std::weak_ptr<Statement> &weak : notLabels->children) {
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(notLabels)->children) {
         PStatement child = weak.lock();
         QVERIFY(!child || child->kind != StatementKind::Label);
     }
@@ -895,11 +895,11 @@ void TestCppParser::test_hard_define_statements()
     PStatement macro = mParser->findStatement("HARD_MACRO");
     QVERIFY(macro);
     QCOMPARE(macro->kind, StatementKind::Preprocessor);
-    QCOMPARE(macro->args, "(x)");
-    QCOMPARE(macro->value, "((x)+1)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->args, "(x)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->value, "((x)+1)");
     QVERIFY(macro->fileName.isEmpty());
     QVERIFY(!macro->declarationRange.isValid());
-    QVERIFY(macro->hasDefinition());
+    QVERIFY(statementHasDefinition(macro));
     QCOMPARE(mParser->statementList().count(), 1);
 }
 
@@ -914,8 +914,8 @@ void TestCppParser::test_structured_bindings()
         QVERIFY(statement!=nullptr);
         QCOMPARE(statement->fullName,name);
         QCOMPARE(statement->kind,StatementKind::Variable);
-        QCOMPARE(statement->type(),"auto");
-        QCOMPARE(statement->args,"");
+        QCOMPARE(statementType(statement),"auto");
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->args,"");
     }
 }
 
@@ -1150,12 +1150,12 @@ void TestCppParser::test_auto_invalidation_preserves_definition_after_declaratio
     mParser->addProjectFile(main, false);
     CppParser::parseFileBlocking(mParser, main, false, "");
     PStatement statement = mParser->findStatement("declared_function");
-    QVERIFY(statement && statement->hasDefinition());
+    QVERIFY(statement && statementHasDefinition(statement));
 
     QVERIFY(writeLines(declaration, {"int declared_function();", "int declaration_marker;"}));
     CppParser::parseFileBlocking(mParser, main, false, "");
     statement = mParser->findStatement("declared_function");
-    QVERIFY(statement && statement->hasDefinition());
+    QVERIFY(statement && statementHasDefinition(statement));
     QCOMPARE(statement->declarationBoundaryAncestor, declaration);
     QCOMPARE(statement->definitionBoundaryAncestor, definition);
     QVERIFY(mParser->findStatement("declaration_marker"));
@@ -1170,11 +1170,11 @@ void TestCppParser::test_cppreference_declarator_syntax()
     PStatement statement = mParser->findStatement("a");
     QVERIFY(statement);
     QCOMPARE(statement->kind, StatementKind::Variable);
-    QCOMPARE(statement->type(), "int");
+    QCOMPARE(statementType(statement), "int");
 
     statement = mParser->findStatement("p");
     QVERIFY(statement);
-    QCOMPARE(statement->type(), "int *");
+    QCOMPARE(statementType(statement), "int *");
 
     QVERIFY(mParser->findStatement("f"));
     statement = mParser->findStatement("pf");
@@ -1238,11 +1238,11 @@ void TestCppParser::test_cppreference_enum_syntax()
                              "cxx20::long_long_long_name", "cxx20::using_enum_demo"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
-    QCOMPARE(mParser->findStatement("green")->value, "20");
-    QCOMPARE(mParser->findStatement("blue")->value, "21");
-    QCOMPARE(mParser->findStatement("d")->value, "0");
-    QCOMPARE(mParser->findStatement("e")->value, "1");
-    QCOMPARE(mParser->findStatement("f")->value, "3");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatement("green"))->value, "20");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatement("blue"))->value, "21");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatement("d"))->value, "0");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatement("e"))->value, "1");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatement("f"))->value, "3");
 }
 
 void TestCppParser::test_cppreference_namespace_syntax()
@@ -1294,10 +1294,10 @@ void TestCppParser::test_cppreference_range_for_syntax()
     QVERIFY(mParser->findStatementOf(file, "i", 7));
     QVERIFY(mParser->findStatementOf(file, "n", 14));
     QVERIFY(mParser->findStatementOf(file, "elem_t", 23));
-    QCOMPARE(mParser->findStatementOf(file, "v", 5)->typeInfo.qualifiedNameText,
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatementOf(file, "v", 5))->typeInfo.qualifiedNameText,
              "std::vector<int>");
-    QCOMPARE(mParser->findStatementOf(file, "v", 5)->type(), "std::vector<int>");
-    QCOMPARE(mParser->findStatementOf(file, "a", 16)->args, "[]");
+    QCOMPARE(statementType(mParser->findStatementOf(file, "v", 5)), "std::vector<int>");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mParser->findStatementOf(file, "a", 16))->args, "[]");
 }
 
 void TestCppParser::test_cppreference_ranges_syntax()
@@ -1361,7 +1361,7 @@ void TestCppParser::test_find_statement_of_inline_namespace()
     QCOMPARE(stringAlias->fullName, "std::__cxx11::string");
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "string"}, 0),
              stringAlias);
-    QVERIFY(stringAlias->hasDefinition());
+    QVERIFY(statementHasDefinition(stringAlias));
     PStatement literalFunction = mParser->findStatement("std::literals::f");
     QVERIFY(literalFunction);
     QCOMPARE(literalFunction->fullName, "std::literals::string_view_literals::f");
@@ -1553,14 +1553,14 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(inlineCxx11Tokens);
     PStatement basicString = mParser->findStatement("std::__cxx11::basic_string");
     QVERIFY(basicString);
-    QVERIFY(basicString->hasDefinition());
+    QVERIFY(statementHasDefinition(basicString));
     QVERIFY(basicString->definitionFileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive));
     QCOMPARE(mParser->findStatementOf(
                  main, {"std", "::", "__cxx11", "::", "basic_string"}, 0), basicString);
     QVERIFY(mParser->findStatement("std::string"));
     PStatement stringAlias = mParser->findStatementOf(main, {"std", "::", "string"}, 0);
     QVERIFY(stringAlias);
-    QVERIFY(stringAlias->hasDefinition());
+    QVERIFY(statementHasDefinition(stringAlias));
     QVERIFY(mParser->findStatement("std::basic_string"));
     QCOMPARE(mParser->findStatementOf(main, {"std", "::", "basic_string"}, 0), basicString);
     PStatement size = mParser->findStatement("std::basic_string::size");
@@ -1756,7 +1756,7 @@ void TestCppParser::test_standard_library_expression_chains()
     QList<PStatement> findIfOverloads = mParser->getListOfFunctions(main, "std::find_if", 32);
     bool hasClassicFindIf = false;
     for (const PStatement &overload : findIfOverloads)
-        hasClassicFindIf |= overload->normalizedArgs == "(@T0,@T0,@T1)";
+        hasClassicFindIf |= std::dynamic_pointer_cast<Statement>(overload)->normalizedArgs == "(@T0,@T0,@T1)";
     QVERIFY(hasClassicFindIf);
     QStringList listFrontExpression{"linked", ".", "front", "(", ")"};
     EvalResult listFrontResult = mParser->evalExpression(
@@ -2015,19 +2015,19 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     CppParser::parseFileBlocking(mParser, main, true, "");
     PStatement statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
     QCOMPARE(statement->declarationBoundaryAncestor, declaration);
     QCOMPARE(statement->definitionBoundaryAncestor, definition);
 
     mParser->invalidateFile(definition);
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
-    QVERIFY(!statement->hasDefinition());
+    QVERIFY(!statementHasDefinition(statement));
 
     CppParser::parseFileBlocking(mParser, main, true, "");
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
 
     mParser->invalidateFile(declaration);
     QVERIFY(!mParser->findStatement("N::C::method"));
@@ -2035,7 +2035,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     CppParser::parseFileBlocking(mParser, main, true, "");
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
-    QVERIFY(statement->hasDefinition());
+    QVERIFY(statementHasDefinition(statement));
     QCOMPARE(statement->fileName, declaration);
     QCOMPARE(statement->declarationBoundaryAncestor, declaration);
     QCOMPARE(statement->definitionFileName, definition);
@@ -2044,7 +2044,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     QVERIFY(parent);
     QCOMPARE(parent->fullName, QString("N::C"));
     bool memberIndexed = false;
-    for (const std::weak_ptr<Statement> &weak : parent->children.values("method")) {
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(parent)->children.values("method")) {
         if (weak.lock() == statement) {
             memberIndexed = true;
             break;
@@ -2085,23 +2085,23 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     PStatement intDeclaration;
     PStatement doubleDefinition;
     for (const PStatement &statement : overloadedFunctions()) {
-        if (statement->normalizedArgs == "(int)")
+        if (std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs == "(int)")
             intDeclaration = statement;
-        else if (statement->normalizedArgs == "(double)")
+        else if (std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs == "(double)")
             doubleDefinition = statement;
     }
     QVERIFY(intDeclaration);
     QVERIFY(doubleDefinition);
     QVERIFY(intDeclaration != doubleDefinition);
-    QVERIFY(!intDeclaration->hasDefinition());
-    QVERIFY(doubleDefinition->hasDefinition());
+    QVERIFY(!statementHasDefinition(intDeclaration));
+    QVERIFY(statementHasDefinition(doubleDefinition));
     QCOMPARE(doubleDefinition->declarationBoundaryAncestor, otherDeclaration);
     QCOMPARE(doubleDefinition->definitionBoundaryAncestor, definition);
     QCOMPARE(doubleDefinition->definitionFileName, definition);
 
     mParser->invalidateFile(definition);
-    QVERIFY(!doubleDefinition->hasDefinition());
-    QVERIFY(!intDeclaration->hasDefinition());
+    QVERIFY(!statementHasDefinition(doubleDefinition));
+    QVERIFY(!statementHasDefinition(intDeclaration));
     QCOMPARE(overloadedFunctions().count(), 2);
 }
 
@@ -2115,11 +2115,11 @@ void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()
     PStatement function = mParser->findStatement("f");
     QVERIFY(function);
     QList<PStatement> variables;
-    for (const std::weak_ptr<Statement> &weakBlock : function->children) {
+    for (const std::weak_ptr<AbstractStatement> &weakBlock : std::dynamic_pointer_cast<Statement>(function)->children) {
         PStatement block = weakBlock.lock();
         if (!block || block->kind != StatementKind::Block)
             continue;
-        for (const std::weak_ptr<Statement> &weak : block->children.values("value")) {
+        for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(block)->children.values("value")) {
             if (PStatement variable = weak.lock())
                 variables.append(variable);
         }

@@ -133,12 +133,12 @@ void NewClassCandidatesModel::fillClasses()
         return;
     if (!mParser->freeze())
         return;
-    foreach( const std::weak_ptr<Statement>& weakStatement, mParser->statementList().childrenStatements()) {
+    foreach( const std::weak_ptr<AbstractStatement>& weakStatement, mParser->statementList().childrenStatements()) {
         PStatement s = weakStatement.lock();
         if (!s)
             continue;
         if (s->kind==StatementKind::Class
-                && s->inProject()
+                && statementInProject(s)
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {
@@ -161,12 +161,12 @@ void NewClassCandidatesModel::fillClasses()
 
 void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
 {
-    foreach( const std::weak_ptr<Statement>& weakStatement, mParser->statementList().childrenStatements(ns)) {
+    foreach( const std::weak_ptr<AbstractStatement>& weakStatement, mParser->statementList().childrenStatements(ns)) {
         PStatement s = weakStatement.lock();
         if (!s)
             continue;
         if (s->kind==StatementKind::Class
-                && s->inProject()
+                && statementInProject(s)
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {

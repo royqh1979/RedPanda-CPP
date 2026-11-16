@@ -35,13 +35,13 @@ class CppStatementBuilder
 public:
     explicit CppStatementBuilder(StatementModel &model);
 
-    QList<std::weak_ptr<Statement>> build(const DeclarationInfo &declaration,
+    QList<std::weak_ptr<AbstractStatement>> build(const DeclarationInfo &declaration,
                                           const StatementBuildContext &context);
 
 private:
-    QList<std::weak_ptr<Statement>> buildNamespace(const DeclarationInfo &declaration,
+    QList<std::weak_ptr<AbstractStatement>> buildNamespace(const DeclarationInfo &declaration,
                                                    const StatementBuildContext &context);
-    QList<std::weak_ptr<Statement>> buildUsing(const DeclarationInfo &declaration,
+    QList<std::weak_ptr<AbstractStatement>> buildUsing(const DeclarationInfo &declaration,
                                                const StatementBuildContext &context);
     PStatement createBlock(const DeclarationInfo &declaration,
                            const StatementBuildContext &context);

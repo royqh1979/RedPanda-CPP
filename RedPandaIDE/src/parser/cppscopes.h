@@ -21,20 +21,20 @@
 
 struct CppScope {
     SourceRange range;
-    std::weak_ptr<Statement> statement;
+    std::weak_ptr<AbstractStatement> statement;
     int parentIndex = -1;
 };
 
 class CppScopes
 {
 public:
-    std::shared_ptr<Statement> findScopeAt(const SourcePosition &position) const;
-    std::shared_ptr<Statement> findScopeAtLine(int line) const;
-    void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,
+    std::shared_ptr<AbstractStatement> findScopeAt(const SourcePosition &position) const;
+    std::shared_ptr<AbstractStatement> findScopeAtLine(int line) const;
+    void addScope(const SourceRange &range, const std::shared_ptr<AbstractStatement> &statement,
                   int parentIndex = -1);
-    void addScope(const SourceRange &range, const std::shared_ptr<Statement> &statement,
-                  const std::shared_ptr<Statement> &parentScope);
-    std::shared_ptr<Statement> lastScope() const;
+    void addScope(const SourceRange &range, const std::shared_ptr<AbstractStatement> &statement,
+                  const std::shared_ptr<AbstractStatement> &parentScope);
+    std::shared_ptr<AbstractStatement> lastScope() const;
     void removeLastScope();
     void clear() { mScopes.clear(); }
     int count() const { return mScopes.count(); }

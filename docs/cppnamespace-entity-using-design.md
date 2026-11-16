@@ -60,7 +60,7 @@ namespace std {
 
 ### 3.1 基本规则
 
-处理 inline/匿名 namespace 的直接成员时，在它的实际 parent 中创建 `InlineAliasStatement`。它沿用 `StatementKind::Alias` 进行分类，但使用独立 C++ 类型明确表达直接目标语义：
+处理 inline/匿名 namespace 的直接成员时，在它的实际 parent 中创建 `InlineAliasStatement`。它沿用 `StatementKind::Alias` 进行分类，但使用独立 C++ 类型明确表达自动生成的 inline 投影：
 
 ```text
 std
@@ -71,14 +71,14 @@ std
 
 InlineAliasStatement：
 
-- 保存可见名称和显示所需信息；
-- 通过 `std::weak_ptr<AbstractStatement> target` 直接引用已知目标，不拥有目标；
-- 不通过 fullName 字符串重新查找目标；
+- 保存可见名称、来源和目标实际 fullName；
+- 复用普通 using 的名称解析步骤取得实际 Statement，不保存目标 weak_ptr；
+- 不包装或转发目标的类型、参数、children 等属性；
 - 正常加入 StatementModel 和 FileInfo；
 - 正常参与失效、replay、补全、树形显示和声明位置更新；
 - 不需要额外的 SyntheticAliasKind。
 
-它由 inline namespace 处理自动生成；目标在创建时已知，因此与普通源码 Alias 的字符串解析路径分离。
+它由 inline namespace 处理自动生成。目标实际路径在创建时已知，但目标查找与普通源码 Alias 共用同一解析算法，不另建一套属性访问接口。
 
 ### 3.2 创建时机
 
@@ -104,7 +104,7 @@ B::value（using → C::value）
 A::value（using → C::value）
 ```
 
-中间节点也是 InlineAliasStatement，并直接保存最终实际目标的 weak_ptr，不形成需要逐次字符串解析的 alias 链。
+中间节点也是 InlineAliasStatement，并记录最终实际目标的 fullName，不形成需要逐次解析的 alias 链。
 
 如果新增 using 位于 inline/匿名 namespace 中，它也属于该 namespace 的新增可见成员，因此按同一规则继续向直接 parent 投影。实际父子链无环，不需要全路径组合。
 
@@ -132,29 +132,24 @@ AbstractStatement
 └── InlineAliasStatement
 ```
 
-AbstractStatement 是三种 Statement 的共同祖先，只保存真正公共的身份、可见名称、实际父子关系、分类和来源数据，并声明公共行为接口。
+AbstractStatement 是三种 Statement 的共同祖先，只保存真正公共的身份、可见名称、实际父子关系、分类和来源数据。
 
-Statement 保持普通语句的单声明/单定义模型，以及类型、参数、模板、children 等普通声明所需的数据。NamespaceStatement 保存多个 occurrence，并实现多定义来源语义。InlineAliasStatement 与 Statement 平级，只增加直接目标 weak_ptr 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它的 StatementKind 仍为 Alias。
+Statement 保持普通语句的单声明/单定义模型，以及类型、参数、模板、children 等普通声明所需的数据。NamespaceStatement 保存多个 occurrence，并实现多定义来源语义。InlineAliasStatement 与 Statement 平级，只保存目标实际 fullName 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它的 StatementKind 仍为 Alias。
 
 本阶段不继续拆 VariableStatement、FunctionStatement、ClassStatement、ScopeStatement 等完整类系。普通 Statement 内部字段是否继续下沉属于后续独立重构，不与 namespace 唯一化同时进行。
 
-### 4.2 行为接口
+### 4.2 集中处理行为，不建立行为虚函数体系
 
-不同种类 Statement 的行为差异必须通过 AbstractStatement 的虚函数及各子类重载实现，包括但不限于：
+文件归属、可见性和来源贡献扣除等复杂逻辑集中在 StatementModel 等现有模型层处理，不为这些行为建立 Statement 虚函数接口：
 
-- 枚举来源及失效归属；
-- 判断是否包含指定归属文件的贡献；
-- 判断在指定文件中的可见性；
-- 判断指定文件和位置是否落在声明或定义范围内；
-- 获取声明/定义跳转位置；
-- 删除指定文件的来源贡献；
-- 删除后保持、更新或整体移除 Statement；
-- 解析查询、补全、跳转、hint 和 function tips 应使用的目标；
-- 枚举直接成员及按名称查找成员。
+- 普通 Statement 与 InlineAliasStatement 共用单来源处理；
+- NamespaceStatement 仅扣除当前文件的 occurrence，仍有来源则保留，全部消失后才删除空壳；
+- FileInfo 和 StatementModel 中条目的添加、删除由统一的公共流程执行；
+- StatementFactory 只负责创建与初始化，不承担失效或可见性逻辑。
 
-调用方只依赖 AbstractStatement 接口，不得使用 `dynamic_pointer_cast<NamespaceStatement>`、`dynamic_pointer_cast<InlineAliasStatement>` 等类型转换进行行为分派，也不得再通过 `kind == Namespace` 在外部实现另一套来源规则。StatementKind 只用于分类和显示，不代替多态行为。
+直接属性访问不得做成虚函数，不得引入 data() 或逐字段目标转发接口。children 仍是具体 Statement 类型的普通成员，不提供虚函数访问接口。调用方确需访问具体类型的属性或 children 时，显式使用 dynamic_pointer_cast。
 
-完全相同的公共算法可以留在 AbstractStatement 的非虚辅助函数中。例如 InlineAliasStatement 与普通 Statement 可以复用单文件来源处理辅助函数，但二者仍保持平级，各自实现对应虚函数。无需 RTTI 或 dynamic cast 来完成正常查询和生命周期处理。
+普通源码 Alias 与 InlineAliasStatement 共用名称解析算法。StatementKind 用于分类、显示和集中处理时的类型判断。集中类型处理的代价是新增行为不同的 Statement 类型时必须同步修改模型层；当前类系是封闭的有限集合，因此不提前为假设中的扩展建立虚函数体系。
 
 ### 4.3 StatementFactory
 
@@ -163,7 +158,7 @@ Statement 保持普通语句的单声明/单定义模型，以及类型、参数
 - createNamespace() → NamespaceStatement；
 - createClass()、createFunction()、createVariable() 等 → Statement；
 - createAlias() → Statement，用于现有源码 Alias；
-- createInlineAlias() → InlineAliasStatement，用于直接目标已知的投影。
+- createInlineAlias() → InlineAliasStatement，用于目标实际 fullName 已知的投影。
 
 工厂负责实际 C++ 类型与 StatementKind 的一致性，并通过必传参数 parentScope、command、fullName 完成公共成员初始赋值，同时初始化 scope、accessibility 和补全计数等基础默认值；工厂方法不得使用默认参数。Builder 负责从 DeclarationInfo 填充其它语义数据。不得先创建普通 Statement 再把 kind 改成 Namespace。
 
@@ -278,13 +273,12 @@ using 的目标指向稳定的实际 Statement，后续定义合并不会改变�
 - 不改变行为；
 - 运行现有完整测试。
 
-### 阶段 2：有限 Statement 类系与行为接口
+### 阶段 2：有限 Statement 类系
 
 - 引入平级的 Statement、NamespaceStatement 和 InlineAliasStatement，共同继承 AbstractStatement；
-- 将普通来源行为移到 Statement，将 namespace 来源行为移到 NamespaceStatement；
-- 为 InlineAliasStatement 增加直接目标 weak_ptr，通过公共辅助函数复用单文件来源算法，而非继承 Statement；
-- 将来源、失效、可见性、目标解析和成员查询等种类相关行为改为虚函数重载，移除调用方的 dynamic cast 行为分派；
-- 此阶段暂不唯一化 namespace；
+- 普通声明字段保留在具体类型中，调用方通过 dynamic_pointer_cast 显式访问，不增加属性虚函数或 data()；
+- InlineAliasStatement 只保存目标实际 fullName，普通 using 与 InlineAlias 的名称解析共用现有 Resolver 路径；
+- 此阶段暂不唯一化 namespace，也不改变来源、失效和可见性逻辑；
 - 验证构建、跳转、失效和锁边界不变。
 
 ### 阶段 3：occurrence 与唯一命名 namespace

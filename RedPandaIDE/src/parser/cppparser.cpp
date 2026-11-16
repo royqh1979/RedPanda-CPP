@@ -149,8 +149,8 @@ void CppParser::internalParse(const QString &fileName)
                 mPreprocessor.getDefineParts(token.text.mid(7).trimmed(), name, args, value);
                 if (!name.isEmpty()) {
                     auto statement = StatementFactory::createPreprocessor(PStatement(), name, name);
-                    statement->args = args;
-                    statement->value = value;
+                    std::dynamic_pointer_cast<Statement>(statement)->args = args;
+                    std::dynamic_pointer_cast<Statement>(statement)->value = value;
                     statement->fileName = currentFile;
                     statement->declarationBoundaryAncestor = currentAncestor;
                     statement->declarationRange = SourceRange{
@@ -160,7 +160,7 @@ void CppParser::internalParse(const QString &fileName)
                     statement->definitionRange = statement->declarationRange;
                     statement->definitionFileName = currentFile;
                     statement->definitionBoundaryAncestor = currentAncestor;
-                    statement->setHasDefinition(true);
+                    setStatementHasDefinition(statement, true);
                     statement->properties.setFlag(StatementProperty::InProject,
                                                   mProjectFiles.contains(currentFile));
                     statement->properties.setFlag(StatementProperty::InSystemHeader,
@@ -226,7 +226,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         bool declarationMatches = statement->declarationBoundaryAncestor == fileName
                 || (statement->declarationBoundaryAncestor.isEmpty()
                     && statement->fileName == fileName);
-        bool definitionMatches = statement->hasDefinition()
+        bool definitionMatches = statementHasDefinition(statement)
                 && (statement->definitionBoundaryAncestor == fileName
                     || (statement->definitionBoundaryAncestor.isEmpty()
                         && statement->definitionFileName == fileName));
@@ -238,7 +238,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                     ? statement->fileName : statement->declarationBoundaryAncestor);
         if (declarationInfo)
             declarationInfo->removeStatement(statement);
-        if (statement->hasDefinition()) {
+        if (statementHasDefinition(statement)) {
             PParsedFileInfo definitionInfo = mPreprocessor.findFileInfo(
                         statement->definitionBoundaryAncestor.isEmpty()
                         ? statement->definitionFileName : statement->definitionBoundaryAncestor);
@@ -247,14 +247,14 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         }
 
         if (definitionMatches) {
-            statement->setHasDefinition(false);
+            setStatementHasDefinition(statement, false);
             statement->definitionRange = statement->declarationRange;
             statement->definitionFileName = statement->fileName;
             statement->definitionBoundaryAncestor.clear();
         }
         if (!declarationMatches)
             continue;
-        if (statement->hasDefinition()) {
+        if (statementHasDefinition(statement)) {
             statement->fileName = statement->definitionFileName;
             statement->declarationRange = statement->definitionRange;
             statement->declarationBoundaryAncestor = statement->definitionBoundaryAncestor;
@@ -473,10 +473,10 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
         scopes.append(parent);
     }
 
-    QSet<const Statement *> seen;
+    QSet<const AbstractStatement *> seen;
     for (const PStatement &scope : scopes) {
         const auto candidates = mStatementList.childrenStatements(scope).values(function->command);
-        for (const std::weak_ptr<Statement> &weak : candidates) {
+        for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             PStatement candidate = weak.lock();
             if (!candidate || seen.contains(candidate.get()))
                 continue;
@@ -538,7 +538,7 @@ PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return {};
-    for (const std::weak_ptr<Statement> &weak : info->statements()) {
+    for (const std::weak_ptr<AbstractStatement> &weak : info->statements()) {
         PStatement statement = weak.lock();
         if (!statement || (statement->kind != StatementKind::Function
                            && statement->kind != StatementKind::Constructor
@@ -547,7 +547,7 @@ PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
         if ((statement->declarationRange.isValid()
              && statement->declarationRange.start.line <= line
              && line <= statement->declarationRange.end.line)
-                || (statement->hasDefinition()
+                || (statementHasDefinition(statement)
                     && statement->definitionRange.start.line <= line
                     && line <= statement->definitionRange.end.line))
             return statement;
@@ -683,12 +683,12 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement) const
     if (statement->kind != StatementKind::Alias && statement->kind != StatementKind::Typedef)
         return statement;
     CppTypeResolver resolver(mStatementList);
-    if (!statement->value.isEmpty()) {
-        PStatement target = resolver.findStatement(statement->value, statement->parentScope.lock());
+    if (!std::dynamic_pointer_cast<Statement>(statement)->value.isEmpty()) {
+        PStatement target = resolver.findStatement(std::dynamic_pointer_cast<Statement>(statement)->value, statement->parentScope.lock());
         if (target)
             return target;
     }
-    return resolver.resolve(statement->typeInfo, {}, statement->parentScope.lock()).declaration.lock();
+    return resolver.resolve(std::dynamic_pointer_cast<Statement>(statement)->typeInfo, {}, statement->parentScope.lock()).declaration.lock();
 }
 
 QStringList CppParser::getFunctionParameterNames(const PStatement &statement) const
@@ -696,7 +696,7 @@ QStringList CppParser::getFunctionParameterNames(const PStatement &statement) co
     QStringList result;
     if (!statement)
         return result;
-    for (const ParameterInfo &parameter : statement->parameters) {
+    for (const ParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(statement)->parameters) {
         if (!parameter.name.isEmpty())
             result.append(parameter.name);
     }
@@ -729,7 +729,7 @@ QList<PStatement> CppParser::doListStatements(const QString &fileName, int line,
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return result;
-    for (const std::weak_ptr<Statement> &weak : info->statements()) {
+    for (const std::weak_ptr<AbstractStatement> &weak : info->statements()) {
         PStatement statement = weak.lock();
         if (!statement || !kinds.contains(statement->kind))
             continue;
@@ -791,7 +791,7 @@ PStatement CppParser::findTypeDef(const PStatement &statement, const QString &fi
     if (!statement)
         return {};
     CppTypeResolver resolver(mStatementList);
-    return resolver.resolve(statement->typeInfo, {}, statement->parentScope.lock()).declaration.lock();
+    return resolver.resolve(std::dynamic_pointer_cast<Statement>(statement)->typeInfo, {}, statement->parentScope.lock()).declaration.lock();
 }
 
 bool CppParser::freeze()
@@ -916,10 +916,10 @@ void CppParser::parseHardDefines()
         return;
     for (const PDefine &define : mPreprocessor.hardDefines()) {
         auto statement = StatementFactory::createPreprocessor(PStatement(), define->name, define->name);
-        statement->args = define->args;
-        statement->value = define->value;
+        std::dynamic_pointer_cast<Statement>(statement)->args = define->args;
+        std::dynamic_pointer_cast<Statement>(statement)->value = define->value;
         statement->declarationRange = SourceRange{{-1, -1}, {-1, -1}};
-        statement->setHasDefinition(true);
+        setStatementHasDefinition(statement, true);
         mStatementList.add(statement);
     }
 }
@@ -1016,10 +1016,10 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
             result = "#define";
             if (!statement->command.isEmpty())
                 result += ' ' + statement->command;
-            if (!statement->args.isEmpty())
-                result += ' ' + statement->args;
-            if (!statement->value.isEmpty())
-                result += ' ' + statement->value;
+            if (!std::dynamic_pointer_cast<Statement>(statement)->args.isEmpty())
+                result += ' ' + std::dynamic_pointer_cast<Statement>(statement)->args;
+            if (!std::dynamic_pointer_cast<Statement>(statement)->value.isEmpty())
+                result += ' ' + std::dynamic_pointer_cast<Statement>(statement)->value;
         }
         break;
     case StatementKind::EnumClassType:
@@ -1029,19 +1029,19 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
         result = "enum " + statement->command;
         break;
     case StatementKind::Enum:
-        if (!statement->type().isEmpty())
-            result = statement->type() + "::";
+        if (!statementType(statement).isEmpty())
+            result = statementType(statement) + "::";
         result += statement->command;
-        if (!statement->value.isEmpty())
-            result += "(" + statement->value + ")";
+        if (!std::dynamic_pointer_cast<Statement>(statement)->value.isEmpty())
+            result += "(" + std::dynamic_pointer_cast<Statement>(statement)->value + ")";
         break;
     case StatementKind::Typedef:
-        result = "typedef " + statement->type() + " " + statement->command;
-        if (!statement->args.isEmpty())
-            result += " " + statement->args;
+        result = "typedef " + statementType(statement) + " " + statement->command;
+        if (!std::dynamic_pointer_cast<Statement>(statement)->args.isEmpty())
+            result += " " + std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     case StatementKind::Alias:
-        result = "using " + statement->type();
+        result = "using " + statementType(statement);
         break;
     case StatementKind::Function:
     case StatementKind::Variable:
@@ -1049,33 +1049,33 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
     case StatementKind::Class:
         if (statement->scope != StatementScope::Local)
             result = getScopePrefix(statement) + ' ';
-        result += statement->type() + ' ';
-        if (statement->kind == StatementKind::Variable && statement->args.startsWith("("))
+        result += statementType(statement) + ' ';
+        if (statement->kind == StatementKind::Variable && std::dynamic_pointer_cast<Statement>(statement)->args.startsWith("("))
             result += "(*" + statement->fullName + ")";
         else
             result += statement->fullName;
-        result += statement->args;
+        result += std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     case StatementKind::OverloadedOperator:
         if (statement->scope != StatementScope::Local)
             result = getScopePrefix(statement) + ' ';
-        result += statement->type() + " operator " + statement->fullName + statement->args;
+        result += statementType(statement) + " operator " + statement->fullName + std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     case StatementKind::LiteralOperator:
         if (statement->scope != StatementScope::Local)
             result = getScopePrefix(statement) + ' ';
-        result += statement->type() + " operator \"\"" + statement->fullName + statement->args;
+        result += statementType(statement) + " operator \"\"" + statement->fullName + std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     case StatementKind::Namespace:
         result = statement->fullName;
         break;
     case StatementKind::Constructor:
         result = getScopePrefix(statement) + QObject::tr("constructor") + ' '
-                + statement->type() + ' ' + statement->fullName + statement->args;
+                + statementType(statement) + ' ' + statement->fullName + std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     case StatementKind::Destructor:
         result = getScopePrefix(statement) + QObject::tr("destructor") + ' '
-                + statement->type() + ' ' + statement->fullName + statement->args;
+                + statementType(statement) + ' ' + statement->fullName + std::dynamic_pointer_cast<Statement>(statement)->args;
         break;
     default:
         break;
@@ -1145,7 +1145,7 @@ PStatement CppParser::findStatementInScope(const QString &name, const PStatement
         current = current->parentScope.lock();
     }
     const auto values = mStatementList.childrenStatements().values(name);
-    for (const std::weak_ptr<Statement> &weak : values) {
+    for (const std::weak_ptr<AbstractStatement> &weak : values) {
         if (PStatement result = weak.lock())
             return result;
     }
@@ -1199,7 +1199,7 @@ PStatement CppParser::findMacro(const QString &phrase, const QString &fileName) 
 {
     Q_UNUSED(fileName);
     const auto values = mStatementList.childrenStatements().values(phrase);
-    for (const std::weak_ptr<Statement> &weak : values) {
+    for (const std::weak_ptr<AbstractStatement> &weak : values) {
         PStatement statement = weak.lock();
         if (statement && statement->kind == StatementKind::Preprocessor)
             return statement;

@@ -434,7 +434,7 @@ void TestWidgets::test_goto_standard_library_string()
     CppParser::parseFileBlocking(mParser, main, true, "");
     PStatement stringAlias = mParser->findStatementOf(main, {"std", "::", "string"}, 1);
     QVERIFY(stringAlias);
-    QVERIFY(stringAlias->hasDefinition());
+    QVERIFY(statementHasDefinition(stringAlias));
 
     QString targetFile;
     QSynedit::CharPos target{-1, -1};
@@ -579,7 +579,7 @@ void TestWidgets::test_code_completion_macros()
     PStatement macro = mParser->findStatement("TEST_MACRO");
     QVERIFY(macro);
     QCOMPARE(macro->kind, StatementKind::Preprocessor);
-    QCOMPARE(macro->value, "1");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->value, "1");
     QCOMPARE(macro->fileName, mMainFile);
     int line = mMainContent.indexOf("#define TEST_MACRO 1");
     QVERIFY(line >= 0);
@@ -695,7 +695,7 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
     PStatement classStatement = mParser->findStatementOf(mMainFile, QStringList{"Foo"}, 0);
     QVERIFY(classStatement);
     PStatement constructorStatement;
-    for (const std::weak_ptr<Statement> &weak : classStatement->children.values("Foo")) {
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(classStatement)->children.values("Foo")) {
         PStatement candidate = weak.lock();
         if (candidate && candidate->kind == StatementKind::Constructor) {
             constructorStatement = candidate;
@@ -772,18 +772,18 @@ void TestWidgets::test_goto_statement_definitions()
                              "Defaulted::Defaulted"}) {
         PStatement statement = mParser->findStatement(QString::fromLatin1(name));
         QVERIFY2(statement, name);
-        QVERIFY2(statement->hasDefinition(), name);
+        QVERIFY2(statementHasDefinition(statement), name);
     }
     for (int line : {13, 14, 18}) {
         QString name = line == 13 ? "param" : line == 14 ? "local" : "retry";
         PStatement statement = mParser->findStatementOf(mMainFile, QStringList{name}, line);
         QVERIFY2(statement, name.toUtf8().constData());
-        QVERIFY(statement->hasDefinition());
+        QVERIFY(statementHasDefinition(statement));
     }
     for (const char *name : {"external", "declared", "Forward"}) {
         PStatement statement = mParser->findStatement(QString::fromLatin1(name));
         QVERIFY2(statement, name);
-        QVERIFY2(!statement->hasDefinition(), name);
+        QVERIFY2(!statementHasDefinition(statement), name);
     }
 
     QSynedit::CharPos target{-1, -1};
@@ -934,7 +934,7 @@ void TestWidgets::test_rename_from_constructor()
     editor.setCppParser(mParser);
     PStatement classStatement = mParser->findStatementOf(mMainFile, QStringList{"Foo"}, 0);
     QVERIFY(classStatement);
-    PStatement constructorStatement = classStatement->children.value("Foo").lock();
+    PStatement constructorStatement = std::dynamic_pointer_cast<Statement>(classStatement)->children.value("Foo").lock();
     QVERIFY(constructorStatement);
     QSynedit::CharPos constructorPos{2, constructorStatement->declarationRange.start.line};
     QStringList expectedContent = mMainContent;

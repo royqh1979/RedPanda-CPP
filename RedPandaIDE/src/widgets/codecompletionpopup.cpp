@@ -247,7 +247,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
         return;
     const StatementList children = mParser->membersOfStatement(scopeStatement);
     for (const PStatement &childStatement : children) {
-        if (childStatement->inSystemHeader())
+        if (statementInSystemHeader(childStatement))
             continue;
         if (childStatement->fileName.isEmpty()) {
             // hard defines, do nothing
@@ -257,7 +257,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
         case StatementKind::Constructor:
         case StatementKind::Function:
         case StatementKind::Destructor:
-            if (!childStatement->hasDefinition())
+            if (!statementHasDefinition(childStatement))
                 addStatement(childStatement,fileName,line);
             break;
         case StatementKind::Class:
@@ -349,17 +349,17 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
         if (statement2->kind != StatementKind::Keyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
-            return  statement2->inSystemHeader();
+            return  statementInSystemHeader(statement2);
         } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::Keyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
-        return  (!statement1->inSystemHeader());
+        return  (!statementInSystemHeader(statement1));
     }
     // Show stuff from local headers first
-    if (statement1->inSystemHeader() != statement2->inSystemHeader())
-        return !(statement1->inSystemHeader());
+    if (statementInSystemHeader(statement1) != statementInSystemHeader(statement2))
+        return !(statementInSystemHeader(statement1));
         // Show local statements first
     if (statement1->scope != StatementScope::Global
                && statement2->scope == StatementScope::Global ) {
@@ -430,17 +430,17 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
         if (statement2->kind != StatementKind::Keyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
-            return  statement2->inSystemHeader();
+            return  statementInSystemHeader(statement2);
         } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::Keyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
-        return  (!statement1->inSystemHeader());
+        return  (!statementInSystemHeader(statement1));
     }
     // Show stuff from local headers first
-    if (statement1->inSystemHeader() != statement2->inSystemHeader())
-        return !(statement1->inSystemHeader());
+    if (statementInSystemHeader(statement1) != statementInSystemHeader(statement2))
+        return !(statementInSystemHeader(statement1));
         // Show local statements first
     if (statement1->scope != StatementScope::Global
                && statement2->scope == StatementScope::Global ) {
@@ -580,7 +580,7 @@ void CodeCompletionPopup::getKeywordCompletionFor(const QSet<QString> &customKey
 void CodeCompletionPopup::getMacroCompletionList(const QString &fileName, int line)
 {
     const StatementMap& statementMap = mParser->statementList().childrenStatements(nullptr);
-    foreach(const std::weak_ptr<Statement>& weakStatement, statementMap.values()) {
+    foreach(const std::weak_ptr<AbstractStatement>& weakStatement, statementMap.values()) {
         PStatement statement = weakStatement.lock();
         if (!statement)
             continue;
@@ -634,7 +634,7 @@ void CodeCompletionPopup::getCompletionFor(
                 if (!codeIn->code.isEmpty()) {
                     PStatement statement = StatementFactory::createUserCodeSnippet(
                                 PStatement(), codeIn->prefix, codeIn->prefix);
-                    statement->value = codeIn->code;
+                    std::dynamic_pointer_cast<Statement>(statement)->value = codeIn->code;
                     mFullCompletionStatementList.append(statement);
                 }
             }
@@ -682,7 +682,10 @@ void CodeCompletionPopup::getCompletionFor(
                 }
 
                 // add members of all usings (in current scope ) and not added before
-                foreach (const QString& namespaceName,scopeStatement->usingList) {
+                const QSet<QString> *usingList = scopeStatement->kind == StatementKind::Namespace
+                        ? &std::dynamic_pointer_cast<NamespaceStatement>(scopeStatement)->usingList
+                        : &std::dynamic_pointer_cast<Statement>(scopeStatement)->usingList;
+                foreach (const QString& namespaceName, *usingList) {
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(namespaceName, true);
                     if (!namespaceStatementsList)
@@ -692,7 +695,7 @@ void CodeCompletionPopup::getCompletionFor(
                     }
                 }
                 if (scopeStatement->kind == StatementKind::Lambda) {
-                    foreach (const QString& phrase, scopeStatement->lambdaCaptures) {
+                    foreach (const QString& phrase, std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures) {
                         if (phrase=="&" || phrase == "=" || phrase =="this")
                             continue;
                         PStatement statement = mParser->findStatementOf(
@@ -701,10 +704,10 @@ void CodeCompletionPopup::getCompletionFor(
                         if (statement)
                             addStatement(statement,scopeStatement->fileName, scopeStatement->declarationRange.start.line);
                     }
-                    if (scopeStatement->lambdaCaptures.contains("&")
-                            || scopeStatement->lambdaCaptures.contains("=")) {
+                    if (std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures.contains("&")
+                            || std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures.contains("=")) {
                         scopeStatement = scopeStatement->parentScope.lock();
-                    } else if (scopeStatement->lambdaCaptures.contains("this")) {
+                    } else if (std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures.contains("this")) {
                         do {
                             scopeStatement = scopeStatement->parentScope.lock();
                         } while (scopeStatement && scopeStatement->kind!=StatementKind::Class
@@ -831,7 +834,7 @@ void CodeCompletionPopup::getCompletionFor(
                         const StatementList children = mParser->membersOfStatement(classTypeStatement);
                         for (const PStatement &childStatement : children) {
                             if (
-                              (childStatement->isStatic())
+                              (statementIsStatic(childStatement))
                                || (childStatement->kind == StatementKind::Typedef
                                 || childStatement->kind == StatementKind::Class
                                 || childStatement->kind == StatementKind::Enum
@@ -846,7 +849,7 @@ void CodeCompletionPopup::getCompletionFor(
                         const StatementList children = mParser->membersOfStatement(classTypeStatement);
                         for (const PStatement &childStatement : children) {
                             if (
-                              (childStatement->isStatic())
+                              (statementIsStatic(childStatement))
                                || (childStatement->kind == StatementKind::Typedef
                                 || childStatement->kind == StatementKind::Class
                                 || childStatement->kind == StatementKind::Enum
@@ -969,7 +972,8 @@ void CodeCompletionPopup::getCompletionListForLabels(const QString &fileName, in
                 || scopeStatement->kind == StatementKind::Destructor
                 || scopeStatement->kind == StatementKind::Lambda)
                 ) {
-            foreach(const std::weak_ptr<Statement> &weakChild, scopeStatement->children) {
+            foreach(const std::weak_ptr<AbstractStatement> &weakChild,
+                    std::dynamic_pointer_cast<Statement>(scopeStatement)->children) {
                 PStatement child = weakChild.lock();
                 if (!child)
                     continue;

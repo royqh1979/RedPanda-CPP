@@ -389,7 +389,7 @@ QPixmap IconsManager::getPixmapForStatement(const QMap<IconName, PPixmap> &iconP
     case StatementKind::LiteralOperator:
         if (statement->scope == StatementScope::Global)
             return *(getPixmap(iconPixmaps, IconsManager::PARSER_GLOBAL_METHOD));
-        if (statement->isInherited()) {
+        if (statementIsInherited(statement)) {
             if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
             } else if (statement->accessibility == StatementAccessibility::Public) {
@@ -412,7 +412,7 @@ QPixmap IconsManager::getPixmapForStatement(const QMap<IconName, PPixmap> &iconP
     case StatementKind::LocalVariable:
         return *(getPixmap(iconPixmaps, IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::Variable:
-        if (statement->isInherited()) {
+        if (statementIsInherited(statement)) {
             if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_PROTECTD_VAR));
             } else if (statement->accessibility == StatementAccessibility::Public) {

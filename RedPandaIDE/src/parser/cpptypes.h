@@ -23,7 +23,7 @@
 #include <QVector>
 #include <memory>
 
-struct Statement;
+struct AbstractStatement;
 struct TypeInfo;
 using PTypeInfo = std::shared_ptr<TypeInfo>;
 
@@ -133,7 +133,7 @@ struct TypeDerivation {
 struct TypeInfo {
     QString qualifiedName;
     QString qualifiedNameText;
-    std::weak_ptr<Statement> declaration;
+    std::weak_ptr<AbstractStatement> declaration;
     QVector<TemplateArgument> templateArguments;
     QVector<TypeDerivation> derivations;
     TypeQualifiers qualifiers = TypeQualifier::None;

@@ -34,17 +34,23 @@ public:
     const StatementMap& childrenStatements(const PStatement& statement = PStatement()) const {
         if (!statement) {
             return mGlobalStatements;
+        } else if (statement->kind == StatementKind::Namespace) {
+            return std::dynamic_pointer_cast<NamespaceStatement>(statement)->children;
         } else {
-            return statement->children;
+            return std::dynamic_pointer_cast<Statement>(statement)->children;
         }
     }
-    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const {
+    const StatementMap& childrenStatements(std::weak_ptr<AbstractStatement> statement) const {
         return childrenStatements(statement.lock());
     }
     void clear() {
         mCount=0;
-        for (const PStatement &statement : mStatements)
-            statement->children.clear();
+        for (const PStatement &statement : mStatements) {
+            if (statement->kind == StatementKind::Namespace)
+                std::dynamic_pointer_cast<NamespaceStatement>(statement)->children.clear();
+            else
+                std::dynamic_pointer_cast<Statement>(statement)->children.clear();
+        }
         mStatements.clear();
         mGlobalStatements.clear();
         mNamespaceStatements.clear();

@@ -82,7 +82,7 @@ private:
     QHash<QString,PStatement> mDummyStatements;
     QHash<QString,PClassBrowserNode> mScopeNodes;
     QHash<QString,PClassBrowserNode> mNodeIndex;
-    QHash<ClassBrowserNode *, QSet<Statement *>> mProcessedStatements;
+    QHash<ClassBrowserNode *, QSet<AbstractStatement *>> mProcessedStatements;
     QVector<PClassBrowserNode> mNodes;
     PCppParser mParser;
     bool mUpdating;

@@ -394,7 +394,7 @@ TypeInfo CppTypeResolver::memberType(const TypeInfo &receiver, const QString &me
     MemberResolution member = findMember(instance, memberName, evaluation);
     if (!member.statement)
         return {};
-    return resolveType(member.statement->typeInfo, member.owner.bindings,
+    return resolveType(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
                        member.statement->parentScope.lock(), evaluation);
 }
 
@@ -417,7 +417,7 @@ MemberEvalResult CppTypeResolver::invokeResult(const ClassInstance &receiver,
     MemberResolution member = findMember(receiver, memberName, evaluation);
     if (!isInvocable(member.statement))
         return {};
-    ClassInstance result = resolveTypeInstance(member.statement->typeInfo, member.owner.bindings,
+    ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
                                                member.statement->parentScope.lock(), evaluation);
     return {member.statement, result.type, result};
 }
@@ -449,7 +449,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
             MemberEvalResult result;
             int matchCount = 0;
             for (const MemberResolution &member : candidates) {
-                int candidateRank = member.statement->templateParameters.isEmpty() ? 0 : 1;
+                int candidateRank = std::dynamic_pointer_cast<Statement>(member.statement)->templateParameters.isEmpty() ? 0 : 1;
                 if (candidateRank != templateRank || !isInvocable(member.statement))
                     continue;
                 ClassInstance owner = member.owner;
@@ -492,7 +492,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
         return makeResult(trait);
     if (!member.statement)
         return {};
-    ClassInstance result = resolveTypeInstance(member.statement->typeInfo, member.owner.bindings,
+    ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
                                                member.statement->parentScope.lock(), evaluation);
     return {member.statement, result.type, result};
 }
@@ -527,10 +527,10 @@ QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function
     QList<PStatement> result;
     if (!function)
         return result;
-    QSet<const Statement *> seen;
+    QSet<const AbstractStatement *> seen;
     auto appendScope = [&](const PStatement &scope) {
         const auto candidates = mModel.childrenStatements(scope).values(function->command);
-        for (const std::weak_ptr<Statement> &weak : candidates) {
+        for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             PStatement candidate = weak.lock();
             if (isInvocable(candidate) && !seen.contains(candidate.get())) {
                 seen.insert(candidate.get());
@@ -559,18 +559,18 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
 {
     if (!function)
         return {};
-    traceEvent(resolverProfile.functionTrace, function->fullName + function->normalizedArgs);
+    traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
     ResolveOriginScope originScope("invokeFunctionCandidate");
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;
     QSet<QString> templateParameters;
-    for (const TemplateParameterInfo &parameter : function->templateParameters)
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
         templateParameters.insert(parameter.name);
 
-    int explicitCount = qMin(explicitArguments.count(), function->templateParameters.count());
+    int explicitCount = qMin(explicitArguments.count(), std::dynamic_pointer_cast<Statement>(function)->templateParameters.count());
     for (int i = 0; i < explicitCount; ++i) {
-        const TemplateParameterInfo &parameter = function->templateParameters[i];
+        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
         const TemplateArgument &argument = explicitArguments[i];
         if (parameter.kind == TemplateParameterKind::Type) {
             if (argument.kind != TemplateArgumentKind::Type || !argument.type)
@@ -590,20 +590,20 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         }
     }
 
-    int count = qMin(function->parameters.count(), arguments.count());
+    int count = qMin(std::dynamic_pointer_cast<Statement>(function)->parameters.count(), arguments.count());
     for (int i = 0; i < count; ++i) {
-        if (function->parameters[i].type) {
-            bindParameterType(*function->parameters[i].type, arguments[i], templateParameters,
+        if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type) {
+            bindParameterType(*std::dynamic_pointer_cast<Statement>(function)->parameters[i].type, arguments[i], templateParameters,
                               frame->values, evaluation);
         }
     }
-    for (int i = explicitCount; i < function->templateParameters.count(); ++i) {
-        const TemplateParameterInfo &parameter = function->templateParameters[i];
+    for (int i = explicitCount; i < std::dynamic_pointer_cast<Statement>(function)->templateParameters.count(); ++i) {
+        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
         if (frame->values.contains(parameter.name))
             continue;
         QString defaultText = parameter.defaultArgumentText;
-        if (defaultText.isEmpty() && i < function->inheritedDefaultArgumentTexts.count())
-            defaultText = function->inheritedDefaultArgumentTexts[i];
+        if (defaultText.isEmpty() && i < std::dynamic_pointer_cast<Statement>(function)->inheritedDefaultArgumentTexts.count())
+            defaultText = std::dynamic_pointer_cast<Statement>(function)->inheritedDefaultArgumentTexts[i];
         if (defaultText.isEmpty())
             continue;
         TemplateArgument argument = resolveArgument(defaultText, parameter.kind,
@@ -611,20 +611,20 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         frame->values.insert(parameter.name, argument);
     }
     bool parameterPack = false;
-    for (const TemplateParameterInfo &parameter : function->templateParameters)
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
         parameterPack |= parameter.parameterPack;
-    if ((!parameterPack && function->parameters.count() != arguments.count())
-            || (parameterPack && function->parameters.count() - 1 > arguments.count())) {
+    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
+            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
         return {};
     }
     for (int i = 0; i < count; ++i) {
-        if (function->parameters[i].type
-                && !compatibleArgument(*function->parameters[i].type, arguments[i], frame,
+        if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type
+                && !compatibleArgument(*std::dynamic_pointer_cast<Statement>(function)->parameters[i].type, arguments[i], frame,
                                        function->parentScope.lock(), evaluation)) {
             return {};
         }
     }
-    ClassInstance result = resolveTypeInstance(function->typeInfo, frame,
+    ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(function)->typeInfo, frame,
                                                function->parentScope.lock(), evaluation);
     if (resultInstance)
         *resultInstance = result;
@@ -654,24 +654,24 @@ bool CppTypeResolver::compatibleArgument(
         return false;
     if (!formalInstance.declaration)
         return false;
-    for (const std::weak_ptr<Statement> &weak : formalInstance.declaration->children) {
+    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(formalInstance.declaration)->children) {
         PStatement constructor = weak.lock();
         if (!constructor || constructor->kind != StatementKind::Constructor
-                || constructor->parameters.isEmpty()
-                || constructor->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit)
-                || !constructor->parameters.first().type) {
+                || std::dynamic_pointer_cast<Statement>(constructor)->parameters.isEmpty()
+                || std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit)
+                || !std::dynamic_pointer_cast<Statement>(constructor)->parameters.first().type) {
             continue;
         }
         bool defaultsMatch = true;
-        for (int i = 1; i < constructor->parameters.count(); ++i) {
-            if (constructor->parameters[i].defaultArgumentText.isEmpty()) {
+        for (int i = 1; i < std::dynamic_pointer_cast<Statement>(constructor)->parameters.count(); ++i) {
+            if (std::dynamic_pointer_cast<Statement>(constructor)->parameters[i].defaultArgumentText.isEmpty()) {
                 defaultsMatch = false;
                 break;
             }
         }
         if (!defaultsMatch)
             continue;
-        const TypeInfo &constructorParameter = *constructor->parameters.first().type;
+        const TypeInfo &constructorParameter = *std::dynamic_pointer_cast<Statement>(constructor)->parameters.first().type;
         if (pointerLike(constructorParameter))
             return true;
         PStatement parameterDeclaration = constructorParameter.declaration.lock();
@@ -693,13 +693,13 @@ QList<PStatement> CppTypeResolver::membersOf(const PStatement &scope) const
 {
     QList<PStatement> result;
     if (!scope) {
-        for (const std::weak_ptr<Statement> &weak : mModel.childrenStatements()) {
+        for (const std::weak_ptr<AbstractStatement> &weak : mModel.childrenStatements()) {
             if (PStatement statement = weak.lock())
                 result.append(statement);
         }
         return result;
     }
-    QSet<const Statement *> visited;
+    QSet<const AbstractStatement *> visited;
     MemberEntryList entries;
     appendMembers(scope, false, visited, entries);
     for (const MemberEntry &entry : entries)
@@ -712,7 +712,7 @@ StatementAccessibility CppTypeResolver::memberAccessibility(
 {
     if (!scope)
         return member ? member->accessibility : StatementAccessibility::None;
-    QSet<const Statement *> visited;
+    QSet<const AbstractStatement *> visited;
     MemberEntryList entries;
     appendMembers(scope, false, visited, entries);
     for (const MemberEntry &entry : entries) {
@@ -726,7 +726,7 @@ PStatement CppTypeResolver::baseClass(const PStatement &scope, const QString &ba
                                       StatementAccessibility &inheritance) const
 {
     QString baseName = baseSpecifier.trimmed();
-    inheritance = scope->classKey == ClassKey::Struct
+    inheritance = std::dynamic_pointer_cast<Statement>(scope)->classKey == ClassKey::Struct
             ? StatementAccessibility::Public : StatementAccessibility::Private;
     for (const QString &modifier : {QString("public"), QString("protected"),
                                    QString("private"), QString("virtual")}) {
@@ -759,29 +759,37 @@ StatementAccessibility CppTypeResolver::applyInheritance(
 }
 
 void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
-                                    QSet<const Statement *> &visited,
+                                    QSet<const AbstractStatement *> &visited,
                                     MemberEntryList &result) const
 {
     if (!scope || visited.contains(scope.get()))
         return;
     visited.insert(scope.get());
+    auto signature = [](const PStatement &statement) {
+        QString result = statement->command;
+        if (statement->kind != StatementKind::Namespace)
+            result += std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
+        return result;
+    };
     QSet<QString> signatures;
     for (const MemberEntry &entry : result)
-        signatures.insert(entry.statement->command + entry.statement->normalizedArgs);
+        signatures.insert(signature(entry.statement));
 
-    for (const std::weak_ptr<Statement> &weak : scope->children) {
+    for (const std::weak_ptr<AbstractStatement> &weak : mModel.childrenStatements(scope)) {
         PStatement statement = weak.lock();
         if (!statement || (inherited && (statement->kind == StatementKind::Constructor
                                         || statement->kind == StatementKind::Destructor))) {
             continue;
         }
-        if (signatures.contains(statement->command + statement->normalizedArgs))
+        if (signatures.contains(signature(statement)))
             continue;
-        signatures.insert(statement->command + statement->normalizedArgs);
+        signatures.insert(signature(statement));
         result.append({statement, statement->accessibility});
     }
 
-    for (const QString &baseSpecifier : scope->baseClasses) {
+    if (scope->kind == StatementKind::Namespace)
+        return;
+    for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(scope)->baseClasses) {
         StatementAccessibility inheritance;
         PStatement base = baseClass(scope, baseSpecifier, inheritance);
         if (!base)
@@ -789,10 +797,10 @@ void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
         MemberEntryList baseMembers;
         appendMembers(base, true, visited, baseMembers);
         for (MemberEntry entry : baseMembers) {
-            if (signatures.contains(entry.statement->command + entry.statement->normalizedArgs))
+            if (signatures.contains(signature(entry.statement)))
                 continue;
             entry.accessibility = applyInheritance(entry.accessibility, inheritance);
-            signatures.insert(entry.statement->command + entry.statement->normalizedArgs);
+            signatures.insert(signature(entry.statement));
             result.append(entry);
         }
     }
@@ -981,8 +989,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
         for (int argumentIndex = 0; argumentIndex < instance.templateArguments.count();
              ++argumentIndex) {
             TemplateArgument &argument = instance.templateArguments[argumentIndex];
-            if (argumentIndex < declaration->templateParameters.count()
-                    && declaration->templateParameters[argumentIndex].kind
+            if (argumentIndex < std::dynamic_pointer_cast<Statement>(declaration)->templateParameters.count()
+                    && std::dynamic_pointer_cast<Statement>(declaration)->templateParameters[argumentIndex].kind
                     == TemplateParameterKind::NonType) {
                 if (argument.constantExpression.isEmpty() && argument.type) {
                     argument.constantExpression = argument.type->qualifiedNameText.isEmpty()
@@ -1019,11 +1027,11 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             evaluation.aliases.insert(aliasKey);
             PTemplateBindingFrame localBindings = declarationBindings(
                     declaration, instance, environment, evaluation);
-            TypeInfo targetType = declaration->typeInfo;
+            TypeInfo targetType = std::dynamic_pointer_cast<Statement>(declaration)->typeInfo;
             PStatement targetDeclaration = targetType.declaration.lock();
             if (!instance.templateArguments.isEmpty() && targetType.templateArguments.isEmpty()
                     && targetDeclaration && targetDeclaration->kind == StatementKind::Class
-                    && !targetDeclaration->templateParameters.isEmpty()) {
+                    && !std::dynamic_pointer_cast<Statement>(targetDeclaration)->templateParameters.isEmpty()) {
                 targetType.templateArguments = instance.templateArguments;
             }
             ClassInstance target = resolveTypeInstance(targetType, localBindings,
@@ -1044,7 +1052,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
         }
 
         if (declaration->kind == StatementKind::Class) {
-            if (!segment.hasTemplateArguments && !declaration->templateParameters.isEmpty()) {
+            if (!segment.hasTemplateArguments && !std::dynamic_pointer_cast<Statement>(declaration)->templateParameters.isEmpty()) {
                 PStatement scope = context;
                 while (scope && scope != declaration)
                     scope = scope->parentScope.lock();
@@ -1054,13 +1062,13 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
                         current = current->parent;
                     if (current) {
                         QVector<TemplateArgument> arguments;
-                        for (const TemplateParameterInfo &parameter : declaration->templateParameters) {
+                        for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(declaration)->templateParameters) {
                             auto argument = current->values.constFind(parameter.name);
                             if (argument == current->values.constEnd())
                                 break;
                             arguments.append(argument.value());
                         }
-                        if (arguments.count() == declaration->templateParameters.count())
+                        if (arguments.count() == std::dynamic_pointer_cast<Statement>(declaration)->templateParameters.count())
                             instance.templateArguments = arguments;
                     }
                 }
@@ -1421,7 +1429,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::classInstanceFromResolvedType(
         return {};
     }
     if (result.declaration->kind == StatementKind::Class
-            && result.declaration->templateKind != TemplateDeclarationKind::Primary) {
+            && std::dynamic_pointer_cast<Statement>(result.declaration)->templateKind != TemplateDeclarationKind::Primary) {
         QString primaryName = result.declaration->command.section('<', 0, 0);
         PStatement primary = findDeclaration(primaryName, result.declaration->parentScope.lock(),
                                              true);
@@ -1443,7 +1451,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
     ResolverProfileScope profileScope(resolverProfile.specializationNs,
                                       resolverProfile.specializationCalls, "selectSpecialization");
     if (!primary.declaration || primary.declaration->kind != StatementKind::Class
-            || primary.declaration->templateKind != TemplateDeclarationKind::Primary) {
+            || std::dynamic_pointer_cast<Statement>(primary.declaration)->templateKind != TemplateDeclarationKind::Primary) {
         return primary;
     }
     QString instanceText = profiledTypeString(primary.type);
@@ -1462,7 +1470,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
     traceSpecialization(primary.declaration->fullName + "|" + instanceText);
     ClassInstance result = primary;
     result.type.templateArguments.clear();
-    for (const TemplateParameterInfo &parameter : primary.declaration->templateParameters) {
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(primary.declaration)->templateParameters) {
         auto argument = primary.bindings->values.constFind(parameter.name);
         if (argument == primary.bindings->values.constEnd())
             return {};
@@ -1486,8 +1494,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
              it != children.end() && it.key().startsWith(prefix); ++it) {
             PStatement candidate = it.value().lock();
             if (!candidate || candidate->kind != StatementKind::Class
-                    || (candidate->templateKind != TemplateDeclarationKind::ExplicitSpecialization
-                        && candidate->templateKind != TemplateDeclarationKind::PartialSpecialization)) {
+                    || (std::dynamic_pointer_cast<Statement>(candidate)->templateKind != TemplateDeclarationKind::ExplicitSpecialization
+                        && std::dynamic_pointer_cast<Statement>(candidate)->templateKind != TemplateDeclarationKind::PartialSpecialization)) {
                 continue;
             }
             TemplateBindings bindings;
@@ -1499,7 +1507,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
             }
             if (match != SpecializationMatch::Match)
                 continue;
-            if (candidate->templateKind == TemplateDeclarationKind::ExplicitSpecialization) {
+            if (std::dynamic_pointer_cast<Statement>(candidate)->templateKind == TemplateDeclarationKind::ExplicitSpecialization) {
                 auto selectedBindings = std::make_shared<TemplateBindingFrame>();
                 selectedBindings->owner = candidate.get();
                 selectedBindings->parent = primary.bindings->parent;
@@ -1536,14 +1544,14 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchSpecialization(
         EvaluationContext &evaluation) const
 {
     traceEvent(resolverProfile.specializationAttemptTrace, specialization->command);
-    TypeInfo pattern = specialization->templatePattern;
+    TypeInfo pattern = std::dynamic_pointer_cast<Statement>(specialization)->templatePattern;
     Q_ASSERT(!pattern.qualifiedName.isEmpty());
     if (pattern.qualifiedName.isEmpty())
         return SpecializationMatch::Unknown;
     if (pattern.templateArguments.count() != arguments.count())
         return SpecializationMatch::NoMatch;
     QSet<QString> parameters;
-    for (const TemplateParameterInfo &parameter : specialization->templateParameters)
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(specialization)->templateParameters)
         parameters.insert(parameter.name);
     SpecializationMatch combined = SpecializationMatch::Match;
     for (int i = 0; i < arguments.count(); ++i) {
@@ -1714,15 +1722,15 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
     if (visited.contains(instanceKey))
         return result;
     visited.insert(instanceKey);
-    const auto candidates = instance.declaration->children.values(name);
+    const auto candidates = std::dynamic_pointer_cast<Statement>(instance.declaration)->children.values(name);
     QList<MemberResolution> constFallback;
-    for (const std::weak_ptr<Statement> &weak : candidates) {
+    for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
         PStatement candidate = weak.lock();
         if (!candidate)
             continue;
         bool qualifiedMember = (candidate->kind == StatementKind::Function
                                 || candidate->kind == StatementKind::OverloadedOperator)
-                && !candidate->isStatic();
+                && !statementIsStatic(candidate);
         if (qualifiedMember
                 && candidate->properties.testFlag(StatementProperty::RvalueReference)) {
             continue;
@@ -1746,10 +1754,10 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
 
     QSet<QString> signatures;
     for (const MemberResolution &member : result)
-        signatures.insert(member.statement->command + member.statement->normalizedArgs);
-    for (QString baseText : instance.declaration->baseClasses) {
+        signatures.insert(member.statement->command + std::dynamic_pointer_cast<Statement>(member.statement)->normalizedArgs);
+    for (QString baseText : std::dynamic_pointer_cast<Statement>(instance.declaration)->baseClasses) {
         baseText = baseText.trimmed();
-        StatementAccessibility inheritance = instance.declaration->classKey == ClassKey::Struct
+        StatementAccessibility inheritance = std::dynamic_pointer_cast<Statement>(instance.declaration)->classKey == ClassKey::Struct
                 ? StatementAccessibility::Public : StatementAccessibility::Private;
         for (const QString &modifier : {QString("public"), QString("protected"),
                                        QString("private"), QString("virtual")}) {
@@ -1770,7 +1778,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
                                            instance.declaration->parentScope.lock(), evaluation);
         const QList<MemberResolution> baseMembers = memberCandidates(base, name, visited, evaluation);
         for (MemberResolution member : baseMembers) {
-            QString signature = member.statement->command + member.statement->normalizedArgs;
+            QString signature = member.statement->command + std::dynamic_pointer_cast<Statement>(member.statement)->normalizedArgs;
             if (signatures.contains(signature))
                 continue;
             signatures.insert(signature);
@@ -1888,7 +1896,7 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
 
     if (!scope) {
         const auto candidates = mModel.childrenStatements().values(parts.first());
-        for (const std::weak_ptr<Statement> &weak : candidates) {
+        for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             if (PStatement candidate = weak.lock()) {
                 if (typesOnly && !isTypeDeclaration(candidate))
                     continue;
@@ -1951,7 +1959,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
             mEvaluation->memberResults->insert(cacheKey, result);
         return result;
     };
-    QSet<const Statement *> visited;
+    QSet<const AbstractStatement *> visited;
     QStack<PStatement> pending;
     pending.push(scope);
     while (!pending.isEmpty()) {
@@ -1961,7 +1969,7 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
         visited.insert(current.get());
         ResolverProfileScope profileScope(resolverProfile.memberDfsNs,
                                           resolverProfile.memberDfsCalls, "memberDfs");
-        const auto directCandidates = current->children.values(name);
+        const auto directCandidates = mModel.childrenStatements(current).values(name);
         for (int i = directCandidates.count() - 1; i >= 0; --i) {
             PStatement candidate = directCandidates[i].lock();
             if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
@@ -1977,18 +1985,20 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
                 pending.push(transparentNamespaces[i]);
         }
         QList<PStatement> bases;
-        for (QString baseName : current->baseClasses) {
-            baseName = baseName.trimmed();
-            for (const QString &modifier : {QString("public"), QString("protected"),
-                                           QString("private"), QString("virtual")}) {
-                if (baseName.startsWith(modifier + ' '))
-                    baseName = baseName.mid(modifier.length()).trimmed();
+        if (current->kind != StatementKind::Namespace) {
+            for (QString baseName : std::dynamic_pointer_cast<Statement>(current)->baseClasses) {
+                baseName = baseName.trimmed();
+                for (const QString &modifier : {QString("public"), QString("protected"),
+                                               QString("private"), QString("virtual")}) {
+                    if (baseName.startsWith(modifier + ' '))
+                        baseName = baseName.mid(modifier.length()).trimmed();
+                }
+                int templateStart = baseName.indexOf('<');
+                if (templateStart >= 0)
+                    baseName.truncate(templateStart);
+                if (PStatement base = findDeclaration(baseName, current->parentScope.lock(), typesOnly))
+                    bases.append(base);
             }
-            int templateStart = baseName.indexOf('<');
-            if (templateStart >= 0)
-                baseName.truncate(templateStart);
-            if (PStatement base = findDeclaration(baseName, current->parentScope.lock(), typesOnly))
-                bases.append(base);
         }
         for (int i = bases.count() - 1; i >= 0; --i)
             pending.push(bases[i]);
@@ -2144,9 +2154,9 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
 
     TypeInfo materialized = instance;
     materializeTemplateArguments(materialized, evaluation);
-    int parameterCount = declaration->templateParameters.count();
+    int parameterCount = std::dynamic_pointer_cast<Statement>(declaration)->templateParameters.count();
     for (int i = 0; i < parameterCount; ++i) {
-        const TemplateParameterInfo &parameter = declaration->templateParameters[i];
+        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(declaration)->templateParameters[i];
         if (parameter.parameterPack) {
             if (i < materialized.templateArguments.count())
                 evaluation.operationCount = 4097;
@@ -2157,8 +2167,8 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
             argument = materialized.templateArguments[i];
         } else {
             QString defaultText = parameter.defaultArgumentText;
-            if (defaultText.isEmpty() && i < declaration->inheritedDefaultArgumentTexts.count())
-                defaultText = declaration->inheritedDefaultArgumentTexts[i];
+            if (defaultText.isEmpty() && i < std::dynamic_pointer_cast<Statement>(declaration)->inheritedDefaultArgumentTexts.count())
+                defaultText = std::dynamic_pointer_cast<Statement>(declaration)->inheritedDefaultArgumentTexts[i];
             if (!defaultText.isEmpty()) {
                 argument = resolveArgument(defaultText, parameter.kind, result,
                                            declaration->parentScope.lock(), evaluation);

@@ -359,7 +359,7 @@ QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
     if (parts.count() == 1) {
         const auto candidates = mModel.childrenStatements(statement->parentScope).values(
                     statement->command);
-        for (const std::weak_ptr<Statement> &weak : candidates) {
+        for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
             if (PStatement candidate = weak.lock())
                 result.append(candidate);
         }
@@ -377,7 +377,7 @@ QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
         QList<PStatement> next;
         for (const PStatement &scope : current) {
             const auto candidates = mModel.childrenStatements(scope).values(parts[i]);
-            for (const std::weak_ptr<Statement> &weak : candidates) {
+            for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
                 if (PStatement candidate = weak.lock())
                     next.append(candidate);
             }
@@ -413,7 +413,7 @@ QList<PStatement> CppStatementBuilder::doFindStatements(const QString &qualified
 
     QList<PStatement> result;
     const auto candidates = mModel.childrenStatements().values(parts.first());
-    for (const std::weak_ptr<Statement> &weak : candidates) {
+    for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
         if (PStatement candidate = weak.lock())
             result += doFindDeclarationRemainder(candidate, parts);
     }
@@ -427,7 +427,7 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
     if (context.scope == StatementScope::Local) {
         const auto directCandidates = mModel.childrenStatements(context.parentScope).values(
                     candidate->command);
-        for (const std::weak_ptr<Statement> &weak : directCandidates) {
+        for (const std::weak_ptr<AbstractStatement> &weak : directCandidates) {
             if (PStatement existing = weak.lock())
                 candidates.append(existing);
         }
@@ -436,13 +436,15 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
     }
 
     for (const PStatement &existing : candidates) {
-        if (existing->fullName != candidate->fullName || existing->kind != candidate->kind
-                || existing->normalizedArgs != candidate->normalizedArgs) {
+        if (existing->fullName != candidate->fullName || existing->kind != candidate->kind)
             continue;
-        }
+        if (candidate->kind != StatementKind::Namespace
+                && std::dynamic_pointer_cast<Statement>(existing)->normalizedArgs
+                != std::dynamic_pointer_cast<Statement>(candidate)->normalizedArgs)
+            continue;
         bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
                 || existing->definitionBoundaryAncestor == context.boundaryAncestor;
-        bool declarationPair = existing->hasDefinition() != candidate->hasDefinition();
+        bool declarationPair = statementHasDefinition(existing) != statementHasDefinition(candidate);
         if (sameAncestor || declarationPair)
             return existing;
     }
@@ -457,74 +459,86 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
     if (!existing)
         return nullptr;
 
-    bool hadDefinition = existing->hasDefinition();
-    if (candidate->hasDefinition()) {
+    bool hadDefinition = statementHasDefinition(existing);
+    if (statementHasDefinition(candidate)) {
         existing->definitionRange = candidate->declarationRange;
         existing->definitionFileName = context.fileName;
         existing->definitionBoundaryAncestor = context.boundaryAncestor;
-        existing->setHasDefinition(true);
-        existing->typeInfo = candidate->typeInfo;
-        existing->parameters = candidate->parameters;
-        existing->args = candidate->args;
-        existing->normalizedArgs = candidate->normalizedArgs;
+        setStatementHasDefinition(existing, true);
     } else {
         existing->declarationRange = candidate->declarationRange;
         existing->fileName = context.fileName;
         existing->declarationBoundaryAncestor = context.boundaryAncestor;
     }
-    if (!candidate->baseClasses.isEmpty())
-        existing->baseClasses = candidate->baseClasses;
+    if (candidate->kind == StatementKind::Namespace) {
+        auto existingNamespace = std::dynamic_pointer_cast<NamespaceStatement>(existing);
+        auto candidateNamespace = std::dynamic_pointer_cast<NamespaceStatement>(candidate);
+        existingNamespace->declSpecifierProperties |= candidateNamespace->declSpecifierProperties;
+        mModel.updateNamespaceTransparency(existing);
+        return existing;
+    }
 
-    bool useCandidate = candidate->hasDefinition() || !hadDefinition;
+    auto existingStatement = std::dynamic_pointer_cast<Statement>(existing);
+    auto candidateStatement = std::dynamic_pointer_cast<Statement>(candidate);
+    if (statementHasDefinition(candidate)) {
+        existingStatement->typeInfo = candidateStatement->typeInfo;
+        existingStatement->parameters = candidateStatement->parameters;
+        existingStatement->args = candidateStatement->args;
+        existingStatement->normalizedArgs = candidateStatement->normalizedArgs;
+    }
+    if (!candidateStatement->baseClasses.isEmpty())
+        existingStatement->baseClasses = candidateStatement->baseClasses;
+
+    bool useCandidate = statementHasDefinition(candidate) || !hadDefinition;
     QVector<TemplateParameterInfo> merged = useCandidate
-            ? candidate->templateParameters : existing->templateParameters;
+            ? candidateStatement->templateParameters : existingStatement->templateParameters;
     QVector<QString> inherited(merged.count());
-    int count = qMin(qMin(existing->templateParameters.count(),
-                          candidate->templateParameters.count()), merged.count());
+    int count = qMin(qMin(existingStatement->templateParameters.count(),
+                          candidateStatement->templateParameters.count()), merged.count());
     for (int i = 0; i < count; ++i) {
         QHash<QString, QString> previousNames;
         for (int j = 0; j < count; ++j) {
-            const QString &oldName = existing->templateParameters[j].name;
+            const QString &oldName = existingStatement->templateParameters[j].name;
             const QString &newName = merged[j].name;
             if (!oldName.isEmpty() && !newName.isEmpty() && oldName != newName)
                 previousNames.insert(oldName, newName);
         }
         QHash<QString, QString> candidateNames;
         for (int j = 0; j < count; ++j) {
-            const QString &oldName = candidate->templateParameters[j].name;
+            const QString &oldName = candidateStatement->templateParameters[j].name;
             const QString &newName = merged[j].name;
             if (!oldName.isEmpty() && !newName.isEmpty() && oldName != newName)
                 candidateNames.insert(oldName, newName);
         }
 
         QString previousDefault;
-        if (i < existing->inheritedDefaultArgumentTexts.count()
-                && !existing->inheritedDefaultArgumentTexts[i].isEmpty()) {
-            previousDefault = existing->inheritedDefaultArgumentTexts[i];
+        if (i < existingStatement->inheritedDefaultArgumentTexts.count()
+                && !existingStatement->inheritedDefaultArgumentTexts[i].isEmpty()) {
+            previousDefault = existingStatement->inheritedDefaultArgumentTexts[i];
         } else {
-            previousDefault = existing->templateParameters[i].defaultArgumentText;
+            previousDefault = existingStatement->templateParameters[i].defaultArgumentText;
         }
         if (!merged[i].defaultArgumentText.isEmpty())
             continue;
         if (!previousDefault.isEmpty())
             inherited[i] = replaceIdentifiers(previousDefault, previousNames);
-        if (inherited[i].isEmpty() && i < candidate->templateParameters.count())
+        if (inherited[i].isEmpty() && i < candidateStatement->templateParameters.count())
             inherited[i] = replaceIdentifiers(
-                        candidate->templateParameters[i].defaultArgumentText, candidateNames);
+                        candidateStatement->templateParameters[i].defaultArgumentText, candidateNames);
         if (!merged[i].type)
-            merged[i].type = existing->templateParameters[i].type;
+            merged[i].type = existingStatement->templateParameters[i].type;
     }
-    existing->templateParameters = merged;
-    existing->inheritedDefaultArgumentTexts = inherited;
-    existing->declSpecifierProperties |= candidate->declSpecifierProperties;
+    existingStatement->templateParameters = merged;
+    existingStatement->inheritedDefaultArgumentTexts = inherited;
+    existingStatement->declSpecifierProperties |= candidateStatement->declSpecifierProperties;
     mModel.updateNamespaceTransparency(existing);
     return existing;
 }
 
-QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
+QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
         const DeclarationInfo &declaration, const StatementBuildContext &context)
 {
-    QList<std::weak_ptr<Statement>> result;
+    QList<std::weak_ptr<AbstractStatement>> result;
     if (declaration.kind == DeclarationKind::Label) {
         for (const DeclaratorInfo &declarator : declaration.declarators) {
             PStatement statement = createStatement(declaration, declarator, context,
@@ -607,7 +621,7 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
         if (declarator.definitionKind == DeclaratorDefinitionKind::Deleted) {
             PStatement deleted = createStatement(declaration, declarator, context, kind);
             PStatement existing = doFindDeclarationToMerge(deleted, context);
-            if (existing && !existing->hasDefinition()) {
+            if (existing && !statementHasDefinition(existing)) {
                 if (context.fileInfo)
                     context.fileInfo->removeStatement(existing);
                 mModel.deleteStatement(existing);
@@ -651,7 +665,7 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
         if (i >= firstVariable && firstVariable > 0
                 && (declaration.kind == DeclarationKind::Class
                     || declaration.kind == DeclarationKind::Enum)) {
-            statement->typeInfo.qualifiedName = declaration.declarators.first().name;
+            std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName = declaration.declarators.first().name;
         }
         PStatement merged = mergeDeclaration(statement, context);
         if (merged)
@@ -689,15 +703,15 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
                 enumStatement->definitionRange = enumStatement->declarationRange;
                 enumStatement->definitionFileName = context.fileName;
                 enumStatement->definitionBoundaryAncestor = context.boundaryAncestor;
-                enumStatement->setHasDefinition(true);
-                enumStatement->typeInfo.qualifiedName = declaration.declarators.first().name;
+                setStatementHasDefinition(enumStatement, true);
+                std::dynamic_pointer_cast<Statement>(enumStatement)->typeInfo.qualifiedName = declaration.declarators.first().name;
                 qlonglong numericValue = nextEnumeratorValue;
                 if (!enumerator.value.isEmpty()) {
                     bool ok = false;
                     numericValue = evaluateIntegerConstant(enumerator.value, enumeratorValues, ok);
-                    enumStatement->value = ok ? QString::number(numericValue) : enumerator.value;
+                    std::dynamic_pointer_cast<Statement>(enumStatement)->value = ok ? QString::number(numericValue) : enumerator.value;
                 } else {
-                    enumStatement->value = QString::number(numericValue);
+                    std::dynamic_pointer_cast<Statement>(enumStatement)->value = QString::number(numericValue);
                 }
                 enumeratorValues.insert(enumerator.name, numericValue);
                 nextEnumeratorValue = numericValue + 1;
@@ -713,7 +727,7 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::build(
             const TypeDerivation &function = declarator.derivations.first();
             for (const ParameterInfo &parameter : function.parameters) {
                 if (!parameter.name.isEmpty()) {
-                    if (merged && statement->children.contains(parameter.name))
+                    if (merged && std::dynamic_pointer_cast<Statement>(statement)->children.contains(parameter.name))
                         continue;
                     PStatement parameterStatement = createParameter(parameter, context, statement);
                     mModel.add(parameterStatement);
@@ -743,21 +757,11 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         Q_ASSERT(validParent);
         Q_ASSERT(!parent || statement->fullName != parent->fullName);
     }
-    statement->classKey = declaration.classKey;
     statement->scope = context.scope;
     statement->accessibility = accessibility(declaration, context);
     statement->declarationRange = declaration.range;
     statement->fileName = context.fileName;
     statement->declarationBoundaryAncestor = context.boundaryAncestor;
-    statement->templateKind = declaration.templateKind;
-    if (kind == StatementKind::Class
-            && (declaration.templateKind == TemplateDeclarationKind::PartialSpecialization
-                || declaration.templateKind == TemplateDeclarationKind::ExplicitSpecialization)) {
-        statement->templatePattern = declarator.templatePattern;
-    }
-    statement->templateParameters = declaration.templateParameters;
-    statement->declSpecifierProperties = declaration.specifiers.properties;
-    statement->baseClasses = declaration.baseClasses;
     statement->properties.setFlag(StatementProperty::Static,
                                   declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Static));
     statement->properties.setFlag(StatementProperty::Virtual,
@@ -767,14 +771,38 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     statement->properties.setFlag(StatementProperty::InProject, context.inProject);
     statement->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
 
-    statement->typeInfo = declaration.specifiers.type;
-    statement->typeInfo.derivations += declarator.derivations;
+    if (kind == StatementKind::Namespace) {
+        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
+        nameSpace->declSpecifierProperties = declaration.specifiers.properties;
+        if (declaration.bodyRange.isValid()
+                || declarator.definitionKind != DeclaratorDefinitionKind::None) {
+            statement->definitionRange = declaration.range;
+            statement->definitionFileName = context.fileName;
+            statement->definitionBoundaryAncestor = context.boundaryAncestor;
+            setStatementHasDefinition(statement, true);
+        }
+        return statement;
+    }
+
+    auto normalStatement = std::dynamic_pointer_cast<Statement>(statement);
+    normalStatement->classKey = declaration.classKey;
+    normalStatement->templateKind = declaration.templateKind;
+    if (kind == StatementKind::Class
+            && (declaration.templateKind == TemplateDeclarationKind::PartialSpecialization
+                || declaration.templateKind == TemplateDeclarationKind::ExplicitSpecialization)) {
+        normalStatement->templatePattern = declarator.templatePattern;
+    }
+    normalStatement->templateParameters = declaration.templateParameters;
+    normalStatement->declSpecifierProperties = declaration.specifiers.properties;
+    normalStatement->baseClasses = declaration.baseClasses;
+    normalStatement->typeInfo = declaration.specifiers.type;
+    std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations += declarator.derivations;
     if (isFunction(declarator)) {
         const TypeDerivation function = declarator.derivations.first();
-        statement->typeInfo.derivations.removeFirst();
-        statement->parameters = function.parameters;
-        statement->args = renderParameters(function, true);
-        statement->normalizedArgs = renderNormalizedParameters(function,
+        std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations.removeFirst();
+        std::dynamic_pointer_cast<Statement>(statement)->parameters = function.parameters;
+        std::dynamic_pointer_cast<Statement>(statement)->args = renderParameters(function, true);
+        std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs = renderNormalizedParameters(function,
                                                                declaration.templateParameters);
         statement->properties.setFlag(StatementProperty::Override,
                                       function.functionProperties.testFlag(FunctionProperty::Override));
@@ -787,19 +815,19 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->properties.setFlag(StatementProperty::RvalueReference,
                                       function.refQualifier == ReferenceQualifier::Rvalue);
         if (!function.trailingReturnType.isEmpty()
-                && statement->typeInfo.qualifiedName == "auto")
-            statement->typeInfo.qualifiedName = function.trailingReturnType;
+                && std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName == "auto")
+            std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName = function.trailingReturnType;
     } else {
         for (const TypeDerivation &derivation : declarator.derivations) {
             if (derivation.kind == TypeDerivationKind::Function) {
                 bool empty = derivation.parameters.isEmpty()
                         && !derivation.functionProperties.testFlag(FunctionProperty::Variadic);
-                statement->args += empty ? "( )" : renderParameters(derivation, true);
-                statement->normalizedArgs += empty
+                std::dynamic_pointer_cast<Statement>(statement)->args += empty ? "( )" : renderParameters(derivation, true);
+                std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs += empty
                         ? "( )" : renderNormalizedParameters(derivation, declaration.templateParameters);
                 statement->properties.setFlag(StatementProperty::FunctionPointer);
             } else if (derivation.kind == TypeDerivationKind::Array) {
-                statement->args += derivation.text;
+                std::dynamic_pointer_cast<Statement>(statement)->args += derivation.text;
             }
         }
     }
@@ -834,7 +862,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                                                 : mTypeOperations.rangeValue(initializerType,
                                                                              &evaluation);
                 }
-                statement->typeInfo = deduceAutoType(initializerType, declarator,
+                std::dynamic_pointer_cast<Statement>(statement)->typeInfo = deduceAutoType(initializerType, declarator,
                                                      declaration.specifiers);
             }
         }
@@ -854,10 +882,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->definitionRange = declaration.range;
         statement->definitionFileName = context.fileName;
         statement->definitionBoundaryAncestor = context.boundaryAncestor;
-        statement->setHasDefinition(true);
+        setStatementHasDefinition(statement, true);
     }
     if (kind == StatementKind::Alias || kind == StatementKind::NamespaceAlias)
-        statement->value = declaration.specifiers.type.toString();
+        std::dynamic_pointer_cast<Statement>(statement)->value = declaration.specifiers.type.toString();
     if (kind == StatementKind::OverloadedOperator || kind == StatementKind::LiteralOperator)
         statement->properties.setFlag(StatementProperty::OperatorOverloading);
     return statement;
@@ -876,9 +904,9 @@ PStatement CppStatementBuilder::createParameter(const ParameterInfo &parameter,
     statement->definitionRange = statement->declarationRange;
     statement->definitionFileName = context.fileName;
     statement->definitionBoundaryAncestor = context.boundaryAncestor;
-    statement->setHasDefinition(true);
+    setStatementHasDefinition(statement, true);
     if (parameter.type)
-        statement->typeInfo = *parameter.type;
+        std::dynamic_pointer_cast<Statement>(statement)->typeInfo = *parameter.type;
     statement->properties.setFlag(StatementProperty::InProject, context.inProject);
     statement->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
     return statement;
@@ -961,10 +989,10 @@ void CppStatementBuilder::buildChildren(const DeclarationInfo &declaration,
 }
 
 
-QList<std::weak_ptr<Statement>> CppStatementBuilder::buildNamespace(
+QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::buildNamespace(
         const DeclarationInfo &declaration, const StatementBuildContext &context)
 {
-    QList<std::weak_ptr<Statement>> result;
+    QList<std::weak_ptr<AbstractStatement>> result;
     if (declaration.declarators.isEmpty())
         return result;
     StatementBuildContext current = context;
@@ -1000,18 +1028,21 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::buildNamespace(
     return result;
 }
 
-QList<std::weak_ptr<Statement>> CppStatementBuilder::buildUsing(
+QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::buildUsing(
         const DeclarationInfo &declaration, const StatementBuildContext &context)
 {
-    QList<std::weak_ptr<Statement>> result;
+    QList<std::weak_ptr<AbstractStatement>> result;
     if (declaration.declarators.isEmpty())
         return result;
     const QString &target = declaration.declarators.first().name;
     if (declaration.usingKind == UsingDeclarationKind::Namespace
             || declaration.usingKind == UsingDeclarationKind::Enum) {
-        if (context.parentScope)
-            context.parentScope->usingList.insert(target);
-        else if (context.fileInfo)
+        if (context.parentScope) {
+            if (context.parentScope->kind == StatementKind::Namespace)
+                std::dynamic_pointer_cast<NamespaceStatement>(context.parentScope)->usingList.insert(target);
+            else
+                std::dynamic_pointer_cast<Statement>(context.parentScope)->usingList.insert(target);
+        } else if (context.fileInfo)
             context.fileInfo->addUsing(target);
         return result;
     }
@@ -1022,20 +1053,20 @@ QList<std::weak_ptr<Statement>> CppStatementBuilder::buildUsing(
     alias->command = separator >= 0 ? target.mid(separator + 2) : target;
     alias->fullName = context.parentScope && !context.parentScope->fullName.isEmpty()
             ? context.parentScope->fullName + "::" + alias->command : alias->command;
-    alias->value = target;
+    std::dynamic_pointer_cast<Statement>(alias)->value = target;
     PStatement targetStatement = mTypeResolver.findStatement(target, context.parentScope);
     if (targetStatement) {
         if (targetStatement->kind == StatementKind::Class
                 || targetStatement->kind == StatementKind::EnumType
                 || targetStatement->kind == StatementKind::EnumClassType
                 || targetStatement->kind == StatementKind::Namespace) {
-            alias->typeInfo.qualifiedName = targetStatement->fullName;
-            alias->typeInfo.declaration = targetStatement;
+            std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName = targetStatement->fullName;
+            std::dynamic_pointer_cast<Statement>(alias)->typeInfo.declaration = targetStatement;
         } else {
-            alias->typeInfo = targetStatement->typeInfo;
+            std::dynamic_pointer_cast<Statement>(alias)->typeInfo = std::dynamic_pointer_cast<Statement>(targetStatement)->typeInfo;
         }
     } else {
-        alias->typeInfo.qualifiedName = target;
+        std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName = target;
     }
     mModel.add(alias);
     if (context.fileInfo)

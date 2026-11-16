@@ -81,7 +81,9 @@ bool CppRefacter::findOccurence(Editor * editor, const QString &keyword, const Q
         PStatement scopeStatement = editor->parser()->findStatement(scopeFullName);
         if (!scopeStatement)
             return false;
-        statement = scopeStatement->children.value(keyword).lock();
+        statement = scopeStatement->kind == StatementKind::Namespace
+                ? std::dynamic_pointer_cast<NamespaceStatement>(scopeStatement)->children.value(keyword).lock()
+                : std::dynamic_pointer_cast<Statement>(scopeStatement)->children.value(keyword).lock();
     } else {
         statement = editor->parser()->findStatement(keyword);
     }

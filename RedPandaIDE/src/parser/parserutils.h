@@ -191,25 +191,16 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(StatementProperties)
 
 using PStatementMathPosition = std::shared_ptr<StatementMatchPosition>;
 
-struct Statement;
-using PStatement = std::shared_ptr<Statement>;
+struct AbstractStatement;
+using PStatement = std::shared_ptr<AbstractStatement>;
 using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
-using StatementMap = QMultiMap<QString, std::weak_ptr<Statement>>;
-struct Statement {
-    std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
-    TypeInfo typeInfo;
+using StatementMap = QMultiMap<QString, std::weak_ptr<AbstractStatement>>;
+
+struct AbstractStatement {
+    std::weak_ptr<AbstractStatement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
     QString command; // identifier/name of statement "foo"
-    QString args; // args "(int a,float b)"
-    QVector<ParameterInfo> parameters;
-    QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
-    TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
-    TypeInfo templatePattern;
-    QVector<TemplateParameterInfo> templateParameters;
-    QVector<QString> inheritedDefaultArgumentTexts;
-    DeclSpecifierProperties declSpecifierProperties;
     StatementKind kind; // kind of statement class/variable/function/etc
-    ClassKey classKey = ClassKey::Class;
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
     SourceRange declarationRange;
@@ -218,50 +209,8 @@ struct Statement {
     QString declarationBoundaryAncestor;
     QString definitionFileName; // definition
     QString definitionBoundaryAncestor;
-    StatementMap children;
-    QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
-    QSet<QString> usingList; // using namespaces
-    QStringList baseClasses;
-    QString normalizedArgs;// Canonical parameter signature without ordinary parameter names
-    QSet<QString> lambdaCaptures;
     StatementProperties properties;
-
-    QString type() const {
-        QString result;
-        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Static))
-            result = "static ";
-        else if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern))
-            result = "extern ";
-        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Register))
-            result += "register ";
-        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::ThreadLocal))
-            result += "thread_local ";
-        if (declSpecifierProperties.testFlag(DeclSpecifierProperty::Mutable))
-            result += "mutable ";
-        TypeInfo compatibleType = typeInfo;
-        bool hasArray = false;
-        bool hasPointer = false;
-        for (const TypeDerivation &derivation : compatibleType.derivations) {
-            hasArray |= derivation.kind == TypeDerivationKind::Array;
-            hasPointer |= derivation.kind == TypeDerivationKind::Pointer;
-        }
-        for (int i = compatibleType.derivations.count() - 1; i >= 0; --i) {
-            if (properties.testFlag(StatementProperty::FunctionPointer)
-                    && compatibleType.derivations[i].kind == TypeDerivationKind::Function) {
-                compatibleType.derivations.remove(0, i + 1);
-                break;
-            }
-            if (compatibleType.derivations[i].kind == TypeDerivationKind::Array
-                    || (hasArray && compatibleType.derivations[i].kind == TypeDerivationKind::Pointer))
-                compatibleType.derivations.remove(i);
-        }
-        QString typeText = compatibleType.toString();
-        if (hasArray && hasPointer)
-            typeText += " (*)";
-        return result + typeText;
-    }
-    void setType(const TypeInfo &type) { typeInfo = type; }
 
     // fields for code completion
     int usageCount; //Usage Count
@@ -271,44 +220,123 @@ struct Statement {
     uint16_t caseMatched; // if match with case
     QList<PStatementMathPosition> matchPositions;
 
-    // definiton line/filename is valid
-    bool hasDefinition() {
-        return properties.testFlag(StatementProperty::HasDefinition);
-    }
-    void setHasDefinition(bool on) {
-        properties.setFlag(StatementProperty::HasDefinition,on);
-    }
-    // statement in project
-    bool inProject() {
-        return properties.testFlag(StatementProperty::InProject);
-    }
-    void setInProject(bool on) {
-        properties.setFlag(StatementProperty::InProject, on);
-    }
-    // statement in system header (#include <>)
-    bool inSystemHeader() {
-        return properties.testFlag(StatementProperty::InSystemHeader);
-    }
-    void setInSystemHeader(bool on) {
-        properties.setFlag(StatementProperty::InSystemHeader, on);
-    }
-    bool isStatic() {
-        return properties.testFlag(StatementProperty::Static);
-    } // static function / variable
-    void setIsStatic(bool on) {
-        properties.setFlag(StatementProperty::Static, on);
-    }
-    bool isInherited() {
-        return properties.testFlag(StatementProperty::Inherited);
-    } // inherted member;
-
+    virtual ~AbstractStatement() = default;
 };
+
+struct Statement : AbstractStatement {
+    TypeInfo typeInfo;
+    QString args; // args "(int a,float b)"
+    QVector<ParameterInfo> parameters;
+    QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
+    TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    TypeInfo templatePattern;
+    QVector<TemplateParameterInfo> templateParameters;
+    QVector<QString> inheritedDefaultArgumentTexts;
+    DeclSpecifierProperties declSpecifierProperties;
+    ClassKey classKey = ClassKey::Class;
+    StatementMap children;
+    QSet<QString> friends; // friend class / functions
+    QSet<QString> usingList; // using namespaces
+    QStringList baseClasses;
+    QString normalizedArgs;// Canonical parameter signature without ordinary parameter names
+    QSet<QString> lambdaCaptures;
+};
+
+struct NamespaceStatement : AbstractStatement {
+    DeclSpecifierProperties declSpecifierProperties;
+    StatementMap children;
+    QSet<QString> usingList; // using namespaces
+};
+
+struct InlineAliasStatement : AbstractStatement {
+    QString targetName;
+};
+
+inline bool statementHasDefinition(const PStatement &statement) {
+    return statement->properties.testFlag(StatementProperty::HasDefinition);
+}
+
+inline void setStatementHasDefinition(const PStatement &statement, bool on) {
+    statement->properties.setFlag(StatementProperty::HasDefinition, on);
+}
+
+inline bool statementInProject(const PStatement &statement) {
+    return statement->properties.testFlag(StatementProperty::InProject);
+}
+
+inline void setStatementInProject(const PStatement &statement, bool on) {
+    statement->properties.setFlag(StatementProperty::InProject, on);
+}
+
+inline bool statementInSystemHeader(const PStatement &statement) {
+    return statement->properties.testFlag(StatementProperty::InSystemHeader);
+}
+
+inline void setStatementInSystemHeader(const PStatement &statement, bool on) {
+    statement->properties.setFlag(StatementProperty::InSystemHeader, on);
+}
+
+inline bool statementIsStatic(const PStatement &statement) {
+    return statement->properties.testFlag(StatementProperty::Static);
+}
+
+inline void setStatementIsStatic(const PStatement &statement, bool on) {
+    statement->properties.setFlag(StatementProperty::Static, on);
+}
+
+inline bool statementIsInherited(const PStatement &statement) {
+    return statement->properties.testFlag(StatementProperty::Inherited);
+}
 
 class StatementFactory {
 public:
     static PStatement create(StatementKind kind, const PStatement &parentScope,
                              const QString &command, const QString &fullName) {
-        PStatement statement = std::make_shared<Statement>();
+        if (kind == StatementKind::Namespace)
+            return createNamespace(parentScope, command, fullName);
+        return createNormal(kind, parentScope, command, fullName);
+    }
+    static std::shared_ptr<AbstractStatement> createUnknown(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Unknown, parentScope, command, fullName); }
+    static std::shared_ptr<NamespaceStatement> createNamespace(const PStatement &parentScope, const QString &command, const QString &fullName) { return createTyped<NamespaceStatement>(StatementKind::Namespace, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createNamespaceAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::NamespaceAlias, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createClass(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Class, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createPreprocessor(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Preprocessor, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createEnumType(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::EnumType, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createEnumClassType(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::EnumClassType, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createTypedef(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Typedef, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createConstructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Constructor, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createDestructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Destructor, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createFunction(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Function, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createOverloadedOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::OverloadedOperator, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createLiteralOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::LiteralOperator, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Variable, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createGlobalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::GlobalVariable, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createLocalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::LocalVariable, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createEnum(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Enum, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Operator, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createParameter(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Parameter, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createBlock(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Block, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createLambda(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Lambda, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createLabel(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Label, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createUserCodeSnippet(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::UserCodeSnippet, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createKeyword(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Keyword, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createKeywordType(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::KeywordType, parentScope, command, fullName); }
+    static std::shared_ptr<AbstractStatement> createAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return createNormal(StatementKind::Alias, parentScope, command, fullName); }
+    static std::shared_ptr<InlineAliasStatement> createInlineAlias(const PStatement &parentScope, const QString &command, const QString &fullName, const QString &targetName) {
+        auto statement = createTyped<InlineAliasStatement>(StatementKind::Alias, parentScope, command, fullName);
+        statement->targetName = targetName;
+        return statement;
+    }
+
+private:
+    static std::shared_ptr<AbstractStatement> createNormal(StatementKind kind, const PStatement &parentScope,
+                                                   const QString &command, const QString &fullName) {
+        return createTyped<Statement>(kind, parentScope, command, fullName);
+    }
+    template<typename T>
+    static std::shared_ptr<T> createTyped(StatementKind kind, const PStatement &parentScope,
+                                          const QString &command, const QString &fullName) {
+        auto statement = std::make_shared<T>();
         statement->parentScope = parentScope;
         statement->command = command;
         statement->fullName = fullName;
@@ -322,33 +350,47 @@ public:
         statement->caseMatched = 0;
         return statement;
     }
-    static PStatement createUnknown(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Unknown, parentScope, command, fullName); }
-    static PStatement createNamespace(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Namespace, parentScope, command, fullName); }
-    static PStatement createNamespaceAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::NamespaceAlias, parentScope, command, fullName); }
-    static PStatement createClass(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Class, parentScope, command, fullName); }
-    static PStatement createPreprocessor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Preprocessor, parentScope, command, fullName); }
-    static PStatement createEnumType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::EnumType, parentScope, command, fullName); }
-    static PStatement createEnumClassType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::EnumClassType, parentScope, command, fullName); }
-    static PStatement createTypedef(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Typedef, parentScope, command, fullName); }
-    static PStatement createConstructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Constructor, parentScope, command, fullName); }
-    static PStatement createDestructor(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Destructor, parentScope, command, fullName); }
-    static PStatement createFunction(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Function, parentScope, command, fullName); }
-    static PStatement createOverloadedOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::OverloadedOperator, parentScope, command, fullName); }
-    static PStatement createLiteralOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::LiteralOperator, parentScope, command, fullName); }
-    static PStatement createVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Variable, parentScope, command, fullName); }
-    static PStatement createGlobalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::GlobalVariable, parentScope, command, fullName); }
-    static PStatement createLocalVariable(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::LocalVariable, parentScope, command, fullName); }
-    static PStatement createEnum(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Enum, parentScope, command, fullName); }
-    static PStatement createOperator(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Operator, parentScope, command, fullName); }
-    static PStatement createParameter(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Parameter, parentScope, command, fullName); }
-    static PStatement createBlock(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Block, parentScope, command, fullName); }
-    static PStatement createLambda(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Lambda, parentScope, command, fullName); }
-    static PStatement createLabel(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Label, parentScope, command, fullName); }
-    static PStatement createUserCodeSnippet(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::UserCodeSnippet, parentScope, command, fullName); }
-    static PStatement createKeyword(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Keyword, parentScope, command, fullName); }
-    static PStatement createKeywordType(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::KeywordType, parentScope, command, fullName); }
-    static PStatement createAlias(const PStatement &parentScope, const QString &command, const QString &fullName) { return create(StatementKind::Alias, parentScope, command, fullName); }
 };
+
+inline QString statementType(const PStatement &statement) {
+    if (!statement || statement->kind == StatementKind::Namespace)
+        return QString();
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    if (!normal)
+        return QString();
+    QString result;
+    if (normal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Static))
+        result = "static ";
+    else if (normal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern))
+        result = "extern ";
+    if (normal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Register))
+        result += "register ";
+    if (normal->declSpecifierProperties.testFlag(DeclSpecifierProperty::ThreadLocal))
+        result += "thread_local ";
+    if (normal->declSpecifierProperties.testFlag(DeclSpecifierProperty::Mutable))
+        result += "mutable ";
+    TypeInfo compatibleType = normal->typeInfo;
+    bool hasArray = false;
+    bool hasPointer = false;
+    for (const TypeDerivation &derivation : compatibleType.derivations) {
+        hasArray |= derivation.kind == TypeDerivationKind::Array;
+        hasPointer |= derivation.kind == TypeDerivationKind::Pointer;
+    }
+    for (int i = compatibleType.derivations.count() - 1; i >= 0; --i) {
+        if (statement->properties.testFlag(StatementProperty::FunctionPointer)
+                && compatibleType.derivations[i].kind == TypeDerivationKind::Function) {
+            compatibleType.derivations.remove(0, i + 1);
+            break;
+        }
+        if (compatibleType.derivations[i].kind == TypeDerivationKind::Array
+                || (hasArray && compatibleType.derivations[i].kind == TypeDerivationKind::Pointer))
+            compatibleType.derivations.remove(i);
+    }
+    QString typeText = compatibleType.toString();
+    if (hasArray && hasPointer)
+        typeText += " (*)";
+    return result + typeText;
+}
 
 struct EvalStatement;
 using PEvalStatement = std::shared_ptr<EvalStatement>;
@@ -389,7 +431,7 @@ struct UsingNamespace {
 using PUsingNamespace = std::shared_ptr<UsingNamespace>;
 
 struct ClassInheritanceInfo {
-    std::weak_ptr<Statement> derivedClass;
+    std::weak_ptr<AbstractStatement> derivedClass;
     QString file;
     QString parentClassName;
     bool isGlobal;

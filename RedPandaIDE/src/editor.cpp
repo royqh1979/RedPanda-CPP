@@ -650,7 +650,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         if (mParser)
                             function = mParser->findFunctionAt(mFilename,caretLine()+1);
                         if (function) {
-                            bool isVoid = (function->type() == "void");
+                            bool isVoid = (statementType(function) == "void");
                             QStringList params = mParser->getFunctionParameterNames(function);
                             insertStrings.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
                             if (!params.isEmpty())
@@ -3620,14 +3620,14 @@ void Editor::completionInsert(bool appendFunc)
                 || statement->kind == StatementKind::Destructor
                 ||
                 (statement->kind == StatementKind::Preprocessor
-                  && !statement->args.isEmpty())) {
+                  && !std::dynamic_pointer_cast<Statement>(statement)->args.isEmpty())) {
             CharPos pos = nextNonSpaceChar(pEnd);
             QChar nextCh;
             if (pos.line == pEnd.line)
                 nextCh = charAt(nextNonSpaceChar(pEnd));
             if (nextCh=='(') {
                 funcAddOn = "";
-            } else if (statement->args != "()" &&(isIdentChar(nextCh) || nextCh == '"'
+            } else if (std::dynamic_pointer_cast<Statement>(statement)->args != "()" &&(isIdentChar(nextCh) || nextCh == '"'
                        || nextCh == '\'')) {
                 funcAddOn = '(';
             } else {
@@ -3640,7 +3640,7 @@ void Editor::completionInsert(bool appendFunc)
     if (statement->kind == StatementKind::UserCodeSnippet) { // it's a user code template
         // insertUserCodeIn(Statement->value);
         //first move caret to the begin of the word to be replaced
-        insertCodeSnippet(statement->value);
+        insertCodeSnippet(std::dynamic_pointer_cast<Statement>(statement)->value);
     } else {
         if (statement->kind == StatementKind::Keyword
                 && !isIdentStartChar(statement->command[0])
@@ -3654,8 +3654,8 @@ void Editor::completionInsert(bool appendFunc)
 
         // Move caret inside the ()'s, only when the user has something to do there...
         if (!funcAddOn.isEmpty()
-                && (statement->args != "()")
-                && (statement->args != "(void)")) {
+                && (std::dynamic_pointer_cast<Statement>(statement)->args != "()")
+                && (std::dynamic_pointer_cast<Statement>(statement)->args != "(void)")) {
             setCaretCh(caretCh() - funcAddOn.length()+1);
         } else {
             setCaretCh(caretCh());
@@ -4173,9 +4173,9 @@ void Editor::updateFunctionTip(bool showTip)
             mFunctionTooltip->addTip(
                         statement->command,
                         statement->fullName,
-                        statement->type(),
-                        statement->args,
-                        statement->normalizedArgs);
+                        statementType(statement),
+                        std::dynamic_pointer_cast<Statement>(statement)->args,
+                        std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs);
         }
     }
 
@@ -4793,7 +4793,7 @@ void Editor::gotoDefinition(const CharPos &pos)
                 expression,
                 pos.line);
     statement = resolveClassOrConstructorAt(statement, pos);
-    if (!statement || !statement->hasDefinition()
+    if (!statement || !statementHasDefinition(statement)
             || !statement->definitionRange.start.isValid()) {
         return;
     }
