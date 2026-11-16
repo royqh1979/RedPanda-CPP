@@ -900,6 +900,23 @@ void TestCppTokenizer::test_syntax_class_declarations()
     QCOMPARE(nested->templateKind, TemplateDeclarationKind::Primary);
 }
 
+void TestCppTokenizer::test_class_base_list_nested_commas()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct D :\n"
+                "    public A<std::pair<int, float>>,\n"
+                "    virtual B<std::array<std::pair<int, double>, 2>>,\n"
+                "    C<void(*)(int, float)> {};\n", declarations));
+    const DeclarationInfo *derived = findDeclaration(declarations, "D");
+    QVERIFY(derived);
+    QCOMPARE(derived->baseClasses, QStringList({
+        "public A<std::pair<int,float>>",
+        "virtual B<std::array<std::pair<int,double>,2>>",
+        "C<void(*)(int,float)>"
+    }));
+}
+
 void TestCppTokenizer::test_syntax_template_declarations()
 {
     QVector<DeclarationInfo> declarations;

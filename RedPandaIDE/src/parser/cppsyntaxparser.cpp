@@ -161,10 +161,8 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     mDeclarationParser.parseTemplatePattern(declarator, nameStart, nameEnd);
     result.declarators.append(declarator);
     mCursor.consume("final");
-    if (mCursor.consume(":")) {
-        QString bases = readUntil({"{" , ";"});
-        result.baseClasses = splitTopLevel(bases);
-    }
+    if (mCursor.consume(":"))
+        result.baseClasses = readBaseClasses();
     if (mCursor.consume(";"))
         return true;
     SourcePosition bodyStart = mCursor.current().position;
@@ -403,31 +401,36 @@ QString CppSyntaxParser::readUntil(const QSet<QString> &delimiters)
     return result;
 }
 
-QStringList CppSyntaxParser::splitTopLevel(const QString &text)
+QStringList CppSyntaxParser::readBaseClasses()
 {
-    CppTokenizer tokenizer;
-    tokenizer.tokenize({text});
     QStringList result;
-    QString current;
+    QString currentBase;
     int angleLevel = 0;
-    const auto &tokens = tokenizer.tokens();
-    for (int i = 0; i < tokens.count(); ++i) {
-        const QString &token = tokens[i].text;
-        if (token == "," && angleLevel == 0) {
-            result.append(current.trimmed());
-            current.clear();
+    while (!mCursor.atEnd()
+           && mCursor.currentText() != "{"
+           && mCursor.currentText() != ";") {
+        const QString &text = mCursor.currentText();
+        if (text == "," && angleLevel == 0) {
+            result.append(currentBase.trimmed());
+            currentBase.clear();
+            mCursor.advance();
             continue;
         }
-        if (token == "<")
+        if (mCursor.current().matchIndex > mCursor.index()) {
+            appendToken(currentBase, readBalanced(mCursor));
+            continue;
+        }
+        if (text == "<")
             ++angleLevel;
-        else if (token == ">")
+        else if (text == ">")
             --angleLevel;
-        else if (token == ">>")
+        else if (text == ">>")
             angleLevel = qMax(0, angleLevel - 2);
-        appendToken(current, token);
+        appendToken(currentBase, text);
+        mCursor.advance();
     }
-    if (!current.trimmed().isEmpty())
-        result.append(current.trimmed());
+    if (!currentBase.trimmed().isEmpty())
+        result.append(currentBase.trimmed());
     return result;
 }
 

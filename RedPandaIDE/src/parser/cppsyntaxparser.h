@@ -39,7 +39,7 @@ private:
     bool parseStatementBody(DeclarationInfo &result);
 
     QString readUntil(const QSet<QString> &delimiters);
-    QStringList splitTopLevel(const QString &text);
+    QStringList readBaseClasses();
     void skipBalanced();
     void skipDeclaration();
     void finishRanges(DeclarationInfo &result, const SourcePosition &start);

@@ -70,6 +70,7 @@ private slots:
     void test_parse_template_parameter_kinds();
     void test_parse_template_specializations();
     void test_syntax_class_declarations();
+    void test_class_base_list_nested_commas();
     void test_syntax_template_declarations();
     void test_syntax_namespace_declarations();
     void test_syntax_enum_declarations();
