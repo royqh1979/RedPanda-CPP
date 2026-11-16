@@ -36,6 +36,7 @@ public:
     bool parseTemplatePattern(DeclaratorInfo &result, const CppTokenCursor::Checkpoint &nameStart,
                               const CppTokenCursor::Checkpoint &nameEnd);
     QString parseQualifiedNameText();
+    void setCppVersion(int cppVersion) { mCppVersion = cppVersion; }
     void setCurrentClassName(const QString &className);
     QString currentClassName() const { return mClassName; }
 
@@ -62,6 +63,7 @@ private:
 
     CppTokenCursor &mCursor;
     QString mClassName;
+    int mCppVersion = CppVersion::Cpp17;
 };
 
 #endif // CPPDECLARATIONPARSER_H

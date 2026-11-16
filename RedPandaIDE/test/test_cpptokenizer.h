@@ -131,8 +131,10 @@ private slots:
 
 private:
     void tokenize(const QStringList &lines);
-    bool parseDeclarationText(const QString &text, DeclarationInfo &result);
-    bool parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result);
+    bool parseDeclarationText(const QString &text, DeclarationInfo &result,
+                              int cppVersion = CppVersion::Cpp17);
+    bool parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result,
+                         int cppVersion = CppVersion::Cpp17);
     bool parseSyntaxFile(const QString &fileName, QVector<DeclarationInfo> &result);
     QStringList tokenTexts() const;
 

@@ -132,7 +132,7 @@ void CppPreprocessor::clear()
     mIncludePathList.clear();
     mProjectIncludePathList.clear();
     mIncludePaths.clear();
-    mCppVersion = 0;
+    mCppVersion = CppVersion::Cpp17;
 }
 
 void CppPreprocessor::clearTempResults()
@@ -1239,7 +1239,7 @@ void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
 
 bool CppPreprocessor::supportCPP23() const
 {
-    return mCppVersion >= 202302;
+    return mCppVersion >= CppVersion::Cpp23;
 }
 
 // Whitespace before '#' is allowed: a line whose first non-blank

@@ -78,6 +78,23 @@ bool isFunction(const DeclaratorInfo &declarator)
             && declarator.derivations.first().kind == TypeDerivationKind::Function;
 }
 
+bool sameRequiresClause(const QString &left, const QString &right)
+{
+    if (left == right)
+        return true;
+    CppTokenizer leftTokenizer;
+    CppTokenizer rightTokenizer;
+    leftTokenizer.tokenize({left});
+    rightTokenizer.tokenize({right});
+    if (leftTokenizer.tokenCount() != rightTokenizer.tokenCount())
+        return false;
+    for (int i = 0; i < leftTokenizer.tokenCount(); ++i) {
+        if (leftTokenizer[i].text != rightTokenizer[i].text)
+            return false;
+    }
+    return true;
+}
+
 bool isDeductionGuide(const DeclarationInfo &declaration, const DeclaratorInfo &declarator)
 {
     return isFunction(declarator)
@@ -428,10 +445,17 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
     for (const PStatement &existing : candidates) {
         if (existing->fullName != candidate->fullName || existing->kind != candidate->kind)
             continue;
-        if (candidate->kind != StatementKind::Namespace
-                && std::dynamic_pointer_cast<Statement>(existing)->normalizedArgs
-                != std::dynamic_pointer_cast<Statement>(candidate)->normalizedArgs)
-            continue;
+        if (candidate->kind != StatementKind::Namespace) {
+            auto existingNormal = std::dynamic_pointer_cast<Statement>(existing);
+            auto candidateNormal = std::dynamic_pointer_cast<Statement>(candidate);
+            if (existingNormal->normalizedArgs != candidateNormal->normalizedArgs
+                    || !sameRequiresClause(existingNormal->templateRequiresClause,
+                                           candidateNormal->templateRequiresClause)
+                    || !sameRequiresClause(existingNormal->requiresClause,
+                                           candidateNormal->requiresClause)) {
+                continue;
+            }
+        }
         bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
                 || existing->definitionBoundaryAncestor == context.boundaryAncestor;
         bool declarationPair = statementHasDefinition(existing) != statementHasDefinition(candidate);
@@ -512,6 +536,10 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
     }
     existingStatement->templateParameters = merged;
     existingStatement->inheritedDefaultArgumentTexts = inherited;
+    if (!candidateStatement->templateRequiresClause.isEmpty())
+        existingStatement->templateRequiresClause = candidateStatement->templateRequiresClause;
+    if (!candidateStatement->requiresClause.isEmpty())
+        existingStatement->requiresClause = candidateStatement->requiresClause;
     existingStatement->declSpecifierProperties |= candidateStatement->declSpecifierProperties;
     return existing;
 }
@@ -771,9 +799,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     auto normalStatement = std::dynamic_pointer_cast<Statement>(statement);
     normalStatement->classKey = declaration.classKey;
     normalStatement->templateKind = declaration.templateKind;
-    if (kind == StatementKind::Class
-            && (declaration.templateKind == TemplateDeclarationKind::PartialSpecialization
-                || declaration.templateKind == TemplateDeclarationKind::ExplicitSpecialization)) {
+    normalStatement->templateRequiresClause = declaration.templateRequiresClause;
+    if (declaration.templateKind == TemplateDeclarationKind::PartialSpecialization
+            || declaration.templateKind == TemplateDeclarationKind::ExplicitSpecialization) {
         normalStatement->templatePattern = declarator.templatePattern;
     }
     normalStatement->templateParameters = declaration.templateParameters;
@@ -783,6 +811,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations += declarator.derivations;
     if (isFunction(declarator)) {
         const TypeDerivation function = declarator.derivations.first();
+        normalStatement->requiresClause = function.requiresClause;
         std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations.removeFirst();
         std::dynamic_pointer_cast<Statement>(statement)->parameters = function.parameters;
         std::dynamic_pointer_cast<Statement>(statement)->args = renderParameters(function, true);
@@ -867,6 +896,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->definitionFileName = context.fileName;
         statement->definitionBoundaryAncestor = context.boundaryAncestor;
         setStatementHasDefinition(statement, true);
+    }
+    if (variable && declaration.templateKind != TemplateDeclarationKind::None
+            && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)) {
+        normalStatement->value = declarator.initializerText;
     }
     if (kind == StatementKind::Alias || kind == StatementKind::NamespaceAlias)
         std::dynamic_pointer_cast<Statement>(statement)->value = declaration.specifiers.type.toString();

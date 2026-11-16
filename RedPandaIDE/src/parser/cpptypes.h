@@ -27,6 +27,12 @@ struct AbstractStatement;
 struct TypeInfo;
 using PTypeInfo = std::shared_ptr<TypeInfo>;
 
+namespace CppVersion {
+inline constexpr int Cpp17 = 201703;
+inline constexpr int Cpp20 = 202002;
+inline constexpr int Cpp23 = 202302;
+}
+
 struct SourcePosition {
     int line = -1;
     int ch = -1;
@@ -120,6 +126,7 @@ struct TypeDerivation {
     FunctionProperties functionProperties = FunctionProperty::None;
     ReferenceQualifier refQualifier = ReferenceQualifier::None;
     QString trailingReturnType;
+    QString requiresClause;
 
     static TypeDerivation pointer(TypeQualifiers qualifiers = TypeQualifier::None);
     static TypeDerivation lvalueReference();
@@ -252,6 +259,7 @@ struct DeclarationInfo {
     DeclSpecifierInfo specifiers;
     QVector<DeclaratorInfo> declarators;
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    QString templateRequiresClause;
     QVector<TemplateParameterInfo> templateParameters;
     DeclarationKind kind = DeclarationKind::Simple;
     UsingDeclarationKind usingKind = UsingDeclarationKind::Member;

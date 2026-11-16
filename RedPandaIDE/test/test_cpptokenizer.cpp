@@ -50,21 +50,25 @@ QStringList TestCppTokenizer::tokenTexts() const
     return result;
 }
 
-bool TestCppTokenizer::parseDeclarationText(const QString &text, DeclarationInfo &result)
+bool TestCppTokenizer::parseDeclarationText(const QString &text, DeclarationInfo &result,
+                                            int cppVersion)
 {
     CppTokenizer tokenizer;
     tokenizer.tokenize(text.split('\n'));
     CppTokenCursor cursor(tokenizer);
     CppDeclarationParser parser(cursor);
+    parser.setCppVersion(cppVersion);
     return parser.parseDeclaration(result);
 }
 
-bool TestCppTokenizer::parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result)
+bool TestCppTokenizer::parseSyntaxText(const QString &text, QVector<DeclarationInfo> &result,
+                                       int cppVersion)
 {
     CppTokenizer tokenizer;
     tokenizer.tokenize(text.split('\n'));
     CppTokenCursor cursor(tokenizer);
     CppSyntaxParser parser(cursor);
+    parser.setCppVersion(cppVersion);
     while (!cursor.atEnd()) {
         if (cursor.current().kind == CppTokenizer::TokenKind::Preprocessor
                 || cursor.current().kind == CppTokenizer::TokenKind::FileBoundary) {
@@ -1830,6 +1834,7 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
+                "  struct string { };\n"
                 "  template<typename T> struct shared_ptr {\n"
                 "    T* operator->();\n"
                 "    T& operator*();\n"
@@ -1840,18 +1845,34 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
                 "    T& operator*();\n"
                 "  };\n"
                 "  template<typename T> struct _MakeUniq { using __single_object = unique_ptr<T>; };\n"
-                "  template<typename T> constexpr bool is_array_v = false;\n"
+                "  template<typename T> constexpr bool is_array_v = __is_array(T);\n"
+                "  template<typename T> constexpr int extent_v = 0;\n"
                 "  template<typename T> requires (!is_array_v<T>) using _NonArray = T;\n"
+                "  template<typename T> requires (extent_v<T> != 0) using _BoundedArray = T[];\n"
                 "  template<typename T, typename... Args>\n"
                 "  shared_ptr<_NonArray<T>> make_shared(Args&&... args);\n"
+                "  template<typename T> shared_ptr<_BoundedArray<T>> make_shared();\n"
+                "  template<typename T> requires is_array_v<T> int select();\n"
+                "  template<typename T> requires (!is_array_v<T>) int select();\n"
+                "  template<typename T> int trailing() requires (!is_array_v<T>);\n"
+                "  template<typename T> requires UnknownTrait<T> int unknown();\n"
+                "  template<typename T> requires UnknownTrait<T> int ambiguous();\n"
+                "  template<typename T> requires true int ambiguous();\n"
+                "  template<typename T> requires (true || false) && (!is_array_v<T>) int logical();\n"
+                "  template<typename T> constexpr bool custom_v = false;\n"
+                "  template<typename T> constexpr bool custom_v<T[]> = true;\n"
+                "  template<typename T> requires custom_v<T> int specialized();\n"
+                "  template<typename T> requires (!is_array_v<T>) int declared();\n"
+                "  template<typename T> requires ( ! is_array_v<T> ) int declared() { return 0; }\n"
                 "  template<typename T, typename... Args>\n"
                 "  typename _MakeUniq<T>::__single_object make_unique(Args&&... args) { return {}; }\n"
                 "  template<typename T, typename... Args>\n"
                 "  void make_unique(Args&&...) = delete;\n"
                 "}\n"
                 "auto shared = std::make_shared<std::string>();\n"
-                "auto unique = std::make_unique<std::string>();\n", declarations));
+                "auto unique = std::make_unique<std::string>();\n", declarations, CppVersion::Cpp20));
     StatementModel model;
+    model.setCppVersion(CppVersion::Cpp20);
     CppStatementBuilder builder(model);
     StatementBuildContext context;
     context.fileName = "/tmp/main.cpp";
@@ -1868,6 +1889,20 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
     };
     DeclarationInfo stringVariable;
     QVERIFY(parseDeclarationText("std::string value;", stringVariable));
+    PStatement isArray = resolver.findStatement("std::is_array_v");
+    PStatement extent = resolver.findStatement("std::extent_v");
+    PStatement nonArray = resolver.findStatement("std::_NonArray");
+    PStatement boundedArray = resolver.findStatement("std::_BoundedArray");
+    QVERIFY(isArray && extent && nonArray && boundedArray);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(isArray)->value, "__is_array(T)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(extent)->value, "0");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(nonArray)->templateRequiresClause,
+             "(!is_array_v<T>)");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(boundedArray)->templateRequiresClause,
+             "(extent_v<T> != 0)");
+    PStatement custom = resolver.findStatement("std::custom_v");
+    QVERIFY(custom);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(custom)->value, "false");
     PStatement makeShared = resolver.findStatement("std::make_shared");
     QVERIFY(makeShared);
     QCOMPARE(makeShared->kind, StatementKind::Function);
@@ -1876,6 +1911,23 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
              "std::shared_ptr<std::string>");
     QCOMPARE(evaluate("std::make_shared<std::string>()").type.toString(),
              "std::shared_ptr<std::string>");
+    QCOMPARE(evaluate("std::select<std::string>()").type.toString(), "int");
+    DeclarationInfo arrayVariable;
+    QVERIFY(parseDeclarationText("std::string value[];", arrayVariable));
+    TypeInfo arrayType = arrayVariable.specifiers.type;
+    arrayType.derivations = arrayVariable.declarators.first().derivations;
+    QCOMPARE(resolver.invokeFunction(resolver.findStatement("std::select"), {},
+                                     {TemplateArgument::fromType(arrayType)}).toString(), "int");
+    QCOMPARE(evaluate("std::select<std::string[]>()").type.toString(), "int");
+    QCOMPARE(evaluate("std::trailing<std::string>()").type.toString(), "int");
+    QCOMPARE(evaluate("std::unknown<std::string>()").type.toString(), "int");
+    QCOMPARE(evaluate("std::logical<std::string>()").type.toString(), "int");
+    QCOMPARE(evaluate("std::specialized<std::string[]>()").type.toString(), "int");
+    QCOMPARE(evaluate("std::declared<std::string>()").type.toString(), "int");
+    QVERIFY(evaluate("std::ambiguous<std::string>()").type.qualifiedName.isEmpty());
+    DeclarationInfo boundedVariable;
+    QVERIFY(parseDeclarationText("std::_BoundedArray<std::string> value;", boundedVariable));
+    QVERIFY(resolver.resolve(boundedVariable.specifiers.type).qualifiedName.isEmpty());
     QCOMPARE(evaluate("std::make_unique<std::string>()").type.toString(),
              "std::unique_ptr<std::string,std::default_delete<std::string>>");
     QCOMPARE(evaluate("std::make_unique<std::string>(\"unique\")").type.toString(),
@@ -1885,6 +1937,10 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
     QVERIFY(shared && unique);
     QCOMPARE(statementType(shared), "std::shared_ptr<std::string>");
     QCOMPARE(statementType(unique), "std::unique_ptr<std::string,std::default_delete<std::string>>");
+
+    model.setCppVersion(CppVersion::Cpp17);
+    QVERIFY(resolver.invokeFunction(makeShared, {},
+            {TemplateArgument::fromType(stringVariable.specifiers.type)}).qualifiedName.isEmpty());
 }
 
 
@@ -2913,6 +2969,22 @@ void TestCppTokenizer::test_requires_clauses_are_consumed()
     QCOMPARE(declarations[4].declarators.first().name, "Constrained");
     QCOMPARE(declarations[5].declarators.first().name, "identity");
     QCOMPARE(declarations[6].declarators.first().name, "after");
+    QVERIFY(declarations[2].templateRequiresClause.isEmpty());
+    QVERIFY(declarations[0].declarators.first().derivations.first().requiresClause.isEmpty());
+
+    QVector<DeclarationInfo> constrained;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> requires (!is_array_v<T>) using NonArray = T;\n"
+                "template<typename T> int f() requires true;\n",
+                constrained, CppVersion::Cpp20));
+    QCOMPARE(constrained[0].templateRequiresClause, "(!is_array_v<T>)");
+    QCOMPARE(constrained[1].declarators.first().derivations.first().requiresClause, "true");
+
+    DeclarationInfo constant;
+    QVERIFY(parseDeclarationText(
+                "template<typename T> constexpr bool is_array_v = __is_array(T);",
+                constant, CppVersion::Cpp20));
+    QCOMPARE(constant.declarators.first().initializerText, "__is_array(T)");
 }
 
 void TestCppTokenizer::test_requires_before_member_declaration()

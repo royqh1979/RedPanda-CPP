@@ -327,7 +327,7 @@ void TestCppPreprocessor::test_cpp_version_value()
     CppPreprocessor preprocessor;
     for (int version : {199711, 201103, 201402, 201703, 202002, 202302, 202400}) {
         preprocessor.clear();
-        QCOMPARE(preprocessor.cppVersion(), 0);
+        QCOMPARE(preprocessor.cppVersion(), CppVersion::Cpp17);
         preprocessor.addHardDefineByLine(QString("#define __cplusplus %1L").arg(version));
         QCOMPARE(preprocessor.cppVersion(), version);
     }

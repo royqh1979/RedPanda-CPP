@@ -385,7 +385,7 @@ private:
 
     bool mParseSystem;
     bool mParseLocal;
-    int mCppVersion = 0;
+    int mCppVersion = CppVersion::Cpp17;
 
     bool mStopForParserReset;
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;

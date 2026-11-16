@@ -24,6 +24,7 @@ class CppSyntaxParser
 public:
     explicit CppSyntaxParser(CppTokenCursor &cursor);
 
+    void setCppVersion(int cppVersion) { mDeclarationParser.setCppVersion(cppVersion); }
     bool parseDeclaration(DeclarationInfo &result);
 
 private:

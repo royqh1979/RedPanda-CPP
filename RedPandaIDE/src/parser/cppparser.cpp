@@ -110,6 +110,7 @@ void CppParser::internalParse(const QString &fileName)
     mPreprocessor.setScanOptions(true, true);
     mPreprocessor.preprocess(fileName);
     qint64 preprocessMs = timer.restart();
+    mStatementList.setCppVersion(mPreprocessor.cppVersion());
 
     CppTokenizer tokenizer;
     tokenizer.tokenize(mPreprocessor.result());
@@ -178,6 +179,7 @@ void CppParser::internalParse(const QString &fileName)
         DeclarationInfo declaration;
         if (!mStopForReset) {
             CppSyntaxParser parser(cursor);
+            parser.setCppVersion(mPreprocessor.cppVersion());
             stepTimer.start();
             if (parser.parseDeclaration(declaration)) {
                 parseDeclarationsMs += stepTimer.restart();

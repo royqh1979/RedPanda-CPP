@@ -229,8 +229,10 @@ struct Statement : AbstractStatement {
     TypeInfo typeInfo;
     QString args; // args "(int a,float b)"
     QVector<ParameterInfo> parameters;
-    QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
+    QString value; // Macro/typedef text or a constexpr variable template initializer
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    QString templateRequiresClause;
+    QString requiresClause;
     TypeInfo templatePattern;
     QVector<TemplateParameterInfo> templateParameters;
     QVector<QString> inheritedDefaultArgumentTexts;

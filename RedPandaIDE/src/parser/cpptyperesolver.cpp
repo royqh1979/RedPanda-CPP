@@ -337,6 +337,132 @@ struct ResolutionGuard {
     QString key;
 };
 
+void appendConstraintToken(QString &target, const QString &text)
+{
+    if (!target.isEmpty() && !text.isEmpty()
+            && (target.back().isLetterOrNumber() || target.back() == '_')
+            && (text.front().isLetterOrNumber() || text.front() == '_')) {
+        target += ' ';
+    }
+    target += text;
+}
+
+ConstraintSatisfaction constraintAnd(ConstraintSatisfaction left, ConstraintSatisfaction right)
+{
+    if (left == ConstraintSatisfaction::Unsatisfied || right == ConstraintSatisfaction::Unsatisfied)
+        return ConstraintSatisfaction::Unsatisfied;
+    if (left == ConstraintSatisfaction::Satisfied && right == ConstraintSatisfaction::Satisfied)
+        return ConstraintSatisfaction::Satisfied;
+    return ConstraintSatisfaction::Unknown;
+}
+
+ConstraintSatisfaction constraintOr(ConstraintSatisfaction left, ConstraintSatisfaction right)
+{
+    if (left == ConstraintSatisfaction::Satisfied || right == ConstraintSatisfaction::Satisfied)
+        return ConstraintSatisfaction::Satisfied;
+    if (left == ConstraintSatisfaction::Unsatisfied && right == ConstraintSatisfaction::Unsatisfied)
+        return ConstraintSatisfaction::Unsatisfied;
+    return ConstraintSatisfaction::Unknown;
+}
+
+class ConstraintParser {
+public:
+    using AtomEvaluator = std::function<ConstraintSatisfaction(const QString &)>;
+
+    ConstraintParser(const QString &text, const AtomEvaluator &evaluateAtom)
+        : mEvaluateAtom(evaluateAtom)
+    {
+        mTokenizer.tokenize(text.split('\n'));
+    }
+
+    ConstraintSatisfaction evaluate()
+    {
+        ConstraintSatisfaction result = parseOr();
+        return mIndex == mTokenizer.tokenCount() ? result : ConstraintSatisfaction::Unknown;
+    }
+
+private:
+    ConstraintSatisfaction parseOr()
+    {
+        ConstraintSatisfaction result = parseAnd();
+        while (consume("||"))
+            result = constraintOr(result, parseAnd());
+        return result;
+    }
+
+    ConstraintSatisfaction parseAnd()
+    {
+        ConstraintSatisfaction result = parseUnary();
+        while (consume("&&"))
+            result = constraintAnd(result, parseUnary());
+        return result;
+    }
+
+    ConstraintSatisfaction parseUnary()
+    {
+        if (consume("!")) {
+            ConstraintSatisfaction result = parseUnary();
+            if (result == ConstraintSatisfaction::Satisfied)
+                return ConstraintSatisfaction::Unsatisfied;
+            if (result == ConstraintSatisfaction::Unsatisfied)
+                return ConstraintSatisfaction::Satisfied;
+            return ConstraintSatisfaction::Unknown;
+        }
+        return parsePrimary();
+    }
+
+    ConstraintSatisfaction parsePrimary()
+    {
+        if (consume("(")) {
+            ConstraintSatisfaction result = parseOr();
+            return consume(")") ? result : ConstraintSatisfaction::Unknown;
+        }
+        if (consume("true"))
+            return ConstraintSatisfaction::Satisfied;
+        if (consume("false"))
+            return ConstraintSatisfaction::Unsatisfied;
+
+        QString atom;
+        int angleLevel = 0;
+        while (mIndex < mTokenizer.tokenCount()) {
+            const CppTokenizer::Token &token = mTokenizer[mIndex];
+            const QString &text = token.text;
+            if (angleLevel == 0 && (text == ")" || text == "&&" || text == "||"))
+                break;
+            if (token.matchIndex > mIndex) {
+                int end = qMin(token.matchIndex, mTokenizer.tokenCount() - 1);
+                while (mIndex <= end) {
+                    appendConstraintToken(atom, mTokenizer[mIndex].text);
+                    ++mIndex;
+                }
+                continue;
+            }
+            if (text == "<") {
+                ++angleLevel;
+            } else if (text == ">") {
+                angleLevel = qMax(0, angleLevel - 1);
+            } else if (text == ">>") {
+                angleLevel = qMax(0, angleLevel - 2);
+            }
+            appendConstraintToken(atom, text);
+            ++mIndex;
+        }
+        return atom.isEmpty() ? ConstraintSatisfaction::Unknown : mEvaluateAtom(atom);
+    }
+
+    bool consume(const QString &text)
+    {
+        if (mIndex >= mTokenizer.tokenCount() || mTokenizer[mIndex].text != text)
+            return false;
+        ++mIndex;
+        return true;
+    }
+
+    CppTokenizer mTokenizer;
+    AtomEvaluator mEvaluateAtom;
+    int mIndex = 0;
+};
+
 }
 
 CppTypeResolver::CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation)
@@ -623,6 +749,10 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
             return {};
         }
     }
+    ConstraintSatisfaction satisfaction = constraintsSatisfied(
+            function, frame, function->parentScope.lock(), evaluation);
+    if (satisfaction == ConstraintSatisfaction::Unsatisfied)
+        return {};
     ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(function)->typeInfo, frame,
                                                function->parentScope.lock(), evaluation);
     if (resultInstance)
@@ -1028,6 +1158,12 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             evaluation.aliases.insert(aliasKey);
             PTemplateBindingFrame localBindings = declarationBindings(
                     declaration, instance, environment, evaluation);
+            ConstraintSatisfaction satisfaction = constraintsSatisfied(
+                    declaration, localBindings, declaration->parentScope.lock(), evaluation);
+            if (satisfaction == ConstraintSatisfaction::Unsatisfied) {
+                evaluation.aliases.remove(aliasKey);
+                return {};
+            }
             TypeInfo targetType = std::dynamic_pointer_cast<Statement>(declaration)->typeInfo;
             PStatement targetDeclaration = targetType.declaration.lock();
             if (!instance.templateArguments.isEmpty() && targetType.templateArguments.isEmpty()
@@ -2014,6 +2150,215 @@ const TemplateArgument *CppTypeResolver::findBinding(
             return &binding.value();
     }
     return nullptr;
+}
+
+ConstraintSatisfaction CppTypeResolver::constraintsSatisfied(
+        const PStatement &statement, const PTemplateBindingFrame &bindings,
+        const PStatement &context, EvaluationContext &evaluation) const
+{
+    if (mModel.cppVersion() < CppVersion::Cpp20)
+        return ConstraintSatisfaction::Satisfied;
+    if (!statement || statement->kind == StatementKind::Namespace
+            || statement->kind == StatementKind::InlineAlias) {
+        return ConstraintSatisfaction::Satisfied;
+    }
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    ConstraintSatisfaction result = ConstraintSatisfaction::Satisfied;
+    if (!normal->templateRequiresClause.isEmpty()) {
+        result = evaluateConstraint(normal->templateRequiresClause, bindings, context, evaluation);
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return result;
+    }
+    if (!normal->requiresClause.isEmpty())
+        result = constraintAnd(result, evaluateConstraint(normal->requiresClause, bindings,
+                                                          context, evaluation));
+    return result;
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateConstraint(
+        const QString &text, const PTemplateBindingFrame &bindings,
+        const PStatement &context, EvaluationContext &evaluation) const
+{
+    if (++evaluation.operationCount > 4096)
+        return ConstraintSatisfaction::Unknown;
+    ConstraintParser parser(text, [&](const QString &atom) {
+        return evaluateConstraintAtom(atom, bindings, context, evaluation);
+    });
+    return parser.evaluate();
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateConstraintAtom(
+        const QString &text, const PTemplateBindingFrame &bindings,
+        const PStatement &context, EvaluationContext &evaluation) const
+{
+    QString constant = evaluateConstantValue(text, bindings, context, evaluation);
+    if (constant == "true")
+        return ConstraintSatisfaction::Satisfied;
+    if (constant == "false")
+        return ConstraintSatisfaction::Unsatisfied;
+    bool ok = false;
+    qlonglong value = constant.toLongLong(&ok, 0);
+    if (ok)
+        return value != 0 ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
+    return ConstraintSatisfaction::Unknown;
+}
+
+QString CppTypeResolver::evaluateConstantValue(
+        const QString &text, const PTemplateBindingFrame &bindings,
+        const PStatement &context, EvaluationContext &evaluation) const
+{
+    QString expression = text.trimmed();
+    CppTokenizer comparisonTokenizer;
+    comparisonTokenizer.tokenize({expression});
+    int angleLevel = 0;
+    for (int i = 0; i < comparisonTokenizer.tokenCount(); ++i) {
+        const CppTokenizer::Token &token = comparisonTokenizer[i];
+        if (token.matchIndex > i) {
+            i = token.matchIndex;
+            continue;
+        }
+        if (token.text == "<") {
+            ++angleLevel;
+        } else if (token.text == ">") {
+            angleLevel = qMax(0, angleLevel - 1);
+        } else if (token.text == ">>") {
+            angleLevel = qMax(0, angleLevel - 2);
+        } else if (angleLevel == 0 && (token.text == "==" || token.text == "!=")) {
+            QString left;
+            QString right;
+            for (int j = 0; j < i; ++j)
+                appendConstraintToken(left, comparisonTokenizer[j].text);
+            for (int j = i + 1; j < comparisonTokenizer.tokenCount(); ++j)
+                appendConstraintToken(right, comparisonTokenizer[j].text);
+            QString leftValue = evaluateConstantValue(left, bindings, context, evaluation);
+            QString rightValue = evaluateConstantValue(right, bindings, context, evaluation);
+            auto integerValue = [](QString value, qlonglong &result) {
+                value = value.trimmed();
+                if (value == "true" || value == "false") {
+                    result = value == "true" ? 1 : 0;
+                    return true;
+                }
+                while (value.endsWith('U') || value.endsWith('u')
+                       || value.endsWith('L') || value.endsWith('l')) {
+                    value.chop(1);
+                }
+                bool ok = false;
+                result = value.toLongLong(&ok, 0);
+                return ok;
+            };
+            qlonglong leftNumber = 0;
+            qlonglong rightNumber = 0;
+            if (!integerValue(leftValue, leftNumber) || !integerValue(rightValue, rightNumber))
+                return QString();
+            bool equal = leftNumber == rightNumber;
+            return (token.text == "==") == equal ? QString("true") : QString("false");
+        }
+    }
+
+    QString constant = resolveConstantExpression(expression, bindings, context, evaluation);
+    if (constant == "true" || constant == "false")
+        return constant;
+    QString numeric = constant;
+    while (numeric.endsWith('U') || numeric.endsWith('u')
+           || numeric.endsWith('L') || numeric.endsWith('l')) {
+        numeric.chop(1);
+    }
+    bool numericOk = false;
+    qlonglong numericValue = numeric.toLongLong(&numericOk, 0);
+    if (numericOk)
+        return QString::number(numericValue);
+
+    const QString arrayBuiltin = "__is_array(";
+    if (expression.startsWith(arrayBuiltin) && expression.endsWith(')')) {
+        int argumentStart = arrayBuiltin.length();
+        TypeInfo argument = parseTypeText(
+                expression.mid(argumentStart, expression.length() - argumentStart - 1), evaluation);
+        argument = resolveType(argument, bindings, context, evaluation);
+        if (argument.qualifiedName.isEmpty())
+            return QString();
+        for (const TypeDerivation &derivation : argument.derivations) {
+            if (derivation.kind == TypeDerivationKind::Array)
+                return "true";
+        }
+        return "false";
+    }
+
+    TypeInfo variableType = parseTypeText(expression, evaluation);
+    if (variableType.qualifiedName.isEmpty())
+        return QString();
+    materializeTemplateArguments(variableType, evaluation);
+    for (TemplateArgument &argument : variableType.templateArguments) {
+        if (argument.kind != TemplateArgumentKind::Type || !argument.type)
+            continue;
+        TypeInfo resolved = resolveType(*argument.type, bindings, context, evaluation);
+        if (resolved.qualifiedName.isEmpty())
+            return QString();
+        argument.type = std::make_shared<TypeInfo>(resolved);
+    }
+    PStatement variable = findDeclaration(variableType.qualifiedName, context);
+    auto isVariable = [](const PStatement &statement) {
+        return statement && (statement->kind == StatementKind::Variable
+                             || statement->kind == StatementKind::GlobalVariable
+                             || statement->kind == StatementKind::LocalVariable);
+    };
+    if (!isVariable(variable)
+            || std::dynamic_pointer_cast<Statement>(variable)->templateKind
+                    == TemplateDeclarationKind::None) {
+        return QString();
+    }
+
+    PStatement selected = variable;
+    PStatement partialMatch;
+    bool unknownMatch = false;
+    PStatement parent = variable->parentScope.lock();
+    const StatementMap &siblings = mModel.childrenStatements(parent);
+    for (auto it = siblings.lowerBound(variable->command);
+         it != siblings.end() && it.key().startsWith(variable->command); ++it) {
+        PStatement candidate = it.value().lock();
+        if (!isVariable(candidate) || candidate == variable)
+            continue;
+        TemplateDeclarationKind candidateKind =
+                std::dynamic_pointer_cast<Statement>(candidate)->templateKind;
+        if (candidateKind != TemplateDeclarationKind::ExplicitSpecialization
+                && candidateKind != TemplateDeclarationKind::PartialSpecialization) {
+            continue;
+        }
+        TemplateBindings captured;
+        SpecializationMatch match = matchSpecialization(candidate, variableType.templateArguments,
+                                                        context, captured, evaluation);
+        if (match == SpecializationMatch::NoMatch)
+            continue;
+        if (match == SpecializationMatch::Unknown) {
+            unknownMatch = true;
+            continue;
+        }
+        if (candidateKind == TemplateDeclarationKind::ExplicitSpecialization) {
+            selected = candidate;
+            partialMatch.reset();
+            unknownMatch = false;
+            break;
+        }
+        if (partialMatch)
+            unknownMatch = true;
+        else
+            partialMatch = candidate;
+    }
+    if (unknownMatch)
+        return QString();
+    if (partialMatch)
+        selected = partialMatch;
+
+    auto normal = std::dynamic_pointer_cast<Statement>(selected);
+    if (normal->value.isEmpty())
+        return QString();
+    QString key = QString::number(reinterpret_cast<quintptr>(selected.get()), 16) + "|"
+            + profiledTypeString(variableType);
+    if (evaluation.resolvingConstraints.contains(key))
+        return QString();
+    ResolutionGuard guard(evaluation.resolvingConstraints, key);
+    PTemplateBindingFrame localBindings = declarationBindings(selected, variableType, bindings,
+                                                               evaluation);
+    return evaluateConstantValue(normal->value, localBindings, selected->parentScope.lock(), evaluation);
 }
 
 QString CppTypeResolver::resolveConstantExpression(

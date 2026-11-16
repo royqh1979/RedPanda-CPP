@@ -24,6 +24,12 @@ using TemplateBindings = QHash<QString, TemplateArgument>;
 struct TemplateBindingFrame;
 using PTemplateBindingFrame = std::shared_ptr<TemplateBindingFrame>;
 
+enum class ConstraintSatisfaction {
+    Satisfied,
+    Unsatisfied,
+    Unknown
+};
+
 struct ClassInstance {
     TypeInfo type;
     PStatement declaration;
@@ -92,6 +98,7 @@ public:
     struct EvaluationContext {
         QSet<QString> aliases;
         QSet<QString> resolvingTypes;
+        QSet<QString> resolvingConstraints;
         std::shared_ptr<QHash<QString, TypeInfo>> parsedTypeTexts =
                 std::make_shared<QHash<QString, TypeInfo>>();
         std::shared_ptr<QHash<QString, ParsedTypeName>> parsedTypeNames =
@@ -200,6 +207,20 @@ private:
                                      const PStatement &context, EvaluationContext &evaluation) const;
     QString resolveConstantExpression(const QString &text, const PTemplateBindingFrame &bindings,
                                       const PStatement &context, EvaluationContext &evaluation) const;
+    ConstraintSatisfaction constraintsSatisfied(const PStatement &statement,
+                                                const PTemplateBindingFrame &bindings,
+                                                const PStatement &context,
+                                                EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateConstraint(const QString &text,
+                                              const PTemplateBindingFrame &bindings,
+                                              const PStatement &context,
+                                              EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateConstraintAtom(const QString &text,
+                                                  const PTemplateBindingFrame &bindings,
+                                                  const PStatement &context,
+                                                  EvaluationContext &evaluation) const;
+    QString evaluateConstantValue(const QString &text, const PTemplateBindingFrame &bindings,
+                                  const PStatement &context, EvaluationContext &evaluation) const;
     TypeInfo traitMemberType(const ClassInstance &instance, const QString &memberName,
                              EvaluationContext &evaluation) const;
     const TemplateArgument *findBinding(const PTemplateBindingFrame &bindings,

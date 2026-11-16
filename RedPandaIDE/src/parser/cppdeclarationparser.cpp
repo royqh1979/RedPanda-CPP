@@ -184,7 +184,10 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 explicitDefinition = true;
             }
             if (!explicitDefinition) {
-                if (result.specifiers.type.qualifiedName == "auto") {
+                bool constraintConstant = mCppVersion >= CppVersion::Cpp20
+                        && result.templateKind != TemplateDeclarationKind::None
+                        && result.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr);
+                if (result.specifiers.type.qualifiedName == "auto" || constraintConstant) {
                     result.declarators.last().initializerPosition = mCursor.current().position;
                     result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
                 } else {
@@ -326,8 +329,12 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
             return false;
         }
     }
-    if (mCursor.consume("requires"))
+    if (mCursor.consume("requires")) {
+        CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
         skipTemplateRequiresClause();
+        if (mCppVersion >= CppVersion::Cpp20)
+            result.templateRequiresClause = readConsumedText(requiresStart);
+    }
     return true;
 }
 
@@ -643,8 +650,12 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
             }
             if (mCursor.consume("->"))
                 applyTrailingReturn(function);
-            if (mCursor.consume("requires"))
+            if (mCursor.consume("requires")) {
+                CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
                 skipRequiresClause();
+                if (mCppVersion >= CppVersion::Cpp20)
+                    function.requiresClause = readConsumedText(requiresStart);
+            }
             result.derivations.append(function);
             continue;
         }
