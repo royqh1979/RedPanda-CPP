@@ -260,24 +260,15 @@ int CppTokenizer::nextFileBoundary(int tokenIndex) const
 
 void CppTokenizer::skipWhitespace()
 {
-    while (true) {
-        if (mCurrent->isSpace()) {
+    while (mCurrent->isSpace()) {
+        if (*mCurrent == '\n') {
             advance();
-        } else if (*mCurrent == '/' && mCurrent[1] == '/') {
-            while (!atEnd() && *mCurrent != '\n' && *mCurrent != '\r')
-                advance();
-        } else if (*mCurrent == '/' && mCurrent[1] == '*') {
-            advance();
-            advance();
-            while (!atEnd() && !(*mCurrent == '*' && mCurrent[1] == '/'))
-                advance();
-            if (*mCurrent == '*' && mCurrent[1] == '/') {
-                advance();
-                advance();
-            }
-        } else {
-            break;
+            continue;
         }
+        const QChar *whitespaceStart = mCurrent;
+        while (mCurrent->isSpace() && *mCurrent != '\n')
+            ++mCurrent;
+        mCurrentPosition.ch += mCurrent - whitespaceStart;
     }
 }
 
@@ -368,8 +359,10 @@ QString CppTokenizer::readIdentifier()
     TokenizerProfileScope profileScope(tokenizerProfile.identifierNs,
                                        tokenizerProfile.identifierCalls);
     int start = mCurrent - mBuffer.constData();
+    const QChar *identifierStart = mCurrent;
     while (isIdentifierPart(*mCurrent))
-        advance();
+        ++mCurrent;
+    mCurrentPosition.ch += mCurrent - identifierStart;
     return mBuffer.mid(start, mCurrent - mBuffer.constData() - start);
 }
 
@@ -511,8 +504,8 @@ QString CppTokenizer::readOperator()
         break;
     }
     QString result = mBuffer.mid(start, length);
-    for (int i = 0; i < length; ++i)
-        advance();
+    mCurrentPosition.ch += length;
+    mCurrent += length;
     return result;
 }
 

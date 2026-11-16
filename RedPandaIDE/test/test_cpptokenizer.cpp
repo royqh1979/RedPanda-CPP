@@ -1,6 +1,7 @@
 #include <QTest>
 #include <QFile>
 #include "test_cpptokenizer.h"
+#include "src/parser/cpppreprocessor.h"
 
 namespace {
 const DeclarationInfo *findDeclaration(const QVector<DeclarationInfo> &declarations,
@@ -98,7 +99,9 @@ bool TestCppTokenizer::parseSyntaxFile(const QString &fileName, QVector<Declarat
         return false;
     QString text = QString::fromUtf8(file.readAll());
     text.remove('\r');
-    return parseSyntaxText(text, result);
+    QStringList lines = text.split('\n');
+    CppPreprocessor::replaceCommentsBySpaceChar(lines);
+    return parseSyntaxText(lines.join('\n'), result);
 }
 
 void TestCppTokenizer::test_identifiers_and_operators()

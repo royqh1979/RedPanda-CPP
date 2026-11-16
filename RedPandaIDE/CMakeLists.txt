@@ -453,6 +453,9 @@ add_dependencies(all-test-targets test-widgets)
 add_executable(test-cpptokenizer test/test-cpptokenizer-main.cpp)
 
 target_qt_plain_cpp(test-cpptokenizer
+    src/parser/cpppreprocessor
+    src/parser/pptoken
+    src/parser/ppexpander
     src/parser/cpptokenizer
     src/parser/cpptokencursor
     src/parser/cpptypes
@@ -463,6 +466,7 @@ target_qt_plain_cpp(test-cpptokenizer
     src/parser/typeoperationregistry
     src/parser/cppexpressionevaluator
     src/parser/cppscopes
+    src/parser/parserutils
 )
 
 target_moc_classes(test-cpptokenizer
@@ -475,7 +479,8 @@ target_include_directories(test-cpptokenizer PRIVATE
 
 target_link_libraries(test-cpptokenizer PRIVATE
     Qt::Core
-    Qt::Test)
+    Qt::Test
+    redpanda_qt_utils)
 
 add_custom_command(
     TARGET test-cpptokenizer POST_BUILD

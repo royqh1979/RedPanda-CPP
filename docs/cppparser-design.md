@@ -53,6 +53,7 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 - 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
 - 参数默认值不做通用表达式求值。Parameter Statement 不保存默认值；函数 ParameterInfo 以 `defaultArgumentText` 保存原文，供有限重载筛选和构造转换使用；函数 `args` 中的默认值文本只用于兼容和展示，不参与签名比较。
 - Token 记录由 0 基 line/ch 组成的 SourcePosition，并保留 `matchIndex`。同一行内的嵌套声明、lambda 和块必须能通过 ch 区分；不另建一套偏移坐标。Tokenizer 的源缓冲区同时被 `mCurrent` 原始指针引用，读取时不得使用非 const `QString::operator[]`，否则可能 detach 并使指针失效；只读访问统一使用 `at()` 或其它不触发 detach 的接口。
+- 标识符、运算符和连续非换行空白直接批量推进指针并一次更新 column；只有换行才逐行更新位置。Tokenizer 的输入已由 Preprocessor 去除注释，`skipWhitespace()` 不再承担注释解析。直接使用原始 cppreference 资源的测试入口必须先调用相同的注释替换，不能为了让原始输入绕过预处理而在生产 Tokenizer 中保留无效注释分支。
 - Tokenizer 计算 `()`、`[]`、`{}` 配对，不计算 `<>` 配对。未闭合结构是正常输入状态，不能中止后续切分；文件内未配对结构以当前文件尾作为虚拟匹配位置。根文件尾由不进入 token 列表的静态 FileEnd 哨兵表示，Cursor 在该位置返回哨兵而不越界；include 文件尾继续使用 FileBoundary 标记。
 - matchIndex 按整个预处理 TU 的 token 流计算，使 Parser 能识别配对目标是否越过 include 文件边界。本 Parser 不支持跨文件配对；发现后记录诊断并跳到当前文件结束。include 文件随后返回包含者继续分析，根文件则自然分析到文件尾。
 - `#include` 文件边界标记的行号映射继续保留，其职责无语法歧义。
@@ -294,13 +295,15 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
 
-GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1082 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
+GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1059 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 
 对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
 
 基类列表已由 `readBaseClasses()` 在当前 token 流中一次完成切分：顶层逗号分段，配对括号通过 matchIndex 整体消费，并保留 `<`、`>`、`>>` 的模板深度处理；不再先由 `readUntil()` 拼接、再由 `splitTopLevel()` 二次 tokenize。嵌套模板逗号、函数指针参数逗号和多行基类列表均有行为测试。
 
 该修改的详细 profile 中，identifier 读取由 332,140 次降为 328,735 次，addToken 由 368,323 次降为 365,369 次，advance 由 5,650,510 次降为 5,617,553 次，证明基类列表的重复词法处理已消除。无插桩第二次完整解析为 1089 ms，与 1082 ms 基线相比没有可见收益；修改仍予保留，因为它消除了确定冗余并统一了单遍 token 处理路径，而不是以总体耗时作为唯一保留依据。
+
+标识符、运算符和空白批量推进后，`advance()` 调用量进一步由 5,617,553 次降为 **2,083,831 次**；详细 identifier 读取由约 96 ms 降至 21 ms，operator 由约 34 ms 降至 20 ms，Tokenizer 阶段由约 352 ms 降至 255 ms。单纯内联 `advance()` 没有明确收益，已撤回；有效修改是直接减少逐字符调用及行列更新次数，而非只消除函数调用。
 
 ## cppreference 语法覆盖测试
 
