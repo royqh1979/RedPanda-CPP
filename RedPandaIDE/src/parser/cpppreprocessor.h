@@ -257,7 +257,6 @@ private:
     };
     void invalidDefinesInFile(const QString& fileName);
     static QString signatureOfDefine(const PDefine& define);
-    bool isInsideBoundary(const QString &fileName) const;
     QHash<QString,QString> userMacroSnapshot() const;
     bool hasValidFileStamps(const PParsedFileInfo &fileInfo) const;
     bool isIncludeProtected(const QString &fileName) const;

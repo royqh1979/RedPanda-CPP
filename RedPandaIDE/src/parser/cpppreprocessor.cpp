@@ -30,7 +30,6 @@ struct PreprocessorProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 openIncludeNs = 0;
     qint64 closeIncludeNs = 0;
-    qint64 insideBoundaryNs = 0;
     qint64 fileStampsNs = 0;
     qint64 includeRelationsNs = 0;
     qint64 readFileNs = 0;
@@ -43,7 +42,6 @@ struct PreprocessorProfile {
     qint64 evaluateConditionNs = 0;
     qint64 openIncludeCalls = 0;
     qint64 closeIncludeCalls = 0;
-    qint64 insideBoundaryCalls = 0;
     qint64 fileStampsCalls = 0;
     qint64 includeRelationsCalls = 0;
     qint64 readFileCalls = 0;
@@ -59,7 +57,6 @@ struct PreprocessorProfile {
         qWarning() << "PREPROCESSOR_PROFILE"
                    << "openInclude" << openIncludeNs / 1000000.0
                    << "closeInclude" << closeIncludeNs / 1000000.0
-                   << "insideBoundary" << insideBoundaryNs / 1000000.0
                    << "fileStamps" << fileStampsNs / 1000000.0
                    << "includeRelations" << includeRelationsNs / 1000000.0
                    << "readFile" << readFileNs / 1000000.0
@@ -73,7 +70,6 @@ struct PreprocessorProfile {
         qWarning() << "PREPROCESSOR_PROFILE_CALLS"
                    << "openInclude" << openIncludeCalls
                    << "closeInclude" << closeIncludeCalls
-                   << "insideBoundary" << insideBoundaryCalls
                    << "fileStamps" << fileStampsCalls
                    << "includeRelations" << includeRelationsCalls
                    << "readFile" << readFileCalls
@@ -492,16 +488,6 @@ QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrenc
     if (occurrence < 0 || occurrence >= ancestors.count())
         return QString();
     return ancestors[occurrence];
-}
-
-bool CppPreprocessor::isInsideBoundary(const QString &fileName) const
-{
-    PreprocessorProfileScope profileScope(preprocessorProfile.insideBoundaryNs,
-                                          preprocessorProfile.insideBoundaryCalls);
-    if (mRegistry.projectFiles.contains(fileName))
-        return false;
-    return isSystemHeaderFile(fileName, mIncludePaths)
-            || isSystemHeaderFile(fileName, mProjectIncludePaths);
 }
 
 QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
@@ -1144,15 +1130,17 @@ void CppPreprocessor::openInclude(QString fileName)
         }
     }
 
+    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
+            || isSystemHeaderFile(fileName, mProjectIncludePaths);
+    bool childInside = !mRegistry.projectFiles.contains(fileName) && isSystemFile;
     bool boundaryEntry = false;
     QString boundaryAncestor;
     if (mSession.includeStack.isEmpty()) {
-        boundaryEntry = isInsideBoundary(fileName);
+        boundaryEntry = childInside;
         boundaryAncestor = boundaryEntry ? fileName : QString();
     } else {
         const PParsedFile &parent = mSession.includeStack.back();
-        bool parentInside = isInsideBoundary(parent->fileName);
-        bool childInside = isInsideBoundary(fileName);
+        bool parentInside = parent->boundaryEntry || !parent->boundaryAncestor.isEmpty();
         boundaryEntry = !parentInside && childInside;
         boundaryAncestor = boundaryEntry ? fileName : parent->boundaryAncestor;
         if (parentInside && !childInside)
@@ -1229,8 +1217,6 @@ void CppPreprocessor::openInclude(QString fileName)
         mRegistry.replayRecords.insert(fileName, mSession.currentFileInfo);
         mRegistry.scannedFiles.insert(fileName);
     }
-    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
-            || isSystemHeaderFile(fileName, mProjectIncludePaths);
     bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
 #ifdef REDPANDA_PARSER_TEST
     if (scanContent)
