@@ -7,7 +7,7 @@
         "underlined": false
     },
     "Active Line": {
-        "background": "#ff000000",
+        "background": "#ff303030",
         "bold": false,
         "italic": false,
         "strikeout": false,
