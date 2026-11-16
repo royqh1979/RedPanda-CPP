@@ -32,6 +32,15 @@ struct DeclarationProfile {
     qint64 typeNameMs = 0;
     qint64 templateArgumentsMs = 0;
     qint64 templateTextMs = 0;
+    qint64 simpleSelfNs = 0;
+    qint64 specifiersSelfNs = 0;
+    qint64 declaratorSelfNs = 0;
+    qint64 parameterSelfNs = 0;
+    qint64 constructorCheckSelfNs = 0;
+    qint64 typeNameSelfNs = 0;
+    qint64 templateArgumentsSelfNs = 0;
+    qint64 templateTextSelfNs = 0;
+    qint64 constructorCheckCalls = 0;
     qint64 templateTextCalls = 0;
     qint64 templateTextTokens = 0;
     qint64 sourceTextCalls = 0;
@@ -54,21 +63,52 @@ struct DeclarationProfile {
                    << "simpleCalls" << simpleCalls << "simpleFailures" << simpleFailures
                    << "failedTemplateTokens" << failedTemplateTextTokens
                    << "sourceCalls" << sourceTextCalls << "normalizedCalls" << normalizedTextCalls;
+        qWarning() << "DECLARATION_SELF"
+                   << "simple" << simpleSelfNs / 1000000.0
+                   << "specifiers" << specifiersSelfNs / 1000000.0
+                   << "declarator" << declaratorSelfNs / 1000000.0
+                   << "parameter" << parameterSelfNs / 1000000.0
+                   << "constructorCheck" << constructorCheckSelfNs / 1000000.0
+                   << "constructorCheckCalls" << constructorCheckCalls
+                   << "typeName" << typeNameSelfNs / 1000000.0
+                   << "templateArguments" << templateArgumentsSelfNs / 1000000.0
+                   << "templateText" << templateTextSelfNs / 1000000.0;
     };
 };
 
 DeclarationProfile declarationProfile;
 
+struct DeclarationProfileScope;
+QVector<DeclarationProfileScope *> declarationProfileScopeStack;
+
 struct DeclarationProfileScope {
-    explicit DeclarationProfileScope(qint64 &target) : target(target) {
-        if (declarationProfile.enabled)
+    DeclarationProfileScope(qint64 &target, qint64 &selfTarget)
+        : target(target), selfTarget(selfTarget),
+          parent(declarationProfileScopeStack.isEmpty()
+                         ? nullptr : declarationProfileScopeStack.last()) {
+        if (declarationProfile.enabled) {
+            declarationProfileScopeStack.append(this);
             timer.start();
+        }
     }
     ~DeclarationProfileScope() {
-        if (declarationProfile.enabled)
-            target += timer.nsecsElapsed();
+        if (declarationProfile.enabled) {
+            qint64 elapsed = timer.nsecsElapsed();
+            target += elapsed;
+            selfTarget += elapsed - childNs;
+            if (parent)
+                parent->childNs += elapsed;
+            if (declarationProfileScopeStack.last() != this) {
+                qWarning() << "DECLARATION_SCOPE_MISMATCH" << &target;
+            } else {
+                declarationProfileScopeStack.removeLast();
+            }
+        }
     }
     qint64 &target;
+    qint64 &selfTarget;
+    DeclarationProfileScope *parent;
+    qint64 childNs = 0;
     QElapsedTimer timer;
 };
 
@@ -136,7 +176,8 @@ bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
 
 bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.simpleMs);
+    DeclarationProfileScope profileScope(declarationProfile.simpleMs,
+                                         declarationProfile.simpleSelfNs);
     ++declarationProfile.simpleCalls;
     qint64 templateTextTokensAtStart = declarationProfile.templateTextTokens;
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
@@ -385,9 +426,14 @@ bool CppDeclarationParser::skipTemplateArguments()
 
 bool CppDeclarationParser::isConstructorDeclaration()
 {
-    DeclarationProfileScope profileScope(declarationProfile.constructorCheckMs);
+    DeclarationProfileScope profileScope(declarationProfile.constructorCheckMs,
+                                         declarationProfile.constructorCheckSelfNs);
+    ++declarationProfile.constructorCheckCalls;
     CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
-    QStringList parts;
+    QString previousPart;
+    QString lastPart;
+    int partCount = 0;
+    bool hasOperator = false;
     mCursor.consume("::");
     while (mCursor.currentText() == "~"
            || mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
@@ -396,7 +442,11 @@ bool CppDeclarationParser::isConstructorDeclaration()
             mCursor.restore(checkpoint);
             return false;
         }
-        parts.append(mCursor.currentText());
+        if (mCursor.currentText() == "operator")
+            hasOperator = true;
+        previousPart = lastPart;
+        lastPart = mCursor.currentText();
+        ++partCount;
         mCursor.advance();
         if (mCursor.currentText() == "<" && !skipTemplateArguments()) {
             mCursor.restore(checkpoint);
@@ -405,7 +455,7 @@ bool CppDeclarationParser::isConstructorDeclaration()
         if (!mCursor.consume("::"))
             break;
     }
-    if (parts.contains("operator")) {
+    if (hasOperator) {
         mCursor.restore(checkpoint);
         return true;
     }
@@ -414,21 +464,24 @@ bool CppDeclarationParser::isConstructorDeclaration()
         return false;
     }
     mCursor.restore(checkpoint);
-    if (parts.isEmpty())
+    if (partCount == 0)
         return false;
     if (!mClassName.isEmpty())
-        return parts.last() == mClassName;
-    return parts.count() >= 2 && parts.last() == parts[parts.count() - 2];
+        return lastPart == mClassName;
+    return partCount >= 2 && lastPart == previousPart;
 }
 
 bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.specifiersMs);
+    DeclarationProfileScope profileScope(declarationProfile.specifiersMs,
+                                         declarationProfile.specifiersSelfNs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclSpecifierInfo();
     bool hasType = false;
+    bool constructor = false;
     while (!mCursor.atEnd()) {
-        if (isConstructorDeclaration())
+        constructor = isConstructorDeclaration();
+        if (constructor)
             break;
         const QString &text = mCursor.currentText();
         DeclSpecifierProperty property = DeclSpecifierProperty::None;
@@ -480,7 +533,7 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
         }
         hasType = true;
     }
-    if (!hasType && !isConstructorDeclaration()) {
+    if (!hasType && !constructor) {
         mCursor.restore(start);
         return false;
     }
@@ -489,7 +542,8 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
 
 bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.declaratorMs);
+    DeclarationProfileScope profileScope(declarationProfile.declaratorMs,
+                                         declarationProfile.declaratorSelfNs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = DeclaratorInfo();
     result.position = mCursor.current().position;
@@ -685,7 +739,8 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
 
 bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.parameterMs);
+    DeclarationProfileScope profileScope(declarationProfile.parameterMs,
+                                         declarationProfile.parameterSelfNs);
     SourcePosition position = mCursor.current().position;
     DeclSpecifierInfo specifiers;
     if (!parseDeclSpecifierSeq(specifiers))
@@ -703,7 +758,8 @@ bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 
 bool CppDeclarationParser::parseTypeName(TypeInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.typeNameMs);
+    DeclarationProfileScope profileScope(declarationProfile.typeNameMs,
+                                         declarationProfile.typeNameSelfNs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     result = TypeInfo();
     QString prefix;
@@ -769,7 +825,8 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
 
 bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
 {
-    DeclarationProfileScope profileScope(declarationProfile.templateArgumentsMs);
+    DeclarationProfileScope profileScope(declarationProfile.templateArgumentsMs,
+                                         declarationProfile.templateArgumentsSelfNs);
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     if (!mCursor.consume("<"))
         return false;
@@ -962,7 +1019,8 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
         return QString();
 
     if (opening == "<") {
-        DeclarationProfileScope profileScope(declarationProfile.templateTextMs);
+        DeclarationProfileScope profileScope(declarationProfile.templateTextMs,
+                                             declarationProfile.templateTextSelfNs);
         ++declarationProfile.templateTextCalls;
         if (useSourceText)
             ++declarationProfile.sourceTextCalls;
