@@ -293,7 +293,9 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找、声明绑定、模板实参结构化和类型键文本生成的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询，`STDLIB_CONTAINER_EVAL` 记录各容器表达式求值耗时。
 
-`DECLARATION_PROFILE` 保留包含子调用的声明解析耗时，`DECLARATION_SELF` 额外输出 self-time。self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时，当前 scope 从自身总耗时中扣除；出栈顺序必须匹配。不能用全局累计的嵌套耗时相减，否则不同调用链交叠时会产生无效负值。
+`DECLARATION_PROFILE` 保留包含子调用的声明解析耗时，`DECLARATION_SELF` 额外输出 self-time。它们由 CMake 选项 `REDPANDA_PARSER_DECLARATION_PROFILE` 控制，默认 OFF；普通构建使用空 scope 且移除相关计数，不引入逐声明插桩成本。需要这些输出时，配置 `-DREDPANDA_PARSER_DECLARATION_PROFILE=ON`，运行时再设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及各阶段总耗时不依赖此开关，普通 Release 仍可测量。
+
+self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时，当前 scope 从自身总耗时中扣除；出栈顺序必须匹配。不能用全局累计的嵌套耗时相减，否则不同调用链交叠时会产生无效负值。
 
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
 

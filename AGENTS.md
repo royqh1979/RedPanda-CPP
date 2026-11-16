@@ -65,6 +65,7 @@ xmake
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
 - `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
+- `REDPANDA_PARSER_DECLARATION_PROFILE`（默认 OFF）— 编译声明解析的细分计时、self-time scope 栈和计数。普通构建使用空 scope，不引入逐声明插桩成本；需要 `DECLARATION_PROFILE`/`DECLARATION_SELF` 输出时设为 ON，并在运行时设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及 preprocess/tokenize/parseDeclarations 等阶段计时不受此开关影响。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 
@@ -129,7 +130,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
   ./test-cppparser.exe --suite=TestCppParser test_standard_library_public_api_complete
 ```
 
-  需要 `DECLARATION_PROFILE`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。
+  需要 `DECLARATION_PROFILE`、`DECLARATION_SELF`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，先在配置阶段启用 `REDPANDA_PARSER_DECLARATION_PROFILE=ON`（声明细分开关默认 OFF），再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；普通构建的声明 scope 为空操作，整体阶段计时仍可使用。嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。
 - **tokenize/profile 的目的首先是发现并消除不合理操作，不是让计数或耗时好看**：profile 本身不以预期收益决定是否进行；每个不同 entry 都必须核对触发来源和必要性，不能仅凭总次数下降判断优化完成。cache/memo 可以使用，但统计必须同时保留解析尝试、命中情况和调用链，不能用 cache 命中隐藏冗余查找或重复处理。先查清并消除无意义操作，再用 cache 复用必要工作的结果；是否修改设计和代码时，才根据证据评估收益、复杂度和风险。
 
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。

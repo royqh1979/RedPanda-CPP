@@ -557,6 +557,12 @@ target_compile_definitions(test-cppparser PRIVATE
     ARCH_X86_64=1
     ARCH_X86=1)
 
+option(REDPANDA_PARSER_DECLARATION_PROFILE
+    "Enable declaration parser self-time profiling" OFF)
+if(REDPANDA_PARSER_DECLARATION_PROFILE)
+    add_compile_definitions(REDPANDA_PARSER_DECLARATION_PROFILE)
+endif()
+
 option(REDPANDA_PARSER_STDLIB_TEST
     "Enable standard library parser acceptance tests" OFF)
 set(REDPANDA_PARSER_STDLIB_MINGW_ROOT "" CACHE PATH

@@ -21,7 +21,13 @@
 #include <QElapsedTimer>
 #include <QVarLengthArray>
 
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
+#include <QDebug>
+#include <QElapsedTimer>
+#endif
+
 namespace {
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
 struct DeclarationProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 simpleMs = 0;
@@ -111,6 +117,32 @@ struct DeclarationProfileScope {
     qint64 childNs = 0;
     QElapsedTimer timer;
 };
+#else
+struct DeclarationProfileDisabled {
+    qint64 simpleMs = 0;
+    qint64 specifiersMs = 0;
+    qint64 declaratorMs = 0;
+    qint64 parameterMs = 0;
+    qint64 constructorCheckMs = 0;
+    qint64 typeNameMs = 0;
+    qint64 templateArgumentsMs = 0;
+    qint64 templateTextMs = 0;
+    qint64 simpleSelfNs = 0;
+    qint64 specifiersSelfNs = 0;
+    qint64 declaratorSelfNs = 0;
+    qint64 parameterSelfNs = 0;
+    qint64 constructorCheckSelfNs = 0;
+    qint64 typeNameSelfNs = 0;
+    qint64 templateArgumentsSelfNs = 0;
+    qint64 templateTextSelfNs = 0;
+};
+
+DeclarationProfileDisabled declarationProfile;
+
+struct DeclarationProfileScope {
+    DeclarationProfileScope(qint64 &, qint64 &) {}
+};
+#endif
 
 void appendToken(QString &target, const QString &text)
 {
@@ -178,11 +210,15 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
 {
     DeclarationProfileScope profileScope(declarationProfile.simpleMs,
                                          declarationProfile.simpleSelfNs);
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
     ++declarationProfile.simpleCalls;
     qint64 templateTextTokensAtStart = declarationProfile.templateTextTokens;
+#endif
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     if (isNonDeclarationStartKeyword(mCursor.currentText())) {
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
         ++declarationProfile.simpleFailures;
+#endif
         return false;
     }
     bool withoutSpecifiers = mCursor.currentText() == "~"
@@ -192,9 +228,11 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 && !isBuiltinType(mCursor.currentText())
                 && mCursor.peek().text == "(");
     if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
         ++declarationProfile.simpleFailures;
         declarationProfile.failedTemplateTextTokens +=
                 declarationProfile.templateTextTokens - templateTextTokensAtStart;
+#endif
         mCursor.restore(start);
         return false;
     }
@@ -204,9 +242,11 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
     while (!mCursor.atEnd()) {
         DeclaratorInfo declarator;
         if (!parseDeclarator(declarator)) {
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
             ++declarationProfile.simpleFailures;
             declarationProfile.failedTemplateTextTokens +=
                     declarationProfile.templateTextTokens - templateTextTokensAtStart;
+#endif
             mCursor.restore(start);
             result = DeclarationInfo();
             return false;
@@ -428,7 +468,9 @@ bool CppDeclarationParser::isConstructorDeclaration()
 {
     DeclarationProfileScope profileScope(declarationProfile.constructorCheckMs,
                                          declarationProfile.constructorCheckSelfNs);
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
     ++declarationProfile.constructorCheckCalls;
+#endif
     CppTokenCursor::Checkpoint checkpoint = mCursor.checkpoint();
     QString previousPart;
     QString lastPart;
@@ -1021,16 +1063,20 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
     if (opening == "<") {
         DeclarationProfileScope profileScope(declarationProfile.templateTextMs,
                                              declarationProfile.templateTextSelfNs);
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
         ++declarationProfile.templateTextCalls;
         if (useSourceText)
             ++declarationProfile.sourceTextCalls;
         else
             ++declarationProfile.normalizedTextCalls;
+#endif
         CppTokenCursor::Checkpoint start = mCursor.checkpoint();
         QString result;
         int level = 0;
         while (!mCursor.atEnd()) {
+#ifdef REDPANDA_PARSER_DECLARATION_PROFILE
             ++declarationProfile.templateTextTokens;
+#endif
             const QString &text = mCursor.currentText();
             if (mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary || text == ";")
                 break;
