@@ -317,8 +317,9 @@ expression eval 按需把完整原文 tokenize 为临时 `TypeNameSegment` 列�
 
 `parsedTypeTexts` 保存成功的纯声明文本解析，`parsedTypeNames` 保存已实体化实参的分段结果，
 `parsedTypePatterns` 保存实参仍为原文的惰性分段结果。它们在派生求值上下文间共享，但失败结果不缓存。
-`materializeTemplateArguments()` 直接消费分段实参，不再启动第二套 tokenizer/parser；简单“限定名 + 实参”
-的 `parseTypeText()` 也复用同一分段结果。普通实参与惰性模式使用不同表，不能混用。
+`materializeTemplateArguments()` 直接消费分段实参，不再启动第二套 tokenizer/parser。纯限定名、多单词
+内置类型和前导 cv 的 `parseTypeText()` 也复用同一分段结果；普通解析使用 eager 分段，特化子实参匹配
+使用 lazy 分段，普通实参与惰性模式使用不同表，不能混用。
 
 类作用域内的 injected-class-name（例如 `vector<T>` 定义内单独写 `vector`）表示当前实例化，复用当前类
 绑定帧中的实参；只有未显式写出实参列表时才适用。普通类名查找不要求实例化：Class/Enum 的表达式结果
@@ -539,6 +540,10 @@ const 数量猜测。后续设计至少需要区分“声明结构相同、cv �
 
 候选筛选只使用显式实参、参数数量、pack 数量和本轮支持的结构匹配。排除 `=delete` 后仍有多个
 候选时返回未解析；function tips 仍可展示全部声明候选，但不能据此猜测表达式类型或跳转目标。
+
+转换构造函数的指针兼容性检查不得无故实例化形参类型：形参已经是指针时直接按当前规则处理；
+声明明确是非指针类类型时跳过后续实例化；只有别名或无法确定的类型才继续完整解析。不能为了判断
+`const char*` 转换而展开 `initializer_list` 等无关类型。
 
 ### 7. cv、指针和引用的组合
 

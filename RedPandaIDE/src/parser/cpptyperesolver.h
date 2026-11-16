@@ -173,7 +173,8 @@ private:
     bool parseTypeNameSegments(const QString &text, QVector<TypeNameSegment> &segments,
                                bool &globallyQualified, EvaluationContext &evaluation,
                                bool materializeArguments = true) const;
-    TypeInfo parseTypeText(const QString &text, EvaluationContext &evaluation) const;
+    TypeInfo parseTypeText(const QString &text, EvaluationContext &evaluation,
+                           bool materializeArguments = true) const;
     TemplateArgument resolveArgument(const QString &text, TemplateParameterKind kind,
                                      const PTemplateBindingFrame &bindings,
                                      const PStatement &context, EvaluationContext &evaluation) const;

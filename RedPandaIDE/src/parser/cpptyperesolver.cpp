@@ -190,7 +190,7 @@ QString profiledTypeString(const TypeInfo &type)
     return type.toString();
 }
 
-bool isBuiltinType(const TypeInfo &type)
+bool isBuiltinTypeName(const QString &name)
 {
     static const QSet<QString> names{
         "void", "bool", "char", "signed char", "unsigned char", "wchar_t", "char8_t",
@@ -201,7 +201,12 @@ bool isBuiltinType(const TypeInfo &type)
         "signed long long int", "unsigned long long", "unsigned long long int", "float",
         "double", "long double"
     };
-    return type.templateArguments.isEmpty() && names.contains(type.qualifiedName.simplified());
+    return names.contains(name.simplified());
+}
+
+bool isBuiltinType(const TypeInfo &type)
+{
+    return type.templateArguments.isEmpty() && isBuiltinTypeName(type.qualifiedName);
 }
 
 bool isAlias(const PStatement &statement)
@@ -589,8 +594,17 @@ bool CppTypeResolver::compatibleArgument(
         }
         if (!defaultsMatch)
             continue;
-        TypeInfo constructorFormal = resolveType(*constructor->parameters.first().type,
-                                                 formalInstance.bindings,
+        const TypeInfo &constructorParameter = *constructor->parameters.first().type;
+        if (pointerLike(constructorParameter))
+            return true;
+        PStatement parameterDeclaration = constructorParameter.declaration.lock();
+        if (!parameterDeclaration) {
+            parameterDeclaration = findDeclaration(constructorParameter.qualifiedName,
+                                                   constructor->parentScope.lock(), true);
+        }
+        if (parameterDeclaration && parameterDeclaration->kind == StatementKind::Class)
+            continue;
+        TypeInfo constructorFormal = resolveType(constructorParameter, formalInstance.bindings,
                                                  constructor->parentScope.lock(), evaluation);
         if (pointerLike(constructorFormal) == pointerLike(argument))
             return true;
@@ -1232,26 +1246,50 @@ void CppTypeResolver::materializeTemplateArgumentPatterns(
     }
 }
 
-TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &evaluation) const
+TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &evaluation,
+                                        bool materializeArguments) const
 {
     auto cached = evaluation.parsedTypeTexts->constFind(text);
     traceSyntaxAttempt("parseTypeText", text, cached != evaluation.parsedTypeTexts->constEnd());
     if (cached != evaluation.parsedTypeTexts->constEnd())
         return cached.value();
-    if (text.contains('<')) {
+    bool simpleNameCandidate = !text.isEmpty()
+            && (text.front().isLetter() || text.front() == '_' || text.front() == ':')
+            && (text.back().isLetterOrNumber() || text.back() == '_' || text.back() == '>')
+            && text != "false" && text != "true" && text != "nullptr";
+    if (simpleNameCandidate) {
         QVector<TypeNameSegment> segments;
         bool globallyQualified = false;
-        if (parseTypeNameSegments(text, segments, globallyQualified, evaluation, false)) {
+        if (parseTypeNameSegments(text, segments, globallyQualified, evaluation,
+                                  materializeArguments)) {
             bool simpleType = true;
+            TypeQualifiers qualifiers = TypeQualifier::None;
             QStringList names;
-            for (const TypeNameSegment &segment : segments) {
-                simpleType &= !segment.name.contains(' ') && !segment.name.startsWith("decltype");
-                names.append(segment.name);
+            for (int index = 0; index < segments.count(); ++index) {
+                QString name = segments[index].name;
+                if (index == 0) {
+                    bool qualifier = true;
+                    while (qualifier) {
+                        if (name.startsWith("const ")) {
+                            qualifiers.setFlag(TypeQualifier::Const);
+                            name = name.mid(6);
+                        } else if (name.startsWith("volatile ")) {
+                            qualifiers.setFlag(TypeQualifier::Volatile);
+                            name = name.mid(9);
+                        } else {
+                            qualifier = false;
+                        }
+                    }
+                }
+                simpleType &= !name.isEmpty() && !name.startsWith("decltype")
+                        && (!name.contains(' ') || isBuiltinTypeName(name));
+                names.append(name);
             }
             if (simpleType) {
                 TypeInfo result;
                 result.qualifiedName = (globallyQualified ? "::" : "") + names.join("::");
                 result.qualifiedNameText = text;
+                result.qualifiers = qualifiers;
                 evaluation.parsedTypeTexts->insert(text, result);
                 return result;
             }
@@ -1481,7 +1519,7 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchArgument(
     if (actual.kind == TemplateArgumentKind::Type && actual.type
             && pattern.kind == TemplateArgumentKind::Type && !pattern.type
             && !patternText.isEmpty()) {
-        TypeInfo patternType = parseTypeText(patternText, evaluation);
+        TypeInfo patternType = parseTypeText(patternText, evaluation, false);
         if (!patternType.qualifiedName.isEmpty()) {
             resolvedPattern = TemplateArgument::fromType(patternType);
             resolvedPattern.constantExpression = patternText;
