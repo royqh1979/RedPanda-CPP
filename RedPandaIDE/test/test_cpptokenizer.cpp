@@ -2914,6 +2914,11 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     CppDeclarationParser templateParser(templateCursor);
     QVERIFY(!templateParser.parseDeclaration(declaration));
     QCOMPARE(templateCursor.index(), 0);
+    tokenize({"value < (unsigned)base) return value;"});
+    CppTokenCursor comparisonCursor(mTokenizer);
+    CppDeclarationParser comparisonParser(comparisonCursor);
+    QVERIFY(!comparisonParser.parseDeclaration(declaration));
+    QCOMPARE(comparisonCursor.index(), 0);
 }
 
 

@@ -109,7 +109,9 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
 
-模板参数列表后和函数 declarator 后的 requires 子句只消费不求值。扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响；这不扩展 concepts 求值或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+模板参数列表后和函数 declarator 后的 requires 子句在声明阶段只消费并保存原文，不求值；扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响。C++20 起的有限 lazy 约束求值见 `cpptemplate-evaluation-design.md`，不扩展完整 Concepts 或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+
+模板参数试探不得越过当前表达式或语句。分号和 include 文件边界直接使试探失败；非负且小于当前索引的 matchIndex 表示遇到 `)`、`]`、`}` 等闭合符，也立即失败。`(`、`[`、`{` 等开括号则由 matchIndex 大于当前索引的配对分支跳过。这样，`if (value < limit)` 中的比较运算符不会导致 `<...>` 试探扫到后续无关声明。
 
 CppPreprocessor 从 hard define `__cplusplus` 保存去除整数后缀后的版本值，并通过 `cppVersion()` 提供查询；CppParser 的同名公共接口在锁内读取该值。测试依据 Parser 实际取得的版本选择对应标准库场景，不根据请求使用的 `-std=` 参数猜测实际预处理结果。
 

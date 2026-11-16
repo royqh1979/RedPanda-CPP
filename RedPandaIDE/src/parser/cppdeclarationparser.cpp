@@ -353,6 +353,14 @@ bool CppDeclarationParser::skipTemplateArguments()
     int level = 0;
     while (!mCursor.atEnd()) {
         const QString &text = mCursor.currentText();
+        if (mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary || text == ";")
+            return false;
+        // A non-negative matchIndex before the current index marks a closing
+        // token such as ')', ']' or '}'. Opening tokens such as '(' use the branch below.
+        if (mCursor.current().matchIndex >= 0
+                && mCursor.current().matchIndex < mCursor.index()) {
+            return false;
+        }
         if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalancedToken();
             continue;
@@ -966,6 +974,14 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
         while (!mCursor.atEnd()) {
             ++declarationProfile.templateTextTokens;
             const QString &text = mCursor.currentText();
+            if (mCursor.current().kind == CppTokenizer::TokenKind::FileBoundary || text == ";")
+                break;
+            // A non-negative matchIndex before the current index marks a closing
+            // token such as ')', ']' or '}'. Opening tokens such as '(' use the branch below.
+            if (mCursor.current().matchIndex >= 0
+                    && mCursor.current().matchIndex < mCursor.index()) {
+                break;
+            }
             if (mCursor.current().matchIndex > mCursor.index()) {
                 if (useSourceText)
                     skipBalancedToken();
