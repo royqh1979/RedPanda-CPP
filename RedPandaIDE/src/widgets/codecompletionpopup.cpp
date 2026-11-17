@@ -221,18 +221,17 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
                                       int line,
                                       bool onlyTypes)
 {
-    if (scopeStatement && !isIncluded(scopeStatement->fileName)
-      && !isIncluded(scopeStatement->definitionFileName))
+    if (scopeStatement && !isStatementIncluded(scopeStatement))
         return;
     const StatementList children = mParser->membersOfStatement(scopeStatement);
     for (const PStatement &childStatement : children) {
         if (onlyTypes && !isTypeKind(childStatement->kind))
             continue;
         if (!scopeStatement) {
-            if (childStatement->fileName.isEmpty()) {
+            StatementOccurrence declaration = statementDeclarationForNavigation(childStatement, fileName);
+            if (declaration.fileName.isEmpty()) {
                 addStatement(childStatement, fileName, -1);
-            } else if (!isIncluded(childStatement->fileName)
-                       && !isIncluded(childStatement->definitionFileName)) {
+            } else if (!isStatementIncluded(childStatement)) {
                 continue;
             }
         }
@@ -242,14 +241,14 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
 
 void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement& scopeStatement, const QString &fileName, int line)
 {
-    if (scopeStatement && !isIncluded(scopeStatement->fileName)
-      && !isIncluded(scopeStatement->definitionFileName))
+    if (scopeStatement && !isStatementIncluded(scopeStatement))
         return;
     const StatementList children = mParser->membersOfStatement(scopeStatement);
     for (const PStatement &childStatement : children) {
         if (statementInSystemHeader(childStatement))
             continue;
-        if (childStatement->fileName.isEmpty()) {
+        StatementOccurrence declaration = statementDeclarationForNavigation(childStatement, fileName);
+        if (declaration.fileName.isEmpty()) {
             // hard defines, do nothing
             continue;
         }
@@ -262,7 +261,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
             break;
         case StatementKind::Class:
         case StatementKind::Namespace:
-            if (isIncluded(childStatement->fileName))
+            if (isStatementIncluded(childStatement))
                 addStatement(childStatement,fileName,line);
             break;
         default:
@@ -286,9 +285,10 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             || statement->properties.testFlag(StatementProperty::DummyStatement)
             )
         return;
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, fileName);
     if ((line!=-1)
-            && (line < statement->declarationRange.start.line)
-            && (fileName == statement->fileName))
+            && (line < declaration.range.start.line)
+            && (fileName == declaration.fileName))
         return;
     mAddedStatements.insert(statement->command);
     if (statement->kind == StatementKind::UserCodeSnippet || !statement->command.contains("<"))
@@ -695,14 +695,15 @@ void CodeCompletionPopup::getCompletionFor(
                     }
                 }
                 if (scopeStatement->kind == StatementKind::Lambda) {
+                    StatementOccurrence declaration = statementDeclarationForNavigation(scopeStatement, fileName);
                     foreach (const QString& phrase, std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures) {
                         if (phrase=="&" || phrase == "=" || phrase =="this")
                             continue;
                         PStatement statement = mParser->findStatementOf(
-                            scopeStatement->fileName,
-                                phrase,scopeStatement->declarationRange.start.line);
+                            declaration.fileName,
+                                phrase,declaration.range.start.line);
                         if (statement)
-                            addStatement(statement,scopeStatement->fileName, scopeStatement->declarationRange.start.line);
+                            addStatement(statement,declaration.fileName, declaration.range.start.line);
                     }
                     if (std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures.contains("&")
                             || std::dynamic_pointer_cast<Statement>(scopeStatement)->lambdaCaptures.contains("=")) {
@@ -792,8 +793,7 @@ void CodeCompletionPopup::getCompletionFor(
                     return;
                 if (memberOperator == "." && pointerDepth(ownerStatement.type) != 0)
                     return;
-                if (!isIncluded(classTypeStatement->fileName) &&
-                    !isIncluded(classTypeStatement->definitionFileName))
+                if (!isStatementIncluded(classTypeStatement))
                     return;
                 if ((classTypeStatement == scopeTypeStatement) || (ownerStatement.type.declaration.lock()->command == "this")) {
                     //we can use all members
@@ -819,8 +819,7 @@ void CodeCompletionPopup::getCompletionFor(
                 PStatement classTypeStatement = ownerStatement.type.declaration.lock();
                 if (!classTypeStatement)
                     return;
-                if (!isIncluded(classTypeStatement->fileName) &&
-                    !isIncluded(classTypeStatement->definitionFileName))
+                if (!isStatementIncluded(classTypeStatement))
                     return;
                 if (classTypeStatement->kind == StatementKind::EnumType
                         || classTypeStatement->kind == StatementKind::EnumClassType) {
@@ -1026,8 +1025,7 @@ void CodeCompletionPopup::getCompletionListForNamespaces(const QString &/*preWor
         foreach (const QString& name, namespaceNames) {
             PStatementList namespaces = mParser->findNamespace(name);
             foreach(const PStatement& statement, *namespaces) {
-                if (isIncluded(statement->fileName)
-                        || isIncluded(statement->definitionFileName)) {
+                if (isStatementIncluded(statement)) {
                     addStatement(statement,fileName,line);
                     continue;
                 }
@@ -1062,8 +1060,7 @@ void CodeCompletionPopup::getCompletionListForTypes(const QString &preWord, cons
         });
         QList<PStatement> statements = mParser->listTypeStatements(fileName,line);
         foreach(const PStatement& statement, statements) {
-            if (isIncluded(statement->fileName)
-                    || isIncluded(statement->definitionFileName)) {
+            if (isStatementIncluded(statement)) {
                 addStatement(statement,fileName,line);
             }
         }
@@ -1083,8 +1080,7 @@ void CodeCompletionPopup::getCompletionListForLiteralOperators(const QString &fi
         });
         QList<PStatement> statements = mParser->listLiteralOperators(fileName,line);
         foreach(const PStatement& statement, statements) {
-            if (isIncluded(statement->fileName)
-                    || isIncluded(statement->definitionFileName)) {
+            if (isStatementIncluded(statement)) {
                 addStatement(statement,fileName,line,true);
             }
         }
@@ -1100,6 +1096,16 @@ void CodeCompletionPopup::addKeyword(const QString &keyword)
 bool CodeCompletionPopup::isIncluded(const QString &fileName)
 {
     return mIncludedFiles.contains(fileName);
+}
+
+bool CodeCompletionPopup::isStatementIncluded(const PStatement &statement)
+{
+    for (const StatementOccurrence &declaration : statement->declarations) {
+        if (isIncluded(declaration.fileName))
+            return true;
+    }
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    return definition.range.start.isValid() && isIncluded(definition.fileName);
 }
 
 SymbolUsageManager *CodeCompletionPopup::symbolUsageManager() const

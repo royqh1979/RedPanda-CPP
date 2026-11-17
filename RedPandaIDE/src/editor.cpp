@@ -3916,13 +3916,16 @@ QString Editor::getParserHint(const QStringList& expression, const CharPos& p)
             || statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor) {
           result = getHintForFunction(statement,mFilename,p.line);
-    } else if (statement->declarationRange.start.line>=0) {
-        QFileInfo fileInfo(statement->fileName);
-        result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
-                + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
-                + tr("Ctrl+click for more info");
-    } else {  // hard defines
-        result = mParser->prettyPrintStatement(statement, mFilename);
+    } else {
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, mFilename);
+        if (declaration.range.start.line >= 0) {
+            QFileInfo fileInfo(declaration.fileName);
+            result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
+                    + QString("%1(%2) ").arg(fileInfo.fileName()).arg(declaration.range.start.line+1)
+                    + tr("Ctrl+click for more info");
+        } else {  // hard defines
+            result = mParser->prettyPrintStatement(statement, mFilename);
+        }
     }
     return result;
 }
@@ -3959,10 +3962,11 @@ QString Editor::getErrorHint(const PSyntaxIssue& issue)
 
 QString Editor::getHintForFunction(const PStatement &statement, const QString& filename, int line)
 {
-    QFileInfo fileInfo(statement->fileName);
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, filename);
+    QFileInfo fileInfo(declaration.fileName);
     QString result;
     result = mParser->prettyPrintStatement(statement,filename,line) + " - "
-            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->declarationRange.start.line+1)
+            + QString("%1(%2) ").arg(fileInfo.fileName()).arg(declaration.range.start.line+1)
             + tr("Ctrl+click for more info");
     return result;
 }
@@ -4693,6 +4697,27 @@ void Editor::setContextFile(const QString &newContextFile, bool parse)
     }
 }
 
+Editor *Editor::syntaxCheckTargetEditor()
+{
+    if (modified() || mContextFile.isEmpty() || mContextFile == mFilename
+            || !mGetOpennedEditorFunc) {
+        return this;
+    }
+    Editor *contextEditor = mGetOpennedEditorFunc(mContextFile);
+    if (!contextEditor)
+        return this;
+    if (!mParser || !mParser->freeze())
+        return contextEditor;
+    auto action = finally([this] {
+        mParser->unFreeze();
+    });
+    if (!mParser->hasReplayRecord(mContextFile)
+            || mParser->getIncludedFiles(mContextFile).contains(mFilename)) {
+        return contextEditor;
+    }
+    return this;
+}
+
 quint64 Editor::lastFocusOutTime() const
 {
     return mLastFocusOutTime;
@@ -4754,19 +4779,20 @@ void Editor::gotoDeclaration(const CharPos &pos)
                 pos.line);
     statement = resolveClassOrConstructorAt(statement, pos);
 
-    if (!statement || !statement->declarationRange.start.isValid()) {
+    if (!statement)
         return;
-    }
-    QString filename;
-    int line;
-    if (statement->fileName == mFilename && statement->declarationRange.start.line == pos.line) {
-            filename = statement->definitionFileName;
-            line = statement->definitionRange.start.line;
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, mFilename);
+    if (!declaration.range.start.isValid())
+        return;
+    if (declaration.fileName == mFilename && declaration.range.start.line == pos.line) {
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
+        if (definition.range.start.isValid())
+            openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
+        else
+            openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
     } else {
-        filename = statement->fileName;
-        line = statement->declarationRange.start.line;
+        openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
     }
-    openFileInContext(filename, CharPos{0,line});
 }
 
 void Editor::gotoDefinition(const CharPos &pos)
@@ -4781,20 +4807,20 @@ void Editor::gotoDefinition(const CharPos &pos)
                 expression,
                 pos.line);
     statement = resolveClassOrConstructorAt(statement, pos);
-    if (!statement || !statementHasDefinition(statement)
-            || !statement->definitionRange.start.isValid()) {
+    if (!statement)
         return;
-    }
-    QString filename;
-    int line;
-    if (statement->definitionFileName == mFilename && statement->definitionRange.start.line == pos.line) {
-            filename = statement->fileName;
-            line = statement->declarationRange.start.line;
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    if (!definition.range.start.isValid())
+        return;
+    if (definition.fileName == mFilename && definition.range.start.line == pos.line) {
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, mFilename);
+        if (declaration.range.start.isValid())
+            openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
+        else
+            openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
     } else {
-        filename = statement->definitionFileName;
-        line = statement->definitionRange.start.line;
+        openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
     }
-    openFileInContext(filename,CharPos{0,line});
 }
 
 QString getWordAtPosition(QSynedit::QSynEdit *editor, const CharPos &p, CharPos &pWordBegin, CharPos &pWordEnd, Editor::WordPurpose purpose)

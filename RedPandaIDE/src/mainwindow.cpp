@@ -2426,18 +2426,21 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 
     mCheckSyntaxInBack=true;
     clearIssues();
+    Editor *targetEditor = e->syntaxCheckTargetEditor();
     CompileTarget target =getCompileTarget();
     if (target ==CompileTarget::Project) {
         int index = mProject->options().compilerSet;
         PCompilerSet set = pSettings->compilerSets().getSet(index);
         if (!set || !CompilerInfoManager::supportSyntaxCheck(set->compilerType()))
             return;
-        mCompilerManager->checkSyntax(e->filename(), e->fileEncoding(), e->text(), mProject);
+        mCompilerManager->checkSyntax(targetEditor->filename(), targetEditor->fileEncoding(),
+                                      targetEditor->text(), mProject);
     } else {
         PCompilerSet set = pSettings->compilerSets().defaultSet();
         if (!set || !CompilerInfoManager::supportSyntaxCheck(set->compilerType()))
             return;
-        mCompilerManager->checkSyntax(e->filename(),e->fileEncoding(),e->text(), nullptr);
+        mCompilerManager->checkSyntax(targetEditor->filename(), targetEditor->fileEncoding(),
+                                      targetEditor->text(), nullptr);
     }
 }
 
@@ -5109,9 +5112,14 @@ void MainWindow::onClassBrowserGotoDeclaration()
     if (!statement) {
         return;
     }
-    QString filename = statement->fileName;
-    int line = statement->declarationRange.start.line;
-    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
+    QString currentFile;
+    if (Editor *editor = mEditorManager->getEditor())
+        currentFile = editor->filename();
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, currentFile);
+    if (!declaration.range.start.isValid())
+        return;
+    openFileWithContext(declaration.fileName, FileType::None, QString(),
+                        QSynedit::CharPos{0, declaration.range.start.line});
 }
 
 void MainWindow::onClassBrowserGotoDefinition()
@@ -5126,9 +5134,11 @@ void MainWindow::onClassBrowserGotoDefinition()
     if (!statement) {
         return;
     }
-    QString filename = statement->definitionFileName;
-    int line = statement->definitionRange.start.line;
-    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    if (!definition.range.start.isValid())
+        return;
+    openFileWithContext(definition.fileName, FileType::None, QString(),
+                        QSynedit::CharPos{0, definition.range.start.line});
 }
 
 void MainWindow::onClassBrowserShowInherited()
@@ -5184,9 +5194,7 @@ void MainWindow::onClassBrowserRefreshStart()
     if (!statement) {
         return;
     }
-    mClassBrowserCurrentStatement=QString("%1+%2+%3")
-            .arg(statement->fullName, std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs)
-            .arg((int)statement->kind);
+    mClassBrowserCurrentStatement =  mClassBrowserModel->generateStatementKey(statement);
 }
 
 void MainWindow::onClassBrowserRefreshEnd()
@@ -7700,30 +7708,27 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     if (!statement) {
         return;
     }
-    QString filename;
-    int line;
-    Editor* currentEditor = mEditorManager->getEditor();
+    QString currentFile;
+    Editor *currentEditor = mEditorManager->getEditor();
+    if (currentEditor)
+        currentFile = currentEditor->filename();
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, currentFile);
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    StatementOccurrence target = declaration;
     if (currentEditor) {
-        if (statement->fileName == currentEditor->filename()
-                && statement->definitionFileName!=currentEditor->filename()) {
-            filename = statement->fileName;
-            line = statement->declarationRange.start.line;
-        } else if (statement->fileName != currentEditor->filename()
-                && statement->definitionFileName==currentEditor->filename()) {
-            filename = statement->definitionFileName;
-            line = statement->definitionRange.start.line;
-        } else if (currentEditor->caretLine()==statement->declarationRange.start.line) {
-            filename = statement->definitionFileName;
-            line = statement->definitionRange.start.line;
-        } else {
-            filename = statement->fileName;
-            line = statement->declarationRange.start.line;
+        if (declaration.fileName == currentFile && definition.fileName != currentFile) {
+            target = declaration;
+        } else if (declaration.fileName != currentFile && definition.fileName == currentFile) {
+            target = definition;
+        } else if (currentEditor->caretLine() == declaration.range.start.line
+                   && definition.range.start.isValid()) {
+            target = definition;
         }
-    } else {
-        filename = statement->fileName;
-        line = statement->declarationRange.start.line;
     }
-    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
+    if (!target.range.start.isValid())
+        return;
+    openFileWithContext(target.fileName, FileType::None, QString(),
+                        QSynedit::CharPos{0, target.range.start.line});
 }
 
 const PTodoParser &MainWindow::todoParser() const
@@ -8555,11 +8560,14 @@ void MainWindow::on_actionRename_Symbol_triggered()
         // definition of the symbol not found
         if (!oldStatement)
             return;
+        StatementOccurrence declaration = statementDeclarationForNavigation(
+                    oldStatement, editor->filename());
+        StatementOccurrence definition = statementDefinitionForNavigation(oldStatement);
         // found but not in this file
-        if (editor->filename() != oldStatement->fileName
-            || editor->filename() != oldStatement->definitionFileName) {
+        if (editor->filename() != declaration.fileName
+            || editor->filename() != definition.fileName) {
             // it's defined in system header, dont rename
-            if (mProject->cppParser()->isSystemHeaderFile(oldStatement->fileName)) {
+            if (mProject->cppParser()->isSystemHeaderFile(declaration.fileName)) {
                 QMessageBox::critical(editor,
                             tr("Rename Error"),
                             tr("Symbol '%1' is defined in system header.")
@@ -9697,8 +9705,10 @@ void MainWindow::on_actionNew_Class_triggered()
         header.append(QString("#define %1").arg(header_macro));
         header.append("");
         if (dialog.baseClass()) {
+            StatementOccurrence declaration = statementDeclarationForNavigation(
+                        dialog.baseClass(), QString());
             header.append(QString("#include \"%1\"").arg(extractRelativePath(mProject->directory(),
-                                                                             dialog.baseClass()->fileName)));
+                                                                             declaration.fileName)));
             header.append("");
             header.append(QString("class %1 : public %2 {").arg(dialog.className(),
                                                                 dialog.baseClass()->fullName));

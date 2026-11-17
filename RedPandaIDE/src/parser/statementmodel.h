@@ -46,6 +46,7 @@ public:
     void clear() {
         mCount=0;
         for (const PStatement &statement : mStatements) {
+            statement->declarations.clear();
             if (statement->kind == StatementKind::Namespace)
                 std::dynamic_pointer_cast<NamespaceStatement>(statement)->children.clear();
             else if (statement->kind != StatementKind::InlineAlias)
@@ -58,13 +59,18 @@ public:
     int cppVersion() const { return mCppVersion; }
     void setCppVersion(int cppVersion) { mCppVersion = cppVersion; }
     const StatementList &statements() const { return mStatements; }
-    void addNamespaceOccurrence(const PStatement &statement, const QString &fileName,
-                                const SourceRange &range, const QString &boundaryAncestor,
-                                bool isInline);
+    void addDeclaration(const PStatement &statement, const QString &fileName,
+                        const SourceRange &range, const QString &boundaryAncestor,
+                        const DeclSpecifierProperties &properties);
+    void addNamespaceDeclaration(const PStatement &statement, const QString &fileName,
+                                 const SourceRange &range, const QString &boundaryAncestor,
+                                 bool isInline);
+    bool hasDeclarationInFile(const PStatement &statement, const QString &fileName) const;
     bool isInFile(const PStatement &statement, const QString &fileName) const;
     bool visibleFrom(const PStatement &statement, const QString &fileName,
                      const PParsedFileInfo &fileInfo) const;
-    bool removeNamespaceOccurrences(const PStatement &statement, const QString &fileName);
+    void removeDeclarations(const PStatement &statement, const QString &fileName);
+    void removeNamespaceDeclarations(const PStatement &statement, const QString &fileName);
 #ifdef QT_DEBUG
     void dump(const QString& logFile) const;
     void dumpAll(const QString& logFile) const;

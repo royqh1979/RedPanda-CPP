@@ -31,47 +31,60 @@ pp-token 宏展开器不在本次重写范围内。
 
 ## 3. 数据归属
 
-### 3.1 Registry 文件记录
+每份持久数据只有一个归属。按实际文件查询的信息不能并入 boundary 记录；仅供 replay 使用的信息也不能为了复用 FileInfo 而复制到每个实际文件中。
 
-只为以下文件建立独立 replay/fileInfo 记录：
+### 3.1 实际文件的 ParsedFileInfo
 
-- 边界外文件；
-- 跨边界头文件。
+每个实际文件都有独立的 `ParsedFileInfo`，包括边界内子树文件。它保存：
 
-边界内子树文件不建立独立 replay 记录，而是并入其跨边界祖先的记录。每条记录包含：
+- 文件名；
+- 直接 include 列表和传递 include 闭包；
+- 本文件 statement 的弱引用索引和代码作用域；
+- 本文件的 using、条件分支可见性；
+- 文件自身的 mtime/size 和 include-once 保护状态。
 
-- 文件名和传递 include 闭包；
+这些信息都有 replay 以外的实际调用方。例如，补全使用 include 闭包和 using，编译器使用直接 include 分析 autolink，class browser 按文件读取 statement，Editor 和重构按行查询作用域及分支可见性。文件元数据与 FileInfo 同样按实际文件确定身份和生命周期，因此直接归入 FileInfo，不另建一张重复索引。
+
+include 闭包也用于级联失效，但它不是 replay 条件本身。保护状态是文件内容固有属性，文件变化时随 stamp 一起失效并重新检测；不能通过 Session 的 processed/filesCouldRepeatInclude 状态反推。
+
+### 3.2 ReplayRecord
+
+只为边界外文件和跨边界头文件建立 `ReplayRecord`。边界内子树文件不建立独立 ReplayRecord，而是使用其跨边界祖先的记录。
+
+ReplayRecord 只保存 replay 专用信息：
+
 - 进入时的用户宏状态；
-- 本次生效时的有序跨边界前缀；
-- 磁盘文件元数据通过实际文件元数据表关联；
-- 本次扫描产生的 define/undef；
-- statement 归属及重放所需的信息。
+- 本次生效时的有序跨边界前缀及条件完整性；
+- 本次扫描产生的聚合 define/undef，用于 replay 恢复宏环境及记录失效时撤销或恢复宏。
 
-include 闭包用于级联失效；它不是 replay 条件本身。
+define/undef 保持聚合结果语义，不另存逐文件副本或宏操作序列。ReplayRecord 不重复保存 include 闭包；依赖遍历、文件变化检查和级联失效均使用 replay 根实际文件 FileInfo 中的 include 闭包。
 
-### 3.2 实际文件元数据
+### 3.3 Registry
 
-Registry 用一张覆盖所有实际文件的元数据表保存 mtime/size 和 include-once 保护状态。边界内子树文件也有该元数据，但不因此获得独立 replay/fileInfo 记录。
+Registry 只保存以下跨轮状态：
 
-保护状态是文件内容固有属性，文件变化时随 stamp 一起失效并重新检测。不能通过 Session 的 processed/filesCouldRepeatInclude 状态反推，也不能在 ParsedFileInfo 中重复维护。
+- `fileInfos`：实际文件名到 ParsedFileInfo 的映射；
+- `replayRecords`：replay 根文件名到 ReplayRecord 的映射；
+- `projectFiles`：项目文件集合；
+- `pendingInvalidations`：include 栈重入期间的延迟失效集合。
 
-### 3.3 Statement 位置与归属
+replayRecords 的 key 就是当前有效的 replay 根集合，不再维护同义的 scannedFiles。文件元数据也如上所述并入 FileInfo，不保留独立的 fileMetadata 映射。
 
-每个 Statement 分别记录声明侧和定义侧的位置与归属：
+### 3.4 Statement 位置与归属
 
-- 声明侧：实际所在文件、跨边界祖先；
-- 定义侧：实际所在文件、跨边界祖先；没有独立定义时定义侧归属为空。
+所有 Statement 使用 `StatementOccurrence` 记录一次源码出现的实际文件、SourceRange、跨边界祖先和声明属性。declaration 是可多值集合，definition 保存当前唯一位置及 `HasDefinition`，不重复存入 declarations。导航时通过辅助函数选择位置：declaration 导航优先当前文件中的 declaration，其次使用其它 declaration，最后才回退 definition；definition 导航只接受实际 definition。
 
-`fileName`/`definitionFileName` 继续表示声明和定义的实际位置，新增的两侧祖先只用于生命周期管理，不改变跳转的位置语义。
+StatementBuilder 始终把 statement 和 scope 写入实际文件的 FileInfo；StatementModel 仍是 Statement 的唯一所有权中心，FileInfo 只保存弱引用索引。每个 declaration 文件和 definition 文件都登记索引。
 
-定义合并到已有声明时，保留声明侧归属，同时记录定义侧自身的跨边界祖先。两侧可以属于不同记录，失效时必须分别处理：
+失效按 occurrence 和 definition 分别处理：
 
-- 定义侧失效：清除定义位置、定义侧祖先和 `HasDefinition`，保留有效声明；
-- 声明侧失效：若定义仍有效，将定义位置同时作为声明位置，并把声明侧祖先设为定义侧祖先；两侧都失效才删除 Statement。
+- declaration 失效：只删除受影响的 occurrences 及其 FileInfo 索引，definition 保持不变；
+- definition 失效：清空 definition、清除 `HasDefinition` 和对应 FileInfo 索引，保留 declarations，不得用 declaration 回填 definition；
+- declarations 和 definition 都不存在时才删除普通 Statement。只有 declaration 而 definition 不存在时，definition occurrence 保持为空。
 
-继承产生的成员 Statement 复制被继承成员的声明侧、定义侧归属，不能使用复制时的当前文件或空祖先。父类处理、别名解析和继承覆盖都通过 Statement 的跨边界祖先定位 Registry 记录；边界内实际文件没有独立记录。
+namespace 的每次出现都登记为 declaration occurrence，剩余 occurrences 决定其展示位置和 inline 属性；删除 occurrence 后重算，数量为零时删除 Statement。
 
-声明侧和定义侧各自只有一个当前祖先，失效时不转移所有权。共享子树由第 5 节规则处理：相关边界记录立即失效或在入口处惰性重扫，因此不需要假设不同包含点首次分析结果相同，也不需要复制 Statement 或维护祖先集合。
+继承产生的成员 Statement 复制被继承成员的声明侧、定义侧归属，不能使用复制时的当前文件或空祖先。父类处理、别名解析和继承覆盖通过 Statement 的跨边界祖先定位 ReplayRecord；按实际文件查询时则使用该文件的 FileInfo。每个 occurrence 只有一个当前跨边界祖先，失效时不转移所有权。
 
 ## 4. 每轮处理流程
 
@@ -165,6 +178,9 @@ Replay 正确后再处理其它缓存：
 
 - 场景和正确性证明见 `cpppreprocessor-replay-scenarios.md`。
 - 每个场景同时检查预处理结果、defines、StatementMap 和 scan/replay/skip/invalidate 计数。
+- 分别构造边界外文件、跨边界入口及其边界内子文件，逐文件验证 include 列表与闭包、statement、scope、using、分支和文件元数据；不得再把子文件信息并入 boundary FileInfo。
+- 对每个 replay 根验证用户宏快照、有序跨边界前缀、聚合 define/undef 和 replay 恢复结果；ReplayRecord 不重复保存 include 闭包，Registry 不重复维护 replay 根集合或文件元数据索引。
+- 声明位置和定义位置按边界外、跨边界入口、边界内做 3×3 交叉组合。每种组合均验证首次 parse、稳定 reparse、声明侧失效、定义侧失效及恢复后的 statement 和逐文件索引；只失效一侧时，另一侧的 FileInfo 索引必须保留。
 - 使用无 replay 的全量扫描作为 oracle；结果一致但发生全扫的用例仍算失败。
 - 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。本机启用方式：配置时添加 `-DREDPANDA_PARSER_STDLIB_TEST=ON -DREDPANDA_PARSER_STDLIB_MINGW_ROOT=D:/mingw`，然后运行 `test-cppparser --suite=TestCppParser test_bits_stdcpp_not_rescanned_on_stable_reparse test_standard_library_public_api_complete`。
 - 完整 `test-cppparser`、`test-editor` 和真实 IDE 编辑/切换/重解析均通过后，才能进行性能验收。

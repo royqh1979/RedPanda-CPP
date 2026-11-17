@@ -18,9 +18,9 @@
 
 #include <QListView>
 #include <QSet>
+#include <QTemporaryDir>
 #include <QTest>
 #ifdef REDPANDA_PARSER_STDLIB_TEST
-#include <QTemporaryDir>
 #include "test_parser_utils.h"
 #endif
 #include "src/colorscheme.h"
@@ -284,7 +284,7 @@ void TestWidgets::test_code_completion_namespaces()
     popup.setParser(mParser);
     PStatement namespaceStatement = mParser->findStatement("TestNamespace");
     QVERIFY(namespaceStatement);
-    QCOMPARE(namespaceStatement->fileName, mMainFile);
+    QCOMPARE(statementDeclarationForNavigation(namespaceStatement, mMainFile).fileName, mMainFile);
     QVERIFY(mParser->namespaces().contains("TestNamespace"));
     PStatementList namespaces = mParser->findNamespace("TestNamespace");
     QVERIFY(namespaces && !namespaces->isEmpty());
@@ -456,8 +456,35 @@ void TestWidgets::test_goto_standard_library_string()
         target = caretPos;
     });
     editor.gotoDefinition({5, 1});
-    QCOMPARE(targetFile, stringAlias->definitionFileName);
-    QCOMPARE(target.line, stringAlias->definitionRange.start.line);
+    QCOMPARE(targetFile, stringAlias->definition.fileName);
+    QCOMPARE(target.line, stringAlias->definition.range.start.line);
+}
+
+void TestWidgets::test_class_browser_standard_library_header_context()
+{
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QDir includeDir = QFileInfo(bitsStdcpp).dir();
+    QVERIFY(includeDir.cdUp());
+    if (!QFileInfo::exists(includeDir.filePath("string")))
+        QVERIFY(includeDir.cdUp());
+    QString stringFile = includeDir.filePath("string");
+    QString basicStringTcc = includeDir.filePath("bits/basic_string.tcc");
+    QVERIFY(QFileInfo::exists(stringFile));
+    QVERIFY(QFileInfo::exists(basicStringTcc));
+
+    CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
+
+    PParsedFileInfo fileInfo = mParser->findFileInfo(basicStringTcc);
+    QVERIFY(fileInfo);
+    QVERIFY(!fileInfo->statements().isEmpty());
+    QVERIFY(!mParser->findReplayRecord(basicStringTcc));
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(basicStringTcc);
+    model.fillStatements();
+    QVERIFY(findNode(model, {}, "std").isValid());
 }
 
 void TestWidgets::test_standard_library_template_consumers()
@@ -532,13 +559,14 @@ void TestWidgets::test_standard_library_template_consumers()
     PStatement size = mParser->findStatement("std::basic_string::size");
     QVERIFY(size);
     editor.gotoDefinition(sizePos);
-    QCOMPARE(targetFile, size->definitionFileName);
-    QCOMPARE(target.line, size->definitionRange.start.line);
+    QCOMPARE(targetFile, size->definition.fileName);
+    QCOMPARE(target.line, size->definition.range.start.line);
     target = {-1, -1};
     targetFile.clear();
     editor.gotoDeclaration(sizePos);
-    QCOMPARE(targetFile, size->fileName);
-    QCOMPARE(target.line, size->declarationRange.start.line);
+    StatementOccurrence declaration = statementDeclarationForNavigation(size, main);
+    QCOMPARE(targetFile, declaration.fileName);
+    QCOMPARE(target.line, declaration.range.start.line);
     QString hint = editor.getParserHint({"it", "->", "size"}, sizePos);
     QVERIFY(hint.contains("size"));
 
@@ -580,10 +608,10 @@ void TestWidgets::test_code_completion_macros()
     QVERIFY(macro);
     QCOMPARE(macro->kind, StatementKind::Preprocessor);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->value, "1");
-    QCOMPARE(macro->fileName, mMainFile);
+    QCOMPARE(macro->definition.fileName, mMainFile);
     int line = mMainContent.indexOf("#define TEST_MACRO 1");
     QVERIFY(line >= 0);
-    QCOMPARE(macro->declarationRange.start.line, line);
+    QCOMPARE(macro->definition.range.start.line, line);
     QCOMPARE(completionNames(popup, "", mMainFile, CodeCompletionType::Macros,
                              "", "TEST_MACRO", {}, line),
              QSet<QString>({"TEST_MACRO", "HARD_TEST_MACRO"}));
@@ -716,7 +744,8 @@ void TestWidgets::test_goto_class_declaration_and_definition()
     QCOMPARE(editor.document()->count(), mMainContent.count());
     PStatement classStatement = mParser->findStatementOf(mMainFile, QStringList{"Foo"}, 0);
     QVERIFY(classStatement);
-    QSynedit::CharPos classPos{6, classStatement->declarationRange.start.line};
+    StatementOccurrence declaration = statementDeclarationForNavigation(classStatement, mMainFile);
+    QSynedit::CharPos classPos{6, declaration.range.start.line};
     QCOMPARE(editor.getExpressionAtPosition(classPos), QStringList{"Foo"});
     QSynedit::CharPos target{-1, -1};
     connect(&editor, &Editor::openFileRequested,
@@ -725,10 +754,10 @@ void TestWidgets::test_goto_class_declaration_and_definition()
         target = caretPos;
     });
     editor.gotoDefinition(classPos);
-    QCOMPARE(target.line, classStatement->definitionRange.start.line);
+    QCOMPARE(target.line, classStatement->definition.range.start.line);
     target = {-1, -1};
     editor.gotoDeclaration(classPos);
-    QCOMPARE(target.line, classStatement->declarationRange.start.line);
+    QCOMPARE(target.line, declaration.range.start.line);
 }
 
 void TestWidgets::test_goto_constructor_declaration_and_definition()
@@ -754,7 +783,8 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
         }
     }
     QVERIFY(constructorStatement);
-    QSynedit::CharPos constructorPos{2, constructorStatement->declarationRange.start.line};
+    StatementOccurrence declaration = statementDeclarationForNavigation(constructorStatement, mMainFile);
+    QSynedit::CharPos constructorPos{2, declaration.range.start.line};
     QCOMPARE(editor.getExpressionAtPosition(constructorPos), QStringList{"Foo"});
     PStatement resolved = mParser->findStatementOf(
                 mMainFile, QStringList{"Foo"}, constructorPos.line);
@@ -768,11 +798,11 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
         target = caretPos;
     });
     editor.gotoDefinition(constructorPos);
-    QCOMPARE(target.line, constructorStatement->definitionRange.start.line);
+    QCOMPARE(target.line, constructorStatement->definition.range.start.line);
     target = {-1, -1};
-    QSynedit::CharPos definitionPos{5, constructorStatement->definitionRange.start.line};
+    QSynedit::CharPos definitionPos{5, constructorStatement->definition.range.start.line};
     editor.gotoDeclaration(definitionPos);
-    QCOMPARE(target.line, constructorStatement->declarationRange.start.line);
+    QCOMPARE(target.line, declaration.range.start.line);
     QString hint = editor.getParserHint({"Foo"}, constructorPos);
     QVERIFY(hint.contains("constructor"));
 }
@@ -904,6 +934,68 @@ void TestWidgets::test_goto_statement_definitions()
     checkGoto(false, "Forward *forwardValue;", "Forward", "class Forward;");
 }
 
+void TestWidgets::test_goto_definition_prefers_current_file()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeLines = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    const QString declarationFile = tmp.filePath("declaration.h");
+    const QString definitionFile = tmp.filePath("definition.h");
+    QVERIFY(writeLines(declarationFile, {"extern int value;"}));
+    QVERIFY(writeLines(definitionFile, {"int value;"}));
+    mMainFile = tmp.filePath("main.cpp");
+    for (bool definitionInCurrentFile : {true, false}) {
+        mMainContent = QStringList{
+            definitionInCurrentFile ? "#include \"declaration.h\"" : "#include \"definition.h\"",
+            definitionInCurrentFile ? "int value;" : "extern int value;",
+            "int readValue() { return value; }"
+        };
+        QVERIFY(writeLines(mMainFile, mMainContent));
+        mParser = std::make_shared<CppParser>();
+        mParser->addIncludePath(tmp.path());
+        mParser->addProjectFile(mMainFile, false);
+        CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+
+        PStatement value = mParser->findStatementOf(mMainFile, "value", 2);
+        QVERIFY(value);
+        QVERIFY(statementHasDefinition(value));
+        QString expectedFile = definitionInCurrentFile ? mMainFile : definitionFile;
+        int expectedLine = definitionInCurrentFile ? 1 : 0;
+        QCOMPARE(value->definition.fileName, expectedFile);
+        QCOMPARE(value->definition.range.start.line, expectedLine);
+
+        Editor editor;
+        editor.setEditorSettings(&pSettings->editor());
+        editor.setColorManager(mColorManager.get());
+        editor.setFilename(mMainFile);
+        editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+        editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+        editor.applySettings();
+        editor.setFileType(FileType::CppSource);
+        editor.loadContent(mMainContent);
+        editor.setCppParser(mParser);
+        QString targetFile;
+        QSynedit::CharPos target{-1, -1};
+        QObject context;
+        connect(&editor, &Editor::openFileRequested, &context,
+                [&targetFile, &target](const QString &fileName, FileType, const QString &,
+                                       const QSynedit::CharPos &caretPos) {
+            targetFile = fileName;
+            target = caretPos;
+        });
+        editor.gotoDefinition({mMainContent[2].lastIndexOf("value"), 2});
+        QCOMPARE(targetFile, expectedFile);
+        QCOMPARE(target.line, expectedLine);
+    }
+}
+
 void TestWidgets::test_ctrl_hover_uses_pointing_hand_cursor()
 {
     Editor editor;
@@ -918,7 +1010,7 @@ void TestWidgets::test_ctrl_hover_uses_pointing_hand_cursor()
     editor.setCppParser(mParser);
     PStatement classStatement = mParser->findStatement("Foo");
     QVERIFY(classStatement);
-    QSynedit::CharPos classPos{6, classStatement->declarationRange.start.line};
+    QSynedit::CharPos classPos{6, statementDeclarationForNavigation(classStatement, mMainFile).range.start.line};
     QPoint point = editor.displayCoordToPixels(editor.bufferToDisplayPos(classPos))
             + QPoint(0, 2);
     QMouseEvent event(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton,
@@ -941,7 +1033,7 @@ void TestWidgets::test_function_tip_class()
     editor.setCppParser(mParser);
     PStatement classStatement = mParser->findStatementOf(mMainFile, QStringList{"Foo"}, 0);
     QVERIFY(classStatement);
-    QSynedit::CharPos classPos{6, classStatement->declarationRange.start.line};
+    QSynedit::CharPos classPos{6, statementDeclarationForNavigation(classStatement, mMainFile).range.start.line};
     QString hint = editor.getParserHint({"Foo"}, classPos);
     QVERIFY(hint.trimmed().startsWith("Foo"));
     QVERIFY(!hint.contains("constructor"));
@@ -961,7 +1053,7 @@ void TestWidgets::test_rename_class_and_constructor()
     editor.setCppParser(mParser);
     PStatement classStatement = mParser->findStatementOf(mMainFile, QStringList{"Foo"}, 0);
     QVERIFY(classStatement);
-    QSynedit::CharPos classPos{6, classStatement->declarationRange.start.line};
+    QSynedit::CharPos classPos{6, statementDeclarationForNavigation(classStatement, mMainFile).range.start.line};
     QStringList expectedContent = mMainContent;
     for (QString &lineText : expectedContent)
         lineText.replace("Foo", "Bar");
@@ -987,7 +1079,7 @@ void TestWidgets::test_rename_from_constructor()
     QVERIFY(classStatement);
     PStatement constructorStatement = std::dynamic_pointer_cast<Statement>(classStatement)->children.value("Foo").lock();
     QVERIFY(constructorStatement);
-    QSynedit::CharPos constructorPos{2, constructorStatement->declarationRange.start.line};
+    QSynedit::CharPos constructorPos{2, statementDeclarationForNavigation(constructorStatement, mMainFile).range.start.line};
     QStringList expectedContent = mMainContent;
     for (QString &lineText : expectedContent)
         lineText.replace("Foo", "Bar");

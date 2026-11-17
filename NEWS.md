@@ -33,6 +33,7 @@ Red Panda C++ Version 3.6
   - fix: GAS syntax directives now control register highlighting and remain correct across incremental edits.
   - fix: Class browser navigation preserves the C/C++ context and opens extensionless headers as C++ instead of plain text.
   - fix: Headers opened with a context are parsed through that context instead of being reparsed without its macro environment.
+  - fix: Background syntax checking uses an unmodified header's context source file when appropriate, including while the context is being parsed.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

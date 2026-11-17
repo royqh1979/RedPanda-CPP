@@ -34,31 +34,28 @@ struct StatementModelProfile {
 
 StatementModelProfile statementModelProfile;
 
-QString namespaceOwner(const NamespaceOccurrence &occurrence)
+QString occurrenceOwner(const StatementOccurrence &occurrence)
 {
     return occurrence.boundaryAncestor.isEmpty()
             ? occurrence.fileName : occurrence.boundaryAncestor;
 }
 
-void updateNamespaceSource(const PStatement &statement, bool updateInline)
+void updateNamespaceSource(const PStatement &statement)
 {
     auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-    if (nameSpace->occurrences.isEmpty())
+    if (statement->declarations.isEmpty()) {
+        statement->definition = StatementOccurrence{};
+        setStatementHasDefinition(statement, false);
+        nameSpace->declSpecifierProperties.setFlag(DeclSpecifierProperty::Inline, false);
         return;
-    const NamespaceOccurrence &current = *nameSpace->occurrences.constBegin();
-    statement->fileName = current.fileName;
-    statement->declarationRange = current.range;
-    statement->declarationBoundaryAncestor = current.boundaryAncestor;
-    statement->definitionRange = current.range;
-    statement->definitionFileName = current.fileName;
-    statement->definitionBoundaryAncestor = current.boundaryAncestor;
-    setStatementHasDefinition(statement, true);
-    if (updateInline) {
-        bool isInline = false;
-        for (const NamespaceOccurrence &occurrence : nameSpace->occurrences)
-            isInline |= occurrence.isInline;
-        nameSpace->declSpecifierProperties.setFlag(DeclSpecifierProperty::Inline, isInline);
     }
+    statement->definition = *statement->declarations.constBegin();
+    setStatementHasDefinition(statement, true);
+    bool isInline = false;
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        isInline |= occurrence.declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline);
+    }
+    nameSpace->declSpecifierProperties.setFlag(DeclSpecifierProperty::Inline, isInline);
 }
 
 struct StatementModelProfileScope {
@@ -79,40 +76,49 @@ StatementModel::StatementModel(QObject *parent) : QObject(parent)
     mCount = 0;
 }
 
-void StatementModel::addNamespaceOccurrence(const PStatement &statement,
-                                            const QString &fileName,
-                                            const SourceRange &range,
-                                            const QString &boundaryAncestor,
-                                            bool isInline)
+void StatementModel::addDeclaration(const PStatement &statement, const QString &fileName,
+                                    const SourceRange &range, const QString &boundaryAncestor,
+                                    const DeclSpecifierProperties &properties)
 {
-    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-    if (!nameSpace)
+    if (fileName.isEmpty())
         return;
-    NamespaceOccurrence occurrence{fileName, range, boundaryAncestor, isInline};
-    QString owner = namespaceOwner(occurrence);
-    const QList<NamespaceOccurrence> existing = nameSpace->occurrences.values(owner);
-    for (const NamespaceOccurrence &item : existing) {
+    StatementOccurrence occurrence{fileName, range, boundaryAncestor, properties};
+    QString owner = occurrenceOwner(occurrence);
+    const QList<StatementOccurrence> existing = statement->declarations.values(owner);
+    for (const StatementOccurrence &item : existing) {
         if (item.fileName == fileName && item.range == range)
             return;
     }
-    nameSpace->occurrences.insert(owner, occurrence);
-    updateNamespaceSource(statement, true);
+    statement->declarations.insert(owner, occurrence);
+}
+
+void StatementModel::addNamespaceDeclaration(const PStatement &statement,
+                                             const QString &fileName,
+                                             const SourceRange &range,
+                                             const QString &boundaryAncestor,
+                                             bool isInline)
+{
+    DeclSpecifierProperties properties;
+    properties.setFlag(DeclSpecifierProperty::Inline, isInline);
+    addDeclaration(statement, fileName, range, boundaryAncestor, properties);
+    updateNamespaceSource(statement);
+}
+
+bool StatementModel::hasDeclarationInFile(const PStatement &statement, const QString &fileName) const
+{
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        if (occurrence.fileName == fileName || occurrenceOwner(occurrence) == fileName)
+            return true;
+    }
+    return false;
 }
 
 bool StatementModel::isInFile(const PStatement &statement, const QString &fileName) const
 {
-    if (statement->kind == StatementKind::Namespace) {
-        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-        return nameSpace->occurrences.contains(fileName);
-    }
-    bool declarationMatches = statement->declarationBoundaryAncestor == fileName
-            || (statement->declarationBoundaryAncestor.isEmpty()
-                && statement->fileName == fileName);
     bool definitionMatches = statementHasDefinition(statement)
-            && (statement->definitionBoundaryAncestor == fileName
-                || (statement->definitionBoundaryAncestor.isEmpty()
-                    && statement->definitionFileName == fileName));
-    return declarationMatches || definitionMatches;
+            && (statement->definition.fileName == fileName
+                || statement->definition.boundaryAncestor == fileName);
+    return hasDeclarationInFile(statement, fileName) || definitionMatches;
 }
 
 bool StatementModel::visibleFrom(const PStatement &statement, const QString &fileName,
@@ -120,31 +126,39 @@ bool StatementModel::visibleFrom(const PStatement &statement, const QString &fil
 {
     if (!fileInfo)
         return true;
-    if (statement->kind == StatementKind::Namespace) {
-        auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-        for (const NamespaceOccurrence &occurrence : nameSpace->occurrences) {
-            QString owner = namespaceOwner(occurrence);
-            if (owner == fileName || fileInfo->including(owner))
-                return true;
-        }
-        return false;
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        QString owner = occurrenceOwner(occurrence);
+        if (owner == fileName || fileInfo->including(owner))
+            return true;
     }
-    QString owner = statement->declarationBoundaryAncestor.isEmpty()
-            ? statement->fileName : statement->declarationBoundaryAncestor;
-    return owner == fileName || fileInfo->including(owner);
+    if (statementHasDefinition(statement)) {
+        QString owner = statement->definition.boundaryAncestor.isEmpty()
+                ? statement->definition.fileName : statement->definition.boundaryAncestor;
+        return owner == fileName || fileInfo->including(owner);
+    }
+    return false;
 }
 
-bool StatementModel::removeNamespaceOccurrences(const PStatement &statement,
-                                                const QString &fileName)
+void StatementModel::removeDeclarations(const PStatement &statement, const QString &fileName)
 {
-    auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
-    if (!nameSpace)
-        return false;
-    nameSpace->occurrences.remove(fileName);
-    if (nameSpace->occurrences.isEmpty())
-        return false;
-    updateNamespaceSource(statement, false);
-    return true;
+    for (auto it = statement->declarations.begin(); it != statement->declarations.end();) {
+        if (it.value().fileName == fileName || occurrenceOwner(it.value()) == fileName)
+            it = statement->declarations.erase(it);
+        else
+            ++it;
+    }
+}
+
+void StatementModel::removeNamespaceDeclarations(const PStatement &statement,
+                                                 const QString &fileName)
+{
+    for (auto it = statement->declarations.begin(); it != statement->declarations.end();) {
+        if (it.value().fileName == fileName || occurrenceOwner(it.value()) == fileName)
+            it = statement->declarations.erase(it);
+        else
+            ++it;
+    }
+    updateNamespaceSource(statement);
 }
 
 void StatementModel::add(const PStatement& statement)
@@ -201,20 +215,24 @@ void StatementModel::dumpAll(const QString &logFile) const
         StatementList statements = mStatements;
         std::sort(statements.begin(), statements.end(),
                   [](const PStatement &a, const PStatement &b) {
-            if (a->fileName != b->fileName)
-                return a->fileName < b->fileName;
-            return a->declarationRange.start < b->declarationRange.start;
+            StatementOccurrence aDeclaration = statementDeclarationForNavigation(a, QString());
+            StatementOccurrence bDeclaration = statementDeclarationForNavigation(b, QString());
+            if (aDeclaration.fileName != bDeclaration.fileName)
+                return aDeclaration.fileName < bDeclaration.fileName;
+            return aDeclaration.range.start < bDeclaration.range.start;
         });
         for (const PStatement &statement : statements) {
+            StatementOccurrence declaration = statementDeclarationForNavigation(statement, QString());
+            StatementOccurrence definition = statementDefinitionForNavigation(statement);
             out << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
                    .arg(statement->command).arg(int(statement->kind))
                    .arg(statementType(statement)).arg(statement->fullName)
                    .arg((size_t)(statement->parentScope.lock().get()))
                    .arg((int)statement->accessibility)
-                   .arg(statement->fileName)
-                   .arg(statement->declarationRange.start.line)
-                   .arg(statement->definitionFileName)
-                   .arg(statement->definitionRange.start.line) << Qt::endl;
+                   .arg(declaration.fileName)
+                   .arg(declaration.range.start.line)
+                   .arg(definition.fileName)
+                   .arg(definition.range.start.line) << Qt::endl;
         }
     }
 }
@@ -254,15 +272,17 @@ void StatementModel::dumpStatementMap(const StatementMap &map, QTextStream &out,
             normalizedArgs = normal->normalizedArgs;
             args = normal->args;
         }
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, QString());
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
         out << indent << QString("%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12")
                .arg(statement->command).arg(int(statement->kind))
                .arg(statementType(statement), statement->fullName, normalizedArgs, args)
                .arg((size_t)(statement->parentScope.lock().get()))
                .arg((int)statement->accessibility)
-               .arg(statement->fileName)
-               .arg(statement->declarationRange.start.line)
-               .arg(statement->definitionFileName)
-               .arg(statement->definitionRange.start.line);
+               .arg(declaration.fileName)
+               .arg(declaration.range.start.line)
+               .arg(definition.fileName)
+               .arg(definition.range.start.line);
         out << Qt::endl;
         const StatementMap &children = childrenStatements(statement);
         if (children.isEmpty())

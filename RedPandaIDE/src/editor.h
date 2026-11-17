@@ -295,6 +295,7 @@ public:
     void syncFileTypeFromPeer(FileType newFileType);
     const QString &contextFile() const;
     void setContextFile(const QString &newContextFile, bool parse = true);
+    Editor *syntaxCheckTargetEditor();
     ParserLanguage calcParserLanguage() const;
     void setCppParser(PCppParser parser);
     void setCppParser();

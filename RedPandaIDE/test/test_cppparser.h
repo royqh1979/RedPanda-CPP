@@ -38,6 +38,8 @@ private slots:
     void test_boundary_invalidation_removes_defines_and_statements();
     void test_replay_reuses_existing_statements();
     void test_system_subtree_inheritance_uses_boundary_record();
+    void test_file_info_for_boundary_children();
+    void test_cross_boundary_declaration_definition_file_info();
     void test_user_header_change_invalidates_dependent_roots();
     void test_shared_internal_header_change_invalidates_boundary_ancestors();
     void test_root_switch_with_macro_change_removes_stale_statements();

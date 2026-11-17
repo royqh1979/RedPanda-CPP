@@ -184,6 +184,7 @@ private:
                                         int line);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
+    bool isStatementIncluded(const PStatement &statement);
 private:
     CodeCompletionListView * mListView;
     CodeCompletionListModel* mModel;

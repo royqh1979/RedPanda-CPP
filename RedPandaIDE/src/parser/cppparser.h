@@ -57,6 +57,7 @@ public:
     QList<PStatement> getListOfFunctions(const QString& fileName, const QString& phrase, int line) const;
     PStatement findScopeStatement(const QString& filename, int line) const;
     PParsedFileInfo findFileInfo(const QString &filename) const;
+    PReplayRecord findReplayRecord(const QString &filename) const;
     QString findFirstTemplateParamOf(const QString& fileName, const QString& phrase,
                                      const PStatement& currentScope) const;
     QString findTemplateParamOf(const QString& fileName, const QString& phrase, int index,

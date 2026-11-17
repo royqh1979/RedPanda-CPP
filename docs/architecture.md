@@ -114,6 +114,7 @@ QSynEdit 是独立组件库，命名空间 `QSynedit`，与应用层解耦：
 - **设置持久化的纪律**：运行时对设置的修改（菜单切换等）在 `MainWindow::closeEvent` 统一保存；设置对话框的 widget `doLoad` **不得**再调用 `settings.load()`——那会从 ini 重读并冲掉未保存的运行时修改（`EditorGeneralWidget` 曾因此丢过 wordWrap）。
 - **最近文件记录携带布局**：`VisitRecord`（`visithistorymanager.h`）除文件名/时间戳外还记录 caret、锚点（topLine/topSegment）、left、wordWrap，在关闭编辑器时捕获（`EditorManager`），从最近文件菜单打开时恢复。
 - 每个 `Editor` 持有一个 `PCppParser`（`std::shared_ptr<CppParser>`）。解析器可以每个编辑器独占，也可以在多个编辑器间共享（设置项 `codeCompletion().shareParser()`，通过 `GetSharedParserrFunc`/`GetCppParserFunc` 回调注入），共享模式省内存，适合小项目。
+- 带 context file 的头文件做后台语法检查时，当前编辑器必须未修改，context 编辑器必须仍打开。context 没有解析记录或正在解析时，直接检查 context；context 已解析时，只有其 include 闭包确认包含当前文件才检查 context，否则仍检查当前文件。
 - `EditorManager : QObject`——管理全部打开的标签页/编辑器，提供新建、打开、保存、关闭、切换等操作，是 MainWindow 与单个 Editor 之间的中间层。
 
 ### 5.3 C++ 解析器（`src/parser/`）

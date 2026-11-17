@@ -500,51 +500,51 @@ QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
     return result;
 }
 
-bool CppPreprocessor::hasValidFileStamps(const PParsedFileInfo &fileInfo) const
+bool CppPreprocessor::hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.fileStampsNs,
                                           preprocessorProfile.fileStampsCalls);
-    QSet<QString> files = fileInfo->includes();
-    files.insert(fileInfo->fileName());
+    QSet<QString> files = includes;
+    files.insert(fileName);
     for (const QString &fileName : files) {
-        if (!mRegistry.fileMetadata.contains(fileName))
-            continue;
-        const Registry::FileMetadata &stamp = mRegistry.fileMetadata[fileName];
-        if (stamp.size < 0)
+        PParsedFileInfo fileInfo = findFileInfo(fileName);
+        if (!fileInfo || fileInfo->fileSize() < 0)
             continue;
         QFileInfo diskInfo(fileName);
-        if (!diskInfo.exists() || diskInfo.lastModified() != stamp.lastModified
-                || diskInfo.size() != stamp.size)
-            return false;
+        if (!diskInfo.exists() || diskInfo.lastModified() != fileInfo->lastModified()
+                || diskInfo.size() != fileInfo->fileSize())
+            return true;
     }
-    return true;
+    return false;
 }
 
 bool CppPreprocessor::isIncludeProtected(const QString &fileName) const
 {
-    return mRegistry.fileMetadata.value(fileName).includeProtected;
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
+    return fileInfo && fileInfo->includeProtected();
 }
 
-PParsedFileInfo CppPreprocessor::replayRecordForFile(const QString &fileName) const
+PReplayRecord CppPreprocessor::replayRecordForFile(const QString &fileName) const
 {
-    PParsedFileInfo fileInfo = findFileInfo(fileName);
-    if (fileInfo)
-        return fileInfo;
+    PReplayRecord record = findReplayRecord(fileName);
+    if (record)
+        return record;
     if (!mSession.includeStack.isEmpty()) {
         const QString &ancestor = mSession.includeStack.back()->boundaryAncestor;
         if (!ancestor.isEmpty())
-            return findFileInfo(ancestor);
+            return findReplayRecord(ancestor);
     }
-    return PParsedFileInfo();
+    return PReplayRecord();
 }
 
 QSet<QString> CppPreprocessor::calculateAffectedFiles(const QString &fileName) const
 {
     QSet<QString> affected{fileName};
-    for (const QString &scannedFile : mRegistry.scannedFiles) {
-        PParsedFileInfo fileInfo = mRegistry.replayRecords.value(scannedFile);
-        if (fileInfo && fileInfo->including(fileName))
-            affected.insert(scannedFile);
+    for (auto it = mRegistry.replayRecords.constBegin();
+            it != mRegistry.replayRecords.constEnd(); ++it) {
+        PParsedFileInfo rootInfo = findFileInfo(it.key());
+        if (rootInfo && rootInfo->including(fileName))
+            affected.insert(it.key());
     }
     return affected;
 }
@@ -562,7 +562,7 @@ void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
         if (mFileInvalidationHandler)
             mFileInvalidationHandler(affectedFile);
         else
-            removeScannedFile(affectedFile);
+            removeReplayRecord(affectedFile);
     }
 }
 
@@ -618,9 +618,9 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
             mCppVersion = ok ? static_cast<int>(version) : 0;
         }
     } else {
-        PParsedFileInfo fileInfo = replayRecordForFile(mSession.fileName);
-        if (fileInfo)
-            fileInfo->defines()->insert(define->name,define);
+        PReplayRecord replayRecord = replayRecordForFile(mSession.fileName);
+        if (replayRecord)
+            replayRecord->defines()->insert(define->name,define);
         mSession.defines.insert(name,define);
     }
 }
@@ -705,20 +705,20 @@ void CppPreprocessor::preprocess(const QString &fileName)
     mSession.defines = mHardDefines;
     mSession.fileName = fileName;
     PParsedFileInfo oldRootInfo = findFileInfo(fileName);
-    if (oldRootInfo && !hasValidFileStamps(oldRootInfo))
+    if (oldRootInfo && hasChangedFiles(oldRootInfo->fileName(), oldRootInfo->includes()))
         invalidateFileAndDependents(fileName);
     else
-        removeScannedFile(fileName);
+        removeReplayRecord(fileName);
     openInclude(fileName);
     preprocessBuffer();
 }
 
 void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
 {
-    PParsedFileInfo fileInfo = findFileInfo(fileName);
-    if (!fileInfo)
+    PReplayRecord replayRecord = findReplayRecord(fileName);
+    if (!replayRecord)
         return;
-    PDefineMap defineMap = fileInfo->defines();
+    PDefineMap defineMap = replayRecord->defines();
     if (defineMap) {
         for (const PDefine &define : *defineMap) {
             const PDefine &current = mSession.defines.value(define->name);
@@ -731,7 +731,7 @@ void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
         }
         defineMap->clear();
     }
-    PDefineMap undefineMap = fileInfo->undefines();
+    PDefineMap undefineMap = replayRecord->undefines();
     if (undefineMap) {
         for (const PDefine &define : *undefineMap)
             mSession.defines.insert(define->name, define);
@@ -757,7 +757,11 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (const PParsedFileInfo& fileInfo:mRegistry.replayRecords) {
+        for (auto it = mRegistry.replayRecords.constBegin();
+                it != mRegistry.replayRecords.constEnd(); ++it) {
+            PParsedFileInfo fileInfo = findFileInfo(it.key());
+            if (!fileInfo)
+                continue;
             stream<<fileInfo->fileName()<<" : "<<Qt::endl;
             stream<<"\t**direct-includes:**"<<Qt::endl;
             foreach (const QString& s,fileInfo->directIncludes()) {
@@ -787,16 +791,14 @@ void CppPreprocessor::addProjectIncludePath(const QString &fileName)
     }
 }
 
-void CppPreprocessor::removeScannedFile(const QString &filename)
+void CppPreprocessor::removeReplayRecord(const QString &filename)
 {
 #ifdef REDPANDA_PARSER_TEST
-    if (mRegistry.scannedFiles.contains(filename) || mRegistry.replayRecords.contains(filename))
+    if (mRegistry.replayRecords.contains(filename))
         mInvalidateCounts[filename]++;
 #endif
     invalidDefinesInFile(filename);
-    mRegistry.scannedFiles.remove(filename);
     mRegistry.replayRecords.remove(filename);
-    mRegistry.fileMetadata.remove(filename);
 }
 
 QString CppPreprocessor::expandMacros(QString text) const
@@ -918,12 +920,12 @@ void CppPreprocessor::handleUndefine(const QString& tokens)
     if (define) {
         //remove the define from defines set
         mSession.defines.remove(name);
-        PParsedFileInfo fileInfo = replayRecordForFile(mSession.fileName);
+        PReplayRecord replayRecord = replayRecordForFile(mSession.fileName);
         if (define->filename == mSession.fileName) {
-            if (fileInfo && fileInfo->defines())
-                fileInfo->defines()->remove(name);
-        } else if (fileInfo) {
-            PDefineMap undefineMap = fileInfo->undefines();
+            if (replayRecord && replayRecord->defines())
+                replayRecord->defines()->remove(name);
+        } else if (replayRecord) {
+            PDefineMap undefineMap = replayRecord->undefines();
             if (!undefineMap->contains(name))
                 undefineMap->insert(name, define);
         }
@@ -1047,9 +1049,8 @@ void CppPreprocessor::handleIncludeNext(const QString &tokens)
 
 void CppPreprocessor::handlePragma(const QString &tokens)
 {
-    if (tokens.trimmed()=="once") {
-        mRegistry.fileMetadata[mSession.fileName].includeProtected = true;
-    }
+    if (tokens.trimmed()=="once" && mSession.currentFileInfo)
+        mSession.currentFileInfo->setIncludeProtected(true);
 }
 
 QString CppPreprocessor::removeGCCAttributes(const QString &line)
@@ -1117,10 +1118,12 @@ void CppPreprocessor::openInclude(QString fileName)
     }
 
     PParsedFileInfo fileInfo = findFileInfo(fileName);
-    if (fileInfo)
+    if (fileInfo) {
         fileName = fileInfo->fileName();
-    else
+    } else {
         fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+        mRegistry.fileInfos.insert(fileName, fileInfo);
+    }
 
     bool inStack = false;
     for (const PParsedFile &parsedFile : mSession.includeStack) {
@@ -1148,12 +1151,14 @@ void CppPreprocessor::openInclude(QString fileName)
                        << parent->fileName << fileName;
     }
 
-    if (!inStack && mRegistry.scannedFiles.contains(fileName)
-            && !hasValidFileStamps(fileInfo)) {
+    if (!inStack && hasReplayRecord(fileName)
+            && hasChangedFiles(fileInfo->fileName(), fileInfo->includes())) {
         invalidateFileAndDependents(fileName);
         fileInfo = findFileInfo(fileName);
-        if (!fileInfo)
+        if (!fileInfo) {
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+            mRegistry.fileInfos.insert(fileName, fileInfo);
+        }
     }
 
     bool includeProtected = isIncludeProtected(fileName);
@@ -1181,15 +1186,20 @@ void CppPreprocessor::openInclude(QString fileName)
     bool repeatedUnprotected = mSession.processed.contains(fileName)
             && !includeProtected;
     bool canReplay = boundaryEntry && !inStack && !repeatedUnprotected
-            && mRegistry.scannedFiles.contains(fileName);
+            && hasReplayRecord(fileName);
+    PReplayRecord replayRecord = findReplayRecord(fileName);
     if (canReplay) {
         bool valid = mSession.allBoundaryEntriesReplayed
-                && fileInfo->hasReplayCondition()
-                && fileInfo->userMacros() == userMacroSnapshot()
-                && fileInfo->boundaryPrefix() == mSession.boundaryPrefix;
+                && replayRecord && replayRecord->hasReplayCondition()
+                && replayRecord->userMacros() == userMacroSnapshot()
+                && replayRecord->boundaryPrefix() == mSession.boundaryPrefix;
         if (!valid) {
             invalidateFileAndDependents(fileName);
-            fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+            fileInfo = findFileInfo(fileName);
+            if (!fileInfo) {
+                fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+                mRegistry.fileInfos.insert(fileName, fileInfo);
+            }
         } else {
 #ifdef REDPANDA_PARSER_TEST
             mReplayCounts[fileName]++;
@@ -1198,6 +1208,15 @@ void CppPreprocessor::openInclude(QString fileName)
             mSession.boundaryPrefix.append(fileName);
             return;
         }
+    }
+
+    if (!inStack) {
+        QDateTime lastModified = fileInfo->lastModified();
+        qint64 fileSize = fileInfo->fileSize();
+        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
+        fileInfo->setFileMetadata(lastModified, fileSize);
+        fileInfo->setIncludeProtected(includeProtected);
+        mRegistry.fileInfos.insert(fileName, fileInfo);
     }
 
     PParsedFile parsedFile = std::make_shared<ParsedFile>();
@@ -1212,11 +1231,9 @@ void CppPreprocessor::openInclude(QString fileName)
     parsedFile->boundaryPrefix = mSession.boundaryPrefix;
 
     mSession.currentFileInfo = fileInfo;
-    bool registryRecord = boundaryEntry || boundaryAncestor.isEmpty();
-    if (registryRecord) {
-        mRegistry.replayRecords.insert(fileName, mSession.currentFileInfo);
-        mRegistry.scannedFiles.insert(fileName);
-    }
+    bool replayRoot = boundaryEntry || boundaryAncestor.isEmpty();
+    if (replayRoot)
+        mRegistry.replayRecords.insert(fileName, std::make_shared<ReplayRecord>());
     bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
 #ifdef REDPANDA_PARSER_TEST
     if (scanContent)
@@ -1236,8 +1253,7 @@ void CppPreprocessor::openInclude(QString fileName)
                                                preprocessorProfile.readFileCalls);
             parsedFile->buffer = readFileToLines(fileName);
             QFileInfo diskInfo(fileName);
-            mRegistry.fileMetadata.insert(fileName,
-                    Registry::FileMetadata{diskInfo.lastModified(), diskInfo.size()});
+            fileInfo->setFileMetadata(diskInfo.lastModified(), diskInfo.size());
         }
         combineLinesEndingWithBackslash(parsedFile->buffer);
         replaceCommentsBySpaceChar(parsedFile->buffer);
@@ -1271,13 +1287,17 @@ void CppPreprocessor::closeInclude()
     if (mSession.includeStack.isEmpty())
         return;
     PParsedFile lastFile = mSession.includeStack.back();
-    if (lastFile->boundaryEntry)
-        lastFile->fileInfo->setReplayCondition(
-                lastFile->userMacros, lastFile->boundaryPrefix);
+    if (lastFile->boundaryEntry) {
+        PReplayRecord replayRecord = findReplayRecord(lastFile->fileName);
+        Q_ASSERT(replayRecord);
+        if (replayRecord)
+            replayRecord->setReplayCondition(
+                    lastFile->userMacros, lastFile->boundaryPrefix);
+    }
     if (lastFile->guardCandidate) {
         bool fullGuard = lastFile->guardClosed && !lastFile->contentAfterGuard;
-        mRegistry.fileMetadata[lastFile->fileName].includeProtected =
-                isIncludeProtected(lastFile->fileName) || fullGuard;
+        lastFile->fileInfo->setIncludeProtected(
+                lastFile->fileInfo->includeProtected() || fullGuard);
     }
     if (!isIncludeProtected(lastFile->fileName))
         mSession.fileCache.insert(lastFile->fileName, lastFile->buffer);
@@ -1324,14 +1344,15 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         return;
     mSession.processed.insert(fileName);
 
-    PParsedFileInfo fileInfo = findFileInfo(fileName);
-    PDefineMap defineList = fileInfo ? fileInfo->defines() : PDefineMap();
+    PReplayRecord replayRecord = findReplayRecord(fileName);
+    PDefineMap defineList = replayRecord ? replayRecord->defines() : PDefineMap();
     if (defineList) {
         foreach (const PDefine& define, defineList->values()) {
             mSession.defines.insert(define->name,define);
         }
     }
 
+    PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
         foreach (const QString& file, fileInfo->includes()) {
             addDefinesInFile(file);

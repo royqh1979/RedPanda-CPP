@@ -2,6 +2,7 @@
 #include <QGuiApplication>
 #include "test_editor_symbol_completion.h"
 #include "test_editor_display.h"
+#include "test_editor_general.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -35,6 +36,11 @@ int main(int argc, char *argv[]) {
     }
     {
         TestEditorDisplay tc;
+        if (suite == "all" || suite == tc.metaObject()->className())
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestEditorGeneral tc;
         if (suite == "all" || suite == tc.metaObject()->className())
             status |= QTest::qExec(&tc, argc, argv);
     }

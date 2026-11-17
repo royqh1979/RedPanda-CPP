@@ -152,15 +152,12 @@ void CppParser::internalParse(const QString &fileName)
                     auto statement = StatementFactory::createPreprocessor(PStatement(), name, name);
                     std::dynamic_pointer_cast<Statement>(statement)->args = args;
                     std::dynamic_pointer_cast<Statement>(statement)->value = value;
-                    statement->fileName = currentFile;
-                    statement->declarationBoundaryAncestor = currentAncestor;
-                    statement->declarationRange = SourceRange{
-                        token.position,
-                        SourcePosition{token.position.ch + token.text.length() - 1,
-                                       token.position.line}};
-                    statement->definitionRange = statement->declarationRange;
-                    statement->definitionFileName = currentFile;
-                    statement->definitionBoundaryAncestor = currentAncestor;
+                    statement->definition = StatementOccurrence{
+                        currentFile,
+                        SourceRange{token.position,
+                                    SourcePosition{token.position.ch + token.text.length() - 1,
+                                                   token.position.line}},
+                        currentAncestor, {}};
                     setStatementHasDefinition(statement, true);
                     statement->properties.setFlag(StatementProperty::InProject,
                                                   mProjectFiles.contains(currentFile));
@@ -227,59 +224,39 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     for (const PStatement &statement : statements) {
         if (!mStatementList.isInFile(statement, fileName))
             continue;
-        bool declarationMatches = statement->declarationBoundaryAncestor == fileName
-                || (statement->declarationBoundaryAncestor.isEmpty()
-                    && statement->fileName == fileName);
         bool definitionMatches = statementHasDefinition(statement)
-                && (statement->definitionBoundaryAncestor == fileName
-                    || (statement->definitionBoundaryAncestor.isEmpty()
-                        && statement->definitionFileName == fileName));
-        if (statement->kind == StatementKind::Namespace) {
-            PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(fileName);
+                && (statement->definition.fileName == fileName
+                    || statement->definition.boundaryAncestor == fileName);
+        for (const StatementOccurrence &occurrence : statement->declarations) {
+            QString owner = occurrence.boundaryAncestor.isEmpty()
+                    ? occurrence.fileName : occurrence.boundaryAncestor;
+            if (occurrence.fileName != fileName && owner != fileName)
+                continue;
+            PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(occurrence.fileName);
             if (fileInfo)
                 fileInfo->removeStatement(statement);
-            if (mStatementList.removeNamespaceOccurrences(statement, fileName))
-                continue;
-            mStatementList.deleteStatement(statement);
-            continue;
         }
-
-        PParsedFileInfo declarationInfo = mPreprocessor.findFileInfo(
-                    statement->declarationBoundaryAncestor.isEmpty()
-                    ? statement->fileName : statement->declarationBoundaryAncestor);
-        if (declarationInfo)
-            declarationInfo->removeStatement(statement);
-        if (statementHasDefinition(statement)) {
-            PParsedFileInfo definitionInfo = mPreprocessor.findFileInfo(
-                        statement->definitionBoundaryAncestor.isEmpty()
-                        ? statement->definitionFileName : statement->definitionBoundaryAncestor);
-            if (definitionInfo)
-                definitionInfo->removeStatement(statement);
+        if (statement->kind == StatementKind::Namespace) {
+            mStatementList.removeNamespaceDeclarations(statement, fileName);
+            if (statement->declarations.isEmpty())
+                mStatementList.deleteStatement(statement);
+            continue;
         }
 
         if (definitionMatches) {
+            PParsedFileInfo definitionInfo = mPreprocessor.findFileInfo(
+                        statement->definition.fileName);
+            if (definitionInfo)
+                definitionInfo->removeStatement(statement);
+            statement->definition = StatementOccurrence{};
             setStatementHasDefinition(statement, false);
-            statement->definitionRange = statement->declarationRange;
-            statement->definitionFileName = statement->fileName;
-            statement->definitionBoundaryAncestor.clear();
         }
-        if (!declarationMatches)
-            continue;
-        if (statementHasDefinition(statement)) {
-            statement->fileName = statement->definitionFileName;
-            statement->declarationRange = statement->definitionRange;
-            statement->declarationBoundaryAncestor = statement->definitionBoundaryAncestor;
-            PParsedFileInfo newOwner = mPreprocessor.findFileInfo(
-                        statement->declarationBoundaryAncestor.isEmpty()
-                        ? statement->fileName : statement->declarationBoundaryAncestor);
-            if (newOwner)
-                newOwner->addStatement(statement);
-            continue;
-        }
-        mStatementList.deleteStatement(statement);
+        mStatementList.removeDeclarations(statement, fileName);
+        if (statement->declarations.isEmpty() && !statementHasDefinition(statement))
+            mStatementList.deleteStatement(statement);
     }
     mPreprocessor.removeFileInfo(fileName);
-    mPreprocessor.removeScannedFile(fileName);
+    mPreprocessor.removeReplayRecord(fileName);
 }
 
 void CppParser::internalInvalidateFiles(const QSet<QString> &files)
@@ -317,7 +294,7 @@ void CppParser::invalidateFile(const QString &fileName)
 QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
 {
     QStringList result;
-    QSet<QString> savedScannedFiles = mPreprocessor.scannedFiles();
+    QSet<QString> savedReplayRoots = mPreprocessor.replayRootFiles();
     for (const QString &file : files) {
         if (mPreprocessor.hasReplayRecord(file))
             continue;
@@ -354,10 +331,10 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
             }
         }
     }
-    QSet<QString> newScannedFiles = mPreprocessor.scannedFiles();
-    for (const QString &file : newScannedFiles) {
-        if (!savedScannedFiles.contains(file))
-            mPreprocessor.removeScannedFile(file);
+    QSet<QString> newReplayRoots = mPreprocessor.replayRootFiles();
+    for (const QString &file : newReplayRoots) {
+        if (!savedReplayRoots.contains(file))
+            mPreprocessor.removeReplayRecord(file);
     }
     return result;
 }
@@ -522,6 +499,14 @@ PParsedFileInfo CppParser::findFileInfo(const QString &filename) const
     return mPreprocessor.findFileInfo(filename);
 }
 
+PReplayRecord CppParser::findReplayRecord(const QString &filename) const
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return nullptr;
+    return mPreprocessor.findReplayRecord(filename);
+}
+
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase,
                                             const PStatement &currentScope) const
 {
@@ -553,12 +538,14 @@ PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
                            && statement->kind != StatementKind::Constructor
                            && statement->kind != StatementKind::Destructor))
             continue;
-        if ((statement->declarationRange.isValid()
-             && statement->declarationRange.start.line <= line
-             && line <= statement->declarationRange.end.line)
-                || (statementHasDefinition(statement)
-                    && statement->definitionRange.start.line <= line
-                    && line <= statement->definitionRange.end.line))
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, fileName);
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
+        if ((declaration.range.isValid()
+             && declaration.range.start.line <= line
+             && line <= declaration.range.end.line)
+                || (definition.range.isValid()
+                    && definition.range.start.line <= line
+                    && line <= definition.range.end.line))
             return statement;
     }
     return {};
@@ -742,8 +729,9 @@ QList<PStatement> CppParser::doListStatements(const QString &fileName, int line,
         PStatement statement = weak.lock();
         if (!statement || !kinds.contains(statement->kind))
             continue;
-        if (line < 0 || (statement->declarationRange.start.line <= line
-                         && line <= statement->declarationRange.end.line))
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, fileName);
+        if (line < 0 || (declaration.range.start.line <= line
+                         && line <= declaration.range.end.line))
             result.append(statement);
     }
     return result;
@@ -927,7 +915,6 @@ void CppParser::parseHardDefines()
         auto statement = StatementFactory::createPreprocessor(PStatement(), define->name, define->name);
         std::dynamic_pointer_cast<Statement>(statement)->args = define->args;
         std::dynamic_pointer_cast<Statement>(statement)->value = define->value;
-        statement->declarationRange = SourceRange{{-1, -1}, {-1, -1}};
         setStatementHasDefinition(statement, true);
         mStatementList.add(statement);
     }

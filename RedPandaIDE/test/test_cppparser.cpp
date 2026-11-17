@@ -107,8 +107,8 @@ void TestCppParser::test_global_variable_reference_scope()
     PStatement declaration = mParser->findStatement("ttt");
     QVERIFY(declaration);
     QVERIFY(statementHasDefinition(declaration));
-    QCOMPARE(declaration->definitionFileName, "text.cpp");
-    QCOMPARE(declaration->definitionRange, declaration->declarationRange);
+    QCOMPARE(declaration->definition.fileName, "text.cpp");
+    QVERIFY(declaration->declarations.isEmpty());
     PStatement reference = mParser->findStatementOf("text.cpp", QStringList{"ttt"}, 3);
     QVERIFY(reference);
     QCOMPARE(reference, declaration);
@@ -171,12 +171,12 @@ void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
     QVERIFY(reference);
     QCOMPARE(reference->command, "value");
     QCOMPARE(reference->kind, StatementKind::Function);
-    QCOMPARE(reference->declarationRange.start.line, 5);
+    QCOMPARE(statementDeclarationForNavigation(reference, QString()).range.start.line, 5);
     PStatement templateReference = mParser->findStatementOf(
                 "text.cpp", QStringList{"box", ".", "value", "(", ")"}, 14);
     QVERIFY(templateReference);
     QCOMPARE(templateReference->command, "value");
-    QCOMPARE(templateReference->declarationRange.start.line, 10);
+    QCOMPARE(statementDeclarationForNavigation(templateReference, QString()).range.start.line, 10);
 }
 
 void TestCppParser::test_base_member_return_uses_declaration_bindings()
@@ -707,10 +707,10 @@ void TestCppParser::test_repeated_template_include_preserves_each_context()
     PStatement second = mParser->findStatement("N2::default_value");
     QVERIFY(first);
     QVERIFY(second);
-    QCOMPARE(first->fileName, tpl);
-    QCOMPARE(second->fileName, tpl);
-    QCOMPARE(first->declarationBoundaryAncestor, host);
-    QCOMPARE(second->declarationBoundaryAncestor, host);
+    QCOMPARE(first->definition.fileName, tpl);
+    QCOMPARE(second->definition.fileName, tpl);
+    QCOMPARE(first->definition.boundaryAncestor, host);
+    QCOMPARE(second->definition.boundaryAncestor, host);
 }
 
 void TestCppParser::test_shared_template_statement_ownership()
@@ -734,10 +734,10 @@ void TestCppParser::test_shared_template_statement_ownership()
     QVERIFY(first);
     QVERIFY(second);
     QVERIFY(first != second);
-    QCOMPARE(first->fileName, tpl);
-    QCOMPARE(second->fileName, tpl);
-    QCOMPARE(first->declarationBoundaryAncestor, a);
-    QCOMPARE(second->declarationBoundaryAncestor, b);
+    QCOMPARE(first->definition.fileName, tpl);
+    QCOMPARE(second->definition.fileName, tpl);
+    QCOMPARE(first->definition.boundaryAncestor, a);
+    QCOMPARE(second->definition.boundaryAncestor, b);
 }
 
 void TestCppParser::test_statement_ownership_declaration_definition_invalidation()
@@ -757,29 +757,32 @@ void TestCppParser::test_statement_ownership_declaration_definition_invalidation
     PStatement statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
-    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
-    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QCOMPARE(statement->declarations.count(), 1);
+    QVERIFY(statement->declarations.contains(declaration));
+    QCOMPARE(statement->declarations.value(declaration).boundaryAncestor, declaration);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
 
     mParser->invalidateFile(definition);
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
     QVERIFY(!statementHasDefinition(statement));
-    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
-    QVERIFY(statement->definitionBoundaryAncestor.isEmpty());
-    QCOMPARE(statement->definitionFileName, statement->fileName);
+    QCOMPARE(statement->declarations.count(), 1);
+    QVERIFY(statement->declarations.contains(declaration));
+    QVERIFY(!statement->definition.range.isValid());
 
     CppParser::parseFileBlocking(mParser, main, false, "");
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
-    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
 
     mParser->invalidateFileRecordForTest(declaration);
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
-    QCOMPARE(statement->fileName, definition);
-    QCOMPARE(statement->declarationBoundaryAncestor, definition);
+    QVERIFY(statement->declarations.isEmpty());
+    QCOMPARE(statement->definition.fileName, definition);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
 }
 
 void TestCppParser::test_boundary_invalidation_removes_defines_and_statements()
@@ -796,17 +799,24 @@ void TestCppParser::test_boundary_invalidation_removes_defines_and_statements()
     CppParser::parseFileBlocking(mParser, main, false, "");
     PParsedFileInfo fileInfo = mParser->findFileInfo(header);
     QVERIFY(fileInfo);
-    QVERIFY(fileInfo->defines()->contains("BOUNDARY_VALUE"));
+    PReplayRecord replayRecord = mParser->findReplayRecord(header);
+    QVERIFY(replayRecord);
+    QVERIFY(replayRecord->defines()->contains("BOUNDARY_VALUE"));
+    QVERIFY(fileInfo->statements().contains("boundary_statement"));
     QVERIFY(mParser->findStatement("boundary_statement"));
 
     mParser->invalidateFile(header);
     QVERIFY(!mParser->findFileInfo(header));
+    QVERIFY(!mParser->findReplayRecord(header));
     QVERIFY(!mParser->findStatement("boundary_statement"));
 
     CppParser::parseFileBlocking(mParser, main, false, "");
     fileInfo = mParser->findFileInfo(header);
     QVERIFY(fileInfo);
-    QVERIFY(fileInfo->defines()->contains("BOUNDARY_VALUE"));
+    replayRecord = mParser->findReplayRecord(header);
+    QVERIFY(replayRecord);
+    QVERIFY(replayRecord->defines()->contains("BOUNDARY_VALUE"));
+    QVERIFY(fileInfo->statements().contains("boundary_statement"));
     QVERIFY(mParser->findStatement("boundary_statement"));
 }
 
@@ -844,9 +854,8 @@ void TestCppParser::test_preprocessor_statements()
     QCOMPARE(object->kind, StatementKind::Preprocessor);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->args, "");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->value, "7");
-    QCOMPARE(object->fileName, "macros.cpp");
-    QCOMPARE(object->definitionFileName, "macros.cpp");
-    QCOMPARE(object->declarationRange.start.line, 0);
+    QCOMPARE(object->definition.fileName, "macros.cpp");
+    QCOMPARE(object->definition.range.start.line, 0);
     QVERIFY(statementHasDefinition(object));
 
     PStatement function = mParser->findStatement("FUNCTION_MACRO");
@@ -854,9 +863,8 @@ void TestCppParser::test_preprocessor_statements()
     QCOMPARE(function->kind, StatementKind::Preprocessor);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->args, "(x)");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->value, "((x)+1)");
-    QCOMPARE(function->fileName, "macros.cpp");
-    QCOMPARE(function->definitionFileName, "macros.cpp");
-    QCOMPARE(function->declarationRange.start.line, 1);
+    QCOMPARE(function->definition.fileName, "macros.cpp");
+    QCOMPARE(function->definition.range.start.line, 1);
     QVERIFY(statementHasDefinition(function));
 }
 
@@ -878,8 +886,8 @@ void TestCppParser::test_label_statements()
     QVERIFY(label);
     QCOMPARE(label->kind, StatementKind::Label);
     QCOMPARE(label->fullName, "f::retry");
-    QCOMPARE(label->declarationRange.start.line, 0);
-    QCOMPARE(label->fileName, "labels.cpp");
+    QCOMPARE(label->definition.range.start.line, 0);
+    QCOMPARE(label->definition.fileName, "labels.cpp");
 
     PStatement notLabels = mParser->findStatement("g");
     QVERIFY(notLabels);
@@ -898,8 +906,8 @@ void TestCppParser::test_hard_define_statements()
     QCOMPARE(macro->kind, StatementKind::Preprocessor);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->args, "(x)");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(macro)->value, "((x)+1)");
-    QVERIFY(macro->fileName.isEmpty());
-    QVERIFY(!macro->declarationRange.isValid());
+    QVERIFY(statementDeclarationForNavigation(macro, QString()).fileName.isEmpty());
+    QVERIFY(!statementDefinitionForNavigation(macro).range.isValid());
     QVERIFY(statementHasDefinition(macro));
     QCOMPARE(mParser->statementList().count(), 1);
 }
@@ -935,10 +943,200 @@ void TestCppParser::test_system_subtree_inheritance_uses_boundary_record()
     mParser->addIncludePath(tmp.path());
     mParser->addProjectFile(main, false);
     CppParser::parseFileBlocking(mParser, main, true, "");
-    QVERIFY(!mParser->findFileInfo(base));
+    QVERIFY(mParser->findFileInfo(base));
+    QVERIFY(mParser->findFileInfo(base)->statements().contains("N::Base"));
+    QVERIFY(!mParser->findReplayRecord(base));
     QVERIFY(mParser->findStatement("N::Base"));
     QVERIFY(mParser->findStatement("Derived"));
     QVERIFY(mParser->findStatement("Derived::inherited_value"));
+}
+
+void TestCppParser::test_file_info_for_boundary_children()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QString root = tmp.filePath("root.h");
+    QString inner = tmp.filePath("inner.h");
+    QVERIFY(writeLines(main, {"#define USER_MODE 1", "#include \"root.h\""}));
+    QVERIFY(writeLines(root, {
+        "namespace Root { void rootFunction() {} }",
+        "using namespace Root;",
+        "#ifdef USER_MODE",
+        "int rootVisible;",
+        "#else",
+        "int rootHidden;",
+        "#endif",
+        "#include \"inner.h\""
+    }));
+    QVERIFY(writeLines(inner, {"namespace Inner { void innerFunction() {} }"}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, false);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    PParsedFileInfo rootInfo = mParser->findFileInfo(root);
+    PParsedFileInfo innerInfo = mParser->findFileInfo(inner);
+    QVERIFY(rootInfo && innerInfo);
+    QVERIFY(rootInfo->statements().contains("Root"));
+    QVERIFY(rootInfo->statements().contains("Root::rootFunction"));
+    QVERIFY(rootInfo->statements().contains("rootVisible"));
+    QVERIFY(!rootInfo->statements().contains("rootHidden"));
+    QVERIFY(!rootInfo->statements().contains("Inner"));
+    QVERIFY(innerInfo->statements().contains("Inner"));
+    QVERIFY(innerInfo->statements().contains("Inner::innerFunction"));
+    QVERIFY(!innerInfo->statements().contains("Root"));
+    QVERIFY(rootInfo->findScopeAtLine(0));
+    QVERIFY(innerInfo->findScopeAtLine(0));
+    QVERIFY(rootInfo->usings().contains("Root"));
+    QVERIFY(rootInfo->isLineVisible(3));
+    QVERIFY(!rootInfo->isLineVisible(5));
+    QVERIFY(mParser->findReplayRecord(root));
+    QVERIFY(!mParser->findReplayRecord(inner));
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    rootInfo = mParser->findFileInfo(root);
+    innerInfo = mParser->findFileInfo(inner);
+    QVERIFY(rootInfo && innerInfo);
+    QVERIFY(rootInfo->findScopeAtLine(0));
+    QVERIFY(innerInfo->findScopeAtLine(0));
+    QVERIFY(rootInfo->isLineVisible(3));
+    QVERIFY(!rootInfo->isLineVisible(5));
+    QVERIFY(rootInfo->statements().contains("Root::rootFunction"));
+    QVERIFY(innerInfo->statements().contains("Inner::innerFunction"));
+
+    mParser->invalidateFileRecordForTest(inner);
+    QVERIFY(!mParser->findFileInfo(inner));
+    QVERIFY(!mParser->findStatement("Inner"));
+    QVERIFY(mParser->findFileInfo(root));
+    QVERIFY(mParser->findStatement("Root"));
+}
+
+void TestCppParser::test_cross_boundary_declaration_definition_file_info()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QString outside = tmp.filePath("outside.h");
+    QString boundary = tmp.filePath("boundary.h");
+    QString inner = tmp.filePath("inner.h");
+    QVERIFY(writeLines(main, {"#include \"outside.h\"", "#include \"boundary.h\""}));
+
+    struct Role {
+        QString fileName;
+        QString boundaryAncestor;
+    };
+    const Role roles[] = {
+        {outside, QString()},
+        {boundary, boundary},
+        {inner, boundary}
+    };
+    auto affectedFiles = [&](int role) {
+        if (role == 0)
+            return QSet<QString>{outside};
+        if (role == 1)
+            return QSet<QString>{boundary, inner};
+        return QSet<QString>{boundary, inner};
+    };
+
+    for (int declarationRole = 0; declarationRole < 3; ++declarationRole) {
+        for (int definitionRole = 0; definitionRole < 3; ++definitionRole) {
+            qInfo() << "cross boundary case" << declarationRole << definitionRole;
+            for (int role = 0; role < 3; ++role) {
+                QStringList lines;
+                if (role == declarationRole)
+                    lines.append("int cross();");
+                if (role == definitionRole)
+                    lines.append("int cross() { return 1; }");
+                if (lines.isEmpty())
+                    lines.append(QString("int marker_%1;").arg(role));
+                if (role == 1)
+                    lines.append("#include \"inner.h\"");
+                QVERIFY(writeLines(roles[role].fileName, lines));
+            }
+
+            mParser = std::make_shared<CppParser>();
+            mParser->addIncludePath(tmp.path());
+            mParser->addProjectFile(main, false);
+            mParser->addProjectFile(outside, false);
+            CppParser::parseFileBlocking(mParser, main, true, "");
+
+            auto hasOccurrence = [](const PStatement &statement, const Role &role) -> bool {
+                for (const StatementOccurrence &occurrence : statement->declarations) {
+                    if (occurrence.fileName == role.fileName)
+                        return occurrence.boundaryAncestor == role.boundaryAncestor;
+                }
+                return false;
+            };
+            auto verify = [&]() {
+                PStatement cross = mParser->findStatement("cross");
+                QVERIFY(cross);
+                QVERIFY(statementHasDefinition(cross));
+                QCOMPARE(cross->declarations.count(), 1);
+                QVERIFY(hasOccurrence(cross, roles[declarationRole]));
+                QCOMPARE(cross->definition.fileName, roles[definitionRole].fileName);
+                QCOMPARE(cross->definition.boundaryAncestor,
+                         roles[definitionRole].boundaryAncestor);
+                for (int role = 0; role < 3; ++role) {
+                    PParsedFileInfo info = mParser->findFileInfo(roles[role].fileName);
+                    QVERIFY(info);
+                    QCOMPARE(info->statements().contains("cross"),
+                             role == declarationRole || role == definitionRole);
+                }
+                QVERIFY(mParser->findReplayRecord(outside));
+                QVERIFY(mParser->findReplayRecord(boundary));
+                QVERIFY(!mParser->findReplayRecord(inner));
+            };
+            qInfo() << "verify initial";
+            verify();
+
+            CppParser::parseFileBlocking(mParser, main, true, "");
+            qInfo() << "verify stable reparse";
+            verify();
+
+            mParser->invalidateFile(roles[declarationRole].fileName);
+            PStatement cross = mParser->findStatement("cross");
+            if (affectedFiles(declarationRole).contains(roles[definitionRole].fileName)) {
+                QVERIFY(!cross);
+            } else {
+                QVERIFY(cross);
+                QVERIFY(statementHasDefinition(cross));
+                QVERIFY(cross->declarations.isEmpty());
+                QCOMPARE(cross->definition.fileName, roles[definitionRole].fileName);
+                QVERIFY(cross->definition.range.start.isValid());
+                PParsedFileInfo definitionInfo = mParser->findFileInfo(
+                            roles[definitionRole].fileName);
+                QVERIFY(definitionInfo);
+                QVERIFY(definitionInfo->statements().contains("cross"));
+            }
+            QVERIFY(!mParser->findFileInfo(roles[declarationRole].fileName));
+            CppParser::parseFileBlocking(mParser, main, true, "");
+            qInfo() << "verify declaration recovery";
+            verify();
+
+            mParser->invalidateFile(roles[definitionRole].fileName);
+            cross = mParser->findStatement("cross");
+            if (affectedFiles(definitionRole).contains(roles[declarationRole].fileName)) {
+                QVERIFY(!cross);
+            } else {
+                QVERIFY(cross);
+                QVERIFY(!statementHasDefinition(cross));
+                QCOMPARE(cross->declarations.count(), 1);
+                QVERIFY(hasOccurrence(cross, roles[declarationRole]));
+                QVERIFY(!cross->definition.range.isValid());
+                QVERIFY(cross->definition.fileName.isEmpty());
+                QVERIFY(cross->definition.boundaryAncestor.isEmpty());
+                PParsedFileInfo declarationInfo = mParser->findFileInfo(
+                            roles[declarationRole].fileName);
+                QVERIFY(declarationInfo);
+                QVERIFY(declarationInfo->statements().contains("cross"));
+            }
+            QVERIFY(!mParser->findFileInfo(roles[definitionRole].fileName));
+            CppParser::parseFileBlocking(mParser, main, true, "");
+            qInfo() << "verify definition recovery";
+            verify();
+        }
+    }
 }
 
 void TestCppParser::test_user_header_change_invalidates_dependent_roots()
@@ -1157,8 +1355,8 @@ void TestCppParser::test_auto_invalidation_preserves_definition_after_declaratio
     CppParser::parseFileBlocking(mParser, main, false, "");
     statement = mParser->findStatement("declared_function");
     QVERIFY(statement && statementHasDefinition(statement));
-    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
-    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QCOMPARE(statement->declarations.value(declaration).boundaryAncestor, declaration);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
     QVERIFY(mParser->findStatement("declaration_marker"));
     QCOMPARE(mParser->preprocessorEventCountsForTest(declaration).scan, 2);
     QCOMPARE(mParser->preprocessorEventCountsForTest(definition).scan, 2);
@@ -1194,8 +1392,8 @@ void TestCppParser::test_cppreference_function_syntax()
     parseSyntaxResource(mParser, "functions.cpp");
     PStatement f1 = mParser->findStatement("f1");
     QVERIFY(f1);
-    QCOMPARE(f1->declarationRange.start.line, 9);
-    QCOMPARE(f1->definitionRange.start.line, 31);
+    QCOMPARE(statementDeclarationForNavigation(f1, QString()).range.start.line, 9);
+    QCOMPARE(f1->definition.range.start.line, 31);
     for (const char *name : {"f0", "f1", "fp03", "fp11", "main", "f2"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
@@ -1210,7 +1408,7 @@ void TestCppParser::test_cppreference_class_syntax()
     parseSyntaxResource(mParser, "classes.cpp");
     PStatement d1 = mParser->findStatement("S::d1");
     QVERIFY(d1);
-    QCOMPARE(d1->declarationRange.start.line, 7);
+    QCOMPARE(d1->definition.range.start.line, 7);
     for (const char *name : {
              "S::d1", "S::a", "S::d2", "S::f1", "S::d3", "S::d4", "S::f2",
              "S::NORTH", "S::NestedS", "S::NestedS::s", "S::d5", "S::d6",
@@ -1261,7 +1459,7 @@ void TestCppParser::test_cppreference_lambda_syntax()
 {
     QString file = parseSyntaxResource(mParser, "lambdas.cpp");
     QVERIFY(mParser->findStatement("main"));
-    QCOMPARE(mParser->findStatementOf(file, "x", 5)->declarationRange.start.line, 5);
+    QCOMPARE(mParser->findStatementOf(file, "x", 5)->definition.range.start.line, 5);
     for (const char *name : {"x", "simple", "func1", "func2",
                              "nth_fibonacci", "generic", "y"}) {
         QVERIFY2(mParser->findStatementOf(file, QString::fromLatin1(name), 5), name);
@@ -1275,7 +1473,7 @@ void TestCppParser::test_cppreference_structured_binding_syntax()
     QString file = parseSyntaxResource(mParser, "structured_bindings.cpp");
     QVERIFY(mParser->findStatement("main"));
     QVERIFY(mParser->findStatementOf(file, "myset", 6));
-    QCOMPARE(mParser->findStatementOf(file, "myset", 6)->declarationRange.start.line, 6);
+    QCOMPARE(mParser->findStatementOf(file, "myset", 6)->definition.range.start.line, 6);
     QVERIFY(mParser->findStatementOf(file, "iter", 8));
     QVERIFY(mParser->findStatementOf(file, "success", 8));
     QVERIFY(mParser->findStatementOf(file, "BitFields", 12));
@@ -1555,7 +1753,7 @@ void TestCppParser::test_standard_library_string()
     PStatement basicString = mParser->findStatement("std::__cxx11::basic_string");
     QVERIFY(basicString);
     QVERIFY(statementHasDefinition(basicString));
-    QVERIFY(basicString->definitionFileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive));
+    QVERIFY(basicString->definition.fileName.endsWith("bits/basic_string.h", Qt::CaseInsensitive));
     QCOMPARE(mParser->findStatementOf(
                  main, {"std", "::", "__cxx11", "::", "basic_string"}, 0), basicString);
     QVERIFY(mParser->findStatement("std::string"));
@@ -2046,8 +2244,8 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     PStatement statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
-    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
-    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QCOMPARE(statement->declarations.value(declaration).boundaryAncestor, declaration);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
 
     mParser->invalidateFile(definition);
     statement = mParser->findStatement("N::C::method");
@@ -2066,10 +2264,10 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
-    QCOMPARE(statement->fileName, declaration);
-    QCOMPARE(statement->declarationBoundaryAncestor, declaration);
-    QCOMPARE(statement->definitionFileName, definition);
-    QCOMPARE(statement->definitionBoundaryAncestor, definition);
+    QCOMPARE(statement->declarations.value(declaration).fileName, declaration);
+    QCOMPARE(statement->declarations.value(declaration).boundaryAncestor, declaration);
+    QCOMPARE(statement->definition.fileName, definition);
+    QCOMPARE(statement->definition.boundaryAncestor, definition);
     PStatement parent = statement->parentScope.lock();
     QVERIFY(parent);
     QCOMPARE(parent->fullName, QString("N::C"));
@@ -2104,7 +2302,7 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     QVERIFY(namespaces && namespaces->count() == 1);
     auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(namespaces->first());
     QVERIFY(nameSpace);
-    QCOMPARE(nameSpace->occurrences.count(), 3);
+    QCOMPARE(nameSpace->declarations.count(), 3);
     auto overloadedFunctions = [&]() {
         QList<PStatement> result;
         for (const PStatement &nameSpace : *namespaces) {
@@ -2128,9 +2326,9 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     QVERIFY(intDeclaration != doubleDefinition);
     QVERIFY(!statementHasDefinition(intDeclaration));
     QVERIFY(statementHasDefinition(doubleDefinition));
-    QCOMPARE(doubleDefinition->declarationBoundaryAncestor, otherDeclaration);
-    QCOMPARE(doubleDefinition->definitionBoundaryAncestor, definition);
-    QCOMPARE(doubleDefinition->definitionFileName, definition);
+    QCOMPARE(doubleDefinition->declarations.value(otherDeclaration).boundaryAncestor, otherDeclaration);
+    QCOMPARE(doubleDefinition->definition.boundaryAncestor, definition);
+    QCOMPARE(doubleDefinition->definition.fileName, definition);
 
     mParser->invalidateFile(definition);
     QVERIFY(!statementHasDefinition(doubleDefinition));
@@ -2224,10 +2422,10 @@ void TestCppParser::test_reopened_namespaces_share_unique_entity()
     QCOMPARE(mParser->findNamespace("A::B")->count(), 1);
     auto namespaceA = std::dynamic_pointer_cast<NamespaceStatement>(a);
     auto namespaceB = std::dynamic_pointer_cast<NamespaceStatement>(b);
-    QCOMPARE(namespaceA->occurrences.count(), 3);
-    QCOMPARE(namespaceB->occurrences.count(), 3);
+    QCOMPARE(namespaceA->declarations.count(), 3);
+    QCOMPARE(namespaceB->declarations.count(), 3);
     QSet<int> namespaceBLines;
-    for (const NamespaceOccurrence &occurrence : namespaceB->occurrences) {
+    for (const StatementOccurrence &occurrence : namespaceB->declarations) {
         QCOMPARE(occurrence.fileName, "text.cpp");
         namespaceBLines.insert(occurrence.range.start.line);
     }
@@ -2256,10 +2454,10 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
     QVERIFY(n && deep);
     auto namespaceN = std::dynamic_pointer_cast<NamespaceStatement>(n);
     auto namespaceDeep = std::dynamic_pointer_cast<NamespaceStatement>(deep);
-    QCOMPARE(namespaceN->occurrences.count(), 2);
-    QCOMPARE(namespaceDeep->occurrences.count(), 2);
-    QVERIFY(namespaceN->occurrences.contains("a.cpp"));
-    QVERIFY(namespaceN->occurrences.contains("b.cpp"));
+    QCOMPARE(namespaceN->declarations.count(), 2);
+    QCOMPARE(namespaceDeep->declarations.count(), 2);
+    QVERIFY(namespaceN->declarations.contains("a.cpp"));
+    QVERIFY(namespaceN->declarations.contains("b.cpp"));
     QVERIFY(mParser->findStatement("N::Deep::fromA"));
     QVERIFY(mParser->findStatement("N::Deep::fromB"));
 
@@ -2268,10 +2466,10 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
     QVERIFY(mParser->findStatement("N::Deep::fromB"));
     QCOMPARE(mParser->findStatement("N"), n);
     QCOMPARE(mParser->findStatement("N::Deep"), deep);
-    QCOMPARE(namespaceDeep->occurrences.count(), 1);
-    QVERIFY(namespaceDeep->occurrences.contains("b.cpp"));
-    QCOMPARE(deep->fileName, "b.cpp");
-    QCOMPARE(deep->declarationRange.start.line, 0);
+    QCOMPARE(namespaceDeep->declarations.count(), 1);
+    QVERIFY(namespaceDeep->declarations.contains("b.cpp"));
+    QCOMPARE(namespaceDeep->declarations.value("b.cpp").fileName, "b.cpp");
+    QCOMPARE(namespaceDeep->declarations.value("b.cpp").range.start.line, 0);
 
     mParser->invalidateFile("b.cpp");
     QVERIFY(!mParser->findStatement("N"));
@@ -2315,7 +2513,7 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
 
     PStatement v = mParser->findStatement("N::V");
     QVERIFY(v);
-    QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(v)->occurrences.count(), 2);
+    QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(v)->declarations.count(), 2);
     QVERIFY(mParser->findStatement("N::visible"));
     QVERIFY(mParser->findStatement("N::plain"));
 
@@ -2324,14 +2522,14 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
     QVERIFY(mParser->findStatement("N::V::plain"));
     QCOMPARE(mParser->findStatement("N::V"), v);
     auto namespaceV = std::dynamic_pointer_cast<NamespaceStatement>(v);
-    QCOMPARE(namespaceV->occurrences.count(), 1);
-    QVERIFY(namespaceV->occurrences.contains("plain.cpp"));
-    QVERIFY(namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
+    QCOMPARE(namespaceV->declarations.count(), 1);
+    QVERIFY(namespaceV->declarations.contains("plain.cpp"));
+    QVERIFY(!namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
     QCOMPARE(mParser->findNamespace("N", true)->count(), 1);
 
     CppParser::parseFileBlocking(mParser, "inline.cpp", false, "");
     QCOMPARE(mParser->findStatement("N::V"), v);
-    QCOMPARE(namespaceV->occurrences.count(), 2);
+    QCOMPARE(namespaceV->declarations.count(), 2);
     QVERIFY(namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
     QVERIFY(mParser->findStatement("N::visible"));
 }

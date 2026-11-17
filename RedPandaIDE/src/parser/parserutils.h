@@ -200,20 +200,23 @@ using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, std::weak_ptr<AbstractStatement>>;
 
+struct StatementOccurrence {
+    QString fileName;
+    SourceRange range;
+    QString boundaryAncestor;
+    DeclSpecifierProperties declSpecifierProperties;
+};
+
 struct AbstractStatement {
     std::weak_ptr<AbstractStatement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
     QString command; // identifier/name of statement "foo"
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public
-    SourceRange declarationRange;
-    SourceRange definitionRange;
-    QString fileName; // declaration
-    QString declarationBoundaryAncestor;
-    QString definitionFileName; // definition
-    QString definitionBoundaryAncestor;
+    StatementOccurrence definition;
     QString fullName; // fullname(including class and namespace), ClassA::foo
     StatementProperties properties;
+    QMultiHash<QString, StatementOccurrence> declarations;
 
     // fields for code completion
     int usageCount; //Usage Count
@@ -247,18 +250,10 @@ struct Statement : AbstractStatement {
     QSet<QString> lambdaCaptures;
 };
 
-struct NamespaceOccurrence {
-    QString fileName;
-    SourceRange range;
-    QString boundaryAncestor;
-    bool isInline = false;
-};
-
 struct NamespaceStatement : AbstractStatement {
     DeclSpecifierProperties declSpecifierProperties;
     StatementMap children;
     QSet<QString> usingList; // using namespaces
-    QMultiHash<QString, NamespaceOccurrence> occurrences;
 };
 
 struct InlineAliasStatement : AbstractStatement {
@@ -271,6 +266,21 @@ inline bool statementHasDefinition(const PStatement &statement) {
 
 inline void setStatementHasDefinition(const PStatement &statement, bool on) {
     statement->properties.setFlag(StatementProperty::HasDefinition, on);
+}
+
+inline StatementOccurrence statementDefinitionForNavigation(const PStatement &statement) {
+    return statementHasDefinition(statement) ? statement->definition : StatementOccurrence{};
+}
+
+inline StatementOccurrence statementDeclarationForNavigation(const PStatement &statement,
+                                                              const QString &currentFile) {
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        if (occurrence.fileName == currentFile)
+            return occurrence;
+    }
+    if (!statement->declarations.isEmpty())
+        return *statement->declarations.constBegin();
+    return statementDefinitionForNavigation(statement);
 }
 
 inline bool statementInProject(const PStatement &statement) {
@@ -489,18 +499,53 @@ public:
     void removeLastScope() { mScopes.removeLastScope(); }
     PStatement lastScope() const { return mScopes.lastScope(); }
     void addUsing(const QString &usingSymbol) { mUsings.insert(usingSymbol); }
-    void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo) { mHandledInheritances.append(classInheritanceInfo); }
-    void clearHandledInheritances() { mHandledInheritances.clear(); }
 
-    void setReplayCondition(const QHash<QString,QString> &userMacros,
+    QString fileName() const { return mFileName; }
+    const StatementMap& statements() const { return mStatements; }
+    const QSet<QString>& usings() const { return mUsings; }
+    const QStringList& directIncludes() const { return mDirectIncludes; }
+    const QSet<QString>& includes() const { return mIncludes; }
+
+    const QDateTime &lastModified() const { return mLastModified; }
+    qint64 fileSize() const { return mFileSize; }
+    void setFileMetadata(const QDateTime &lastModified, qint64 fileSize) {
+        mLastModified = lastModified;
+        mFileSize = fileSize;
+    }
+    bool includeProtected() const { return mIncludeProtected; }
+    void setIncludeProtected(bool protectedFile) { mIncludeProtected = protectedFile; }
+
+private:
+    QString mFileName;
+    QSet<QString> mIncludes;
+    QStringList mDirectIncludes; //We need order here.
+    QSet<QString> mUsings; // namespaces it usings
+    StatementMap mStatements; // but we don't save temporary statements (full name as key)
+    CppScopes mScopes; // int is start line of the statement scope
+    QMap<int,bool> mBranches;
+    QDateTime mLastModified;
+    qint64 mFileSize = -1;
+    bool mIncludeProtected = false;
+};
+
+using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
+
+class ReplayRecord {
+public:
+    ReplayRecord() = default;
+    ReplayRecord(const ReplayRecord &)=delete;
+    ReplayRecord& operator=(const ReplayRecord&)=delete;
+
+    void setReplayCondition(const QHash<QString, QString> &userMacros,
                             const QStringList &boundaryPrefix) {
         mUserMacros = userMacros;
         mBoundaryPrefix = boundaryPrefix;
         mHasReplayCondition = true;
     }
     bool hasReplayCondition() const { return mHasReplayCondition; }
-    const QHash<QString,QString> &userMacros() const { return mUserMacros; }
+    const QHash<QString, QString> &userMacros() const { return mUserMacros; }
     const QStringList &boundaryPrefix() const { return mBoundaryPrefix; }
+
     PDefineMap defines() const { return mDefines; }
     PDefineMap defines() {
         if (!mDefines)
@@ -514,30 +559,15 @@ public:
         return mUndefines;
     }
 
-    QString fileName() const { return mFileName; }
-    const StatementMap& statements() const { return mStatements; }
-    const QSet<QString>& usings() const { return mUsings; }
-    const QStringList& directIncludes() const { return mDirectIncludes; }
-    const QSet<QString>& includes() const { return mIncludes; }
-    const QList<std::weak_ptr<ClassInheritanceInfo> >& handledInheritances() const { return mHandledInheritances; }
-
 private:
-    QString mFileName;
-    QSet<QString> mIncludes;
-    QStringList mDirectIncludes; //We need order here.
-    QSet<QString> mUsings; // namespaces it usings
-    StatementMap mStatements; // but we don't save temporary statements (full name as key)
-    CppScopes mScopes; // int is start line of the statement scope
-    QMap<int,bool> mBranches;
-    QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
     bool mHasReplayCondition = false;
-    QHash<QString,QString> mUserMacros;
+    QHash<QString, QString> mUserMacros;
     QStringList mBoundaryPrefix;
     PDefineMap mDefines;
     PDefineMap mUndefines;
 };
 
-using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
+using PReplayRecord = std::shared_ptr<ReplayRecord>;
 
 extern QStringList cppDirectives;
 extern QStringList javadocTags;

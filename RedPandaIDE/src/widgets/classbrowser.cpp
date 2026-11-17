@@ -279,6 +279,18 @@ void ClassBrowserModel::fillStatements()
     }
 }
 
+QString ClassBrowserModel::generateStatementKey(const PStatement& statement) const
+{
+    QString normalizedArgs;
+    if (statement->kind != StatementKind::Namespace
+            && statement->kind != StatementKind::InlineAlias)
+        normalizedArgs = std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
+
+    return QString("%1+%2+%3")
+                .arg(statement->fullName, normalizedArgs)
+                .arg((int)statement->kind);
+}
+
 PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PStatement& statement)
 {
     PClassBrowserNode newNode = std::make_shared<ClassBrowserNode>();
@@ -291,10 +303,7 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     if (statement->kind != StatementKind::Namespace
             && statement->kind != StatementKind::InlineAlias)
         normalizedArgs = std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
-    mNodeIndex.insert(
-                QString("%1+%2+%3")
-                .arg(statement->fullName, normalizedArgs)
-                .arg((int)statement->kind),newNode);
+    mNodeIndex.insert(generateStatementKey(statement),newNode);
     mProcessedStatements[node].insert(statement.get());
     if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
@@ -334,17 +343,25 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
     if (!pSettings->ui().classBrowserSortAlpha()) {
         if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
             std::sort(node->children.begin(),node->children.end(),
-                      [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
+                      [this](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+                StatementOccurrence first = statementDeclarationForNavigation(
+                            node1->statement, mCurrentFile);
+                StatementOccurrence second = statementDeclarationForNavigation(
+                            node2->statement, mCurrentFile);
+                return first.range.start.line < second.range.start.line;
             });
         } else {
             std::sort(node->children.begin(),node->children.end(),
                       [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                int comp=QString::compare(node1->statement->fileName, node2->statement->fileName);
-                if (comp<0)
+                StatementOccurrence first = statementDeclarationForNavigation(
+                            node1->statement, QString());
+                StatementOccurrence second = statementDeclarationForNavigation(
+                            node2->statement, QString());
+                int comp = QString::compare(first.fileName, second.fileName);
+                if (comp < 0)
                     return true;
-                else if (comp==0)
-                    return (node1->statement->declarationRange.start.line < node2->statement->declarationRange.start.line);
+                if (comp == 0)
+                    return first.range.start.line < second.range.start.line;
                 return false;
             });
         };
@@ -413,18 +430,20 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
         if (statement->scope == StatementScope::Local)
             continue;
 
+        StatementOccurrence declaration = statementDeclarationForNavigation(statement, mCurrentFile);
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
         if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
             && statement->command.startsWith("__")
-            && statement->fileName != mCurrentFile
-                && statement->definitionFileName != mCurrentFile
+            && declaration.fileName != mCurrentFile
+                && definition.fileName != mCurrentFile
                 )
         continue;
 
         if (pSettings->codeCompletion().hideSymbolsStartsWithUnderLine()
                 && statement->kind != StatementKind::LiteralOperator
                 && statement->command.startsWith('_')
-                && statement->fileName != mCurrentFile
-                && statement->definitionFileName != mCurrentFile
+                && declaration.fileName != mCurrentFile
+                && definition.fileName != mCurrentFile
                 )
         continue;
 
@@ -443,9 +462,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
 
             // Processing the orphan statement
                 //the statement's parent is in this file, so it's not a real orphan
-//            if ((parentScope->fileName==mCurrentFile)
-//                    ||(parentScope->definitionFileName==mCurrentFile))
-//                continue;
+
 
             ClassBrowserNode *dummyNode = getParentNode(parentScope,1);
             if (dummyNode)

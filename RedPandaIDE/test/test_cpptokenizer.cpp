@@ -1181,7 +1181,7 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
     QVERIFY(c);
     QCOMPARE(c->fullName, "N::C");
     QCOMPARE(c->scope, StatementScope::Global);
-    QCOMPARE(c->declarationRange.start, (SourcePosition{1, 2}));
+    QCOMPARE(c->definition.range.start, (SourcePosition{1, 2}));
     QVERIFY(statementHasDefinition(c));
 
     PStatement constructor = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "C");
@@ -1190,18 +1190,16 @@ void TestCppTokenizer::test_statement_builder_preserves_scopes_positions_and_anc
     QCOMPARE(constructor->accessibility, StatementAccessibility::Public);
     PStatement parameter = findStatement(std::dynamic_pointer_cast<Statement>(constructor)->children, "value");
     QVERIFY(parameter);
-    QCOMPARE(parameter->declarationRange.start.line, 3);
+    QCOMPARE(parameter->definition.range.start.line, 3);
 
     PStatement method = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "method");
     QVERIFY(method);
     QCOMPARE(method->kind, StatementKind::Function);
     QCOMPARE(method->fullName, "N::C::method");
-    QCOMPARE(method->declarationRange.start, (SourcePosition{4, 4}));
-    QCOMPARE(method->definitionRange, method->declarationRange);
-    QCOMPARE(method->fileName, "/tmp/include.h");
-    QCOMPARE(method->declarationBoundaryAncestor, "/tmp/main.cpp");
-    QCOMPARE(method->definitionFileName, "/tmp/include.h");
-    QCOMPARE(method->definitionBoundaryAncestor, "/tmp/main.cpp");
+    QCOMPARE(method->definition.range.start, (SourcePosition{4, 4}));
+    QCOMPARE(method->definition.fileName, "/tmp/include.h");
+    QCOMPARE(method->definition.boundaryAncestor, "/tmp/main.cpp");
+    QVERIFY(method->declarations.isEmpty());
     QVERIFY(statementInSystemHeader(method));
 
     PStatement count = findStatement(std::dynamic_pointer_cast<Statement>(c)->children, "count");
@@ -1444,7 +1442,8 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     QVERIFY(s && value);
     QVERIFY(statementHasDefinition(s));
     QVERIFY(statementHasDefinition(value));
-    QCOMPARE(value->definitionRange, value->declarationRange);
+    QVERIFY(value->declarations.isEmpty());
+    QVERIFY(value->definition.range.isValid());
     QCOMPARE(statementType(value), "S");
 
     declarations.clear();
@@ -2236,7 +2235,7 @@ void TestCppTokenizer::test_function_scopes_auto_loops_catch_and_using()
         const auto blocks = std::dynamic_pointer_cast<Statement>(function)->children.values("block");
         for (const std::weak_ptr<AbstractStatement> &weakBlock : blocks) {
             PStatement block = weakBlock.lock();
-            if (block && block->declarationRange.start.line == line)
+            if (block && statementDeclarationForNavigation(block, QString()).range.start.line == line)
                 return block;
         }
         return PStatement();
@@ -2469,8 +2468,8 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     PStatement lambda = std::dynamic_pointer_cast<Statement>(callback)->typeInfo.declaration.lock();
     QVERIFY(lambda);
     QCOMPARE(lambda->kind, StatementKind::Lambda);
-    QCOMPARE(lambda->fileName, "/tmp/main.cpp");
-    QCOMPARE(lambda->declarationRange.start, (SourcePosition{0, 16}));
+    QCOMPARE(lambda->definition.fileName, "/tmp/main.cpp");
+    QCOMPARE(lambda->definition.range.start, (SourcePosition{0, 16}));
     PStatement call = findStatement(std::dynamic_pointer_cast<Statement>(lambda)->children, "operator()");
     QVERIFY(call);
     QCOMPARE(statementType(call), "double");
@@ -2899,13 +2898,13 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
         PStatement string = resolver.findStatement("std::basic_string");
         QVERIFY(string);
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters.count(), 3);
-        QCOMPARE(string->declarationRange.start.line, 2);
+        QCOMPARE(statementDeclarationForNavigation(string, QString()).range.start.line, 2);
         auto inlineParent = std::dynamic_pointer_cast<NamespaceStatement>(string->parentScope.lock());
         QVERIFY(inlineParent->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
-        QCOMPARE(inlineParent->occurrences.count(), 2);
+        QCOMPARE(inlineParent->declarations.count(), 2);
         int inlineOccurrences = 0;
-        for (const NamespaceOccurrence &occurrence : inlineParent->occurrences)
-            inlineOccurrences += occurrence.isInline ? 1 : 0;
+        for (const StatementOccurrence &occurrence : inlineParent->declarations)
+            inlineOccurrences += occurrence.declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline) ? 1 : 0;
         QCOMPARE(inlineOccurrences, 1);
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[1].defaultArgumentText, "char_traits<_CharT>");
         QCOMPARE(std::dynamic_pointer_cast<Statement>(string)->templateParameters[2].defaultArgumentText, "allocator<_CharT>");
@@ -2937,8 +2936,8 @@ void TestCppTokenizer::test_template_forward_declaration_with_default_arguments(
             }
         }
         QVERIFY(inlineNamespace);
-        QVERIFY(model.removeNamespaceOccurrences(inlineNamespace, "/tmp/c++config.h"));
-        QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(inlineNamespace)->occurrences.count(), 1);
+        model.removeNamespaceDeclarations(inlineNamespace, "/tmp/c++config.h");
+        QCOMPARE(std::dynamic_pointer_cast<NamespaceStatement>(inlineNamespace)->declarations.count(), 1);
         QVERIFY(resolver.findStatement("std::basic_string"));
         QVERIFY(resolver.findStatement("std::__cxx11::basic_string"));
     }

@@ -63,6 +63,7 @@ public:
     void setClassBrowserType(ProjectClassBrowserType newClassBrowserType);
 
     QModelIndex modelIndexForStatement(const QString& key) const;
+    QString generateStatementKey(const PStatement& statement) const;
 signals:
     void refreshStarted();
     void refreshEnd();

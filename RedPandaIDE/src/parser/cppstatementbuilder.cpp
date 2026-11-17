@@ -463,8 +463,15 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
                 continue;
             }
         }
-        bool sameAncestor = existing->declarationBoundaryAncestor == context.boundaryAncestor
-                || existing->definitionBoundaryAncestor == context.boundaryAncestor;
+        bool sameAncestor = existing->definition.boundaryAncestor == context.boundaryAncestor;
+        for (const StatementOccurrence &occurrence : existing->declarations) {
+            QString owner = occurrence.boundaryAncestor.isEmpty()
+                    ? occurrence.fileName : occurrence.boundaryAncestor;
+            if (owner == context.boundaryAncestor) {
+                sameAncestor = true;
+                break;
+            }
+        }
         bool declarationPair = statementHasDefinition(existing) != statementHasDefinition(candidate);
         if (sameAncestor || declarationPair)
             return existing;
@@ -482,14 +489,8 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
 
     bool hadDefinition = statementHasDefinition(existing);
     if (statementHasDefinition(candidate)) {
-        existing->definitionRange = candidate->declarationRange;
-        existing->definitionFileName = context.fileName;
-        existing->definitionBoundaryAncestor = context.boundaryAncestor;
+        existing->definition = candidate->definition;
         setStatementHasDefinition(existing, true);
-    } else {
-        existing->declarationRange = candidate->declarationRange;
-        existing->fileName = context.fileName;
-        existing->declarationBoundaryAncestor = context.boundaryAncestor;
     }
     auto existingStatement = std::dynamic_pointer_cast<Statement>(existing);
     auto candidateStatement = std::dynamic_pointer_cast<Statement>(candidate);
@@ -548,6 +549,12 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
     if (!candidateStatement->requiresClause.isEmpty())
         existingStatement->requiresClause = candidateStatement->requiresClause;
     existingStatement->declSpecifierProperties |= candidateStatement->declSpecifierProperties;
+    if (!statementHasDefinition(candidate)) {
+        for (const StatementOccurrence &occurrence : candidate->declarations) {
+            mModel.addDeclaration(existing, occurrence.fileName, occurrence.range,
+                                  occurrence.boundaryAncestor, occurrence.declSpecifierProperties);
+        }
+    }
     return existing;
 }
 
@@ -715,12 +722,9 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                             ? enumeratorParent->fullName + "::" + enumerator.name : enumerator.name);
                 enumStatement->scope = context.scope;
                 enumStatement->accessibility = accessibility(declaration, context);
-                enumStatement->declarationRange = enumerator.range;
-                enumStatement->fileName = context.fileName;
-                enumStatement->declarationBoundaryAncestor = context.boundaryAncestor;
-                enumStatement->definitionRange = enumStatement->declarationRange;
-                enumStatement->definitionFileName = context.fileName;
-                enumStatement->definitionBoundaryAncestor = context.boundaryAncestor;
+                enumStatement->definition = StatementOccurrence{
+                    context.fileName, enumerator.range, context.boundaryAncestor,
+                    declaration.specifiers.properties};
                 setStatementHasDefinition(enumStatement, true);
                 std::dynamic_pointer_cast<Statement>(enumStatement)->typeInfo.qualifiedName = declaration.declarators.first().name;
                 qlonglong numericValue = nextEnumeratorValue;
@@ -778,9 +782,6 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     }
     statement->scope = context.scope;
     statement->accessibility = accessibility(declaration, context);
-    statement->declarationRange = declaration.range;
-    statement->fileName = context.fileName;
-    statement->declarationBoundaryAncestor = context.boundaryAncestor;
     statement->properties.setFlag(StatementProperty::Static,
                                   declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Static));
     statement->properties.setFlag(StatementProperty::Virtual,
@@ -795,9 +796,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         nameSpace->declSpecifierProperties = declaration.specifiers.properties;
         if (declaration.bodyRange.isValid()
                 || declarator.definitionKind != DeclaratorDefinitionKind::None) {
-            statement->definitionRange = declaration.range;
-            statement->definitionFileName = context.fileName;
-            statement->definitionBoundaryAncestor = context.boundaryAncestor;
+            statement->definition = StatementOccurrence{
+                context.fileName, declaration.range, context.boundaryAncestor,
+                declaration.specifiers.properties};
             setStatementHasDefinition(statement, true);
         }
         return statement;
@@ -899,10 +900,13 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
             && declarator.definitionKind == DeclaratorDefinitionKind::None)
         declarationOnly = true;
     if (!declarationOnly) {
-        statement->definitionRange = declaration.range;
-        statement->definitionFileName = context.fileName;
-        statement->definitionBoundaryAncestor = context.boundaryAncestor;
+        statement->definition = StatementOccurrence{
+            context.fileName, declaration.range, context.boundaryAncestor,
+            declaration.specifiers.properties};
         setStatementHasDefinition(statement, true);
+    } else {
+        mModel.addDeclaration(statement, context.fileName, declaration.range,
+                              context.boundaryAncestor, declaration.specifiers.properties);
     }
     if (variable && declaration.templateKind != TemplateDeclarationKind::None
             && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)) {
@@ -922,12 +926,9 @@ PStatement CppStatementBuilder::createParameter(const ParameterInfo &parameter,
     auto statement = StatementFactory::createParameter(
                 function, parameter.name, function->fullName + "::" + parameter.name);
     statement->scope = StatementScope::Local;
-    statement->declarationRange = SourceRange{parameter.position, parameter.position};
-    statement->fileName = context.fileName;
-    statement->declarationBoundaryAncestor = context.boundaryAncestor;
-    statement->definitionRange = statement->declarationRange;
-    statement->definitionFileName = context.fileName;
-    statement->definitionBoundaryAncestor = context.boundaryAncestor;
+    statement->definition = StatementOccurrence{
+        context.fileName, SourceRange{parameter.position, parameter.position},
+        context.boundaryAncestor, {}};
     setStatementHasDefinition(statement, true);
     if (parameter.type)
         std::dynamic_pointer_cast<Statement>(statement)->typeInfo = *parameter.type;
@@ -1012,12 +1013,11 @@ void CppStatementBuilder::createInlineAliases(const PStatement &statement,
                     parent, target->command, fullName, target);
         alias->scope = target->scope;
         alias->accessibility = target->accessibility;
-        alias->declarationRange = target->declarationRange;
-        alias->fileName = target->fileName;
-        alias->declarationBoundaryAncestor = context.boundaryAncestor;
-        alias->definitionRange = target->definitionRange;
-        alias->definitionFileName = target->definitionFileName;
-        alias->definitionBoundaryAncestor = context.boundaryAncestor;
+        alias->declarations = target->declarations;
+        for (auto &occurrence : alias->declarations)
+            occurrence.boundaryAncestor = context.boundaryAncestor;
+        alias->definition = target->definition;
+        alias->definition.boundaryAncestor = context.boundaryAncestor;
         alias->properties = target->properties;
         mModel.add(alias);
         if (context.fileInfo)
@@ -1099,7 +1099,7 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::buildNamespace(
         auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(statement);
         bool becameInline = declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Inline)
                 && !nameSpace->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline);
-        mModel.addNamespaceOccurrence(
+        mModel.addNamespaceDeclaration(
                     statement, current.fileName, declaration.range, current.boundaryAncestor,
                     declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Inline));
         if (becameInline)
@@ -1178,9 +1178,8 @@ PStatement CppStatementBuilder::createBlock(const DeclarationInfo &declaration,
                 context.parentScope && !context.parentScope->fullName.isEmpty()
                 ? context.parentScope->fullName + "::block" : "block");
     statement->scope = StatementScope::Local;
-    statement->declarationRange = declaration.range;
-    statement->fileName = context.fileName;
-    statement->declarationBoundaryAncestor = context.boundaryAncestor;
+    mModel.addDeclaration(statement, context.fileName, declaration.range,
+                          context.boundaryAncestor, {});
     statement->properties.setFlag(StatementProperty::DummyStatement);
     statement->properties.setFlag(StatementProperty::InProject, context.inProject);
     statement->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);

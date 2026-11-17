@@ -534,7 +534,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
 
     QString fileName = startToken.fileName;
     if (fileName.isEmpty() && context)
-        fileName = context->fileName;
+        fileName = statementDeclarationForNavigation(context, QString()).fileName;
     QString name = QString("__lambda_%1_%2_%3")
             .arg(qHash(fileName), 0, 16).arg(startToken.position.line).arg(startToken.position.ch);
     if (PStatement existing = findDirectStatement(context, name)) {
@@ -560,18 +560,14 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     lambda->scope = context && (context->kind == StatementKind::Function
                                 || context->kind == StatementKind::Block)
             ? StatementScope::Local : StatementScope::Global;
-    lambda->fileName = fileName;
-    lambda->declarationBoundaryAncestor = context ? context->declarationBoundaryAncestor : QString();
-    lambda->declarationRange.start = startToken.position;
+    QString boundaryAncestor = context
+            ? statementDeclarationForNavigation(context, fileName).boundaryAncestor : QString();
     lambda->properties.setFlag(StatementProperty::DummyStatement);
 
     auto call = StatementFactory::createOverloadedOperator(
                 lambda, "operator()", lambda->fullName + "::operator()");
     call->scope = StatementScope::ClassLocal;
     call->accessibility = StatementAccessibility::Public;
-    call->fileName = fileName;
-    call->declarationBoundaryAncestor = lambda->declarationBoundaryAncestor;
-    call->declarationRange.start = startToken.position;
     std::dynamic_pointer_cast<Statement>(call)->typeInfo.qualifiedName = "auto";
     call->properties.setFlag(StatementProperty::OperatorOverloading);
     call->properties.setFlag(StatementProperty::Const);
@@ -603,9 +599,9 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
             auto parameter = StatementFactory::createParameter(
                         call, tokens[nameIndex].text, call->fullName + "::" + tokens[nameIndex].text);
             parameter->scope = StatementScope::Local;
-            parameter->fileName = fileName;
-            parameter->declarationRange = SourceRange{tokens[nameIndex].position,
-                                                      tokens[nameIndex].position};
+            mModel.addDeclaration(parameter, fileName,
+                                  SourceRange{tokens[nameIndex].position, tokens[nameIndex].position},
+                                  boundaryAncestor, {});
             std::dynamic_pointer_cast<Statement>(parameter)->typeInfo = parseTypeText(typeText);
             mModel.add(parameter);
         };
@@ -646,15 +642,10 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     if (bodyEnd <= bodyStart || bodyEnd >= tokens.count())
         bodyEnd = tokens.count() - 1;
 
-    lambda->declarationRange.end = tokens[bodyEnd].position;
-    lambda->definitionRange = lambda->declarationRange;
-    lambda->definitionFileName = fileName;
-    lambda->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
+    SourceRange lambdaRange{startToken.position, tokens[bodyEnd].position};
+    lambda->definition = StatementOccurrence{fileName, lambdaRange, boundaryAncestor, {}};
     setStatementHasDefinition(lambda, true);
-    call->declarationRange = lambda->declarationRange;
-    call->definitionRange = lambda->declarationRange;
-    call->definitionFileName = fileName;
-    call->definitionBoundaryAncestor = lambda->declarationBoundaryAncestor;
+    call->definition = StatementOccurrence{fileName, lambdaRange, boundaryAncestor, {}};
     setStatementHasDefinition(call, true);
     mModel.add(lambda);
     mModel.add(call);

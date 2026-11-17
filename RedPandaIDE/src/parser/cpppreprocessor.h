@@ -40,7 +40,7 @@ struct ParsedFile {
     QString fileName; // Record filename, but not used now
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
-    PParsedFileInfo fileInfo; // info of this file
+    PParsedFileInfo fileInfo;
     bool boundaryEntry = false;
     QString boundaryAncestor;
     QHash<QString,QString> userMacros;
@@ -105,7 +105,7 @@ public:
         mProjectIncludePaths.clear();
         mProjectIncludePathList.clear();
     }
-    void removeScannedFile(const QString& filename);
+    void removeReplayRecord(const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
     void invalidateFile(const QString &fileName) { invalidateFileAndDependents(fileName); }
 
@@ -122,15 +122,19 @@ public:
     };
 
     PParsedFileInfo findFileInfo(const QString& fileName) const {
+        return mRegistry.fileInfos.value(fileName);
+    }
+
+    PReplayRecord findReplayRecord(const QString &fileName) const {
         return mRegistry.replayRecords.value(fileName);
     }
 
     void removeFileInfo(const QString& fileName) {
-        mRegistry.replayRecords.remove(fileName);
+        mRegistry.fileInfos.remove(fileName);
     }
 
     bool hasReplayRecord(const QString& fileName) const {
-        return mRegistry.scannedFiles.contains(fileName);
+        return mRegistry.replayRecords.contains(fileName);
     }
 
     bool includesFile(const QString &contextFileName, const QString &fileName) const {
@@ -142,8 +146,9 @@ public:
         return mIncludePaths;
     }
 
-    const QSet<QString>& scannedFiles() const {
-        return mRegistry.scannedFiles;
+    QSet<QString> replayRootFiles() const {
+        const QStringList files = mRegistry.replayRecords.keys();
+        return QSet<QString>(files.begin(), files.end());
     }
 
     const QSet<QString> &projectIncludePaths() const {
@@ -263,9 +268,9 @@ private:
     void invalidDefinesInFile(const QString& fileName);
     static QString signatureOfDefine(const PDefine& define);
     QHash<QString,QString> userMacroSnapshot() const;
-    bool hasValidFileStamps(const PParsedFileInfo &fileInfo) const;
+    bool hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const;
     bool isIncludeProtected(const QString &fileName) const;
-    PParsedFileInfo replayRecordForFile(const QString &fileName) const;
+    PReplayRecord replayRecordForFile(const QString &fileName) const;
     void invalidateFileAndDependents(const QString &fileName);
 
 
@@ -328,22 +333,15 @@ private:
     };
 
     struct Registry {
-        struct FileMetadata {
-            QDateTime lastModified;
-            qint64 size = -1;
-            bool includeProtected = false;
-        };
-        QHash<QString, PParsedFileInfo> replayRecords;
-        QSet<QString> scannedFiles;
+        QHash<QString, PParsedFileInfo> fileInfos;
+        QHash<QString, PReplayRecord> replayRecords;
         QSet<QString> projectFiles;
-        QHash<QString, FileMetadata> fileMetadata;
         QSet<QString> pendingInvalidations;
 
         void clear() {
+            fileInfos.clear();
             replayRecords.clear();
-            scannedFiles.clear();
             projectFiles.clear();
-            fileMetadata.clear();
             pendingInvalidations.clear();
         }
     };

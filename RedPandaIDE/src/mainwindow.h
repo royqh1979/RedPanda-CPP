@@ -347,7 +347,6 @@ private:
     void updateProblemSetName();
     void saveProblemSet(const QString& filePath);
     void setEditorEncoding(Editor *e, const QByteArray &encoding);
-
 private slots:
     void setupSlotsForProject();
     void onProjectUnitAdded(const QString &filename);
@@ -1094,6 +1093,7 @@ public:
     OJProblemModel *getOJProblemModel() const;
     ColorManager* colorManager() const;
     IconsManager* iconsManager() const;
+
 };
 
 extern MainWindow* pMainWindow;

@@ -134,9 +134,12 @@ void CppRefacter::renameSymbol(Editor *editor, const CharPos &pos, const QString
     if (!oldStatement)
         return;
     QString oldScope = fullParentName(oldStatement);
+    StatementOccurrence declaration = statementDeclarationForNavigation(
+                oldStatement, editor->filename());
+    StatementOccurrence definition = statementDefinitionForNavigation(oldStatement);
     // found but not in this file
-    if (editor->filename() != oldStatement->fileName
-            || editor->filename() != oldStatement->definitionFileName) {
+    if (editor->filename() != declaration.fileName
+            || editor->filename() != definition.fileName) {
             QMessageBox::critical(editor,
                               tr("Rename Symbol Error"),
                               tr("Can't rename symbols not defined in this file."));
@@ -175,7 +178,8 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
             && scope->kind != StatementKind::Destructor
             && scope->kind != StatementKind::Lambda)
         return;
-    if (scope->definitionFileName!=editor->filename())
+    StatementOccurrence scopeDefinition = statementDefinitionForNavigation(scope);
+    if (scopeDefinition.fileName != editor->filename())
         return;
 
     // get full phrase (such as s.name instead of name)
@@ -204,7 +208,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
                 newExpression,
                 pos.line);
     QSynedit::PSyntaxer syntaxer = SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
-    int posY = scope->definitionRange.start.line;
+    int posY = scopeDefinition.range.start.line;
     editor->clearSelection();
     editor->beginEditing();
     while (posY < editor->lineCount()) {
@@ -364,9 +368,13 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                     PStatement tokenStatement = parser->findStatementOf(
                                 filename,
                                 expression, p.line);
+                    StatementOccurrence expected = statementDeclarationForNavigation(statement, filename);
+                    StatementOccurrence actual;
+                    if (tokenStatement)
+                        actual = statementDeclarationForNavigation(tokenStatement, filename);
                     if (tokenStatement
-                            && (tokenStatement->declarationRange.start.line == statement->declarationRange.start.line)
-                            && (tokenStatement->fileName == statement->fileName)) {
+                            && actual.range.start.line == expected.range.start.line
+                            && actual.fileName == expected.fileName) {
                         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
                         item->filename = filename;
                         item->line = p.line;
@@ -409,10 +417,14 @@ void CppRefacter::renameSymbolInEditor(Editor *editor, const PStatement &stateme
                 QStringList expression = editor->getExpressionAtPosition(p);
                 PStatement tokenStatement = editor->parser()->findStatementOf(
                             editor->filename(), expression, p.line);
-                if (tokenStatement
-                        && (tokenStatement->declarationRange.start.line == statement->declarationRange.start.line)
-                        && (tokenStatement->fileName == statement->fileName)) {
-                    token = newWord;
+                if (tokenStatement) {
+                    StatementOccurrence expected = statementDeclarationForNavigation(
+                                statement, editor->filename());
+                    StatementOccurrence actual = statementDeclarationForNavigation(
+                                tokenStatement, editor->filename());
+                    if (actual.range.start.line == expected.range.start.line
+                            && actual.fileName == expected.fileName)
+                        token = newWord;
                 }
             }
             newLine += token;

@@ -134,7 +134,7 @@ AbstractStatement
 
 AbstractStatement 是三种 Statement 的共同祖先，只保存真正公共的身份、可见名称、实际父子关系、分类和来源数据。
 
-Statement 保持普通语句的单声明/单定义模型，以及类型、参数、模板、children 等普通声明所需的数据。NamespaceStatement 保存多个 occurrence，并实现多定义来源语义。InlineAliasStatement 与 Statement 平级，只保存目标 weak_ptr 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它使用独立的 StatementKind::InlineAlias。
+所有 Statement 通过 StatementOccurrence 保存多个 declarations，普通 Statement 和 NamespaceStatement 不再采用不同的位置来源模型。普通 Statement 另存当前 definition 及 HasDefinition，definition 不重复存入 declarations，失效清空后也不得用 declaration 回填。namespace 的每次出现同时作为其声明和定义。InlineAliasStatement 与 Statement 平级，只保存目标 weak_ptr 等投影所需数据，不继承普通 Statement 的类型、参数、模板、children、基类等字段；它使用独立的 StatementKind::InlineAlias。
 
 本阶段不继续拆 VariableStatement、FunctionStatement、ClassStatement、ScopeStatement 等完整类系。普通 Statement 内部字段是否继续下沉属于后续独立重构，不与 namespace 唯一化同时进行。
 
@@ -142,8 +142,8 @@ Statement 保持普通语句的单声明/单定义模型，以及类型、参数
 
 文件归属、可见性和来源贡献扣除等复杂逻辑集中在 StatementModel 等现有模型层处理，不为这些行为建立 Statement 虚函数接口：
 
-- 普通 Statement 与 InlineAliasStatement 共用单来源处理；
-- NamespaceStatement 仅扣除当前文件的 occurrence，仍有来源则保留，全部消失后才删除空壳；
+- 普通 Statement 按 declaration occurrences 和 definition 分别扣除来源，二者均不存在时才删除；
+- NamespaceStatement 仅扣除当前文件的 declaration occurrences，仍有来源则保留，全部消失后才删除空壳；
 - FileInfo 和 StatementModel 中条目的添加、删除由统一的公共流程执行；
 - StatementFactory 只负责创建与初始化，不承担失效或可见性逻辑。
 
@@ -164,16 +164,11 @@ Statement 保持普通语句的单声明/单定义模型，以及类型、参数
 
 本轮仍保留 PStatement 作为 AbstractStatement 的 shared_ptr，StatementModel 保持唯一所有权，children 和其它索引使用 weak_ptr。
 
-## 5. Namespace occurrence 与失效
+## 5. Namespace declarations 与失效
 
-### 5.1 occurrence 内容
+### 5.1 StatementOccurrence 内容
 
-NamespaceStatement 的每次定义记录：
-
-- 实际位置文件 fileName；
-- 起止 SourceRange；
-- 失效归属 boundaryAncestor；
-- 本次定义是否带 inline 属性。
+所有 Statement 使用 StatementOccurrence 记录实际文件、SourceRange、失效归属 boundaryAncestor 和声明属性。namespace 的 declarations 与普通 Statement 共用这一类型；inline 保存在 occurrence 的 DeclSpecifierProperties 中。
 
 namespace 每次出现都是定义，不需要额外的 isDefinition。失效归属为：
 
@@ -182,7 +177,7 @@ boundaryAncestor 非空：boundaryAncestor
 否则：fileName
 ```
 
-occurrence 可按失效归属建立 QMultiHash，value 保存实际文件、范围和 inline 属性。
+declarations 按失效归属建立 QMultiHash，value 保存实际文件、范围和声明属性。
 
 ### 5.2 新增与重开
 
@@ -191,20 +186,20 @@ occurrence 可按失效归属建立 QMultiHash，value 保存实际文件、范�
 1. 在实际 parent 的直接 children 中查找同名 NamespaceStatement；
 2. 不存在则通过工厂创建并加入模型；
 3. 存在则复用；
-4. 添加本次 occurrence；
+4. 添加本次 declaration occurrence；
 5. 将新 children 构建到该唯一实体；
 6. 本次带 inline 且实体此前没有 inline 标志时，为已有 children 补生成 InlineAlias；之后新增的实际成员在创建时直接投影。
 
-嵌套 namespace 逐层执行相同规则。inline 标志一旦在合并时建立，本次实现不根据剩余 occurrence 反推或撤销。
+嵌套 namespace 逐层执行相同规则。inline 标志按剩余 declaration occurrences 计算。
 
 ### 5.3 文件失效
 
 失效一个归属文件时：
 
 1. 通过 FileInfo 删除该文件贡献的普通 Statement 和 using；
-2. 从 NamespaceStatement 删除对应 occurrence；
-3. 若仍有 occurrence，保留 namespace，更新可见性和可用跳转位置，但不重算已有 inline 标志；
-4. 若 occurrence 为空，删除 namespace 壳；
+2. 从 NamespaceStatement 删除对应 declaration occurrences；
+3. 若仍有 occurrences，保留 namespace，更新可见性、跳转位置和 inline 标志；
+4. 若 occurrences 为空，删除 namespace 壳；
 5. 不使用 shared_ptr::use_count() 判断是否仍有来源。
 
 同一头文件被多个边界根包含时，occurrence 按归属分别保存。失效根 A 不得删除根 B 的贡献。

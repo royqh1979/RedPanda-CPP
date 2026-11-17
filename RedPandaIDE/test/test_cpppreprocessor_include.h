@@ -38,7 +38,7 @@ private slots:
     // group F: incremental / registry behavior
     void test_reprocess_same_instance();
     void test_clear_registry();
-    void test_reprocess_after_remove_scanned();
+    void test_reprocess_after_remove_replay_record();
     void test_hard_define_restore();
     void test_undef_restore();
     void test_on_get_file_stream();
@@ -61,6 +61,7 @@ private slots:
     void test_guarded_noop_then_first_boundary_entry();
     void test_user_to_user_include_has_no_boundary_record();
     void test_system_subtree_belongs_to_boundary_ancestor();
+    void test_file_info_and_replay_record_partition();
     void test_nonproject_include_path_file_is_inside_boundary();
     void test_system_header_root_is_boundary_entry();
     void test_guard_must_cover_whole_file();

@@ -529,7 +529,7 @@ void TestCppPreprocessorInclude::test_clear_registry()
     QCOMPARE(p.eventCounts(header).replay, 0);
 }
 
-void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
+void TestCppPreprocessorInclude::test_reprocess_after_remove_replay_record()
 {
     // The production reparse path invalidates the edited file only;
     // files it includes stay scanned and are replayed (their content
@@ -539,15 +539,15 @@ void TestCppPreprocessorInclude::test_reprocess_after_remove_scanned()
     p.addIncludePath(dir);
     p.addProjectFile(dir + "/main.cpp");
     QStringList first = runScenario(p, dir, "main.cpp");
-    p.removeScannedFile(dir + "/main.cpp");
+    p.removeReplayRecord(dir + "/main.cpp");
     QCOMPARE(runScenario(p, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "int main() { return foo(); }"}));
     // Invalidating the included header as well forces a full re-scan
     // and reproduces the original result.
-    p.removeScannedFile(dir + "/main.cpp");
-    p.removeScannedFile(dir + "/a.h");
+    p.removeReplayRecord(dir + "/main.cpp");
+    p.removeReplayRecord(dir + "/a.h");
     QCOMPARE(runScenario(p, dir, "main.cpp"), first);
 }
 
@@ -560,7 +560,7 @@ void TestCppPreprocessorInclude::test_hard_define_restore()
     p.addHardDefineByLine("#define UNG_V 0");
     p.preprocess(dir + "/a3.cpp");
     QCOMPARE(p.getDefine("UNG_V")->value, "1");
-    p.removeScannedFile(dir + "/ung.h");
+    p.removeReplayRecord(dir + "/ung.h");
     QCOMPARE(p.getDefine("UNG_V")->value, "0");
 }
 
@@ -572,7 +572,7 @@ void TestCppPreprocessorInclude::test_undef_restore()
     CppPreprocessor p;
     p.preprocess(dir + "/main.cpp");
     QVERIFY(!p.getDefine("X"));
-    p.removeScannedFile(dir + "/main.cpp");
+    p.removeReplayRecord(dir + "/main.cpp");
     QCOMPARE(p.getDefine("X")->value, "1");
 }
 
@@ -948,7 +948,68 @@ void TestCppPreprocessorInclude::test_system_subtree_belongs_to_boundary_ancesto
     p.addProjectFile(dir + "/guard_first.cpp");
     p.preprocess(dir + "/guard_first.cpp");
     QCOMPARE(p.boundaryAncestor(guarded, 0), container);
-    QVERIFY(!p.findFileInfo(guarded));
+    QVERIFY(p.findFileInfo(guarded));
+    QVERIFY(!p.hasReplayRecord(guarded));
+    QVERIFY(p.findFileInfo(container)->includes().contains(guarded));
+    QVERIFY(p.findReplayRecord(container));
+}
+
+void TestCppPreprocessorInclude::test_file_info_and_replay_record_partition()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeLines = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString main = tmp.filePath("main.cpp");
+    QString root = tmp.filePath("root.h");
+    QString inner = tmp.filePath("inner.h");
+    QVERIFY(writeLines(main, {"#define USER_MODE 7", "#include \"root.h\""}));
+    QVERIFY(writeLines(root, {"#define ROOT_VALUE 1", "#include \"inner.h\""}));
+    QVERIFY(writeLines(inner, {"#define INNER_VALUE 2", "#undef ROOT_VALUE"}));
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.addProjectFile(main);
+    p.preprocess(main);
+
+    PParsedFileInfo mainInfo = p.findFileInfo(main);
+    PParsedFileInfo rootInfo = p.findFileInfo(root);
+    PParsedFileInfo innerInfo = p.findFileInfo(inner);
+    QVERIFY(mainInfo && rootInfo && innerInfo);
+    QCOMPARE(mainInfo->directIncludes(), QStringList{root});
+    QCOMPARE(rootInfo->directIncludes(), QStringList{inner});
+    QVERIFY(innerInfo->directIncludes().isEmpty());
+    QVERIFY(mainInfo->includes().contains(root));
+    QVERIFY(mainInfo->includes().contains(inner));
+    QVERIFY(rootInfo->includes().contains(inner));
+    QVERIFY(!rootInfo->includes().contains(root));
+    QVERIFY(innerInfo->includes().isEmpty());
+    QVERIFY(rootInfo->fileSize() > 0);
+    QVERIFY(innerInfo->fileSize() > 0);
+    QVERIFY(rootInfo->lastModified().isValid());
+    QVERIFY(!innerInfo->includeProtected());
+
+    PReplayRecord rootReplay = p.findReplayRecord(root);
+    QVERIFY(rootReplay);
+    QVERIFY(!p.findReplayRecord(inner));
+    QVERIFY(rootReplay->hasReplayCondition());
+    QVERIFY(rootReplay->userMacros().contains("USER_MODE"));
+    QVERIFY(rootReplay->boundaryPrefix().isEmpty());
+    QVERIFY(rootReplay->defines()->contains("ROOT_VALUE"));
+    QVERIFY(rootReplay->defines()->contains("INNER_VALUE"));
+    QVERIFY(rootReplay->undefines()->contains("ROOT_VALUE"));
+
+    p.preprocess(main);
+    QCOMPARE(p.eventCounts(root).scan, 1);
+    QCOMPARE(p.eventCounts(root).replay, 1);
+    QCOMPARE(p.eventCounts(inner).scan, 1);
+    QCOMPARE(p.expandMacros("INNER_VALUE"), QString("2"));
 }
 
 void TestCppPreprocessorInclude::test_nonproject_include_path_file_is_inside_boundary()
