@@ -698,6 +698,7 @@ private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
     void computeCaret(const QPoint &point);
+    bool shouldStartDrag(const QPoint &point) const;
     void computeScroll(bool isDragging);
     void selCurrentToken();
     void selTokenAt(const CharPos &pos);
@@ -939,8 +940,9 @@ private:
     // set when the max was adopted from a partial (still computing) cache:
     // recompute from the complete cache once the sweep finishes
     mutable bool mMaxLineWidthMaybeStale = false;
-    bool mMouseMoved;
     QPoint mMouseOrigin;
+    int mMouseDownPreviousGlyphWidth;
+    int mMouseDownNextGlyphWidth;
 
     bool mInserting;
     PDocument mDocument;
@@ -990,6 +992,7 @@ private:
     PUndoList mUndoList;
     PRedoList mRedoList;
     QPoint mMouseDownPos;
+    QElapsedTimer mMouseDownTime;
     EditCaretType mOverwriteCaret;
     EditCaretType  mInsertCaret;
     QPoint mCaretOffset;

@@ -884,3 +884,11 @@ API 层而非格式化调用点，此后在列删除/列插入/undo-redo 恢复�
 Caret 保持点击前位置，只有选区发生变化。用于选择的左键不发送 `gutterClicked`，因此 Editor
 不会在同一次点击中切换断点；折叠按钮仍走独立分支，并把 caret 放到折叠块起始行，避免折叠后
 落在隐藏区域。
+
+### 8.8 文本拖拽启动阈值
+
+拖放已有选区时，`shouldStartDrag()` 同时检查 `QApplication::startDragDistance()` 和 `startDragTime()`：位移达到系统拖拽距离，且距 mousePress 的时间也达到系统拖拽延时，才启动 QDrag。仅发生小范围或短时间的鼠标抖动不会启动拖拽，普通点击和选择行为不变。
+
+### 8.9 鼠标拖选启动阈值
+
+普通按住左键拖选由滚动定时器更新选区终点。mousePress 时记录起点前后 glyph 的实际宽度，`doMouseScroll()` 按移动方向选择阈值：向左使用前一个 glyph，向右使用后一个 glyph；水平位移达到对应宽度，或垂直位移达到 `textHeight()` 后才更新选区，未达到时继续等待。该阈值只用于尚未 `selAvail()` 的启动阶段；选区一旦形成，缩小和反向拖动不再受阈值限制，因此可以拖回起点形成空选区。该判断不使用 `startDragDistance()` 或 `startDragTime()`，非等宽字体不使用统一的 `M` 宽度。QDrag 仍独立使用距离加时间条件。

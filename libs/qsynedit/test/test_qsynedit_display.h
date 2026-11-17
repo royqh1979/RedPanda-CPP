@@ -34,6 +34,7 @@ private slots:
     void test_gutter_shift_click_selects_line_range();
     void test_gutter_shift_click_requires_full_line_selection();
     void test_wrap_selection_paints_on_start_segment();
+    void test_drag_start_requires_distance_and_time();
     void test_dnd_drop_path();
     void test_dnd_undo_restores_content_and_folds();
     void test_wrap_mapping_reset_keeps_anchor();

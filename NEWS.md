@@ -39,6 +39,8 @@ Red Panda C++ Version 3.6
   - fix: Nested include guards are recognized correctly, so repeatedly included headers are scanned once and their active contents are not grayed out.
   - enhancement: Editor tab tooltips show the parsing context file.
   - fix: Compiler-defined macros use macro highlighting and show parser hints.
+  - change: Text drag-and-drop now requires both the system drag distance and drag time.
+  - fix: Text selection starts only after moving at least one glyph width or one line height, and can shrink back to its start.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

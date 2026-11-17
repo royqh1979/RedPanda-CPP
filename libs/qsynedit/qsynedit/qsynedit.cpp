@@ -82,7 +82,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDocument = std::make_shared<Document>();
     mRowIndex.reset(mDocument->count());
 
-    mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
     mUndoing = false;
     mMergeCaretStatusChangeLock = 0;
@@ -2355,11 +2354,18 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     Qt::MouseButtons buttons = qApp->mouseButtons();
     if (!buttons.testFlag(Qt::LeftButton))
         return;
-    QPoint mousePos;
+    QPoint mousePos = mapFromGlobal(QCursor::pos());
+    QPoint delta = mousePos - mMouseOrigin;
+    int glyphWidth = delta.x() < 0
+            ? mMouseDownPreviousGlyphWidth : mMouseDownNextGlyphWidth;
+    if (!isDragging && !selAvail()
+            && std::abs(delta.x()) < glyphWidth
+            && std::abs(delta.y()) < mTextHeight) {
+        mScrollTimer->singleShot(20,this,&QSynEdit::onScrollTimeout);
+        return;
+    }
     VisualPos coord;
 
-    mousePos = QCursor::pos();
-    mousePos = mapFromGlobal(mousePos);
     coord = pixelsToNearestGlyphPos(mousePos.x(), mousePos.y());
     coord.y = minMax(coord.y, 0, (displayLineCount()-1) * mTextHeight);
     if (scrollX != 0) {
@@ -7459,11 +7465,22 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 {
     bool wasSel = false;
     bool startDrag = false;
-    mMouseMoved = false;
     mMouseOrigin = event->pos();
+    mMouseDownTime.start();
     Qt::MouseButton button = event->button();
     int x=event->pos().x();
     int y=event->pos().y();
+    mMouseDownPreviousGlyphWidth = mCharWidth;
+    mMouseDownNextGlyphWidth = mCharWidth;
+    CharPos mouseChar = displayToBufferPos(pixelsToGlyphPos(x, y));
+    if (mouseChar.line >= 0 && mouseChar.line < mDocument->count()
+            && mouseChar.ch >= 0 && mouseChar.ch <= mDocument->getLine(mouseChar.line).length()) {
+        int glyphIndex = mDocument->charToGlyphIndex(mouseChar.line, mouseChar.ch);
+        if (mouseChar.ch < mDocument->getLine(mouseChar.line).length())
+            mMouseDownNextGlyphWidth = glyphWidth(mouseChar.line, glyphIndex);
+        mMouseDownPreviousGlyphWidth = glyphIndex > 0
+                ? glyphWidth(mouseChar.line, glyphIndex - 1) : mMouseDownNextGlyphWidth;
+    }
 
     if (button == Qt::LeftButton && x < mGutterWidth) {
         processGutterClick(event);
@@ -7541,16 +7558,19 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     endInternalChanges();
 }
 
+bool QSynEdit::shouldStartDrag(const QPoint &point) const
+{
+    return (point - mMouseDownPos).manhattanLength() >= QApplication::startDragDistance()
+            && mMouseDownTime.elapsed() >= QApplication::startDragTime();
+}
+
 void QSynEdit::mouseMoveEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseMoveEvent(event);
-    if ( (std::abs(event->pos().y()-mMouseOrigin.y()) > 2)
-            || (std::abs(event->pos().x()-mMouseOrigin.x()) > 2) )
-        mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
     if (mStateFlags.testFlag(StateFlag::WaitForDragging)
             && !mReadOnly) {
-        if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
+        if (shouldStartDrag(event->pos())) {
             mStateFlags.setFlag(StateFlag::WaitForDragging,false);
             QDrag *drag = new QDrag(this);
             QMimeData *mimeData = new QMimeData;

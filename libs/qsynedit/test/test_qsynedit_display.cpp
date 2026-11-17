@@ -328,6 +328,26 @@ void TestQSyneditDisplay::test_wrap_selection_paints_on_start_segment()
     mEdit->setOptions(opts);
 }
 
+void TestQSyneditDisplay::test_drag_start_requires_distance_and_time()
+{
+    int oldTime = QApplication::startDragTime();
+    int oldDistance = QApplication::startDragDistance();
+    auto restore = finally([oldTime, oldDistance] {
+        QApplication::setStartDragTime(oldTime);
+        QApplication::setStartDragDistance(oldDistance);
+    });
+    QApplication::setStartDragTime(100);
+    QApplication::setStartDragDistance(10);
+    QPoint origin(100, 100);
+    mEdit->mMouseDownPos = origin;
+    mEdit->mMouseDownTime.start();
+
+    QVERIFY(!mEdit->shouldStartDrag(origin + QPoint(11, 0)));
+    QTest::qWait(120);
+    QVERIFY(mEdit->shouldStartDrag(origin + QPoint(11, 0)));
+    QVERIFY(!mEdit->shouldStartDrag(origin + QPoint(9, 0)));
+}
+
 void TestQSyneditDisplay::test_dnd_drop_path()
 {
     // the drop path's edit dance: dragEnter adds a scratch line at the end,
