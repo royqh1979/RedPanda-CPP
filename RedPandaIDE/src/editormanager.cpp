@@ -129,6 +129,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     }
     e->setAutoBackupEnabled(true);
     parentPageControl->addTab(e, e->caption());
+    updateEditorTabCaption(e);
     updateLayout();
     e->setFunctionTooltip(pMainWindow->functionTip());
     e->setCompletionPopup(pMainWindow->completionPopup());
@@ -354,7 +355,10 @@ void EditorManager::updateEditorTabCaption(Editor* e)
     if (index==-1)
         return;
     parentWidget->setTabText(index,e->caption());
-    parentWidget->setTabToolTip(index, e->filename());
+    QStringList toolTip{e->filename()};
+    if (!e->contextFile().isEmpty() && e->contextFile() != e->filename())
+        toolTip.append(tr("Context: %1").arg(e->contextFile()));
+    parentWidget->setTabToolTip(index, toolTip.join('\n'));
 }
 
 void EditorManager::onBreakpointAdded(const Editor *e, int line)
@@ -772,9 +776,11 @@ bool EditorManager::swapEditor(Editor *editor)
     if (fromPageControl == mLeftPageWidget) {
         mLeftPageWidget->removeTab(mLeftPageWidget->indexOf(editor));
         mRightPageWidget->addTab(editor, editor->caption());
+        updateEditorTabCaption(editor);
     } else {
         mRightPageWidget->removeTab(mRightPageWidget->indexOf(editor));
         mLeftPageWidget->addTab(editor, editor->caption());
+        updateEditorTabCaption(editor);
     }
     if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
         editor->setCppParser();

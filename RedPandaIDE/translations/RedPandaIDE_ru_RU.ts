@@ -2089,6 +2089,14 @@
     </message>
 </context>
 <context>
+    <name>EditorManager</name>
+    <message>
+        <location filename="../src/editormanager.cpp" line="359"/>
+        <source>Context: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EditorMiscWidget</name>
     <message>
         <location filename="../src/settingsdialog/editormiscwidget.ui" line="14"/>

@@ -1185,6 +1185,8 @@ PStatement CppParser::visibleStatement(const QString &fileName,
 {
     if (!statement)
         return {};
+    if (statementHasDefinition(statement) && statement->definition.fileName.isEmpty())
+        return statement;
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
     if (!info)
         return statement;

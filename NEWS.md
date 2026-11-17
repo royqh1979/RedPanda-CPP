@@ -37,6 +37,8 @@ Red Panda C++ Version 3.6
   - fix: Correctly parse nested template prefixes on out-of-line member definitions and extern template explicit instantiations.
   - change: The class browser shows direct members from the selected files and no longer has an inherited-member display toggle.
   - fix: Nested include guards are recognized correctly, so repeatedly included headers are scanned once and their active contents are not grayed out.
+  - enhancement: Editor tab tooltips show the parsing context file.
+  - fix: Compiler-defined macros use macro highlighting and show parser hints.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

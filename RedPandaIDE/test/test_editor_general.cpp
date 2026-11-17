@@ -80,3 +80,23 @@ void TestEditorGeneral::test_syntax_check_target_editor()
     }
     QTRY_VERIFY(!parsingParser->parsing());
 }
+
+void TestEditorGeneral::test_hard_define_statement_visibility_and_hint()
+{
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->addHardDefineByLine("#define __cplusplus 201703L");
+    parser->parseHardDefines();
+    parser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"int value = __cplusplus;"};
+        return true;
+    });
+    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    PStatement statement = parser->findStatementOf("main.cpp", QStringList{"__cplusplus"}, 0);
+    QVERIFY(statement);
+    QCOMPARE(statement->kind, StatementKind::Preprocessor);
+
+    mEditor->setFilename("main.cpp");
+    mEditor->setCppParser(parser);
+    QString hint = mEditor->getParserHint({"__cplusplus"}, {0, 12});
+    QVERIFY(!hint.isEmpty());
+}
