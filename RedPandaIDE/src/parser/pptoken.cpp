@@ -125,12 +125,8 @@ PpToken PpTokenizer::next()
         token = readNumber(line);
     } else if (ch == '"' || ch == '\'') {
         token = readStringOrChar(line, ch);
-    } else if (ch == '#' && mCol + 1 < line.length() && line[mCol + 1] == '#') {
-        token = makeSimple(PpTokenKind::Punct, QStringLiteral("##"));
-        mCol += 2;
     } else {
-        token = makeSimple(PpTokenKind::Punct, QString(ch));
-        mCol++;
+        token = readPunct(line);
     }
     mWhitespace.clear();
     return token;
@@ -187,6 +183,71 @@ PpToken PpTokenizer::readStringOrChar(const QString &line, QChar quote)
     return makeSimple(kind, line.mid(start, mCol - start));
 }
 
+PpToken PpTokenizer::readPunct(const QString &line)
+{
+    int length = 1;
+    if (mCol+1<line.length()){
+        QChar second = line[mCol+1];
+        switch (line[mCol].unicode()) {
+        case '<':
+            if (second == '<' || second == '=') {
+                length = ((mCol+2<line.length()) &&
+                         ((second == '<' && line[mCol+2] == '=')
+                          || (second == '=' && line[mCol+2] == '>'))) ? 3 : 2;
+            }
+            break;
+        case '>':
+            if (second == '>' || second == '=')
+                length = ((mCol+2<line.length()) &&
+                          (second == '>' && line[mCol+2] == '='))  ? 3 : 2;
+            break;
+        case '.':
+            if (second == '*')
+                length = 2;
+            else if (mCol+2<line.length() && second == '.' && line[mCol+2] == '.')
+                length = 3;
+            else
+            break;
+        case '-':
+            if (second == '>') {
+                length = (mCol+2<line.length() && line[mCol+2] == '*') ? 3 : 2;
+            } else if (second == '-' || second == '=') {
+                length = 2;
+            }
+            break;
+        case ':':
+            if (second == ':')
+                length = 2;
+            break;
+        case '#':
+            if (second == '#')
+                length = 2;
+            break;
+        case '+':
+        case '&':
+        case '|':
+            if (second == line[mCol] || second == '=')
+                length = 2;
+            break;
+        case '*':
+        case '/':
+        case '%':
+        case '=':
+        case '!':
+        case '^':
+            if (second == '=')
+                length = 2;
+            break;
+        default:
+            break;
+        }
+    }
+    QString result = line.mid(mCol, length);
+    PpToken token = makeSimple(PpTokenKind::Punct, result);
+    mCol+=length;
+    return token;
+}
+
 static QVector<PpToken> tokenizeAll(const QString& text)
 {
     QStringList lines{text};
@@ -201,6 +262,11 @@ static QVector<PpToken> tokenizeAll(const QString& text)
         tokens.append(token);
     }
     return tokens;
+}
+
+QVector<PpToken> tokenizeMacroValue(const QString &value)
+{
+    return tokenizeAll(value);
 }
 
 QStringList splitMacroParams(const QString &args)

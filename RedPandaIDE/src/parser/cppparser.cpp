@@ -1118,6 +1118,8 @@ QList<PStatement> CppParser::membersOfStatement(const PStatement &scopeStatement
 
 QList<PStatement> CppParser::doMembersOfStatement(const PStatement &scopeStatement) const
 {
+    if (scopeStatement && scopeStatement->kind == StatementKind::InlineAlias)
+        return {};
     CppTypeResolver resolver(mStatementList);
     return resolver.membersOf(scopeStatement);
 }

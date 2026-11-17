@@ -656,6 +656,35 @@ void TestWidgets::test_class_browser_reopened_namespace_single_node()
     QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
 }
 
+void TestWidgets::test_class_browser_inline_namespace_aliases()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace N { inline namespace V {",
+            "  struct C { int member; };",
+            "  int value;",
+            "} }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", false, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile("classbrowser.cpp");
+    model.fillStatements();
+    QModelIndex n = findNode(model, {}, "N");
+    QVERIFY(n.isValid());
+    QCOMPARE(childCommands(model, n), QSet<QString>({"C", "V", "value"}));
+    QModelIndex alias = findNode(model, n, "C");
+    QVERIFY(alias.isValid());
+    auto node = static_cast<ClassBrowserNode *>(alias.internalPointer());
+    QVERIFY(node && node->statement);
+    QCOMPARE(node->statement->kind, StatementKind::InlineAlias);
+    QVERIFY(mParser->membersOfStatement(node->statement).isEmpty());
+    QCOMPARE(model.data(alias, Qt::DisplayRole).toString(), "C");
+}
+
 void TestWidgets::test_class_browser_inherited_members()
 {
     ClassBrowserModel model;

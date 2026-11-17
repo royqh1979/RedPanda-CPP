@@ -55,6 +55,17 @@ void CppTokenCursor::advance()
     mGreaterConsumed = 0;
 }
 
+bool CppTokenCursor::consume(const char *text)
+{
+    QLatin1String latinText(text);
+    if (latinText == QLatin1String(">"))
+        return consumeGreater();
+    if (atEnd() || currentText() != latinText)
+        return false;
+    advance();
+    return true;
+}
+
 bool CppTokenCursor::consume(const QString &text)
 {
     if (text == ">")

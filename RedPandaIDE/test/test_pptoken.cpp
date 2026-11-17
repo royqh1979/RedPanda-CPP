@@ -188,6 +188,15 @@ void TestPpTokenizer::test_identifiers_and_punctuation()
                  "eol:", "eof:"}));
 }
 
+void TestPpTokenizer::test_multi_character_operators()
+{
+    QCOMPARE(dumpTokens({"a==b && c!=d <= 2 >= 1 << 3 >> 1"}),
+             QStringList({"id:a", "pun:==", "id:b", "pun+:&&", "id+:c",
+                          "pun:!=", "id:d", "pun+:<=", "num+:2", "pun+:>=",
+                          "num+:1", "pun+:<<", "num+:3", "pun+:>>", "num+:1",
+                          "eol:", "eof:"}));
+}
+
 void TestPpTokenizer::test_unterminated_escape()
 {
     QCOMPARE(dumpTokens({"\"abc\\", "'x\\"}),

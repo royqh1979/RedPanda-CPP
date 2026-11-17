@@ -45,6 +45,7 @@ public:
     const QStringList &sourceLines() const { return *mSourceLines; }
 
     void advance();
+    bool consume(const char *text);
     bool consume(const QString &text);
     bool consumeGreater();
     Checkpoint checkpoint() const { return Checkpoint{mIndex, mGreaterConsumed}; }

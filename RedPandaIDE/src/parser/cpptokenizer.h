@@ -70,7 +70,7 @@ public:
     void stopForParserReset() { mStopForParserReset = true; }
 
 private:
-    void addToken(const QString &text, TokenKind kind, const SourcePosition &position);
+    void addToken(QString text, TokenKind kind, const SourcePosition &position);
     void resolveUnmatchedPairs();
     int nextFileBoundary(int tokenIndex) const;
 
@@ -87,6 +87,7 @@ private:
     void readFileBoundary(const QString &text, int tokenIndex);
 
     bool atEnd() const { return *mCurrent == 0; }
+    bool startsWith(const char *text) const;
     bool startsWith(const QString &text) const;
     void advance();
     static bool isIdentifierStart(QChar ch) { return ch == '_' || ch.isLetter(); }
@@ -105,6 +106,8 @@ private:
     QVector<int> mFileBoundaries;
     bool mStopForParserReset = false;
 };
+
+Q_DECLARE_TYPEINFO(CppTokenizer::Token, Q_RELOCATABLE_TYPE);
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;
 

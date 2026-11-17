@@ -64,7 +64,6 @@ class CppPreprocessor
         RawString,
         Other
     };
-    typedef qlonglong NumberType;
 public:
 
     using FileInvalidationHandler = std::function<void(const QString&)>;
@@ -175,7 +174,6 @@ public:
     static void combineLinesEndingWithBackslash(QStringList& text);
     static void replaceCommentsBySpaceChar(QStringList& text);
     bool evaluateIf(const QString& line) const;
-    QString expandMacrosInConditioningExpression(QString line) const;
 
 private:
 
@@ -259,7 +257,6 @@ private:
     };
     void invalidDefinesInFile(const QString& fileName);
     static QString signatureOfDefine(const PDefine& define);
-    bool isInsideBoundary(const QString &fileName) const;
     QHash<QString,QString> userMacroSnapshot() const;
     bool hasValidFileStamps(const PParsedFileInfo &fileInfo) const;
     bool isIncludeProtected(const QString &fileName) const;
@@ -286,31 +283,9 @@ private:
      */
     static  bool isDigit(const QChar& ch) { return (ch>='0' && ch<='9'); }
 
-    /*
-     * '0'..'9','x',X','a'..'f','A'..'F','u','U','l','L'
-     */
-    static  bool isNumberChar(const QChar& ch);
-
     QString lineBreak() { return "\n"; }
 
-    bool skipSpaces(const QString &expr, int& pos) const;
-    bool evalNumber(const QString &expr, NumberType& result, int& pos) const;
-    bool evalTerm(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalUnaryExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalMulExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalAddExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalShiftExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalRelationExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalEqualExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalBitAndExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalBitXorExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalBitOrExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalLogicAndExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalLogicOrExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalConnditionalExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-    bool evalExpr(const QString &expr, NumberType& result, int& pos, bool evaluate) const;
-
-    bool evaluateExpression(QString line) const;
+    QVector<PpToken> expandConditionTokens(const QString &line) const;
 private:
     struct Session {
         int index = 0;

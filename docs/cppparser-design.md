@@ -48,11 +48,12 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 
 ### Token 模型
 
-- Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。
+- Token 使用值语义，由 `QVector<Token>` 连续存储；不再为每个 token 单独分配 `shared_ptr`。`addToken()` 按值接收文本并移动构造 Token，调用点也移动局部 QString，避免局部 Token 和 append 的重复复制；FileBoundary 改从向量中保存的文本读取边界信息。Token 声明为 `Q_RELOCATABLE_TYPE`，QVector 扩容时可整体重定位，避免逐个复制含 QString 的 Token。
 - 对外提供最小词法类别：标识符、整数字面量、浮点数字面量、字符串/字符字面量、运算符或标点、预处理结果中的文件边界标记。关键字仍按文本判断，不为每个关键字建立 Token 类型。整数与浮点数按词法结构分类，包括指数、十六进制浮点和后缀；符号运算符不并入数字。
 - 所有字面量都保留原文。Token 只存在于本次解析的 Session 中，保存字符串等原文不会增加 Registry 或 Statement 的长期内存负担；Token 类别用于解析判断，是否使用内容由 Parser 决定。
 - 参数默认值不做通用表达式求值。Parameter Statement 不保存默认值；函数 ParameterInfo 以 `defaultArgumentText` 保存原文，供有限重载筛选和构造转换使用；函数 `args` 中的默认值文本只用于兼容和展示，不参与签名比较。
 - Token 记录由 0 基 line/ch 组成的 SourcePosition，并保留 `matchIndex`。同一行内的嵌套声明、lambda 和块必须能通过 ch 区分；不另建一套偏移坐标。Tokenizer 的源缓冲区同时被 `mCurrent` 原始指针引用，读取时不得使用非 const `QString::operator[]`，否则可能 detach 并使指针失效；只读访问统一使用 `at()` 或其它不触发 detach 的接口。
+- 标识符、运算符和连续非换行空白直接批量推进指针并一次更新 column；只有换行才逐行更新位置。Tokenizer 的输入已由 Preprocessor 去除注释，`skipWhitespace()` 不再承担注释解析。直接使用原始 cppreference 资源的测试入口必须先调用相同的注释替换，不能为了让原始输入绕过预处理而在生产 Tokenizer 中保留无效注释分支。
 - Tokenizer 计算 `()`、`[]`、`{}` 配对，不计算 `<>` 配对。未闭合结构是正常输入状态，不能中止后续切分；文件内未配对结构以当前文件尾作为虚拟匹配位置。根文件尾由不进入 token 列表的静态 FileEnd 哨兵表示，Cursor 在该位置返回哨兵而不越界；include 文件尾继续使用 FileBoundary 标记。
 - matchIndex 按整个预处理 TU 的 token 流计算，使 Parser 能识别配对目标是否越过 include 文件边界。本 Parser 不支持跨文件配对；发现后记录诊断并跳到当前文件结束。include 文件随后返回包含者继续分析，根文件则自然分析到文件尾。
 - `#include` 文件边界标记的行号映射继续保留，其职责无语法歧义。
@@ -63,6 +64,8 @@ parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直�
 Parser 通过 TokenCursor 消费 token，不再由各 handler 任意改写全局 `mIndex`。游标提供当前值、前瞻、消费、配对区域跳过以及保存/恢复位置。所有配对跳转集中在 TokenCursor 接口检查目标文件：同文件配对正常跳过；文件内未配对结构跳到当前文件尾；跨文件配对产生诊断并跳到当前文件尾，但不终止整个 TU 的分析。
 
 游标位置包含 token 索引和 `>>` 内已经消费的 `>` 数量，因此半 token 消费也能正确回滚。试探解析只能改变并回滚游标，不得创建 Statement、修改作用域或更新其它全局解析结果。
+
+TokenCursor 和 Tokenizer 的字面量文本匹配使用 `const char *`/`QLatin1String` 重载，不为每次 `consume("...")` 或 `startsWith("...")` 构造临时 QString；动态文本仍使用 QString 重载。该约束适用于声明解析的高频比较路径，不能以统一接口为由保留隐式字符串分配。
 
 lambda 的识别由 Parser 根据上下文完成，删除 Tokenizer 的 `mLambdas` 候选队列。表达式跳过仍使用括号和分隔符结构，不建立表达式 AST。
 
@@ -109,7 +112,9 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
 
-模板参数列表后和函数 declarator 后的 requires 子句只消费不求值。扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响；这不扩展 concepts 求值或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+模板参数列表后和函数 declarator 后的 requires 子句在声明阶段只消费并保存原文，不求值；扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响。C++20 起的有限 lazy 约束求值见 `cpptemplate-evaluation-design.md`，不扩展完整 Concepts 或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+
+模板参数试探不得越过当前表达式或语句。分号和 include 文件边界直接使试探失败；非负且小于当前索引的 matchIndex 表示遇到 `)`、`]`、`}` 等闭合符，也立即失败。`(`、`[`、`{` 等开括号则由 matchIndex 大于当前索引的配对分支跳过。这样，`if (value < limit)` 中的比较运算符不会导致 `<...>` 试探扫到后续无关声明。
 
 CppPreprocessor 从 hard define `__cplusplus` 保存去除整数后缀后的版本值，并通过 `cppVersion()` 提供查询；CppParser 的同名公共接口在锁内读取该值。测试依据 Parser 实际取得的版本选择对应标准库场景，不根据请求使用的 `-std=` 参数猜测实际预处理结果。
 
@@ -288,7 +293,25 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找、声明绑定、模板实参结构化和类型键文本生成的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询，`STDLIB_CONTAINER_EVAL` 记录各容器表达式求值耗时。
 
+`DECLARATION_PROFILE` 保留包含子调用的声明解析耗时，`DECLARATION_SELF` 额外输出 self-time。它们由 CMake 选项 `REDPANDA_PARSER_DECLARATION_PROFILE` 控制，默认 OFF；普通构建使用空 scope 且移除相关计数，不引入逐声明插桩成本。需要这些输出时，配置 `-DREDPANDA_PARSER_DECLARATION_PROFILE=ON`，运行时再设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及各阶段总耗时不依赖此开关，普通 Release 仍可测量。
+
+self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时，当前 scope 从自身总耗时中扣除；出栈顺序必须匹配。不能用全局累计的嵌套耗时相减，否则不同调用链交叠时会产生无效负值。
+
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
+
+GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1027 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
+
+对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
+
+基类列表已由 `readBaseClasses()` 在当前 token 流中一次完成切分：顶层逗号分段，配对括号通过 matchIndex 整体消费，并保留 `<`、`>`、`>>` 的模板深度处理；不再先由 `readUntil()` 拼接、再由 `splitTopLevel()` 二次 tokenize。嵌套模板逗号、函数指针参数逗号和多行基类列表均有行为测试。
+
+该修改的详细 profile 中，identifier 读取由 332,140 次降为 328,735 次，addToken 由 368,323 次降为 365,369 次，advance 由 5,650,510 次降为 5,617,553 次，证明基类列表的重复词法处理已消除。无插桩第二次完整解析为 1089 ms，与 1082 ms 基线相比没有可见收益；修改仍予保留，因为它消除了确定冗余并统一了单遍 token 处理路径，而不是以总体耗时作为唯一保留依据。
+
+标识符、运算符和空白批量推进后，`advance()` 调用量进一步由 5,617,553 次降为 **2,083,831 次**；详细 identifier 读取由约 96 ms 降至 21 ms，operator 由约 34 ms 降至 20 ms，Tokenizer 阶段由约 352 ms 降至 255 ms。单纯内联 `advance()` 没有明确收益，已撤回；有效修改是直接减少逐字符调用及行列更新次数，而非只消除函数调用。
+
+`addToken()` 改为移动文本和 Token，并将 Token 声明为可重定位类型后，其详细耗时由约 64.5 ms 降至 **43 ms**，Tokenizer 阶段进一步降至约 232 ms。盲目 reserve 未采用：可重定位扩容已经消除了主要复制成本，而按字符数预留容易过度分配内存。
+
+声明解析 self-time 表明 simple 外层自身不是热点，主要成本在 decl-specifier、declarator 和构造函数识别。`parseDeclSpecifierSeq()` 现在复用循环中已得到的构造函数识别结果，不再在结束时对同一游标重复识别。`isConstructorDeclaration()` 不再创建 QStringList 并线性查找 operator，而是只保存 operator 标志、名称数量及最后两个名称；约 12.5 万次调用中，`constructorCheck` 由约 24 ms 降至 **14.4 ms**。
 
 ## cppreference 语法覆盖测试
 

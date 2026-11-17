@@ -30,7 +30,6 @@ struct PreprocessorProfile {
     bool enabled = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     qint64 openIncludeNs = 0;
     qint64 closeIncludeNs = 0;
-    qint64 insideBoundaryNs = 0;
     qint64 fileStampsNs = 0;
     qint64 includeRelationsNs = 0;
     qint64 readFileNs = 0;
@@ -39,9 +38,10 @@ struct PreprocessorProfile {
     qint64 replaceCommentsNs = 0;
     qint64 expandLineNs = 0;
     qint64 evaluateIfNs = 0;
+    qint64 expandConditionNs = 0;
+    qint64 evaluateConditionNs = 0;
     qint64 openIncludeCalls = 0;
     qint64 closeIncludeCalls = 0;
-    qint64 insideBoundaryCalls = 0;
     qint64 fileStampsCalls = 0;
     qint64 includeRelationsCalls = 0;
     qint64 readFileCalls = 0;
@@ -57,7 +57,6 @@ struct PreprocessorProfile {
         qWarning() << "PREPROCESSOR_PROFILE"
                    << "openInclude" << openIncludeNs / 1000000.0
                    << "closeInclude" << closeIncludeNs / 1000000.0
-                   << "insideBoundary" << insideBoundaryNs / 1000000.0
                    << "fileStamps" << fileStampsNs / 1000000.0
                    << "includeRelations" << includeRelationsNs / 1000000.0
                    << "readFile" << readFileNs / 1000000.0
@@ -65,11 +64,12 @@ struct PreprocessorProfile {
                    << "handleInclude" << handleIncludeNs / 1000000.0
                    << "replaceComments" << replaceCommentsNs / 1000000.0
                    << "expandLine" << expandLineNs / 1000000.0
-                   << "evaluateIf" << evaluateIfNs / 1000000.0;
+                   << "evaluateIf" << evaluateIfNs / 1000000.0
+                   << "expandCondition" << expandConditionNs / 1000000.0
+                   << "evaluateCondition" << evaluateConditionNs / 1000000.0;
         qWarning() << "PREPROCESSOR_PROFILE_CALLS"
                    << "openInclude" << openIncludeCalls
                    << "closeInclude" << closeIncludeCalls
-                   << "insideBoundary" << insideBoundaryCalls
                    << "fileStamps" << fileStampsCalls
                    << "includeRelations" << includeRelationsCalls
                    << "readFile" << readFileCalls
@@ -100,6 +100,348 @@ struct PreprocessorProfileScope {
     qint64 &target;
     qint64 &calls;
     QElapsedTimer timer;
+};
+
+class PpConditionEvaluator {
+public:
+    explicit PpConditionEvaluator(const QVector<PpToken> &tokens) : mTokens(tokens) {}
+
+    bool evaluate(qlonglong &result)
+    {
+        return parseExpression(result, true) && mPos == mTokens.count();
+    }
+
+private:
+    bool parseNumber(const QString &text, qlonglong &result)
+    {
+        QString value = text;
+        bool ok = false;
+        if (value.endsWith(QLatin1String("ULL"), Qt::CaseInsensitive)) {
+            value.chop(3);
+            result = value.toULongLong(&ok, 0);
+        } else if (value.endsWith(QLatin1String("UL"), Qt::CaseInsensitive)) {
+            value.chop(2);
+            result = value.toULong(&ok, 0);
+        } else if (value.endsWith(QLatin1String("LL"), Qt::CaseInsensitive)) {
+            value.chop(2);
+            result = value.toLongLong(&ok, 0);
+        } else if (value.endsWith(QLatin1String("L"), Qt::CaseInsensitive)) {
+            value.chop(1);
+            result = value.toLong(&ok, 0);
+        } else if (value.endsWith(QLatin1String("U"), Qt::CaseInsensitive)) {
+            value.chop(1);
+            result = value.toUInt(&ok, 0);
+        } else {
+            result = value.toInt(&ok, 0);
+        }
+        return ok;
+    }
+
+    bool parseCharacter(const QString &text, qlonglong &result)
+    {
+        int pos = 1;
+        if (pos >= text.length())
+            return false;
+        if (text[pos] == '\\') {
+            ++pos;
+            if (pos >= text.length())
+                return false;
+            switch (text[pos].unicode()) {
+            case 'n': result = '\n'; break;
+            case 't': result = '\t'; break;
+            case 'r': result = '\r'; break;
+            case '0': result = 0; break;
+            case 'a': result = '\a'; break;
+            case 'b': result = '\b'; break;
+            case 'f': result = '\f'; break;
+            case 'v': result = '\v'; break;
+            default: result = text[pos].unicode(); break;
+            }
+            ++pos;
+        } else {
+            result = text[pos].unicode();
+            ++pos;
+        }
+        while (pos < text.length() && text[pos] != '\'') {
+            result = (result << 8) | text[pos].unicode();
+            ++pos;
+        }
+        return pos + 1 == text.length() && text[pos] == '\'';
+    }
+
+    bool parsePrimary(qlonglong &result, bool evaluate)
+    {
+        if (consume("(")) {
+            return parseExpression(result, evaluate) && consume(")");
+        }
+        if (atEnd())
+            return false;
+        const PpToken &token = mTokens[mPos++];
+        if (token.kind == PpTokenKind::Number)
+            return parseNumber(token.text, result);
+        if (token.kind == PpTokenKind::CharLiteral)
+            return parseCharacter(token.text, result);
+        return false;
+    }
+
+    bool parseUnary(qlonglong &result, bool evaluate)
+    {
+        if (consume("+"))
+            return parsePrimary(result, evaluate);
+        if (consume("-")) {
+            if (!parsePrimary(result, evaluate))
+                return false;
+            if (evaluate)
+                result = -result;
+            return true;
+        }
+        if (consume("~")) {
+            if (!parsePrimary(result, evaluate))
+                return false;
+            if (evaluate)
+                result = ~result;
+            return true;
+        }
+        if (consume("!")) {
+            if (!parsePrimary(result, evaluate))
+                return false;
+            if (evaluate)
+                result = !result;
+            return true;
+        }
+        return parsePrimary(result, evaluate);
+    }
+
+    bool parseMul(qlonglong &result, bool evaluate)
+    {
+        if (!parseUnary(result, evaluate))
+            return false;
+        while (true) {
+            enum class Operation { Multiply, Divide, Modulo };
+            Operation operation;
+            if (consume("*"))
+                operation = Operation::Multiply;
+            else if (consume("/"))
+                operation = Operation::Divide;
+            else if (consume("%"))
+                operation = Operation::Modulo;
+            else
+                return true;
+            qlonglong right = 0;
+            if (!parseUnary(right, evaluate))
+                return false;
+            if (evaluate) {
+                switch (operation) {
+                case Operation::Multiply:
+                    result *= right;
+                    break;
+                case Operation::Divide:
+                    result = right != 0 ? result / right : 0;
+                    break;
+                case Operation::Modulo:
+                    result = right != 0 ? result % right : 0;
+                    break;
+                }
+            }
+        }
+    }
+
+    bool parseAdd(qlonglong &result, bool evaluate)
+    {
+        if (!parseMul(result, evaluate))
+            return false;
+        while (true) {
+            bool subtract = false;
+            if (!consume("+")) {
+                if (!consume("-"))
+                    return true;
+                subtract = true;
+            }
+            qlonglong right = 0;
+            if (!parseMul(right, evaluate))
+                return false;
+            if (evaluate)
+                result = subtract ? result - right : result + right;
+        }
+    }
+
+    bool parseShift(qlonglong &result, bool evaluate)
+    {
+        if (!parseAdd(result, evaluate))
+            return false;
+        while (true) {
+            bool rightShift = false;
+            if (!consume("<<")) {
+                if (!consume(">>"))
+                    return true;
+                rightShift = true;
+            }
+            qlonglong right = 0;
+            if (!parseAdd(right, evaluate))
+                return false;
+            if (evaluate)
+                result = rightShift ? result >> right : result << right;
+        }
+    }
+
+    bool parseRelation(qlonglong &result, bool evaluate)
+    {
+        if (!parseShift(result, evaluate))
+            return false;
+        while (true) {
+            enum class Operation { LessEqual, GreaterEqual, Less, Greater };
+            Operation operation;
+            if (consume("<="))
+                operation = Operation::LessEqual;
+            else if (consume(">="))
+                operation = Operation::GreaterEqual;
+            else if (consume("<"))
+                operation = Operation::Less;
+            else if (consume(">"))
+                operation = Operation::Greater;
+            else
+                return true;
+            qlonglong right = 0;
+            if (!parseShift(right, evaluate))
+                return false;
+            if (evaluate) {
+                switch (operation) {
+                case Operation::LessEqual:
+                    result = result <= right;
+                    break;
+                case Operation::GreaterEqual:
+                    result = result >= right;
+                    break;
+                case Operation::Less:
+                    result = result < right;
+                    break;
+                case Operation::Greater:
+                    result = result > right;
+                    break;
+                }
+            }
+        }
+    }
+
+    bool parseEquality(qlonglong &result, bool evaluate)
+    {
+        if (!parseRelation(result, evaluate))
+            return false;
+        while (true) {
+            bool unequal = false;
+            if (!consume("==")) {
+                if (!consume("!="))
+                    return true;
+                unequal = true;
+            }
+            qlonglong right = 0;
+            if (!parseRelation(right, evaluate))
+                return false;
+            if (evaluate)
+                result = unequal ? result != right : result == right;
+        }
+    }
+
+    bool parseBitAnd(qlonglong &result, bool evaluate)
+    {
+        if (!parseEquality(result, evaluate))
+            return false;
+        while (consume("&")) {
+            qlonglong right = 0;
+            if (!parseEquality(right, evaluate))
+                return false;
+            if (evaluate)
+                result &= right;
+        }
+        return true;
+    }
+
+    bool parseBitXor(qlonglong &result, bool evaluate)
+    {
+        if (!parseBitAnd(result, evaluate))
+            return false;
+        while (consume("^")) {
+            qlonglong right = 0;
+            if (!parseBitAnd(right, evaluate))
+                return false;
+            if (evaluate)
+                result ^= right;
+        }
+        return true;
+    }
+
+    bool parseBitOr(qlonglong &result, bool evaluate)
+    {
+        if (!parseBitXor(result, evaluate))
+            return false;
+        while (consume("|")) {
+            qlonglong right = 0;
+            if (!parseBitXor(right, evaluate))
+                return false;
+            if (evaluate)
+                result |= right;
+        }
+        return true;
+    }
+
+    bool parseLogicAnd(qlonglong &result, bool evaluate)
+    {
+        if (!parseBitOr(result, evaluate))
+            return false;
+        while (consume("&&")) {
+            qlonglong right = 0;
+            if (!parseBitOr(right, evaluate && result))
+                return false;
+            if (evaluate)
+                result = result && right;
+        }
+        return true;
+    }
+
+    bool parseLogicOr(qlonglong &result, bool evaluate)
+    {
+        if (!parseLogicAnd(result, evaluate))
+            return false;
+        while (consume("||")) {
+            qlonglong right = 0;
+            if (!parseLogicAnd(right, evaluate && !result))
+                return false;
+            if (evaluate)
+                result = result || right;
+        }
+        return true;
+    }
+
+    bool parseExpression(qlonglong &result, bool evaluate)
+    {
+        if (!parseLogicOr(result, evaluate))
+            return false;
+        if (!consume("?"))
+            return true;
+        bool condition = result != 0;
+        qlonglong whenTrue = 0;
+        if (!parseExpression(whenTrue, evaluate && condition) || !consume(":"))
+            return false;
+        qlonglong whenFalse = 0;
+        if (!parseExpression(whenFalse, evaluate && !condition))
+            return false;
+        if (evaluate)
+            result = condition ? whenTrue : whenFalse;
+        return true;
+    }
+
+    bool consume(const char *text)
+    {
+        if (atEnd() || mTokens[mPos].text != QLatin1String(text))
+            return false;
+        ++mPos;
+        return true;
+    }
+
+    bool atEnd() const { return mPos >= mTokens.count(); }
+
+    const QVector<PpToken> &mTokens;
+    int mPos = 0;
 };
 }
 
@@ -146,16 +488,6 @@ QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrenc
     if (occurrence < 0 || occurrence >= ancestors.count())
         return QString();
     return ancestors[occurrence];
-}
-
-bool CppPreprocessor::isInsideBoundary(const QString &fileName) const
-{
-    PreprocessorProfileScope profileScope(preprocessorProfile.insideBoundaryNs,
-                                          preprocessorProfile.insideBoundaryCalls);
-    if (mRegistry.projectFiles.contains(fileName))
-        return false;
-    return isSystemHeaderFile(fileName, mIncludePaths)
-            || isSystemHeaderFile(fileName, mProjectIncludePaths);
 }
 
 QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
@@ -263,7 +595,9 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     define->value = value;
     define->filename = mSession.fileName;
     define->hardCoded = hardCoded;
-    if (!args.isEmpty()) {
+    if (args.isEmpty()) {
+        define->valueTokens = tokenizeMacroValue(value);
+    } else {
         // precompile the replacement list for the pp-token engine
         define->paramNames = splitMacroParams(
                 define->args.mid(1, define->args.length()-2));
@@ -796,15 +1130,17 @@ void CppPreprocessor::openInclude(QString fileName)
         }
     }
 
+    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
+            || isSystemHeaderFile(fileName, mProjectIncludePaths);
+    bool childInside = !mRegistry.projectFiles.contains(fileName) && isSystemFile;
     bool boundaryEntry = false;
     QString boundaryAncestor;
     if (mSession.includeStack.isEmpty()) {
-        boundaryEntry = isInsideBoundary(fileName);
+        boundaryEntry = childInside;
         boundaryAncestor = boundaryEntry ? fileName : QString();
     } else {
         const PParsedFile &parent = mSession.includeStack.back();
-        bool parentInside = isInsideBoundary(parent->fileName);
-        bool childInside = isInsideBoundary(fileName);
+        bool parentInside = parent->boundaryEntry || !parent->boundaryAncestor.isEmpty();
         boundaryEntry = !parentInside && childInside;
         boundaryAncestor = boundaryEntry ? fileName : parent->boundaryAncestor;
         if (parentInside && !childInside)
@@ -881,8 +1217,6 @@ void CppPreprocessor::openInclude(QString fileName)
         mRegistry.replayRecords.insert(fileName, mSession.currentFileInfo);
         mRegistry.scannedFiles.insert(fileName);
     }
-    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
-            || isSystemHeaderFile(fileName, mProjectIncludePaths);
     bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
 #ifdef REDPANDA_PARSER_TEST
     if (scanContent)
@@ -1326,38 +1660,28 @@ int CppPreprocessor::expandLineWithEngine(const QStringList &buffer, int startLi
     return expander.expandLine(tokenizer, out);
 }
 
-bool CppPreprocessor::isNumberChar(const QChar &ch)
-{
-    if (ch>='0' && ch<='9')
-        return true;
-    if (ch>='a' && ch<='f')
-        return true;
-    if (ch>='A' && ch<='F')
-        return true;
-    switch(ch.unicode()) {
-    case 'x':
-    case 'X':
-    case 'u':
-    case 'U':
-    case 'l':
-    case 'L':
-        return true;
-    default:
-        return false;
-    }
-}
-
 bool CppPreprocessor::evaluateIf(const QString &line) const
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.evaluateIfNs,
                                           preprocessorProfile.evaluateIfCalls);
-    QString newLine = expandMacrosInConditioningExpression(line); // replace FOO by numerical value of FOO
-    bool result = evaluateExpression(newLine);
-    //qDebug()<<newLine<<line<<result;
-    return  result;
+    QElapsedTimer conditionTimer;
+    if (preprocessorProfile.enabled)
+        conditionTimer.start();
+    QVector<PpToken> tokens = expandConditionTokens(line);
+    qint64 expansionNs = 0;
+    if (preprocessorProfile.enabled) {
+        expansionNs = conditionTimer.nsecsElapsed();
+        preprocessorProfile.expandConditionNs += expansionNs;
+    }
+    qlonglong result = 0;
+    PpConditionEvaluator evaluator(tokens);
+    bool valid = evaluator.evaluate(result);
+    if (preprocessorProfile.enabled)
+        preprocessorProfile.evaluateConditionNs += conditionTimer.nsecsElapsed() - expansionNs;
+    return valid && result != 0;
 }
 
-QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) const
+QVector<PpToken> CppPreprocessor::expandConditionTokens(const QString &line) const
 {
     // #if/#elif expressions are expanded by the same pp-token engine in
     // condition mode (defined/__has_include as operators, undefined
@@ -1391,551 +1715,13 @@ QString CppPreprocessor::expandMacrosInConditioningExpression(QString line) cons
         [this](const QString& name) {
 
         });
-    QString out;
-    expander.expandLine(tokenizer, out);
-    return out;
-}
-
-bool CppPreprocessor::skipSpaces(const QString &expr, int &pos) const
-{
-    while (pos<expr.length() && isSpaceChar(expr[pos]))
-        pos++;
-    return pos<expr.length();
-}
-
-bool CppPreprocessor::evalNumber(const QString &expr, NumberType &result, int &pos) const
-{
-    if (!skipSpaces(expr,pos))
-        return false;
-    if (!isDigit(expr[pos]))
-        return false;
-    QString s;
-    while (pos<expr.length() && isNumberChar(expr[pos])) {
-        s+=expr[pos];
-        pos++;
-    }
-    bool ok;
-
-    if (s.endsWith("ULL",Qt::CaseInsensitive)) {
-        s.resize(s.length()-3);
-        result = s.toULongLong(&ok, 0);
-    } else if (s.endsWith("UL",Qt::CaseInsensitive)) {
-        s.resize(s.length()-2);
-        result = s.toULong(&ok, 0);
-    } else if (s.endsWith("LL",Qt::CaseInsensitive)) {
-        s.resize(s.length()-2);
-        result = s.toLongLong(&ok, 0);
-    } else if (s.endsWith("L",Qt::CaseInsensitive)) {
-        s.resize(s.length()-1);
-        result = s.toLong(&ok, 0);
-    } else if (s.endsWith("U",Qt::CaseInsensitive)) {
-        s.resize(s.length()-1);
-        result = s.toUInt(&ok, 0);
-    } else {
-        result = s.toInt(&ok, 0);
-    }
-    return ok;
-}
-
-bool CppPreprocessor::evalTerm(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!skipSpaces(expr,pos))
-        return false;
-    if (expr[pos]=='\'') {
-        // character constant, e.g. 'a', '\n', or a multi-char constant
-        pos++;
-        if (pos>=expr.length())
-            return false;
-        if (expr[pos]=='\\') {
-            pos++;
-            if (pos>=expr.length())
-                return false;
-            switch (expr[pos].unicode()) {
-            case 'n': result = '\n'; break;
-            case 't': result = '\t'; break;
-            case 'r': result = '\r'; break;
-            case '0': result = 0; break;
-            case 'a': result = '\a'; break;
-            case 'b': result = '\b'; break;
-            case 'f': result = '\f'; break;
-            case 'v': result = '\v'; break;
-            default: result = expr[pos].unicode(); break; // '\\', '\'', '"', ...
-            }
-            pos++;
-        } else {
-            result = expr[pos].unicode();
-            pos++;
-        }
-        // fold any remaining characters (multi-char constants, GCC-style)
-        while (pos<expr.length() && expr[pos]!='\'') {
-            if (evaluate)
-                result = (result << 8) | expr[pos].unicode();
-            pos++;
-        }
-        if (pos>=expr.length())
-            return false; // unterminated
-        pos++; // skip closing '
-        return true;
-    }
-    if (expr[pos]=='(') {
-        pos++;
-        if (!evalExpr(expr,result,pos,evaluate))
-            return false;
-        if (!skipSpaces(expr,pos))
-            return false;
-        if (expr[pos]!=')')
-            return false;
-        pos++;
-        return true;
-    } else {
-        return evalNumber(expr,result,pos);
-    }
-}
-
-/*
- * unary_expr = term
-     | '+' term
-     | '-' term
-     | '!' term
-     | '~' term
- */
-bool CppPreprocessor::evalUnaryExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!skipSpaces(expr,pos))
-        return false;
-    if (expr[pos]=='+') {
-        pos++;
-        if (!evalTerm(expr,result,pos,evaluate))
-            return false;
-    } else if (expr[pos]=='-') {
-        pos++;
-        if (!evalTerm(expr,result,pos,evaluate))
-            return false;
-        if (evaluate)
-            result = -result;
-    } else if (expr[pos]=='~') {
-        pos++;
-        if (!evalTerm(expr,result,pos,evaluate))
-            return false;
-        if (evaluate)
-            result = ~result;
-    } else if (expr[pos]=='!') {
-        pos++;
-        if (!evalTerm(expr,result,pos,evaluate))
-            return false;
-        if (evaluate)
-            result = !result;
-    } else {
-        return evalTerm(expr,result,pos,evaluate);
-    }
-    return true;
-}
-
-/*
- * mul_expr = unary_expr
-     | mul_expr '*' unary_expr
-     | mul_expr '/' unary_expr
-     | mul_expr '%' unary_expr
- */
-bool CppPreprocessor::evalMulExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalUnaryExpr(expr,result,pos,evaluate))
-        return false;
+    QVector<PpToken> inputTokens;
     while (true) {
-        if (!skipSpaces(expr,pos))
+        PpToken token = tokenizer.next();
+        if (token.kind == PpTokenKind::EndOfInput || token.kind == PpTokenKind::EndOfLine)
             break;
-        NumberType rightResult;
-        if (expr[pos]=='*') {
-            pos++;
-            if (!evalUnaryExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result *= rightResult;
-        } else if (expr[pos]=='/') {
-            pos++;
-            if (!evalUnaryExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate) {
-                if (rightResult != 0)
-                    result /= rightResult;
-                else
-                    result = 0;
-            }
-        } else if (expr[pos]=='%') {
-            pos++;
-            if (!evalUnaryExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate) {
-                if (rightResult != 0)
-                    result %= rightResult;
-                else
-                    result = 0;
-            }
-        } else {
-            break;
-        }
+        inputTokens.append(token);
     }
-    return true;
+    return expander.expandTokens(inputTokens);
 }
-
-/*
- * add_expr = mul_expr
-     | add_expr '+' mul_expr
-     | add_expr '-' mul_expr
- */
-bool CppPreprocessor::evalAddExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalMulExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        NumberType rightResult;
-        if (expr[pos]=='+') {
-            pos++;
-            if (!evalMulExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result += rightResult;
-        } else if (expr[pos]=='-') {
-            pos++;
-            if (!evalMulExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result -= rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * shift_expr = add_expr
-     | shift_expr "<<" add_expr
-     | shift_expr ">>" add_expr
- */
-bool CppPreprocessor::evalShiftExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalAddExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        NumberType rightResult;
-        if (pos+1<expr.length() && expr[pos] == '<' && expr[pos+1]=='<') {
-            pos += 2;
-            if (!evalAddExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = (result << rightResult);
-        } else if (pos+1<expr.length() && expr[pos] == '>' && expr[pos+1]=='>') {
-            pos += 2;
-            if (!evalAddExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = (result >> rightResult);
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * relation_expr = shift_expr
-     | relation_expr ">=" shift_expr
-     | relation_expr ">" shift_expr
-     | relation_expr "<=" shift_expr
-     | relation_expr "<" shift_expr
- */
-bool CppPreprocessor::evalRelationExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalShiftExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        NumberType rightResult;
-        if (expr[pos]=='<') {
-            if (pos+1<expr.length() && expr[pos+1]=='=') {
-                pos+=2;
-                if (!evalShiftExpr(expr,rightResult,pos,evaluate))
-                    return false;
-                if (evaluate)
-                    result = (result <= rightResult);
-            } else {
-                pos++;
-                if (!evalShiftExpr(expr,rightResult,pos,evaluate))
-                    return false;
-                if (evaluate)
-                    result = (result < rightResult);
-            }
-        } else if (expr[pos]=='>') {
-            if (pos+1<expr.length() && expr[pos+1]=='=') {
-                pos+=2;
-                if (!evalShiftExpr(expr,rightResult,pos,evaluate))
-                    return false;
-                if (evaluate)
-                    result = (result >= rightResult);
-            } else {
-                pos++;
-                if (!evalShiftExpr(expr,rightResult,pos,evaluate))
-                    return false;
-                if (evaluate)
-                    result = (result > rightResult);
-            }
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * equal_expr = relation_expr
-     | equal_expr "==" relation_expr
-     | equal_expr "!=" relation_expr
- */
-bool CppPreprocessor::evalEqualExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalRelationExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (pos+1<expr.length() && expr[pos]=='!' && expr[pos+1]=='=') {
-            pos+=2;
-            NumberType rightResult;
-            if (!evalRelationExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = (result != rightResult);
-        } else if (pos+1<expr.length() && expr[pos]=='=' && expr[pos+1]=='=') {
-            pos+=2;
-            NumberType rightResult;
-            if (!evalRelationExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = (result == rightResult);
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * bit_and_expr = equal_expr
-     | bit_and_expr "&" equal_expr
- */
-bool CppPreprocessor::evalBitAndExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalEqualExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (expr[pos]=='&'
-                && (pos+1 == expr.length()
-                || expr[pos+1]!='&')) {
-            pos++;
-            NumberType rightResult;
-            if (!evalEqualExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = result & rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * bit_xor_expr = bit_and_expr
-     | bit_xor_expr "^" bit_and_expr
- */
-bool CppPreprocessor::evalBitXorExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalBitAndExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (expr[pos]=='^') {
-            pos++;
-            NumberType rightResult;
-            if (!evalBitAndExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = result ^ rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * bit_or_expr = bit_xor_expr
-     | bit_or_expr "|" bit_xor_expr
- */
-bool CppPreprocessor::evalBitOrExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalBitXorExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (expr[pos] == '|'
-                && (pos+1 == expr.length()
-                || expr[pos+1]!='|')) {
-            pos++;
-            NumberType rightResult;
-            if (!evalBitXorExpr(expr,rightResult,pos,evaluate))
-                return false;
-            if (evaluate)
-                result = result | rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * logic_and_expr = bit_or_expr
-    | logic_and_expr "&&" bit_or_expr
- */
-bool CppPreprocessor::evalLogicAndExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalBitOrExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (pos+1<expr.length() && expr[pos]=='&' && expr[pos+1] =='&') {
-            pos+=2;
-            NumberType rightResult;
-            if (!evalBitOrExpr(expr,rightResult,pos,evaluate && result))
-                return false;
-            if (evaluate)
-                result = result && rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-/*
- * logic_or_expr = logic_and_expr
-    | logic_or_expr "||" logic_and_expr
- */
-bool CppPreprocessor::evalLogicOrExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalLogicAndExpr(expr,result,pos,evaluate))
-        return false;
-    while (true) {
-        if (!skipSpaces(expr,pos))
-            break;
-        if (pos+1<expr.length() && expr[pos]=='|' && expr[pos+1] =='|') {
-            pos+=2;
-            NumberType rightResult;
-            if (!evalLogicAndExpr(expr,rightResult,pos,evaluate && !result))
-                return false;
-            if (evaluate)
-                result = result || rightResult;
-        } else {
-            break;
-        }
-    }
-    return true;
-}
-
-bool CppPreprocessor::evalConnditionalExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    if (!evalLogicOrExpr(expr,result,pos,evaluate))
-        return false;
-    if (!skipSpaces(expr,pos))
-        return true;
-    if (expr[pos] == '?') {
-        pos++; // skip '?'
-        int condition = result;
-        NumberType result1,result2;
-        if (!evalExpr(expr,result1,pos,evaluate && condition))
-            return false;
-        if (!skipSpaces(expr,pos))
-            return false;
-        if (expr[pos] != ':')
-            return false;
-        pos++; // skip ':'
-        if (!evalExpr(expr,result2,pos,evaluate && !condition))
-            return false;
-        if (evaluate)
-            result = condition ? result1 : result2;
-    }
-    return true;
-}
-
-bool CppPreprocessor::evalExpr(const QString &expr, NumberType &result, int &pos, bool evaluate) const
-{
-    return evalConnditionalExpr(expr,result,pos,evaluate);
-}
-
-/* BNF for C constant expression evaluation
- * term = number
-     | '(' expression ')'
-unary_expr = term
-     | '+' term
-     | '-' term
-     | '!' term
-     | '~' term
-mul_expr = term
-     | mul_expr '*' term
-     | mul_expr '/' term
-     | mul_expr '%' term
-add_expr = mul_expr
-     | add_expr '+' mul_expr
-     | add_expr '-' mul_expr
-shift_expr = add_expr
-     | shift_expr "<<" add_expr
-     | shift_expr ">>" add_expr
-relation_expr = shift_expr
-     | relation_expr ">=" shift_expr
-     | relation_expr ">" shift_expr
-     | relation_expr "<=" shift_expr
-     | relation_expr "<" shift_expr
-equal_expr = relation_expr
-     | equal_expr "==" relation_expr
-     | equal_expr "!=" relation_expr
-bit_and_expr = equal_expr
-     | bit_and_expr "&" equal_expr
-bit_xor_expr = bit_and_expr
-     | bit_xor_expr "^" bit_and_expr
-bit_or_expr = bit_xor_expr
-     | bit_or_expr "|" bit_xor_expr
-logic_and_expr = bit_or_expr
-    | logic_and_expr "&&" bit_or_expr
-logic_or_expr = logic_and_expr
-    | logic_or_expr "||" logic_and_expr
-conditional_expr= logic_or_expr
-    | logic_or_expr ? <expression> : conditional_expr
-
-    */
-
-bool CppPreprocessor::evaluateExpression(QString line) const
-{
-    int pos = 0;
-    NumberType result;
-    bool ok = evalExpr(line,result,pos,true);
-    if (!ok)
-        return false;
-    //expr not finished
-    if (skipSpaces(line,pos))
-        return false;
-    return result;
-}
-
 

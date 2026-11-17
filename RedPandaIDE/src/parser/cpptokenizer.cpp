@@ -19,6 +19,7 @@
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QStringList>
+#include <utility>
 
 namespace {
 struct TokenizerProfile {
@@ -160,7 +161,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             QString text = readPreprocessor();
             TokenKind kind = text.startsWith("#include ")
                     ? TokenKind::FileBoundary : TokenKind::Preprocessor;
-            addToken(text, kind, position);
+            addToken(std::move(text), kind, position);
         } else if (*mCurrent == '"' || *mCurrent == '\''
                    || ((*mCurrent == 'R' || *mCurrent == 'L'
                         || *mCurrent == 'u' || *mCurrent == 'U')
@@ -173,7 +174,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
                            || startsWith("u8'")))) {
             TokenKind kind = TokenKind::StringLiteral;
             QString text = readLiteral(kind);
-            addToken(text, kind, position);
+            addToken(std::move(text), kind, position);
         } else if (isIdentifierStart(*mCurrent)) {
             QString identifier = readIdentifier();
             if (identifier == "__extension__")
@@ -186,12 +187,12 @@ void CppTokenizer::tokenize(const QStringList &buffer)
                     continue;
                 }
             }
-            addToken(identifier, TokenKind::Identifier, position);
+            addToken(std::move(identifier), TokenKind::Identifier, position);
         } else if (mCurrent->isDigit()
                    || (*mCurrent == '.' && (mCurrent + 1)->isDigit())) {
             TokenKind kind = TokenKind::IntegerLiteral;
             QString text = readNumber(kind);
-            addToken(text, kind, position);
+            addToken(std::move(text), kind, position);
         } else {
             addToken(readOperator(), TokenKind::Operator, position);
         }
@@ -199,7 +200,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     resolveUnmatchedPairs();
 }
 
-void CppTokenizer::addToken(const QString &text, TokenKind kind, const SourcePosition &position)
+void CppTokenizer::addToken(QString text, TokenKind kind, const SourcePosition &position)
 {
     TokenizerProfileScope profileScope(tokenizerProfile.addTokenNs,
                                        tokenizerProfile.addTokenCalls);
@@ -225,15 +226,15 @@ void CppTokenizer::addToken(const QString &text, TokenKind kind, const SourcePos
     }
 
     Token token;
-    token.text = text;
+    token.text = std::move(text);
     token.position = position;
     token.kind = kind;
     token.fileName = mCurrentFile;
     token.matchIndex = opening;
-    mTokenList.append(token);
+    mTokenList.append(std::move(token));
 
     if (kind == TokenKind::FileBoundary) {
-        readFileBoundary(text, index);
+        readFileBoundary(mTokenList.last().text, index);
         mTokenList.last().fileName = mCurrentFile;
         mFileBoundaries.append(index);
     }
@@ -260,24 +261,15 @@ int CppTokenizer::nextFileBoundary(int tokenIndex) const
 
 void CppTokenizer::skipWhitespace()
 {
-    while (true) {
-        if (mCurrent->isSpace()) {
+    while (mCurrent->isSpace()) {
+        if (*mCurrent == '\n') {
             advance();
-        } else if (*mCurrent == '/' && mCurrent[1] == '/') {
-            while (!atEnd() && *mCurrent != '\n' && *mCurrent != '\r')
-                advance();
-        } else if (*mCurrent == '/' && mCurrent[1] == '*') {
-            advance();
-            advance();
-            while (!atEnd() && !(*mCurrent == '*' && mCurrent[1] == '/'))
-                advance();
-            if (*mCurrent == '*' && mCurrent[1] == '/') {
-                advance();
-                advance();
-            }
-        } else {
-            break;
+            continue;
         }
+        const QChar *whitespaceStart = mCurrent;
+        while (mCurrent->isSpace() && *mCurrent != '\n')
+            ++mCurrent;
+        mCurrentPosition.ch += mCurrent - whitespaceStart;
     }
 }
 
@@ -368,8 +360,10 @@ QString CppTokenizer::readIdentifier()
     TokenizerProfileScope profileScope(tokenizerProfile.identifierNs,
                                        tokenizerProfile.identifierCalls);
     int start = mCurrent - mBuffer.constData();
+    const QChar *identifierStart = mCurrent;
     while (isIdentifierPart(*mCurrent))
-        advance();
+        ++mCurrent;
+    mCurrentPosition.ch += mCurrent - identifierStart;
     return mBuffer.mid(start, mCurrent - mBuffer.constData() - start);
 }
 
@@ -511,8 +505,8 @@ QString CppTokenizer::readOperator()
         break;
     }
     QString result = mBuffer.mid(start, length);
-    for (int i = 0; i < length; ++i)
-        advance();
+    mCurrentPosition.ch += length;
+    mCurrent += length;
     return result;
 }
 
@@ -528,6 +522,20 @@ void CppTokenizer::readFileBoundary(const QString &text, int tokenIndex)
     int line = QStringView(text.constBegin() + delimiter + 1, text.constEnd()).toInt(&ok);
     if (ok)
         mCurrentPosition = SourcePosition{line, 0};
+}
+
+bool CppTokenizer::startsWith(const char *text) const
+{
+    TokenizerProfileScope profileScope(tokenizerProfile.startsWithNs,
+                                       tokenizerProfile.startsWithCalls);
+    if (tokenizerProfile.enabled)
+        ++tokenizerProfile.startsWithTextCalls[text];
+    QLatin1String latinText(text);
+    for (int i = 0; i < latinText.size(); ++i) {
+        if (mCurrent[i] != latinText[i])
+            return false;
+    }
+    return true;
 }
 
 bool CppTokenizer::startsWith(const QString &text) const

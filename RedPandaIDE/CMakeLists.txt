@@ -323,8 +323,7 @@ target_compile_definitions(test-editor PRIVATE
 
     # pacman makepkg adds `-ffile-prefix-map=$srcdir=/usr/src/debug/$pkgname`
     # `QFINDTESTDATA` won't find test data without explicitly setting the paths
-    QT_TESTCASE_SOURCEDIR="${CMAKE_CURRENT_SOURCE_DIR}/test"
-    QT_TESTCASE_BUILDDIR="${CMAKE_CURRENT_BINARY_DIR}")
+    QT_TESTCASE_SOURCEDIR="${CMAKE_CURRENT_SOURCE_DIR}/test")
 
 add_test(
     NAME test-editor
@@ -453,6 +452,9 @@ add_dependencies(all-test-targets test-widgets)
 add_executable(test-cpptokenizer test/test-cpptokenizer-main.cpp)
 
 target_qt_plain_cpp(test-cpptokenizer
+    src/parser/cpppreprocessor
+    src/parser/pptoken
+    src/parser/ppexpander
     src/parser/cpptokenizer
     src/parser/cpptokencursor
     src/parser/cpptypes
@@ -463,6 +465,7 @@ target_qt_plain_cpp(test-cpptokenizer
     src/parser/typeoperationregistry
     src/parser/cppexpressionevaluator
     src/parser/cppscopes
+    src/parser/parserutils
 )
 
 target_moc_classes(test-cpptokenizer
@@ -475,7 +478,8 @@ target_include_directories(test-cpptokenizer PRIVATE
 
 target_link_libraries(test-cpptokenizer PRIVATE
     Qt::Core
-    Qt::Test)
+    Qt::Test
+    redpanda_qt_utils)
 
 add_custom_command(
     TARGET test-cpptokenizer POST_BUILD
@@ -552,11 +556,18 @@ target_compile_definitions(test-cppparser PRIVATE
     ARCH_X86_64=1
     ARCH_X86=1)
 
+option(REDPANDA_PARSER_DECLARATION_PROFILE
+    "Enable declaration parser self-time profiling" OFF)
+if(REDPANDA_PARSER_DECLARATION_PROFILE)
+    add_compile_definitions(REDPANDA_PARSER_DECLARATION_PROFILE)
+endif()
+
 option(REDPANDA_PARSER_STDLIB_TEST
     "Enable standard library parser acceptance tests" OFF)
 set(REDPANDA_PARSER_STDLIB_MINGW_ROOT "" CACHE PATH
     "MinGW root used by the standard library parser acceptance tests")
 if(REDPANDA_PARSER_STDLIB_TEST)
+    list(APPEND test_environment "LC_ALL=C")
     if(NOT EXISTS "${REDPANDA_PARSER_STDLIB_MINGW_ROOT}/bin/g++.exe")
         message(FATAL_ERROR
             "REDPANDA_PARSER_STDLIB_MINGW_ROOT must point to a MinGW installation")
@@ -572,6 +583,14 @@ endif()
 add_test(
     NAME test-cppparser
     COMMAND test-cppparser)
+
+set_tests_properties(
+    test-editor
+    test-widgets
+    test-cppparser
+    test-cpptokenizer
+    PROPERTIES
+        ENVIRONMENT "${test_environment}")
 
 add_dependencies(all-test-targets test-cppparser)
 

@@ -183,6 +183,13 @@ QString withoutTemplateArguments(QString name)
     return name;
 }
 
+PStatement resolveInlineAlias(const PStatement &statement)
+{
+    if (!statement || statement->kind != StatementKind::InlineAlias)
+        return statement;
+    return std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
+}
+
 QString className(const DeclaratorInfo &declarator, const StatementBuildContext &context)
 {
     PStatement parent = context.parentScope;
@@ -373,16 +380,15 @@ QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
     QList<PStatement> result;
     if (!statement || parts.isEmpty())
         return result;
-    if (statement && statement->kind == StatementKind::InlineAlias) {
-        auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(statement);
-        PStatement target = alias->target.lock();
+    PStatement target = resolveInlineAlias(statement);
+    if (target != statement)
         return target ? doFindDeclarationRemainder(target, parts) : result;
-    }
     if (parts.count() == 1) {
         const auto candidates = mModel.childrenStatements(statement->parentScope).values(
                     statement->command);
         for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
-            if (PStatement candidate = weak.lock())
+            PStatement candidate = resolveInlineAlias(weak.lock());
+            if (candidate)
                 result.append(candidate);
         }
         return result;
@@ -400,7 +406,8 @@ QList<PStatement> CppStatementBuilder::doFindDeclarationRemainder(
         for (const PStatement &scope : current) {
             const auto candidates = mModel.childrenStatements(scope).values(parts[i]);
             for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
-                if (PStatement candidate = weak.lock())
+                PStatement candidate = resolveInlineAlias(weak.lock());
+                if (candidate)
                     next.append(candidate);
             }
         }

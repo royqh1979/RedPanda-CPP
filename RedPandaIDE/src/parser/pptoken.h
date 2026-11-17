@@ -34,7 +34,7 @@ enum class PpTokenKind {
     CharLiteral,        // '...'
     RawStringFragment,  // one physical line of a raw string (may be a
                         // continuation fragment of a multi-line raw string)
-    Punct,              // single character; '#' and '##' are separate tokens
+    Punct,              // operator or punctuation, using longest-match spelling
     EndOfLine,          // line boundary marker
     EndOfInput
 };
@@ -76,6 +76,7 @@ private:
     PpToken readWord(const QString& line);
     PpToken readNumber(const QString& line);
     PpToken readStringOrChar(const QString& line, QChar quote);
+    PpToken readPunct(const QString& line);
     PpToken makeSimple(PpTokenKind kind, const QString& text) const;
 
 private:
@@ -111,6 +112,8 @@ using ReplTokenList = QVector<ReplToken>;
  * consistent with real compilers).
  */
 QStringList splitMacroParams(const QString& args);
+
+QVector<PpToken> tokenizeMacroValue(const QString& value);
 
 /*
  * Compile a macro body into a replacement list: parameter references

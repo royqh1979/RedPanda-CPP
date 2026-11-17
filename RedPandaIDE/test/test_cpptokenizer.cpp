@@ -1,6 +1,7 @@
 #include <QTest>
 #include <QFile>
 #include "test_cpptokenizer.h"
+#include "src/parser/cpppreprocessor.h"
 
 namespace {
 const DeclarationInfo *findDeclaration(const QVector<DeclarationInfo> &declarations,
@@ -98,7 +99,9 @@ bool TestCppTokenizer::parseSyntaxFile(const QString &fileName, QVector<Declarat
         return false;
     QString text = QString::fromUtf8(file.readAll());
     text.remove('\r');
-    return parseSyntaxText(text, result);
+    QStringList lines = text.split('\n');
+    CppPreprocessor::replaceCommentsBySpaceChar(lines);
+    return parseSyntaxText(lines.join('\n'), result);
 }
 
 void TestCppTokenizer::test_identifiers_and_operators()
@@ -627,6 +630,13 @@ void TestCppTokenizer::test_parse_direct_initialization_not_function()
     QCOMPARE(declaration.declarators[0].name, "F");
     QVERIFY(declaration.declarators[0].derivations.isEmpty());
 
+    for (const QString &text : {"Foo F(this);", "Foo F(nullptr);", "Foo F(true);"}) {
+        QVERIFY(parseDeclarationText(text, declaration));
+        QCOMPARE(declaration.declarators.count(), 1);
+        QCOMPARE(declaration.declarators[0].name, "F");
+        QVERIFY(declaration.declarators[0].derivations.isEmpty());
+    }
+
     QVERIFY(parseDeclarationText("Foo F();", declaration));
     QCOMPARE(declaration.declarators[0].derivations.count(), 1);
     QCOMPARE(declaration.declarators[0].derivations[0].kind, TypeDerivationKind::Function);
@@ -898,6 +908,23 @@ void TestCppTokenizer::test_syntax_class_declarations()
     const DeclarationInfo *nested = findDeclaration(memberTemplates->children, "NestedS");
     QVERIFY(nested);
     QCOMPARE(nested->templateKind, TemplateDeclarationKind::Primary);
+}
+
+void TestCppTokenizer::test_class_base_list_nested_commas()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct D :\n"
+                "    public A<std::pair<int, float>>,\n"
+                "    virtual B<std::array<std::pair<int, double>, 2>>,\n"
+                "    C<void(*)(int, float)> {};\n", declarations));
+    const DeclarationInfo *derived = findDeclaration(declarations, "D");
+    QVERIFY(derived);
+    QCOMPARE(derived->baseClasses, QStringList({
+        "public A<std::pair<int,float>>",
+        "virtual B<std::array<std::pair<int,double>,2>>",
+        "C<void(*)(int,float)>"
+    }));
 }
 
 void TestCppTokenizer::test_syntax_template_declarations()
@@ -1241,6 +1268,33 @@ void TestCppTokenizer::test_statement_builder_assigns_out_of_line_special_member
     DeclarationInfo variable;
     QVERIFY(parseDeclarationText("C<int> value;", variable));
     QCOMPARE(resolver.resolve(variable.specifiers.type, {}, c).declaration.lock(), c);
+
+    declarations.clear();
+    QVERIFY(parseSyntaxText(
+                "namespace N {\n"
+                "  inline namespace V {\n"
+                "    template<typename T> class InlineC { public: InlineC(); };\n"
+                "  }\n"
+                "}\n"
+                "template<typename T> N::InlineC<T>::InlineC() {}\n",
+                declarations));
+    StatementModel inlineModel;
+    CppStatementBuilder inlineBuilder(inlineModel);
+    for (const DeclarationInfo &declaration : declarations)
+        inlineBuilder.build(declaration, context);
+
+    n = findStatement(inlineModel.childrenStatements(), "N");
+    QVERIFY(n);
+    PStatement v = findStatement(inlineModel.childrenStatements(n), "V");
+    QVERIFY(v);
+    c = findStatement(inlineModel.childrenStatements(v), "InlineC");
+    QVERIFY(c);
+    constructor = findStatement(inlineModel.childrenStatements(c), "InlineC");
+    QVERIFY(constructor);
+    QCOMPARE(constructor->parentScope.lock(), c);
+    QCOMPARE(constructor->fullName, "N::V::InlineC::InlineC");
+    QVERIFY(statementHasDefinition(constructor));
+    QCOMPARE(inlineModel.childrenStatements(c).values("InlineC").count(), 1);
 }
 
 
@@ -1392,6 +1446,26 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     QVERIFY(statementHasDefinition(value));
     QCOMPARE(value->definitionRange, value->declarationRange);
     QCOMPARE(statementType(value), "S");
+
+    declarations.clear();
+    QVERIFY(parseSyntaxText(
+                "void f() { struct Local { ~Local() {} } value(this); }",
+                declarations));
+    StatementModel localModel;
+    CppStatementBuilder localBuilder(localModel);
+    localBuilder.build(declarations.first(), context);
+
+    PStatement function = findStatement(localModel.childrenStatements(), "f");
+    QVERIFY(function);
+    PStatement local = findStatement(localModel.childrenStatements(function), "Local");
+    value = findStatement(localModel.childrenStatements(function), "value");
+    QVERIFY(local && value);
+    QCOMPARE(value->kind, StatementKind::Variable);
+    QCOMPARE(value->parentScope.lock(), function);
+    PStatement destructor = findStatement(localModel.childrenStatements(local), "~Local");
+    QVERIFY(destructor);
+    QCOMPARE(destructor->parentScope.lock(), local);
+    QCOMPARE(localModel.childrenStatements(local).values("~Local").count(), 1);
 }
 
 
@@ -2688,6 +2762,9 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
         if (candidate && candidate->kind == StatementKind::InlineAlias) {
             auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
             QCOMPARE(alias->target.lock()->fullName, "A::I::B");
+            QList<PStatement> aliasMembers = resolver.membersOf(candidate);
+            QCOMPARE(aliasMembers.count(), 1);
+            QCOMPARE(aliasMembers.first()->command, "viaInline");
             foundInlineAlias = true;
         }
     }
@@ -2914,6 +2991,11 @@ void TestCppTokenizer::test_failed_declaration_restores_cursor()
     CppDeclarationParser templateParser(templateCursor);
     QVERIFY(!templateParser.parseDeclaration(declaration));
     QCOMPARE(templateCursor.index(), 0);
+    tokenize({"value < (unsigned)base) return value;"});
+    CppTokenCursor comparisonCursor(mTokenizer);
+    CppDeclarationParser comparisonParser(comparisonCursor);
+    QVERIFY(!comparisonParser.parseDeclaration(declaration));
+    QCOMPARE(comparisonCursor.index(), 0);
 }
 
 

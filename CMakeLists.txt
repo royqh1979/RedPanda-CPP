@@ -285,6 +285,11 @@ if (OVERRIDE_MALLOC)
     link_libraries(${OVERRIDE_MALLOC})
 endif()
 
+set(test_environment "QT_QPA_PLATFORM=offscreen")
+if(WIN32 AND EXISTS "$ENV{WINDIR}/Fonts")
+    list(APPEND test_environment "QT_QPA_FONTDIR=$ENV{WINDIR}/Fonts")
+endif()
+
 add_subdirectory(RedPandaIDE)
 if (LUA_ADDON)
     add_subdirectory(libs/lua)

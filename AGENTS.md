@@ -64,7 +64,8 @@ xmake
 - `MAKE_INTERFACE` — `unix` 与 `mingw32`（IDE 调用哪个 make）。
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
-- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
+- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。启用时 CTest 会设置 `LC_ALL=C`，确保编译器 `-v` 输出使用固定的英文标记。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
+- `REDPANDA_PARSER_DECLARATION_PROFILE`（默认 OFF）— 编译声明解析的细分计时、self-time scope 栈和计数。普通构建使用空 scope，不引入逐声明插桩成本；需要 `DECLARATION_PROFILE`/`DECLARATION_SELF` 输出时设为 ON，并在运行时设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及 preprocess/tokenize/parseDeclarations 等阶段计时不受此开关影响。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 
@@ -73,13 +74,15 @@ xmake
 测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
 
 ```sh
-# CMake：构建全部测试目标，然后运行（GUI 测试使用 offscreen）
+# CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
 cmake --build build --target all-test-targets --parallel
-cd build && env CTEST_OUTPUT_ON_FAILURE=1 QT_QPA_PLATFORM=offscreen make test
+cd build && ctest --output-on-failure
 
 # Xmake：构建并运行测试
 xmake test
 ```
+
+完整回归必须先用 Release 构建运行全部 CTest，再用 Debug 构建运行全部 CTest，顺序不得反过来。Release 先验证功能并快速覆盖标准库场景，Debug 再检查断言和调试期不变量；两种构建均通过才算完整回归通过。
 
 CI（`.github/workflows/unit.yml`）在 Ubuntu + Qt 5 上运行的正是上述步骤。它还强制检查：
 - `addon/gen.sh` 的输出已提交（运行后 `git diff --exit-code` 必须干净）。
@@ -100,7 +103,7 @@ PATH="/d/qt/mingw64/bin:$PATH" cmake -G "MinGW Makefiles" \
   /e/workspaces/contributes/RedPanda-CPP
 ```
 
-- GUI 测试统一设置 `QT_QPA_FONTDIR=C:/Windows/Fonts`，避免本机 Qt 安装缺少 `lib/fonts` 时反复报告字体目录 warning；这只影响测试进程的字体查找，不修改 Qt 安装。`test-qsynedit` 尤其需要该设置。
+- CTest 自动为测试设置 `QT_QPA_PLATFORM=offscreen`；检测到 Windows 字体目录时，还会将 `QT_QPA_FONTDIR` 指向该目录，避免本机 Qt 安装缺少 `lib/fonts` 时反复报告字体目录 warning。这些设置只影响测试进程，不修改 Qt 安装。直接运行测试 exe 时仍需自行设置这些环境变量。
 
 - **test-qsynedit 优先直接运行**，并设置 `QT_QPA_PLATFORM=offscreen`、`QT_QPA_FONTDIR=C:/Windows/Fonts` 和 `QT_FORCE_STDERR_LOGGING=1`。当前构建已验证可直接运行并通过；只有出现无输出退出、崩溃或需要栈信息时才使用 gdb：
 
@@ -129,7 +132,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
   ./test-cppparser.exe --suite=TestCppParser test_standard_library_public_api_complete
 ```
 
-  需要 `DECLARATION_PROFILE`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。
+  需要 `DECLARATION_PROFILE`、`DECLARATION_SELF`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，先在配置阶段启用 `REDPANDA_PARSER_DECLARATION_PROFILE=ON`（声明细分开关默认 OFF），再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；普通构建的声明 scope 为空操作，整体阶段计时仍可使用。嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。
 - **tokenize/profile 的目的首先是发现并消除不合理操作，不是让计数或耗时好看**：profile 本身不以预期收益决定是否进行；每个不同 entry 都必须核对触发来源和必要性，不能仅凭总次数下降判断优化完成。cache/memo 可以使用，但统计必须同时保留解析尝试、命中情况和调用链，不能用 cache 命中隐藏冗余查找或重复处理。先查清并消除无意义操作，再用 cache 复用必要工作的结果；是否修改设计和代码时，才根据证据评估收益、复杂度和风险。
 
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
