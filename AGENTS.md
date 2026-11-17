@@ -82,6 +82,8 @@ cd build && ctest --output-on-failure
 xmake test
 ```
 
+完整回归必须先用 Release 构建运行全部 CTest，再用 Debug 构建运行全部 CTest，顺序不得反过来。Release 先验证功能并快速覆盖标准库场景，Debug 再检查断言和调试期不变量；两种构建均通过才算完整回归通过。
+
 CI（`.github/workflows/unit.yml`）在 Ubuntu + Qt 5 上运行的正是上述步骤。它还强制检查：
 - `addon/gen.sh` 的输出已提交（运行后 `git diff --exit-code` 必须干净）。
 - `libs/lua/lua/` 与上游 Lua v5.4.6 完全一致。

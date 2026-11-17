@@ -630,6 +630,13 @@ void TestCppTokenizer::test_parse_direct_initialization_not_function()
     QCOMPARE(declaration.declarators[0].name, "F");
     QVERIFY(declaration.declarators[0].derivations.isEmpty());
 
+    for (const QString &text : {"Foo F(this);", "Foo F(nullptr);", "Foo F(true);"}) {
+        QVERIFY(parseDeclarationText(text, declaration));
+        QCOMPARE(declaration.declarators.count(), 1);
+        QCOMPARE(declaration.declarators[0].name, "F");
+        QVERIFY(declaration.declarators[0].derivations.isEmpty());
+    }
+
     QVERIFY(parseDeclarationText("Foo F();", declaration));
     QCOMPARE(declaration.declarators[0].derivations.count(), 1);
     QCOMPARE(declaration.declarators[0].derivations[0].kind, TypeDerivationKind::Function);
@@ -1261,6 +1268,33 @@ void TestCppTokenizer::test_statement_builder_assigns_out_of_line_special_member
     DeclarationInfo variable;
     QVERIFY(parseDeclarationText("C<int> value;", variable));
     QCOMPARE(resolver.resolve(variable.specifiers.type, {}, c).declaration.lock(), c);
+
+    declarations.clear();
+    QVERIFY(parseSyntaxText(
+                "namespace N {\n"
+                "  inline namespace V {\n"
+                "    template<typename T> class InlineC { public: InlineC(); };\n"
+                "  }\n"
+                "}\n"
+                "template<typename T> N::InlineC<T>::InlineC() {}\n",
+                declarations));
+    StatementModel inlineModel;
+    CppStatementBuilder inlineBuilder(inlineModel);
+    for (const DeclarationInfo &declaration : declarations)
+        inlineBuilder.build(declaration, context);
+
+    n = findStatement(inlineModel.childrenStatements(), "N");
+    QVERIFY(n);
+    PStatement v = findStatement(inlineModel.childrenStatements(n), "V");
+    QVERIFY(v);
+    c = findStatement(inlineModel.childrenStatements(v), "InlineC");
+    QVERIFY(c);
+    constructor = findStatement(inlineModel.childrenStatements(c), "InlineC");
+    QVERIFY(constructor);
+    QCOMPARE(constructor->parentScope.lock(), c);
+    QCOMPARE(constructor->fullName, "N::V::InlineC::InlineC");
+    QVERIFY(statementHasDefinition(constructor));
+    QCOMPARE(inlineModel.childrenStatements(c).values("InlineC").count(), 1);
 }
 
 
@@ -1412,6 +1446,26 @@ void TestCppTokenizer::test_statement_builder_distinguishes_class_body_from_vari
     QVERIFY(statementHasDefinition(value));
     QCOMPARE(value->definitionRange, value->declarationRange);
     QCOMPARE(statementType(value), "S");
+
+    declarations.clear();
+    QVERIFY(parseSyntaxText(
+                "void f() { struct Local { ~Local() {} } value(this); }",
+                declarations));
+    StatementModel localModel;
+    CppStatementBuilder localBuilder(localModel);
+    localBuilder.build(declarations.first(), context);
+
+    PStatement function = findStatement(localModel.childrenStatements(), "f");
+    QVERIFY(function);
+    PStatement local = findStatement(localModel.childrenStatements(function), "Local");
+    value = findStatement(localModel.childrenStatements(function), "value");
+    QVERIFY(local && value);
+    QCOMPARE(value->kind, StatementKind::Variable);
+    QCOMPARE(value->parentScope.lock(), function);
+    PStatement destructor = findStatement(localModel.childrenStatements(local), "~Local");
+    QVERIFY(destructor);
+    QCOMPARE(destructor->parentScope.lock(), local);
+    QCOMPARE(localModel.childrenStatements(local).values("~Local").count(), 1);
 }
 
 
@@ -2708,6 +2762,9 @@ void TestCppTokenizer::test_namespace_lookup_transparency_and_scope_boundaries()
         if (candidate && candidate->kind == StatementKind::InlineAlias) {
             auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
             QCOMPARE(alias->target.lock()->fullName, "A::I::B");
+            QList<PStatement> aliasMembers = resolver.membersOf(candidate);
+            QCOMPARE(aliasMembers.count(), 1);
+            QCOMPARE(aliasMembers.first()->command, "viaInline");
             foundInlineAlias = true;
         }
     }

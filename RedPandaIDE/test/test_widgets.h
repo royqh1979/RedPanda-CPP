@@ -54,6 +54,7 @@ private slots:
     void test_code_completion_keywords_only();
     void test_code_completion_operator_overloads_are_excluded();
     void test_class_browser_reopened_namespace_single_node();
+    void test_class_browser_inline_namespace_aliases();
     void test_class_browser_inherited_members();
     void test_goto_class_declaration_and_definition();
     void test_goto_constructor_declaration_and_definition();

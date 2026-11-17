@@ -144,7 +144,8 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            if (node->statement->kind == StatementKind::Namespace)
+            if (node->statement->kind == StatementKind::Namespace
+                    || node->statement->kind == StatementKind::InlineAlias)
                 return node->statement->command;
             if (!(statementType(node->statement).isEmpty())) {
                 if ( (node->statement->kind == StatementKind::Variable)
@@ -287,7 +288,8 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     node->children.append(newNode.get());
     mNodes.append(newNode);
     QString normalizedArgs;
-    if (statement->kind != StatementKind::Namespace)
+    if (statement->kind != StatementKind::Namespace
+            && statement->kind != StatementKind::InlineAlias)
         normalizedArgs = std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
     mNodeIndex.insert(
                 QString("%1+%2+%3")

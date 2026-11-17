@@ -828,6 +828,10 @@ QList<PStatement> CppTypeResolver::membersOf(const PStatement &scope) const
         }
         return result;
     }
+    if (scope->kind == StatementKind::InlineAlias) {
+        PStatement target = std::dynamic_pointer_cast<InlineAliasStatement>(scope)->target.lock();
+        return target ? membersOf(target) : result;
+    }
     QSet<const AbstractStatement *> visited;
     MemberEntryList entries;
     appendMembers(scope, false, visited, entries);

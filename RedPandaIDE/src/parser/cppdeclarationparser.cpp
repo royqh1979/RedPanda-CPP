@@ -557,7 +557,8 @@ bool CppDeclarationParser::parseDeclSpecifierSeq(DeclSpecifierInfo &result)
         bool typeWord = isBuiltinType(text) || text == "struct" || text == "class"
                 || text == "union" || text == "enum" || text == "decltype"
                 || text == "typename"
-                || mCursor.current().kind == CppTokenizer::TokenKind::Identifier;
+                || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
+                    && !isNonDeclarationStartKeyword(text));
         if (!typeWord || (hasType && !isBuiltinType(text)))
             break;
 

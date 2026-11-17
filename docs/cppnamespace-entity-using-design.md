@@ -245,6 +245,8 @@ class 补全的基类遍历不因本设计改变。
 
 树形视图同时显示实际声明和using。using 的类型解析、跳转、parse hint 和 function tips 均指向实际目标。
 
+成员枚举分为两层：`CppTypeResolver::membersOf()` 提供语义查找，InlineAlias 会解析到目标并返回目标的成员；`CppParser::membersOfStatement()` 面向 UI 节点，InlineAlias 自身没有 children，返回空列表。代码补全从表达式求值取得实际目标，因此不依赖 UI 层对 InlineAlias 的透明解析。
+
 唯一命名 namespace 实现后，class browser 直接显示唯一实体，不再需要为重开节点创建 dummy Statement。该调用方调整已完成；Block 和 Lambda 使用的 `DummyStatement` 属性与 namespace 展示无关，继续保留。
 
 refactor/rename 不属于本轮改造范围，后续统一完善。
