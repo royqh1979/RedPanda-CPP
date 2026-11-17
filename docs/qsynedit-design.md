@@ -453,6 +453,16 @@ Syntaxer 实例持可变扫描状态（当前行、token 位置），不可重�
 - 级联重算只用文档实例；两者扫描状态互不干扰；
 - 后台线程只允许用临时克隆。
 
+### 4.3 GAS syntax directive 状态
+
+`.intel_syntax` / `.att_syntax` 在扫描时更新 GAS syntaxer 的 syntax mode 和寄存器 prefix 设置；`prefix` / `noprefix` 选项在同一行继续调整 prefix。ASM 基类通过寄存器分类钩子让 GAS 根据当前设置选择带前缀或不带前缀的寄存器集合，指令和 directive 不受该设置影响。
+
+`GASSyntaxState` 保存每行结束时的 syntax mode 和 prefix，并通过 `equals()` 比较二者。完整重解析从默认 ATT 开始；从中间行重解析时由前一行状态恢复环境。directive 前保持默认模式，directive 后才切换。
+
+directive 的新增、修改、覆盖和删除都会改变相应行及其后续行状态，直接复用 Document 已有的级联重解析即可收敛，不需要模式变化通知、directive 行 ID 查询或 Document 的 ASM 专有判断。`moveLine()` 无需特殊处理。`createInstance()` 只复制配置，不复制这些临时扫描状态。
+
+设计上不以单文件多处 syntax directive 为需求，不为此增加额外机制。
+
 ## 5. 代码折叠
 
 ### 5.1 术语与命名约定

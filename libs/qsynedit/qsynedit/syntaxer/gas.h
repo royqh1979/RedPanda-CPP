@@ -29,13 +29,17 @@ public:
         ATT,
         Intel
     };
+    struct GASSyntaxState : SyntaxState {
+        SyntaxMode syntaxMode;
+        bool prefixRegisterNames;
+        bool equals(const std::shared_ptr<SyntaxState> &s2) const override;
+    };
     explicit GASSyntaxer();
     GASSyntaxer(const GASSyntaxer&)=delete;
     GASSyntaxer& operator=(const GASSyntaxer&)=delete;
 
     static const QSet<QString> Directives;
 private:
-    int mDirectiveSyntaxLine;
     SyntaxMode mSyntaxMode;
     bool mPrefixRegisterNames;
     bool mThisLineHasSyntaxDirective;
@@ -43,13 +47,16 @@ private:
     static QSet<QString> mPrefixedKeywords;
 protected:
     bool isCommentStartChar(QChar ch) override;
-    void procNull() override;
+    bool isRegister(const QString &ident) const override;
     bool isDirective(const QString& ident) override;
     void handleDirective(int line, const QString& directive) override;
     void handleIdent(int line, const QString& ident)  override;
     void setPrefixRegisterNames(bool prefix);
 public:
     void setLine(int lineNumber, const QString &newLine, size_t lineSeq) override;
+    PSyntaxState getState() const override;
+    void setState(const PSyntaxState &rangeState) override;
+    void resetState() override;
     QString languageName() const override;
     ProgrammingLanguage language() const override;
     QSet<QString> keywords() const override;

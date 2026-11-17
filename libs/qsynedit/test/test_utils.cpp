@@ -1,6 +1,9 @@
 #include "test_utils.h"
 #include <QFontDatabase>
 #include <QDebug>
+#include <QElapsedTimer>
+#include <QFile>
+#include <QTest>
 
 TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer, const QString &lineText)
 {
@@ -38,6 +41,50 @@ QList<TokenInfoList> parseLines(QSynedit::Syntaxer *syntaxer, const QStringList 
         result.append(list);
     }
     return result;
+}
+
+void profileSyntaxerFile(QSynedit::Syntaxer *syntaxer, const QString &fileName,
+                         const QString &syntaxerName)
+{
+    QFile file(fileName);
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QStringList sourceLines = QString::fromUtf8(file.readAll()).split('\n', Qt::KeepEmptyParts);
+    file.close();
+    bool repeatValid = false;
+    int repeat = qEnvironmentVariableIntValue("QSYNEDIT_PROFILE_REPEAT", &repeatValid);
+    if (!repeatValid || repeat < 1)
+        repeat = 1;
+    QStringList lines;
+    if (repeat > 1)
+        lines.reserve(sourceLines.count() * repeat);
+    for (int i = 0; i < repeat; ++i)
+        lines += sourceLines;
+
+    for (int mode = 0; mode < 2; ++mode) {
+        for (int run = 0; run < 3; ++run) {
+            syntaxer->resetState();
+            qint64 tokens = 0;
+            qint64 tokenChars = 0;
+            int attributeTypes = 0;
+            QElapsedTimer timer;
+            timer.start();
+            for (int i = 0; i < lines.count(); ++i) {
+                syntaxer->setLine(i, lines[i], i);
+                while (!syntaxer->eol()) {
+                    ++tokens;
+                    attributeTypes += int(syntaxer->getTokenAttribute()->tokenType());
+                    if (mode == 1)
+                        tokenChars += syntaxer->getToken().length();
+                    syntaxer->next();
+                }
+            }
+            qint64 elapsed = timer.nsecsElapsed();
+            qWarning().noquote() << QString(
+                        "SYNTAXER_PROFILE syntaxer=%1 mode=%2 run=%3 ns=%4 tokens=%5 tokenChars=%6 attributes=%7")
+                        .arg(syntaxerName, mode == 0 ? "scan" : "materialize")
+                        .arg(run).arg(elapsed).arg(tokens).arg(tokenChars).arg(attributeTypes);
+        }
+    }
 }
 
 

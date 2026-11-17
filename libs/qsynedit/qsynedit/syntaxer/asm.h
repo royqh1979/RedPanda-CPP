@@ -80,7 +80,7 @@ private:
     void procComment();
     void procCR();
     void procGreaterThan();
-    void procIdent(const QString& prefix);
+    void procIdent(QChar prefix);
     void procLF();
     void proceLowerThan();
     void procNumber();
@@ -95,6 +95,7 @@ private:
     TokenId getIdentType(const QString& ident,  QChar nextChar);
 protected:
     virtual bool isCommentStartChar(QChar ch);
+    virtual bool isRegister(const QString &ident) const;
     virtual void procNull();
     virtual bool isDirective(const QString& ident);
     virtual bool isPreprocessDirective(const QString& ident);

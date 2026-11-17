@@ -29,7 +29,9 @@ private slots:
 
     void test_cpp_style_comments();
     void test_ansi_c_comments();
+    void test_directives_and_identifier_classification();
 
+    void test_profile_file();
     void test_create_instance_copies_settings();
 private:
     QSynedit::CppSyntaxer mSyntaxer;

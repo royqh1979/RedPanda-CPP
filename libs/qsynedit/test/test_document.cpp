@@ -5,6 +5,7 @@
 #include "qsynedit/document.h"
 #include "qsynedit/glyphcalculator.h"
 #include "qsynedit/syntaxer/cpp.h"
+#include "qsynedit/syntaxer/gas.h"
 #include "qsynedit/syntaxer/textfile.h"
 
 namespace QSynedit {
@@ -971,6 +972,37 @@ void TestDocument::test_reparse()
     mDoc->putLine(0, "void f() {}", true);
     QCOMPARE(mDoc->braceLevel(0), 0);
     QCOMPARE(reparseSpy.count(), 1);
+}
+
+void TestDocument::test_gas_directive_state_cascade()
+{
+    mDoc->setSyntaxer(std::make_shared<GASSyntaxer>());
+    mDoc->setText("mov eax, ebx\n"
+                  ".intel_syntax noprefix\n"
+                  "mov ecx, edx\n"
+                  "mov esi, edi");
+    auto checkState = [&](int line, GASSyntaxer::SyntaxMode mode, bool prefix) {
+        auto state = std::dynamic_pointer_cast<GASSyntaxer::GASSyntaxState>(
+                    mDoc->getSyntaxState(line));
+        QVERIFY(state);
+        QCOMPARE(state->syntaxMode, mode);
+        QCOMPARE(state->prefixRegisterNames, prefix);
+    };
+    checkState(0, GASSyntaxer::SyntaxMode::ATT, true);
+    checkState(2, GASSyntaxer::SyntaxMode::Intel, false);
+    checkState(3, GASSyntaxer::SyntaxMode::Intel, false);
+
+    mDoc->deleteLine(1, true);
+    checkState(1, GASSyntaxer::SyntaxMode::ATT, true);
+    checkState(2, GASSyntaxer::SyntaxMode::ATT, true);
+
+    mDoc->insertLine(1, ".intel_syntax noprefix", true);
+    checkState(2, GASSyntaxer::SyntaxMode::Intel, false);
+    checkState(3, GASSyntaxer::SyntaxMode::Intel, false);
+
+    mDoc->putLine(1, ".att_syntax prefix", true);
+    checkState(2, GASSyntaxer::SyntaxMode::ATT, true);
+    checkState(3, GASSyntaxer::SyntaxMode::ATT, true);
 }
 
 void TestDocument::test_find_last_line_by_seq()

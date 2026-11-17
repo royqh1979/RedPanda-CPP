@@ -73,6 +73,8 @@ xmake
 
 测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
 
+测试必须按被测组件的职责放入对应目标和测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`。新增测试不得再把 Parser、StatementBuilder、Resolver 等无关组件塞进 `test-cpptokenizer`；其中已有的历史混放不是新增测试的范例，必要时应拆分目标，而不是继续扩大其职责。
+
 ```sh
 # CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
 cmake --build build --target all-test-targets --parallel
@@ -116,6 +118,8 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 
   本机调试版 Qt 没有 `lib/fonts`；offscreen 后端否则会反复报告字体目录 warning。
   `QT_QPA_FONTDIR=C:/Windows/Fonts` 只影响测试进程的字体查找，不修改 Qt 安装。
+
+- **Syntaxer profiling**：Release 下设置 `QSYNEDIT_PROFILE_FILE`，直接运行 `test-qsynedit` 的 `TestCppSyntaxer`、`TestASMSyntaxer` 或 `TestTextSyntaxer` 中 `test_profile_file`，例如 `QSYNEDIT_PROFILE_FILE=resources/miniaudio.h ./test-qsynedit.exe --suite=TestCppSyntaxer test_profile_file`（大文件已收入 `libs/qsynedit/test/resources/`，构建时复制到测试目录，也可供后续 QSynEdit 编辑性能检查复用）。文件读取不计时；用例分别跑三轮纯扫描和三轮包含 `getToken()` 的遍历，以 `SYNTAXER_PROFILE` 行输出纳秒、token 数和字符数。短文件可用 `QSYNEDIT_PROFILE_REPEAT=10000` 在计时前展开；未设置文件变量时正常测试自动跳过。
 
 - **崩溃时取栈**：`gdb -batch -ex run -ex bt --args ./test-qsynedit.exe [参数]`（`-ex` 顺序必须是先 run 后 bt；对非主线程的崩溃，停止后用 `-ex "thread apply all bt"` 打印所有线程）。注意栈地址异常（如数据指针为野值）通常意味着更早前已发生堆/栈破坏，崩溃只是案发点，应向前追查写坏内存的代码，而不是只修崩溃处。
 
