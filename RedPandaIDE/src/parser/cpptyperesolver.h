@@ -147,8 +147,8 @@ public:
                             EvaluationContext *evaluation = nullptr,
                             ClassInstance *resultInstance = nullptr) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
-    StatementAccessibility memberAccessibility(const PStatement &scope,
-                                               const PStatement &member) const;
+    QList<PStatement> resolveMembersOfClass(const PStatement &classStatement,
+                                            const PStatement &accessScope) const;
 
 private:
     struct MemberResolution {

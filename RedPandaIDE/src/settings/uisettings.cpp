@@ -56,16 +56,6 @@ void UISettings::setLeftPanelIndex(int newLeftPanelIndex)
     mLeftPanelIndex = newLeftPanelIndex;
 }
 
-bool UISettings::classBrowserShowInherited() const
-{
-    return mClassBrowserShowInherited;
-}
-
-void UISettings::setClassBrowserShowInherited(bool newClassBrowserShowInherited)
-{
-    mClassBrowserShowInherited = newClassBrowserShowInherited;
-}
-
 bool UISettings::showProblem() const
 {
     return mShowProblem;
@@ -557,7 +547,6 @@ void UISettings::doSave()
     saveValue("debug_panel_index",mDebugPanelIndex);
     saveValue("class_browser_sort_alphabetically",mClassBrowserSortAlpha);
     saveValue("class_browser_sort_by_type",mClassBrowserSortType);
-    saveValue("class_browser_show_inherited",mClassBrowserShowInherited);
 
     saveValue("shrink_explorer_tabs",mShrinkExplorerTabs);
     saveValue("shrink_messages_tabs",mShrinkMessagesTabs);
@@ -623,7 +612,6 @@ void UISettings::doLoad()
 
     mClassBrowserSortAlpha = boolValue("class_browser_sort_alphabetically",true);
     mClassBrowserSortType = boolValue("class_browser_sort_by_type",true);
-    mClassBrowserShowInherited = boolValue("class_browser_show_inherited",true);
 
     mShrinkExplorerTabs = boolValue("shrink_explorer_tabs",false);
     mShrinkMessagesTabs = boolValue("shrink_messages_tabs",false);

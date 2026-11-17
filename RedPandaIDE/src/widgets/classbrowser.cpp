@@ -247,6 +247,7 @@ void ClassBrowserModel::clear()
     mNodes.clear();
     mNodeIndex.clear();
     mProcessedStatements.clear();
+    mStatementsToShow.clear();
     mScopeNodes.clear();
     endResetModel();
 }
@@ -317,14 +318,14 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
 
 void ClassBrowserModel::addMembers()
 {
+    QList<PParsedFileInfo> fileInfos;
     if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
         if (mCurrentFile.isEmpty())
             return;
-        // show statements in the file
         PParsedFileInfo p = mParser->findFileInfo(mCurrentFile);
         if (!p)
             return;
-        filterChildren(mRoot,p->statements());
+        fileInfos.append(p);
     } else {
         if (mParser->projectFiles().isEmpty())
             return;
@@ -332,9 +333,21 @@ void ClassBrowserModel::addMembers()
             PParsedFileInfo p = mParser->findFileInfo(file);
             if (!p)
                 return;
-            filterChildren(mRoot,p->statements());
+            fileInfos.append(p);
         }
     }
+
+    for (const PParsedFileInfo &fileInfo : fileInfos) {
+        for (const std::weak_ptr<AbstractStatement> &weakStatement : fileInfo->statements()) {
+            PStatement statement = weakStatement.lock();
+            while (statement && !mStatementsToShow.contains(statement)) {
+                mStatementsToShow.insert(statement);
+                statement = statement->parentScope.lock();
+            }
+        }
+    }
+    for (const PParsedFileInfo &fileInfo : fileInfos)
+        filterChildren(mRoot,fileInfo->statements());
     sortNode(mRoot);
 }
 
@@ -408,7 +421,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementList &statements)
 {
     for (const PStatement &statement : statements) {
-        if (!statement)
+        if (!statement || !mStatementsToShow.contains(statement))
             continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statementInProject(statement))
@@ -420,8 +433,6 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
         if (statement->kind == StatementKind::Block)
             continue;
         if (statement->kind == StatementKind::Lambda)
-            continue;
-        if (statementIsInherited(statement) && !pSettings->ui().classBrowserShowInherited())
             continue;
 
         if (statement == node->statement) // prevent infinite recursion
@@ -450,9 +461,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
         ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
-        bool memberOfNode = node->statement
-                && mParser->memberAccessibility(node->statement, statement)
-                != StatementAccessibility::None;
+        bool memberOfNode = node->statement && parentScope == node->statement;
         if (!memberOfNode && (parentScope!=node->statement)
                 && (!parentScope || !node->statement
                     || parentScope->fullName!=node->statement->fullName)) {
@@ -471,8 +480,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
         if (isScopeStatement(statement)) {
             PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
             if (!scopeNode)
-                scopeNode = addChild(parentNode, statement);
-            filterChildren(scopeNode.get(), mParser->membersOfStatement(statement));
+                addChild(parentNode, statement);
         } else {
             addChild(parentNode,statement);
         }

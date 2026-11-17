@@ -41,9 +41,6 @@ public:
     bool classBrowserSortType() const;
     void setClassBrowserSortType(bool newClassBrowserSortType);
 
-    bool classBrowserShowInherited() const;
-    void setClassBrowserShowInherited(bool newClassBrowserShowInherited);
-
     bool showToolbar() const;
     void setShowToolbar(bool newShowToolbar);
 
@@ -188,7 +185,6 @@ private:
     int mDebugPanelIndex;
     bool mClassBrowserSortAlpha;
     bool mClassBrowserSortType;
-    bool mClassBrowserShowInherited;
 
     bool mShrinkExplorerTabs;
     bool mShrinkMessagesTabs;

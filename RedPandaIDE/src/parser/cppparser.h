@@ -67,8 +67,8 @@ public:
     PStatementList findNamespace(const QString& name, bool includeInline = false) const;
     PStatement findStatement(const QString& fullname) const;
     QList<PStatement> membersOfStatement(const PStatement &scopeStatement) const;
-    StatementAccessibility memberAccessibility(const PStatement &scopeStatement,
-                                               const PStatement &member) const;
+    QList<PStatement> resolveMembersOfClass(const PStatement &classStatement,
+                                            const PStatement &accessScope) const;
     PStatement findStatementOf(const QString& fileName, const QString& phrase, int line) const;
     PStatement findStatementOf(const QString& fileName, const QString& phrase,
                                const PStatement& currentScope, PStatement& parentScopeType) const;

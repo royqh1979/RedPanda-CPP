@@ -141,6 +141,55 @@ void TestCppParser::test_unresolved_member_function_reference()
     QCOMPARE(reference->parentScope.lock(), mParser->findStatement("C"));
 }
 
+void TestCppParser::test_nested_template_member_definition()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename T> struct C {",
+            "    template<typename U> C<T>& f(U);",
+            "};",
+            "template<typename T>",
+            "template<typename U>",
+            "C<T>&",
+            "C<T>::",
+            "f(U) { return *this; }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement function = mParser->findStatement("C::f");
+    QVERIFY(function);
+    QCOMPARE(function->kind, StatementKind::Function);
+    QCOMPARE(function->parentScope.lock(), mParser->findStatement("C"));
+    QVERIFY(statementHasDefinition(function));
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->templateParameters.count(), 2);
+    QVERIFY(!mParser->findStatement("C<T>"));
+}
+
+void TestCppParser::test_extern_template_class_declaration()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename T> struct C {};",
+            "extern template class C<int>;",
+            "int after;"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement specialization = mParser->findStatement("C<int>");
+    QVERIFY(specialization);
+    QCOMPARE(specialization->kind, StatementKind::Class);
+    QVERIFY(mParser->findStatement("after"));
+    for (const PStatement &statement : mParser->statementList().statements()) {
+        QVERIFY2(!statement->command.isEmpty() || statement->kind != StatementKind::Variable,
+                 QString("empty variable at line %1")
+                 .arg(statement->definition.range.start.line).toUtf8().constData());
+    }
+}
+
 void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
@@ -561,6 +610,48 @@ void TestCppParser::test_struct()
     QCOMPARE(statementType(child), "int");
     QCOMPARE(child->accessibility, StatementAccessibility::Private);
 
+}
+
+void TestCppParser::test_resolve_members_of_class_access_scope()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "class Base {",
+            "public: int publicValue;",
+            "protected: int protectedValue;",
+            "private: int privateValue;",
+            "};",
+            "class Derived : private Base { public: void action(); };",
+            "struct PublicDerived : Base { void action(); };",
+            "struct ProtectedDerived : protected Base { void action(); };"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    PStatement base = mParser->findStatement("Base");
+    PStatement derived = mParser->findStatement("Derived");
+    PStatement publicDerived = mParser->findStatement("PublicDerived");
+    PStatement protectedDerived = mParser->findStatement("ProtectedDerived");
+    QVERIFY(base && derived && publicDerived && protectedDerived);
+    auto names = [](const StatementList &statements) {
+        QSet<QString> result;
+        for (const PStatement &statement : statements)
+            result.insert(statement->command);
+        return result;
+    };
+
+    QCOMPARE(names(mParser->resolveMembersOfClass(derived, {})),
+             QSet<QString>{"action"});
+    QCOMPARE(names(mParser->resolveMembersOfClass(derived, derived)),
+             QSet<QString>({"action", "publicValue", "protectedValue"}));
+    QCOMPARE(names(mParser->resolveMembersOfClass(derived, base)),
+             QSet<QString>({"action", "publicValue", "protectedValue", "privateValue"}));
+    QCOMPARE(names(mParser->resolveMembersOfClass(publicDerived, {})),
+             QSet<QString>({"action", "publicValue"}));
+    QCOMPARE(names(mParser->resolveMembersOfClass(protectedDerived, {})),
+             QSet<QString>{"action"});
+    QCOMPARE(names(mParser->resolveMembersOfClass(protectedDerived, protectedDerived)),
+             QSet<QString>({"action", "publicValue", "protectedValue"}));
 }
 
 void TestCppParser::test_shared_boundary_statement_invalidation()
@@ -1762,6 +1853,60 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(statementHasDefinition(stringAlias));
     QVERIFY(mParser->findStatement("std::basic_string"));
     QCOMPARE(mParser->findStatementOf(main, {"std", "::", "basic_string"}, 0), basicString);
+    PStatement append = mParser->findStatement("std::basic_string::_M_append");
+    QVERIFY(append);
+    PStatement appendParent = append->parentScope.lock();
+    QVERIFY2(appendParent == basicString,
+             QString("%1 has parent %2; expected %3")
+             .arg(append->fullName,
+                  appendParent ? appendParent->fullName : QString("<null>"),
+                  basicString->fullName).toUtf8().constData());
+    QString basicStringTcc = QFileInfo(basicString->definition.fileName).dir().filePath("basic_string.tcc");
+    PParsedFileInfo tccInfo = mParser->findFileInfo(basicStringTcc);
+    QVERIFY(tccInfo);
+    int appendDefinitions = 0;
+    for (const std::weak_ptr<AbstractStatement> &weak : tccInfo->statements()) {
+        PStatement statement = weak.lock();
+        if (!statement || statement->command != "_M_append")
+            continue;
+        ++appendDefinitions;
+        PStatement parent = statement->parentScope.lock();
+        QVERIFY2(parent == basicString,
+                 QString("%1 at line %2 has parent %3; expected %4")
+                 .arg(statement->fullName)
+                 .arg(statement->definition.range.start.line)
+                 .arg(parent ? parent->fullName : QString("<null>"), basicString->fullName)
+                 .toUtf8().constData());
+    }
+    QVERIFY(appendDefinitions > 0);
+    PStatement replaceDispatch = mParser->findStatement("std::basic_string::_M_replace_dispatch");
+    QVERIFY(replaceDispatch);
+    QCOMPARE(replaceDispatch->kind, StatementKind::Function);
+    QCOMPARE(replaceDispatch->parentScope.lock(), basicString);
+    QStringList emptyVariables;
+    for (const std::weak_ptr<AbstractStatement> &weak : tccInfo->statements()) {
+        PStatement statement = weak.lock();
+        QVERIFY(statement);
+        if (statement->command.isEmpty() && statement->kind == StatementKind::Variable
+                && statement->scope == StatementScope::Global) {
+            emptyVariables.append(QString("fullName %1, definition line %2")
+                                  .arg(statement->fullName)
+                                  .arg(statement->definition.range.start.line));
+        }
+    }
+    QVERIFY2(emptyVariables.isEmpty(), emptyVariables.join("; ").toUtf8().constData());
+    bool hasWcharExplicitInstantiation = false;
+    for (const QString &line : mParser->preprocessedForTest()) {
+        if (line.contains("extern template class basic_string<wchar_t>")) {
+            hasWcharExplicitInstantiation = true;
+            break;
+        }
+    }
+    if (hasWcharExplicitInstantiation) {
+        PStatement wcharString = mParser->findStatement("std::basic_string<wchar_t>");
+        QVERIFY(wcharString);
+        QCOMPARE(wcharString->kind, StatementKind::Class);
+    }
     PStatement size = mParser->findStatement("std::basic_string::size");
     QVERIFY(size);
     QCOMPARE(mParser->findStatementOf(

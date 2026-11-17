@@ -200,6 +200,10 @@ using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, std::weak_ptr<AbstractStatement>>;
 
+inline uint qHash(const PStatement& statement, uint seed) {
+    return qHash(statement.get(),seed);
+}
+
 struct StatementOccurrence {
     QString fileName;
     SourceRange range;
@@ -274,9 +278,9 @@ inline StatementOccurrence statementDefinitionForNavigation(const PStatement &st
 
 inline StatementOccurrence statementDeclarationForNavigation(const PStatement &statement,
                                                               const QString &currentFile) {
-    for (const StatementOccurrence &occurrence : statement->declarations) {
-        if (occurrence.fileName == currentFile)
-            return occurrence;
+    QList<StatementOccurrence> occurrencies = statement->declarations.values(currentFile);
+    if (!occurrencies.isEmpty()) {
+        return occurrencies.first();
     }
     if (!statement->declarations.isEmpty())
         return *statement->declarations.constBegin();

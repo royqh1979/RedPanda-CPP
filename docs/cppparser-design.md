@@ -112,6 +112,8 @@ internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转�
 
 声明入口按关键字角色分类，不能把任意保留字当作用户类型名。语句、控制流、字面量和表达式专用关键字不能开始声明，普通声明解析直接失败并由外层语句扫描跳过，因此 `return value;` 不会生成局部变量 Statement。`alignas`、`_Pragma`、两种 GNU `__attribute` 拼写和 `__extension__` 在 Tokenizer 中跳过其标记及配对区域，保留后续声明；`export` 在 template/声明前缀中消费。当前不生成 concept Statement，concept 定义按不支持语法跳过。`final`、`override` 等上下文标识符只在对应 declarator 后缀处理，不进入全局拒绝集合。
 
+成员函数模板的类外定义可以包含多层连续 `template<...>` 前缀；声明解析逐层消费并按外层到内层顺序累计模板形参，不能把剩余前缀交给普通 declarator。`extern template` 是显式实例化声明而不是模板声明前缀：保留 `extern` 属性并消费这两个 token 后，按后续 class 或函数声明正常分派。
+
 模板参数列表后和函数 declarator 后的 requires 子句在声明阶段只消费并保存原文，不求值；扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响。C++20 起的有限 lazy 约束求值见 `cpptemplate-evaluation-design.md`，不扩展完整 Concepts 或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
 
 模板参数试探不得越过当前表达式或语句。分号和 include 文件边界直接使试探失败；非负且小于当前索引的 matchIndex 表示遇到 `)`、`]`、`}` 等闭合符，也立即失败。`(`、`[`、`{` 等开括号则由 matchIndex 大于当前索引的配对分支跳过。这样，`if (value < limit)` 中的比较运算符不会导致 `<...>` 试探扫到后续无关声明。
@@ -205,7 +207,7 @@ StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存
 
 ### 继承成员查找
 
-继承成员默认采用按需递归查找，不复制基类 children。derived 的直接成员优先，随后递归补充基类成员；override 按函数签名去重，inline/匿名 namespace 作为透明作用域处理。树形视图和补全列表通过统一的 membersOf(scope) 获得临时成员列表，不读取持久 children 作为继承结果。
+继承成员默认采用按需递归查找，不复制基类 children。derived 的直接成员优先，随后递归补充基类成员；override 按函数签名去重，inline/匿名 namespace 作为透明作用域处理。class 补全通过 `resolveMembersOfClass(classStatement, accessScope)` 获取从访问域可见的临时成员列表，继承访问级别按路径计算；非 class 作用域直接读取持久 children。Class Browser 只显示直接 children，不做继承投影。
 
 复制 children 虽然能降低单次查询成本，但会增加 Statement 和索引数量，并要求在基类变化时级联失效。它还必须处理 override 签名、继承访问级别、模板参数替换、声明范围和 boundary ancestor，容易破坏 replay 与唯一所有权模型。继承访问级别只在临时查询结果中计算，不改写基类 Statement。
 
@@ -350,4 +352,4 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 
 重命名按 syntax token 工作：只处理 `TokenType::Identifier`，用该位置表达式查找 Statement，并比较声明文件与声明位置，不能只按文本相同替换。`findOccurenceInFile` 和 `renameSymbolInEditor` 都采用该规则。`renameSymbol` 只允许声明和定义位于当前文件的符号，私有实现直接操作传入的当前 Editor，不再通过 MainWindow 二次查找，也不处理未打开文件。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
 
-补全和类浏览器使用统一的临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。goto 测试覆盖变量、typedef/using/namespace 别名、枚举值、参数、标签、宏、普通及 `=default` 函数，以及 extern、前置声明和 `=delete` 等无定义的拒绝路径。
+class 补全使用临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。Class Browser 从当前 FileInfo（项目模式为所有项目 FileInfo）的 statements 及其祖先建立身份集合，再沿直接 children 生成树；祖先节点仅用于组织当前集合中的声明和定义，不引入其它文件成员。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。goto 测试覆盖变量、typedef/using/namespace 别名、枚举值、参数、标签、宏、普通及 `=default` 函数，以及 extern、前置声明和 `=delete` 等无定义的拒绝路径。

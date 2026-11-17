@@ -34,6 +34,8 @@ Red Panda C++ Version 3.6
   - fix: Class browser navigation preserves the C/C++ context and opens extensionless headers as C++ instead of plain text.
   - fix: Headers opened with a context are parsed through that context instead of being reparsed without its macro environment.
   - fix: Background syntax checking uses an unmodified header's context source file when appropriate, including while the context is being parsed.
+  - fix: Correctly parse nested template prefixes on out-of-line member definitions and extern template explicit instantiations.
+  - change: The class browser shows direct members from the selected files and no longer has an inherited-member display toggle.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

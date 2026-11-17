@@ -82,6 +82,7 @@ private:
     QHash<QString,PClassBrowserNode> mScopeNodes;
     QHash<QString,PClassBrowserNode> mNodeIndex;
     QHash<ClassBrowserNode *, QSet<AbstractStatement *>> mProcessedStatements;
+    QSet<PStatement> mStatementsToShow;
     QVector<PClassBrowserNode> mNodes;
     PCppParser mParser;
     bool mUpdating;

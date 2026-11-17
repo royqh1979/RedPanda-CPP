@@ -840,19 +840,54 @@ QList<PStatement> CppTypeResolver::membersOf(const PStatement &scope) const
     return result;
 }
 
-StatementAccessibility CppTypeResolver::memberAccessibility(
-        const PStatement &scope, const PStatement &member) const
+QList<PStatement> CppTypeResolver::resolveMembersOfClass(
+        const PStatement &classStatement, const PStatement &accessScope) const
 {
-    if (!scope)
-        return member ? member->accessibility : StatementAccessibility::None;
+    QList<PStatement> result;
+    if (!classStatement || classStatement->kind != StatementKind::Class)
+        return result;
+
+    auto enclosingClass = [](PStatement scope) {
+        while (scope && scope->kind != StatementKind::Class)
+            scope = scope->parentScope.lock();
+        return scope;
+    };
+    PStatement accessClass = enclosingClass(accessScope);
     QSet<const AbstractStatement *> visited;
     MemberEntryList entries;
-    appendMembers(scope, false, visited, entries);
+    appendMembers(classStatement, false, visited, entries);
     for (const MemberEntry &entry : entries) {
-        if (entry.statement == member)
-            return entry.accessibility;
+        PStatement declaringClass = enclosingClass(entry.statement->parentScope.lock());
+        bool accessible = entry.accessibility == StatementAccessibility::Public;
+        if (accessClass && accessClass == declaringClass) {
+            accessible = true;
+        } else if (accessClass == classStatement) {
+            accessible = entry.statement->accessibility != StatementAccessibility::Private;
+        } else if (accessClass && entry.accessibility == StatementAccessibility::Protected) {
+            QSet<const AbstractStatement *> basesVisited;
+            QStack<PStatement> pending;
+            pending.push(accessClass);
+            while (!pending.isEmpty() && !accessible) {
+                PStatement current = pending.pop();
+                if (!current || basesVisited.contains(current.get()))
+                    continue;
+                basesVisited.insert(current.get());
+                for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(current)->baseClasses) {
+                    StatementAccessibility inheritance;
+                    PStatement base = baseClass(current, baseSpecifier, inheritance);
+                    if (base == classStatement) {
+                        accessible = true;
+                        break;
+                    }
+                    if (base)
+                        pending.push(base);
+                }
+            }
+        }
+        if (accessible)
+            result.append(entry.statement);
     }
-    return StatementAccessibility::None;
+    return result;
 }
 
 PStatement CppTypeResolver::baseClass(const PStatement &scope, const QString &baseSpecifier,

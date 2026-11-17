@@ -2312,7 +2312,6 @@ void MainWindow::updateActionIcons()
     //classbrowser
     mClassBrowser_Sort_By_Name->setIcon(mIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_NAME));
     mClassBrowser_Sort_By_Type->setIcon(mIconsManager->getIcon(IconsManager::ACTION_EDIT_SORT_BY_TYPE));
-    mClassBrowser_Show_Inherited->setIcon(mIconsManager->getIcon(IconsManager::ACTION_EDIT_SHOW_INHERITED));
 
     //debug console
     mDebugConsole_Copy->setIcon(mIconsManager->getIcon(IconsManager::ACTION_EDIT_COPY));
@@ -3325,10 +3324,6 @@ void MainWindow::createCustomActions()
                 tr("Sort alphabetically"),
                 ui->tabStructure);
     mClassBrowser_Sort_By_Name->setCheckable(true);
-    mClassBrowser_Show_Inherited = createAction(
-                tr("Show inherited members"),
-                ui->tabStructure);
-    mClassBrowser_Show_Inherited->setCheckable(true);
     mClassBrowser_goto_declaration = createAction(
                 tr("Goto declaration"),
                 ui->tabStructure);
@@ -3346,13 +3341,10 @@ void MainWindow::createCustomActions()
 
     mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
     mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
-    mClassBrowser_Show_Inherited->setChecked(pSettings->ui().classBrowserShowInherited());
     connect(mClassBrowser_Sort_By_Name, &QAction::toggled,
             this, &MainWindow::onClassBrowserSortByName);
     connect(mClassBrowser_Sort_By_Type, &QAction::toggled,
             this, &MainWindow::onClassBrowserSortByType);
-    connect(mClassBrowser_Show_Inherited, &QAction::toggled,
-            this, &MainWindow::onClassBrowserShowInherited);
 
     connect(mClassBrowser_goto_definition,&QAction::triggered,
             this, &MainWindow::onClassBrowserGotoDefinition);
@@ -3486,14 +3478,6 @@ void MainWindow::initToolButtons()
         toolButton = new QToolButton;
         toolButton->setIconSize(iconSize);
         toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
-        hlayout->addWidget(toolButton);
-        QFrame * vLine = new QFrame();
-        vLine->setFrameShape(QFrame::VLine);
-        vLine->setFrameShadow(QFrame::Sunken);
-        hlayout->addWidget(vLine);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
         hlayout->addWidget(toolButton);
         hlayout->addStretch();
     }
@@ -4313,7 +4297,6 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mClassBrowser_Sort_By_Name);
     menu.addAction(mClassBrowser_Sort_By_Type);
-    menu.addAction(mClassBrowser_Show_Inherited);
     Editor * editor = mEditorManager->getEditor();
     if ((editor &&editor->inProject()) || mProject) {
         menu.addSeparator();
@@ -5139,13 +5122,6 @@ void MainWindow::onClassBrowserGotoDefinition()
         return;
     openFileWithContext(definition.fileName, FileType::None, QString(),
                         QSynedit::CharPos{0, definition.range.start.line});
-}
-
-void MainWindow::onClassBrowserShowInherited()
-{
-    pSettings->ui().setClassBrowserShowInherited(mClassBrowser_Show_Inherited->isChecked());
-    pSettings->ui().save();
-    mClassBrowserModel->fillStatements();
 }
 
 void MainWindow::onClassBrowserSortByType()

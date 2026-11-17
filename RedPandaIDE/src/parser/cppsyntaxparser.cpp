@@ -102,7 +102,11 @@ bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
     SourcePosition start = mCursor.current().position;
     result = DeclarationInfo();
     result.fileName = mCursor.current().fileName;
-    if (!mDeclarationParser.parseTemplatePrefix(result)) {
+    if (mCursor.currentText() == "extern" && mCursor.peek().text == "template") {
+        result.specifiers.properties.setFlag(DeclSpecifierProperty::Extern);
+        mCursor.advance();
+        mCursor.advance();
+    } else if (!mDeclarationParser.parseTemplatePrefix(result)) {
         mCursor.restore(checkpoint);
         result = DeclarationInfo();
         return false;

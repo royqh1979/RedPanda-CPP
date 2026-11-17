@@ -3321,17 +3321,6 @@ void TestCppTokenizer::test_inherited_member_enumeration_and_access()
     QVERIFY(members.contains(basePublicValue));
     QVERIFY(members.contains(baseProtectedValue));
     QVERIFY(members.contains(basePrivateValue));
-    QCOMPARE(resolver.memberAccessibility(derived, override), StatementAccessibility::Public);
-    QCOMPARE(resolver.memberAccessibility(derived, basePublicValue), StatementAccessibility::Private);
-    QCOMPARE(resolver.memberAccessibility(derived, baseProtectedValue), StatementAccessibility::Private);
-    QCOMPARE(resolver.memberAccessibility(derived, basePrivateValue), StatementAccessibility::Private);
-
-    QCOMPARE(resolver.memberAccessibility(publicDerived, basePublicValue), StatementAccessibility::Public);
-    QCOMPARE(resolver.memberAccessibility(publicDerived, baseProtectedValue), StatementAccessibility::Protected);
-    QCOMPARE(resolver.memberAccessibility(publicDerived, basePrivateValue), StatementAccessibility::Private);
-    QCOMPARE(resolver.memberAccessibility(protectedDerived, basePublicValue), StatementAccessibility::Protected);
-    QCOMPARE(resolver.memberAccessibility(protectedDerived, baseProtectedValue), StatementAccessibility::Protected);
-    QCOMPARE(resolver.memberAccessibility(protectedDerived, basePrivateValue), StatementAccessibility::Private);
     QCOMPARE(basePublicValue->accessibility, StatementAccessibility::Public);
     QCOMPARE(baseProtectedValue->accessibility, StatementAccessibility::Protected);
     QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);

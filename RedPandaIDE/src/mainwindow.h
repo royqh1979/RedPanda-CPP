@@ -420,7 +420,6 @@ private slots:
     void onFilesViewOpen();
     void onClassBrowserGotoDeclaration();
     void onClassBrowserGotoDefinition();
-    void onClassBrowserShowInherited();
     void onClassBrowserSortByType();
     void onClassBrowserSortByName();
     void onClassBrowserChangeScope();
@@ -1008,7 +1007,6 @@ private:
     //actions for class browser
     QAction * mClassBrowser_Sort_By_Type;
     QAction * mClassBrowser_Sort_By_Name;
-    QAction * mClassBrowser_Show_Inherited;
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
     QAction * mClassBrowser_Show_CurrentFile;

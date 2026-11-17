@@ -1104,9 +1104,14 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
 QList<PStatement> CppParser::membersOfStatement(const PStatement &scopeStatement) const
 {
     QMutexLocker locker(&mMutex);
-    if (mParsing)
-        return {};
-    return doMembersOfStatement(scopeStatement);
+    QList<PStatement> result;
+    if (mParsing || (scopeStatement && scopeStatement->kind == StatementKind::InlineAlias))
+        return result;
+    for (const std::weak_ptr<AbstractStatement> &weak : mStatementList.childrenStatements(scopeStatement)) {
+        if (PStatement statement = weak.lock())
+            result.append(statement);
+    }
+    return result;
 }
 
 QList<PStatement> CppParser::doMembersOfStatement(const PStatement &scopeStatement) const
@@ -1117,14 +1122,14 @@ QList<PStatement> CppParser::doMembersOfStatement(const PStatement &scopeStateme
     return resolver.membersOf(scopeStatement);
 }
 
-StatementAccessibility CppParser::memberAccessibility(
-        const PStatement &scopeStatement, const PStatement &member) const
+QList<PStatement> CppParser::resolveMembersOfClass(const PStatement &classStatement,
+                                                   const PStatement &accessScope) const
 {
     QMutexLocker locker(&mMutex);
     if (mParsing)
-        return StatementAccessibility::None;
+        return {};
     CppTypeResolver resolver(mStatementList);
-    return resolver.memberAccessibility(scopeStatement, member);
+    return resolver.resolveMembersOfClass(classStatement, accessScope);
 }
 
 PStatement CppParser::findMemberOfStatement(const QString &phrase,

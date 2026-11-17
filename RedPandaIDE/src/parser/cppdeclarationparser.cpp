@@ -348,73 +348,73 @@ bool CppDeclarationParser::parseTemplatePrefix(DeclarationInfo &result)
 {
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     mCursor.consume("export");
-    if (!mCursor.consume("template"))
-        return true;
-    if (!mCursor.consume("<")) {
-        mCursor.restore(start);
-        return false;
-    }
-    result.templateKind = TemplateDeclarationKind::Primary;
-    if (mCursor.consume(">")) {
-        result.templateKind = TemplateDeclarationKind::ExplicitSpecialization;
-    } else {
-        while (!mCursor.atEnd()) {
-            TemplateParameterInfo parameter;
-            if (mCursor.consume("template")) {
-                parameter.kind = TemplateParameterKind::TemplateTemplate;
-                if (mCursor.currentText() == "<")
-                    readBalancedToken("<", ">");
-                if (!mCursor.consume("class"))
-                    mCursor.consume("typename");
-            } else if (mCursor.consume("class") || mCursor.consume("typename")) {
-                parameter.kind = TemplateParameterKind::Type;
-            } else {
-                parameter.kind = TemplateParameterKind::NonType;
-                DeclSpecifierInfo specifiers;
-                if (!parseDeclSpecifierSeq(specifiers)) {
-                    mCursor.restore(start);
-                    return false;
-                }
-                if (mCursor.consume("..."))
-                    parameter.parameterPack = true;
-                DeclaratorInfo declarator;
-                if (!parseDeclarator(declarator)) {
-                    mCursor.restore(start);
-                    return false;
-                }
-                parameter.name = declarator.name;
-                parameter.type = std::make_shared<TypeInfo>(specifiers.type);
-                appendTypeDerivation(*parameter.type, declarator);
-            }
-            if (mCursor.consume("..."))
-                parameter.parameterPack = true;
-            if (parameter.name.isEmpty() && !mCursor.atEnd()
-                    && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
-                parameter.name = mCursor.currentText();
-                mCursor.advance();
-            }
-            if (mCursor.consume("=")) {
-                CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-                skipTemplateDefaultArgument(parameter.kind == TemplateParameterKind::NonType);
-                parameter.defaultArgumentText = readConsumedText(defaultStart);
-            }
-            result.templateParameters.append(parameter);
-
-            if (mCursor.consume(","))
-                continue;
-            if (mCursor.currentText() == ">" || mCursor.currentText() == ">>") {
-                mCursor.consumeGreater();
-                break;
-            }
+    while (mCursor.consume("template")) {
+        if (!mCursor.consume("<")) {
             mCursor.restore(start);
             return false;
         }
-    }
-    if (mCursor.consume("requires")) {
-        CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
-        skipTemplateRequiresClause();
-        if (mCppVersion >= CppVersion::Cpp20)
-            result.templateRequiresClause = readConsumedText(requiresStart);
+        result.templateKind = TemplateDeclarationKind::Primary;
+        if (mCursor.consume(">")) {
+            result.templateKind = TemplateDeclarationKind::ExplicitSpecialization;
+        } else {
+            while (!mCursor.atEnd()) {
+                TemplateParameterInfo parameter;
+                if (mCursor.consume("template")) {
+                    parameter.kind = TemplateParameterKind::TemplateTemplate;
+                    if (mCursor.currentText() == "<")
+                        readBalancedToken("<", ">");
+                    if (!mCursor.consume("class"))
+                        mCursor.consume("typename");
+                } else if (mCursor.consume("class") || mCursor.consume("typename")) {
+                    parameter.kind = TemplateParameterKind::Type;
+                } else {
+                    parameter.kind = TemplateParameterKind::NonType;
+                    DeclSpecifierInfo specifiers;
+                    if (!parseDeclSpecifierSeq(specifiers)) {
+                        mCursor.restore(start);
+                        return false;
+                    }
+                    if (mCursor.consume("..."))
+                        parameter.parameterPack = true;
+                    DeclaratorInfo declarator;
+                    if (!parseDeclarator(declarator)) {
+                        mCursor.restore(start);
+                        return false;
+                    }
+                    parameter.name = declarator.name;
+                    parameter.type = std::make_shared<TypeInfo>(specifiers.type);
+                    appendTypeDerivation(*parameter.type, declarator);
+                }
+                if (mCursor.consume("..."))
+                    parameter.parameterPack = true;
+                if (parameter.name.isEmpty() && !mCursor.atEnd()
+                        && mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+                    parameter.name = mCursor.currentText();
+                    mCursor.advance();
+                }
+                if (mCursor.consume("=")) {
+                    CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
+                    skipTemplateDefaultArgument(parameter.kind == TemplateParameterKind::NonType);
+                    parameter.defaultArgumentText = readConsumedText(defaultStart);
+                }
+                result.templateParameters.append(parameter);
+
+                if (mCursor.consume(","))
+                    continue;
+                if (mCursor.currentText() == ">" || mCursor.currentText() == ">>") {
+                    mCursor.consumeGreater();
+                    break;
+                }
+                mCursor.restore(start);
+                return false;
+            }
+        }
+        if (mCursor.consume("requires")) {
+            CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
+            skipTemplateRequiresClause();
+            if (mCppVersion >= CppVersion::Cpp20)
+                result.templateRequiresClause = readConsumedText(requiresStart);
+        }
     }
     return true;
 }

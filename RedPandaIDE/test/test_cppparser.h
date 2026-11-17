@@ -16,6 +16,8 @@ private slots:
     void test_parse_var();
     void test_global_variable_reference_scope();
     void test_unresolved_member_function_reference();
+    void test_nested_template_member_definition();
+    void test_extern_template_class_declaration();
     void test_forward_declaration_prefers_definition_for_eval();
     void test_base_member_return_uses_declaration_bindings();
     void test_member_overload_resolution();
@@ -24,6 +26,7 @@ private slots:
     void test_member_alias_template_specialization();
     void test_parse_vars();
     void test_struct();
+    void test_resolve_members_of_class_access_scope();
     void test_preprocessor_statements();
     void test_label_statements();
     void test_hard_define_statements();

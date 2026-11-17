@@ -223,19 +223,31 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
 {
     if (scopeStatement && !isStatementIncluded(scopeStatement))
         return;
-    const StatementList children = mParser->membersOfStatement(scopeStatement);
-    for (const PStatement &childStatement : children) {
+    auto addChild = [&](const PStatement &childStatement) {
         if (onlyTypes && !isTypeKind(childStatement->kind))
-            continue;
+            return;
         if (!scopeStatement) {
             StatementOccurrence declaration = statementDeclarationForNavigation(childStatement, fileName);
             if (declaration.fileName.isEmpty()) {
                 addStatement(childStatement, fileName, -1);
             } else if (!isStatementIncluded(childStatement)) {
-                continue;
+                return;
             }
         }
         addStatement(childStatement, fileName, line);
+    };
+    if (scopeStatement && scopeStatement->kind == StatementKind::Class) {
+        const StatementList children = mParser->resolveMembersOfClass(scopeStatement, mCurrentScope);
+        for (const PStatement &childStatement : children)
+            addChild(childStatement);
+    } else {
+        const StatementList children = mParser->membersOfStatement(scopeStatement);
+        for (PStatement childStatement : children) {
+            if (childStatement->kind == StatementKind::InlineAlias)
+                childStatement = mParser->findAliasedStatement(childStatement);
+            if (childStatement)
+                addChild(childStatement);
+        }
     }
 }
 
@@ -243,7 +255,11 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
 {
     if (scopeStatement && !isStatementIncluded(scopeStatement))
         return;
-    const StatementList children = mParser->membersOfStatement(scopeStatement);
+    StatementList children;
+    if (scopeStatement && scopeStatement->kind == StatementKind::Class)
+        children = mParser->resolveMembersOfClass(scopeStatement, mCurrentScope);
+    else
+        children = mParser->membersOfStatement(scopeStatement);
     for (const PStatement &childStatement : children) {
         if (statementInSystemHeader(childStatement))
             continue;
@@ -798,14 +814,13 @@ void CodeCompletionPopup::getCompletionFor(
                 if ((classTypeStatement == scopeTypeStatement) || (ownerStatement.type.declaration.lock()->command == "this")) {
                     //we can use all members
                     addChildren(classTypeStatement,fileName,-1);
-                } else { // we can only use public members
-                    const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                } else { // we can only use members accessible from the current scope
+                    const StatementList children = mParser->resolveMembersOfClass(
+                                classTypeStatement, mCurrentScope);
                     if (children.isEmpty())
                         return;
                     for (const PStatement &childStatement : children) {
-                        if (mParser->memberAccessibility(classTypeStatement, childStatement)
-                                == StatementAccessibility::Public
-                                && childStatement->kind != StatementKind::Constructor
+                        if (childStatement->kind != StatementKind::Constructor
                                 && childStatement->kind != StatementKind::Destructor
                                 && !mAddedStatements.contains(childStatement->command)) {
                             addStatement(childStatement,fileName,-1);
@@ -824,13 +839,14 @@ void CodeCompletionPopup::getCompletionFor(
                 if (classTypeStatement->kind == StatementKind::EnumType
                         || classTypeStatement->kind == StatementKind::EnumClassType) {
                     const StatementList children = mParser->membersOfStatement(classTypeStatement);
-                    for (const PStatement &child : children)
-                        addStatement(child,fileName,line);
+                    for (const PStatement &childStatement : children)
+                        addStatement(childStatement,fileName,line);
                 } else {
                     //class
                     if (classTypeStatement == scopeTypeStatement) {
-                        //we can use all static members
-                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        //we can use all accessible static members
+                        const StatementList children = mParser->resolveMembersOfClass(
+                                    classTypeStatement, mCurrentScope);
                         for (const PStatement &childStatement : children) {
                             if (
                               (statementIsStatic(childStatement))
@@ -844,8 +860,9 @@ void CodeCompletionPopup::getCompletionFor(
                             }
                         }
                     } else {
-                        // we can only use public static members
-                        const StatementList children = mParser->membersOfStatement(classTypeStatement);
+                        // we can only use accessible static members
+                        const StatementList children = mParser->resolveMembersOfClass(
+                                    classTypeStatement, mCurrentScope);
                         for (const PStatement &childStatement : children) {
                             if (
                               (statementIsStatic(childStatement))
@@ -855,10 +872,7 @@ void CodeCompletionPopup::getCompletionFor(
                                 || childStatement->kind == StatementKind::EnumClassType
                                 || childStatement->kind == StatementKind::EnumType
                                    )) {
-                                if (mParser->memberAccessibility(classTypeStatement, childStatement)
-                                        == StatementAccessibility::Public) {
-                                    addStatement(childStatement,fileName,-1);
-                                }
+                                addStatement(childStatement,fileName,-1);
                             }
                         }
                     }

@@ -47,6 +47,7 @@ private slots:
     void test_code_completion_standard_library_make_shared();
     void test_goto_standard_library_string();
     void test_class_browser_standard_library_header_context();
+    void test_class_browser_standard_library_ostream_context();
     void test_standard_library_template_consumers();
 #endif
     void test_code_completion_types();
@@ -55,8 +56,11 @@ private slots:
     void test_code_completion_keywords_only();
     void test_code_completion_operator_overloads_are_excluded();
     void test_class_browser_reopened_namespace_single_node();
+    void test_class_browser_project_union();
+    void test_class_browser_current_file_limits_reopened_namespace();
+    void test_class_browser_current_file_out_of_line_member();
     void test_class_browser_inline_namespace_aliases();
-    void test_class_browser_inherited_members();
+    void test_class_browser_direct_members();
     void test_goto_class_declaration_and_definition();
     void test_goto_constructor_declaration_and_definition();
     void test_goto_statement_definitions();

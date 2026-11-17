@@ -231,8 +231,11 @@ void TestWidgets::test_code_completion_inherited_access()
 {
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
-    QSet<QString> derivedNames = completionNames(popup, "d", mMainFile);
-    QSet<QString> publicNames = completionNames(popup, "p", mMainFile);
+    int globalLine = mMainContent.count() - 1;
+    QSet<QString> derivedNames = completionNames(popup, "d", mMainFile, CodeCompletionType::Normal,
+                                                 "", "", {}, globalLine);
+    QSet<QString> publicNames = completionNames(popup, "p", mMainFile, CodeCompletionType::Normal,
+                                                "", "", {}, globalLine);
     QCOMPARE(derivedNames, QSet<QString>{"action"});
     QCOMPARE(publicNames, QSet<QString>({"action", "publicValue"}));
 }
@@ -487,6 +490,30 @@ void TestWidgets::test_class_browser_standard_library_header_context()
     QVERIFY(findNode(model, {}, "std").isValid());
 }
 
+void TestWidgets::test_class_browser_standard_library_ostream_context()
+{
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QDir includeDir = QFileInfo(bitsStdcpp).dir();
+    QVERIFY(includeDir.cdUp());
+    if (!QFileInfo::exists(includeDir.filePath("ostream")))
+        QVERIFY(includeDir.cdUp());
+    QString ostreamTcc = includeDir.filePath("bits/ostream.tcc");
+    QVERIFY(QFileInfo::exists(ostreamTcc));
+
+    CppParser::parseFileBlocking(mParser, ostreamTcc, false, bitsStdcpp);
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(ostreamTcc);
+    model.fillStatements();
+    QModelIndex stdNode = findNode(model, {}, "std");
+    QVERIFY(stdNode.isValid());
+    QVERIFY(findNode(model, stdNode, "basic_ostream").isValid());
+    QVERIFY(!findNode(model, stdNode, "vector").isValid());
+}
+
 void TestWidgets::test_standard_library_template_consumers()
 {
     QTemporaryDir tmp;
@@ -684,6 +711,83 @@ void TestWidgets::test_class_browser_reopened_namespace_single_node()
     QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
 }
 
+void TestWidgets::test_class_browser_project_union()
+{
+    const QString firstFile = "first.cpp";
+    const QString secondFile = "second.cpp";
+    mParser = std::make_shared<CppParser>();
+    mParser->setOnGetFileStream([firstFile](const QString &fileName, QStringList &buffer) {
+        if (fileName == firstFile)
+            buffer = QStringList{"namespace N { int first; }"};
+        else
+            buffer = QStringList{"namespace N { int second; }"};
+        return true;
+    });
+    mParser->addProjectFile(firstFile, false);
+    mParser->addProjectFile(secondFile, false);
+    CppParser::parseFileBlocking(mParser, firstFile, true, "");
+    CppParser::parseFileBlocking(mParser, secondFile, true, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setClassBrowserType(ProjectClassBrowserType::WholeProject);
+    model.fillStatements();
+    QModelIndex n = findNode(model, {}, "N");
+    QVERIFY(n.isValid());
+    QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
+}
+
+void TestWidgets::test_class_browser_current_file_limits_reopened_namespace()
+{
+    const QString contextFile = "context.cpp";
+    const QString currentFile = "current.tcc";
+    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer) {
+        if (fileName == contextFile)
+            buffer = QStringList{"namespace N { int other; }"};
+        else
+            buffer = QStringList{"namespace N { int current; }"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, currentFile, false, contextFile);
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(currentFile);
+    model.fillStatements();
+    QModelIndex n = findNode(model, {}, "N");
+    QVERIFY(n.isValid());
+    QCOMPARE(childCommands(model, n), QSet<QString>({"current"}));
+}
+
+void TestWidgets::test_class_browser_current_file_out_of_line_member()
+{
+    const QString contextFile = "context.h";
+    const QString currentFile = "current.cpp";
+    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer) {
+        if (fileName == contextFile) {
+            buffer = QStringList{
+                "class A {",
+                "public:",
+                "    void f();",
+                "    void g();",
+                "};"
+            };
+        } else {
+            buffer = QStringList{"void A::f() {}"};
+        }
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, currentFile, false, contextFile);
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(currentFile);
+    model.fillStatements();
+    QModelIndex a = findNode(model, {}, "A");
+    QVERIFY(a.isValid());
+    QCOMPARE(childCommands(model, a), QSet<QString>({"f"}));
+}
+
 void TestWidgets::test_class_browser_inline_namespace_aliases()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
@@ -713,17 +817,19 @@ void TestWidgets::test_class_browser_inline_namespace_aliases()
     QCOMPARE(model.data(alias, Qt::DisplayRole).toString(), "C");
 }
 
-void TestWidgets::test_class_browser_inherited_members()
+void TestWidgets::test_class_browser_direct_members()
 {
     ClassBrowserModel model;
     model.setParser(mParser);
     model.setCurrentFile(mMainFile);
     model.fillStatements();
+    QModelIndex base = findNode(model, {}, "Base");
+    QVERIFY(base.isValid());
+    QVERIFY(findNode(model, base, "publicValue").isValid());
     QModelIndex derived = findNode(model, {}, "Derived");
     QVERIFY(derived.isValid());
-    QSet<QString> members = childCommands(model, derived);
-    QCOMPARE(members, QSet<QString>({"action", "publicValue", "protectedValue", "privateValue"}));
-    QVERIFY(findNode(model, derived, "publicValue").isValid());
+    QCOMPARE(childCommands(model, derived), QSet<QString>({"action"}));
+    QVERIFY(!findNode(model, derived, "publicValue").isValid());
 }
 
 void TestWidgets::test_goto_class_declaration_and_definition()
