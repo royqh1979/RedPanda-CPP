@@ -439,6 +439,38 @@ void TestCppSyntaxer::test_ansi_c_comments()
                                  }));
 }
 
+void TestCppSyntaxer::test_directives_and_identifier_classification()
+{
+    mSyntaxer.setCustomTypeKeywords(QSet<QString>{"Widget"});
+    QList<TokenInfoList> lines = parseLines(&mSyntaxer, {
+        "#define VALUE 1",
+        "#if defined(VALUE)",
+        "#else",
+        "#endif",
+        "int value = 0x2AU;",
+        "Widget widget;"
+    });
+
+    QCOMPARE(filterTokens(lines, mSyntaxer.preprocessorAttribute()).join("|"),
+             "#define|1|#if|#else|#endif");
+    QCOMPARE(filterTokens(lines, mSyntaxer.keywordAttribute()),
+             QStringList({"int", "Widget"}));
+    QCOMPARE(filterTokens(lines, mSyntaxer.hexAttribute()),
+             QStringList({"0x2AU"}));
+    QCOMPARE(lines[4][2]->token, "value");
+    QCOMPARE(lines[4][2]->attribute, mSyntaxer.identifierAttribute());
+    QCOMPARE(lines[5][2]->token, "widget");
+    QCOMPARE(lines[5][2]->attribute, mSyntaxer.identifierAttribute());
+}
+
+void TestCppSyntaxer::test_profile_file()
+{
+    QString fileName = qEnvironmentVariable("QSYNEDIT_PROFILE_FILE");
+    if (fileName.isEmpty())
+        QSKIP("Set QSYNEDIT_PROFILE_FILE to run syntaxer profiling");
+    profileSyntaxerFile(&mSyntaxer, fileName, "cpp");
+}
+
 void TestCppSyntaxer::test_create_instance_copies_settings()
 {
     // createInstance copies ALL configuration: attribute color/style values

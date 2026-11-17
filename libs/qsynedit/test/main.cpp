@@ -1,7 +1,9 @@
 #include <QtTest>
 #include <QGuiApplication>
 #include "test_charpos.h"
+#include "test_asmsyntaxer.h"
 #include "test_cppsyntaxer.h"
+#include "test_textsyntaxer.h"
 #include "test_document.h"
 #include "test_qsynedit_cpp.h"
 #include "test_qsynedit_display.h"
@@ -81,9 +83,27 @@ int main(int argc, char *argv[]) {
             status |= QTest::qExec(&tc, argc, argv);
     }
 
+    //ASM Syntaxer Test
+    {
+        TestASMSyntaxer tc;
+        QString className = tc.metaObject()->className();
+        className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+
     //Cpp Syntaxer Test
     {
         TestCppSyntaxer tc;
+        QString className = tc.metaObject()->className();
+        className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    //Text Syntaxer Test
+    {
+        TestTextSyntaxer tc;
         QString className = tc.metaObject()->className();
         className = className.split("::").last();
         if (suite == className || suite == "all")

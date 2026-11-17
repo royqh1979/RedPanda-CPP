@@ -454,11 +454,12 @@ void CppSyntaxer::procComma()
 
 void CppSyntaxer::procDirective()
 {
-    QString preContents = mLine.left(mRun).trimmed();
-    if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
-       mTokenId = TokenId::Unknown;
-       mRun+=1;
-       return;
+    for (int i = 0; i < mRun; ++i) {
+        if (!isSpaceChar(mLine[i])) { // '#' is not first non-space char on the line, treat it as an invalid char
+            mTokenId = TokenId::Unknown;
+            mRun+=1;
+            return;
+        }
     }
     mTokenId = TokenId::Directive;
     mRun+=1;
@@ -467,28 +468,26 @@ void CppSyntaxer::procDirective()
         mRun+=1;
     }
 
-    QString directive;
-    while (mRun < mLineSize && isIdentChar(mLine[mRun])) {
-        directive+=mLine[mRun];
+    int directiveStart = mRun;
+    while (mRun < mLineSize && isIdentChar(mLine[mRun]))
         mRun+=1;
-    }
-    if (directive == "define") {
+    QStringView directive(mLine.constData() + directiveStart, mRun - directiveStart);
+    if (directive == QStringView(u"define")) {
         mRange.state = RangeState::rsDefineIdentifier;
     } else {
         mRange.state = RangeState::rsUnknown;
-        if (directive=="if"
-                ||  directive=="ifdef"
-                ||  directive=="ifndef"
-                ) {
+        if (directive == QStringView(u"if")
+                || directive == QStringView(u"ifdef")
+                || directive == QStringView(u"ifndef")) {
             mRange.blockLevel++;
             mRange.blockStarted=1;
-        } else if (directive=="else"
-                   ||  directive=="elif"
-                   ||  directive=="elifdef"
-                   ||  directive=="elifndef") {
+        } else if (directive == QStringView(u"else")
+                   || directive == QStringView(u"elif")
+                   || directive == QStringView(u"elifdef")
+                   || directive == QStringView(u"elifndef")) {
             mRange.blockStarted=1;
             mRange.blockEnded=1;
-        } else if (directive=="endif") {
+        } else if (directive == QStringView(u"endif")) {
             mRange.blockLevel--;
             mRange.blockEnded=1;
         }
@@ -987,7 +986,7 @@ void CppSyntaxer::procQuestion()
 void CppSyntaxer::procRawString()
 {
     if (mRange.state == RangeState::rsRawStringStart) {
-        QString rawStringInitialDCharSeq;
+        int delimiterStart = mRun;
         mRange.initialDCharSeq = "";
         mTokenId = TokenId::RawStringStart;
         while (mRun<mLineSize) {
@@ -997,12 +996,11 @@ void CppSyntaxer::procRawString()
             }
             if (mLine[mRun].unicode()=='(') {
                 mRange.state = RangeState::rsRawStringNotEscaping;
-                mRange.initialDCharSeq = rawStringInitialDCharSeq;
+                mRange.initialDCharSeq = mLine.mid(delimiterStart, mRun - delimiterStart);
                 mTokenId = TokenId::RawStringStart;
                 mRun++;
                 return;
             }
-            rawStringInitialDCharSeq += mLine[mRun];
             mRun++;
         }
     } else if (mRange.state == RangeState::rsRawStringNotEscaping) {
@@ -1012,12 +1010,14 @@ void CppSyntaxer::procRawString()
             case ' ':
             case '\t':
                 return;
-            case ')':
-                if (mRun+mRange.initialDCharSeq.length()+1<mLineSize
-                        && mLine.mid(mRun+1,mRange.initialDCharSeq.length()) == mRange.initialDCharSeq
-                        && mLine[mRun+1+mRange.initialDCharSeq.length()] == '\"') {
+            case ')': {
+                int delimiterLength = mRange.initialDCharSeq.length();
+                if (mRun+delimiterLength+1<mLineSize
+                        && QStringView(mLine.constData() + mRun + 1, delimiterLength)
+                            == QStringView(mRange.initialDCharSeq)
+                        && mLine[mRun+1+delimiterLength] == '\"') {
                     if (mRun==mTokenPos) {
-                        mRun = mRun+mRange.initialDCharSeq.length()+1;
+                        mRun = mRun+delimiterLength+1;
                         mTokenId = TokenId::RawStringEnd;
                         mRange.state = RangeState::rsUnknown;
                         mRun++;
@@ -1026,6 +1026,7 @@ void CppSyntaxer::procRawString()
                     return;
                 }
                 break;
+            }
             }
             mRun++;
         }

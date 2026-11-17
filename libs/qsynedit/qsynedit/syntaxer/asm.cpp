@@ -134,14 +134,20 @@ void ASMSyntaxer::procGreaterThan()
         mRun++;
 }
 
-void ASMSyntaxer::procIdent(const QString& prefix)
+void ASMSyntaxer::procIdent(QChar prefix)
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
         mRun++;
     }
-    QString s = mLineString.mid(start,mRun-start).toLower();
-    mTokenID = getIdentType(prefix+s, mLine[mRun]);
+    QString ident;
+    ident.reserve(mRun - start + (prefix.isNull() ? 0 : 1));
+    if (!prefix.isNull())
+        ident.append(prefix);
+    for (int i = start; i < mRun; ++i)
+        ident.append(mLine[i].toLower());
+    mTokenID = getIdentType(ident, mLine[mRun]);
+    handleIdent(mLineNumber, ident);
 }
 
 void ASMSyntaxer::procLF()
@@ -173,6 +179,9 @@ void ASMSyntaxer::procNumber()
         mRun++;
     while (true) {
         QChar ch = mLine[mRun];
+        if (mTokenID == TokenId::DecInteger && (ch == 'b' || ch == 'B')
+                && !isIdentChar(mLine[mRun + 1]))
+            break;
         if (!((ch>='0' && ch<='9') || (ch=='.') || (ch=='_') || (ch >= 'a' && ch<='f')
               || (ch >= 'A' && ch<='F')))
             break;
@@ -218,6 +227,8 @@ void ASMSyntaxer::procSingleQuoteString()
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\'') && (mLine[mRun + 2] == '\''))
         mRun += 2;
+    else
+        mRun += 1;
     while (true) {
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n' || mLine[mRun] == '\'')
             break;
@@ -1504,9 +1515,7 @@ ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextC
         return TokenId::Label;
     if (Instructions.contains(ident))
         return TokenId::Instruction;
-    else if (Registers.contains(ident))
-        return TokenId::Register;
-    else if (PrefixedRegisters.contains(ident))
+    else if (isRegister(ident))
         return TokenId::Register;
     else if (isDirective(ident)) {
         handleDirective(mLineNumber,ident);
@@ -1516,6 +1525,11 @@ ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextC
     else {
         return TokenId::Identifier;
     }
+}
+
+bool ASMSyntaxer::isRegister(const QString &ident) const
+{
+    return Registers.contains(ident) || PrefixedRegisters.contains(ident);
 }
 
 bool ASMSyntaxer::isCommentStartChar(QChar ch)
@@ -1673,7 +1687,7 @@ void ASMSyntaxer::next()
         if (mLine[mRun]>='0' && mLine[mRun]<='9') {
             procNumber();
         } else if (isIdentStartChar(mLine[mRun])) {
-            procIdent("");
+            procIdent(QChar());
         } else if (isLexicalSpace(mLine[mRun])) {
             procSpace();
         } else {
@@ -1688,6 +1702,7 @@ void ASMSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);
     mLineNumber = lineNumber;
+    mStringLen = newLine.size();
     mRun = 0;
     next();
 }

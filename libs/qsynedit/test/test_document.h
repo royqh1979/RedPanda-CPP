@@ -92,6 +92,7 @@ private slots:
     void test_content_changed();
     void test_code_block_delta_lexical_context();
     void test_reparse();
+    void test_gas_directive_state_cascade();
     void test_find_last_line_by_seq();
 
     void test_crash_on_debian_amd_64();

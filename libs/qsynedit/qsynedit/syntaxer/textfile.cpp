@@ -114,6 +114,7 @@ void TextSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSe
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);
     mLineNumber = lineNumber;
+    mStringLen = newLine.size();
     mRun = 0;
     next();
 }

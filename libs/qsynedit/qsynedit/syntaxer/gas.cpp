@@ -82,7 +82,6 @@ QSet<QString> GASSyntaxer::mNonprefixedKeywords;
 QSet<QString> GASSyntaxer::mPrefixedKeywords;
 
 GASSyntaxer::GASSyntaxer(): ASMSyntaxer(),
-    mDirectiveSyntaxLine{-1},
     mSyntaxMode{SyntaxMode::ATT},
     mPrefixRegisterNames{true},
     mThisLineHasSyntaxDirective{false}
@@ -104,17 +103,6 @@ bool GASSyntaxer::isCommentStartChar(QChar ch)
     return (ch == "#");
 }
 
-void GASSyntaxer::procNull()
-{
-    if ( (mLineNumber == mDirectiveSyntaxLine)
-            && !mThisLineHasSyntaxDirective) {
-        mSyntaxMode = SyntaxMode::ATT;
-        setPrefixRegisterNames(true);
-        mDirectiveSyntaxLine = -1;
-    }
-    ASMSyntaxer::procNull();
-}
-
 GASSyntaxer::SyntaxMode GASSyntaxer::syntaxMode() const
 {
     return mSyntaxMode;
@@ -129,13 +117,18 @@ PSyntaxer GASSyntaxer::createInstance() const
 {
     auto result = std::make_shared<GASSyntaxer>();
     copySettingsTo(result.get());
-    result->mPrefixRegisterNames = mPrefixRegisterNames;
     return result;
 }
 
 bool GASSyntaxer::prefixRegisterNames() const
 {
     return mPrefixRegisterNames;
+}
+
+bool GASSyntaxer::isRegister(const QString &ident) const
+{
+    return mPrefixRegisterNames ? PrefixedRegisters.contains(ident)
+                                : Registers.contains(ident);
 }
 
 bool GASSyntaxer::isDirective(const QString &ident)
@@ -145,23 +138,23 @@ bool GASSyntaxer::isDirective(const QString &ident)
 
 void GASSyntaxer::handleDirective(int line, const QString &directive)
 {
+    Q_UNUSED(line);
     //directive is already in lower case
     if (directive == ".intel_syntax") {
         mThisLineHasSyntaxDirective = true;
         mSyntaxMode = SyntaxMode::Intel;
         setPrefixRegisterNames(false);
-        mDirectiveSyntaxLine = line;
     } else if (directive == ".att_syntax") {
         mThisLineHasSyntaxDirective = true;
         mSyntaxMode = SyntaxMode::ATT;
         setPrefixRegisterNames(true);
-        mDirectiveSyntaxLine = line;
     }
 }
 
 void GASSyntaxer::handleIdent(int line, const QString &ident)
 {
-    if (mDirectiveSyntaxLine == line) {
+    Q_UNUSED(line);
+    if (mThisLineHasSyntaxDirective) {
         if (ident == "prefix") {
             setPrefixRegisterNames(true);
         } else if (ident == "noprefix") {
@@ -179,9 +172,46 @@ void GASSyntaxer::setPrefixRegisterNames(bool prefix)
 
 void GASSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq)
 {
-    Q_UNUSED(lineSeq);
     mThisLineHasSyntaxDirective = false;
     ASMSyntaxer::setLine(lineNumber, newLine, lineSeq);
+}
+
+PSyntaxState GASSyntaxer::getState() const
+{
+    auto state = std::make_shared<GASSyntaxState>();
+    state->hasTrailingSpaces = mHasTrailingSpaces;
+    state->syntaxMode = mSyntaxMode;
+    state->prefixRegisterNames = mPrefixRegisterNames;
+    return state;
+}
+
+void GASSyntaxer::setState(const PSyntaxState &rangeState)
+{
+    auto state = std::dynamic_pointer_cast<GASSyntaxState>(rangeState);
+    if (!state) {
+        resetState();
+        return;
+    }
+    ASMSyntaxer::setState(rangeState);
+    mSyntaxMode = state->syntaxMode;
+    mPrefixRegisterNames = state->prefixRegisterNames;
+}
+
+void GASSyntaxer::resetState()
+{
+    ASMSyntaxer::resetState();
+    mSyntaxMode = SyntaxMode::ATT;
+    mPrefixRegisterNames = true;
+    mThisLineHasSyntaxDirective = false;
+}
+
+bool GASSyntaxer::GASSyntaxState::equals(const std::shared_ptr<SyntaxState> &s2) const
+{
+    if (!SyntaxState::equals(s2))
+        return false;
+    auto gasState = std::dynamic_pointer_cast<GASSyntaxState>(s2);
+    return gasState && syntaxMode == gasState->syntaxMode
+            && prefixRegisterNames == gasState->prefixRegisterNames;
 }
 
 QString GASSyntaxer::languageName() const
