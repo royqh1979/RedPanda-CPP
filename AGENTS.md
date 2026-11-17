@@ -64,7 +64,7 @@ xmake
 - `MAKE_INTERFACE` — `unix` 与 `mingw32`（IDE 调用哪个 make）。
 - `OVERRIDE_MALLOC` — 链接如 mimalloc 之类的分配器。
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
-- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
+- `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为 MinGW 根目录（本机为 `D:/mingw`）。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。启用时 CTest 会设置 `LC_ALL=C`，确保编译器 `-v` 输出使用固定的英文标记。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
 - `REDPANDA_PARSER_DECLARATION_PROFILE`（默认 OFF）— 编译声明解析的细分计时、self-time scope 栈和计数。普通构建使用空 scope，不引入逐声明插桩成本；需要 `DECLARATION_PROFILE`/`DECLARATION_SELF` 输出时设为 ON，并在运行时设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及 preprocess/tokenize/parseDeclarations 等阶段计时不受此开关影响。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。

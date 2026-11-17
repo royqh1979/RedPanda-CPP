@@ -567,6 +567,7 @@ option(REDPANDA_PARSER_STDLIB_TEST
 set(REDPANDA_PARSER_STDLIB_MINGW_ROOT "" CACHE PATH
     "MinGW root used by the standard library parser acceptance tests")
 if(REDPANDA_PARSER_STDLIB_TEST)
+    list(APPEND test_environment "LC_ALL=C")
     if(NOT EXISTS "${REDPANDA_PARSER_STDLIB_MINGW_ROOT}/bin/g++.exe")
         message(FATAL_ERROR
             "REDPANDA_PARSER_STDLIB_MINGW_ROOT must point to a MinGW installation")
