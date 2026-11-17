@@ -112,6 +112,8 @@ namespace 的每次出现都登记为 declaration occurrence，剩余 occurrence
 
 前缀必须包含 replay 生效的记录；否则首轮记录的前缀在第二轮永远无法匹配。保护 no-op 不能追加，否则“上轮被跳过、本轮首次真正生效”的场景会误命中。只要已生效前缀中有一项经过重扫，本轮所有后续记录都不能 replay；Session 用一个布尔状态记录这一条件，无需逐项保存前缀的扫描来源。
 
+完整 include guard 的宏与重复包含跳过在 Session 级生效，但 guard 闭合必须按当前文件判断。`ParsedFile::guardBranchDepth` 记录 guard 打开前的 Session 分支深度，`-1` 表示非 guard 候选；只有 `#endif` 后恢复到该深度且 guard 宏已定义，才把当前文件标记为 guard 闭合。外层文件尚未结束的条件分支不得阻止内层文件完成 guard 识别。
+
 ### 4.3 Replay 与重扫
 
 - Replay 恢复该记录的 define/undef 和 include 关系，不重新读取或扫描系统子树。

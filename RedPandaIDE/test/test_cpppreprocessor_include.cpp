@@ -104,6 +104,39 @@ void TestCppPreprocessorInclude::test_include_guard()
              QStringList({dir + "/guard.h", dir + "/guard.h"}));
 }
 
+void TestCppPreprocessorInclude::test_nested_include_guard_visibility()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeLines = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString main = tmp.filePath("main.cpp");
+    QString outer = tmp.filePath("outer.h");
+    QString inner = tmp.filePath("inner.h");
+    QVERIFY(writeLines(main, {"#include \"outer.h\"", "#include \"inner.h\""}));
+    QVERIFY(writeLines(outer, {"#ifndef OUTER_H", "#define OUTER_H",
+                               "#include \"inner.h\"", "#endif"}));
+    QVERIFY(writeLines(inner, {"#ifndef INNER_H", "#define INNER_H",
+                               "int guarded;", "#endif"}));
+
+    CppPreprocessor p;
+    p.preprocess(main);
+    PParsedFileInfo outerInfo = p.findFileInfo(outer);
+    PParsedFileInfo innerInfo = p.findFileInfo(inner);
+    QVERIFY(outerInfo && innerInfo);
+    QVERIFY(outerInfo->includeProtected());
+    QVERIFY(innerInfo->includeProtected());
+    QCOMPARE(p.eventCounts(outer).scan, 1);
+    QCOMPARE(p.eventCounts(inner).scan, 1);
+    QVERIFY(innerInfo->isLineVisible(2));
+}
+
 void TestCppPreprocessorInclude::test_pragma_once()
 {
     QString dir = scenarioPath("pragma_once");

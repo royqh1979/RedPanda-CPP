@@ -45,7 +45,7 @@ struct ParsedFile {
     QString boundaryAncestor;
     QHash<QString,QString> userMacros;
     QStringList boundaryPrefix;
-    bool guardCandidate = false;
+    int guardBranchDepth = -1;
     bool guardClosed = false;
     bool contentAfterGuard = false;
 };

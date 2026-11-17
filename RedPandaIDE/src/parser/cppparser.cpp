@@ -1186,7 +1186,19 @@ PStatement CppParser::visibleStatement(const QString &fileName,
     if (!statement)
         return {};
     PParsedFileInfo info = mPreprocessor.findFileInfo(fileName);
-    return mStatementList.visibleFrom(statement, fileName, info) ? statement : PStatement();
+    if (!info)
+        return statement;
+    if (statement->declarations.contains(fileName))
+        return statement;
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        if (occurrence.fileName == fileName || info->including(occurrence.fileName))
+            return statement;
+    }
+    if (statementHasDefinition(statement)
+            && (statement->definition.fileName == fileName
+                || info->including(statement->definition.fileName)))
+        return statement;
+    return {};
 }
 
 TypeInfo CppParser::parseTypeInfo(const QString &text) const

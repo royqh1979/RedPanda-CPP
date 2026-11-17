@@ -278,10 +278,13 @@ inline StatementOccurrence statementDefinitionForNavigation(const PStatement &st
 
 inline StatementOccurrence statementDeclarationForNavigation(const PStatement &statement,
                                                               const QString &currentFile) {
-    QList<StatementOccurrence> occurrencies = statement->declarations.values(currentFile);
-    if (!occurrencies.isEmpty()) {
-        return occurrencies.first();
+    for (const StatementOccurrence &occurrence : statement->declarations) {
+        if (occurrence.fileName == currentFile)
+            return occurrence;
     }
+    const QList<StatementOccurrence> contextOccurrences = statement->declarations.values(currentFile);
+    if (!contextOccurrences.isEmpty())
+        return contextOccurrences.first();
     if (!statement->declarations.isEmpty())
         return *statement->declarations.constBegin();
     return statementDefinitionForNavigation(statement);

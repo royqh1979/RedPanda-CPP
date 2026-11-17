@@ -67,8 +67,6 @@ public:
                                  bool isInline);
     bool hasDeclarationInFile(const PStatement &statement, const QString &fileName) const;
     bool isInFile(const PStatement &statement, const QString &fileName) const;
-    bool visibleFrom(const PStatement &statement, const QString &fileName,
-                     const PParsedFileInfo &fileInfo) const;
     void removeDeclarations(const PStatement &statement, const QString &fileName);
     void removeNamespaceDeclarations(const PStatement &statement, const QString &fileName);
 #ifdef QT_DEBUG

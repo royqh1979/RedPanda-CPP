@@ -1935,6 +1935,34 @@ void TestCppParser::test_standard_library_header_context()
     QVERIFY(mParser->findStatementOf(basicStringTcc, QStringList{"std"}, 50));
 }
 
+void TestCppParser::test_standard_library_nested_include_guard_visibility()
+{
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QDir includeDir = QFileInfo(bitsStdcpp).dir();
+    QVERIFY(includeDir.cdUp());
+    if (!QFileInfo::exists(includeDir.filePath("string")))
+        QVERIFY(includeDir.cdUp());
+    QString stringFile = includeDir.filePath("string");
+    QVERIFY(QFileInfo::exists(stringFile));
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
+
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PParsedFileInfo stringInfo = mParser->findFileInfo(stringFile);
+    QVERIFY(stringInfo);
+    QVERIFY(stringInfo->includeProtected());
+    QCOMPARE(mParser->preprocessorEventCountsForTest(stringFile).scan, 1);
+    QVERIFY(mParser->isLineVisible(stringFile, 40));
+
+    CppParser::parseFileBlocking(mParser, bitsStdcpp, false, main);
+    QVERIFY(mParser->isLineVisible(stringFile, 40));
+    CppParser::parseFileBlocking(mParser, stringFile, false, main);
+    QVERIFY(mParser->isLineVisible(stringFile, 40));
+}
+
 void TestCppParser::test_standard_library_front_append()
 {
     QTemporaryDir tmp;
@@ -2479,6 +2507,34 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     QVERIFY(!statementHasDefinition(doubleDefinition));
     QVERIFY(!statementHasDefinition(intDeclaration));
     QCOMPARE(overloadedFunctions().count(), 2);
+}
+
+void TestCppParser::test_statement_declaration_navigation_selection()
+{
+    StatementModel model;
+    PStatement statement = StatementFactory::createVariable({}, "value", "value");
+    model.addDeclaration(statement, "other.h", SourceRange{{10, 0}, {10, 1}},
+                         "current.tcc", {});
+    model.addDeclaration(statement, "current.tcc", SourceRange{{20, 0}, {20, 1}},
+                         "context.h", {});
+    StatementOccurrence selected = statementDeclarationForNavigation(statement, "current.tcc");
+    QCOMPARE(selected.fileName, "current.tcc");
+    QCOMPARE(selected.range.start.line, 20);
+
+    PStatement contextStatement = StatementFactory::createVariable({}, "contextValue", "contextValue");
+    model.addDeclaration(contextStatement, "inner.h", SourceRange{{30, 0}, {30, 1}},
+                         "context.h", {});
+    selected = statementDeclarationForNavigation(contextStatement, "context.h");
+    QCOMPARE(selected.fileName, "inner.h");
+    QCOMPARE(selected.range.start.line, 30);
+
+    PStatement definitionStatement = StatementFactory::createVariable({}, "definedValue", "definedValue");
+    definitionStatement->definition = StatementOccurrence{
+        "definition.cpp", SourceRange{{40, 0}, {40, 1}}, QString(), {}};
+    setStatementHasDefinition(definitionStatement, true);
+    selected = statementDeclarationForNavigation(definitionStatement, "current.tcc");
+    QCOMPARE(selected.fileName, "definition.cpp");
+    QCOMPARE(selected.range.start.line, 40);
 }
 
 void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()

@@ -63,6 +63,7 @@ private slots:
     void test_cppreference_ranges_syntax();
     void test_member_declaration_definition_in_namespace();
     void test_overloaded_declaration_definition_merge();
+    void test_statement_declaration_navigation_selection();
     void test_local_declarations_in_disjoint_blocks_remain_distinct();
     void test_namespace_index_inline_filter_and_invalidation();
     void test_namespace_index_does_not_promote_inline_descendants();
@@ -77,6 +78,7 @@ private slots:
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_string();
     void test_standard_library_header_context();
+    void test_standard_library_nested_include_guard_visibility();
     void test_standard_library_front_append();
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();

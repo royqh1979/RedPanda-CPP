@@ -106,8 +106,10 @@ void StatementModel::addNamespaceDeclaration(const PStatement &statement,
 
 bool StatementModel::hasDeclarationInFile(const PStatement &statement, const QString &fileName) const
 {
+    if (statement->declarations.contains(fileName))
+        return true;
     for (const StatementOccurrence &occurrence : statement->declarations) {
-        if (occurrence.fileName == fileName || occurrenceOwner(occurrence) == fileName)
+        if (occurrence.fileName == fileName)
             return true;
     }
     return false;
@@ -121,28 +123,11 @@ bool StatementModel::isInFile(const PStatement &statement, const QString &fileNa
     return hasDeclarationInFile(statement, fileName) || definitionMatches;
 }
 
-bool StatementModel::visibleFrom(const PStatement &statement, const QString &fileName,
-                                 const PParsedFileInfo &fileInfo) const
-{
-    if (!fileInfo)
-        return true;
-    for (const StatementOccurrence &occurrence : statement->declarations) {
-        QString owner = occurrenceOwner(occurrence);
-        if (owner == fileName || fileInfo->including(owner))
-            return true;
-    }
-    if (statementHasDefinition(statement)) {
-        QString owner = statement->definition.boundaryAncestor.isEmpty()
-                ? statement->definition.fileName : statement->definition.boundaryAncestor;
-        return owner == fileName || fileInfo->including(owner);
-    }
-    return false;
-}
-
 void StatementModel::removeDeclarations(const PStatement &statement, const QString &fileName)
 {
+    statement->declarations.remove(fileName);
     for (auto it = statement->declarations.begin(); it != statement->declarations.end();) {
-        if (it.value().fileName == fileName || occurrenceOwner(it.value()) == fileName)
+        if (it.value().fileName == fileName)
             it = statement->declarations.erase(it);
         else
             ++it;
@@ -152,8 +137,9 @@ void StatementModel::removeDeclarations(const PStatement &statement, const QStri
 void StatementModel::removeNamespaceDeclarations(const PStatement &statement,
                                                  const QString &fileName)
 {
+    statement->declarations.remove(fileName);
     for (auto it = statement->declarations.begin(); it != statement->declarations.end();) {
-        if (it.value().fileName == fileName || occurrenceOwner(it.value()) == fileName)
+        if (it.value().fileName == fileName)
             it = statement->declarations.erase(it);
         else
             ++it;

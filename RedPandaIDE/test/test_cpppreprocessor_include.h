@@ -16,6 +16,7 @@ private slots:
     // group E: directives & include
     void test_nested_include();
     void test_include_guard();
+    void test_nested_include_guard_visibility();
     void test_pragma_once();
     void test_no_guard();
     void test_guard_after_comment();

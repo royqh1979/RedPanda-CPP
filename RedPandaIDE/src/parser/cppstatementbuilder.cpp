@@ -463,15 +463,8 @@ PStatement CppStatementBuilder::doFindDeclarationToMerge(
                 continue;
             }
         }
-        bool sameAncestor = existing->definition.boundaryAncestor == context.boundaryAncestor;
-        for (const StatementOccurrence &occurrence : existing->declarations) {
-            QString owner = occurrence.boundaryAncestor.isEmpty()
-                    ? occurrence.fileName : occurrence.boundaryAncestor;
-            if (owner == context.boundaryAncestor) {
-                sameAncestor = true;
-                break;
-            }
-        }
+        bool sameAncestor = existing->definition.boundaryAncestor == context.boundaryAncestor
+                || existing->declarations.contains(context.boundaryAncestor);
         bool declarationPair = statementHasDefinition(existing) != statementHasDefinition(candidate);
         if (sameAncestor || declarationPair)
             return existing;

@@ -970,7 +970,7 @@ void CppPreprocessor::handleIfndef(const QString &tokens)
 
         if (mSession.fileJustOpenned) {
             mSession.fileIncludeOnceToken = name;
-            mSession.includeStack.back()->guardCandidate = true;
+            mSession.includeStack.back()->guardBranchDepth = mSession.branchResults.count();
         }
         setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
     }
@@ -1032,7 +1032,8 @@ void CppPreprocessor::handleEndif(const QString &tokens)
 {
     PParsedFile current = mSession.includeStack.back();
     removeCurrentBranch();
-    if (current->guardCandidate && mSession.branchResults.isEmpty()
+    if (current->guardBranchDepth >= 0
+            && mSession.branchResults.count() == current->guardBranchDepth
             && mSession.fileIncludeOnceToken.isEmpty())
         current->guardClosed = true;
 }
@@ -1294,7 +1295,7 @@ void CppPreprocessor::closeInclude()
             replayRecord->setReplayCondition(
                     lastFile->userMacros, lastFile->boundaryPrefix);
     }
-    if (lastFile->guardCandidate) {
+    if (lastFile->guardBranchDepth >= 0) {
         bool fullGuard = lastFile->guardClosed && !lastFile->contentAfterGuard;
         lastFile->fileInfo->setIncludeProtected(
                 lastFile->fileInfo->includeProtected() || fullGuard);
