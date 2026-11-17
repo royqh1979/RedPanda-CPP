@@ -1747,8 +1747,9 @@ void QSynEdit::clearUndo()
 
 void QSynEdit::showCaret()
 {
-    if (m_blinkTimerId==0)
-        m_blinkTimerId = startTimer(500);
+    if (m_blinkTimerId!=0)
+        killTimer(m_blinkTimerId);
+    m_blinkTimerId = startTimer(500);
     m_blinkStatus = 1;
     updateCaret();
 }
@@ -3243,6 +3244,7 @@ void QSynEdit::computeCaret(const QPoint &point)
     caretNearestPos.y = minMax(caretNearestPos.y, 0,
                                (displayLineCount()-1) * mTextHeight);
     setCaretDisplayXY(caretNearestPos, false);
+    showCaret();
 }
 
 void QSynEdit::computeScroll(bool isDragging)

@@ -4787,11 +4787,11 @@ void Editor::gotoDeclaration(const CharPos &pos)
     if (declaration.fileName == mFilename && declaration.range.start.line == pos.line) {
         StatementOccurrence definition = statementDefinitionForNavigation(statement);
         if (definition.range.start.isValid())
-            openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
+            openFileInContext(definition.fileName, CharPos{definition.range.start.ch, definition.range.start.line});
         else
-            openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
+            openFileInContext(declaration.fileName, CharPos{declaration.range.start.ch, declaration.range.start.line});
     } else {
-        openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
+        openFileInContext(declaration.fileName, CharPos{declaration.range.start.ch, declaration.range.start.line});
     }
 }
 
@@ -4815,11 +4815,11 @@ void Editor::gotoDefinition(const CharPos &pos)
     if (definition.fileName == mFilename && definition.range.start.line == pos.line) {
         StatementOccurrence declaration = statementDeclarationForNavigation(statement, mFilename);
         if (declaration.range.start.isValid())
-            openFileInContext(declaration.fileName, CharPos{0, declaration.range.start.line});
+            openFileInContext(declaration.fileName, CharPos{declaration.range.start.ch, declaration.range.start.line});
         else
-            openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
+            openFileInContext(definition.fileName, CharPos{definition.range.start.ch, definition.range.start.line});
     } else {
-        openFileInContext(definition.fileName, CharPos{0, definition.range.start.line});
+        openFileInContext(definition.fileName, CharPos{definition.range.start.ch, definition.range.start.line});
     }
 }
 

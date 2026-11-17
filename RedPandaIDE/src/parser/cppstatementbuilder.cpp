@@ -751,8 +751,35 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                         context.fileInfo->addStatement(parameterStatement);
                 }
             }
-            if (declaration.bodyRange.isValid())
+            if (declaration.bodyRange.isValid()) {
+                if (!std::dynamic_pointer_cast<Statement>(statement)->children.contains("__func__")) {
+                    QString functionName = statement->command;
+                    if (statement->kind == StatementKind::OverloadedOperator)
+                        functionName = "operator" + functionName;
+                    else if (statement->kind == StatementKind::LiteralOperator)
+                        functionName = "operator\"\"" + functionName;
+                    else if (statement->kind == StatementKind::Lambda)
+                        functionName = "operator()";
+                    auto funcVariable = StatementFactory::createLocalVariable(
+                                statement, "__func__", statement->fullName + "::__func__");
+                    funcVariable->scope = StatementScope::Local;
+                    funcVariable->definition = statement->definition;
+                    setStatementHasDefinition(funcVariable, true);
+                    funcVariable->properties.setFlag(StatementProperty::Static, true);
+                    funcVariable->properties.setFlag(StatementProperty::InProject, context.inProject);
+                    funcVariable->properties.setFlag(StatementProperty::InSystemHeader,
+                                                     context.inSystemHeader);
+                    auto normal = std::dynamic_pointer_cast<Statement>(funcVariable);
+                    normal->typeInfo.qualifiedName = "char";
+                    normal->typeInfo.qualifiers = TypeQualifier::Const;
+                    normal->typeInfo.derivations.append(TypeDerivation::array("[]"));
+                    normal->value = "\"" + functionName + "\"";
+                    mModel.add(funcVariable);
+                    if (context.fileInfo)
+                        context.fileInfo->addStatement(funcVariable);
+                }
                 buildChildren(declaration, context, statement);
+            }
         }
     }
     return result;

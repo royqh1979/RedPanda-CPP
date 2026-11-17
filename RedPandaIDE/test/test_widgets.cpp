@@ -861,9 +861,11 @@ void TestWidgets::test_goto_class_declaration_and_definition()
     });
     editor.gotoDefinition(classPos);
     QCOMPARE(target.line, classStatement->definition.range.start.line);
+    QCOMPARE(target.ch, classStatement->definition.range.start.ch);
     target = {-1, -1};
     editor.gotoDeclaration(classPos);
     QCOMPARE(target.line, declaration.range.start.line);
+    QCOMPARE(target.ch, declaration.range.start.ch);
 }
 
 void TestWidgets::test_goto_constructor_declaration_and_definition()
@@ -905,10 +907,12 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
     });
     editor.gotoDefinition(constructorPos);
     QCOMPARE(target.line, constructorStatement->definition.range.start.line);
+    QCOMPARE(target.ch, constructorStatement->definition.range.start.ch);
     target = {-1, -1};
     QSynedit::CharPos definitionPos{5, constructorStatement->definition.range.start.line};
     editor.gotoDeclaration(definitionPos);
     QCOMPARE(target.line, declaration.range.start.line);
+    QCOMPARE(target.ch, declaration.range.start.ch);
     QString hint = editor.getParserHint({"Foo"}, constructorPos);
     QVERIFY(hint.contains("constructor"));
 }

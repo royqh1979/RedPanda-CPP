@@ -30,6 +30,7 @@ private slots:
     void test_preprocessor_statements();
     void test_label_statements();
     void test_hard_define_statements();
+    void test_predefined_func_variable();
     void test_structured_bindings();
     void test_shared_boundary_statement_invalidation();
     void test_shared_boundary_statement_invalidation_only();

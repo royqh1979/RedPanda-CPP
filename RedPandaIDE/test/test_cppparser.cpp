@@ -102,7 +102,7 @@ void TestCppParser::test_global_variable_reference_scope()
     });
     CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
 
-    QCOMPARE(mParser->statementList().count(), 2);
+    QCOMPARE(mParser->statementList().count(), 3);
     QVERIFY(!mParser->findStatement("main::ttt"));
     PStatement declaration = mParser->findStatement("ttt");
     QVERIFY(declaration);
@@ -1001,6 +1001,43 @@ void TestCppParser::test_hard_define_statements()
     QVERIFY(!statementDefinitionForNavigation(macro).range.isValid());
     QVERIFY(statementHasDefinition(macro));
     QCOMPARE(mParser->statementList().count(), 1);
+}
+
+void TestCppParser::test_predefined_func_variable()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "void alpha() {}",
+            "struct C { void beta() {} };",
+            "void declarationOnly();"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement alphaFunc = mParser->findStatementOf("text.cpp", QStringList{"__func__"}, 0);
+    QVERIFY(alphaFunc);
+    QCOMPARE(alphaFunc->kind, StatementKind::LocalVariable);
+    QCOMPARE(alphaFunc->fullName, "alpha::__func__");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(alphaFunc)->value, "\"alpha\"");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(alphaFunc)->typeInfo.qualifiedName, "char");
+    QVERIFY(std::dynamic_pointer_cast<Statement>(alphaFunc)->typeInfo.qualifiers.testFlag(TypeQualifier::Const));
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(alphaFunc)->typeInfo.derivations.count(), 1);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(alphaFunc)->typeInfo.derivations.first().kind,
+             TypeDerivationKind::Array);
+    QVERIFY(statementHasDefinition(alphaFunc));
+    PStatement alpha = mParser->findStatement("alpha");
+    QVERIFY(alpha);
+    QCOMPARE(alphaFunc->definition.fileName, alpha->definition.fileName);
+    QCOMPARE(alphaFunc->definition.range, alpha->definition.range);
+
+    PStatement betaFunc = mParser->findStatementOf("text.cpp", QStringList{"__func__"}, 1);
+    QVERIFY(betaFunc);
+    QCOMPARE(betaFunc->fullName, "C::beta::__func__");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(betaFunc)->value, "\"beta\"");
+    QVERIFY(!mParser->findStatementOf("text.cpp", QStringList{"__func__"}, 2));
+    QVERIFY(!mParser->findStatementOf("text.cpp", QStringList{"__func__"}, 3));
+    QVERIFY(!mParser->findStatement("__func__"));
 }
 
 void TestCppParser::test_structured_bindings()

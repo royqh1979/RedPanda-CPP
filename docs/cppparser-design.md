@@ -342,13 +342,17 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 
 这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。
 
+### 函数局部预定义标识符 `__func__`
+
+`__func__` 按函数局部预定义变量处理，而不是全局宏。Builder 只为具有函数体的 Statement 添加 `function::__func__`，其类型为 `const char[]`，值为未限定的函数名；普通声明没有函数体时不创建。该 Statement 复用当前函数的 definition occurrence 作为定义位置和 parse-root 归属，并随所属 context 失效。补全、局部名称查找、类型求值和 Parser Hint 复用普通局部变量路径，Hint 同时显示函数名字符串。
+
 ## IDE 查询与重命名约定
 
 `getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。namespace 补全使用 includeInline 时返回索引中的全部关联节点，包括没有 Inline 标记的重开 namespace；不能只保留带标记的节点，否则会丢失其实际成员。
 
 普通补全不展示 OverloadedOperator 或 LiteralOperator，也不展示 command 为空的匿名 namespace 等无效候选项。现有 LiteralOperators 专用补全在字符串、字符和数字后缀输入语境中单独提供候选，不经普通补全的过滤器，不能因专用能力而让重载运算符泄漏到普通列表。变量及图标类别按 StatementScope 的 global/local/class-local 判定，不能用是否存在 parentScope 区分全局变量与类成员，否则 namespace 变量会被误标为 private。
 
-`gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
+`gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转，目标位置使用 occurrence 的 `range.start.line` 和 `range.start.ch`，不能只跳到行首。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
 
 重命名按 syntax token 工作：只处理 `TokenType::Identifier`，用该位置表达式查找 Statement，并比较声明文件与声明位置，不能只按文本相同替换。`findOccurenceInFile` 和 `renameSymbolInEditor` 都采用该规则。`renameSymbol` 只允许声明和定义位于当前文件的符号，私有实现直接操作传入的当前 Editor，不再通过 MainWindow 二次查找，也不处理未打开文件。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
 

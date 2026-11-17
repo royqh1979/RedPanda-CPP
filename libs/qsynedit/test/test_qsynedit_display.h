@@ -24,6 +24,7 @@ private slots:
     void test_mouse_positioning();
     void test_mouse_positioning_with_fold();
     void test_mouse_press_moves_caret();
+    void test_mouse_positioning_shows_caret_immediately();
     void test_mouse_press_moves_caret_wrap();
     void test_mouse_press_moves_caret_fold();
     void test_mouse_double_click_selects_word();

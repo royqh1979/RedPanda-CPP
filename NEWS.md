@@ -41,6 +41,9 @@ Red Panda C++ Version 3.6
   - fix: Compiler-defined macros use macro highlighting and show parser hints.
   - change: Text drag-and-drop now requires both the system drag distance and drag time.
   - fix: Text selection starts only after moving at least one glyph width or one line height, and can shrink back to its start.
+  - fix: Mouse positioning immediately shows the caret and restarts its visible blink phase.
+  - enhancement: Support the function-local predefined identifier __func__ in completion, highlighting, type evaluation, and parser hints.
+  - fix: Goto declaration/definition jumps to the occurrence's source column instead of the start of its line.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

@@ -100,3 +100,18 @@ void TestEditorGeneral::test_hard_define_statement_visibility_and_hint()
     QString hint = mEditor->getParserHint({"__cplusplus"}, {0, 12});
     QVERIFY(!hint.isEmpty());
 }
+
+void TestEditorGeneral::test_predefined_func_hint()
+{
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"void alpha() {", "}", "void declarationOnly();"};
+        return true;
+    });
+    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    mEditor->setFilename("main.cpp");
+    mEditor->setCppParser(parser);
+    QString hint = mEditor->getParserHint({"__func__"}, {0, 1});
+    QVERIFY(hint.contains("\"alpha\""));
+    QVERIFY(hint.contains("const char"));
+}

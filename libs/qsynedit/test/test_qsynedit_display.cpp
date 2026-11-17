@@ -130,6 +130,22 @@ void TestQSyneditDisplay::test_mouse_press_moves_caret()
     QCOMPARE(mEdit->mActiveSelectionMode, SelectionMode::Normal);
 }
 
+void TestQSyneditDisplay::test_mouse_positioning_shows_caret_immediately()
+{
+    mEdit->loadContent(makeLines(10));
+    QPoint point(mEdit->gutterWidth() + 2 + mEdit->charWidth(), mEdit->textHeight() + 2);
+    mEdit->m_blinkStatus = 0;
+    mEdit->computeCaret(point);
+    QCOMPARE(mEdit->m_blinkStatus, 1);
+    int firstTimer = mEdit->m_blinkTimerId;
+    QVERIFY(firstTimer != 0);
+
+    mEdit->m_blinkStatus = 0;
+    mEdit->computeCaret(point);
+    QCOMPARE(mEdit->m_blinkStatus, 1);
+    QVERIFY(mEdit->m_blinkTimerId != 0);
+}
+
 void TestQSyneditDisplay::test_mouse_press_moves_caret_wrap()
 {
     mEdit->loadContent(QStringList{

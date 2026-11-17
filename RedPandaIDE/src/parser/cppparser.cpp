@@ -1055,6 +1055,7 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
         break;
     case StatementKind::Function:
     case StatementKind::Variable:
+    case StatementKind::LocalVariable:
     case StatementKind::Parameter:
     case StatementKind::Class:
         if (statement->scope != StatementScope::Local)
@@ -1065,6 +1066,10 @@ QString CppParser::prettyPrintStatement(const PStatement &statement, const QStri
         else
             result += statement->fullName;
         result += std::dynamic_pointer_cast<Statement>(statement)->args;
+        if ((statement->kind == StatementKind::Variable
+             || statement->kind == StatementKind::LocalVariable)
+                && !std::dynamic_pointer_cast<Statement>(statement)->value.isEmpty())
+            result += " = " + std::dynamic_pointer_cast<Statement>(statement)->value;
         break;
     case StatementKind::OverloadedOperator:
         if (statement->scope != StatementScope::Local)

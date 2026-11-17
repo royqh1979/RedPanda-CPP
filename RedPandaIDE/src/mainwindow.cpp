@@ -5102,7 +5102,7 @@ void MainWindow::onClassBrowserGotoDeclaration()
     if (!declaration.range.start.isValid())
         return;
     openFileWithContext(declaration.fileName, FileType::None, QString(),
-                        QSynedit::CharPos{0, declaration.range.start.line});
+                        QSynedit::CharPos{declaration.range.start.ch, declaration.range.start.line});
 }
 
 void MainWindow::onClassBrowserGotoDefinition()
@@ -5121,7 +5121,7 @@ void MainWindow::onClassBrowserGotoDefinition()
     if (!definition.range.start.isValid())
         return;
     openFileWithContext(definition.fileName, FileType::None, QString(),
-                        QSynedit::CharPos{0, definition.range.start.line});
+                        QSynedit::CharPos{definition.range.start.ch, definition.range.start.line});
 }
 
 void MainWindow::onClassBrowserSortByType()
@@ -7704,7 +7704,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     if (!target.range.start.isValid())
         return;
     openFileWithContext(target.fileName, FileType::None, QString(),
-                        QSynedit::CharPos{0, target.range.start.line});
+                        QSynedit::CharPos{target.range.start.ch, target.range.start.line});
 }
 
 const PTodoParser &MainWindow::todoParser() const
