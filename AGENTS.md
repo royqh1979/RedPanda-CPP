@@ -74,9 +74,9 @@ xmake
 测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
 
 ```sh
-# CMake：构建全部测试目标，然后运行（GUI 测试使用 offscreen）
+# CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
 cmake --build build --target all-test-targets --parallel
-cd build && env CTEST_OUTPUT_ON_FAILURE=1 QT_QPA_PLATFORM=offscreen make test
+cd build && ctest --output-on-failure
 
 # Xmake：构建并运行测试
 xmake test
@@ -101,7 +101,7 @@ PATH="/d/qt/mingw64/bin:$PATH" cmake -G "MinGW Makefiles" \
   /e/workspaces/contributes/RedPanda-CPP
 ```
 
-- GUI 测试统一设置 `QT_QPA_FONTDIR=C:/Windows/Fonts`，避免本机 Qt 安装缺少 `lib/fonts` 时反复报告字体目录 warning；这只影响测试进程的字体查找，不修改 Qt 安装。`test-qsynedit` 尤其需要该设置。
+- CTest 自动为测试设置 `QT_QPA_PLATFORM=offscreen`；检测到 Windows 字体目录时，还会将 `QT_QPA_FONTDIR` 指向该目录，避免本机 Qt 安装缺少 `lib/fonts` 时反复报告字体目录 warning。这些设置只影响测试进程，不修改 Qt 安装。直接运行测试 exe 时仍需自行设置这些环境变量。
 
 - **test-qsynedit 优先直接运行**，并设置 `QT_QPA_PLATFORM=offscreen`、`QT_QPA_FONTDIR=C:/Windows/Fonts` 和 `QT_FORCE_STDERR_LOGGING=1`。当前构建已验证可直接运行并通过；只有出现无输出退出、崩溃或需要栈信息时才使用 gdb：
 

@@ -171,6 +171,9 @@ add_test(
     NAME test-qsynedit
     COMMAND test-qsynedit)
 
+set_tests_properties(test-qsynedit PROPERTIES
+    ENVIRONMENT "${test_environment}")
+
 add_dependencies(all-test-targets test-qsynedit)
 
 ################

@@ -583,6 +583,14 @@ add_test(
     NAME test-cppparser
     COMMAND test-cppparser)
 
+set_tests_properties(
+    test-editor
+    test-widgets
+    test-cppparser
+    test-cpptokenizer
+    PROPERTIES
+        ENVIRONMENT "${test_environment}")
+
 add_dependencies(all-test-targets test-cppparser)
 
 #####################
