@@ -157,7 +157,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     connect(e, &Editor::closeOccured, pMainWindow, &MainWindow::removeInfosForEditor);
     connect(e, &Editor::hideOccured, pMainWindow, &MainWindow::removeInfosForEditor);
     connect(e, &QWidget::customContextMenuRequested, pMainWindow, &MainWindow::onEditorContextMenu);
-    connect(e, &Editor::openFileRequested, pMainWindow, &MainWindow::onOpenFileRequested);
+    connect(e, &Editor::openFileRequested, pMainWindow, &MainWindow::openFileWithContext);
     connect(e, &Editor::symbolChoosed, pMainWindow->symbolUsageManager(), &SymbolUsageManager::updateUsage);
 
     if (!pMainWindow->openingFiles()

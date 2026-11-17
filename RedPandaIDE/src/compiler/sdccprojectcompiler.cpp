@@ -218,7 +218,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         writeln(file);
         QString objStr = escapeFilenameForMakefilePrerequisite(shortFileName);
         // if we have scanned it, use scanned info
-        if (parser && parser->fileScanned(unit->fileName())) {
+        if (parser && parser->hasReplayRecord(unit->fileName())) {
             QSet<QString> includedFiles = parser->getIncludedFiles(unit->fileName());
             foreach(const PProjectUnit &unit2, projectUnits) {
                 if (unit2==unit)

@@ -31,7 +31,7 @@
 
 - include path、project files、filesToScan 的读写；
 - `enabled()` / `setEnabled()`，尤其禁用时会调用 `resetParser()` 的路径；
-- `parsing()`、`isFileParsed()`、`isProjectHeaderFile()` 等状态查询；
+- `parsing()`、`hasReplayRecord()`、`isFileParsedInContext()`、`isProjectHeaderFile()` 等状态查询；
 - language、sharedByFiles、serialId 和 onGetFileStream 的读写。
 
 配置 setter 即使在入口加锁，也仍可能与未持锁的解析过程并发修改预处理器状态。需要明确解析中应拒绝、延迟还是先停止解析。

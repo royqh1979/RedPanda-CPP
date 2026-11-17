@@ -56,7 +56,7 @@ void CppParser::addProjectFile(const QString &fileName, bool needScan)
     QMutexLocker locker(&mMutex);
     mProjectFiles.insert(fileName);
     mPreprocessor.addProjectFile(fileName);
-    if (needScan && !mPreprocessor.fileScanned(fileName))
+    if (needScan && !mPreprocessor.hasReplayRecord(fileName))
         mFilesToScan.insert(fileName);
 }
 
@@ -319,7 +319,7 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
     QStringList result;
     QSet<QString> savedScannedFiles = mPreprocessor.scannedFiles();
     for (const QString &file : files) {
-        if (mPreprocessor.fileScanned(file))
+        if (mPreprocessor.hasReplayRecord(file))
             continue;
         mPreprocessor.setScanOptions(false, true);
         mPreprocessor.preprocess(file);
@@ -393,7 +393,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
         mParsing = false;
     });
-    if (onlyIfNotParsed && mPreprocessor.fileScanned(fileName))
+    if (onlyIfNotParsed && mPreprocessor.hasReplayRecord(fileName))
         return false;
 
     if (inProject) {
@@ -405,7 +405,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         for (const QString &file : files) {
             ++mFilesScannedCount;
             emit progress(file, mFilesToScanCount, mFilesScannedCount);
-            if (!mPreprocessor.fileScanned(file))
+            if (!mPreprocessor.hasReplayRecord(file))
                 internalParse(file);
         }
     } else {
@@ -416,7 +416,8 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         ++mFilesScannedCount;
         emit progress(fileName, mFilesToScanCount, mFilesScannedCount);
         internalParse(contextFilename);
-        if (!mPreprocessor.fileScanned(fileName))
+        if (fileName != contextFilename
+                && !mPreprocessor.includesFile(contextFilename, fileName))
             internalParse(fileName);
     }
     return true;
@@ -451,7 +452,7 @@ void CppParser::parseFileList(bool updateView)
     for (const QString &file : files) {
         ++mFilesScannedCount;
         emit progress(file, mFilesToScanCount, mFilesScannedCount);
-        if (!mPreprocessor.fileScanned(file))
+        if (!mPreprocessor.hasReplayRecord(file))
             internalParse(file);
     }
     mFilesToScan.clear();
@@ -984,15 +985,20 @@ void CppParser::unFreeze()
         --mLockCount;
 }
 
-bool CppParser::fileScanned(const QString &fileName) const
+bool CppParser::hasReplayRecord(const QString &fileName) const
 {
     QMutexLocker locker(&mMutex);
-    return !mParsing && mPreprocessor.fileScanned(fileName);
+    return !mParsing && mPreprocessor.hasReplayRecord(fileName);
 }
 
-bool CppParser::isFileParsed(const QString &filename) const
+bool CppParser::isFileParsedInContext(const QString &fileName, const QString &contextFileName) const
 {
-    return mPreprocessor.fileScanned(filename);
+    QMutexLocker locker(&mMutex);
+    if (mParsing || contextFileName.isEmpty()
+            || !mPreprocessor.hasReplayRecord(contextFileName))
+        return false;
+    return fileName == contextFileName
+            || mPreprocessor.includesFile(contextFileName, fileName);
 }
 
 

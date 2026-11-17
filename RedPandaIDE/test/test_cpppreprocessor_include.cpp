@@ -514,12 +514,12 @@ void TestCppPreprocessorInclude::test_clear_registry()
     CppPreprocessor p;
     p.addIncludePath(includeDir);
     p.preprocess(dir + "/macro_one.cpp");
-    QVERIFY(p.fileScanned(header));
+    QVERIFY(p.hasReplayRecord(header));
     QVERIFY(p.findFileInfo(header));
     QVERIFY(p.getDefine("MACRO_RESULT"));
 
     p.clear();
-    QVERIFY(!p.fileScanned(header));
+    QVERIFY(!p.hasReplayRecord(header));
     QVERIFY(!p.findFileInfo(header));
     QVERIFY(!p.getDefine("MACRO_RESULT"));
     QVERIFY(p.result().isEmpty());
@@ -899,7 +899,7 @@ void TestCppPreprocessorInclude::test_scanned_prefix_entry_forces_lazy_suffix_re
     p.invalidateFile(first);
     QCOMPARE(p.eventCounts(first).invalidate, 1);
     QCOMPARE(p.eventCounts(second).invalidate, 0);
-    QVERIFY(p.fileScanned(second));
+    QVERIFY(p.hasReplayRecord(second));
 
     p.preprocess(root);
     QCOMPARE(p.eventCounts(first).scan, 2);
@@ -933,7 +933,7 @@ void TestCppPreprocessorInclude::test_user_to_user_include_has_no_boundary_recor
     p.addProjectFile(dir + "/main.cpp");
     p.preprocess(dir + "/main.cpp");
     QString header = dir + "/a.h";
-    QVERIFY(p.fileScanned(header));
+    QVERIFY(p.hasReplayRecord(header));
     QCOMPARE(p.boundaryAncestor(header, 0), QString());
 }
 
@@ -970,7 +970,7 @@ void TestCppPreprocessorInclude::test_system_header_root_is_boundary_entry()
     CppPreprocessor p;
     p.addIncludePath(dir + "/include");
     p.preprocess(header);
-    QVERIFY(p.fileScanned(header));
+    QVERIFY(p.hasReplayRecord(header));
     QCOMPARE(p.boundaryAncestor(header, 0), header);
 }
 
@@ -1294,7 +1294,7 @@ void TestCppPreprocessorInclude::test_user_to_system_creates_boundary_record()
     p.addIncludePath(includeDir);
     p.addProjectFile(dir + "/order_ab.cpp");
     p.preprocess(dir + "/order_ab.cpp");
-    QVERIFY(p.fileScanned(header));
+    QVERIFY(p.hasReplayRecord(header));
     QCOMPARE(p.boundaryAncestor(header, 0), header);
     QCOMPARE(p.currentBoundaryPrefix().first(), header);
 }

@@ -71,6 +71,7 @@ private slots:
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_string();
+    void test_standard_library_header_context();
     void test_standard_library_front_append();
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();

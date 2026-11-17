@@ -4407,28 +4407,16 @@ void Editor::syncEncoding(const QByteArray &editorEncoding, const QByteArray &fi
 
 void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)
 {
-    FileType fileType = getFileType(filename);
-    QString contextFile;
-    if (!isC_CPPHeaderFile(fileType)
-            && !isC_CPPSourceFile(fileType))
-        fileType = FileType::CCppHeader;
-    if (isC_CPPHeaderFile(fileType)) {
-        if (isC_CPPSourceFile(mFileType)) {
-            contextFile = mFilename;
-        } else if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-            contextFile = mContextFile;
-        }
-    }
-
-    emit openFileRequested(filename, fileType,contextFile, caretPos);
+    emit openFileRequested(filename, getFileType(filename), QString(), caretPos);
 }
 
 bool Editor::needReparse() const
 {
-    return mParser && ((isC_CPPHeaderFile(mFileType)
-                        && !mContextFile.isEmpty()
-                        && !mParser->isFileParsed(mContextFile))
-                       || (!mParser->isFileParsed(mFilename)));
+    if (!mParser)
+        return false;
+    if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty())
+        return !mParser->isFileParsedInContext(mFilename, mContextFile);
+    return !mParser->hasReplayRecord(mFilename);
 }
 
 PStatement Editor::resolveClassOrConstructorAt(const PStatement &statement, const CharPos &pos)

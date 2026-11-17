@@ -645,8 +645,8 @@ void TestCppParser::test_invalidation_preserves_earlier_boundary_record()
     QVERIFY(before);
 
     mParser->invalidateFile(changed);
-    QVERIFY(mParser->fileScanned(earlier));
-    QVERIFY(!mParser->fileScanned(changed));
+    QVERIFY(mParser->hasReplayRecord(earlier));
+    QVERIFY(!mParser->hasReplayRecord(changed));
     CppParser::parseFileBlocking(mParser, root, false, "");
     QCOMPARE(mParser->findStatement("plain_b"), before);
 }
@@ -1123,8 +1123,8 @@ void TestCppParser::test_reset_parser_clears_registry_and_statements()
 
     mParser->resetParser();
     QCOMPARE(mParser->statementList().count(), 0);
-    QVERIFY(!mParser->fileScanned(main));
-    QVERIFY(!mParser->fileScanned(header));
+    QVERIFY(!mParser->hasReplayRecord(main));
+    QVERIFY(!mParser->hasReplayRecord(header));
     QVERIFY(!mParser->findFileInfo(main));
     QVERIFY(!mParser->findFileInfo(header));
     QVERIFY(mParser->namespaces().isEmpty());
@@ -1568,6 +1568,28 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(size);
     QCOMPARE(mParser->findStatementOf(
                  main, {"std", "::", "basic_string", "::", "size"}, 0), size);
+}
+
+void TestCppParser::test_standard_library_header_context()
+{
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QDir includeDir = QFileInfo(bitsStdcpp).dir();
+    QVERIFY(includeDir.cdUp());
+    if (!QFileInfo::exists(includeDir.filePath("string")))
+        QVERIFY(includeDir.cdUp());
+    QString stringFile = includeDir.filePath("string");
+    QString basicStringTcc = includeDir.filePath("bits/basic_string.tcc");
+    QVERIFY(QFileInfo::exists(stringFile));
+    QVERIFY(QFileInfo::exists(basicStringTcc));
+
+    CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
+
+    QCOMPARE(mParser->preprocessorEventCountsForTest(basicStringTcc).scan, 1);
+    QVERIFY(mParser->hasReplayRecord(stringFile));
+    QVERIFY(!mParser->hasReplayRecord(basicStringTcc));
+    QVERIFY(mParser->isFileParsedInContext(basicStringTcc, stringFile));
+    QVERIFY(mParser->findStatementOf(basicStringTcc, QStringList{"std"}, 50));
 }
 
 void TestCppParser::test_standard_library_front_append()

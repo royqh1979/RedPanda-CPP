@@ -110,8 +110,8 @@ public:
     int cppVersion() const;
     void resetParser();
     void unFreeze();
-    bool fileScanned(const QString& fileName) const;
-    bool isFileParsed(const QString& filename) const;
+    bool hasReplayRecord(const QString& fileName) const;
+    bool isFileParsedInContext(const QString &fileName, const QString &contextFileName) const;
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1) const;
     bool enabled() const;
     void setEnabled(bool newEnabled);

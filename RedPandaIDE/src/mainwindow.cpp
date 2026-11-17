@@ -1391,10 +1391,27 @@ void MainWindow::removeInfosForEditor()
     updateForStatusbarModeInfo(nullptr);
 }
 
-void MainWindow::onOpenFileRequested(
+void MainWindow::openFileWithContext(
         const QString &filename, FileType fileType,
-        const QString &contextFile, const QSynedit::CharPos& caretPos)
+        QString contextFile, const QSynedit::CharPos& caretPos)
 {
+    Editor *sourceEditor = qobject_cast<Editor *>(sender());
+    if (!sourceEditor)
+        sourceEditor = mEditorManager->getEditor();
+    if (sourceEditor && (isC_CPPSourceFile(sourceEditor->fileType())
+                         || isC_CPPHeaderFile(sourceEditor->fileType()))) {
+        if (!isC_CPPHeaderFile(fileType) && !isC_CPPSourceFile(fileType))
+            fileType = FileType::CCppHeader;
+        if (isC_CPPHeaderFile(fileType) && contextFile.isEmpty()) {
+            if (isC_CPPSourceFile(sourceEditor->fileType())) {
+                contextFile = sourceEditor->filename();
+            } else {
+                contextFile = sourceEditor->contextFile();
+                if (contextFile.isEmpty())
+                    contextFile = sourceEditor->filename();
+            }
+        }
+    }
     Editor *e=openFile(filename, true, fileType, contextFile);
     if (e) {
         mEditorManager->activeEditorAndSetCaret(e,caretPos);
@@ -1920,6 +1937,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
             editor->setFileType(fileType);
         if (activate) {
             mEditorManager->activeEditor(editor,true);
+            editor->reparseIfNeeded();
         }
         return editor;
     }
@@ -5093,10 +5111,7 @@ void MainWindow::onClassBrowserGotoDeclaration()
     }
     QString filename = statement->fileName;
     int line = statement->declarationRange.start.line;
-    Editor* e=openFile(filename);
-    if (e) {
-        mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
-    }
+    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
 }
 
 void MainWindow::onClassBrowserGotoDefinition()
@@ -5113,10 +5128,7 @@ void MainWindow::onClassBrowserGotoDefinition()
     }
     QString filename = statement->definitionFileName;
     int line = statement->definitionRange.start.line;
-    Editor* e=openFile(filename);
-    if (e) {
-        mEditorManager->activeEditorAndSetCaret(e,QSynedit::CharPos{0,line});
-    }
+    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
 }
 
 void MainWindow::onClassBrowserShowInherited()
@@ -7711,10 +7723,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
         filename = statement->fileName;
         line = statement->declarationRange.start.line;
     }
-    Editor* e = openFile(filename);
-    if (e) {
-        mEditorManager->activeEditorAndSetCaret(e, QSynedit::CharPos{0,line});
-    }
+    openFileWithContext(filename, FileType::None, QString(), QSynedit::CharPos{0,line});
 }
 
 const PTodoParser &MainWindow::todoParser() const

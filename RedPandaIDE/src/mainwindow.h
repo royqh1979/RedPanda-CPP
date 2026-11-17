@@ -280,7 +280,7 @@ public slots:
     //editor signals
     void refreshInfosForEditor(Editor *e);
     void removeInfosForEditor();
-    void onOpenFileRequested(const QString& filename, FileType fileType, const QString& contextFile, const QSynedit::CharPos& caretPos);
+    void openFileWithContext(const QString& filename, FileType fileType, QString contextFile, const QSynedit::CharPos& caretPos);
 private:
     void executeTool(PToolItem item);
     int calIconSize(const QString &fontName, int fontPointSize);

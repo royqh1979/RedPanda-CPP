@@ -129,8 +129,13 @@ public:
         mRegistry.replayRecords.remove(fileName);
     }
 
-    bool fileScanned(const QString& fileName) const {
+    bool hasReplayRecord(const QString& fileName) const {
         return mRegistry.scannedFiles.contains(fileName);
+    }
+
+    bool includesFile(const QString &contextFileName, const QString &fileName) const {
+        PParsedFileInfo contextInfo = findFileInfo(contextFileName);
+        return contextInfo && contextInfo->includes().contains(fileName);
     }
 
     const QSet<QString>& includePaths() const {

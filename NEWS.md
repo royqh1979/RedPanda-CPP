@@ -31,6 +31,8 @@ Red Panda C++ Version 3.6
   - fix: The class browser no longer crashes when displaying inline namespace aliases.
   - fix: Correct ASM single-quote strings and binary suffixes, and trailing-space detection in ASM and plain text.
   - fix: GAS syntax directives now control register highlighting and remain correct across incremental edits.
+  - fix: Class browser navigation preserves the C/C++ context and opens extensionless headers as C++ instead of plain text.
+  - fix: Headers opened with a context are parsed through that context instead of being reparsed without its macro environment.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.
