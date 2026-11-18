@@ -711,6 +711,8 @@ void CppPreprocessor::preprocess(const QString &fileName)
         removeReplayRecord(fileName);
     openInclude(fileName);
     preprocessBuffer();
+    if (preprocessorProfile.enabled)
+        qWarning() << "PREPROCESSOR_PROTECTION scannedIncludes" << mSession.scannedIncludeCount;
 }
 
 void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
@@ -1245,10 +1247,24 @@ void CppPreprocessor::openInclude(QString fileName)
     if (replayRoot)
         mRegistry.replayRecords.insert(fileName, std::make_shared<ReplayRecord>());
     bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
+    if (scanContent) {
+        if (mSession.scannedIncludeCount >= INCLUDE_SCAN_STOP_THRESHOLD) {
+            qWarning() << "Too many files scanned during preprocessing; stopping at"
+                       << mSession.scannedIncludeCount << fileName;
+            mStopForParserReset = true;
+            mSession.result.clear();
+            Q_ASSERT_X(false, "openInclude", "Too many files scanned during preprocessing");
+            return;
+        }
+        ++mSession.scannedIncludeCount;
+        if (mSession.scannedIncludeCount == INCLUDE_SCAN_WARNING_THRESHOLD) {
+            qWarning() << "Preprocessing has scanned" << mSession.scannedIncludeCount
+                       << "files; the latest file is" << fileName;
+        }
 #ifdef REDPANDA_PARSER_TEST
-    if (scanContent)
         mScanCounts[fileName]++;
 #endif
+    }
     mSession.processed.insert(fileName);
     mSession.boundaryAncestors[fileName].append(boundaryAncestor);
 

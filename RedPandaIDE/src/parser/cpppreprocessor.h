@@ -93,6 +93,8 @@ public:
     // patterns (Boost-style iteration) terminate by branch evaluation
     // and never reach it.
     static constexpr int DEFAULT_MAX_INCLUDE_NESTING_DEPTH = 200;
+    static constexpr qint64 INCLUDE_SCAN_WARNING_THRESHOLD = 1000;
+    static constexpr qint64 INCLUDE_SCAN_STOP_THRESHOLD = 10000;
     int maxIncludeNestingDepth() const { return mMaxIncludeNestingDepth; }
     void setMaxIncludeNestingDepth(int depth) { mMaxIncludeNestingDepth = depth; }
 
@@ -313,6 +315,7 @@ private:
         QList<BranchResult> branchResults;
         DefineMap defines;
         QSet<QString> processed;
+        qint64 scannedIncludeCount = 0;
         bool fileJustOpenned = false;
         QHash<QString, QStringList> fileCache;
         QStringList boundaryPrefix;
@@ -329,6 +332,7 @@ private:
             includeStack.clear();
             branchResults.clear();
             processed.clear();
+            scannedIncludeCount = 0;
             boundaryPrefix.clear();
             allBoundaryEntriesReplayed = true;
             boundaryAncestors.clear();

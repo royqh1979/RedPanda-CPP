@@ -19,7 +19,6 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 #include "../systemconsts.h"
-#include "../utils/parser.h"
 #include <QAction>
 #include <QMessageBox>
 #include <QDebug>
@@ -86,10 +85,11 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
     parser->setSharedByFiles(false);
     parser->setLanguage(ui->editDemo->calcParserLanguage());
     parser->setOnGetFileStream([this](const QString& filename, QStringList& buffer){
-        buffer=ui->editDemo->content();
-           return true;
+        if (filename != ui->editDemo->filename())
+            return false;
+        buffer = ui->editDemo->content();
+        return true;
     });
-    resetCppParser(parser);
     parser->setEnabled(true);
     ui->editDemo->setCppParser(parser);
     ui->editDemo->replaceContent(

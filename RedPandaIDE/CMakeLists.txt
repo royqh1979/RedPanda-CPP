@@ -395,17 +395,23 @@ target_qt_plain_cpp(test-widgets
 target_moc_classes(test-widgets
     src/editor
 
+    src/settingsdialog/settingswidget
     src/widgets/bookmarkmodel
     src/widgets/classbrowser
     src/widgets/codecompletionlistview
     src/widgets/codecompletionpopup
+    src/widgets/coloredit
     src/widgets/customdisablediconengine
+    src/widgets/qpatchedcombobox
     src/widgets/functiontooltipwidget
     src/widgets/headercompletionpopup
 
     src/symbolusagemanager
     src/codesnippetsmanager
     test/test_widgets
+    )
+target_ui_classes(test-widgets
+    src/settingsdialog/editorcolorschemewidget
     )
 target_include_directories(test-widgets PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR})

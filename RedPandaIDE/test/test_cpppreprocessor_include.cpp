@@ -697,6 +697,33 @@ void TestCppPreprocessorInclude::test_on_get_file_stream()
     QVERIFY(!p.findFileInfo(dir + "/a.h"));
 }
 
+void TestCppPreprocessorInclude::test_unfiltered_file_stream_callback_exhausts_depth_cap()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    const QString main = tmp.filePath("main.cpp");
+    const QString iostream = tmp.filePath("iostream");
+    const QString conio = tmp.filePath("conio.h");
+    for (const QString &path : {main, iostream, conio}) {
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.close();
+    }
+
+    CppPreprocessor p;
+    p.addIncludePath(tmp.path());
+    p.setMaxIncludeNestingDepth(8);
+    p.setOnGetFileStream([](const QString &, QStringList &out) {
+        out = QStringList{"#include <iostream>", "#include <conio.h>"};
+        return true;
+    });
+    p.preprocess(main);
+
+    QCOMPARE(p.eventCounts(main).scan, 1);
+    QCOMPARE(p.eventCounts(iostream).scan, 127);
+    QCOMPARE(p.eventCounts(conio).scan, 127);
+}
+
 void TestCppPreprocessorInclude::test_session_file_cache_reuse_and_clear()
 {
     QTemporaryDir tmp;

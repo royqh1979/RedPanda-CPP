@@ -45,6 +45,7 @@ private slots:
     void test_hard_define_restore();
     void test_undef_restore();
     void test_on_get_file_stream();
+    void test_unfiltered_file_stream_callback_exhausts_depth_cap();
     void test_session_file_cache_reuse_and_clear();
     // group G: replay correctness
     void test_replay_env_dependent();

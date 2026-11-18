@@ -69,6 +69,7 @@ private slots:
     void test_function_tip_class();
     void test_rename_class_and_constructor();
     void test_rename_from_constructor();
+    void test_editor_color_scheme_demo_parser_is_self_contained();
 
 private:
     std::unique_ptr<Settings> mSettings;

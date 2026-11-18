@@ -30,6 +30,8 @@
 #include "src/mainwindow.h"
 #include "src/project.h"
 #include "src/settings.h"
+#include "src/settingsdialog/editorcolorschemewidget.h"
+#include "src/utils.h"
 #include "src/widgets/classbrowser.h"
 #include "src/widgets/codecompletionpopup.h"
 #include "src/widgets/functiontooltipwidget.h"
@@ -40,6 +42,10 @@
 IconsManager *MainWindow::iconsManager() const
 {
     return nullptr;
+}
+
+void MainWindow::updateEditorColorSchemes()
+{
 }
 
 std::shared_ptr<Project> MainWindow::project()
@@ -1196,4 +1202,43 @@ void TestWidgets::test_rename_from_constructor()
     CppRefacter refactor(nullptr);
     refactor.renameSymbol(&editor, constructorPos, "Bar");
     QCOMPARE(editor.content(), expectedContent);
+}
+
+void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    const QString iostream = tmp.filePath("iostream");
+    const QString conio = tmp.filePath("conio.h");
+    for (const QString &path : {iostream, conio}) {
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(path == iostream ? "int iostream_value;" : "int conio_value;");
+        file.close();
+    }
+
+    const int previousDefault = pSettings->compilerSets().defaultIndex();
+    const CompilerSetList previousSets = pSettings->compilerSets().clearSets();
+    auto restoreCompilerSets = finally([this, previousDefault, previousSets] {
+        pSettings->compilerSets().clearSets();
+        for (const PCompilerSet &set : previousSets)
+            pSettings->compilerSets().addSet(set);
+        pSettings->compilerSets().setDefaultIndex(previousDefault);
+    });
+    PCompilerSet compilerSet = pSettings->compilerSets().addSet();
+    compilerSet->CppIncludeDirs().append(tmp.path());
+    pSettings->compilerSets().setDefaultIndex(0);
+
+    EditorColorSchemeWidget widget(mColorManager.get(), "Color", "Editor", nullptr);
+    Editor *demo = widget.findChild<Editor *>("editDemo");
+    QVERIFY(demo);
+    const PCppParser &parser = demo->parser();
+    QVERIFY(parser);
+    QVERIFY(parser->includePaths().isEmpty());
+    QVERIFY(parser->projectIncludePaths().isEmpty());
+
+    parser->addIncludePath(tmp.path());
+    CppParser::parseFileBlocking(parser, demo->filename(), false, "");
+    QVERIFY(parser->findStatement("iostream_value"));
+    QVERIFY(parser->findStatement("conio_value"));
 }
