@@ -1666,7 +1666,7 @@ CharPos gutterLineEnd(const QSynEdit *editor, int line)
 {
     if (line + 1 < editor->lineCount())
         return CharPos{0, line + 1};
-    return CharPos{editor->lineText(line).length(), line};
+    return CharPos{static_cast<int>(editor->lineText(line).length()) , line};
 }
 
 bool hasSingleFullLineSelection(const QSynEdit *editor)
