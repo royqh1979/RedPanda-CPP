@@ -66,8 +66,21 @@ private slots:
     void test_input_input_chars_undo();
 
     void test_input_tab_in_empty_file();
+    void test_tab_input_variants_data();
+    void test_tab_input_variants();
+    void test_tab_input_unicode_data();
+    void test_tab_input_unicode();
+    void test_tab_boundaries_font_independent();
     void test_block_indent();
+    void test_block_indent_variants_data();
+    void test_block_indent_variants();
     void test_block_unindent();
+    void test_block_unindent_variants_data();
+    void test_block_unindent_variants();
+    void test_backspace_tab_boundaries_data();
+    void test_backspace_tab_boundaries();
+    void test_delete_tab_boundaries_data();
+    void test_delete_tab_boundaries();
 
     void test_replace_line_in_empty_file();
     void test_replace_line_at_file_begin_end();

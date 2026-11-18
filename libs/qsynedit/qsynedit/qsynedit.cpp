@@ -2730,6 +2730,19 @@ void QSynEdit::doDeletePrevChar()
         Q_ASSERT(glyphIndex>0);
         int oldCaretX = mCaretCh;
         int newCaretX = mDocument->glyphStartChar(mCaretLine, glyphIndex-1);
+        if (mOptions.testFlag(EditorOption::TabsToSpaces)
+                && tempStr[mCaretCh - 1] == ' ') {
+            int column = calcLogicalColumn(tempStr, mCaretCh, tabSize());
+            if (column > 0 && column % tabSize() == 0) {
+                int spaceCount = 0;
+                while (spaceCount < tabSize()
+                       && mCaretCh - spaceCount - 1 >= 0
+                       && tempStr[mCaretCh - spaceCount - 1] == ' ') {
+                    ++spaceCount;
+                }
+                newCaretX = mCaretCh - spaceCount;
+            }
+        }
         //qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretLine;
         QString deletedGlyph = tempStr.mid(newCaretX, oldCaretX-newCaretX);
         setCaretCh(newCaretX);
@@ -2808,6 +2821,17 @@ void QSynEdit::doDeleteCurrentChar()
 
             beginEditing();
             QString deletedGlyph = mDocument->glyphAt(mCaretLine, mCaretCh);
+            if (mOptions.testFlag(EditorOption::TabsToSpaces)
+                    && tempStr[mCaretCh] == ' '
+                    && calcLogicalColumn(tempStr, mCaretCh, tabSize()) % tabSize() == 0) {
+                int spaceCount = 0;
+                while (spaceCount < tabSize()
+                       && mCaretCh + spaceCount < tempStrLen
+                       && tempStr[mCaretCh + spaceCount] == ' ') {
+                    ++spaceCount;
+                }
+                deletedGlyph = tempStr.mid(mCaretCh, spaceCount);
+            }
             if (!shouldAddGroupBreak) {
                 if (deletedGlyph.length() == 1) {
                     if (lastDelText.length()==1) {
@@ -3324,9 +3348,8 @@ void QSynEdit::doTabKey()
     }
     QString spaces;
     if (mOptions.testFlag(EditorOption::TabsToSpaces)) {
-        int left = charToGlyphLeft(mCaretLine,mCaretCh);
-        int i = std::ceil( (tabWidth() - (left) % tabWidth() ) / (float) tabSize());
-        spaces = QString(i,' ');
+        int column = calcLogicalColumn(getDisplayStringAtLine(mCaretLine), mCaretCh, tabSize());
+        spaces = QString(tabSize() - column % tabSize(), ' ');
     } else {
         spaces = '\t';
     }

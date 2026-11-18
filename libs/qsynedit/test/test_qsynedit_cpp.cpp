@@ -42,6 +42,11 @@ void TestQSyneditCpp::initTestCase()
 void TestQSyneditCpp::cleanup()
 {
     mEdit->setOptions(mDefaultOptions);
+    mEdit->setTabSize(4);
+    QFont defaultFont;
+    defaultFont.setFamily(defaultMonoFont());
+    defaultFont.setPointSize(14);
+    mEdit->setFont(defaultFont);
     mEdit->setInsertMode(true);
     mEdit->setReadOnly(false);
     mEdit->setActiveSelectionMode(SelectionMode::Normal);
@@ -12492,6 +12497,470 @@ void TestQSyneditCpp::test_edit_operations_are_batched()
     verifyOp("load content", [&]{
         mEdit->loadContent({"int x;", "int y;"});
     });
+}
+
+void TestQSyneditCpp::test_tab_input_variants_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<QString>("prefix");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<int>("expectedCaretCh");
+
+    for (int tabSize : {2, 3, 4, 8}) {
+        for (bool tabsToSpaces : {false, true}) {
+            for (bool existingTab : {false, true}) {
+                for (int offset = 0; offset < tabSize; ++offset) {
+                    QString prefix = QString(existingTab ? "\t" : "") + QString(offset, 'x');
+                    QString inserted = tabsToSpaces
+                            ? QString(tabSize - offset, ' ') : QString('\t');
+                    QString name = QString("size%1-%2-existingTab%3-offset%4")
+                            .arg(tabSize).arg(tabsToSpaces).arg(existingTab).arg(offset);
+                    QTest::newRow(qPrintable(name))
+                            << tabSize << tabsToSpaces << prefix
+                            << prefix + inserted + "z" << prefix.length() + inserted.length();
+                }
+            }
+        }
+    }
+}
+
+void TestQSyneditCpp::test_tab_input_variants()
+{
+    QFETCH(int, tabSize);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(QString, prefix);
+    QFETCH(QString, expected);
+    QFETCH(int, expectedCaretCh);
+
+    clearContent();
+    mEdit->setTabSize(tabSize);
+    EditorOptions options = mDefaultOptions;
+    options.setFlag(EditorOption::TabIndent, false);
+    options.setFlag(EditorOption::TabsToSpaces, tabsToSpaces);
+    mEdit->setOptions(options);
+    mEdit->loadContent(prefix + "z");
+    mEdit->setCaretPos(CharPos{prefix.length(), 0});
+    mEdit->processCommand(EditCommand::Tab);
+
+    QCOMPARE(mEdit->content(), QStringList{expected});
+    QCOMPARE(mEdit->caretPos(), CharPos(expectedCaretCh, 0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList{prefix + "z"});
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{expected});
+}
+
+void TestQSyneditCpp::test_block_indent_variants_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<bool>("multiLine");
+    QTest::addColumn<bool>("endAtLineStart");
+    QTest::addColumn<QStringList>("expected");
+
+    const QStringList original{"a", " b", "", "c"};
+    for (int tabSize : {2, 3, 4, 8}) {
+        for (bool tabsToSpaces : {false, true}) {
+            for (bool multiLine : {false, true}) {
+                for (bool endAtLineStart : {false, true}) {
+                    if (!multiLine && endAtLineStart)
+                        continue;
+                    QString indent = tabsToSpaces ? QString(tabSize, ' ') : QString('\t');
+                    QStringList expected = original;
+                    if (multiLine) {
+                        int lastLine = endAtLineStart ? 1 : 3;
+                        for (int i = 0; i <= lastLine; ++i)
+                            expected[i].prepend(indent);
+                    } else {
+                        expected[1].prepend(indent);
+                    }
+                    QString name = QString("size%1-%2-multi%3-endAtStart%4")
+                            .arg(tabSize).arg(tabsToSpaces).arg(multiLine).arg(endAtLineStart);
+                    QTest::newRow(qPrintable(name))
+                            << tabSize << tabsToSpaces << multiLine << endAtLineStart << expected;
+                }
+            }
+        }
+    }
+}
+
+void TestQSyneditCpp::test_block_indent_variants()
+{
+    QFETCH(int, tabSize);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(bool, multiLine);
+    QFETCH(bool, endAtLineStart);
+    QFETCH(QStringList, expected);
+
+    const QStringList original{"a", " b", "", "c"};
+    clearContent();
+    mEdit->setTabSize(tabSize);
+    EditorOptions options = mDefaultOptions;
+    options.setFlag(EditorOption::TabsToSpaces, tabsToSpaces);
+    mEdit->setOptions(options);
+    mEdit->loadContent(original);
+    if (multiLine) {
+        CharPos end = endAtLineStart ? CharPos{0, 2} : CharPos{1, 3};
+        mEdit->setCaretAndSelection(end, CharPos{0, 0}, end);
+    } else {
+        mEdit->setCaretPos(CharPos{1, 1});
+    }
+    mEdit->processCommand(EditCommand::BlockIndent);
+
+    QCOMPARE(mEdit->content(), expected);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), original);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), expected);
+}
+
+void TestQSyneditCpp::test_block_unindent_variants_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<bool>("multiLine");
+    QTest::addColumn<bool>("endAtLineStart");
+    QTest::addColumn<QStringList>("original");
+    QTest::addColumn<QStringList>("expected");
+
+    for (int tabSize : {2, 3, 4, 8}) {
+        QStringList original{
+            QString(tabSize, ' ') + "a",
+            QString(tabSize - 1, ' ') + "b",
+            "\tc",
+            "",
+            "d"
+        };
+        QStringList fullyUnindented = original;
+        fullyUnindented[0] = "a";
+        fullyUnindented[1] = "b";
+        fullyUnindented[2] = "c";
+        for (bool tabsToSpaces : {false, true}) {
+            for (bool multiLine : {false, true}) {
+                for (bool endAtLineStart : {false, true}) {
+                    if (!multiLine && endAtLineStart)
+                        continue;
+                    QStringList expected = original;
+                    if (multiLine) {
+                        int lastLine = endAtLineStart ? 1 : 4;
+                        for (int i = 0; i <= lastLine; ++i)
+                            expected[i] = fullyUnindented[i];
+                    } else {
+                        expected[0] = "a";
+                    }
+                    QString name = QString("size%1-%2-multi%3-endAtStart%4")
+                            .arg(tabSize).arg(tabsToSpaces).arg(multiLine).arg(endAtLineStart);
+                    QTest::newRow(qPrintable(name))
+                            << tabSize << tabsToSpaces << multiLine << endAtLineStart
+                            << original << expected;
+                }
+            }
+        }
+    }
+}
+
+void TestQSyneditCpp::test_block_unindent_variants()
+{
+    QFETCH(int, tabSize);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(bool, multiLine);
+    QFETCH(bool, endAtLineStart);
+    QFETCH(QStringList, original);
+    QFETCH(QStringList, expected);
+
+    clearContent();
+    mEdit->setTabSize(tabSize);
+    EditorOptions options = mDefaultOptions;
+    options.setFlag(EditorOption::TabsToSpaces, tabsToSpaces);
+    mEdit->setOptions(options);
+    mEdit->loadContent(original);
+    if (multiLine) {
+        CharPos end = endAtLineStart ? CharPos{0, 2} : CharPos{1, 4};
+        mEdit->setCaretAndSelection(end, CharPos{0, 0}, end);
+    } else {
+        mEdit->setCaretPos(CharPos{0, 0});
+    }
+    mEdit->processCommand(EditCommand::BlockUnindent);
+
+    QCOMPARE(mEdit->content(), expected);
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), original);
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), expected);
+}
+
+void TestQSyneditCpp::test_backspace_tab_boundaries_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<int>("caretCh");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<int>("expectedCaretCh");
+
+    for (int tabSize : {2, 3, 4, 8}) {
+        for (bool tabsToSpaces : {false, true}) {
+            for (bool existingTab : {false, true}) {
+                for (int spaceCount = 0; spaceCount <= tabSize; ++spaceCount) {
+                    QString prefix = QString(existingTab ? "\t" : "")
+                            + QString(tabSize - spaceCount, 'x');
+                    QString spaces = QString(spaceCount, ' ');
+                    int caretCh = prefix.length() + spaceCount;
+                    QString expected;
+                    int expectedCaretCh;
+                    if (spaceCount > 0 && tabsToSpaces) {
+                        expected = prefix + "z";
+                        expectedCaretCh = prefix.length();
+                    } else {
+                        expected = prefix + spaces.left(spaceCount - 1) + "z";
+                        expectedCaretCh = caretCh - 1;
+                        if (spaceCount == 0) {
+                            expected = prefix.left(prefix.length() - 1) + "z";
+                        }
+                    }
+                    QString name = QString("size%1-%2-existingTab%3-spaces%4")
+                            .arg(tabSize).arg(tabsToSpaces).arg(existingTab).arg(spaceCount);
+                    QTest::newRow(qPrintable(name))
+                            << tabSize << tabsToSpaces << prefix + spaces + "z"
+                            << caretCh << expected << expectedCaretCh;
+                }
+            }
+        }
+        for (bool existingTab : {false, true}) {
+            QString prefix = existingTab ? "\t" : "";
+            QString spaces = QString(2 * tabSize, ' ');
+            QString name = QString("size%1-longRun-existingTab%2").arg(tabSize).arg(existingTab);
+            QTest::newRow(qPrintable(name))
+                    << tabSize << true << prefix + spaces + "z"
+                    << prefix.length() + spaces.length()
+                    << prefix + QString(tabSize, ' ') + "z" << prefix.length() + tabSize;
+        }
+        for (int offset = 1; offset < tabSize; ++offset) {
+            QString prefix = QString(tabSize, 'x');
+            QString spaces = QString(offset, ' ');
+            QString name = QString("size%1-nonBoundary-offset%2").arg(tabSize).arg(offset);
+            QTest::newRow(qPrintable(name))
+                    << tabSize << true << prefix + spaces + "z"
+                    << prefix.length() + offset
+                    << prefix + spaces.left(offset - 1) + "z"
+                    << prefix.length() + offset - 1;
+        }
+    }
+}
+
+void TestQSyneditCpp::test_backspace_tab_boundaries()
+{
+    QFETCH(int, tabSize);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(QString, initial);
+    QFETCH(int, caretCh);
+    QFETCH(QString, expected);
+    QFETCH(int, expectedCaretCh);
+
+    clearContent();
+    mEdit->setTabSize(tabSize);
+    EditorOptions options = mDefaultOptions;
+    options.setFlag(EditorOption::TabsToSpaces, tabsToSpaces);
+    mEdit->setOptions(options);
+    mEdit->loadContent(initial);
+    mEdit->setCaretPos(CharPos{caretCh, 0});
+    mEdit->processCommand(EditCommand::DeleteLastChar);
+
+    QCOMPARE(mEdit->content(), QStringList{expected});
+    QCOMPARE(mEdit->caretPos(), CharPos(expectedCaretCh, 0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList{initial});
+    QCOMPARE(mEdit->caretPos(), CharPos(caretCh, 0));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{expected});
+    QCOMPARE(mEdit->caretPos(), CharPos(expectedCaretCh, 0));
+}
+
+void TestQSyneditCpp::test_delete_tab_boundaries_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<int>("caretCh");
+    QTest::addColumn<QString>("expected");
+
+    for (int tabSize : {2, 3, 4, 8}) {
+        for (bool tabsToSpaces : {false, true}) {
+            for (bool existingTab : {false, true}) {
+                for (int spaceCount = 1; spaceCount <= tabSize; ++spaceCount) {
+                    QString prefix = existingTab ? "\t" : "";
+                    QString spaces = QString(spaceCount, ' ');
+                    QString expected = tabsToSpaces
+                            ? prefix + "z" : prefix + spaces.left(spaceCount - 1) + "z";
+                    QString name = QString("size%1-%2-existingTab%3-spaces%4")
+                            .arg(tabSize).arg(tabsToSpaces).arg(existingTab).arg(spaceCount);
+                    QTest::newRow(qPrintable(name))
+                            << tabSize << tabsToSpaces << prefix + spaces + "z"
+                            << prefix.length() << expected;
+                }
+            }
+        }
+        for (bool existingTab : {false, true}) {
+            QString prefix = existingTab ? "\t" : "";
+            QString spaces = QString(2 * tabSize, ' ');
+            QString name = QString("size%1-longRun-existingTab%2").arg(tabSize).arg(existingTab);
+            QTest::newRow(qPrintable(name))
+                    << tabSize << true << prefix + spaces + "z"
+                    << prefix.length() << prefix + QString(tabSize, ' ') + "z";
+        }
+        for (int offset = 1; offset < tabSize; ++offset) {
+            QString prefix = QString(tabSize, 'x');
+            QString spaces = QString(tabSize, ' ');
+            QString name = QString("size%1-nonBoundary-offset%2").arg(tabSize).arg(offset);
+            QTest::newRow(qPrintable(name))
+                    << tabSize << true << prefix + spaces + "z"
+                    << prefix.length() + offset
+                    << prefix + spaces.left(tabSize - 1) + "z";
+        }
+    }
+}
+
+void TestQSyneditCpp::test_delete_tab_boundaries()
+{
+    QFETCH(int, tabSize);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(QString, initial);
+    QFETCH(int, caretCh);
+    QFETCH(QString, expected);
+
+    clearContent();
+    mEdit->setTabSize(tabSize);
+    EditorOptions options = mDefaultOptions;
+    options.setFlag(EditorOption::TabsToSpaces, tabsToSpaces);
+    mEdit->setOptions(options);
+    mEdit->loadContent(initial);
+    mEdit->setCaretPos(CharPos{caretCh, 0});
+    mEdit->processCommand(EditCommand::DeleteChar);
+
+    QCOMPARE(mEdit->content(), QStringList{expected});
+    QCOMPARE(mEdit->caretPos(), CharPos(caretCh, 0));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList{initial});
+    QCOMPARE(mEdit->caretPos(), CharPos(caretCh, 0));
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), QStringList{expected});
+    QCOMPARE(mEdit->caretPos(), CharPos(caretCh, 0));
+}
+
+void TestQSyneditCpp::test_tab_input_unicode_data()
+{
+    QTest::addColumn<int>("tabSize");
+    QTest::addColumn<QString>("prefix");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<int>("expectedCaretCh");
+
+    struct UnicodeTabCase {
+        const char *name;
+        const char *prefix;
+        int column;
+    };
+    const QList<UnicodeTabCase> cases{
+        {"precomposed-accent", "é", 1},
+        {"combining-accent", "e\u0301", 1},
+        {"cjk", "中", 2},
+        {"cjk-ascii", "中a", 3},
+        {"emoji", "😀", 2},
+        {"emoji-zwj", "👨‍👩‍👧‍👦", 2},
+        {"flag", "🇨🇳", 2},
+        {"ambiguous", "·", 1},
+    };
+    for (int tabSize : {2, 3, 4, 8}) {
+        for (bool existingTab : {false, true}) {
+            for (const UnicodeTabCase &testCase : cases) {
+                QString prefix = QString(existingTab ? "\t" : "")
+                        + QString::fromUtf8(testCase.prefix);
+                int column = (existingTab ? tabSize : 0) + testCase.column;
+                QString inserted = QString(tabSize - column % tabSize, ' ');
+                QString name = QString("size%1-existingTab%2-%3")
+                        .arg(tabSize).arg(existingTab).arg(testCase.name);
+                QTest::newRow(qPrintable(name))
+                        << tabSize << prefix << prefix + inserted + "z"
+                        << prefix.length() + inserted.length();
+            }
+        }
+    }
+}
+
+void TestQSyneditCpp::test_tab_input_unicode()
+{
+    QFETCH(int, tabSize);
+    QFETCH(QString, prefix);
+    QFETCH(QString, expected);
+    QFETCH(int, expectedCaretCh);
+
+    const QStringList fontFamilies{defaultMonoFont(), testProportionalFont()};
+    for (const QString &fontFamily : fontFamilies) {
+        clearContent();
+        mEdit->setTabSize(tabSize);
+        QFont font;
+        font.setFamily(fontFamily);
+        font.setPointSize(14);
+        mEdit->setFont(font);
+        EditorOptions options = mDefaultOptions;
+        options.setFlag(EditorOption::TabIndent, false);
+        options.setFlag(EditorOption::TabsToSpaces, true);
+        mEdit->setOptions(options);
+        mEdit->loadContent(prefix + "z");
+        mEdit->setCaretPos(CharPos{prefix.length(), 0});
+        mEdit->processCommand(EditCommand::Tab);
+
+        QCOMPARE(mEdit->content(), QStringList{expected});
+        QCOMPARE(mEdit->caretPos(), CharPos(expectedCaretCh, 0));
+        mEdit->undo();
+        QCOMPARE(mEdit->content(), QStringList{prefix + "z"});
+        mEdit->redo();
+        QCOMPARE(mEdit->content(), QStringList{expected});
+    }
+}
+
+void TestQSyneditCpp::test_tab_boundaries_font_independent()
+{
+    const QStringList fontFamilies{defaultMonoFont(), testProportionalFont()};
+    const QList<QPair<QString, int>> prefixes{
+        {QString::fromUtf8("中"), 2},
+        {QString::fromUtf8("😀"), 2},
+        {"iiii", 4},
+    };
+    for (const QString &fontFamily : fontFamilies) {
+        QFont font;
+        font.setFamily(fontFamily);
+        font.setPointSize(14);
+        mEdit->setFont(font);
+        EditorOptions options = mDefaultOptions;
+        options.setFlag(EditorOption::TabsToSpaces, true);
+        mEdit->setOptions(options);
+        for (int tabSize : {4, 8}) {
+            mEdit->setTabSize(tabSize);
+            for (const auto &prefix : prefixes) {
+                if (prefix.second >= tabSize)
+                    continue;
+                QString spaces = QString(tabSize - prefix.second, ' ');
+                QString initial = prefix.first + spaces + "z";
+                QString expected = prefix.first + "z";
+
+                clearContent();
+                mEdit->loadContent(initial);
+                mEdit->setCaretPos(CharPos{prefix.first.length() + spaces.length(), 0});
+                mEdit->processCommand(EditCommand::DeleteLastChar);
+                QCOMPARE(mEdit->content(), QStringList{expected});
+                QCOMPARE(mEdit->caretPos(), CharPos(prefix.first.length(), 0));
+
+                QString deletePrefix = prefix.first.repeated(tabSize / prefix.second);
+                clearContent();
+                mEdit->loadContent(deletePrefix + spaces + "z");
+                mEdit->setCaretPos(CharPos{deletePrefix.length(), 0});
+                mEdit->processCommand(EditCommand::DeleteChar);
+                QCOMPARE(mEdit->content(), QStringList{deletePrefix + "z"});
+                QCOMPARE(mEdit->caretPos(), CharPos(deletePrefix.length(), 0));
+            }
+        }
+    }
 }
 
 }

@@ -45,6 +45,8 @@ Red Panda C++ Version 3.6
   - enhancement: Support the function-local predefined identifier __func__ in completion, highlighting, type evaluation, and parser hints.
   - enhancement: Double-click selection now picks words at token boundaries and inside strings, comments, and macro definitions.
   - fix: Goto declaration/definition jumps to the occurrence's source column instead of the start of its line.
+  - fix: Tabs-to-spaces inserts the correct number of spaces at every tab stop, independent of font metrics.
+  - enhancement: With tabs-to-spaces enabled, Backspace/Delete at tab stops remove spaces to the previous/next tab stop.
 
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.

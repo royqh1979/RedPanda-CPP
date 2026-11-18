@@ -34,6 +34,8 @@ int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx);
 int segmentIntervalStart(const QList<int> &segList, int maxVal, int idx);
 QList<int> calcGlyphStartCharList(const QString &text);
 void expandGlyphStartCharList(const QString& strAdded, int oldStrLen, QList<int> &glyphStartCharList);
+int glyphLogicalWidth(const QString &glyph);
+int calcLogicalColumn(const QString &lineText, int charPos, int tabSize);
 
 /**
  * @brief The GlyphCalculator class

@@ -122,6 +122,97 @@ void expandGlyphStartCharList(const QString &strAdded, int oldStrLen, QList<int>
     }
 }
 
+namespace {
+
+uint codePointAt(const QString &text, int index)
+{
+    QChar ch = text[index];
+    if (ch.isHighSurrogate() && index + 1 < text.length()
+            && text[index + 1].isLowSurrogate()) {
+        return QChar::surrogateToUcs4(ch, text[index + 1]);
+    }
+    return ch.unicode();
+}
+
+bool isWideCodePoint(uint ucs4)
+{
+    if ((ucs4 >= 0x1100 && ucs4 <= 0x115F)
+            || (ucs4 >= 0x2329 && ucs4 <= 0x232A)
+            || (ucs4 >= 0x2E80 && ucs4 <= 0xA4CF && ucs4 != 0x303F)
+            || (ucs4 >= 0xAC00 && ucs4 <= 0xD7A3)
+            || (ucs4 >= 0xF900 && ucs4 <= 0xFAFF)
+            || (ucs4 >= 0xFE10 && ucs4 <= 0xFE19)
+            || (ucs4 >= 0xFE30 && ucs4 <= 0xFE6F)
+            || (ucs4 >= 0xFF00 && ucs4 <= 0xFF60)
+            || (ucs4 >= 0xFFE0 && ucs4 <= 0xFFE6)
+            || (ucs4 >= 0x1F000 && ucs4 <= 0x1FAFF)
+            || (ucs4 >= 0x20000 && ucs4 <= 0x3FFFD)) {
+        return true;
+    }
+    return (ucs4 >= 0x231A && ucs4 <= 0x231B)
+            || (ucs4 >= 0x23E9 && ucs4 <= 0x23EC)
+            || ucs4 == 0x23F0 || ucs4 == 0x23F3
+            || (ucs4 >= 0x25FD && ucs4 <= 0x25FE)
+            || (ucs4 >= 0x2614 && ucs4 <= 0x2615)
+            || (ucs4 >= 0x2648 && ucs4 <= 0x2653)
+            || ucs4 == 0x267F || ucs4 == 0x2693 || ucs4 == 0x26A1
+            || (ucs4 >= 0x26AA && ucs4 <= 0x26AB)
+            || (ucs4 >= 0x26BD && ucs4 <= 0x26BE)
+            || (ucs4 >= 0x26C4 && ucs4 <= 0x26C5)
+            || ucs4 == 0x26CE || ucs4 == 0x26D4 || ucs4 == 0x26EA
+            || (ucs4 >= 0x26F2 && ucs4 <= 0x26F3)
+            || ucs4 == 0x26F5 || ucs4 == 0x26FA || ucs4 == 0x26FD
+            || ucs4 == 0x2705 || (ucs4 >= 0x270A && ucs4 <= 0x270B)
+            || ucs4 == 0x2728 || ucs4 == 0x274C || ucs4 == 0x274E
+            || (ucs4 >= 0x2753 && ucs4 <= 0x2755) || ucs4 == 0x2757
+            || (ucs4 >= 0x2795 && ucs4 <= 0x2797)
+            || ucs4 == 0x27B0 || ucs4 == 0x27BF
+            || (ucs4 >= 0x2B1B && ucs4 <= 0x2B1C)
+            || ucs4 == 0x2B50 || ucs4 == 0x2B55;
+}
+
+}
+
+int glyphLogicalWidth(const QString &glyph)
+{
+    if (glyph.isEmpty())
+        return 0;
+    uint ucs4 = codePointAt(glyph, 0);
+    if (QChar::combiningClass(ucs4) != 0 || ucs4 == 0x200C || ucs4 == 0x200D
+            || (ucs4 >= 0xFE00 && ucs4 <= 0xFE0F)
+            || (ucs4 >= 0xE0100 && ucs4 <= 0xE01EF)) {
+        return 0;
+    }
+    for (int i = 0; i < glyph.length(); ++i) {
+        uint codePoint = codePointAt(glyph, i);
+        if (codePoint == 0xFE0F || codePoint == 0x20E3)
+            return 2;
+    }
+    return isWideCodePoint(ucs4) ? 2 : 1;
+}
+
+int calcLogicalColumn(const QString &lineText, int charPos, int tabSize)
+{
+    Q_ASSERT(tabSize > 0);
+    if (tabSize <= 0)
+        return 0;
+    QList<int> glyphStartCharList = calcGlyphStartCharList(lineText);
+    int column = 0;
+    for (int i = 0; i < glyphStartCharList.length(); ++i) {
+        int start = glyphStartCharList[i];
+        if (start >= charPos)
+            break;
+        int end = i + 1 < glyphStartCharList.length()
+                ? glyphStartCharList[i + 1] : lineText.length();
+        QString glyph = lineText.mid(start, end - start);
+        if (glyph == "\t")
+            column += tabSize - column % tabSize;
+        else
+            column += glyphLogicalWidth(glyph);
+    }
+    return column;
+}
+
 GlyphCalculator::GlyphCalculator(const QFont &font):
     mFontMetrics{font},
     mTabSize{4},
