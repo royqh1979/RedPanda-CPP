@@ -167,8 +167,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mContentImage->setDevicePixelRatio(dpr);
 
     mUseCodeFolding = true;
-    m_blinkTimerId = 0;
-    m_blinkStatus = 0;
+    mBlinkTimerId = 0;
+    mBlinkStatus = 0;
 
     hideCaret();
 
@@ -1662,11 +1662,11 @@ void QSynEdit::unCollpaseAll()
 }
 
 namespace {
-CharPos gutterLineEnd(const QSynEdit *editor, int line)
+CharPos lineEndPos(const QSynEdit *editor, int line)
 {
     if (line + 1 < editor->lineCount())
         return CharPos{0, line + 1};
-    return CharPos{static_cast<int>(editor->lineText(line).length()) , line};
+    return CharPos{(int)(editor->lineText(line).length()) , line};
 }
 
 bool hasSingleFullLineSelection(const QSynEdit *editor)
@@ -1718,7 +1718,7 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
     if (line >= 0 && line < mDocument->count()
             && event->button() == Qt::LeftButton) {
         CharPos start{0, line};
-        CharPos end = gutterLineEnd(this, line);
+        CharPos end = lineEndPos(this, line);
         if (event->modifiers() == Qt::ShiftModifier
                 && hasSingleFullLineSelection(this)) {
             CharPos selectedStart = std::min(selBegin(), selEnd());
@@ -1747,19 +1747,19 @@ void QSynEdit::clearUndo()
 
 void QSynEdit::showCaret()
 {
-    if (m_blinkTimerId!=0)
-        killTimer(m_blinkTimerId);
-    m_blinkTimerId = startTimer(500);
-    m_blinkStatus = 1;
+    if (mBlinkTimerId!=0)
+        killTimer(mBlinkTimerId);
+    mBlinkTimerId = startTimer(500);
+    mBlinkStatus = 1;
     updateCaret();
 }
 
 void QSynEdit::hideCaret()
 {
-    if (m_blinkTimerId!=0) {
-        killTimer(m_blinkTimerId);
-        m_blinkTimerId = 0;
-        m_blinkStatus = 0;
+    if (mBlinkTimerId!=0) {
+        killTimer(mBlinkTimerId);
+        mBlinkTimerId = 0;
+        mBlinkStatus = 0;
         updateCaret();
     }
 }
@@ -4598,7 +4598,7 @@ PCodeBlock QSynEdit::foldEndAtLine(int line)
 
 void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
 {
-    if (m_blinkStatus!=1)
+    if (mBlinkStatus!=1)
         return;
     painter.setClipRect(rcClip);
     if (rcClip.left() < mGutterWidth)
@@ -7381,10 +7381,10 @@ void QSynEdit::resizeEvent(QResizeEvent *)
 
 void QSynEdit::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == m_blinkTimerId) {
+    if (event->timerId() == mBlinkTimerId) {
         if (mPaintLock>0)
             return;
-        m_blinkStatus = 1- m_blinkStatus;
+        mBlinkStatus = 1- mBlinkStatus;
         updateCaret();
     }
 }

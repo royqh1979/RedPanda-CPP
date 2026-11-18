@@ -134,16 +134,16 @@ void TestQSyneditDisplay::test_mouse_positioning_shows_caret_immediately()
 {
     mEdit->loadContent(makeLines(10));
     QPoint point(mEdit->gutterWidth() + 2 + mEdit->charWidth(), mEdit->textHeight() + 2);
-    mEdit->m_blinkStatus = 0;
+    mEdit->mBlinkStatus = 0;
     mEdit->computeCaret(point);
-    QCOMPARE(mEdit->m_blinkStatus, 1);
-    int firstTimer = mEdit->m_blinkTimerId;
+    QCOMPARE(mEdit->mBlinkStatus, 1);
+    int firstTimer = mEdit->mBlinkTimerId;
     QVERIFY(firstTimer != 0);
 
-    mEdit->m_blinkStatus = 0;
+    mEdit->mBlinkStatus = 0;
     mEdit->computeCaret(point);
-    QCOMPARE(mEdit->m_blinkStatus, 1);
-    QVERIFY(mEdit->m_blinkTimerId != 0);
+    QCOMPARE(mEdit->mBlinkStatus, 1);
+    QVERIFY(mEdit->mBlinkTimerId != 0);
 }
 
 void TestQSyneditDisplay::test_mouse_press_moves_caret_wrap()

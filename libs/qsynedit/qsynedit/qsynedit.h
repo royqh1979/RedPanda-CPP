@@ -1021,8 +1021,8 @@ private:
     bool mUndoing;
     int mGutterWidth;
     //caret blink related
-    int m_blinkTimerId;
-    int m_blinkStatus;
+    int mBlinkTimerId;
+    int mBlinkStatus;
 
     QCursor mDefaultCursor;
 
