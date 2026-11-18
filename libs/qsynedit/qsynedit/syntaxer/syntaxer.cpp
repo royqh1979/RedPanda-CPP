@@ -21,23 +21,17 @@ namespace QSynedit {
 Syntaxer::Syntaxer() :
     mWordBreakChars{ WordBreakChars }
 {
-    mCommentAttribute = std::make_shared<TokenAttribute>(SYNS_AttrComment,
-                                                               TokenType::Comment);
+    mCommentAttribute = std::make_shared<TokenAttribute>(SYNS_AttrComment);
     addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIdentifier,
-                                                                  TokenType::Identifier);
+    mIdentifierAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIdentifier);
     addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<TokenAttribute>(SYNS_AttrReservedWord,
-                                                               TokenType::Keyword);
+    mKeywordAttribute = std::make_shared<TokenAttribute>(SYNS_AttrReservedWord);
     addAttribute(mKeywordAttribute);
-    mStringAttribute = std::make_shared<TokenAttribute>(SYNS_AttrString,
-                                                              TokenType::String);
+    mStringAttribute = std::make_shared<TokenAttribute>(SYNS_AttrString);
     addAttribute(mStringAttribute);
-    mWhitespaceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSpace,
-                                                                   TokenType::Space);
+    mWhitespaceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSpace);
     addAttribute(mWhitespaceAttribute);
-    mSymbolAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSymbol,
-                                                                 TokenType::Symbol);
+    mSymbolAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSymbol);
     addAttribute(mSymbolAttribute);
 }
 
@@ -156,12 +150,11 @@ QString Syntaxer::blockCommentEndSymbol() const
     return QString();
 }
 
-TokenAttribute::TokenAttribute(const QString &name, TokenType tokenType):
+TokenAttribute::TokenAttribute(const QString &name):
     mForeground(QColor()),
     mBackground(QColor()),
     mName(name),
-    mStyles(FontStyle::fsNone),
-    mTokenType(tokenType)
+    mStyles(FontStyle::fsNone)
 {
 
 }

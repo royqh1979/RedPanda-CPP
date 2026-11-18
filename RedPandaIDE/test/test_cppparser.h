@@ -80,6 +80,9 @@ private slots:
     void test_standard_library_string();
     void test_standard_library_header_context();
     void test_standard_library_nested_include_guard_visibility();
+    void test_standard_library_direct_c_header_context();
+    void test_standard_library_header_guard_context_visibility_data();
+    void test_standard_library_header_guard_context_visibility();
     void test_standard_library_front_append();
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();

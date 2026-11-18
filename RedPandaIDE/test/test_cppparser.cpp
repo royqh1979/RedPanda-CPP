@@ -52,6 +52,26 @@ QSet<QString> standardLibraryStatementNames(const PCppParser &parser)
         collectStatementNames(parser, nameSpace, result);
     return result;
 }
+
+int includeGuardDefineLine(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return -1;
+    const QStringList lines = QString::fromUtf8(file.readAll()).split('\n');
+    for (int i = 0; i < lines.count(); ++i) {
+        const QString directive = lines[i].trimmed();
+        if (!directive.startsWith("#ifndef "))
+            continue;
+        const QString guard = directive.mid(8).trimmed();
+        for (int j = i + 1; j < qMin(i + 5, lines.count()); ++j) {
+            if (lines[j].trimmed().startsWith("#define " + guard))
+                return j;
+        }
+        return -1;
+    }
+    return -1;
+}
 #endif
 }
 
@@ -1998,6 +2018,98 @@ void TestCppParser::test_standard_library_nested_include_guard_visibility()
     QVERIFY(mParser->isLineVisible(stringFile, 40));
     CppParser::parseFileBlocking(mParser, stringFile, false, main);
     QVERIFY(mParser->isLineVisible(stringFile, 40));
+}
+
+void TestCppParser::test_standard_library_header_guard_context_visibility_data()
+{
+    QTest::addColumn<QByteArray>("headerName");
+    const QByteArrayList cHeaders{
+        "assert.h", "complex.h", "ctype.h", "errno.h", "fenv.h", "float.h",
+        "inttypes.h", "iso646.h", "limits.h", "locale.h", "math.h", "setjmp.h",
+        "signal.h", "stdalign.h", "stdarg.h", "stdatomic.h", "stdbool.h",
+        "stddef.h", "stdint.h", "stdio.h", "stdlib.h", "stdnoreturn.h",
+        "string.h", "tgmath.h", "threads.h", "time.h", "uchar.h", "wchar.h",
+        "wctype.h"
+    };
+    const QByteArrayList cppHeaders{
+        "algorithm", "any", "array", "atomic", "bitset", "cassert", "cctype",
+        "cerrno", "cfenv", "cfloat", "charconv", "chrono", "cinttypes",
+        "ciso646", "climits", "clocale", "cmath", "codecvt", "complex",
+        "condition_variable", "csetjmp", "csignal", "cstdalign", "cstdarg",
+        "cstdbool", "cstddef", "cstdint", "cstdio", "cstdlib", "cstring",
+        "ctgmath", "ctime", "cuchar", "cwchar", "cwctype", "deque", "exception",
+        "execution", "filesystem", "forward_list", "fstream", "functional",
+        "future", "initializer_list", "iomanip", "ios", "iosfwd", "iostream",
+        "istream", "iterator", "limits", "list", "locale", "map", "memory",
+        "memory_resource", "mutex", "new", "numeric", "optional", "ostream",
+        "queue", "random", "ratio", "regex", "scoped_allocator", "set",
+        "shared_mutex", "sstream", "stack", "stdexcept", "streambuf", "string",
+        "string_view", "strstream", "system_error", "thread", "tuple",
+        "type_traits", "typeindex", "typeinfo", "unordered_map", "unordered_set",
+        "utility", "valarray", "variant", "vector"
+    };
+    for (const QByteArray &header : cHeaders)
+        QTest::addRow("C/%s", header.constData()) << header;
+    for (const QByteArray &header : cppHeaders)
+        QTest::addRow("C++/%s", header.constData()) << header;
+}
+
+void TestCppParser::test_standard_library_header_guard_context_visibility()
+{
+    QFETCH(QByteArray, headerName);
+    const QString header = QString::fromLatin1(headerName);
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    const QString include = "<" + header + ">";
+    const QString headerFile = mParser->getHeaderFileName(bitsStdcpp, include);
+    if (headerFile.isEmpty())
+        QSKIP("Header is not available in this toolchain");
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    const QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include " + include}));
+
+    CppParser::parseFileBlocking(mParser, headerFile, false, main);
+
+    QVERIFY2(mParser->isFileParsedInContext(headerFile, main), headerName.constData());
+    PParsedFileInfo info = mParser->findFileInfo(headerFile);
+    QVERIFY(info);
+    const int guardDefineLine = includeGuardDefineLine(headerFile);
+    if (guardDefineLine < 0)
+        return;
+    if (headerName == "stdarg.h") {
+        // GCC's wrapper includes the next stdarg.h first, which defines
+        // _STDARG_H and makes this wrapper's guarded body inactive.
+        QVERIFY(!mParser->isLineVisible(headerFile, guardDefineLine));
+        return;
+    }
+    QVERIFY2(mParser->isLineVisible(headerFile, guardDefineLine), headerName.constData());
+    if (info->includeProtected())
+        QCOMPARE(mParser->preprocessorEventCountsForTest(headerFile).scan, 1);
+}
+
+void TestCppParser::test_standard_library_direct_c_header_context()
+{
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QString stdioFile = mParser->getHeaderFileName(bitsStdcpp, "<stdio.h>");
+    QVERIFY(!stdioFile.isEmpty());
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <stdio.h>"}));
+
+    CppParser::parseFileBlocking(mParser, stdioFile, false, main);
+
+    QVERIFY(mParser->isFileParsedInContext(stdioFile, main));
+    QCOMPARE(mParser->preprocessorEventCountsForTest(stdioFile).scan, 1);
+    PParsedFileInfo stdioInfo = mParser->findFileInfo(stdioFile);
+    QVERIFY(stdioInfo);
+    QVERIFY(stdioInfo->includeProtected());
+    QVERIFY(mParser->isLineVisible(stdioFile, 6));
+    QVERIFY(!mParser->isLineVisible(stdioFile, 40));
+    QVERIFY(mParser->isLineVisible(stdioFile, 43));
+    QVERIFY(mParser->isLineVisible(stdioFile, 80));
 }
 
 void TestCppParser::test_standard_library_front_append()

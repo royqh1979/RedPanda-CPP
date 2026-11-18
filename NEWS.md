@@ -43,6 +43,7 @@ Red Panda C++ Version 3.6
   - fix: Text selection starts only after moving at least one glyph width or one line height, and can shrink back to its start.
   - fix: Mouse positioning immediately shows the caret and restarts its visible blink phase.
   - enhancement: Support the function-local predefined identifier __func__ in completion, highlighting, type evaluation, and parser hints.
+  - enhancement: Double-click selection now picks words at token boundaries and inside strings, comments, and macro definitions.
   - fix: Goto declaration/definition jumps to the occurrence's source column instead of the start of its line.
 
 Red Panda C++ Version 3.5

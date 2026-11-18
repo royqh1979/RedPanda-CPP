@@ -978,7 +978,7 @@ void QSynEditPainter::paintFoldAttributes()
 
 void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
 {
-    if (attr->tokenType() != TokenType::Symbol)
+    if (mEdit->mSyntaxer->getTokenType() != TokenType::Symbol)
         return;
     PTokenAttribute oldAttr = attr;
     switch(level % 4) {
@@ -1247,7 +1247,7 @@ void QSynEditPainter::paintLines()
 //                }
 //            }
             bool showGlyph=false;
-            if (attr && attr->tokenType() == TokenType::Space) {
+            if (attr && mEdit->mSyntaxer->getTokenType() == TokenType::Space) {
                 int pos = mEdit->mSyntaxer->getTokenPos();
                 if (pos==0) {
                     showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowLeadingSpaces);

@@ -835,8 +835,9 @@ void CppPreprocessor::handleDefine(const QString &tokens)
     if (getCurrentBranch() == BranchResult::isTrue) {
         QString name,args,value;
         getDefineParts(tokens, name, args, value);
-        if (name == mSession.fileIncludeOnceToken)
-            mSession.fileIncludeOnceToken = "";
+        PParsedFile current = mSession.includeStack.back();
+        if (name == current->includeGuardToken)
+            current->includeGuardDefined = true;
         // Add to the list
         addDefineByParts(name, args, value, false);
         mSession.result[mSession.preProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
@@ -969,8 +970,8 @@ void CppPreprocessor::handleIfndef(const QString &tokens)
         QString name = tokens.trimmed();
 
         if (mSession.fileJustOpenned) {
-            mSession.fileIncludeOnceToken = name;
             mSession.includeStack.back()->guardBranchDepth = mSession.branchResults.count();
+            mSession.includeStack.back()->includeGuardToken = name;
         }
         setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
     }
@@ -1034,7 +1035,7 @@ void CppPreprocessor::handleEndif(const QString &tokens)
     removeCurrentBranch();
     if (current->guardBranchDepth >= 0
             && mSession.branchResults.count() == current->guardBranchDepth
-            && mSession.fileIncludeOnceToken.isEmpty())
+            && current->includeGuardDefined)
         current->guardClosed = true;
 }
 
@@ -1126,13 +1127,14 @@ void CppPreprocessor::openInclude(QString fileName)
         mRegistry.fileInfos.insert(fileName, fileInfo);
     }
 
-    bool inStack = false;
+    PParsedFile stackEntry;
     for (const PParsedFile &parsedFile : mSession.includeStack) {
         if (parsedFile->fileName == fileName) {
-            inStack = true;
+            stackEntry = parsedFile;
             break;
         }
     }
+    bool inStack = stackEntry != nullptr;
 
     bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
             || isSystemHeaderFile(fileName, mProjectIncludePaths);
@@ -1177,7 +1179,14 @@ void CppPreprocessor::openInclude(QString fileName)
         innerMostFile->branches = mSession.branchResults.count();
     }
 
-    if (includeProtected && mSession.processed.contains(fileName)) {
+    bool insideActiveGuard = stackEntry
+            && !stackEntry->includeGuardToken.isEmpty()
+            && mSession.branchResults.count() > stackEntry->guardBranchDepth
+            && getDefine(stackEntry->includeGuardToken);
+    // Recursive inclusion inside an active, defined guard is a no-op.
+    // Unguarded cycles still re-enter and may produce different content.
+    if ((includeProtected && mSession.processed.contains(fileName))
+            || insideActiveGuard) {
 #ifdef REDPANDA_PARSER_TEST
         mSkipCounts[fileName]++;
 #endif
@@ -1277,7 +1286,6 @@ void CppPreprocessor::openInclude(QString fileName)
         mSession.boundaryPrefix.append(fileName);
     }
     mSession.fileJustOpenned = true;
-    mSession.fileIncludeOnceToken = "";
 }
 
 
@@ -1302,6 +1310,7 @@ void CppPreprocessor::closeInclude()
     }
     if (!isIncludeProtected(lastFile->fileName))
         mSession.fileCache.insert(lastFile->fileName, lastFile->buffer);
+    lastFile->fileInfo->setBranchVisibility(lastFile->branchVisibility);
     mSession.includeStack.pop_back();
 
     if (mSession.includeStack.isEmpty())

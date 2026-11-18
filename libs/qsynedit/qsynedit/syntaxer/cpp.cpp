@@ -208,46 +208,33 @@ static bool isEscapingSeqChar(const QChar& ch) {
 
 CppSyntaxer::CppSyntaxer(): Syntaxer()
 {
-    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
-                                                            TokenType::Character);
+    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
 
-    mClassAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass,
-                                                             TokenType::Identifier);
+    mClassAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass);
     addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat,
-                                                             TokenType::Number);
+    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat);
     addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction,
-                                                                TokenType::Identifier);
+    mFunctionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction);
     addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable,
-                                                                 TokenType::Identifier);
+    mGlobalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable);
     addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal,
-                                                           TokenType::Number);
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal);
     addAttribute(mHexAttribute);
-    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar,
-                                                               TokenType::Error);
+    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar);
     addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable,
-                                                                TokenType::Identifier);
+    mLocalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable);
     addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber,
-                                                              TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal,
-                                                           TokenType::Number);
+    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal);
     addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor,
-                                                                    TokenType::Preprocessor);
+    mPreprocessorAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mPreprocessorAttribute);
 
-    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences,
-                                                                            TokenType::String);
+    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences);
     addAttribute(mStringEscapeSequenceAttribute);
-    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable,
-                                                                TokenType::Identifier);
+    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable);
     addAttribute(mVariableAttribute);
     CppSyntaxer::resetState();
 
@@ -1614,6 +1601,49 @@ const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
         return mWhitespaceAttribute;
     default:
         return mInvalidAttribute;
+    }
+}
+
+TokenType CppSyntaxer::getTokenType() const
+{
+    if ((mRange.state == RangeState::rsDefineRemaining
+         || mRange.stateBeforeLastToken == RangeState::rsDefineRemaining)
+            && mTokenId == TokenId::Directive)
+        return TokenType::Default;
+    switch (mTokenId) {
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Directive:
+        return TokenType::Preprocessor;
+    case TokenId::Identifier:
+        return TokenType::Identifier;
+    case TokenId::Keyword:
+        return TokenType::Keyword;
+    case TokenId::DecInteger:
+    case TokenId::Float:
+    case TokenId::HexFloat:
+    case TokenId::HexInteger:
+    case TokenId::OctInteger:
+    case TokenId::BinInteger:
+        return TokenType::Number;
+    case TokenId::Space:
+    case TokenId::SpaceAfterBackSlash:
+        return TokenType::Space;
+    case TokenId::String:
+    case TokenId::StringEscapeSeq:
+    case TokenId::RawStringStart:
+    case TokenId::RawStringNotEscaping:
+    case TokenId::RawStringEnd:
+        return TokenType::String;
+    case TokenId::Char:
+        return TokenType::Character;
+    case TokenId::Symbol:
+    case TokenId::LastBackSlash:
+        return TokenType::Symbol;
+    case TokenId::Unknown:
+        return TokenType::Error;
+    default:
+        return TokenType::Default;
     }
 }
 

@@ -40,12 +40,15 @@ struct ParsedFile {
     QString fileName; // Record filename, but not used now
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
+    QMap<int, bool> branchVisibility;
     PParsedFileInfo fileInfo;
     bool boundaryEntry = false;
     QString boundaryAncestor;
     QHash<QString,QString> userMacros;
     QStringList boundaryPrefix;
     int guardBranchDepth = -1;
+    QString includeGuardToken;
+    bool includeGuardDefined = false;
     bool guardClosed = false;
     bool contentAfterGuard = false;
 };
@@ -245,7 +248,8 @@ private:
     }
     void setCurrentBranch(BranchResult value){
         if (!sameResultWithCurrentBranch(value)) {
-            mSession.currentFileInfo->insertBranch(mSession.index+1,value==BranchResult::isTrue);
+            mSession.includeStack.back()->branchVisibility.insert(
+                    mSession.index+1,value==BranchResult::isTrue);
         }
         mSession.branchResults.append(value);
     }
@@ -255,7 +259,8 @@ private:
             mSession.branchResults.pop_back();
         }
         if (!sameResultWithCurrentBranch(value)) {
-            mSession.currentFileInfo->insertBranch(mSession.index+1,getCurrentBranch()==BranchResult::isTrue);
+            mSession.includeStack.back()->branchVisibility.insert(
+                    mSession.index+1,getCurrentBranch()==BranchResult::isTrue);
         }
     }
     void addDefinesInFile(const QString& fileName);
@@ -309,7 +314,6 @@ private:
         DefineMap defines;
         QSet<QString> processed;
         bool fileJustOpenned = false;
-        QString fileIncludeOnceToken;
         QHash<QString, QStringList> fileCache;
         QStringList boundaryPrefix;
         bool allBoundaryEntriesReplayed = true;
@@ -321,7 +325,6 @@ private:
             result.clear();
             currentFileInfo.reset();
             fileJustOpenned = false;
-            fileIncludeOnceToken.clear();
             fileCache.clear();
             includeStack.clear();
             branchResults.clear();

@@ -197,6 +197,64 @@ void TestQSyneditDisplay::test_mouse_double_click_selects_word()
     QCOMPARE(mEdit->selText(), QString("main"));
 }
 
+void TestQSyneditDisplay::test_mouse_double_click_at_token_boundary_data()
+{
+    QTest::addColumn<QString>("lineText");
+    QTest::addColumn<int>("clickCh");
+    QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+
+    QTest::addRow("identifier before symbol") << "value+next" << 5 << "value" << 0 << 5;
+    QTest::addRow("number before symbol") << "123+next" << 3 << "123" << 0 << 3;
+    QTest::addRow("keyword before symbol") << "return;" << 6 << "return" << 0 << 6;
+    QTest::addRow("macro before symbol") << "#define MAX+1" << 11 << "MAX" << 8 << 11;
+    QTest::addRow("number in macro") << "#define X 123+next" << 13 << "123" << 10 << 13;
+    QTest::addRow("macro parameter") << "#define SUM(x,y)" << 12 << "x" << 12 << 13;
+    QTest::addRow("string before symbol") << "\"hello+world\"" << 6 << "hello" << 1 << 6;
+    QTest::addRow("escape in string") << "\"a\\b\"" << 2 << "\\b" << 2 << 4;
+    QTest::addRow("escaped backslash in string") << "\"a\\\\b\"" << 2 << "\\\\" << 2 << 4;
+    QTest::addRow("second char of escaped backslash") << "\"a\\\\b\"" << 3 << "\\\\" << 2 << 4;
+    QTest::addRow("char of letter escape") << "\"\\a\"" << 2 << "\\a" << 1 << 3;
+    QTest::addRow("invalid escape uses normal word") << "\"\\q\"" << 2 << "q" << 2 << 3;
+    QTest::addRow("char of quote escape") << "\"\\\"\"" << 2 << "\\\"" << 1 << 3;
+    QTest::addRow("char of escape in define") << "#define X \"\\a\"" << 12 << "\\a" << 11 << 13;
+    QTest::addRow("escape before closing quote") << "\"a\\\\\"" << 4 << "\\\\" << 2 << 4;
+    QTest::addRow("letter escape before closing quote") << "\"\\a\"" << 3 << "\\a" << 1 << 3;
+    QTest::addRow("quote escape before closing quote") << "\"\\\"\"" << 3 << "\\\"" << 1 << 3;
+    QTest::addRow("escape in define") << "#define X \"a\\b\"" << 12 << "\\b" << 12 << 14;
+    QTest::addRow("escape before quote in define") << "#define X \"a\\\\\"" << 14 << "\\\\" << 12 << 14;
+    QTest::addRow("comment before symbol") << "//value+next" << 7 << "value" << 2 << 7;
+    QTest::addRow("identifier after symbol") << "value+next" << 6 << "next" << 6 << 10;
+    QTest::addRow("space before symbol") << "value +next" << 6 << "+" << 6 << 7;
+    QTest::addRow("end of line") << "value" << 5 << "value" << 0 << 5;
+    QTest::addRow("end of line after quote") << "\"abc\"" << 5 << "\"" << 4 << 5;
+    QTest::addRow("end of line after spaces") << "value  " << 7 << "  " << 5 << 7;
+    QTest::addRow("end of line after escape") << "\"\\a\"" << 4 << "\"" << 3 << 4;
+    QTest::addRow("end of line in define") << "#define EOL \"TEST\"" << 18 << "\"" << 17 << 18;
+}
+
+void TestQSyneditDisplay::test_mouse_double_click_at_token_boundary()
+{
+    QFETCH(QString, lineText);
+    QFETCH(int, clickCh);
+    QFETCH(QString, selectedText);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    mEdit->loadContent(QStringList{lineText});
+    QPoint pt = mEdit->displayCoordToPixels(
+                mEdit->bufferToDisplayPos(CharPos{clickCh, 0})) + QPoint(0, 2);
+    QTest::mousePress(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+    QTest::mouseEvent(QTest::MouseDClick, mEdit->viewport(), Qt::LeftButton,
+                      Qt::NoModifier, pt);
+    QTest::mouseRelease(mEdit->viewport(), Qt::LeftButton, Qt::NoModifier, pt);
+
+    QCOMPARE(mEdit->selText(), selectedText);
+    QCOMPARE(mEdit->selBegin(), CharPos(selectionStart, 0));
+    QCOMPARE(mEdit->selEnd(), CharPos(selectionEnd, 0));
+}
+
 void TestQSyneditDisplay::test_mouse_alt_press_column_mode()
 {
     mEdit->loadContent(makeLines(5));

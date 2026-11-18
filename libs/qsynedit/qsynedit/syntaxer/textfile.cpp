@@ -23,7 +23,7 @@ namespace QSynedit {
 
 TextSyntaxer::TextSyntaxer()
 {
-    mTextAttribute = std::make_shared<TokenAttribute>(SYNS_AttrText, TokenType::Default);
+    mTextAttribute = std::make_shared<TokenAttribute>(SYNS_AttrText);
     addAttribute(mTextAttribute);
 }
 
@@ -87,6 +87,13 @@ const PTokenAttribute &TextSyntaxer::getTokenAttribute() const
     default:
         return mTextAttribute;
     }
+}
+
+TokenType TextSyntaxer::getTokenType() const
+{
+    if (mTokenID == TokenId::Space)
+        return TokenType::Space;
+    return TokenType::Default;
 }
 
 int TextSyntaxer::getTokenPos()

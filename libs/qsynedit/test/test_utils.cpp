@@ -14,6 +14,7 @@ TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer, const QString &lineText)
         PTokenInfo info = std::make_shared<TokenInfo>();
         info->token = syntaxer->getToken();
         info->attribute = syntaxer->getTokenAttribute();
+        info->type = syntaxer->getTokenType();
         info->startChar = syntaxer->getTokenPos();
         info->state = syntaxer->getState();
         result.append(info);
@@ -33,6 +34,7 @@ QList<TokenInfoList> parseLines(QSynedit::Syntaxer *syntaxer, const QStringList 
             PTokenInfo info = std::make_shared<TokenInfo>();
             info->token = syntaxer->getToken();
             info->attribute = syntaxer->getTokenAttribute();
+            info->type = syntaxer->getTokenType();
             info->startChar = syntaxer->getTokenPos();
             info->state = syntaxer->getState();
             list.append(info);
@@ -72,7 +74,7 @@ void profileSyntaxerFile(QSynedit::Syntaxer *syntaxer, const QString &fileName,
                 syntaxer->setLine(i, lines[i], i);
                 while (!syntaxer->eol()) {
                     ++tokens;
-                    attributeTypes += int(syntaxer->getTokenAttribute()->tokenType());
+                    attributeTypes += int(syntaxer->getTokenType());
                     if (mode == 1)
                         tokenChars += syntaxer->getToken().length();
                     syntaxer->next();

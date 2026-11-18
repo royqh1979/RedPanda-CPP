@@ -161,25 +161,19 @@ QSet<QString> LuaSyntaxer::mKeywordsCache;
 LuaSyntaxer::LuaSyntaxer(): Syntaxer()
 {
     mUseXMakeLibs=false;
-    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
-                                                            TokenType::Character);
+    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
 
-    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat,
-                                                             TokenType::Number);
+    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat);
     addAttribute(mFloatAttribute);
-    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal,
-                                                           TokenType::Number);
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal);
     addAttribute(mHexAttribute);
-    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar,
-                                                               TokenType::Error);
+    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar);
     addAttribute(mInvalidAttribute);
-    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber,
-                                                              TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
 
-    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences,
-                                                                            TokenType::String);
+    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences);
     addAttribute(mStringEscapeSequenceAttribute);
     LuaSyntaxer::resetState();
 
@@ -1083,6 +1077,32 @@ const PTokenAttribute &LuaSyntaxer::getTokenAttribute() const
         return mInvalidAttribute;
     default:
         return mInvalidAttribute;
+    }
+}
+
+TokenType LuaSyntaxer::getTokenType() const
+{
+    switch (mTokenId) {
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Identifier:
+        return TokenType::Identifier;
+    case TokenId::Key:
+        return TokenType::Keyword;
+    case TokenId::Number:
+    case TokenId::Float:
+    case TokenId::HexFloat:
+    case TokenId::Hex:
+        return TokenType::Number;
+    case TokenId::Space:
+        return TokenType::Space;
+    case TokenId::String:
+    case TokenId::StringEscapeSeq:
+        return TokenType::String;
+    case TokenId::Symbol:
+        return TokenType::Symbol;
+    default:
+        return TokenType::Error;
     }
 }
 

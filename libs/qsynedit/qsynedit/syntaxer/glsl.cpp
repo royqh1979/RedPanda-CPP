@@ -84,46 +84,33 @@ const QSet<QString> GLSLSyntaxer::Keywords {
 
 GLSLSyntaxer::GLSLSyntaxer(): Syntaxer()
 {
-    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
-                                                            TokenType::Character);
+    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter);
     addAttribute(mCharAttribute);
 
-    mClassAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass,
-                                                             TokenType::Identifier);
+    mClassAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass);
     addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat,
-                                                             TokenType::Number);
+    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat);
     addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction,
-                                                                TokenType::Identifier);
+    mFunctionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction);
     addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable,
-                                                                 TokenType::Identifier);
+    mGlobalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable);
     addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal,
-                                                           TokenType::Number);
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal);
     addAttribute(mHexAttribute);
-    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar,
-                                                               TokenType::Error);
+    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar);
     addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable,
-                                                                TokenType::Identifier);
+    mLocalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable);
     addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber,
-                                                              TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal,
-                                                           TokenType::Number);
+    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal);
     addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor,
-                                                                    TokenType::Preprocessor);
+    mPreprocessorAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mPreprocessorAttribute);
 
-    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences,
-                                                                            TokenType::String);
+    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences);
     addAttribute(mStringEscapeSequenceAttribute);
-    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable,
-                                                                TokenType::Identifier);
+    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable);
     addAttribute(mVariableAttribute);
 
     GLSLSyntaxer::resetState();
@@ -1293,6 +1280,38 @@ const PTokenAttribute &GLSLSyntaxer::getTokenAttribute() const
         return mInvalidAttribute;
     default:
         return mInvalidAttribute;
+    }
+}
+
+TokenType GLSLSyntaxer::getTokenType() const
+{
+    switch (mTokenId) {
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Directive:
+        return TokenType::Preprocessor;
+    case TokenId::Identifier:
+        return TokenType::Identifier;
+    case TokenId::Key:
+        return TokenType::Keyword;
+    case TokenId::Number:
+    case TokenId::Float:
+    case TokenId::HexFloat:
+    case TokenId::Hex:
+    case TokenId::Octal:
+        return TokenType::Number;
+    case TokenId::Space:
+        return TokenType::Space;
+    case TokenId::String:
+    case TokenId::StringEscapeSeq:
+    case TokenId::RawString:
+        return TokenType::String;
+    case TokenId::Char:
+        return TokenType::Character;
+    case TokenId::Symbol:
+        return TokenType::Symbol;
+    default:
+        return TokenType::Error;
     }
 }
 

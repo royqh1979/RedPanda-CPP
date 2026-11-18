@@ -149,7 +149,7 @@ void TodoThread::doParseFile(const QString &filename)
         while (!syntaxer->eol()) {
             QSynedit::PTokenAttribute attr;
             attr = syntaxer->getTokenAttribute();
-            if (attr && attr->tokenType() == QSynedit::TokenType::Comment) {
+            if (attr && syntaxer->getTokenType() == QSynedit::TokenType::Comment) {
                 QString token = syntaxer->getToken();
                 int pos = token.indexOf(*todoReg);
                 if (pos>=0) {

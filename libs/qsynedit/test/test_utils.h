@@ -12,6 +12,7 @@
 struct TokenInfo{
     QString token;
     QSynedit::PTokenAttribute attribute;
+    QSynedit::TokenType type;
     QSynedit::PSyntaxState state;
     int startChar;
 };

@@ -19,6 +19,7 @@ private slots:
     void test_string_literal1();
     void test_string_literal2();
     void test_string_literal3();
+    void test_escape_sequence_tokens();
 
     void test_rawstring_literal1();
     void test_rawstring_literal2();

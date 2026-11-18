@@ -60,20 +60,19 @@ QSet<QString> ASMSyntaxer::PrefixedRegisters;
 ASMSyntaxer::ASMSyntaxer()
 {
     initData();
-    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal, TokenType::Number);
+    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal);
     addAttribute(mOctAttribute);
-    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal, TokenType::Number);
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal);
     addAttribute(mHexAttribute);
-    mDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable, TokenType::Keyword);
+    mDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable);
     addAttribute(mDirectiveAttribute);
-    mLabelAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction, TokenType::Keyword);
+    mLabelAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction);
     addAttribute(mLabelAttribute);
-    mRegisterAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Keyword);
+    mRegisterAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass);
     addAttribute(mRegisterAttribute);
-    mPreprocessDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor,
-                                                                    TokenType::Preprocessor);
+    mPreprocessDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mPreprocessDirectiveAttribute);
 
 }
@@ -1617,6 +1616,34 @@ const PTokenAttribute &ASMSyntaxer::getTokenAttribute() const
         return mIdentifierAttribute;
     default:
         return mIdentifierAttribute;
+    }
+}
+
+TokenType ASMSyntaxer::getTokenType() const
+{
+    switch(mTokenID) {
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Instruction:
+    case TokenId::Directive:
+    case TokenId::Label:
+    case TokenId::Register:
+        return TokenType::Keyword;
+    case TokenId::DecInteger:
+    case TokenId::BinInteger:
+    case TokenId::OctInteger:
+    case TokenId::HexInteger:
+        return TokenType::Number;
+    case TokenId::Space:
+        return TokenType::Space;
+    case TokenId::String:
+        return TokenType::String;
+    case TokenId::Symbol:
+        return TokenType::Symbol;
+    case TokenId::PreprocessorDirective:
+        return TokenType::Preprocessor;
+    default:
+        return TokenType::Identifier;
     }
 }
 

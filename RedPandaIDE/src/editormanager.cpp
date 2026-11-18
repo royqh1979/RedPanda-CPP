@@ -93,12 +93,12 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setFilename(filename);
     e->setFileType(fileType, false);
     e->setContextFile(contextFile, false);
+    e->setCppParser();
     if (!newFile) {
         e->loadFile(filename, false);
         e->checkSyntaxInBack();
         e->reparseTodo();
     }
-    e->setCppParser();
     //e->reparse();
 
     if (!newFile) {

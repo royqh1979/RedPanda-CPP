@@ -109,6 +109,7 @@ public:
     ProgrammingLanguage language() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;
+    TokenType getTokenType() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(int lineNumber, const QString &newLine, size_t lineSeq) override;

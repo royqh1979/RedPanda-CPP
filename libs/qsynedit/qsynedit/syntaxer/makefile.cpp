@@ -183,17 +183,17 @@ const QSet<QString> MakefileSyntaxer::Directives {
 
 MakefileSyntaxer::MakefileSyntaxer()
 {
-    mTargetAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Identifier);
+    mTargetAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass);
     addAttribute(mTargetAttribute);
-    mCommandAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable, TokenType::Identifier);
+    mCommandAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable);
     addAttribute(mCommandAttribute);
-    mCommandParamAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor, TokenType::Identifier);
+    mCommandParamAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor);
     addAttribute(mCommandParamAttribute);
-    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber);
     addAttribute(mNumberAttribute);
-    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable, TokenType::Identifier);
+    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable);
     addAttribute(mVariableAttribute);
-    mExpressionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction, TokenType::Identifier);
+    mExpressionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction);
     addAttribute(mExpressionAttribute);
 }
 
@@ -467,6 +467,31 @@ const PTokenAttribute &MakefileSyntaxer::getTokenAttribute() const
         return mKeywordAttribute;
     default:
         return mSymbolAttribute;
+    }
+}
+
+TokenType MakefileSyntaxer::getTokenType() const
+{
+    switch(mTokenID) {
+    case TokenId::Comment:
+        return TokenType::Comment;
+    case TokenId::Target:
+    case TokenId::Command:
+    case TokenId::CommandParam:
+    case TokenId::Identifier:
+    case TokenId::Variable:
+    case TokenId::Expression:
+        return TokenType::Identifier;
+    case TokenId::Number:
+        return TokenType::Number;
+    case TokenId::Space:
+        return TokenType::Space;
+    case TokenId::String:
+        return TokenType::String;
+    case TokenId::Directive:
+        return TokenType::Keyword;
+    default:
+        return TokenType::Symbol;
     }
 }
 

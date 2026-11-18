@@ -28,6 +28,8 @@ private slots:
     void test_mouse_press_moves_caret_wrap();
     void test_mouse_press_moves_caret_fold();
     void test_mouse_double_click_selects_word();
+    void test_mouse_double_click_at_token_boundary_data();
+    void test_mouse_double_click_at_token_boundary();
     void test_mouse_alt_press_column_mode();
     void test_gutter_click_toggles_fold();
     void test_gutter_fold_button_paints();

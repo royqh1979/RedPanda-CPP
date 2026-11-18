@@ -79,7 +79,7 @@ namespace QSynedit {
                 QString firstToken = pSyntaxer->getToken();
                 PTokenAttribute attr = pSyntaxer->getTokenAttribute();
                 if (
-                        attr->tokenType() == TokenType::Keyword
+                        pSyntaxer->getTokenType() == TokenType::Keyword
 
                         &&  lineText.endsWith(':')
                         && (

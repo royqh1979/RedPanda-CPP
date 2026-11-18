@@ -736,28 +736,28 @@ int QSynEdit::maxScrollWidth() const
         return std::max(maxWidth-viewWidth()+mCharWidth, 0);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, PTokenAttribute &attr) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, PTokenAttribute &attr, TokenType *tokenType) const
 {
     int tmpStart;
     PSyntaxState syntaxState;
-    return getTokenAttr(pos, token, tmpStart, attr,syntaxState);
+    return getTokenAttr(pos, token, tmpStart, attr, syntaxState, tokenType);
 }
 
 bool QSynEdit::getTokenAttr(
         const CharPos &pos, QString &token,
-        PTokenAttribute &attr, PSyntaxState &syntaxState) const
+        PTokenAttribute &attr, PSyntaxState &syntaxState, TokenType *tokenType) const
 {
     int start;
-    return getTokenAttr(pos, token, start, attr, syntaxState);
+    return getTokenAttr(pos, token, start, attr, syntaxState, tokenType);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr, TokenType *tokenType) const
 {
     PSyntaxState syntaxState;
-    return getTokenAttr(pos, token, start, attr, syntaxState);
+    return getTokenAttr(pos, token, start, attr, syntaxState, tokenType);
 }
 
-bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr, PSyntaxState &syntaxState) const
+bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTokenAttribute &attr, PSyntaxState &syntaxState, TokenType *tokenType) const
 {
     int chIdx, lineIdx, endPos;
     QString lineText;
@@ -778,6 +778,8 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
                 endPos = start + token.length();
                 if ((chIdx >= start) && (chIdx < endPos)) {
                     attr = syntaxer->getTokenAttribute();
+                    if (tokenType)
+                        *tokenType = syntaxer->getTokenType();
                     return true;
                 }
                 syntaxer->next();
@@ -926,7 +928,7 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                         if (line == pos.line && syntaxer->getTokenPos() >= pos.ch) {
                             break;
                         }
-                        TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+                        TokenType tokenType = syntaxer->getTokenType();
                         if ( tokenType != TokenType::String
                              && tokenType != TokenType::Character
                              && tokenType != TokenType::Comment ) {
@@ -958,7 +960,7 @@ CharPos QSynEdit::getMatchingBracket(const CharPos &pos)
                 for (int line=pos.line;line<mDocument->count();line++) {
                     syntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
                     while(!syntaxer->eol()) {
-                        TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+                        TokenType tokenType = syntaxer->getTokenType();
                         if (line == pos.line && syntaxer->getTokenPos() <= pos.ch) {
                             goto MOVE_NEXT_2;
                         }
@@ -1981,7 +1983,7 @@ bool QSynEdit::getContainingBlockStart(const CharPos &pos, CharPos &blockStart) 
             if (line == pos.line && syntaxer->getTokenPos() >= pos.ch) {
                 break;
             }
-            TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+            TokenType tokenType = syntaxer->getTokenType();
             if ( tokenType != TokenType::String
                  && tokenType != TokenType::Character
                  && tokenType != TokenType::Comment) {
@@ -2030,7 +2032,7 @@ bool QSynEdit::getContainingBlockEnd(const CharPos &pos, CharPos &blockEnd) cons
     for (int line=pos.line;line<mDocument->count();line++) {
         syntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
         while(!syntaxer->eol()) {
-            TokenType tokenType = syntaxer->getTokenAttribute()->tokenType();
+            TokenType tokenType = syntaxer->getTokenType();
             if (line == pos.line && syntaxer->getTokenPos() <= pos.ch) {
                 goto MOVE_NEXT_2;
             }
@@ -2072,13 +2074,183 @@ void QSynEdit::selTokenAt(const CharPos &pos)
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttr(pos, token, start, attr)) {
-        if (!token.isEmpty()) {
-            CharPos wordStart{start, pos.line};
-            CharPos wordEnd{start+(int)token.length(), pos.line};
-            setActiveSelectionMode(SelectionMode::Normal);
-            setCaretAndSelection(wordEnd, wordStart, wordEnd);
+    TokenType tokenType;
+    auto isWordChar = [](QChar ch) {
+        return ch == '_' || ch.isLetterOrNumber();
+    };
+    auto isEscapeToken = [](const QString &text) {
+        if (text.length() < 2 || !text.startsWith('\\'))
+            return false;
+        switch (text[1].unicode()) {
+        case '\'':
+        case '"':
+        case '?':
+        case 'a':
+        case 'b':
+        case 'f':
+        case 'n':
+        case 'r':
+        case 't':
+        case 'v':
+        case '\\':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case 'x':
+        case 'u':
+        case 'U':
+            return true;
+        default:
+            return false;
         }
+    };
+    bool endOfLine = pos.ch == mDocument->getLine(pos.line).length() && pos.ch > 0;
+    bool hasToken = endOfLine
+            ? getTokenAttr(CharPos{pos.ch - 1, pos.line}, token, start, attr, &tokenType)
+            : getTokenAttr(pos, token, start, attr, &tokenType);
+    if (hasToken) {
+        bool extracted = endOfLine && tokenType != TokenType::Default;
+        int offset = pos.ch - start;
+        if ((tokenType == TokenType::String || tokenType == TokenType::Character)
+                && isEscapeToken(token))
+            extracted = true;
+        if (!extracted && start == pos.ch && !token.isEmpty()
+                && !isWordChar(token.front()) && pos.ch > 0
+                && (offset >= token.length() || token[offset] != '\\')) {
+            QString previousToken;
+            int previousStart;
+            if (getTokenAttr(CharPos{pos.ch - 1, pos.line},
+                             previousToken, previousStart, attr)
+                    && previousStart + previousToken.length() == pos.ch) {
+                if (isEscapeToken(previousToken)) {
+                    token = previousToken;
+                    start = previousStart;
+                    extracted = true;
+                } else {
+                    int wordStart = previousToken.length();
+                    while (wordStart > 0 && isWordChar(previousToken[wordStart - 1]))
+                        --wordStart;
+                    if (wordStart < previousToken.length()) {
+                        token = previousToken.mid(wordStart);
+                        start = previousStart + wordStart;
+                        extracted = true;
+                    }
+                }
+            }
+        }
+        if (!extracted && tokenType == TokenType::Default
+                && mSyntaxer->language() == ProgrammingLanguage::CPP) {
+            QString lineText = mDocument->getLine(pos.line);
+            int bodyStart = 0;
+            while (bodyStart < lineText.length() && isSpaceChar(lineText[bodyStart]))
+                ++bodyStart;
+            if (bodyStart < lineText.length() && lineText[bodyStart] == '#')
+                ++bodyStart;
+            while (bodyStart < lineText.length() && isSpaceChar(lineText[bodyStart]))
+                ++bodyStart;
+            while (bodyStart < lineText.length() && isWordChar(lineText[bodyStart]))
+                ++bodyStart;
+            while (bodyStart < lineText.length() && isSpaceChar(lineText[bodyStart]))
+                ++bodyStart;
+            while (bodyStart < lineText.length() && isWordChar(lineText[bodyStart]))
+                ++bodyStart;
+            PSyntaxer syntaxer = mDocument->createSyntaxerInstance();
+            syntaxer->resetState();
+            syntaxer->setLine(0, lineText.mid(bodyStart), 0);
+            int bodyOffset = pos.ch - bodyStart - (endOfLine ? 1 : 0);
+            QString previousToken;
+            int previousStart = 0;
+            while (!syntaxer->eol()) {
+                QString currentToken = syntaxer->getToken();
+                int currentStart = syntaxer->getTokenPos();
+                int currentEnd = currentStart + currentToken.length();
+                if (bodyOffset >= currentStart && bodyOffset < currentEnd) {
+                    int currentOffset = bodyOffset - currentStart;
+                    if (isEscapeToken(currentToken)) {
+                        token = currentToken;
+                        start = bodyStart + currentStart;
+                        extracted = true;
+                        break;
+                    }
+                    if (!endOfLine && currentOffset == 0 && !currentToken.isEmpty()
+                            && !isWordChar(currentToken.front()) && !previousToken.isEmpty()
+                            && previousStart + previousToken.length() == currentStart) {
+                        if (isEscapeToken(previousToken)) {
+                            token = previousToken;
+                            start = bodyStart + previousStart;
+                            extracted = true;
+                            break;
+                        }
+                        int wordStart = previousToken.length();
+                        while (wordStart > 0 && isWordChar(previousToken[wordStart - 1]))
+                            --wordStart;
+                        if (wordStart < previousToken.length()) {
+                            token = previousToken.mid(wordStart);
+                            start = bodyStart + previousStart + wordStart;
+                            extracted = true;
+                            break;
+                        }
+                    }
+                    if (currentOffset > 0 && !isWordChar(currentToken[currentOffset])
+                            && isWordChar(currentToken[currentOffset - 1])) {
+                        int wordStart = currentOffset;
+                        while (wordStart > 0 && isWordChar(currentToken[wordStart - 1]))
+                            --wordStart;
+                        token = currentToken.mid(wordStart, currentOffset - wordStart);
+                        currentStart += wordStart;
+                    } else if (isWordChar(currentToken[currentOffset])) {
+                        int wordStart = currentOffset;
+                        int wordEnd = currentOffset + 1;
+                        while (wordStart > 0 && isWordChar(currentToken[wordStart - 1]))
+                            --wordStart;
+                        while (wordEnd < currentToken.length() && isWordChar(currentToken[wordEnd]))
+                            ++wordEnd;
+                        token = currentToken.mid(wordStart, wordEnd - wordStart);
+                        currentStart += wordStart;
+                    } else {
+                        token = currentToken;
+                    }
+                    start = bodyStart + currentStart;
+                    extracted = true;
+                    break;
+                }
+                previousToken = currentToken;
+                previousStart = currentStart;
+                syntaxer->next();
+            }
+        }
+        if (!extracted) {
+            if (offset > 0 && offset < token.length()
+                    && !isWordChar(token[offset]) && isWordChar(token[offset - 1])) {
+                int wordStart = offset;
+                while (wordStart > 0 && isWordChar(token[wordStart - 1]))
+                    --wordStart;
+                token = token.mid(wordStart, offset - wordStart);
+                start += wordStart;
+            } else if (offset >= 0 && offset < token.length() && isWordChar(token[offset])) {
+                int wordStart = offset;
+                int wordEnd = offset + 1;
+                while (wordStart > 0 && isWordChar(token[wordStart - 1]))
+                    --wordStart;
+                while (wordEnd < token.length() && isWordChar(token[wordEnd]))
+                    ++wordEnd;
+                token = token.mid(wordStart, wordEnd - wordStart);
+                start += wordStart;
+            }
+        }
+    }
+    if (!token.isEmpty()) {
+        CharPos wordStart{start, pos.line};
+        CharPos wordEnd{start+(int)token.length(), pos.line};
+        setActiveSelectionMode(SelectionMode::Normal);
+        setCaretAndSelection(wordEnd, wordStart, wordEnd);
     }
     endInternalChanges();
 }

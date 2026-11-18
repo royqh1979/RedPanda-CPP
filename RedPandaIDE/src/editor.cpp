@@ -236,15 +236,14 @@ void Editor::loadFile(QString filename, bool parse) {
     saveAutoBackup();
     setStatusChanged(QSynedit::StatusChange::Custom0);
 
-    if (shouldOpenInReadonly()) {
-        this->setModified(false);
-        setReadOnly(true);
-    }
     if (parse) {
         setCppParser();
         reparse();
         reparseTodo();
         checkSyntaxInBack();
+    }
+    if (shouldOpenInReadonly()) {
+        setReadOnly(true);
     }
 }
 
@@ -380,18 +379,6 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
     }
     mFilename = newName;
     setFileType(getFileType(mFilename));
-    if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
-        mSyntaxIssues.clear();
-    }
-    reparse();
-    if (doCheckSyntax) {
-        if (mEditorSettings->syntaxCheckWhenSave())
-            checkSyntaxInBack();
-    }
-    reparseTodo();
-    if (!shouldOpenInReadonly()) {
-        setReadOnly(false);
-    }
     setStatusChanged(QSynedit::StatusChange::Custom0);
 
     if (mFileSystemWatcher)
@@ -411,6 +398,17 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
         mIsNew = false;
         setModified(false);
         setStatusChanged(QSynedit::StatusChange::Custom0);
+
+        reparse();
+        setReadOnly(shouldOpenInReadonly());
+        if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
+            mSyntaxIssues.clear();
+        }
+        if (doCheckSyntax) {
+            if (mEditorSettings->syntaxCheckWhenSave())
+                checkSyntaxInBack();
+        }
+        reparseTodo();
     }  catch (FileError& exception) {
         if (mFileSystemWatcher)
             mFileSystemWatcher->addPath(mFilename);
@@ -418,6 +416,7 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
         emit fileSaveError(this, mFilename, exception.reason());
         return false;
     }
+
 
     initAutoBackup();
     return true;
@@ -513,10 +512,11 @@ void Editor::undoSymbolCompletion(const CharPos &pos)
     QSynedit::PTokenAttribute attr;
     QString token;
     QSynedit::PSyntaxState syntaxState;
+    QSynedit::TokenType tokenType;
 
     if (!mEditorSettings->removeSymbolPairs())
         return;
-    if (!getTokenAttr(pos, token, attr, syntaxState))
+    if (!getTokenAttr(pos, token, attr, syntaxState, &tokenType))
         return;
     if (syntaxer()->isCommentNotFinished(syntaxState))
         return ;
@@ -526,20 +526,20 @@ void Editor::undoSymbolCompletion(const CharPos &pos)
         return;
     QChar deletedChar = lineText().at(pos.ch);
     QChar nextChar = lineText().at(pos.ch+1);
-    if ((attr->tokenType() == QSynedit::TokenType::Character) && (deletedChar != '\''))
+    if ((tokenType == QSynedit::TokenType::Character) && (deletedChar != '\''))
         return;
-//    if (attr->tokenType() == QSynedit::TokenType::StringEscapeSequence)
+//    if (tokenType == QSynedit::TokenType::StringEscapeSequence)
 //        return;
-    if (attr->tokenType() == QSynedit::TokenType::String) {
+    if (tokenType == QSynedit::TokenType::String) {
         if (token=="\\\"")
             return;
         if ((deletedChar!='"') || (nextChar!='"'))
             return;
     }
     if (deletedChar == '\'') {
-        if (attr->tokenType() != QSynedit::TokenType::Character)
+        if (tokenType != QSynedit::TokenType::Character)
             return;
-        if (attr->tokenType() == QSynedit::TokenType::Number)
+        if (tokenType == QSynedit::TokenType::Number)
             return;
         if (token == "'\\''")
             return;
@@ -1137,16 +1137,17 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
     if (token.isEmpty())
         return;
 
+    QSynedit::TokenType tokenType = syntaxer()->getTokenType();
     if (mParser) {
         // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
             background = syntaxer()->commentAttribute()->background();
-            if (attr->tokenType() != QSynedit::TokenType::Space)
+            if (tokenType != QSynedit::TokenType::Space)
                 foreground = syntaxer()->commentAttribute()->foreground();
             return;
         }
         QString lineContent = lineText(line);
-        if (mParser->isIncludeLine(lineContent) && attr->tokenType() != QSynedit::TokenType::Comment) {
+        if (mParser->isIncludeLine(lineContent) && tokenType != QSynedit::TokenType::Comment) {
             // #include header names (<>)
             int pos1=lineContent.indexOf("<");
             int pos2=lineContent.indexOf(">",pos1);
@@ -1156,7 +1157,7 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
                 background = syntaxer()->identifierAttribute()->background();
             }
             return;
-        } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
+        } else if (mParser->enabled() && tokenType == QSynedit::TokenType::Identifier) {
             //Syntax color for different identifier types
             CharPos p{ch,line};
 
@@ -1221,7 +1222,7 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
     }
 
     if (attr) {
-        if (attr->tokenType() == QSynedit::TokenType::Keyword) {
+        if (tokenType == QSynedit::TokenType::Keyword) {
             //C++ type keywords
             if (CppTypeKeywords.contains(token)
                     ||
@@ -1244,11 +1245,11 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
                 }
             }
         }
-        if (((attr->tokenType() == QSynedit::TokenType::Identifier)
-             || (attr->tokenType() == QSynedit::TokenType::Keyword)
-             || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
-             || (attr->tokenType() == QSynedit::TokenType::String)
-             || (attr->tokenType() == QSynedit::TokenType::Comment)
+        if (((tokenType == QSynedit::TokenType::Identifier)
+             || (tokenType == QSynedit::TokenType::Keyword)
+             || (tokenType == QSynedit::TokenType::Preprocessor)
+             || (tokenType == QSynedit::TokenType::String)
+             || (tokenType == QSynedit::TokenType::Comment)
                 )
             && (token == mCurrentHighlightedWord)) {
             // occurrencies of the selected identifier
@@ -1708,8 +1709,9 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             if (pos.isValid()) {
                 QSynedit::PTokenAttribute attr;
                 QString token;
-                if (getTokenAttr(pos,token,attr)
-                        && attr->tokenType() == QSynedit::TokenType::Symbol) {
+                QSynedit::TokenType tokenType;
+                if (getTokenAttr(pos,token,attr,&tokenType)
+                        && tokenType == QSynedit::TokenType::Symbol) {
                     CharPos complementCharPos = getMatchingBracket(pos);
                     if (!foldHidesLine(pos.line)
                             && !foldHidesLine(complementCharPos.line)) {
@@ -1743,11 +1745,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         if (!selAvail() && mEditorSettings->highlightCurrentWord()) {
             QString token;
             QSynedit::PTokenAttribute attri;
-            if (getTokenAttr(caretPos(), token,attri)
+            QSynedit::TokenType tokenType;
+            if (getTokenAttr(caretPos(), token,attri,&tokenType)
                 && (
-                    (attri->tokenType()==QSynedit::TokenType::Identifier)
-                        || (attri->tokenType() == QSynedit::TokenType::Keyword)
-                        || (attri->tokenType() == QSynedit::TokenType::Preprocessor))
+                    (tokenType==QSynedit::TokenType::Identifier)
+                        || (tokenType == QSynedit::TokenType::Keyword)
+                        || (tokenType == QSynedit::TokenType::Preprocessor))
                     && !token.isEmpty()
                     && isIdentStartChar(token[0])) {
                 mCurrentHighlightedWord = token;
@@ -2185,13 +2188,13 @@ QStringList Editor::getExpressionAtPosition(
             QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
             if ( (line == pos.line)
                  && (start<=ch) && (ch<=endPos)) {
-                if (attr->tokenType() == QSynedit::TokenType::Comment
-                        || attr->tokenType() == QSynedit::TokenType::String) {
+                if (syntaxer.getTokenType() == QSynedit::TokenType::Comment
+                        || syntaxer.getTokenType() == QSynedit::TokenType::String) {
                     return result;
                 }
             }
-            if (attr->tokenType() != QSynedit::TokenType::Comment
-                    && attr->tokenType() != QSynedit::TokenType::Space){
+            if (syntaxer.getTokenType() != QSynedit::TokenType::Comment
+                    && syntaxer.getTokenType() != QSynedit::TokenType::Space){
                 tokens.append(token);
             }
             syntaxer.next();
@@ -2471,9 +2474,10 @@ bool Editor::handleSymbolCompletion(QChar key)
             QSynedit::PTokenAttribute attr;
             QString token;
             QSynedit::PSyntaxState syntaxState;
-            if (getTokenAttr(highlightPos, token, attr, syntaxState)) {
+            QSynedit::TokenType tokenType;
+            if (getTokenAttr(highlightPos, token, attr, syntaxState, &tokenType)) {
                 inComment = syntaxer()->isCommentNotFinished(syntaxState);
-                inNumber = attr->tokenType() == QSynedit::TokenType::Number;
+                inNumber = tokenType == QSynedit::TokenType::Number;
             }
         }
         if (inComment)
@@ -3250,36 +3254,37 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     QSynedit::PTokenAttribute attr;
     CharPos pBeginPos, pEndPos;
     int start;
+    QSynedit::TokenType tokenType;
     if (getTokenAttr(
                 CharPos{caretCh() - 1,
-                caretLine()}, s,start, attr)) {
-        if (attr->tokenType() == QSynedit::TokenType::Preprocessor) {//Preprocessor
+                caretLine()}, s,start, attr, &tokenType)) {
+        if (tokenType == QSynedit::TokenType::Preprocessor) {//Preprocessor
             word = getWordAtPosition(this,caretPos(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {
                 word = "";
             }
-        } else if (attr->tokenType() == QSynedit::TokenType::Comment) { //Comment, javadoc tag
+        } else if (tokenType == QSynedit::TokenType::Comment) { //Comment, javadoc tag
             word = getWordAtPosition(this,caretPos(),pBeginPos,pEndPos, WordPurpose::wpJavadoc);
             if (!word.startsWith('@')) {
                     return;
             }
         } else if (
-                   (attr->tokenType() == QSynedit::TokenType::String) &&
-                   (attr->tokenType() != QSynedit::TokenType::Character)) {
+                   (tokenType == QSynedit::TokenType::String) &&
+                   (tokenType != QSynedit::TokenType::Character)) {
             return;
         } else if (type==CodeCompletionType::KeywordsOnly ) {
             if (syntaxer()->language()==QSynedit::ProgrammingLanguage::GNU_Assembly
                     && std::dynamic_pointer_cast<const QSynedit::GASSyntaxer>(syntaxer())->prefixRegisterNames() )
                 word = getWordAtPosition(this,caretPos(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
-            else if (fileType() == FileType::NASM && attr->tokenType() == QSynedit::TokenType::Preprocessor)
+            else if (fileType() == FileType::NASM && tokenType == QSynedit::TokenType::Preprocessor)
                 word = getWordAtPosition(this,caretPos(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
             else
                 word = getWordAtPosition(this,caretPos(),pBeginPos,pEndPos, WordPurpose::wpKeywords);
         } else if (
-                   (attr->tokenType() != QSynedit::TokenType::Symbol) &&
-                   (attr->tokenType() != QSynedit::TokenType::Space) &&
-                   (attr->tokenType() != QSynedit::TokenType::Keyword) &&
-                   (attr->tokenType() != QSynedit::TokenType::Identifier)
+                   (tokenType != QSynedit::TokenType::Symbol) &&
+                   (tokenType != QSynedit::TokenType::Space) &&
+                   (tokenType != QSynedit::TokenType::Keyword) &&
+                   (tokenType != QSynedit::TokenType::Identifier)
                    ) {
             return;
         }
@@ -3438,8 +3443,9 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     QSynedit::PTokenAttribute attr;
     QString token;
     QSynedit::PSyntaxState syntaxState;
-    if (getTokenAttr(highlightPos, token, attr, syntaxState)) {
-        if (attr && attr->tokenType()==QSynedit::TokenType::Comment)
+    QSynedit::TokenType tokenType;
+    if (getTokenAttr(highlightPos, token, attr, syntaxState, &tokenType)) {
+        if (attr && tokenType==QSynedit::TokenType::Comment)
             return;
     }
 
@@ -3858,9 +3864,10 @@ Editor::TipType Editor::getTipType(QPoint point, CharPos& pos)
 
         QSynedit::PTokenAttribute attr;
         QString s;
+        QSynedit::TokenType tokenType;
 
         // Only allow hand tips in highlighted areas
-        if (getTokenAttr(pos,s,attr)) {
+        if (getTokenAttr(pos,s,attr,&tokenType)) {
             // Only allow Identifiers, Preprocessor directives, and selection
             if (attr) {
                 if (dragging()) {
@@ -3869,11 +3876,11 @@ Editor::TipType Editor::getTipType(QPoint point, CharPos& pos)
                     return TipType::Include;
                 } else if (selAvail() && inSelection(pos)) {
                         return TipType::Selection;
-                } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
+                } else if (tokenType == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
-                } else if (attr->tokenType() == QSynedit::TokenType::Number) {
+                } else if (tokenType == QSynedit::TokenType::Number) {
                     return TipType::Number;
-                } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {
+                } else if (tokenType == QSynedit::TokenType::Keyword) {
                     return TipType::Keyword;
                 }
             }
@@ -4013,13 +4020,14 @@ void Editor::updateFunctionTip(bool showTip)
     QSynedit::PTokenAttribute attr;
     QString token;
     QSynedit::PSyntaxState syntaxState;
+    QSynedit::TokenType tokenType;
     CharPos pos{caretCh()-1, caretLine()};
-    if (getTokenAttr(pos, token, attr, syntaxState)) {
+    if (getTokenAttr(pos, token, attr, syntaxState, &tokenType)) {
         if (syntaxer()->isStringNotFinished(syntaxState))
             return;
         if (syntaxer()->isCommentNotFinished(syntaxState))
             return;
-        if (attr->tokenType() == QSynedit::TokenType::Character)
+        if (tokenType == QSynedit::TokenType::Character)
             return;
     }
 
@@ -4038,9 +4046,9 @@ void Editor::updateFunctionTip(bool showTip)
             if (start>=currentChar)
                 break;
 
-            if (lineAttr->tokenType() != QSynedit::TokenType::Comment
-                    && lineAttr->tokenType() != QSynedit::TokenType::Space) {
-                if (lineAttr->tokenType() == QSynedit::TokenType::String)
+            if (pSyntaxer->getTokenType() != QSynedit::TokenType::Comment
+                    && pSyntaxer->getTokenType() != QSynedit::TokenType::Space) {
+                if (pSyntaxer->getTokenType() == QSynedit::TokenType::String)
                     lineToken="\"\"";
                 tokens.append(lineToken);
                 positions.append(start);
@@ -4454,9 +4462,10 @@ int Editor::previousIdChars(const CharPos &pos)
     QString token;
     QSynedit::PTokenAttribute attr;
     int start;
-    if (getTokenAttr(CharPos{pos.ch-1, pos.line}, token, start, attr)) {
-        if (attr->tokenType() == QSynedit::TokenType::Identifier
-                || attr->tokenType() == QSynedit::TokenType::Keyword)
+    QSynedit::TokenType tokenType;
+    if (getTokenAttr(CharPos{pos.ch-1, pos.line}, token, start, attr, &tokenType)) {
+        if (tokenType == QSynedit::TokenType::Identifier
+                || tokenType == QSynedit::TokenType::Keyword)
             return pos.ch - start;
     }
     return 0;
@@ -5085,7 +5094,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const CharPos &p, QSynedi
     startParseLine(pSyntaxer.get(),line);
     while (!pSyntaxer->eol()) {
         QSynedit::PTokenAttribute attr = pSyntaxer->getTokenAttribute();
-        QSynedit::TokenType tokenType = attr->tokenType();
+        QSynedit::TokenType tokenType = pSyntaxer->getTokenType();
         int start = pSyntaxer->getTokenPos();
         int end = start + pSyntaxer->getToken().length();
         QString token = pSyntaxer->getToken();
@@ -5490,8 +5499,7 @@ void Editor::applySettings()
 static QSynedit::PTokenAttribute createRainbowAttribute(ColorManager *colorManager, const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
     PColorSchemeItem item = colorManager->getItem(schemeName,schemeItemName);
     if (item) {
-        QSynedit::PTokenAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName,
-                                                                                                QSynedit::TokenType::Default);
+        QSynedit::PTokenAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName);
         attr->setForeground(item->foreground());
         attr->setBackground(item->background());
         return attr;

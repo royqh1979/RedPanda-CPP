@@ -383,13 +383,15 @@ public:
     int maxScrollHeight() const;
 
     bool getTokenAttr(const CharPos& pos, QString& token,
-      PTokenAttribute& attr) const;
+      PTokenAttribute& attr, TokenType *tokenType = nullptr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      PTokenAttribute& attr, PSyntaxState &syntaxState) const;
+      PTokenAttribute& attr, PSyntaxState &syntaxState,
+      TokenType *tokenType = nullptr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      int &start, PTokenAttribute& attr) const;
+      int &start, PTokenAttribute& attr, TokenType *tokenType = nullptr) const;
     bool getTokenAttr(const CharPos& pos, QString& token,
-      int &start, PTokenAttribute& attr, PSyntaxState &syntaxState) const;
+      int &start, PTokenAttribute& attr, PSyntaxState &syntaxState,
+      TokenType *tokenType = nullptr) const;
     QSet<int> getTokenBorders(int line) const;
 
     void beginEditing();

@@ -186,6 +186,15 @@ void TestCppSyntaxer::test_string_literal3()
                                  }));
 }
 
+void TestCppSyntaxer::test_escape_sequence_tokens()
+{
+    TokenInfoList tokens = parseLine(&mSyntaxer, "\"a\\\\b\"");
+    QStringList texts;
+    for (const PTokenInfo &token : tokens)
+        texts.append(token->token);
+    QCOMPARE(texts, QStringList({"\"", "a", "\\\\", "b", "\""}));
+}
+
 void TestCppSyntaxer::test_rawstring_literal1()
 {
     //multiline
@@ -453,6 +462,10 @@ void TestCppSyntaxer::test_directives_and_identifier_classification()
 
     QCOMPARE(filterTokens(lines, mSyntaxer.preprocessorAttribute()).join("|"),
              "#define|1|#if|#else|#endif");
+    QCOMPARE(lines[0][2]->type, QSynedit::TokenType::Identifier);
+    QCOMPARE(lines[0][4]->type, QSynedit::TokenType::Default);
+    QCOMPARE(lines[0][4]->attribute, mSyntaxer.preprocessorAttribute());
+    QCOMPARE(lines[1][2]->type, QSynedit::TokenType::Identifier);
     QCOMPARE(filterTokens(lines, mSyntaxer.keywordAttribute()),
              QStringList({"int", "Widget"}));
     QCOMPARE(filterTokens(lines, mSyntaxer.hexAttribute()),

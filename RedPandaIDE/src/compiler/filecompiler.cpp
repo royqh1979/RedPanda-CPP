@@ -180,9 +180,9 @@ bool FileCompiler::prepareForCompile()
 //                    break;
 //                }
 //                attr = syntaxer.getTokenAttribute();
-//                if (attr->tokenType() != QSynedit::TokenType::Space
-//                        && attr->tokenType()!=QSynedit::TokenType::String
-//                        && attr->tokenType()!=QSynedit::TokenType::Character)
+//                if (syntaxer.getTokenType() != QSynedit::TokenType::Space
+//                        && syntaxer.getTokenType()!=QSynedit::TokenType::String
+//                        && syntaxer.getTokenType()!=QSynedit::TokenType::Character)
 //                    lastToken=token;
 //                syntaxer.next();
 //            }

@@ -358,7 +358,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             int start = pSyntaxer->getTokenPos();
             QString token = pSyntaxer->getToken();
             QSynedit::PTokenAttribute attr = pSyntaxer->getTokenAttribute();
-            if (attr && attr->tokenType()==QSynedit::TokenType::Identifier) {
+            if (attr && pSyntaxer->getTokenType()==QSynedit::TokenType::Identifier) {
                 if (token == statement->command) {
                     //same name symbol , test if the same statement;
                     CharPos p;
@@ -407,7 +407,7 @@ void CppRefacter::renameSymbolInEditor(Editor *editor, const PStatement &stateme
         while (!syntaxer->eol()) {
             QString token = syntaxer->getToken();
             QSynedit::PTokenAttribute attr = syntaxer->getTokenAttribute();
-            if (attr && attr->tokenType() == QSynedit::TokenType::Identifier
+            if (attr && syntaxer->getTokenType() == QSynedit::TokenType::Identifier
                     && token == statement->command) {
                 //same name symbol , test if the same statement;
                 CharPos p;

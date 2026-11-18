@@ -137,6 +137,40 @@ void TestCppPreprocessorInclude::test_nested_include_guard_visibility()
     QVERIFY(innerInfo->isLineVisible(2));
 }
 
+void TestCppPreprocessorInclude::test_nested_false_guard_does_not_block_outer_guard()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    auto writeLines = [](const QString &path, const QStringList &lines) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            return false;
+        file.write(lines.join('\n').toUtf8());
+        file.close();
+        return true;
+    };
+    QString main = tmp.filePath("main.cpp");
+    QString outer = tmp.filePath("outer.h");
+    QString inner = tmp.filePath("inner.h");
+    QVERIFY(writeLines(main, {"#define INNER_H", "#include \"outer.h\"",
+                              "#include \"outer.h\""}));
+    QVERIFY(writeLines(outer, {"#ifndef OUTER_H", "#define OUTER_H",
+                               "#include \"inner.h\"", "int outer;", "#endif"}));
+    QVERIFY(writeLines(inner, {"#ifndef INNER_H", "#define INNER_H",
+                               "int inner;", "#endif"}));
+
+    CppPreprocessor p;
+    p.preprocess(main);
+
+    QCOMPARE(p.result().count("int outer;"), 1);
+    QCOMPARE(p.result().count("int inner;"), 0);
+    PParsedFileInfo outerInfo = p.findFileInfo(outer);
+    QVERIFY(outerInfo);
+    QVERIFY(outerInfo->includeProtected());
+    QCOMPARE(p.eventCounts(outer).scan, 1);
+    QVERIFY(outerInfo->isLineVisible(1));
+}
+
 void TestCppPreprocessorInclude::test_pragma_once()
 {
     QString dir = scenarioPath("pragma_once");
@@ -281,6 +315,40 @@ void TestCppPreprocessorInclude::test_recursive_include()
     QCOMPARE(inA, 2);
     QCOMPARE(inB, 2);
     QVERIFY(sawAfter);
+}
+
+void TestCppPreprocessorInclude::test_unguarded_recursive_include_visibility()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("repeat.h");
+    QString main = tmp.filePath("main.cpp");
+    QFile file(header);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write("#ifndef SEEN\n"
+               "#define SEEN\n"
+               "int outer;\n"
+               "#else\n"
+               "int inner;\n"
+               "#endif\n"
+               "#include \"repeat.h\"");
+    file.close();
+    QFile mainFile(main);
+    QVERIFY(mainFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    mainFile.write("#include \"repeat.h\"");
+    mainFile.close();
+
+    CppPreprocessor p;
+    p.setMaxIncludeNestingDepth(3);
+    p.preprocess(main);
+
+    QCOMPARE(p.result().count("int outer;"), 1);
+    QCOMPARE(p.result().count("int inner;"), 1);
+    PParsedFileInfo info = p.findFileInfo(header);
+    QVERIFY(info);
+    QVERIFY(info->isLineVisible(2));
+    QVERIFY(info->isLineVisible(3));
+    QVERIFY(!info->isLineVisible(5));
 }
 
 void TestCppPreprocessorInclude::test_include_nonexistent()
@@ -1419,6 +1487,10 @@ void TestCppPreprocessorInclude::test_protected_include_cycle_stops()
     p.preprocess(main);
     QCOMPARE(p.result().count("int in_a;"), 1);
     QCOMPARE(p.result().count("int in_b;"), 1);
+    QCOMPARE(p.eventCounts(a).scan, 1);
+    PParsedFileInfo aInfo = p.findFileInfo(a);
+    QVERIFY(aInfo);
+    QVERIFY(aInfo->isLineVisible(3));
 }
 
 void TestCppPreprocessorInclude::test_replayed_subtree_marks_pragma_once_file_processed()

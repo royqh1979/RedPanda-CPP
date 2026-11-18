@@ -84,7 +84,7 @@ enum class TokenType {
 
 class TokenAttribute {
 public:
-    explicit TokenAttribute(const QString& name, TokenType mTokenType);
+    explicit TokenAttribute(const QString& name);
     TokenAttribute(const TokenAttribute&)=delete;
     TokenAttribute& operator=(const TokenAttribute&)=delete;
 
@@ -112,14 +112,11 @@ public:
     const QColor &background() const { return mBackground; }
     void setBackground(const QColor &background) { mBackground = background; }
 
-    TokenType tokenType() const { return mTokenType; }
-
 private:
     QColor mForeground;
     QColor mBackground;
     QString mName;
     FontStyles mStyles;
-    TokenType mTokenType;
 };
 
 using PTokenAttribute = std::shared_ptr<TokenAttribute> ;
@@ -156,6 +153,7 @@ public:
     virtual PSyntaxState getState() const = 0;
     virtual QString getToken() const=0;
     virtual const PTokenAttribute &getTokenAttribute() const=0;
+    virtual TokenType getTokenType() const { return TokenType::Default; }
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;

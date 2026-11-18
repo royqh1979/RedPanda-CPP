@@ -17,6 +17,7 @@ private slots:
     void test_nested_include();
     void test_include_guard();
     void test_nested_include_guard_visibility();
+    void test_nested_false_guard_does_not_block_outer_guard();
     void test_pragma_once();
     void test_no_guard();
     void test_guard_after_comment();
@@ -24,6 +25,7 @@ private slots:
     void test_guard_after_include();
     void test_include_via_macro();
     void test_recursive_include();
+    void test_unguarded_recursive_include_visibility();
     void test_include_nonexistent();
     void test_include_next();
     void test_undef_external();

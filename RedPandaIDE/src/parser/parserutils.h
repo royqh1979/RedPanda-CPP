@@ -478,7 +478,7 @@ public:
     ParsedFileInfo(const QString& fileName): mFileName {fileName} { }
     ParsedFileInfo(const ParsedFileInfo&)=delete;
     ParsedFileInfo& operator=(const ParsedFileInfo&)=delete;
-    void insertBranch(int level, bool branchTrue) { mBranches.insert(level, branchTrue); }
+    void setBranchVisibility(const QMap<int, bool> &branches) { mBranches = branches; }
     bool isLineVisible(int line) const;
     void addInclude(const QString &fileName) { mIncludes.insert(fileName); }
     void addDirectInclude(const QString &fileName) { mDirectIncludes.append(fileName); }
