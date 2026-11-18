@@ -144,6 +144,7 @@ struct TypeInfo {
     QVector<TemplateArgument> templateArguments;
     QVector<TypeDerivation> derivations;
     TypeQualifiers qualifiers = TypeQualifier::None;
+    ReferenceQualifier valueCategory = ReferenceQualifier::None;
 
     QString toString() const;
 };

@@ -1217,7 +1217,19 @@ TypeInfo CppStatementBuilder::deduceAutoType(TypeInfo initializerType,
             initializerType.derivations.removeFirst();
         initializerType.qualifiers = TypeQualifier::None;
     }
-    initializerType.derivations += declarator.derivations;
+    QVector<TypeDerivation> additions = declarator.derivations;
+    if (!initializerType.derivations.isEmpty() && !additions.isEmpty()
+            && (initializerType.derivations.first().kind == TypeDerivationKind::LvalueReference
+                || initializerType.derivations.first().kind == TypeDerivationKind::RvalueReference)
+            && (additions.first().kind == TypeDerivationKind::LvalueReference
+                || additions.first().kind == TypeDerivationKind::RvalueReference)) {
+        bool rvalue = initializerType.derivations.first().kind == TypeDerivationKind::RvalueReference
+                && additions.first().kind == TypeDerivationKind::RvalueReference;
+        initializerType.derivations.first().kind = rvalue
+                ? TypeDerivationKind::RvalueReference : TypeDerivationKind::LvalueReference;
+        additions.removeFirst();
+    }
+    initializerType.derivations += additions;
     initializerType.qualifiers |= specifiers.type.qualifiers;
     return initializerType;
 }

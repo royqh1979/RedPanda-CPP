@@ -3,11 +3,22 @@
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 #include <QElapsedTimer>
 #include "test_parser_utils.h"
+#include "src/parser/cppexpressionevaluator.h"
 #endif
 #include "src/parser/cppparser.h"
+#include "src/parser/cpptyperesolver.h"
 #include "test_cppparser.h"
 
 namespace {
+void logEvalProfileCsv(const QString &suite, const QString &name, qint64 elapsedNs,
+                       const EvalResult &result)
+{
+    QString type = result.type.toString();
+    type.replace("\"", "\"\"");
+    qWarning().noquote() << QString("%1,%2,%3,%4,\"%5\"")
+            .arg(suite, name).arg(elapsedNs).arg(result.isValid() ? 1 : 0).arg(type);
+}
+
 bool writeLines(const QString &path, const QStringList &lines)
 {
     QFile file(path);
@@ -1831,6 +1842,142 @@ void TestCppParser::test_unknown_non_type_default_preserves_alias_resolution()
     QCOMPARE(mParser->findTypeDefinitionOf("text.cpp", "Unordered<Value>::key_type", {}), value);
 }
 
+void TestCppParser::test_using_declaration_function_overload_set()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Result {};",
+            "namespace std { template<typename T> Result remove(T, T); }",
+            "int remove(const char *);",
+            "namespace std { using ::remove; }",
+            "auto value = std::remove(1, 2);"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    QStringList expression{"std", "::", "remove", "(", "1", ",", "2", ")"};
+    EvalResult result = mParser->evalExpression("text.cpp", expression, {});
+    QVERIFY(result.isValid());
+    QCOMPARE(result.type.declaration.lock(), mParser->findStatement("Result"));
+}
+
+void TestCppParser::test_overload_rejects_unrelated_class_specialization()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace std {",
+            "    template<typename T> struct iterator {};",
+            "    template<typename T> struct deque_iterator {};",
+            "    template<typename II, typename OI> OI copy(II, II, OI);",
+            "    template<typename T> deque_iterator<T> copy(deque_iterator<T>, deque_iterator<T>, deque_iterator<T>);",
+            "}",
+            "std::iterator<int> it;",
+            "std::deque_iterator<int> dequeIt;",
+            "auto result = std::copy(it, it, it);",
+            "auto dequeResult = std::copy(dequeIt, dequeIt, dequeIt);"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    for (const QString &name : {QString("it"), QString("dequeIt")}) {
+        QStringList expression{"std", "::", "copy", "(", name, ",", name, ",", name, ")"};
+        EvalResult result = mParser->evalExpression("text.cpp", expression, {});
+        QVERIFY(result.isValid());
+        PStatement expected = mParser->findStatement(
+                    name == "dequeIt" ? "std::deque_iterator" : "std::iterator");
+        QCOMPARE(result.type.declaration.lock(), expected);
+        QCOMPARE(result.type.templateArguments.count(), 1);
+        QVERIFY(result.type.templateArguments.first().type);
+        QCOMPARE(result.type.templateArguments.first().type->qualifiedName, QString("int"));
+    }
+}
+
+void TestCppParser::test_empty_template_argument_list()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename...> using __void_t = void;"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    CppTypeResolver resolver(mParser->statementList());
+    TypeInfo type;
+    type.qualifiedName = "__void_t";
+    type.qualifiedNameText = "__void_t<>";
+    TypeInfo resolved = resolver.resolve(type, {}, mParser->findStatement("std"));
+    QCOMPARE(resolved.qualifiedName, QString("void"));
+}
+
+void TestCppParser::test_const_template_parameter_substitution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename T> struct Pair {};",
+            "template<typename T> struct Map { using value_type = Pair<const T>; };"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    CppTypeResolver resolver(mParser->statementList());
+    TypeInfo type;
+    type.qualifiedName = "Map<int>::value_type";
+    type.qualifiedNameText = "Map<int>::value_type";
+    TypeInfo resolved = resolver.resolve(type);
+    QCOMPARE(resolved.qualifiedName, QString("Pair"));
+    QCOMPARE(resolved.templateArguments.count(), 1);
+    QVERIFY(resolved.templateArguments.first().type);
+    QCOMPARE(resolved.templateArguments.first().type->qualifiedName, QString("int"));
+    QCOMPARE(resolved.templateArguments.first().type->toString(), QString("const int"));
+}
+
+void TestCppParser::test_auto_reference_collapsing()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Value {};",
+            "Value &get();",
+            "auto &value = get();",
+            "auto &&other = get();"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    for (const QString &name : {QString("value"), QString("other")}) {
+        PStatement statement = mParser->findStatementOf("text.cpp", name, 3);
+        QVERIFY(statement);
+        const TypeInfo &type = std::dynamic_pointer_cast<Statement>(statement)->typeInfo;
+        QVERIFY(!type.derivations.isEmpty());
+        QCOMPARE(type.derivations.first().kind, TypeDerivationKind::LvalueReference);
+    }
+}
+
+void TestCppParser::test_void_t_detection_failure()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<typename...> using __void_t = void;",
+            "template<typename T, typename = __void_t<>> struct Traits { };",
+            "template<typename T> struct Traits<T, __void_t<typename T::missing>> { using type = int; };"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    CppTypeResolver resolver(mParser->statementList());
+    TypeInfo type;
+    type.qualifiedName = "Traits<int>";
+    type.qualifiedNameText = "Traits<int>";
+    TypeInfo resolved = resolver.resolve(type);
+    QCOMPARE(resolved.qualifiedName, QString("Traits"));
+    QCOMPARE(resolved.declaration.lock(), mParser->findStatement("Traits"));
+}
+
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
 {
@@ -2106,10 +2253,41 @@ void TestCppParser::test_standard_library_direct_c_header_context()
     PParsedFileInfo stdioInfo = mParser->findFileInfo(stdioFile);
     QVERIFY(stdioInfo);
     QVERIFY(stdioInfo->includeProtected());
-    QVERIFY(mParser->isLineVisible(stdioFile, 6));
-    QVERIFY(!mParser->isLineVisible(stdioFile, 40));
-    QVERIFY(mParser->isLineVisible(stdioFile, 43));
-    QVERIFY(mParser->isLineVisible(stdioFile, 80));
+    const int guardDefineLine = includeGuardDefineLine(stdioFile);
+    QVERIFY(guardDefineLine >= 0);
+    QVERIFY(mParser->isLineVisible(stdioFile, guardDefineLine));
+
+    QFile source(stdioFile);
+    QVERIFY(source.open(QIODevice::ReadOnly));
+    const QStringList sourceLines = QString::fromUtf8(source.readAll()).split('\n');
+    source.close();
+    int structLine = -1;
+    int structEndLine = -1;
+    for (int line = 0; line < sourceLines.count(); ++line) {
+        if (structLine < 0 && sourceLines[line].contains("struct _iobuf"))
+            structLine = line;
+        if (structLine >= 0 && sourceLines[line].trimmed() == "};") {
+            structEndLine = line;
+            break;
+        }
+    }
+    QVERIFY(structLine >= 0);
+    QVERIFY(structEndLine > structLine);
+    QSet<int> tokenLines;
+    for (const CppTokenizer::Token &token : mParser->tokenizerTokensForTest()) {
+        if (token.fileName == stdioFile && token.kind != CppTokenizer::TokenKind::FileBoundary
+                && token.kind != CppTokenizer::TokenKind::FileEnd) {
+            tokenLines.insert(token.position.line);
+        }
+    }
+    for (int line = structLine; line <= structEndLine; ++line) {
+        const QString sourceLine = sourceLines[line].trimmed();
+        if (sourceLine.isEmpty() || sourceLine.startsWith('#'))
+            continue;
+        QByteArray message = QString("%1:%2").arg(stdioFile).arg(line).toUtf8();
+        QVERIFY2(mParser->isLineVisible(stdioFile, line) == tokenLines.contains(line),
+                 message.constData());
+    }
 }
 
 void TestCppParser::test_standard_library_front_append()
@@ -2455,6 +2633,7 @@ void TestCppParser::test_standard_library_container_eval_profile()
     };
     QElapsedTimer timer;
     timer.start();
+    qWarning() << "suite,scenario,elapsed_ns,valid,type";
     int failures = 0;
     QByteArray caseFilter = qgetenv("REDPANDA_STDLIB_CONTAINER_CASE");
     for (const Case &test : cases) {
@@ -2472,12 +2651,310 @@ void TestCppParser::test_standard_library_container_eval_profile()
         EvalResult result = mParser->evalExpression(main, expression, scope);
         qWarning() << "STDLIB_CONTAINER_EVAL" << test.name
                    << timer.nsecsElapsed() - started;
+        logEvalProfileCsv("STDLIB_CONTAINER_EVAL_CSV", test.name,
+                          timer.nsecsElapsed() - started, result);
         if (!result.isValid() || result.type.declaration.lock() != basicString) {
             ++failures;
             qWarning() << "STDLIB_CONTAINER_INVALID" << test.name << result.type.toString();
         }
+        if (test.name == QStringLiteral("range_for.element")) {
+            QVERIFY(!result.type.derivations.isEmpty());
+            QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::LvalueReference);
+        }
     }
     QCOMPARE(failures, 0);
+}
+
+void TestCppParser::test_standard_library_algorithm_eval_profile()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::vector<std::string> lst;",
+        "    auto found = std::find_if(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
+        "    auto output = std::transform(lst.begin(), lst.end(), lst.begin(), [](const std::string &s) { return s; });",
+        "    auto counted = std::count(lst.begin(), lst.end(), \"x\");",
+        "    auto accumulated = std::accumulate(lst.begin(), lst.end(), std::string());",
+        "    auto each = std::for_each(lst.begin(), lst.end(), [](const std::string &s) { s.size(); });",
+        "    std::sort(lst.begin(), lst.end());",
+        "    auto lower = std::lower_bound(lst.begin(), lst.end(), \"x\");",
+        "    auto minimum = std::min_element(lst.begin(), lst.end());",
+        "    auto binary = std::binary_search(lst.begin(), lst.end(), \"x\");",
+        "    auto any = std::any_of(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
+        "    auto copied = std::copy(lst.begin(), lst.end(), lst.begin());",
+        "    auto removed = std::remove(lst.begin(), lst.end(), \"x\");",
+        "    auto unique = std::unique(lst.begin(), lst.end());",
+        "    std::reverse(lst.begin(), lst.end());",
+        "    auto inserted = lst.insert(lst.begin(), \"x\");",
+        "    auto erased = lst.erase(lst.begin());",
+        "    std::stable_sort(lst.begin(), lst.end());",
+        "    std::partial_sort(lst.begin(), lst.begin() + 1, lst.end());",
+        "    std::nth_element(lst.begin(), lst.begin() + 1, lst.end());",
+        "    auto reduced = std::reduce(lst.begin(), lst.end(), 0);",
+        "    auto product = std::inner_product(lst.begin(), lst.end(), lst.begin(), 0);",
+        "    auto countedIf = std::count_if(lst.begin(), lst.end(), [](const std::string &s) { return s.empty(); });",
+        "    std::shuffle(lst.begin(), lst.end(), std::mt19937());",
+        "    auto replaced = std::replace(lst.begin(), lst.end(), \"x\", \"y\");",
+        "    auto rotated = std::rotate(lst.begin(), lst.begin() + 1, lst.end());",
+        "    std::fill(lst.begin(), lst.end(), \"z\");",
+        "    std::generate(lst.begin(), lst.end(), [] { return std::string(); });",
+        "    auto moved = std::move(lst.begin(), lst.end(), lst.begin());",
+        "    auto copiedN = std::copy_n(lst.begin(), 1, lst.begin());",
+        "    auto foundValue = std::find(lst.begin(), lst.end(), \"x\");",
+        "    auto maximum = std::max_element(lst.begin(), lst.end());",
+        "    auto minmax = std::minmax_element(lst.begin(), lst.end());",
+        "    std::vector<int> ints;",
+        "    auto intInserted = ints.insert(ints.begin(), 1);",
+        "    auto intErased = ints.erase(ints.begin());",
+        "    std::stable_sort(ints.begin(), ints.end());",
+        "    std::shuffle(ints.begin(), ints.end(), std::mt19937());",
+        "    auto intRotated = std::rotate(ints.begin(), ints.begin() + 1, ints.end());",
+        "    auto intUnique = std::unique(ints.begin(), ints.end());",
+        "    auto intRemoved = std::remove(ints.begin(), ints.end(), 1);",
+        "    std::replace(ints.begin(), ints.end(), 1, 2);",
+        "    auto intCopied = std::copy(ints.begin(), ints.end(), ints.begin());",
+        "    auto intTransformed = std::transform(ints.begin(), ints.end(), ints.begin(), [](int value) { return value; });",
+        "    auto intReduced = std::reduce(ints.begin(), ints.end(), 0);",
+        "    auto intProduct = std::inner_product(ints.begin(), ints.end(), ints.begin(), 0);",
+        "    auto intFound = std::find(ints.begin(), ints.end(), 1);",
+        "    auto intCountedIf = std::count_if(ints.begin(), ints.end(), [](int value) { return value == 1; });",
+        "    auto intLower = std::lower_bound(ints.begin(), ints.end(), 1);",
+        "    auto intBinary = std::binary_search(ints.begin(), ints.end(), 1);",
+        "    auto intMinmax = std::minmax_element(ints.begin(), ints.end());",
+        "    auto intEach = std::for_each(ints.begin(), ints.end(), [](int value) { ++value; });",
+        "    std::generate(ints.begin(), ints.end(), [] { return 1; });",
+        "    auto intMoved = std::move(ints.begin(), ints.end(), ints.begin());",
+        "    auto intCopiedN = std::copy_n(ints.begin(), 1, ints.begin());",
+        "    std::deque<std::string> deq;",
+        "    auto deqInserted = deq.insert(deq.begin(), \"x\");",
+        "    auto deqErased = deq.erase(deq.begin());",
+        "    std::stable_sort(deq.begin(), deq.end());",
+        "    std::shuffle(deq.begin(), deq.end(), std::mt19937());",
+        "    auto deqUnique = std::unique(deq.begin(), deq.end());",
+        "    auto deqRemoved = std::remove(deq.begin(), deq.end(), \"x\");",
+        "    auto deqFound = std::find(deq.begin(), deq.end(), \"x\");",
+        "    auto deqCopied = std::copy(deq.begin(), deq.end(), deq.begin());",
+        "    auto deqAccumulated = std::accumulate(deq.begin(), deq.end(), std::string());",
+        "    std::list<std::string> linked;",
+        "    linked.sort();",
+        "    linked.reverse();",
+        "    linked.unique();",
+        "    linked.remove(\"x\");",
+        "    auto linkedFound = std::find(linked.begin(), linked.end(), \"x\");",
+        "    auto linkedCopied = std::copy(linked.begin(), linked.end(), linked.begin());",
+        "    auto linkedAccumulated = std::accumulate(linked.begin(), linked.end(), std::string());",
+        "    std::forward_list<int> forward;",
+        "    forward.sort();",
+        "    forward.reverse();",
+        "    forward.unique();",
+        "    forward.remove(1);",
+        "    auto forwardFound = std::find(forward.begin(), forward.end(), 1);",
+        "    auto forwardCopied = std::copy(forward.begin(), forward.end(), forward.begin());",
+        "    auto forwardAccumulated = std::accumulate(forward.begin(), forward.end(), 0);",
+        "    std::array<std::string, 2> arr;",
+        "    std::stable_sort(arr.begin(), arr.end());",
+        "    std::shuffle(arr.begin(), arr.end(), std::mt19937());",
+        "    std::reverse(arr.begin(), arr.end());",
+        "    auto arrUnique = std::unique(arr.begin(), arr.end());",
+        "    auto arrRemoved = std::remove(arr.begin(), arr.end(), \"x\");",
+        "    auto arrFound = std::find(arr.begin(), arr.end(), \"x\");",
+        "    auto arrCopied = std::copy(arr.begin(), arr.end(), arr.begin());",
+        "    auto arrAccumulated = std::accumulate(arr.begin(), arr.end(), std::string());",
+        "    std::map<int, int> mapping;",
+        "    auto mapFound = mapping.find(1);",
+        "    auto mapCount = mapping.count(1);",
+        "    auto mapLower = mapping.lower_bound(1);",
+        "    std::set<std::string> ordered;",
+        "    auto setFound = ordered.find(\"x\");",
+        "    auto setCount = ordered.count(\"x\");",
+        "    auto setLower = ordered.lower_bound(\"x\");",
+        "    auto setCopied = std::copy(ordered.begin(), ordered.end(), ordered.begin());",
+        "    std::unordered_map<int, int> unorderedMapping;",
+        "    auto unorderedMapFound = unorderedMapping.find(1);",
+        "    auto unorderedMapCount = unorderedMapping.count(1);",
+        "    std::unordered_set<int> unorderedSet;",
+        "    auto unorderedSetFound = unorderedSet.find(1);",
+        "    auto unorderedSetCount = unorderedSet.count(1);",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement scope = mParser->findScopeStatement(main, 3);
+    QVERIFY(scope);
+
+    struct Case {
+        const char *name;
+        const char *expectedType;
+        const char *requiredStatement = nullptr;
+    };
+    const QVector<Case> cases{
+        {"find_if", "__gnu_cxx::__normal_iterator"},
+        {"transform", "__gnu_cxx::__normal_iterator"},
+        {"count", "long long int"},
+        {"accumulate", "std::__cxx11::basic_string"},
+        {"for_each", "main::__lambda_"},
+        {"sort", "void"},
+        {"lower_bound", "__gnu_cxx::__normal_iterator"},
+        {"min_element", "__gnu_cxx::__normal_iterator"},
+        {"binary_search", "bool"},
+        {"any_of", "bool"},
+        {"copy", "__gnu_cxx::__normal_iterator"},
+        {"remove", "__gnu_cxx::__normal_iterator"},
+        {"unique", "__gnu_cxx::__normal_iterator"},
+        {"reverse", "void"},
+        {"insert", "__gnu_cxx::__normal_iterator"},
+        {"erase", "__gnu_cxx::__normal_iterator"},
+        {"stable_sort", "void"},
+        {"partial_sort", "void"},
+        {"nth_element", "void"},
+        {"reduce", "int", "std::reduce"},
+        {"inner_product", "int"},
+        {"count_if", "long long int"},
+        {"shuffle", "void"},
+        {"replace", "void"},
+        {"rotate", "__gnu_cxx::__normal_iterator"},
+        {"fill", "void"},
+        {"generate", "void"},
+        {"move", "__gnu_cxx::__normal_iterator"},
+        {"copy_n", "__gnu_cxx::__normal_iterator"},
+        {"find", "__gnu_cxx::__normal_iterator"},
+        {"max_element", "__gnu_cxx::__normal_iterator"},
+        {"minmax_element", "std::pair"},
+        {"int.insert", "iterator"},
+        {"int.erase", "iterator"},
+        {"int.stable_sort", "void"},
+        {"int.shuffle", "void"},
+        {"int.rotate", "iterator"},
+        {"int.unique", "iterator"},
+        {"int.remove", "iterator"},
+        {"int.replace", "void"},
+        {"int.copy", "iterator"},
+        {"int.transform", "iterator"},
+        {"int.reduce", "int", "std::reduce"},
+        {"int.inner_product", "int"},
+        {"int.find", "iterator"},
+        {"int.count_if", "long long int"},
+        {"int.lower_bound", "iterator"},
+        {"int.binary_search", "bool"},
+        {"int.minmax_element", "std::pair"},
+        {"int.for_each", "main::__lambda_"},
+        {"int.generate", "void"},
+        {"int.move", "iterator"},
+        {"int.copy_n", "iterator"},
+        {"deque.insert", "iterator"},
+        {"deque.erase", "iterator"},
+        {"deque.stable_sort", "void"},
+        {"deque.shuffle", "void"},
+        {"deque.unique", "iterator"},
+        {"deque.remove", "iterator"},
+        {"deque.find", "iterator"},
+        {"deque.copy", "iterator"},
+        {"deque.accumulate", "std::__cxx11::basic_string"},
+        {"list.sort", "void"},
+        {"list.reverse", "void"},
+        {"list.unique", "void"},
+        {"list.remove", "void"},
+        {"list.find", "iterator"},
+        {"list.copy", "iterator"},
+        {"list.accumulate", "std::__cxx11::basic_string"},
+        {"forward_list.sort", "void"},
+        {"forward_list.reverse", "void"},
+        {"forward_list.unique", "void"},
+        {"forward_list.remove", "void"},
+        {"forward_list.find", "iterator"},
+        {"forward_list.copy", "iterator"},
+        {"forward_list.accumulate", "int"},
+        {"array.stable_sort", "void"},
+        {"array.shuffle", "void"},
+        {"array.reverse", "void"},
+        {"array.unique", "pointer"},
+        {"array.remove", "pointer"},
+        {"array.find", "pointer"},
+        {"array.copy", "pointer"},
+        {"array.accumulate", "std::__cxx11::basic_string"},
+        {"map.find", "iterator"},
+        {"map.count", "long long unsigned int"},
+        {"map.lower_bound", "iterator"},
+        {"set.find", "iterator"},
+        {"set.count", "long long unsigned int"},
+        {"set.lower_bound", "iterator"},
+        {"set.copy", "iterator"},
+        {"unordered_map.find", "iterator"},
+        {"unordered_map.count", "long long unsigned int"},
+        {"unordered_set.find", "iterator"},
+        {"unordered_set.count", "long long unsigned int"},
+    };
+    QFile source(main);
+    QVERIFY(source.open(QIODevice::ReadOnly));
+    const QStringList sourceLines = QString::fromUtf8(source.readAll()).split('\n');
+    source.close();
+    QElapsedTimer timer;
+    timer.start();
+    qWarning() << "suite,scenario,elapsed_ns,valid,type";
+    QByteArray caseFilter = qgetenv("REDPANDA_STDLIB_ALGORITHM_CASE");
+    int line = 4;
+    for (int caseIndex = 0; caseIndex < cases.count(); ++caseIndex) {
+        const Case &test = cases[caseIndex];
+        while (line < sourceLines.count()) {
+            const QString sourceLine = sourceLines[line];
+            if (sourceLine.contains("= ") || sourceLine.contains('('))
+                break;
+            ++line;
+        }
+        QVERIFY(line < sourceLines.count());
+        if (test.requiredStatement && !mParser->findStatement(test.requiredStatement)) {
+            ++line;
+            continue;
+        }
+        if (!caseFilter.isEmpty() && caseFilter != test.name) {
+            ++line;
+            continue;
+        }
+        qint64 started = timer.nsecsElapsed();
+        CppTypeResolver::EvaluationContext evaluation;
+        CppTypeResolver resolver(mParser->statementList(), &evaluation);
+        TypeOperationRegistry operations(resolver);
+        CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mParser->statementList()),
+                                         resolver, operations);
+        QString sourceLine = sourceLines[line];
+        int expressionStart = sourceLine.indexOf("= ");
+        if (expressionStart >= 0)
+            expressionStart += 2;
+        else
+            expressionStart = sourceLine.indexOf("std::");
+        QString expressionText = sourceLine.mid(expressionStart).trimmed();
+        expressionText.chop(1);
+        for (const PStatement &statement : mParser->statementList().statements()) {
+            if (statement->kind == StatementKind::Lambda
+                    && statement->definition.range.start.line == line) {
+                expressionStart = statement->definition.range.start.ch - expressionText.indexOf('[');
+                break;
+            }
+        }
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({expressionText});
+        tokenizer.relocateTokens(main, SourcePosition{line, expressionStart});
+        EvalResult result = evaluator.evaluate(tokenizer, scope, &evaluation);
+        qWarning() << "STDLIB_ALGORITHM_EVAL" << test.name
+                   << timer.nsecsElapsed() - started << result.isValid() << result.type.toString();
+        logEvalProfileCsv("STDLIB_ALGORITHM_EVAL_CSV", test.name, timer.nsecsElapsed() - started, result);
+        QVERIFY2(result.isValid(), test.name);
+        if (test.expectedType == QStringLiteral("main::__lambda_"))
+            QVERIFY(result.type.qualifiedName.startsWith("main::__lambda_"));
+        else if (test.expectedType == QStringLiteral("iterator"))
+            QVERIFY(result.type.qualifiedName.contains("iterator"));
+        else if (test.expectedType == QStringLiteral("pointer")) {
+            QVERIFY(!result.type.derivations.isEmpty());
+            QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::Pointer);
+        } else
+            QCOMPARE(result.type.qualifiedName, QString::fromLatin1(test.expectedType));
+        ++line;
+    }
 }
 
 void TestCppParser::test_standard_library_parse_baseline()
