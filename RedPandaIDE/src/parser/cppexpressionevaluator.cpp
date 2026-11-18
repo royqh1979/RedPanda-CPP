@@ -421,6 +421,9 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                 result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
             }
             result.kind = EvalStatementKind::Variable;
+            result.type.valueCategory = !result.type.derivations.isEmpty()
+                    && result.type.derivations.first().kind == TypeDerivationKind::LvalueReference
+                    ? ReferenceQualifier::Lvalue : ReferenceQualifier::Rvalue;
             continue;
         }
         if (operation == "{") {
@@ -517,6 +520,10 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
     default:
         break;
     }
+    if (result.kind == EvalStatementKind::Literal)
+        result.type.valueCategory = ReferenceQualifier::Rvalue;
+    else if (result.kind == EvalStatementKind::Variable)
+        result.type.valueCategory = ReferenceQualifier::Lvalue;
     return result;
 }
 
@@ -551,8 +558,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
         cached.kind = EvalStatementKind::Variable;
         return cached;
     }
-    if (evaluation && !evaluation->allowModelChanges)
-        return {};
+    bool allowModelChanges = !evaluation || evaluation->allowModelChanges;
 
     auto lambda = StatementFactory::createLambda(
                 context, name, context && !context->fullName.isEmpty()
@@ -599,11 +605,14 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
             auto parameter = StatementFactory::createParameter(
                         call, tokens[nameIndex].text, call->fullName + "::" + tokens[nameIndex].text);
             parameter->scope = StatementScope::Local;
-            mModel.addDeclaration(parameter, fileName,
-                                  SourceRange{tokens[nameIndex].position, tokens[nameIndex].position},
-                                  boundaryAncestor, {});
+            if (allowModelChanges) {
+                mModel.addDeclaration(parameter, fileName,
+                                      SourceRange{tokens[nameIndex].position, tokens[nameIndex].position},
+                                      boundaryAncestor, {});
+            }
             std::dynamic_pointer_cast<Statement>(parameter)->typeInfo = parseTypeText(typeText);
-            mModel.add(parameter);
+            if (allowModelChanges)
+                mModel.add(parameter);
         };
         for (int i = parameterStart; i <= parametersEnd; ++i) {
             QString text = tokens[i].text;
@@ -647,8 +656,10 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     setStatementHasDefinition(lambda, true);
     call->definition = StatementOccurrence{fileName, lambdaRange, boundaryAncestor, {}};
     setStatementHasDefinition(call, true);
-    mModel.add(lambda);
-    mModel.add(call);
+    if (allowModelChanges) {
+        mModel.add(lambda);
+        mModel.add(call);
+    }
 
     if (!trailingReturn.qualifiedName.isEmpty()) {
         std::dynamic_pointer_cast<Statement>(call)->typeInfo = trailingReturn;
@@ -720,6 +731,9 @@ EvalResult CppExpressionEvaluator::createResult(
         result.type.declaration = mResolver.findStatement(result.type.qualifiedName);
         result.kind = EvalStatementKind::Namespace;
         break;
+    case StatementKind::InlineAlias:
+        return createResult(std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock(),
+                            evaluation);
     case StatementKind::Class:
     case StatementKind::EnumType:
     case StatementKind::EnumClassType:
@@ -729,6 +743,17 @@ EvalResult CppExpressionEvaluator::createResult(
         break;
     case StatementKind::Typedef:
     case StatementKind::Alias:
+        if (statement->kind == StatementKind::Alias) {
+            const Statement &alias = *std::dynamic_pointer_cast<Statement>(statement);
+            if (!alias.value.isEmpty()) {
+                PStatement target = mResolver.findStatement(alias.value, statement->parentScope.lock());
+                if (target && isFunction(target)) {
+                    EvalResult aliased = createResult(target, evaluation);
+                    aliased.baseStatement = statement;
+                    return aliased;
+                }
+            }
+        }
         result.type.qualifiedName = statement->fullName;
         result.type.declaration = statement;
         result.instance = mResolver.resolveInstance(result.type, {}, statement->parentScope.lock(),
@@ -770,6 +795,8 @@ EvalResult CppExpressionEvaluator::createResult(
     default:
         return {};
     }
+    if (result.kind == EvalStatementKind::Variable)
+        result.type.valueCategory = ReferenceQualifier::Lvalue;
     return result;
 }
 
@@ -957,7 +984,7 @@ PStatement CppExpressionEvaluator::findVisibleStatement(const QString &name,
 PStatement CppExpressionEvaluator::findDirectStatement(const PStatement &scope,
                                                        const QString &name) const
 {
-    return mResolver.findStatement(name, scope);
+    return findInMap(mModel.childrenStatements(scope), name);
 }
 
 ClassInstance CppExpressionEvaluator::memberReceiver(

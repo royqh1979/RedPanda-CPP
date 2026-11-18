@@ -67,6 +67,7 @@ inline uint qHash(const LookupKey &key, uint seed = 0) noexcept
 
 struct TemplateBindingFrame {
     const AbstractStatement *owner = nullptr;
+    bool complete = true;
     TemplateBindings values;
     QHash<QString, ClassInstance> resolvedValues;
     std::shared_ptr<TemplateBindingFrame> parent;
@@ -182,7 +183,8 @@ private:
                                      const QVector<TemplateArgument> &explicitArguments,
                                      EvaluationContext &evaluation,
                                      const PTemplateBindingFrame &outerBindings = {},
-                                     ClassInstance *resultInstance = nullptr) const;
+                                     ClassInstance *resultInstance = nullptr,
+                                     int *matchScore = nullptr) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
                                              EvaluationContext &evaluation,
