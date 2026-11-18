@@ -772,12 +772,16 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
             || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
         return {};
     }
+    QVector<TypeInfo> resolvedParameters;
+    resolvedParameters.reserve(count);
     for (int i = 0; i < count; ++i) {
+        TypeInfo resolvedParameter;
         if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type
                 && !compatibleArgument(*std::dynamic_pointer_cast<Statement>(function)->parameters[i].type, arguments[i], frame,
-                                       function->parentScope.lock(), evaluation)) {
+                                       function->parentScope.lock(), evaluation, resolvedParameter)) {
             return {};
         }
+        resolvedParameters.append(resolvedParameter);
     }
     ConstraintSatisfaction satisfaction = constraintsSatisfied(
             function, frame, function->parentScope.lock(), evaluation);
@@ -789,19 +793,16 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         int score = 0;
         for (int i = 0; i < count; ++i) {
             const TypeInfo &formal = *std::dynamic_pointer_cast<Statement>(function)->parameters[i].type;
+            const TypeInfo &resolvedFormal = resolvedParameters[i];
             const TypeInfo &actual = arguments[i];
             if (!templateParameters.contains(formal.qualifiedName))
                 ++score;
-            if (formal.toString() == actual.toString()) {
+            if (formal.toString() == actual.toString()
+                    || resolvedFormal.toString() == actual.toString()) {
                 score += 4;
-            } else {
-                TypeInfo resolvedFormal = resolveType(formal, frame,
-                                                      function->parentScope.lock(), evaluation);
-                if (resolvedFormal.toString() == actual.toString())
-                    score += 4;
-                else if (formal.qualifiedName == actual.qualifiedName
-                         || resolvedFormal.qualifiedName == actual.qualifiedName)
-                    score += 2;
+            } else if (formal.qualifiedName == actual.qualifiedName
+                       || resolvedFormal.qualifiedName == actual.qualifiedName) {
+                score += 2;
             }
             TypeDerivationKind referenceKind = TypeDerivationKind::Pointer;
             if (!formal.derivations.isEmpty()
@@ -834,11 +835,12 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
 bool CppTypeResolver::compatibleArgument(
         const TypeInfo &parameter, const TypeInfo &argument,
         const PTemplateBindingFrame &bindings, const PStatement &context,
-        EvaluationContext &evaluation) const
+        EvaluationContext &evaluation, TypeInfo &resolvedParameter) const
 {
     ResolveOriginScope originScope("compatibleArgument");
     ClassInstance formalInstance = resolveTypeInstance(parameter, bindings, context, evaluation);
     const TypeInfo &formal = formalInstance.type;
+    resolvedParameter = formal;
     auto pointerLike = [](const TypeInfo &type) {
         for (const TypeDerivation &derivation : type.derivations) {
             if (derivation.kind == TypeDerivationKind::Pointer
@@ -1148,14 +1150,6 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
                                       resolverProfile.resolveTypeCalls, "resolveType");
     if (++evaluation.operationCount > 4096)
         return {};
-    QString resolutionKey = (context ? context->fullName : QString()) + "|" + profiledTypeString(type)
-            + "|" + (bindings && bindings->owner ? bindings->owner->fullName : QString());
-    if (evaluation.resolvingTypes.contains(resolutionKey)) {
-        evaluation.resolutionFailed = true;
-        return {};
-    }
-    ResolutionGuard guard(evaluation.resolvingTypes, resolutionKey);
-
     QString text = type.qualifiedNameText;
     if (text.isEmpty() || (type.qualifiedName.contains(' ')
                            && !type.qualifiedName.startsWith("typename "))) {
@@ -1167,10 +1161,30 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         result.declaration.reset();
         return {result, {}, {}};
     }
+    QString typeString = profiledTypeString(type);
+    QString resolutionKey = (context ? context->fullName : QString()) + "|" + typeString
+            + "|" + (bindings && bindings->owner ? bindings->owner->fullName : QString());
+    if (evaluation.resolvingTypes.contains(resolutionKey)) {
+        evaluation.resolutionFailed = true;
+        return {};
+    }
+    ResolutionGuard guard(evaluation.resolvingTypes, resolutionKey);
+
     QVector<TypeNameSegment> segments;
     bool globallyQualified = false;
-    if (!parseTypeNameSegments(text, segments, globallyQualified, evaluation) || segments.isEmpty())
+    PStatement referenceDeclaration = type.declaration.lock();
+    if (referenceDeclaration && referenceDeclaration->fullName == type.qualifiedName
+            && (!type.templateArguments.isEmpty() || !type.qualifiedNameText.contains('<'))) {
+        TypeNameSegment segment;
+        segment.name = type.qualifiedName;
+        segment.arguments = type.templateArguments;
+        segment.hasTemplateArguments = !type.templateArguments.isEmpty();
+        segments.append(segment);
+        globallyQualified = type.qualifiedName.startsWith("::");
+    } else if (!parseTypeNameSegments(text, segments, globallyQualified, evaluation)
+               || segments.isEmpty()) {
         return {};
+    }
     if (segments.count() == 1 && segments.first().arguments.isEmpty()) {
         QString name = segments.first().name;
         TypeInfo reference = type;
@@ -1205,10 +1219,17 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         if (binding) {
             if (binding->kind != TemplateArgumentKind::Type || !binding->type)
                 return {};
-            if (binding->type->toString() == profiledTypeString(type))
+            if (binding->type->toString() == typeString)
                 return {};
             if (!hasResolvedValue) {
-                result = resolveTypeInstance(*binding->type, bindings, context, evaluation);
+                PStatement bindingDeclaration = binding->type->declaration.lock();
+                if (bindingDeclaration && (bindingDeclaration->kind == StatementKind::Class
+                                           || bindingDeclaration->kind == StatementKind::Lambda)) {
+                    result = classInstanceFromResolvedType(*binding->type, bindings,
+                                                           context, evaluation);
+                } else {
+                    result = resolveTypeInstance(*binding->type, bindings, context, evaluation);
+                }
                 if (!result.type.qualifiedName.isEmpty())
                     bindingFrame->resolvedValues.insert(name, result);
             }
@@ -1245,7 +1266,14 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
         if (const TemplateArgument *binding = findBinding(bindings, segments.first().name)) {
             if (binding->kind != TemplateArgumentKind::Type || !binding->type)
                 return {};
-            ClassInstance owner = classInstance(*binding->type, bindings, context, evaluation);
+            PStatement bindingDeclaration = binding->type->declaration.lock();
+            ClassInstance owner;
+            if (bindingDeclaration && (bindingDeclaration->kind == StatementKind::Class
+                                       || bindingDeclaration->kind == StatementKind::Lambda)) {
+                owner = classInstanceFromResolvedType(*binding->type, bindings, context, evaluation);
+            } else {
+                owner = classInstance(*binding->type, bindings, context, evaluation);
+            }
             MemberResolution member = findMember(owner, segments[1].name, evaluation);
             if (!member.statement)
                 return {};
@@ -1760,9 +1788,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
             || std::dynamic_pointer_cast<Statement>(primary.declaration)->templateKind != TemplateDeclarationKind::Primary) {
         return primary;
     }
-    QString instanceText = profiledTypeString(primary.type);
     QString cacheKey = QString::number(reinterpret_cast<quintptr>(primary.declaration.get()), 16) + "|"
-            + QString::number(reinterpret_cast<quintptr>(primary.bindings.get()), 16) + "|" + instanceText;
+            + QString::number(reinterpret_cast<quintptr>(primary.bindings.get()), 16);
     auto cached = evaluation.selectedSpecializations->constFind(cacheKey);
     traceSyntaxAttempt("selectSpecialization", cacheKey,
                        cached != evaluation.selectedSpecializations->constEnd());
@@ -1773,7 +1800,10 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
             evaluation.selectedSpecializations->insert(cacheKey, selected);
         return selected;
     };
-    traceSpecialization(primary.declaration->fullName + "|" + instanceText);
+    if (resolverProfile.traceEnabled) {
+        traceSpecialization(primary.declaration->fullName + "|"
+                            + primary.type.toString());
+    }
     ClassInstance result = primary;
     result.type.templateArguments.clear();
     for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(primary.declaration)->templateParameters) {
@@ -2051,7 +2081,10 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
     if (!instance.declaration)
         return result;
     traceEvent(resolverProfile.memberTrace, instance.declaration->fullName + "::" + name);
-    QString instanceKey = instance.declaration->fullName + "<" + profiledTypeString(instance.type) + ">";
+    QString instanceKey = instance.bindings
+            ? QString::number(reinterpret_cast<quintptr>(instance.declaration.get()), 16) + "|"
+                + QString::number(reinterpret_cast<quintptr>(instance.bindings.get()), 16)
+            : instance.declaration->fullName + "<" + profiledTypeString(instance.type) + ">";
     if (visited.contains(instanceKey))
         return result;
     visited.insert(instanceKey);

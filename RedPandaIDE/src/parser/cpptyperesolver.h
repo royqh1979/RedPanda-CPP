@@ -191,7 +191,7 @@ private:
                                              bool stopAtDirectMember = false) const;
     bool compatibleArgument(const TypeInfo &parameter, const TypeInfo &argument,
                             const PTemplateBindingFrame &bindings, const PStatement &context,
-                            EvaluationContext &evaluation) const;
+                            EvaluationContext &evaluation, TypeInfo &resolvedParameter) const;
     TypeInfo resolveType(const TypeInfo &type, const PTemplateBindingFrame &bindings,
                          const PStatement &context, EvaluationContext &evaluation) const;
     ClassInstance resolveTypeInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,

@@ -88,6 +88,11 @@ QString renderDeclarator(const QString &name, const QVector<TypeDerivation> &der
 
 QString renderType(const TypeInfo &type, const QString &name = QString())
 {
+    if (name.isEmpty() && type.qualifiers == TypeQualifiers()
+            && type.derivations.isEmpty() && type.templateArguments.isEmpty()) {
+        return type.qualifiedNameText.contains('<')
+                ? type.qualifiedNameText.trimmed() : type.qualifiedName.trimmed();
+    }
     QString result;
     if (type.qualifiers.testFlag(TypeQualifier::Const))
         result += "const ";

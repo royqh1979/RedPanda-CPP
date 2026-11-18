@@ -2915,6 +2915,11 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
             ++line;
             continue;
         }
+        if (qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE")
+                || qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE")) {
+            qputenv("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER", "1");
+            qputenv("REDPANDA_PARSER_PROFILE_RESET_RESOLVER", "1");
+        }
         qint64 started = timer.nsecsElapsed();
         CppTypeResolver::EvaluationContext evaluation;
         CppTypeResolver resolver(mParser->statementList(), &evaluation);
