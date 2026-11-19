@@ -369,8 +369,8 @@ qlonglong evaluateIntegerConstant(const QString &text, const QHash<QString, qlon
 }
 }
 
-CppStatementBuilder::CppStatementBuilder(StatementModel &model)
-    : mModel(model), mTypeResolver(model), mTypeOperations(mTypeResolver),
+CppStatementBuilder::CppStatementBuilder(StatementModel &model, bool supportsClangTypeBuiltins)
+    : mModel(model), mTypeResolver(model, nullptr, supportsClangTypeBuiltins), mTypeOperations(mTypeResolver),
       mExpressionEvaluator(model, mTypeResolver, mTypeOperations)
 {
 }
@@ -835,6 +835,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     }
     normalStatement->templateParameters = declaration.templateParameters;
     normalStatement->declSpecifierProperties = declaration.specifiers.properties;
+    normalStatement->definitionKind = declarator.definitionKind;
     normalStatement->baseClasses = declaration.baseClasses;
     normalStatement->typeInfo = declaration.specifiers.type;
     std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations += declarator.derivations;
@@ -931,8 +932,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         mModel.addDeclaration(statement, context.fileName, declaration.range,
                               context.boundaryAncestor, declaration.specifiers.properties);
     }
-    if (variable && declaration.templateKind != TemplateDeclarationKind::None
-            && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)) {
+    if (variable && (declaration.templateKind != TemplateDeclarationKind::None
+                     || statementIsStatic(statement))
+            && (declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)
+                || declaration.specifiers.type.qualifiers.testFlag(TypeQualifier::Const))) {
         normalStatement->value = declarator.initializerText;
     }
     if (kind == StatementKind::Alias || kind == StatementKind::NamespaceAlias)

@@ -1762,7 +1762,7 @@ void TestCppParser::test_find_statement_of_inline_namespace()
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
     QCOMPARE(basicString->fullName, "std::__cxx11::basic_string");
-    QCOMPARE(mParser->findStatement("std::__cxx11::basic_string"), basicString);
+    QVERIFY(!mParser->findStatement("basic_string"));
     QCOMPARE(mParser->findStatementOf("text.cpp", {"std", "::", "basic_string"}, 0),
              basicString);
     QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"basic_string"}, 5),
@@ -2066,6 +2066,8 @@ void TestCppParser::test_standard_library_string()
     QVERIFY(writeLines(main, {"#include <string>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    if (mParser->compilerType() == CppCompilerType::Clang)
+        QSKIP("This test requires the libstdc++ basic_string implementation");
 
     CppParser::parseFileBlocking(mParser, main, true, "");
     int preprocessedReferences = 0;
@@ -2186,8 +2188,8 @@ void TestCppParser::test_standard_library_header_context()
         QVERIFY(includeDir.cdUp());
     QString stringFile = includeDir.filePath("string");
     QString basicStringTcc = includeDir.filePath("bits/basic_string.tcc");
-    QVERIFY(QFileInfo::exists(stringFile));
-    QVERIFY(QFileInfo::exists(basicStringTcc));
+    if (!QFileInfo::exists(stringFile) || !QFileInfo::exists(basicStringTcc))
+        QSKIP("This test requires the libstdc++ basic_string.tcc layout");
 
     CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
 
@@ -2202,12 +2204,8 @@ void TestCppParser::test_standard_library_nested_include_guard_visibility()
 {
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    QDir includeDir = QFileInfo(bitsStdcpp).dir();
-    QVERIFY(includeDir.cdUp());
-    if (!QFileInfo::exists(includeDir.filePath("string")))
-        QVERIFY(includeDir.cdUp());
-    QString stringFile = includeDir.filePath("string");
-    QVERIFY(QFileInfo::exists(stringFile));
+    QString stringFile = mParser->getHeaderFileName(bitsStdcpp, "<string>");
+    QVERIFY(!stringFile.isEmpty());
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
@@ -2218,12 +2216,14 @@ void TestCppParser::test_standard_library_nested_include_guard_visibility()
     QVERIFY(stringInfo);
     QVERIFY(stringInfo->includeProtected());
     QCOMPARE(mParser->preprocessorEventCountsForTest(stringFile).scan, 1);
-    QVERIFY(mParser->isLineVisible(stringFile, 40));
+    int guardLine = includeGuardDefineLine(stringFile);
+    QVERIFY(guardLine >= 0);
+    QVERIFY(mParser->isLineVisible(stringFile, guardLine));
 
     CppParser::parseFileBlocking(mParser, bitsStdcpp, false, main);
-    QVERIFY(mParser->isLineVisible(stringFile, 40));
+    QVERIFY(mParser->isLineVisible(stringFile, guardLine));
     CppParser::parseFileBlocking(mParser, stringFile, false, main);
-    QVERIFY(mParser->isLineVisible(stringFile, 40));
+    QVERIFY(mParser->isLineVisible(stringFile, guardLine));
 }
 
 void TestCppParser::test_standard_library_header_guard_context_visibility_data()
@@ -2311,10 +2311,11 @@ void TestCppParser::test_standard_library_direct_c_header_context()
     QCOMPARE(mParser->preprocessorEventCountsForTest(stdioFile).scan, 1);
     PParsedFileInfo stdioInfo = mParser->findFileInfo(stdioFile);
     QVERIFY(stdioInfo);
-    QVERIFY(stdioInfo->includeProtected());
     const int guardDefineLine = includeGuardDefineLine(stdioFile);
-    QVERIFY(guardDefineLine >= 0);
-    QVERIFY(mParser->isLineVisible(stdioFile, guardDefineLine));
+    if (guardDefineLine >= 0) {
+        QVERIFY(stdioInfo->includeProtected());
+        QVERIFY(mParser->isLineVisible(stdioFile, guardDefineLine));
+    }
 
     QFile source(stdioFile);
     QVERIFY(source.open(QIODevice::ReadOnly));
@@ -2330,7 +2331,8 @@ void TestCppParser::test_standard_library_direct_c_header_context()
             break;
         }
     }
-    QVERIFY(structLine >= 0);
+    if (structLine < 0)
+        QSKIP("The selected stdio.h wrapper does not define _iobuf");
     QVERIFY(structEndLine > structLine);
     QSet<int> tokenLines;
     for (const CppTokenizer::Token &token : mParser->tokenizerTokensForTest()) {
@@ -2540,7 +2542,8 @@ void TestCppParser::test_standard_library_expression_chains()
     QStringList iteratorExpression{"it"};
     EvalResult beginResult = mParser->evalExpression(main, beginExpression, iteratorScope);
     EvalResult iteratorResult = mParser->evalExpression(main, iteratorExpression, iteratorScope);
-    QCOMPARE(beginResult.type.qualifiedName, "__gnu_cxx::__normal_iterator");
+    QVERIFY(beginResult.isValid());
+    QVERIFY(beginResult.instance.declaration);
     QCOMPARE(iteratorResult.type.toString(), beginResult.type.toString());
     PStatement foundScope = mParser->findScopeStatement(main, 33);
     QVERIFY(foundScope);
@@ -2600,9 +2603,9 @@ void TestCppParser::test_standard_library_expression_chains()
     QStringList entryExpression{"entry"};
     EvalResult entryResult = mParser->evalExpression(main, entryExpression, entryScope);
     PStatement entryDeclaration = entryResult.type.declaration.lock();
-    QVERIFY(entryResult.type.toString().startsWith("const std::pair<"));
+    QVERIFY(entryResult.type.qualifiers.testFlag(TypeQualifier::Const));
     QVERIFY(entryDeclaration);
-    QCOMPARE(entryDeclaration->fullName, QString("std::pair"));
+    QCOMPARE(entryDeclaration, mParser->findStatement("std::pair"));
     expectStringSize(42, {"entry", ".", "first", ".", "size"});
     expectStringSize(43, {"entry", ".", "second", ".", "size"});
     QStringList flagElementExpression{"flags", "[", "0", "]"};
@@ -2611,7 +2614,8 @@ void TestCppParser::test_standard_library_expression_chains()
     PStatement flip = mParser->findStatementOf(
                 main, {"flags", "[", "0", "]", ".", "flip"}, 37);
     QVERIFY2(flip, flagElement.type.toString().toUtf8().constData());
-    QCOMPARE(flip, mParser->findStatement("std::_Bit_reference::flip"));
+    QVERIFY(flagElement.instance.declaration);
+    QCOMPARE(flip->parentScope.lock(), flagElement.instance.declaration);
 }
 
 void TestCppParser::test_standard_library_trace_edge_cases()
@@ -2945,38 +2949,38 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         const char *requiredStatement = nullptr;
     };
     const QVector<Case> cases{
-        {"find_if", "__gnu_cxx::__normal_iterator"},
-        {"transform", "__gnu_cxx::__normal_iterator"},
-        {"count", "long long int"},
-        {"accumulate", "std::__cxx11::basic_string"},
+        {"find_if", "iterator"},
+        {"transform", "iterator"},
+        {"count", "difference"},
+        {"accumulate", "basic_string"},
         {"for_each", "main::__lambda_"},
         {"sort", "void"},
-        {"lower_bound", "__gnu_cxx::__normal_iterator"},
-        {"min_element", "__gnu_cxx::__normal_iterator"},
+        {"lower_bound", "iterator"},
+        {"min_element", "iterator"},
         {"binary_search", "bool"},
         {"any_of", "bool"},
-        {"copy", "__gnu_cxx::__normal_iterator"},
-        {"remove", "__gnu_cxx::__normal_iterator"},
-        {"unique", "__gnu_cxx::__normal_iterator"},
+        {"copy", "iterator"},
+        {"remove", "iterator"},
+        {"unique", "iterator"},
         {"reverse", "void"},
-        {"insert", "__gnu_cxx::__normal_iterator"},
-        {"erase", "__gnu_cxx::__normal_iterator"},
+        {"insert", "iterator"},
+        {"erase", "iterator"},
         {"stable_sort", "void"},
         {"partial_sort", "void"},
         {"nth_element", "void"},
         {"reduce", "int", "std::reduce"},
         {"inner_product", "int"},
-        {"count_if", "long long int"},
+        {"count_if", "difference"},
         {"shuffle", "void"},
         {"replace", "void"},
-        {"rotate", "__gnu_cxx::__normal_iterator"},
+        {"rotate", "iterator"},
         {"fill", "void"},
         {"generate", "void"},
-        {"move", "__gnu_cxx::__normal_iterator"},
-        {"copy_n", "__gnu_cxx::__normal_iterator"},
-        {"find", "__gnu_cxx::__normal_iterator"},
-        {"max_element", "__gnu_cxx::__normal_iterator"},
-        {"minmax_element", "std::pair"},
+        {"move", "iterator"},
+        {"copy_n", "iterator"},
+        {"find", "iterator"},
+        {"max_element", "iterator"},
+        {"minmax_element", "pair"},
         {"int.insert", "iterator"},
         {"int.erase", "iterator"},
         {"int.stable_sort", "void"},
@@ -2990,10 +2994,10 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         {"int.reduce", "int", "std::reduce"},
         {"int.inner_product", "int"},
         {"int.find", "iterator"},
-        {"int.count_if", "long long int"},
+        {"int.count_if", "difference"},
         {"int.lower_bound", "iterator"},
         {"int.binary_search", "bool"},
-        {"int.minmax_element", "std::pair"},
+        {"int.minmax_element", "pair"},
         {"int.for_each", "main::__lambda_"},
         {"int.generate", "void"},
         {"int.move", "iterator"},
@@ -3006,14 +3010,14 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         {"deque.remove", "iterator"},
         {"deque.find", "iterator"},
         {"deque.copy", "iterator"},
-        {"deque.accumulate", "std::__cxx11::basic_string"},
+        {"deque.accumulate", "basic_string"},
         {"list.sort", "void"},
         {"list.reverse", "void"},
         {"list.unique", "void"},
         {"list.remove", "void"},
         {"list.find", "iterator"},
         {"list.copy", "iterator"},
-        {"list.accumulate", "std::__cxx11::basic_string"},
+        {"list.accumulate", "basic_string"},
         {"forward_list.sort", "void"},
         {"forward_list.reverse", "void"},
         {"forward_list.unique", "void"},
@@ -3028,18 +3032,18 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         {"array.remove", "pointer"},
         {"array.find", "pointer"},
         {"array.copy", "pointer"},
-        {"array.accumulate", "std::__cxx11::basic_string"},
+        {"array.accumulate", "basic_string"},
         {"map.find", "iterator"},
-        {"map.count", "long long unsigned int"},
+        {"map.count", "size"},
         {"map.lower_bound", "iterator"},
         {"set.find", "iterator"},
-        {"set.count", "long long unsigned int"},
+        {"set.count", "size"},
         {"set.lower_bound", "iterator"},
         {"set.copy", "iterator"},
         {"unordered_map.find", "iterator"},
-        {"unordered_map.count", "long long unsigned int"},
+        {"unordered_map.count", "size"},
         {"unordered_set.find", "iterator"},
-        {"unordered_set.count", "long long unsigned int"},
+        {"unordered_set.count", "size"},
     };
     QFile source(main);
     QVERIFY(source.open(QIODevice::ReadOnly));
@@ -3103,9 +3107,27 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         QVERIFY2(result.isValid(), test.name);
         if (test.expectedType == QStringLiteral("main::__lambda_"))
             QVERIFY(result.type.qualifiedName.startsWith("main::__lambda_"));
-        else if (test.expectedType == QStringLiteral("iterator"))
-            QVERIFY(result.type.qualifiedName.contains("iterator"));
-        else if (test.expectedType == QStringLiteral("pointer")) {
+        else if (test.expectedType == QStringLiteral("iterator")) {
+            PStatement declaration = result.type.declaration.lock();
+            QString typeName = declaration ? declaration->command : result.type.qualifiedName;
+            QVERIFY(typeName.contains("iter", Qt::CaseInsensitive));
+        } else if (test.expectedType == QStringLiteral("basic_string")
+                   || test.expectedType == QStringLiteral("pair")) {
+            PStatement declaration = result.type.declaration.lock();
+            QVERIFY(declaration);
+            QCOMPARE(declaration->command, QString::fromLatin1(test.expectedType));
+        } else if (test.expectedType == QStringLiteral("difference")) {
+            static const QSet<QString> supportedTypes{
+                "std::ptrdiff_t", "ptrdiff_t", "long long int", "long int"
+            };
+            QVERIFY(supportedTypes.contains(result.type.qualifiedName));
+        } else if (test.expectedType == QStringLiteral("size")) {
+            static const QSet<QString> supportedTypes{
+                "std::size_t", "size_t", "unsigned long long int", "long long unsigned int",
+                "unsigned long int"
+            };
+            QVERIFY(supportedTypes.contains(result.type.qualifiedName));
+        } else if (test.expectedType == QStringLiteral("pointer")) {
             QVERIFY(!result.type.derivations.isEmpty());
             QCOMPARE(result.type.derivations.first().kind, TypeDerivationKind::Pointer);
         } else

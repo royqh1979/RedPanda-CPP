@@ -1763,6 +1763,7 @@ void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
 {
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
+                "namespace std { struct string {}; }\n"
                 "template<typename T> struct Forward { T&& get(); };\n"
                 "using First = Second;\n"
                 "using Second = First;\n", declarations));
@@ -1783,6 +1784,28 @@ void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
     DeclarationInfo cycle;
     QVERIFY(parseDeclarationText("First value;", cycle));
     QVERIFY(resolver.resolve(cycle.specifiers.type).qualifiedName.isEmpty());
+
+    DeclarationInfo builtinReference;
+    QVERIFY(parseDeclarationText("__add_lvalue_reference(std::string) value;", builtinReference));
+    QCOMPARE(builtinReference.specifiers.type.qualifiedName,
+             QString("__add_lvalue_reference(std::string)"));
+    QVERIFY(resolver.resolve(builtinReference.specifiers.type).qualifiedName.isEmpty());
+    CppTypeResolver clangResolver(model, nullptr, true);
+    QCOMPARE(clangResolver.resolve(builtinReference.specifiers.type).toString(), "std::string &");
+    DeclarationInfo builtinPointer;
+    QVERIFY(parseDeclarationText("__add_pointer(std::string) value;", builtinPointer));
+    QCOMPARE(clangResolver.resolve(builtinPointer.specifiers.type).toString(), "std::string *");
+    DeclarationInfo builtinExtent;
+    QVERIFY(parseDeclarationText("__remove_extent(std::string[]) value;", builtinExtent));
+    QCOMPARE(clangResolver.resolve(builtinExtent.specifiers.type).toString(), "std::string");
+    DeclarationInfo builtinRemoveReference;
+    QVERIFY(parseDeclarationText("__remove_reference_t(std::string&) value;", builtinRemoveReference));
+    QCOMPARE(clangResolver.resolve(builtinRemoveReference.specifiers.type).toString(), "std::string");
+    DeclarationInfo builtinRemoveCv;
+    QVERIFY(parseDeclarationText("__remove_cv_t(const std::string) value;", builtinRemoveCv));
+    QVERIFY(!builtinRemoveCv.specifiers.type.qualifiers.testFlag(TypeQualifier::Const));
+    QCOMPARE(clangResolver.resolve(builtinRemoveCv.specifiers.type).toString(), "std::string");
+
     DeclarationInfo dependent;
     QVERIFY(parseDeclarationText("std::move_iterator<_InputIterator> value;", dependent));
     TemplateBindings bindings;
@@ -1844,6 +1867,127 @@ void TestCppTokenizer::test_type_resolver_selects_specializations_and_rebind()
     QCOMPARE(memberType("Size<2> value;").toString(), "std::string");
     QVERIFY(memberType("Size<1+1> value;").qualifiedName.isEmpty());
     QVERIFY(memberType("Ambiguous<const int*> value;").qualifiedName.isEmpty());
+}
+
+
+void TestCppTokenizer::test_type_resolver_preserves_fixed_arguments_in_specialization_scope()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T, typename A> struct Vector { using reference = T; };\n"
+                "template<typename A> struct Vector<bool, A> { using reference = Vector; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Vector<bool, int> value;", variable));
+    TypeInfo reference = resolver.memberType(variable.specifiers.type, "reference");
+    QCOMPARE(reference.qualifiedName.section('<', 0, 0), QString("Vector"));
+    QCOMPARE(reference.templateArguments.count(), 2);
+    QCOMPARE(reference.templateArguments[0].type->toString(), QString("bool"));
+    QCOMPARE(reference.templateArguments[1].type->toString(), QString("int"));
+}
+
+
+void TestCppTokenizer::test_type_resolver_evaluates_static_const_member_default_argument()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct HasStorage { static const bool value = true; };\n"
+                "template<typename T, bool = HasStorage<T>::value> struct Reference { using type = int; };\n"
+                "template<typename T> struct Reference<T, false> {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement hasStorage = findStatement(model.childrenStatements(), "HasStorage");
+    QVERIFY(hasStorage);
+    PStatement valueStatement = findStatement(
+                std::dynamic_pointer_cast<Statement>(hasStorage)->children, "value");
+    QVERIFY(valueStatement);
+    QVERIFY(statementIsStatic(valueStatement));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(valueStatement)->typeInfo.qualifiers.testFlag(
+            TypeQualifier::Const));
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(valueStatement)->value, QString("true"));
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Reference<int> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").toString(), QString("int"));
+}
+
+
+void TestCppTokenizer::test_type_resolver_evaluates_specialized_static_const_member_default_argument()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T> struct HasStorage { static const bool value = false; };\n"
+                "template<typename T> struct HasStorage<T*> { static const bool value = true; };\n"
+                "template<typename T, bool = HasStorage<T>::value> struct Reference { using type = int; };\n"
+                "template<typename T> struct Reference<T, false> {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Reference<int*> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").toString(), QString("int"));
+}
+
+
+void TestCppTokenizer::test_type_resolver_matches_nested_class_specialization_default_argument()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T, typename A> struct Vector {};\n"
+                "template<typename A> struct Vector<bool, A> {};\n"
+                "template<typename T> struct HasStorage { static const bool value = false; };\n"
+                "template<typename A> struct HasStorage<Vector<bool, A>> { static const bool value = true; };\n"
+                "template<typename T, bool = HasStorage<T>::value> struct Reference { using type = int; };\n"
+                "template<typename T> struct Reference<T, false> {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Reference<Vector<bool, int>> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").toString(), QString("int"));
+}
+
+
+void TestCppTokenizer::test_type_resolver_matches_injected_specialization_default_argument()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename T, typename A> struct Vector { using reference = T; };\n"
+                "template<typename A> struct Vector<bool, A> { using reference = Vector; };\n"
+                "template<typename T> struct HasStorage { static const bool value = false; };\n"
+                "template<typename A> struct HasStorage<Vector<bool, A>> { static const bool value = true; };\n"
+                "template<typename T, bool = HasStorage<typename T::reference>::value>\n"
+                "struct Reference { using type = int; };\n"
+                "template<typename T> struct Reference<T, false> {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Reference<Vector<bool, int>> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").toString(), QString("int"));
 }
 
 

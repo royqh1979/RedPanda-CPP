@@ -97,6 +97,7 @@ private:
     QString stringize(const QVector<PpToken>& tokens) const;
     void handleDefined(QVector<PpToken>& out, const QString& whitespace);
     void handleHasInclude(QVector<PpToken>& out, const QString& whitespace);
+    void handleHasBuiltin(QVector<PpToken>& out, const QString& whitespace);
 
 private:
     DefineLookup mLookup;

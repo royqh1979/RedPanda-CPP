@@ -481,8 +481,8 @@ void TestWidgets::test_class_browser_standard_library_header_context()
         QVERIFY(includeDir.cdUp());
     QString stringFile = includeDir.filePath("string");
     QString basicStringTcc = includeDir.filePath("bits/basic_string.tcc");
-    QVERIFY(QFileInfo::exists(stringFile));
-    QVERIFY(QFileInfo::exists(basicStringTcc));
+    if (!QFileInfo::exists(stringFile) || !QFileInfo::exists(basicStringTcc))
+        QSKIP("This test requires the libstdc++ basic_string.tcc layout");
 
     CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
 
@@ -507,7 +507,8 @@ void TestWidgets::test_class_browser_standard_library_ostream_context()
     if (!QFileInfo::exists(includeDir.filePath("ostream")))
         QVERIFY(includeDir.cdUp());
     QString ostreamTcc = includeDir.filePath("bits/ostream.tcc");
-    QVERIFY(QFileInfo::exists(ostreamTcc));
+    if (!QFileInfo::exists(ostreamTcc))
+        QSKIP("This test requires the libstdc++ ostream.tcc layout");
 
     CppParser::parseFileBlocking(mParser, ostreamTcc, false, bitsStdcpp);
 

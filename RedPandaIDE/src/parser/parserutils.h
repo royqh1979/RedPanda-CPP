@@ -239,6 +239,7 @@ struct Statement : AbstractStatement {
     QVector<ParameterInfo> parameters;
     QString value; // Macro/typedef text or a constexpr variable template initializer
     TemplateDeclarationKind templateKind = TemplateDeclarationKind::None;
+    DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;
     QString templateRequiresClause;
     QString requiresClause;
     TypeInfo templatePattern;

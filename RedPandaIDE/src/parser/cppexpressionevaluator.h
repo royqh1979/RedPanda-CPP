@@ -59,7 +59,9 @@ private:
                            const QString &operatorName,
                            CppTypeResolver::EvaluationContext *evaluation) const;
     PStatement findVisibleStatement(const QString &name, const PStatement &context) const;
+    PStatement findVisibleFunction(const QString &name, const PStatement &context) const;
     PStatement findDirectStatement(const PStatement &scope, const QString &name) const;
+    PStatement findDirectFunction(const PStatement &scope, const QString &name) const;
     ClassInstance memberReceiver(const EvalResult &result, bool arrow,
                                  CppTypeResolver::EvaluationContext *evaluation) const;
     EvalResult dereference(EvalResult result, CppTypeResolver::EvaluationContext *evaluation) const;

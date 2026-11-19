@@ -475,6 +475,7 @@ void CppPreprocessor::clear()
     mProjectIncludePathList.clear();
     mIncludePaths.clear();
     mCppVersion = CppVersion::Cpp17;
+    mCompilerType = CppCompilerType::GCC;
 }
 
 void CppPreprocessor::clearTempResults()
@@ -616,6 +617,8 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
             bool ok;
             long version = v.toLong(&ok);
             mCppVersion = ok ? static_cast<int>(version) : 0;
+        } else if (name == "__clang__") {
+            mCompilerType = CppCompilerType::Clang;
         }
     } else {
         PReplayRecord replayRecord = replayRecordForFile(mSession.fileName);

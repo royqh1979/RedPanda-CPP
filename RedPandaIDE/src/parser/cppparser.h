@@ -111,6 +111,7 @@ public:
     bool isProjectHeaderFile(const QString& fileName) const;
     bool isSystemHeaderFile(const QString& fileName) const;
     void parseHardDefines();
+    CppCompilerType compilerType() const;
     bool parsing() const;
     int cppVersion() const;
     void resetParser();

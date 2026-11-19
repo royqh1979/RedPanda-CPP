@@ -120,7 +120,8 @@ void CppParser::internalParse(const QString &fileName)
     mTokenizerTokensForTest = tokenizer.tokens();
 #endif
     CppTokenCursor cursor(tokenizer);
-    CppStatementBuilder builder(mStatementList);
+    CppStatementBuilder builder(mStatementList,
+                                mPreprocessor.compilerType() == CppCompilerType::Clang);
     const QHash<QString, QStringList> &ancestors = mPreprocessor.boundaryAncestors();
     qint64 parseDeclarationsMs = 0;
     qint64 buildStatementsMs = 0;
@@ -511,7 +512,8 @@ QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QStri
                                             const PStatement &currentScope) const
 {
     Q_UNUSED(fileName);
-    TypeInfo type = CppTypeResolver(mStatementList).resolve(parseTypeInfo(phrase), {}, currentScope);
+    TypeInfo type = CppTypeResolver(mStatementList, nullptr,
+                        mPreprocessor.compilerType() == CppCompilerType::Clang).resolve(parseTypeInfo(phrase), {}, currentScope);
     return type.templateArguments.isEmpty() ? QString() : type.templateArguments.first().toString();
 }
 
@@ -519,7 +521,8 @@ QString CppParser::findTemplateParamOf(const QString &fileName, const QString &p
                                        const PStatement &currentScope) const
 {
     Q_UNUSED(fileName);
-    TypeInfo type = CppTypeResolver(mStatementList).resolve(parseTypeInfo(phrase), {}, currentScope);
+    TypeInfo type = CppTypeResolver(mStatementList, nullptr,
+                        mPreprocessor.compilerType() == CppCompilerType::Clang).resolve(parseTypeInfo(phrase), {}, currentScope);
     return index >= 0 && index < type.templateArguments.count()
             ? type.templateArguments[index].toString() : QString();
 }
@@ -573,7 +576,8 @@ PStatementList CppParser::doFindNamespace(const QString &name, bool includeInlin
 {
     Q_UNUSED(includeInline);
     auto result = std::make_shared<StatementList>();
-    PStatement statement = CppTypeResolver(mStatementList).findStatement(name);
+    PStatement statement = CppTypeResolver(mStatementList, nullptr,
+                        mPreprocessor.compilerType() == CppCompilerType::Clang).findStatement(name);
     if (statement && statement->kind == StatementKind::Namespace)
         result->append(statement);
     return result;
@@ -584,7 +588,8 @@ PStatement CppParser::findStatement(const QString &fullname) const
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return nullptr;
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.findStatement(fullname);
 }
 
@@ -678,7 +683,8 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement) const
         return std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
     if (statement->kind != StatementKind::Alias && statement->kind != StatementKind::Typedef)
         return statement;
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     if (!std::dynamic_pointer_cast<Statement>(statement)->value.isEmpty()) {
         PStatement target = resolver.findStatement(std::dynamic_pointer_cast<Statement>(statement)->value, statement->parentScope.lock());
         if (target)
@@ -798,7 +804,8 @@ EvalResult CppParser::doEvalExpression(const QString &fileName, const CppTokeniz
     }
     CppTypeResolver::EvaluationContext evaluation;
     evaluation.allowModelChanges = mParsing;
-    CppTypeResolver resolver(mStatementList, &evaluation);
+    CppTypeResolver resolver(mStatementList, &evaluation,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(mStatementList, resolver, operations);
     EvalResult result = evaluator.evaluate(tokenizer, currentScope, &evaluation, trace);
@@ -814,7 +821,8 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return nullptr;
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.resolve(parseTypeInfo(typeName), {}, currentClass).declaration.lock();
 }
 
@@ -826,7 +834,8 @@ PStatement CppParser::findTypeDef(const PStatement &statement, const QString &fi
         return nullptr;
     if (!statement)
         return {};
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.resolve(std::dynamic_pointer_cast<Statement>(statement)->typeInfo, {}, statement->parentScope.lock()).declaration.lock();
 }
 
@@ -957,6 +966,11 @@ void CppParser::parseHardDefines()
         setStatementHasDefinition(statement, true);
         mStatementList.add(statement);
     }
+}
+
+CppCompilerType CppParser::compilerType() const
+{
+    return mPreprocessor.compilerType();
 }
 
 bool CppParser::parsing() const
@@ -1141,7 +1155,8 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
                                                 const PStatement &startScope) const
 {
     Q_UNUSED(fileName);
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.findStatement(phrase, startScope);
 }
 
@@ -1162,7 +1177,8 @@ QList<PStatement> CppParser::doMembersOfStatement(const PStatement &scopeStateme
 {
     if (scopeStatement && scopeStatement->kind == StatementKind::InlineAlias)
         return {};
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.membersOf(scopeStatement);
 }
 
@@ -1172,7 +1188,8 @@ QList<PStatement> CppParser::resolveMembersOfClass(const PStatement &classStatem
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return {};
-    CppTypeResolver resolver(mStatementList);
+    CppTypeResolver resolver(mStatementList, nullptr,
+                             mPreprocessor.compilerType() == CppCompilerType::Clang);
     return resolver.resolveMembersOfClass(classStatement, accessScope);
 }
 

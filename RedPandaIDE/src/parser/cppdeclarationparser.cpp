@@ -159,6 +159,15 @@ void appendTypeDerivation(TypeInfo &type, const DeclaratorInfo &declarator)
     type.derivations += declarator.derivations;
 }
 
+bool isClangTypeBuiltin(const QString &text)
+{
+    static const QSet<QString> names{
+        "__add_lvalue_reference", "__add_rvalue_reference", "__add_pointer",
+        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t"
+    };
+    return names.contains(text);
+}
+
 bool isNonDeclarationStartKeyword(const QString &text)
 {
     static const QSet<QString> keywords{
@@ -227,6 +236,7 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
             || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
                 && mCursor.currentText() != "explicit"
                 && !isBuiltinType(mCursor.currentText())
+                && !isClangTypeBuiltin(mCursor.currentText())
                 && mCursor.peek().text == "(");
     if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
 #ifdef REDPANDA_PARSER_DECLARATION_PROFILE
@@ -266,10 +276,11 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 explicitDefinition = true;
             }
             if (!explicitDefinition) {
-                bool constraintConstant = mCppVersion >= CppVersion::Cpp20
-                        && result.templateKind != TemplateDeclarationKind::None
-                        && result.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr);
-                if (result.specifiers.type.qualifiedName == "auto" || constraintConstant) {
+                bool constantVariable = (result.templateKind != TemplateDeclarationKind::None
+                                         || result.specifiers.properties.testFlag(DeclSpecifierProperty::Static))
+                        && (result.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)
+                            || result.specifiers.type.qualifiers.testFlag(TypeQualifier::Const));
+                if (result.specifiers.type.qualifiedName == "auto" || constantVariable) {
                     result.declarators.last().initializerPosition = mCursor.current().position;
                     result.declarators.last().initializerText = readUntilDelimiter(
                                 {",", ";"}, &result.declarators.last());
@@ -844,6 +855,8 @@ bool CppDeclarationParser::parseTypeName(TypeInfo &result)
             break;
         name += text;
         mCursor.advance();
+        if (isClangTypeBuiltin(name) && mCursor.currentText() == "(")
+            name += readBalancedToken("(", ")");
         if (mCursor.currentText() == "<") {
             if (readBalancedToken("<", ">", true).isEmpty()) {
                 mCursor.restore(start);

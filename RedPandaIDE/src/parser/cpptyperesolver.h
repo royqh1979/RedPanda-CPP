@@ -69,6 +69,7 @@ struct TemplateBindingFrame {
     const AbstractStatement *owner = nullptr;
     bool complete = true;
     TemplateBindings values;
+    QHash<QString, QVector<TemplateArgument>> parameterPacks;
     QHash<QString, ClassInstance> resolvedValues;
     std::shared_ptr<TemplateBindingFrame> parent;
     quint64 revision = 0;
@@ -184,13 +185,17 @@ public:
     using ClassInstance = ::ClassInstance;
     using PTemplateBindingFrame = ::PTemplateBindingFrame;
 
-    explicit CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation = nullptr);
+    explicit CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation = nullptr,
+                             bool supportsClangTypeBuiltins = false);
 
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
                      const PStatement &context = {}, EvaluationContext *evaluation = nullptr) const;
     ClassInstance resolveInstance(const TypeInfo &type, const TemplateBindings &bindings = {},
                                   const PStatement &context = {},
                                   EvaluationContext *evaluation = nullptr) const;
+    ClassInstance resolveInContext(const TypeInfo &type, const PTemplateBindingFrame &bindings,
+                                   const PStatement &context,
+                                   EvaluationContext *evaluation = nullptr) const;
     PStatement findStatement(const QString &qualifiedName, const PStatement &context = {}) const;
     PStatement memberStatement(const TypeInfo &receiver, const QString &memberName,
                                EvaluationContext *evaluation = nullptr) const;
@@ -289,6 +294,8 @@ private:
                              EvaluationContext &evaluation) const;
     const TemplateArgument *findBinding(const PTemplateBindingFrame &bindings,
                                         const QString &name) const;
+    const QVector<TemplateArgument> *findParameterPack(const PTemplateBindingFrame &bindings,
+                                                       const QString &name) const;
     ClassInstance classInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,
                                 const PStatement &context, EvaluationContext &evaluation) const;
     ClassInstance classInstanceFromResolvedType(const TypeInfo &type,
@@ -328,6 +335,7 @@ private:
 
     const StatementModel &mModel;
     EvaluationContext *mEvaluation;
+    bool mSupportsClangTypeBuiltins;
 };
 
 #endif // CPPTYPERESOLVER_H

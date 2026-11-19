@@ -164,6 +164,10 @@ int PpExpander::processToken(const PpToken &token,
             handleHasInclude(out, token.whitespaceBefore);
             return 0;
         }
+        if (token.text == QLatin1String("__has_builtin")) {
+            handleHasBuiltin(out, token.whitespaceBefore);
+            return 0;
+        }
         // C++ alternative tokens (iso646 keywords)
         static const QHash<QString, QString> altTokens = {
             {"and", "&&"}, {"and_eq", "&="}, {"bitand", "&"},
@@ -558,5 +562,48 @@ void PpExpander::handleHasInclude(QVector<PpToken> &out, const QString &whitespa
             && mHasInclude(tokensToString(args).trimmed())) {
         result.text = "1";
     }
+    out.append(result);
+}
+
+void PpExpander::handleHasBuiltin(QVector<PpToken> &out, const QString &whitespace)
+{
+    PpToken next = nextToken();
+    PpToken result;
+    result.kind = PpTokenKind::Number;
+    result.text = "0";
+    result.whitespaceBefore = whitespace;
+    if (!(next.kind == PpTokenKind::Punct && next.text == "(")) {
+        out.append(result);
+        return;
+    }
+    QVector<PpToken> args;
+    int depth = 1;
+    bool ok = false;
+    while (true) {
+        PpToken token = nextToken();
+        if (token.kind == PpTokenKind::EndOfInput)
+            break;
+        if (token.kind == PpTokenKind::Punct) {
+            if (token.text == "(") {
+                ++depth;
+            } else if (token.text == ")") {
+                --depth;
+                if (depth == 0) {
+                    ok = true;
+                    break;
+                }
+            }
+        }
+        args.append(token);
+    }
+    static const QSet<QString> supported{
+        "__is_array", "__is_trivially_destructible", "__is_trivially_constructible",
+        "__is_trivially_assignable", "__is_trivially_copyable",
+        "__add_lvalue_reference", "__add_rvalue_reference", "__add_pointer",
+        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t"
+    };
+    QString name = tokensToString(args).trimmed();
+    if (ok && mLookup("__clang__") && supported.contains(name))
+        result.text = "1";
     out.append(result);
 }

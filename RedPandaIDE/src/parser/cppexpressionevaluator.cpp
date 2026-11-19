@@ -43,6 +43,20 @@ bool isFunction(const PStatement &statement)
     }
 }
 
+PStatement findFunctionInMap(const StatementMap &statements, const QString &name)
+{
+    const auto values = statements.values(name);
+    for (const std::weak_ptr<AbstractStatement> &weak : values) {
+        PStatement statement = weak.lock();
+        PStatement target = statement;
+        if (statement && statement->kind == StatementKind::InlineAlias)
+            target = std::dynamic_pointer_cast<InlineAliasStatement>(statement)->target.lock();
+        if (isFunction(target))
+            return statement;
+    }
+    return {};
+}
+
 TypeInfo primitiveType(const QString &name)
 {
     TypeInfo result;
@@ -221,7 +235,30 @@ EvalResult CppExpressionEvaluator::evaluateUnary(
         }
         return result;
     }
-    if (unaryOperator == "new" || unaryOperator == "delete" || unaryOperator == "sizeof") {
+    if (unaryOperator == "sizeof") {
+        ++index;
+        if (index < tokens.count() && tokens[index].text == "(") {
+            int close = tokens[index].matchIndex;
+            int typeIndex = index + 1;
+            EvalResult type = evaluateBinary(tokens, typeIndex, context, 1, evaluation);
+            if (close > index && type.isValid() && type.kind == EvalStatementKind::Type
+                    && typeIndex == close) {
+                index = close + 1;
+                EvalResult result;
+                result.type = primitiveType("std::size_t");
+                result.kind = EvalStatementKind::Variable;
+                return result;
+            }
+        }
+        EvalResult result = evaluateUnary(tokens, index, context, evaluation);
+        if (!result.isValid())
+            return result;
+        result.type = primitiveType("std::size_t");
+        result.instance = {};
+        result.kind = EvalStatementKind::Variable;
+        return result;
+    }
+    if (unaryOperator == "new" || unaryOperator == "delete") {
         ++index;
         EvalResult result = evaluateUnary(tokens, index, context, evaluation);
         if (!result.isValid())
@@ -233,12 +270,31 @@ EvalResult CppExpressionEvaluator::evaluateUnary(
         } else if (unaryOperator == "delete") {
             result.type = primitiveType("void");
             result.instance = {};
-        } else {
-            result.type = primitiveType("std::size_t");
-            result.instance = {};
         }
         result.kind = EvalStatementKind::Variable;
         return result;
+    }
+    if (unaryOperator == "static_cast" || unaryOperator == "const_cast"
+            || unaryOperator == "reinterpret_cast" || unaryOperator == "dynamic_cast") {
+        ++index;
+        QVector<TemplateArgument> templateArguments;
+        if (!readTemplateArguments(tokens, index, templateArguments)
+                || templateArguments.count() != 1
+                || templateArguments.first().kind != TemplateArgumentKind::Type
+                || !templateArguments.first().type) {
+            return {};
+        }
+        if (index >= tokens.count() || tokens[index].text != "(")
+            return {};
+        ++index;
+        EvalResult result = evaluateBinary(tokens, index, context, 1, evaluation);
+        if (!result.isValid() || index >= tokens.count() || tokens[index].text != ")")
+            return {};
+        ++index;
+        result.type = mResolver.resolve(*templateArguments.first().type, {}, context, evaluation);
+        result.instance = mResolver.resolveInstance(result.type, {}, context, evaluation);
+        result.kind = EvalStatementKind::Variable;
+        return evaluatePostfixTail(result, tokens, index, context, evaluation);
     }
     if (unaryOperator == "(") {
         int close = tokens[index].matchIndex;
@@ -354,7 +410,12 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             if (!scope)
                 scope = mResolver.findStatement(result.type.qualifiedName);
             int memberIndex = index;
-            PStatement member = findDirectStatement(scope, tokens[index++].text);
+            QString memberName = tokens[index++].text;
+            PStatement member;
+            if (index < tokens.count() && tokens[index].text == "(")
+                member = findDirectFunction(scope, memberName);
+            if (!member)
+                member = findDirectStatement(scope, memberName);
             if (!member)
                 return {};
             result = createResult(member, evaluation);
@@ -378,7 +439,8 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             QString memberName = tokens[index++].text;
             bool call = index < tokens.count() && tokens[index].text == "(";
             QVector<TypeInfo> arguments;
-            if (call && !evaluateArguments(tokens, index, context, arguments, evaluation))
+            bool argumentsValid = !call || evaluateArguments(tokens, index, context, arguments, evaluation);
+            if (!argumentsValid)
                 return {};
             MemberEvalResult member = mResolver.resolveMember(receiver, memberName, call, arguments,
                                                               evaluation);
@@ -533,7 +595,12 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
             result.type = primitiveType("std::nullptr_t");
             result.kind = EvalStatementKind::Literal;
         } else {
-            result = createResult(findVisibleStatement(initial.text, context), evaluation);
+            PStatement statement;
+            if (index < tokens.count() && tokens[index].text == "(")
+                statement = findVisibleFunction(initial.text, context);
+            if (!statement)
+                statement = findVisibleStatement(initial.text, context);
+            result = createResult(statement, evaluation);
             recordIdentifierTrace(evaluation, index - 1, result);
         }
         break;
@@ -962,7 +1029,10 @@ EvalResult CppExpressionEvaluator::applyBinary(
         return result;
     }
     static const QSet<QString> arithmeticOperators{"+", "-", "*", "/", "%"};
-    if (arithmeticOperators.contains(operatorName) && !hasPointer(left.type) && !hasPointer(right.type)) {
+    if (operatorName == "-" && hasPointer(left.type) && hasPointer(right.type)) {
+        result.type = primitiveType("std::ptrdiff_t");
+        result.instance = {};
+    } else if (arithmeticOperators.contains(operatorName) && !hasPointer(left.type) && !hasPointer(right.type)) {
         result.type = usualArithmeticType(removeReferences(left.type), removeReferences(right.type));
         result.instance = {};
     } else if ((operatorName == "+" || operatorName == "-")
@@ -1001,10 +1071,40 @@ PStatement CppExpressionEvaluator::findVisibleStatement(const QString &name,
     return findDirectStatement({}, name);
 }
 
+PStatement CppExpressionEvaluator::findVisibleFunction(const QString &name,
+                                                       const PStatement &context) const
+{
+    PStatement scope = context;
+    while (scope) {
+        if (PStatement result = findDirectFunction(scope, name))
+            return result;
+        const QSet<QString> *usingList = scope->kind == StatementKind::Namespace
+                ? &std::dynamic_pointer_cast<NamespaceStatement>(scope)->usingList
+                : &std::dynamic_pointer_cast<Statement>(scope)->usingList;
+        for (const QString &usingName : *usingList) {
+            PStatement target = mResolver.findStatement(usingName, scope);
+            if (target && (target->kind == StatementKind::Namespace
+                           || target->kind == StatementKind::EnumType
+                           || target->kind == StatementKind::EnumClassType)) {
+                if (PStatement result = findDirectFunction(target, name))
+                    return result;
+            }
+        }
+        scope = scope->parentScope.lock();
+    }
+    return findDirectFunction({}, name);
+}
+
 PStatement CppExpressionEvaluator::findDirectStatement(const PStatement &scope,
                                                        const QString &name) const
 {
     return findInMap(mModel.childrenStatements(scope), name);
+}
+
+PStatement CppExpressionEvaluator::findDirectFunction(const PStatement &scope,
+                                                      const QString &name) const
+{
+    return findFunctionInMap(mModel.childrenStatements(scope), name);
 }
 
 ClassInstance CppExpressionEvaluator::memberReceiver(
@@ -1017,15 +1117,19 @@ ClassInstance CppExpressionEvaluator::memberReceiver(
             return mResolver.resolveInstance(current.type, {}, {}, evaluation);
         return current;
     }
+    PTemplateBindingFrame operatorBindings;
+    PStatement operatorContext;
     for (int depth = 0; depth < 8; ++depth) {
         if (!current.type.derivations.isEmpty()
                 && current.type.derivations.first().kind == TypeDerivationKind::Pointer) {
             current.type.derivations.removeFirst();
-            return mResolver.resolveInstance(current.type, {}, {}, evaluation);
+            return mResolver.resolveInContext(current.type, operatorBindings, operatorContext, evaluation);
         }
+        operatorBindings = current.bindings;
         MemberEvalResult member = mResolver.resolveMember(current, "operator->", true, {}, evaluation);
         if (member.type.qualifiedName.isEmpty())
             return {};
+        operatorContext = member.statement ? member.statement->parentScope.lock() : PStatement();
         current = member.instance;
         current.type = removeReferences(member.type);
     }

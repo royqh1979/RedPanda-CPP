@@ -90,7 +90,15 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
         }
     }
     if (bitsStdcpp.isEmpty()) {
-        qWarning() << "Cannot find bits/stdc++.h in compiler include paths";
+        QString fallbackDir = QStringLiteral(REDPANDA_PARSER_STDLIB_RESOURCE_DIR);
+        QString candidate = fallbackDir + "/bits/stdc++.h";
+        if (QFileInfo::exists(candidate)) {
+            parser->addIncludePath(fallbackDir);
+            bitsStdcpp = QFileInfo(candidate).canonicalFilePath();
+        }
+    }
+    if (bitsStdcpp.isEmpty()) {
+        qWarning() << "Cannot find bits/stdc++.h in compiler include paths or test resources";
         return false;
     }
     return true;

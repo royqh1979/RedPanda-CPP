@@ -134,6 +134,11 @@ void TestCppPreprocessor::test_replace_macros_in_constant_expression_1()
     QVERIFY(!preprocessor.evaluateIf("defined(__cplus)"));
     QVERIFY(!preprocessor.evaluateIf("defined __cplus"));
     QVERIFY(!preprocessor.evaluateIf("__has_builtin(__builtin_is_constant_evaluated)"));
+    QVERIFY(!preprocessor.evaluateIf("__has_builtin(__is_trivially_destructible)"));
+    preprocessor.addHardDefineByLine("#define __clang__ 1");
+    QVERIFY(preprocessor.evaluateIf("__has_builtin(__is_trivially_destructible)"));
+    QVERIFY(preprocessor.evaluateIf("__has_builtin(__add_lvalue_reference)"));
+    QVERIFY(!preprocessor.evaluateIf("__has_builtin(__unknown_builtin)"));
 }
 
 void TestCppPreprocessor::test_evaluate_constant_expression_1()

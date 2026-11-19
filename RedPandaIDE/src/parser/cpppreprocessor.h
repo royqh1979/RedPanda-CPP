@@ -21,6 +21,11 @@
 #include <QTextStream>
 #include "parserutils.h"
 
+enum class CppCompilerType {
+    GCC,
+    Clang
+};
+
 enum class DefineArgTokenType{
     Symbol,
     Identifier,
@@ -119,6 +124,7 @@ public:
     }
 
     int cppVersion() const { return mCppVersion; }
+    CppCompilerType compilerType() const { return mCompilerType; }
 
     QString expandMacros(QString text) const;
 
@@ -371,6 +377,7 @@ private:
     bool mParseSystem;
     bool mParseLocal;
     int mCppVersion = CppVersion::Cpp17;
+    CppCompilerType mCompilerType = CppCompilerType::GCC;
 
     bool mStopForParserReset;
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;

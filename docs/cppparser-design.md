@@ -263,7 +263,7 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 类型求值的各级缓存由 EvaluationContext::caches 独立控制，默认全部启用。完整类型结果只在模型不变时缓存成功解析；键包含类型、声明/context 指针以及逐帧指针和修订号，绑定链变化后旧结果自然失效。帧内 resolvedValues 作为模板参数快路径独立保留。对照 profile 可通过 REDPANDA_PARSER_DISABLE_CACHES 的逗号分隔列表关闭 all、type-text、type-name、type-pattern、binding-frame、resolved-value、specialization、declaration、member 或 resolved-type。
 
-完整模板实例化、SFINAE、concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
+绑定帧可保存参数包并在模板实参列表中展开；无法求值的非类型实参保留原文，不因缺少布局/求值信息而丢失别名链。完整模板实例化、完整 SFINAE、完整 concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
 
 验收以常用 STL 容器、C++20 range/view 以及 cppreference 的 container/iterator/algorithm 示例为目标。例如 `std::vector<std::string> lst; lst.front().` 应能列出 string 成员。range/view 的代表性场景取自：
 

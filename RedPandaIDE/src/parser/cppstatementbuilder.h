@@ -33,7 +33,7 @@ struct StatementBuildContext {
 class CppStatementBuilder
 {
 public:
-    explicit CppStatementBuilder(StatementModel &model);
+    explicit CppStatementBuilder(StatementModel &model, bool supportsClangTypeBuiltins = false);
 
     QList<std::weak_ptr<AbstractStatement>> build(const DeclarationInfo &declaration,
                                           const StatementBuildContext &context);

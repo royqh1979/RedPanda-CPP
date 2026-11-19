@@ -98,6 +98,11 @@ private slots:
     void test_type_resolver_binds_dependent_base_members();
     void test_type_resolver_reference_collapsing_and_cycles();
     void test_type_resolver_selects_specializations_and_rebind();
+    void test_type_resolver_preserves_fixed_arguments_in_specialization_scope();
+    void test_type_resolver_evaluates_static_const_member_default_argument();
+    void test_type_resolver_evaluates_specialized_static_const_member_default_argument();
+    void test_type_resolver_matches_nested_class_specialization_default_argument();
+    void test_type_resolver_matches_injected_specialization_default_argument();
     void test_type_resolver_selects_specializations_across_reopened_namespaces();
     void test_type_resolver_computes_bounded_traits();
     void test_function_template_explicit_arguments();
