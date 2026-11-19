@@ -214,7 +214,7 @@ TemplateSuffix findTemplateSuffix(const QVector<Token> &tokens, int targetIndex)
     return {};
 }
 
-QStringList extractTokens(const QSynedit::QSynEdit *editor,
+QVector<Token> extractTokens(const QSynedit::QSynEdit *editor,
                           const QSynedit::PSyntaxer &syntaxer,
                           QVector<Token> tokens, int targetIndex, int previousLine)
 {
@@ -329,10 +329,7 @@ QStringList extractTokens(const QSynedit::QSynEdit *editor,
     if (needReceiver || round != 0 || square != 0 || curly != 0 || angle != 0)
         return {};
     std::reverse(expression.begin(), expression.end());
-    QStringList result;
-    for (const Token &item : expression)
-        result.append(item.text);
-    return result;
+    return expression;
 }
 }
 
@@ -369,7 +366,51 @@ QStringList CppExpressionExtractor::extract(const QSynedit::CharPos &pos)
     if (targetIndex < 0)
         return {};
     std::reverse(line.begin(), line.end());
-    return extractTokens(mEditor, mSyntaxer, line, targetIndex, pos.line - 1);
+    QVector<Token> expression = extractTokens(
+                mEditor, mSyntaxer, line, targetIndex, pos.line - 1);
+    QStringList result;
+    for (const Token &token : expression)
+        result.append(token.text);
+    return result;
+}
+
+QVector<CppExpressionUnit> CppExpressionExtractor::extractLine(int line)
+{
+    QVector<CppExpressionUnit> result;
+    if (!mValid || line < 0 || line >= mEditor->lineCount())
+        return result;
+
+    QSynedit::CharPos noTarget{-1, -1};
+    bool rejected = false;
+    QVector<Token> tokens = readLine(mEditor, mSyntaxer, line, noTarget, rejected);
+    std::reverse(tokens.begin(), tokens.end());
+    QSet<qint64> covered;
+    auto positionKey = [](const QSynedit::CharPos &pos) {
+        return (qint64(pos.line) << 32) | quint32(pos.ch);
+    };
+    for (int i = 0; i < tokens.size(); ++i) {
+        const Token &target = tokens[i];
+        QSynedit::CharPos targetPos{target.ch, target.line};
+        if (target.type != QSynedit::TokenType::Identifier
+                || covered.contains(positionKey(targetPos))) {
+            continue;
+        }
+        QVector<Token> expression = extractTokens(
+                    mEditor, mSyntaxer, tokens, i, line - 1);
+        if (expression.isEmpty())
+            continue;
+        CppExpressionUnit unit;
+        unit.target = targetPos;
+        for (const Token &token : expression) {
+            QSynedit::CharPos pos{token.ch, token.line};
+            unit.expression.append(token.text);
+            covered.insert(positionKey(pos));
+            if (token.type == QSynedit::TokenType::Identifier)
+                unit.coveredIdentifiers.append(pos);
+        }
+        result.append(unit);
+    }
+    return result;
 }
 
 QStringList CppExpressionExtractor::extract(

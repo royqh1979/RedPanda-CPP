@@ -12,6 +12,8 @@ private slots:
     void test_invalid_positions();
     void test_custom_syntaxer();
     void test_session();
+    void test_extract_line_data();
+    void test_extract_line();
     void test_profile();
 };
 

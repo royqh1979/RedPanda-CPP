@@ -18,6 +18,7 @@
 #define CPPEXPRESSIONEXTRACTOR_H
 
 #include <QStringList>
+#include <QVector>
 #include <qsynedit/syntaxer/syntaxer.h>
 #include <qsynedit/types.h>
 
@@ -25,12 +26,19 @@ namespace QSynedit {
 class QSynEdit;
 }
 
+struct CppExpressionUnit {
+    QSynedit::CharPos target;
+    QStringList expression;
+    QVector<QSynedit::CharPos> coveredIdentifiers;
+};
+
 class CppExpressionExtractor
 {
 public:
     CppExpressionExtractor(const QSynedit::QSynEdit *editor,
                            const QSynedit::PConstSyntaxer &syntaxer);
     QStringList extract(const QSynedit::CharPos &pos);
+    QVector<CppExpressionUnit> extractLine(int line);
     static QStringList extract(const QSynedit::QSynEdit *editor,
                                const QSynedit::PConstSyntaxer &syntaxer,
                                const QSynedit::CharPos &pos);

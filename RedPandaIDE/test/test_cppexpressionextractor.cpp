@@ -202,10 +202,17 @@ void TestCppExpressionExtractor::test_invalid_positions()
     QVERIFY(CppExpressionExtractor::extract(&editor, editor.syntaxer(), {0, 1}).isEmpty());
     QVERIFY(CppExpressionExtractor::extract(&editor, editor.syntaxer(), {99, 0}).isEmpty());
     QVERIFY(CppExpressionExtractor::extract(nullptr, editor.syntaxer(), {0, 0}).isEmpty());
+    CppExpressionExtractor extractor(&editor, editor.syntaxer());
+    QVERIFY(extractor.extractLine(-1).isEmpty());
+    QVERIFY(extractor.extractLine(1).isEmpty());
 #ifndef QT_DEBUG
     QSynedit::PSyntaxer textSyntaxer = std::make_shared<QSynedit::TextSyntaxer>();
     QVERIFY(CppExpressionExtractor::extract(&editor, textSyntaxer, {0, 0}).isEmpty());
     QVERIFY(CppExpressionExtractor::extract(&editor, QSynedit::PConstSyntaxer{}, {0, 0}).isEmpty());
+    CppExpressionExtractor textExtractor(&editor, textSyntaxer);
+    QVERIFY(textExtractor.extractLine(0).isEmpty());
+    CppExpressionExtractor emptyExtractor(&editor, QSynedit::PConstSyntaxer{});
+    QVERIFY(emptyExtractor.extractLine(0).isEmpty());
 #endif
 }
 
@@ -215,6 +222,13 @@ void TestCppExpressionExtractor::test_custom_syntaxer()
     syntaxer->setCustomTypeKeywords({"custom"});
     QCOMPARE(extractAtMarker("|custom", syntaxer), QStringList{});
     QCOMPARE(extractAtMarker("|value", syntaxer), QStringList{"value"});
+    QSynedit::QSynEdit editor;
+    editor.setSyntaxer(syntaxer);
+    editor.document()->setText("custom value");
+    CppExpressionExtractor extractor(&editor, editor.syntaxer());
+    QVector<CppExpressionUnit> units = extractor.extractLine(0);
+    QCOMPARE(units.size(), 1);
+    QCOMPARE(units.first().expression, QStringList{"value"});
 }
 
 void TestCppExpressionExtractor::test_session()
@@ -227,6 +241,113 @@ void TestCppExpressionExtractor::test_session()
     QCOMPARE(extractor.extract({2, 0}), QStringList{"a"});
     QCOMPARE(extractor.extract({7, 0}),
              QStringList({"f", "(", "a", "(", ")", ")", ".", "b"}));
+    QVector<CppExpressionUnit> first = extractor.extractLine(0);
+    QVector<CppExpressionUnit> second = extractor.extractLine(0);
+    QCOMPARE(first.size(), 1);
+    QCOMPARE(second.size(), 1);
+    QCOMPARE(first.first().expression, second.first().expression);
+    QCOMPARE(first.first().coveredIdentifiers.size(), 3);
+}
+
+void TestCppExpressionExtractor::test_extract_line_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<QStringList>("expected");
+
+    QTest::newRow("call result member covers complete chain")
+            << "f(a()).b()" << 0 << QStringList{"f ( a ( ) ) . b"};
+    QTest::newRow("binary operands stay independent")
+            << "f(a()) + b()" << 0 << QStringList{"b", "a", "f"};
+    QTest::newRow("member chains stay independent")
+            << "object.member + other->field"
+            << 0 << QStringList{"other -> field", "object . member"};
+    QTest::newRow("nested argument member")
+            << "foo(a.bar())" << 0 << QStringList{"a . bar", "foo"};
+    QTest::newRow("target call argument stays independent")
+            << "f(a()).b(c())" << 0 << QStringList{"c", "f ( a ( ) ) . b"};
+    QTest::newRow("nested template member")
+            << "std::vector<std::string>::iterator it;"
+            << 0 << QStringList{"it", "std :: vector < std :: string > :: iterator"};
+    QTest::newRow("assignment operands stay independent")
+            << "value = object.member;" << 0 << QStringList{"object . member", "value"};
+    QTest::newRow("subscript receiver covers index")
+            << "a[i].b" << 0 << QStringList{"a [ i ] . b"};
+    QTest::newRow("multiple subscripts cover indexes")
+            << "matrix[i][j].value" << 0 << QStringList{"matrix [ i ] [ j ] . value"};
+    QTest::newRow("comment has no expressions") << "// value" << 0 << QStringList{};
+    QTest::newRow("string has no expressions")
+            << "\"value\" + other" << 0 << QStringList{"other"};
+    QTest::newRow("unknown identifier") << "unknown" << 0 << QStringList{"unknown"};
+    QTest::newRow("namespace chains")
+            << "std::cout << std::endl;"
+            << 0 << QStringList{"std :: endl", "std :: cout"};
+    QTest::newRow("new receiver")
+            << "new Type().member" << 0 << QStringList{"new Type ( ) . member"};
+    QTest::newRow("parenthesized receiver")
+            << "(*pointer).member" << 0 << QStringList{"( * pointer ) . member"};
+    QTest::newRow("comment inside receiver")
+            << "a./* comment */b" << 0 << QStringList{"a . b"};
+    QTest::newRow("return member")
+            << "return object.member" << 0 << QStringList{"object . member"};
+    QTest::newRow("less than operands")
+            << "a < b" << 0 << QStringList{"b", "a"};
+    QTest::newRow("greater than and call receiver")
+            << "a > foo().b" << 0 << QStringList{"foo ( ) . b", "a"};
+    QTest::newRow("lambda receiver")
+            << "[&]{ return value; }().member"
+            << 0 << QStringList{"[ & ] { return value ; } ( ) . member"};
+    QTest::newRow("template function and argument")
+            << "foo<int>(a)" << 0 << QStringList{"a", "foo < int >"};
+    QTest::newRow("template member")
+            << "std::vector<int>::iterator"
+            << 0 << QStringList{"std :: vector < int > :: iterator"};
+    QTest::newRow("call and argument")
+            << "obj.method() + argument"
+            << 0 << QStringList{"argument", "obj . method"};
+    QTest::newRow("multiline receiver and target argument")
+            << "f(\n a()).b(c())" << 1 << QStringList{"c", "f ( a ( ) ) . b"};
+    QTest::newRow("member on next line") << "a.\n b" << 1 << QStringList{"a . b"};
+    QTest::newRow("argument on next line") << "f(\n a())" << 1 << QStringList{"a"};
+}
+
+void TestCppExpressionExtractor::test_extract_line()
+{
+    QFETCH(QString, source);
+    QFETCH(int, line);
+    QFETCH(QStringList, expected);
+
+    QSynedit::QSynEdit editor;
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.document()->setText(source);
+    CppExpressionExtractor extractor(&editor, editor.syntaxer());
+    QVector<CppExpressionUnit> units = extractor.extractLine(line);
+    QCOMPARE(units.size(), expected.size());
+
+    QSet<qint64> identifiers;
+    QSynedit::CppSyntaxer scanner;
+    editor.startParseLine(&scanner, line);
+    while (!scanner.eol()) {
+        if (scanner.getTokenType() == QSynedit::TokenType::Identifier) {
+            identifiers.insert((qint64(line) << 32) | quint32(scanner.getTokenPos()));
+        }
+        scanner.next();
+    }
+    QSet<qint64> covered;
+    for (int i = 0; i < units.size(); ++i) {
+        const CppExpressionUnit &unit = units[i];
+        QCOMPARE(unit.target.line, line);
+        QCOMPARE(unit.expression.join(' '), expected[i]);
+        QCOMPARE(unit.expression, extractor.extract(unit.target));
+        QVERIFY(!unit.coveredIdentifiers.isEmpty());
+        for (const QSynedit::CharPos &pos : unit.coveredIdentifiers) {
+            qint64 key = (qint64(pos.line) << 32) | quint32(pos.ch);
+            QVERIFY2(!covered.contains(key), qPrintable(unit.expression.join(' ')));
+            covered.insert(key);
+        }
+    }
+    for (qint64 key : identifiers)
+        QVERIFY(covered.contains(key));
 }
 
 void TestCppExpressionExtractor::test_profile()
@@ -258,6 +379,9 @@ void TestCppExpressionExtractor::test_profile()
     volatile qint64 oldTokenCount = 0;
     volatile qint64 newTokenCount = 0;
     volatile qint64 sessionTokenCount = 0;
+    volatile qint64 lineTokenCount = 0;
+    volatile qint64 lineUnitCount = 0;
+    volatile qint64 lineCoveredCount = 0;
     auto runOld = [&]() {
         qint64 count = 0;
         QElapsedTimer timer;
@@ -292,17 +416,42 @@ void TestCppExpressionExtractor::test_profile()
         sessionTokenCount = count;
         return timer.nsecsElapsed();
     };
+    auto runLines = [&]() {
+        qint64 tokenCount = 0;
+        qint64 unitCount = 0;
+        qint64 coveredCount = 0;
+        CppExpressionExtractor extractor(&editor, editor.syntaxer());
+        QElapsedTimer timer;
+        timer.start();
+        for (int i = 0; i < repeat; ++i) {
+            for (int line = 0; line < editor.lineCount(); ++line) {
+                QVector<CppExpressionUnit> units = extractor.extractLine(line);
+                unitCount += units.size();
+                for (const CppExpressionUnit &unit : units) {
+                    tokenCount += unit.expression.size();
+                    coveredCount += unit.coveredIdentifiers.size();
+                }
+            }
+        }
+        lineTokenCount = tokenCount;
+        lineUnitCount = unitCount;
+        lineCoveredCount = coveredCount;
+        return timer.nsecsElapsed();
+    };
 
     runOld();
     runNew();
     runSession();
+    runLines();
     qint64 oldNs = std::numeric_limits<qint64>::max();
     qint64 newNs = std::numeric_limits<qint64>::max();
     qint64 sessionNs = std::numeric_limits<qint64>::max();
+    qint64 lineNs = std::numeric_limits<qint64>::max();
     for (int i = 0; i < 3; ++i) {
         oldNs = qMin(oldNs, runOld());
         newNs = qMin(newNs, runNew());
         sessionNs = qMin(sessionNs, runSession());
+        lineNs = qMin(lineNs, runLines());
     }
     qWarning().nospace() << "EXPRESSION_PROFILE file=" << fileName
                          << " identifiers=" << positions.size()
@@ -310,8 +459,18 @@ void TestCppExpressionExtractor::test_profile()
                          << " oldNs=" << oldNs
                          << " newNs=" << newNs
                          << " sessionNs=" << sessionNs
+                         << " lineNs=" << lineNs
                          << " oldTokens=" << oldTokenCount
                          << " newTokens=" << newTokenCount
-                         << " sessionTokens=" << sessionTokenCount;
+                         << " sessionTokens=" << sessionTokenCount
+                         << " lineTokens=" << lineTokenCount
+                         << " lineUnits=" << lineUnitCount
+                         << " lineCovered=" << lineCoveredCount;
     QCOMPARE(newTokenCount, sessionTokenCount);
+    CppExpressionExtractor extractor(&editor, editor.syntaxer());
+    for (int line = 0; line < editor.lineCount(); ++line) {
+        QVector<CppExpressionUnit> units = extractor.extractLine(line);
+        for (const CppExpressionUnit &unit : units)
+            QCOMPARE(unit.expression, extractor.extract(unit.target));
+    }
 }
