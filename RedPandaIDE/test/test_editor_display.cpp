@@ -532,10 +532,17 @@ void TestEditorDisplay::test_stl_paint_profile()
         auto measureLineExtraction = [&]() {
             unitCount = 0;
             CppExpressionExtractor extractor(mEditor.get(), mEditor->syntaxer());
+            QSynedit::PSyntaxer syntaxer = mEditor->syntaxer()->createInstance();
             QElapsedTimer timer;
             timer.start();
             for (int line = 0; line < profileLines; ++line) {
-                QVector<CppExpressionUnit> units = extractor.extractLine(line);
+                QVector<CppExpressionInputToken> input;
+                mEditor->startParseLine(syntaxer.get(), line);
+                while (!syntaxer->eol()) {
+                    input.append({syntaxer->getToken(), syntaxer->getTokenType()});
+                    syntaxer->next();
+                }
+                QVector<CppExpressionUnit> units = extractor.extractLine(line, input);
                 unitCount += units.size();
             }
             return timer.nsecsElapsed();

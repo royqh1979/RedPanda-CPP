@@ -14,6 +14,7 @@ private slots:
     void test_session();
     void test_extract_line_data();
     void test_extract_line();
+    void test_display_input();
     void test_profile();
 };
 

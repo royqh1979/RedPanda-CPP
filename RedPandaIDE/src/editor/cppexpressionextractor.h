@@ -26,10 +26,15 @@ namespace QSynedit {
 class QSynEdit;
 }
 
+struct CppExpressionInputToken {
+    QString text;
+    QSynedit::TokenType type;
+};
+
 struct CppExpressionUnit {
-    QSynedit::CharPos target;
+    int targetTokenIndex;
     QStringList expression;
-    QVector<QSynedit::CharPos> coveredIdentifiers;
+    QVector<int> inputTokenIndexes;
 };
 
 class CppExpressionExtractor
@@ -38,7 +43,8 @@ public:
     CppExpressionExtractor(const QSynedit::QSynEdit *editor,
                            const QSynedit::PConstSyntaxer &syntaxer);
     QStringList extract(const QSynedit::CharPos &pos);
-    QVector<CppExpressionUnit> extractLine(int line);
+    QVector<CppExpressionUnit> extractLine(int line,
+            const QVector<CppExpressionInputToken> &tokens);
     static QStringList extract(const QSynedit::QSynEdit *editor,
                                const QSynedit::PConstSyntaxer &syntaxer,
                                const QSynedit::CharPos &pos);

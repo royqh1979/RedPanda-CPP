@@ -25,8 +25,7 @@ namespace {
 struct Token {
     QString text;
     QSynedit::TokenType type;
-    int line;
-    int ch;
+    int inputIndex;
 };
 
 bool isAtom(const Token &token)
@@ -91,7 +90,8 @@ int updateGroupDepth(const QString &text, int &round, int &square, int &curly)
 
 QVector<Token> readLine(const QSynedit::QSynEdit *editor,
                         const QSynedit::PSyntaxer &syntaxer, int line,
-                        const QSynedit::CharPos &target, bool &targetRejected)
+                        const QSynedit::CharPos &target, bool &targetRejected,
+                        int &targetIndex)
 {
     QVector<Token> result;
     editor->startParseLine(syntaxer.get(), line);
@@ -99,20 +99,22 @@ QVector<Token> readLine(const QSynedit::QSynEdit *editor,
         Token token{
             syntaxer->getToken(),
             syntaxer->getTokenType(),
-            line,
-            syntaxer->getTokenPos()
+            -1
         };
+        int tokenPos = syntaxer->getTokenPos();
         if (line == target.line
-                && token.ch <= target.ch
-                && target.ch < token.ch + token.text.length()
-                && (token.type == QSynedit::TokenType::Comment
-                    || token.type == QSynedit::TokenType::String)) {
-            targetRejected = true;
+                && tokenPos <= target.ch
+                && target.ch < tokenPos + token.text.length()) {
+            if (token.type == QSynedit::TokenType::Comment
+                    || token.type == QSynedit::TokenType::String) {
+                targetRejected = true;
+            } else if (token.type != QSynedit::TokenType::Space) {
+                targetIndex = result.size();
+            }
         }
         if (token.type != QSynedit::TokenType::Comment
-                && token.type != QSynedit::TokenType::Space) {
+                && token.type != QSynedit::TokenType::Space)
             result.append(token);
-        }
         syntaxer->next();
     }
     return result;
@@ -145,13 +147,20 @@ public:
         return true;
     }
 
+    int index() const
+    {
+        return mIndex;
+    }
+
 private:
     bool ensureAvailable()
     {
         while (mIndex >= mTokens.size() && mPreviousLine >= 0) {
             QSynedit::CharPos noTarget{-1, -1};
             bool rejected = false;
-            QVector<Token> line = readLine(mEditor, mSyntaxer, mPreviousLine, noTarget, rejected);
+            int targetIndex = -1;
+            QVector<Token> line = readLine(mEditor, mSyntaxer, mPreviousLine, noTarget,
+                                           rejected, targetIndex);
             --mPreviousLine;
             std::reverse(line.begin(), line.end());
             mTokens += line;
@@ -214,9 +223,14 @@ TemplateSuffix findTemplateSuffix(const QVector<Token> &tokens, int targetIndex)
     return {};
 }
 
-QVector<Token> extractTokens(const QSynedit::QSynEdit *editor,
-                          const QSynedit::PSyntaxer &syntaxer,
-                          QVector<Token> tokens, int targetIndex, int previousLine)
+struct ExtractionResult {
+    QVector<Token> expression;
+    int nextIndex = -1;
+};
+
+ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
+                               const QSynedit::PSyntaxer &syntaxer,
+                               QVector<Token> tokens, int targetIndex, int previousLine)
 {
     QVector<Token> expression;
     TemplateSuffix suffix;
@@ -236,6 +250,7 @@ QVector<Token> extractTokens(const QSynedit::QSynEdit *editor,
     bool needReceiver = false;
     bool needBase = false;
     bool memberChain = false;
+    int nextIndex = -1;
     Token token;
     while (stream.next(token)) {
         if (token.text == "\\")
@@ -322,6 +337,8 @@ QVector<Token> extractTokens(const QSynedit::QSynEdit *editor,
         }
         if (token.text == "new" && memberChain) {
             expression.append(token);
+        } else {
+            nextIndex = stream.index() - 1;
         }
         break;
     }
@@ -329,7 +346,7 @@ QVector<Token> extractTokens(const QSynedit::QSynEdit *editor,
     if (needReceiver || round != 0 || square != 0 || curly != 0 || angle != 0)
         return {};
     std::reverse(expression.begin(), expression.end());
-    return expression;
+    return {expression, nextIndex >= 0 ? nextIndex : stream.index()};
 }
 }
 
@@ -350,65 +367,58 @@ QStringList CppExpressionExtractor::extract(const QSynedit::CharPos &pos)
     if (!mValid || pos.ch < 0 || pos.line < 0 || pos.line >= mEditor->lineCount())
         return {};
     bool targetRejected = false;
-    QVector<Token> line = readLine(mEditor, mSyntaxer, pos.line, pos, targetRejected);
-    if (targetRejected)
-        return {};
     int targetIndex = -1;
-    for (int i = line.size() - 1; i >= 0; --i) {
-        const Token &token = line[i];
-        if (token.ch <= pos.ch && pos.ch < token.ch + token.text.length()) {
-            if (token.type != QSynedit::TokenType::Identifier)
-                return {};
-            targetIndex = line.size() - 1 - i;
-            break;
-        }
-    }
-    if (targetIndex < 0)
+    QVector<Token> line = readLine(mEditor, mSyntaxer, pos.line, pos,
+                                   targetRejected, targetIndex);
+    if (targetRejected || targetIndex < 0)
         return {};
+    if (line[targetIndex].type != QSynedit::TokenType::Identifier)
+        return {};
+    targetIndex = line.size() - 1 - targetIndex;
     std::reverse(line.begin(), line.end());
-    QVector<Token> expression = extractTokens(
+    ExtractionResult extracted = extractTokens(
                 mEditor, mSyntaxer, line, targetIndex, pos.line - 1);
     QStringList result;
-    for (const Token &token : expression)
+    for (const Token &token : extracted.expression)
         result.append(token.text);
     return result;
 }
 
-QVector<CppExpressionUnit> CppExpressionExtractor::extractLine(int line)
+QVector<CppExpressionUnit> CppExpressionExtractor::extractLine(
+        int line, const QVector<CppExpressionInputToken> &input)
 {
     QVector<CppExpressionUnit> result;
     if (!mValid || line < 0 || line >= mEditor->lineCount())
         return result;
 
-    QSynedit::CharPos noTarget{-1, -1};
-    bool rejected = false;
-    QVector<Token> tokens = readLine(mEditor, mSyntaxer, line, noTarget, rejected);
+    QVector<Token> tokens;
+    for (int i = 0; i < input.size(); ++i) {
+        if (input[i].type != QSynedit::TokenType::Comment
+                && input[i].type != QSynedit::TokenType::Space) {
+            tokens.append({input[i].text, input[i].type, i});
+        }
+    }
     std::reverse(tokens.begin(), tokens.end());
-    QSet<qint64> covered;
-    auto positionKey = [](const QSynedit::CharPos &pos) {
-        return (qint64(pos.line) << 32) | quint32(pos.ch);
-    };
-    for (int i = 0; i < tokens.size(); ++i) {
+    for (int i = 0; i < tokens.size();) {
         const Token &target = tokens[i];
-        QSynedit::CharPos targetPos{target.ch, target.line};
-        if (target.type != QSynedit::TokenType::Identifier
-                || covered.contains(positionKey(targetPos))) {
+        if (target.type != QSynedit::TokenType::Identifier) {
+            ++i;
             continue;
         }
-        QVector<Token> expression = extractTokens(
+        ExtractionResult extracted = extractTokens(
                     mEditor, mSyntaxer, tokens, i, line - 1);
-        if (expression.isEmpty())
+        if (extracted.expression.isEmpty()) {
+            ++i;
             continue;
+        }
         CppExpressionUnit unit;
-        unit.target = targetPos;
-        for (const Token &token : expression) {
-            QSynedit::CharPos pos{token.ch, token.line};
+        unit.targetTokenIndex = target.inputIndex;
+        for (const Token &token : extracted.expression) {
             unit.expression.append(token.text);
-            covered.insert(positionKey(pos));
-            if (token.type == QSynedit::TokenType::Identifier)
-                unit.coveredIdentifiers.append(pos);
+            unit.inputTokenIndexes.append(token.inputIndex);
         }
         result.append(unit);
+        i = qMax(i + 1, extracted.nextIndex);
     }
     return result;
 }
