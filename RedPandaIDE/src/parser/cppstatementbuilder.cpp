@@ -19,6 +19,7 @@
 #include <limits>
 #include <QDebug>
 #include <QElapsedTimer>
+#include "cppdeclarationparser.h"
 
 namespace {
 struct MergeDeclarationProfile {
@@ -873,6 +874,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         }
     }
 
+    buildLambdas(declarator, context);
+
     if (declaration.specifiers.type.qualifiedName == "auto"
             && !declaration.structuredBinding
             && (kind == StatementKind::Variable || kind == StatementKind::GlobalVariable
@@ -1204,6 +1207,79 @@ PStatement CppStatementBuilder::createBlock(const DeclarationInfo &declaration,
     statement->properties.setFlag(StatementProperty::InProject, context.inProject);
     statement->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
     return statement;
+}
+
+void CppStatementBuilder::buildLambdas(const DeclaratorInfo &declarator,
+                                       const StatementBuildContext &context)
+{
+    for (const std::shared_ptr<LambdaInfo> &info : declarator.lambdas) {
+        if (!info || !info->body)
+            continue;
+        QString name = QString("__lambda_%1_%2_%3")
+                .arg(qHash(context.fileName), 0, 16)
+                .arg(info->range.start.line).arg(info->range.start.ch);
+        auto lambda = StatementFactory::createLambda(
+                    context.parentScope, name,
+                    context.parentScope && !context.parentScope->fullName.isEmpty()
+                    ? context.parentScope->fullName + "::" + name : name);
+        lambda->scope = context.scope;
+        lambda->definition = StatementOccurrence{
+            context.fileName, info->range, context.boundaryAncestor, {}};
+        setStatementHasDefinition(lambda, true);
+        lambda->properties.setFlag(StatementProperty::DummyStatement);
+        lambda->properties.setFlag(StatementProperty::InProject, context.inProject);
+        lambda->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
+        mModel.add(lambda);
+        if (context.fileInfo)
+            context.fileInfo->addStatement(lambda);
+
+        auto call = StatementFactory::createOverloadedOperator(
+                    lambda, "operator()", lambda->fullName + "::operator()");
+        call->scope = StatementScope::ClassLocal;
+        call->accessibility = StatementAccessibility::Public;
+        call->definition = StatementOccurrence{
+            context.fileName, info->range, context.boundaryAncestor, {}};
+        setStatementHasDefinition(call, true);
+        call->properties.setFlag(StatementProperty::OperatorOverloading);
+        call->properties.setFlag(StatementProperty::Const, !info->isMutable);
+        call->properties.setFlag(StatementProperty::InProject, context.inProject);
+        call->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
+        auto normalCall = std::dynamic_pointer_cast<Statement>(call);
+        normalCall->typeInfo = info->returnType;
+        normalCall->typeInfo.qualifiedName = info->hasTrailingReturnType
+                ? info->returnType.qualifiedName : "auto";
+        TypeDerivation function = TypeDerivation::function(info->parameters);
+        function.qualifiers.setFlag(TypeQualifier::Const, !info->isMutable);
+        normalCall->args = renderParameters(function, true);
+        normalCall->normalizedArgs = renderNormalizedParameters(function, {});
+        mModel.add(call);
+        if (context.fileInfo)
+            context.fileInfo->addStatement(call);
+
+        for (const ParameterInfo &parameter : info->parameters) {
+            if (parameter.name.isEmpty())
+                continue;
+            PStatement parameterStatement = createParameter(parameter, context, call);
+            mModel.add(parameterStatement);
+            if (context.fileInfo)
+                context.fileInfo->addStatement(parameterStatement);
+        }
+        buildChildren(*info->body, context, call);
+        if (context.fileInfo)
+            context.fileInfo->addScope(info->body->bodyRange, call, context.parentScope);
+
+        if (!info->hasTrailingReturnType) {
+            if (info->returnExpression.isEmpty()) {
+                normalCall->typeInfo.qualifiedName = "void";
+            } else {
+                CppTokenizer returnTokenizer;
+                returnTokenizer.setTokens(info->returnExpression);
+                EvalResult returned = mExpressionEvaluator.evaluate(returnTokenizer, call);
+                if (returned.isValid())
+                    normalCall->typeInfo = returned.type;
+            }
+        }
+    }
 }
 
 TypeInfo CppStatementBuilder::deduceAutoType(TypeInfo initializerType,

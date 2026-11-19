@@ -2480,7 +2480,7 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     QVERIFY(call);
     QCOMPARE(statementType(call), "double");
     QVERIFY(call->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->normalizedArgs, "() const");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->normalizedArgs, "(int) const");
     PStatement value = findStatement(std::dynamic_pointer_cast<Statement>(call)->children, "value");
     QVERIFY(value);
     QCOMPARE(statementType(value), "int");
@@ -2491,7 +2491,7 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     PStatement mutableCall = findStatement(std::dynamic_pointer_cast<Statement>(mutableLambda)->children, "operator()");
     QVERIFY(mutableCall);
     QVERIFY(!mutableCall->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "()");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "(int)");
 
     CppTypeResolver resolver(model);
     TypeOperationRegistry operations(resolver);

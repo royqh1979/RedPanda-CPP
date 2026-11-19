@@ -26,13 +26,13 @@ public:
 
     void setCppVersion(int cppVersion) { mDeclarationParser.setCppVersion(cppVersion); }
     bool parseDeclaration(DeclarationInfo &result);
+    bool parseBlock(DeclarationInfo &result);
 
 private:
     bool parseClass(DeclarationInfo &result);
     bool parseNamespace(DeclarationInfo &result);
     bool parseEnum(DeclarationInfo &result);
     bool parseUsing(DeclarationInfo &result);
-    bool parseBlock(DeclarationInfo &result);
     bool parseFor(DeclarationInfo &result);
     bool parseCatch(DeclarationInfo &result);
     bool parseControlBlock(DeclarationInfo &result);

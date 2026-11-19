@@ -20,6 +20,7 @@
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QVarLengthArray>
+#include "cppsyntaxparser.h"
 
 #ifdef REDPANDA_PARSER_DECLARATION_PROFILE
 #include <QDebug>
@@ -270,9 +271,10 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                         && result.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr);
                 if (result.specifiers.type.qualifiedName == "auto" || constraintConstant) {
                     result.declarators.last().initializerPosition = mCursor.current().position;
-                    result.declarators.last().initializerText = readUntilDelimiter({",", ";"});
+                    result.declarators.last().initializerText = readUntilDelimiter(
+                                {",", ";"}, &result.declarators.last());
                 } else {
-                    skipExpression({",", ";"});
+                    skipExpression({",", ";"}, &result.declarators.last());
                 }
             }
         }
@@ -287,7 +289,7 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         if (mCursor.consume(":")) {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
-            skipExpression(function ? QSet<QString>{"{"} : QSet<QString>{",", ";"});
+            skipExpression(function ? QSet<QString>{"{"} : QSet<QString>{",", ";"}, nullptr);
         }
         if (mCursor.consume(","))
             continue;
@@ -334,7 +336,7 @@ bool CppDeclarationParser::parseStructuredBinding(DeclarationInfo &result)
     }
     if (mCursor.consume("=")) {
         SourcePosition initializerPosition = mCursor.current().position;
-        QString initializer = readUntilDelimiter({";"});
+        QString initializer = readUntilDelimiter({";"}, nullptr);
         for (DeclaratorInfo &declarator : result.declarators) {
             declarator.initializerText = initializer;
             declarator.initializerPosition = initializerPosition;
@@ -718,7 +720,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                     }
                     if (mCursor.consume("=")) {
                         CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-                        skipExpression({",", ")"});
+                        skipExpression({",", ")"}, nullptr);
                         function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
                     }
                     if (mCursor.consume(")"))
@@ -1165,10 +1167,11 @@ QString CppDeclarationParser::readBalancedToken(const QString &opening, const QS
     return result;
 }
 
-QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters)
+QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters,
+                                                  DeclaratorInfo *declarator)
 {
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
-    skipExpression(delimiters);
+    skipExpression(delimiters, declarator);
     return readConsumedText(start);
 }
 
@@ -1181,9 +1184,136 @@ void CppDeclarationParser::skipBalancedToken()
     }
 }
 
-void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters)
+namespace {
+CppTokenizer::TokenList readLambdaReturnExpression(CppTokenCursor cursor)
+{
+    int bodyEnd = cursor.current().matchIndex;
+    if (bodyEnd <= cursor.index())
+        return {};
+    cursor.advance();
+    while (!cursor.atEnd() && cursor.index() < bodyEnd) {
+        if (cursor.currentText() == "return") {
+            cursor.advance();
+            CppTokenizer::TokenList result;
+            while (!cursor.atEnd() && cursor.index() < bodyEnd
+                   && cursor.currentText() != ";") {
+                int expressionEnd = cursor.current().matchIndex;
+                if (expressionEnd > cursor.index()) {
+                    while (!cursor.atEnd() && cursor.index() <= expressionEnd) {
+                        result.append(cursor.current());
+                        cursor.advance();
+                    }
+                } else {
+                    result.append(cursor.current());
+                    cursor.advance();
+                }
+            }
+            return result;
+        }
+        if (cursor.current().matchIndex > cursor.index()) {
+            cursor.skipToMatch();
+            if (!cursor.atEnd())
+                cursor.advance();
+        } else {
+            cursor.advance();
+        }
+    }
+    return {};
+}
+}
+
+bool CppDeclarationParser::parseLambda(LambdaInfo &result)
+{
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    result = LambdaInfo();
+    result.range.start = mCursor.current().position;
+    if (mCursor.currentText() != "["
+            || mCursor.current().matchIndex <= mCursor.index()) {
+        return false;
+    }
+    skipBalancedToken();
+
+    if (mCursor.currentText() == "(") {
+        mCursor.advance();
+        if (!mCursor.consume(")")) {
+            while (!mCursor.atEnd()) {
+                ParameterInfo parameter;
+                if (!parseParameter(parameter)) {
+                    mCursor.restore(start);
+                    return false;
+                }
+                result.parameters.append(parameter);
+                if (mCursor.consume("="))
+                    skipExpression({",", ")"}, nullptr);
+                if (mCursor.consume(")"))
+                    break;
+                if (!mCursor.consume(",")) {
+                    mCursor.restore(start);
+                    return false;
+                }
+            }
+        }
+    }
+
+    while (!mCursor.atEnd()) {
+        if (mCursor.consume("mutable")) {
+            result.isMutable = true;
+        } else if (mCursor.consume("constexpr") || mCursor.consume("consteval")) {
+        } else if (mCursor.consume("noexcept")) {
+            if (mCursor.currentText() == "(")
+                skipBalancedToken();
+        } else {
+            break;
+        }
+    }
+    if (mCursor.consume("->")) {
+        DeclSpecifierInfo specifiers;
+        if (!parseDeclSpecifierSeq(specifiers)) {
+            mCursor.restore(start);
+            return false;
+        }
+        result.returnType = specifiers.type;
+        if (mCursor.currentText() != "{") {
+            DeclaratorInfo abstractDeclarator;
+            if (!parseDeclarator(abstractDeclarator)) {
+                mCursor.restore(start);
+                return false;
+            }
+            appendTypeDerivation(result.returnType, abstractDeclarator);
+        }
+        result.hasTrailingReturnType = true;
+    }
+    if (mCursor.currentText() != "{") {
+        mCursor.restore(start);
+        return false;
+    }
+
+    CppTokenCursor bodyCursor = mCursor;
+    auto body = std::make_shared<DeclarationInfo>();
+    body->fileName = mCursor.current().fileName;
+    CppSyntaxParser bodyParser(mCursor);
+    bodyParser.setCppVersion(mCppVersion);
+    if (!bodyParser.parseBlock(*body)) {
+        mCursor.restore(start);
+        return false;
+    }
+    result.body = body;
+    result.returnExpression = readLambdaReturnExpression(bodyCursor);
+    result.range.end = mCursor.peek(-1).position;
+    return true;
+}
+
+void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters,
+                                          DeclaratorInfo *declarator)
 {
     while (!mCursor.atEnd() && !delimiters.contains(mCursor.currentText())) {
+        if (declarator && mCursor.currentText() == "[") {
+            auto lambda = std::make_shared<LambdaInfo>();
+            if (parseLambda(*lambda)) {
+                declarator->lambdas.append(lambda);
+                continue;
+            }
+        }
         if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalancedToken();
             continue;

@@ -24,6 +24,7 @@
 #include <memory>
 
 struct AbstractStatement;
+struct LambdaInfo;
 struct TypeInfo;
 using PTypeInfo = std::shared_ptr<TypeInfo>;
 
@@ -163,6 +164,7 @@ struct DeclaratorInfo {
     QVector<TypeDerivation> derivations;
     QString initializerText;
     SourcePosition initializerPosition;
+    QVector<std::shared_ptr<LambdaInfo>> lambdas;
     DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;
     int structuredBindingIndex = -1;
     TypeInfo templatePattern;

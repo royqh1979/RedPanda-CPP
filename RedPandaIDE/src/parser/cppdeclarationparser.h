@@ -21,6 +21,16 @@
 #include "cpptokencursor.h"
 #include "cpptypes.h"
 
+struct LambdaInfo {
+    SourceRange range;
+    QVector<ParameterInfo> parameters;
+    TypeInfo returnType;
+    bool hasTrailingReturnType = false;
+    bool isMutable = false;
+    CppTokenizer::TokenList returnExpression;
+    std::shared_ptr<DeclarationInfo> body;
+};
+
 class CppDeclarationParser
 {
 public:
@@ -52,8 +62,9 @@ private:
                            const CppTokenizer::Token &endToken) const;
     QString readConsumedText(const CppTokenCursor::Checkpoint &start);
     void skipBalancedToken();
-    QString readUntilDelimiter(const QSet<QString> &delimiters);
-    void skipExpression(const QSet<QString> &delimiters);
+    bool parseLambda(LambdaInfo &result);
+    QString readUntilDelimiter(const QSet<QString> &delimiters, DeclaratorInfo *declarator);
+    void skipExpression(const QSet<QString> &delimiters, DeclaratorInfo *declarator);
     void skipTemplateRequiresClause();
     void skipRequiresClause();
     void skipTemplateDefaultArgument(bool nonType = false);

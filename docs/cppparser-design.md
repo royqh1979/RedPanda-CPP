@@ -259,7 +259,7 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 函数对象调用的实参也按完整表达式求值，逗号只分隔实参。TypeOperationRegistry 将 filter/transform 调用转换为带实际回调 TypeInfo 的闭包；operator| 再把输入 range 与闭包合成为 filter_view/transform_view，join adaptor 直接合成为 join_view。显式非类型模板实参仅在 Registry 确认目标支持时消费，否则 `<` 仍按比较运算处理；views::elements<N> 因此可以合成为带 N 的 elements_view。管道类型可以传给 auto 和 range-for，最终成员访问继续使用同一表达式求值路径。
 
-初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移，lambda 等 Statement 不会错误落到表达式副本的 0 行。lambda 是实际声明而非模板实例：StatementModel 持有 Lambda Statement，参数归属于其 operator()，返回表达式在该函数上下文复用完整求值器；显式 trailing return 优先，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
+初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移。lambda 是实际声明而非模板实例：声明解析直接在原 token 流中保存参数、body 的结构化 DeclarationInfo 和顶层 return 表达式 token，不重新拼接或切分 body；Builder 在 auto 变量类型推导前建立 Lambda Statement、operator()、参数、body 内 statement 和源码位置作用域。auto 求值按稳定名称复用该 Lambda Statement。显式 trailing return 优先；否则在 operator() 上下文对保留的 return token 复用完整求值器，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
 
 完整模板实例化、SFINAE、concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
 
@@ -339,7 +339,6 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 - namespace 成员函数体内的 `extern` 声明归属，例如 `Q::V::h`；
 - if 条件中的结构化绑定，例如 `if (auto [iter, success] = ...; success)`；
 - range-for 中 `char const c` 形式的循环变量；
-- lambda body 尚未建立独立的源码位置作用域，按行查询会落在外层函数，lambda 参数及 body 内名称因此不能依赖该路径解析；当前 lazy eval 的临时 lambda statement 不替代源码作用域。
 
 这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。
 
