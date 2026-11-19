@@ -7,7 +7,7 @@
 #include <qsynedit/searcher/basicsearcher.h>
 #include <qsynedit/searcher/regexsearcher.h>
 #include "../utils.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "../editormanager.h"
 #include "../mainwindow.h"
 

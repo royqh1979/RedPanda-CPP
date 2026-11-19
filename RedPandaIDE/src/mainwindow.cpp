@@ -51,7 +51,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "editormanager.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"

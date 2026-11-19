@@ -18,15 +18,15 @@
 #define EDITOR_H
 
 #include <QObject>
-#include "utils/file.h"
-#include "utils/types.h"
-#include "utils/parsemacros.h"
+#include "../utils/file.h"
+#include "../utils/types.h"
+#include "../utils/parsemacros.h"
 #include "qsynedit/qsynedit.h"
-#include "common.h"
-#include "widgets/codecompletionpopup.h"
-#include "widgets/headercompletionpopup.h"
-#include "compiler/compilerinfo.h"
-#include "reformatter/basereformatter.h"
+#include "../common.h"
+#include "../widgets/codecompletionpopup.h"
+#include "../widgets/headercompletionpopup.h"
+#include "../compiler/compilerinfo.h"
+#include "../reformatter/basereformatter.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"

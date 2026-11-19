@@ -22,7 +22,7 @@
 #include "cpprefacter.h"
 #include "mainwindow.h"
 #include "settings.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include "editormanager.h"
 #include "syntaxermanager.h"
 #include "project.h"

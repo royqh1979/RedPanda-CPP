@@ -16,7 +16,7 @@
  */
 #include "todoparser.h"
 #include "mainwindow.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include "editormanager.h"
 #include "utils/file.h"
 

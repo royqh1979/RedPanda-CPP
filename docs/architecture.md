@@ -107,9 +107,10 @@ QSynEdit 是独立组件库，命名空间 `QSynedit`，与应用层解耦：
 - `exporter/` ——导出器：HTML（`HTMLExporter`、`QtSupportedHtmlExporter`）、RTF（`RTFExporter`）；
 - `formatter/cppformatter.*` ——简单的 C++ 缩进格式化（与 AStyle 格式化器不同，见 5.9）。
 
-### 5.2 编辑器封装：Editor 与 EditorManager（`src/editor.*`、`src/editormanager.*`）
+### 5.2 编辑器封装：Editor 与 EditorManager（`src/editor/editor.*`、`src/editormanager.*`）
 
 - `Editor : public QSynedit::QSynEdit`——在编辑器组件上叠加 IDE 语义：关联文件/项目单元、断点、语法检查标记、代码补全触发、符号高亮等。
+- `CppExpressionExtractor`（`src/editor/cppexpressionextractor.*`）——只依赖 `QSynEdit` 的 C++ 表达式提取组件，可独立于 IDE Editor 进行单元测试；现有 `Editor::getExpressionAtPosition()` 暂时保留，待调用方迁移完成后清理。
 - **自动换行是 per-editor 状态**（`Editor::mWordWrap`，`wordWrap()`/`setWordWrap()`）：选项对话框里的全局设置只作为**新建编辑器的默认值**（`setEditorSettings` 时初始化），视图菜单的开关只作用于当前编辑器；`MainWindow::updateEditorActions` 负责让菜单勾选跟随当前编辑器。会话恢复、项目布局（`ProjectEditorLayout`）、最近文件记录（`VisitRecord`）都按编辑器/文件保存该状态；拆分视图继承源编辑器的 wrap 状态。
 - **设置持久化的纪律**：运行时对设置的修改（菜单切换等）在 `MainWindow::closeEvent` 统一保存；设置对话框的 widget `doLoad` **不得**再调用 `settings.load()`——那会从 ini 重读并冲掉未保存的运行时修改（`EditorGeneralWidget` 曾因此丢过 wordWrap）。
 - **最近文件记录携带布局**：`VisitRecord`（`visithistorymanager.h`）除文件名/时间戳外还记录 caret、锚点（topLine/topSegment）、left、wordWrap，在关闭编辑器时捕获（`EditorManager`），从最近文件菜单打开时恢复。

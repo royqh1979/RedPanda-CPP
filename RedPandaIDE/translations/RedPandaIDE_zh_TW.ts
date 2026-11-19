@@ -1882,7 +1882,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">失敗</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+366"/>
+        <location filename="../src/editor/editor.cpp" line="+366"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -2038,7 +2038,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">輸入當前斷點的生效條件:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+5120"/>
+        <location filename="../src/editor/editor.cpp" line="+5120"/>
         <source>Readonly</source>
         <translation>唯讀</translation>
     </message>

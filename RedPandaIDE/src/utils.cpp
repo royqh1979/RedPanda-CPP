@@ -9,7 +9,7 @@
 #include <QRandomGenerator>
 #include <QOperatingSystemVersion>
 #include <QtXml>
-#include "editor.h"
+#include "editor/editor.h"
 #include "compiler/executablerunner.h"
 #include <QComboBox>
 #include "utils/escape.h"

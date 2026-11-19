@@ -19,7 +19,7 @@
 #include <QHeaderView>
 #include "../settings.h"
 #include "../mainwindow.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "../editormanager.h"
 
 

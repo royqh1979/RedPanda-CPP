@@ -3,7 +3,7 @@
 #include "src/settings/dirsettings.h"
 #include "src/settings/editorsettings.h"
 #include "src/colorscheme.h"
-#include "src/editor.h"
+#include "src/editor/editor.h"
 #include "test_editor_symbol_completion.h"
 #include <qsynedit/syntaxer/cpp.h>
 

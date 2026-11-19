@@ -1517,7 +1517,7 @@
         <translation type="vanished">sem nome</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+366"/>
+        <location filename="../src/editor/editor.cpp" line="+366"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -1581,7 +1581,7 @@
         <translation type="vanished">Inserir a condição de parada:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="+1636"/>
+        <location filename="../src/editor/editor.cpp" line="+1636"/>
         <source>Readonly</source>
         <translation>Apenas leitura</translation>
     </message>

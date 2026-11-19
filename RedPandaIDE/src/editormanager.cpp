@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "editormanager.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include <QMessageBox>
 #include <QVariant>
 #include "mainwindow.h"

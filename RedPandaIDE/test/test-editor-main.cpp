@@ -1,5 +1,6 @@
 #include <QTest>
 #include <QGuiApplication>
+#include "test_cppexpressionextractor.h"
 #include "test_editor_symbol_completion.h"
 #include "test_editor_display.h"
 #include "test_editor_general.h"
@@ -29,6 +30,11 @@ int main(int argc, char *argv[]) {
     argc = qtArgs.length();
     argv = qtArgs.data();
 
+    {
+        TestCppExpressionExtractor tc;
+        if (suite == "all" || suite == tc.metaObject()->className())
+            status |= QTest::qExec(&tc, argc, argv);
+    }
     {
         TestEditorSymbolCompletion tc;
         if (suite == "all" || suite == tc.metaObject()->className())

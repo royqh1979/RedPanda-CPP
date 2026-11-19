@@ -29,7 +29,7 @@
 #include <QString>
 #include <QTime>
 #include <QApplication>
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "../mainwindow.h"
 #include "../editormanager.h"
 #include "../parser/cppparser.h"

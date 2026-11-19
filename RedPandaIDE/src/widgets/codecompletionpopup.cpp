@@ -17,7 +17,7 @@
 #include "codecompletionpopup.h"
 #include "../utils.h"
 #include "../mainwindow.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "../editormanager.h"
 #include "../symbolusagemanager.h"
 #include "../colorscheme.h"

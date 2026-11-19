@@ -25,7 +25,7 @@
 #endif
 #include "src/colorscheme.h"
 #include "src/cpprefacter.h"
-#include "src/editor.h"
+#include "src/editor/editor.h"
 #include "src/editormanager.h"
 #include "src/mainwindow.h"
 #include "src/project.h"

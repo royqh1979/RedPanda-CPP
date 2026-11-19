@@ -19,7 +19,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "../editormanager.h"
 #include "../mainwindow.h"
 

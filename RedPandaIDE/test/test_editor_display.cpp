@@ -6,7 +6,7 @@
 #include <QCursor>
 #include <QMimeData>
 #include "test_editor_display.h"
-#include "src/editor.h"
+#include "src/editor/editor.h"
 #include "src/reformatter/basereformatter.h"
 
 namespace {

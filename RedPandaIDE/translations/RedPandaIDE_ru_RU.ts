@@ -1382,81 +1382,81 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../src/editor.cpp" line="489"/>
+        <location filename="../src/editor/editor.cpp" line="489"/>
         <source>Error Load File</source>
         <translation>Ошибка загрузки файла</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="366"/>
+        <location filename="../src/editor/editor.cpp" line="366"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="298"/>
-        <location filename="../src/editor.cpp" line="418"/>
+        <location filename="../src/editor/editor.cpp" line="298"/>
+        <location filename="../src/editor/editor.cpp" line="418"/>
         <source>Save Error</source>
         <translation type="unfinished">Ошибка сохранения</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="331"/>
+        <location filename="../src/editor/editor.cpp" line="331"/>
         <source>Save As</source>
         <translation>Сохранить как</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="367"/>
+        <location filename="../src/editor/editor.cpp" line="367"/>
         <source>File %1 already opened!</source>
         <translation>Файл %1 уже открыт!</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="479"/>
+        <location filename="../src/editor/editor.cpp" line="479"/>
         <source>Confirm Reload File</source>
         <translation>Подтверждение перезагрузки файла</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="480"/>
+        <location filename="../src/editor/editor.cpp" line="480"/>
         <source>The editing file will be reloaded. &lt;br /&gt;All unsaved modifications will be lost. &lt;br /&gt;Are you sure to continue?</source>
         <translation>Редактируемый файл будет перезагружен. &lt;br /&gt; Все несохраненные изменения будут потеряны. &lt;br /&gt; Вы хотите продолжить?</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="1957"/>
+        <location filename="../src/editor/editor.cpp" line="1957"/>
         <source>hex: %1</source>
         <translation>hex: %1</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="1959"/>
+        <location filename="../src/editor/editor.cpp" line="1959"/>
         <source>dec: %1</source>
         <translation>dec: %1</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3074"/>
+        <location filename="../src/editor/editor.cpp" line="3074"/>
         <source>Print Document</source>
         <translation>Печать документа</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3127"/>
-        <location filename="../src/editor.cpp" line="3128"/>
+        <location filename="../src/editor/editor.cpp" line="3127"/>
+        <location filename="../src/editor/editor.cpp" line="3128"/>
         <source>Printing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3127"/>
+        <location filename="../src/editor/editor.cpp" line="3127"/>
         <source>Cancel</source>
         <translation type="unfinished">Отмена</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3137"/>
+        <location filename="../src/editor/editor.cpp" line="3137"/>
         <source>Printing Page %1 / %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="3895"/>
-        <location filename="../src/editor.cpp" line="3921"/>
-        <location filename="../src/editor.cpp" line="3964"/>
+        <location filename="../src/editor/editor.cpp" line="3895"/>
+        <location filename="../src/editor/editor.cpp" line="3921"/>
+        <location filename="../src/editor/editor.cpp" line="3964"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+щелчок для подробностей</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="5190"/>
+        <location filename="../src/editor/editor.cpp" line="5190"/>
         <source>Reformat Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1490,7 +1490,7 @@
         <translation type="vanished">Введите условие для точки останова:</translation>
     </message>
     <message>
-        <location filename="../src/editor.cpp" line="5600"/>
+        <location filename="../src/editor/editor.cpp" line="5600"/>
         <source>Readonly</source>
         <translation>Только чтение</translation>
     </message>

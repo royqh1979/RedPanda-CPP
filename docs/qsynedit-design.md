@@ -306,7 +306,7 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
 
 - `document.h` 注释称 `glyphStartPostion` 返回 "column (starting from 1)"，实现实为 **0 基**（`calcGlyphPositionList` 从 0 累积，`document.cpp`）——注释错误；`document.h` 的 `@param column (starting from 1)` 是同一类错误；
 - `charToGlyphIndex` 的文档注释（`document.h`）仍写参数名 `charIdx`，声明实参已统一为 `charPos`（`document.h`）——注释滞后；
-- `RedPandaIDE/src/editor.cpp` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
+- `RedPandaIDE/src/editor/editor.cpp` 的注释 `//BufferCoord::Char starts with 1` 是旧 SynEdit（1 基）时代残留，当前 ch 为 0 基，代码本身正确但注释误导。
 
 ### 3.4 CharPos 的多义使用（有意复用，非误用）
 
