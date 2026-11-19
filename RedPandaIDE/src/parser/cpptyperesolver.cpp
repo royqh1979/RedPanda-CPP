@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QStack>
+#include <algorithm>
 #include <limits>
 
 namespace {
@@ -466,6 +467,34 @@ private:
 
 }
 
+CppTypeResolver::EvaluationContext::EvaluationContext()
+{
+    const QByteArrayList disabled = qgetenv("REDPANDA_PARSER_DISABLE_CACHES").split(',');
+    for (QByteArray name : disabled) {
+        name = name.trimmed();
+        if (name == "all")
+            caches = CacheLevel::None;
+        else if (name == "type-text")
+            caches.setFlag(CacheLevel::ParsedTypeText, false);
+        else if (name == "type-name")
+            caches.setFlag(CacheLevel::ParsedTypeName, false);
+        else if (name == "type-pattern")
+            caches.setFlag(CacheLevel::ParsedTypePattern, false);
+        else if (name == "binding-frame")
+            caches.setFlag(CacheLevel::BindingFrame, false);
+        else if (name == "resolved-value")
+            caches.setFlag(CacheLevel::ResolvedValue, false);
+        else if (name == "specialization")
+            caches.setFlag(CacheLevel::SelectedSpecialization, false);
+        else if (name == "declaration")
+            caches.setFlag(CacheLevel::Declaration, false);
+        else if (name == "member")
+            caches.setFlag(CacheLevel::Member, false);
+        else if (name == "resolved-type")
+            caches.setFlag(CacheLevel::ResolvedType, false);
+    }
+}
+
 CppTypeResolver::CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation)
     : mModel(model), mEvaluation(evaluation)
 {
@@ -575,9 +604,12 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
         QList<MemberResolution> candidates = memberCandidates(receiver, memberName,
                                                               visited, evaluation);
         for (int templateRank = 0; templateRank < 2; ++templateRank) {
-            MemberEvalResult result;
-            int bestScore = std::numeric_limits<int>::min();
-            bool tied = false;
+            struct MatchedCandidate {
+                PStatement statement;
+                PTemplateBindingFrame bindings;
+                int score;
+            };
+            QVector<MatchedCandidate> matches;
             for (const MemberResolution &member : candidates) {
                 int candidateRank = std::dynamic_pointer_cast<Statement>(member.statement)->templateParameters.isEmpty() ? 0 : 1;
                 if (candidateRank != templateRank || !isInvocable(member.statement))
@@ -593,22 +625,41 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                     if (!owner.bindings->complete)
                         continue;
                 }
-                ClassInstance resultInstance;
                 int score = 0;
-                TypeInfo type = invokeFunctionCandidate(member.statement, arguments, {},
-                                                        evaluation, owner.bindings, &resultInstance, &score);
-                if (type.qualifiedName.isEmpty())
-                    continue;
-                if (score > bestScore) {
-                    bestScore = score;
-                    result = {member.statement, type, resultInstance};
-                    tied = false;
-                } else if (score == bestScore) {
-                    tied = true;
-                }
+                PTemplateBindingFrame currentBindings = matchFunctionCandidate(
+                            member.statement, arguments, {}, evaluation, owner.bindings, &score);
+                if (currentBindings)
+                    matches.append({member.statement, currentBindings, score});
             }
-            if (!tied && bestScore != std::numeric_limits<int>::min())
-                return result;
+            std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
+                return left.score > right.score;
+            });
+            int first = 0;
+            while (first < matches.count()) {
+                int last = first + 1;
+                while (last < matches.count() && matches[last].score == matches[first].score)
+                    ++last;
+                MemberEvalResult result;
+                bool tied = false;
+                for (int i = first; i < last; ++i) {
+                    const MatchedCandidate &match = matches[i];
+                    ClassInstance resultInstance = resolveTypeInstance(
+                                std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
+                                match.bindings, match.statement->parentScope.lock(), evaluation);
+                    if (resultInstance.type.qualifiedName.isEmpty())
+                        continue;
+                    if (result.statement) {
+                        tied = true;
+                    } else {
+                        result = {match.statement, resultInstance.type, resultInstance};
+                    }
+                }
+                if (tied)
+                    break;
+                if (result.statement)
+                    return result;
+                first = last;
+            }
         }
         return {};
     }
@@ -641,10 +692,13 @@ TypeInfo CppTypeResolver::invokeFunction(
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    TypeInfo result;
-    ClassInstance instance;
-    int bestScore = std::numeric_limits<int>::min();
-    bool tied = false;
+    struct MatchedCandidate {
+        PStatement statement;
+        PTemplateBindingFrame bindings;
+        EvaluationContext evaluation;
+        int score;
+    };
+    QVector<MatchedCandidate> matches;
     for (const PStatement &candidate : functionCandidates(function)) {
         EvaluationContext candidateEvaluation = evaluation;
         candidateEvaluation.operationCount = 0;
@@ -652,24 +706,49 @@ TypeInfo CppTypeResolver::invokeFunction(
         candidateEvaluation.aliases.clear();
         candidateEvaluation.resolvingTypes.clear();
         candidateEvaluation.resolvingConstraints.clear();
-        ClassInstance currentInstance;
         int score = 0;
-        TypeInfo current = invokeFunctionCandidate(candidate, arguments, explicitArguments,
-                                                   candidateEvaluation, {}, &currentInstance, &score);
-        if (current.qualifiedName.isEmpty())
-            continue;
-        if (score > bestScore) {
-            bestScore = score;
-            result = current;
-            instance = currentInstance;
-            tied = false;
-        } else if (score == bestScore) {
-            tied = true;
-        }
+        PTemplateBindingFrame currentBindings = matchFunctionCandidate(
+                    candidate, arguments, explicitArguments, candidateEvaluation, {}, &score);
+        if (currentBindings)
+            matches.append({candidate, currentBindings, candidateEvaluation, score});
     }
-    if (!tied && resultInstance)
-        *resultInstance = instance;
-    return tied ? TypeInfo() : result;
+    std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
+        return left.score > right.score;
+    });
+    int first = 0;
+    while (first < matches.count()) {
+        int last = first + 1;
+        while (last < matches.count() && matches[last].score == matches[first].score)
+            ++last;
+        PStatement result;
+        ClassInstance instance;
+        bool tied = false;
+        for (int i = first; i < last; ++i) {
+            MatchedCandidate &match = matches[i];
+            ClassInstance current = resolveTypeInstance(
+                        std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
+                        match.bindings, match.statement->parentScope.lock(), match.evaluation);
+            if (current.type.qualifiedName.isEmpty())
+                continue;
+            if (result) {
+                tied = true;
+            } else {
+                result = match.statement;
+                instance = current;
+            }
+        }
+        if (tied)
+            return {};
+        if (result) {
+            if (resultInstance)
+                *resultInstance = instance;
+            return instance.type;
+        }
+        first = last;
+    }
+    if (resultInstance)
+        *resultInstance = {};
+    return {};
 }
 
 QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function) const
@@ -705,17 +784,23 @@ QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function
     return result;
 }
 
-TypeInfo CppTypeResolver::invokeFunctionCandidate(
+PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
         const PStatement &function, const QVector<TypeInfo> &arguments,
         const QVector<TemplateArgument> &explicitArguments,
-        EvaluationContext &evaluation,
-        const PTemplateBindingFrame &outerBindings,
-        ClassInstance *resultInstance, int *matchScore) const
+        EvaluationContext &evaluation, const PTemplateBindingFrame &outerBindings,
+        int *matchScore) const
 {
     if (!function)
         return {};
     traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
-    ResolveOriginScope originScope("invokeFunctionCandidate");
+    ResolveOriginScope originScope("matchFunctionCandidate");
+    bool parameterPack = false;
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
+        parameterPack |= parameter.parameterPack;
+    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
+            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
+        return {};
+    }
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;
@@ -734,11 +819,13 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
                                           evaluation);
             if (actual.qualifiedName.isEmpty())
                 return {};
+            ++frame->revision;
             frame->values.insert(parameter.name, TemplateArgument::fromType(actual));
         } else {
             QString constant = argument.constantExpression;
             if (constant.isEmpty() && argument.type)
                 constant = argument.type->qualifiedNameText;
+            ++frame->revision;
             frame->values.insert(parameter.name, TemplateArgument::fromConstant(
                     resolveConstantExpression(constant, frame, function->parentScope.lock(),
                                               evaluation)));
@@ -750,6 +837,7 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type) {
             bindParameterType(*std::dynamic_pointer_cast<Statement>(function)->parameters[i].type, arguments[i], templateParameters,
                               frame->values, evaluation);
+            ++frame->revision;
         }
     }
     for (int i = explicitCount; i < std::dynamic_pointer_cast<Statement>(function)->templateParameters.count(); ++i) {
@@ -763,14 +851,8 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
             continue;
         TemplateArgument argument = resolveArgument(defaultText, parameter.kind,
                                                     frame, function->parentScope.lock(), evaluation);
+        ++frame->revision;
         frame->values.insert(parameter.name, argument);
-    }
-    bool parameterPack = false;
-    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
-        parameterPack |= parameter.parameterPack;
-    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
-            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
-        return {};
     }
     QVector<TypeInfo> resolvedParameters;
     resolvedParameters.reserve(count);
@@ -787,8 +869,6 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
             function, frame, function->parentScope.lock(), evaluation);
     if (satisfaction == ConstraintSatisfaction::Unsatisfied)
         return {};
-    ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(function)->typeInfo, frame,
-                                               function->parentScope.lock(), evaluation);
     if (matchScore) {
         int score = 0;
         for (int i = 0; i < count; ++i) {
@@ -827,9 +907,7 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         }
         *matchScore = score;
     }
-    if (resultInstance)
-        *resultInstance = result;
-    return result.type;
+    return frame;
 }
 
 bool CppTypeResolver::compatibleArgument(
@@ -1162,6 +1240,16 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         return {result, {}, {}};
     }
     QString typeString = profiledTypeString(type);
+    bool cacheEnabled = !evaluation.allowModelChanges
+            && evaluation.caches.testFlag(CacheLevel::ResolvedType);
+    ResolvedTypeKey cacheKey;
+    if (cacheEnabled) {
+        cacheKey = {typeString, type.declaration.lock().get(), context.get(), bindings};
+        auto cached = evaluation.resolvedTypes->constFind(cacheKey);
+        traceSyntaxAttempt("resolveType", typeString, cached != evaluation.resolvedTypes->constEnd());
+        if (cached != evaluation.resolvedTypes->constEnd())
+            return cached.value();
+    }
     QString resolutionKey = (context ? context->fullName : QString()) + "|" + typeString
             + "|" + (bindings && bindings->owner ? bindings->owner->fullName : QString());
     if (evaluation.resolvingTypes.contains(resolutionKey)) {
@@ -1169,6 +1257,13 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         return {};
     }
     ResolutionGuard guard(evaluation.resolvingTypes, resolutionKey);
+    auto cacheResult = [&](ClassInstance result) {
+        if (cacheEnabled && !result.type.qualifiedName.isEmpty()
+                && evaluation.operationCount <= 4096 && !evaluation.resolutionFailed) {
+            evaluation.resolvedTypes->insert(cacheKey, result);
+        }
+        return result;
+    };
 
     QVector<TypeNameSegment> segments;
     bool globallyQualified = false;
@@ -1204,12 +1299,15 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         const TemplateArgument *binding = nullptr;
         ClassInstance result;
         bool hasResolvedValue = false;
+        bool resolvedValueCacheEnabled = evaluation.caches.testFlag(CacheLevel::ResolvedValue);
         for (; bindingFrame; bindingFrame = bindingFrame->parent) {
             auto argument = bindingFrame->values.constFind(name);
             if (argument == bindingFrame->values.constEnd())
                 continue;
             binding = &argument.value();
-            auto resolved = bindingFrame->resolvedValues.constFind(name);
+            auto resolved = resolvedValueCacheEnabled
+                    ? bindingFrame->resolvedValues.constFind(name)
+                    : bindingFrame->resolvedValues.constEnd();
             if (resolved != bindingFrame->resolvedValues.constEnd()) {
                 result = resolved.value();
                 hasResolvedValue = true;
@@ -1230,11 +1328,11 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
                 } else {
                     result = resolveTypeInstance(*binding->type, bindings, context, evaluation);
                 }
-                if (!result.type.qualifiedName.isEmpty())
+                if (resolvedValueCacheEnabled && !result.type.qualifiedName.isEmpty())
                     bindingFrame->resolvedValues.insert(name, result);
             }
             applyReference(result.type, reference);
-            return result;
+            return cacheResult(result);
         }
     }
     if (segments.last().arguments.isEmpty() && !type.templateArguments.isEmpty()) {
@@ -1247,7 +1345,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
                 resolveType(*parameter.type, bindings, context, evaluation);
         }
     }
-    return resolveSegments(type, segments, globallyQualified, bindings, context, evaluation);
+    return cacheResult(resolveSegments(type, segments, globallyQualified, bindings, context, evaluation));
 }
 
 CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
@@ -1487,7 +1585,10 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
 {
     const auto &cache = materializeArguments ? evaluation.parsedTypeNames
                                              : evaluation.parsedTypePatterns;
-    auto cached = cache->constFind(text);
+    bool cacheEnabled = evaluation.caches.testFlag(materializeArguments
+                                                   ? CacheLevel::ParsedTypeName
+                                                   : CacheLevel::ParsedTypePattern);
+    auto cached = cacheEnabled ? cache->constFind(text) : cache->constEnd();
     traceSyntaxAttempt(materializeArguments ? "parseTypeNameSegments/eager"
                                             : "parseTypeNameSegments/lazy",
                        text, cached != cache->constEnd());
@@ -1624,7 +1725,8 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
     }
     if (segments.isEmpty())
         return false;
-    cache->insert(text, {segments, globallyQualified});
+    if (cacheEnabled)
+        cache->insert(text, {segments, globallyQualified});
     return true;
 }
 
@@ -1669,7 +1771,9 @@ void CppTypeResolver::materializeTemplateArgumentPatterns(
 TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &evaluation,
                                         bool materializeArguments) const
 {
-    auto cached = evaluation.parsedTypeTexts->constFind(text);
+    bool cacheEnabled = evaluation.caches.testFlag(CacheLevel::ParsedTypeText);
+    auto cached = cacheEnabled ? evaluation.parsedTypeTexts->constFind(text)
+                               : evaluation.parsedTypeTexts->constEnd();
     traceSyntaxAttempt("parseTypeText", text, cached != evaluation.parsedTypeTexts->constEnd());
     if (cached != evaluation.parsedTypeTexts->constEnd())
         return cached.value();
@@ -1710,7 +1814,8 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
                 result.qualifiedName = (globallyQualified ? "::" : "") + names.join("::");
                 result.qualifiedNameText = text;
                 result.qualifiers = qualifiers;
-                evaluation.parsedTypeTexts->insert(text, result);
+                if (cacheEnabled)
+                    evaluation.parsedTypeTexts->insert(text, result);
                 return result;
             }
         }
@@ -1730,7 +1835,7 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
         return {};
     TypeInfo result = specifiers.type;
     result.derivations += declarator.derivations;
-    if (!result.qualifiedName.isEmpty())
+    if (cacheEnabled && !result.qualifiedName.isEmpty())
         evaluation.parsedTypeTexts->insert(text, result);
     return result;
 }
@@ -1790,14 +1895,18 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
     }
     QString cacheKey = QString::number(reinterpret_cast<quintptr>(primary.declaration.get()), 16) + "|"
             + QString::number(reinterpret_cast<quintptr>(primary.bindings.get()), 16);
-    auto cached = evaluation.selectedSpecializations->constFind(cacheKey);
+    bool cacheEnabled = evaluation.caches.testFlag(CacheLevel::SelectedSpecialization);
+    auto cached = cacheEnabled ? evaluation.selectedSpecializations->constFind(cacheKey)
+                               : evaluation.selectedSpecializations->constEnd();
     traceSyntaxAttempt("selectSpecialization", cacheKey,
                        cached != evaluation.selectedSpecializations->constEnd());
     if (cached != evaluation.selectedSpecializations->constEnd())
         return cached.value();
     auto cacheResult = [&](const ClassInstance &selected) {
-        if (selected.declaration && evaluation.operationCount <= 4096 && !evaluation.resolutionFailed)
+        if (cacheEnabled && selected.declaration
+                && evaluation.operationCount <= 4096 && !evaluation.resolutionFailed) {
             evaluation.selectedSpecializations->insert(cacheKey, selected);
+        }
         return selected;
     };
     if (resolverProfile.traceEnabled) {
@@ -2191,7 +2300,8 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
     const QStringList parts = name.split("::", Qt::SkipEmptyParts);
     if (parts.isEmpty())
         return nullptr;
-    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
+    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges
+            && mEvaluation->caches.testFlag(CacheLevel::Declaration);
     LookupKey cacheKey{initialContext.get(), name, typesOnly};
     if (cacheEnabled) {
         auto cached = mEvaluation->declarationResults->constFind(cacheKey);
@@ -2311,7 +2421,8 @@ PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &n
                 + (typesOnly ? "types" : "all");
         ++resolverProfile.memberDeclarationTrace[key];
     }
-    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges;
+    bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges
+            && mEvaluation->caches.testFlag(CacheLevel::Member);
     LookupKey cacheKey{scope.get(), name, typesOnly};
     if (cacheEnabled) {
         ResolverProfileScope profileScope(resolverProfile.memberCacheNs,
@@ -2717,7 +2828,9 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
     QString instanceText = profiledTypeString(instance);
     QString cacheKey = QString::number(reinterpret_cast<quintptr>(declaration.get()), 16) + "|"
             + QString::number(reinterpret_cast<quintptr>(lexicalParent.get()), 16) + "|" + instanceText;
-    auto cached = evaluation.bindingFrames->constFind(cacheKey);
+    bool cacheEnabled = evaluation.caches.testFlag(CacheLevel::BindingFrame);
+    auto cached = cacheEnabled ? evaluation.bindingFrames->constFind(cacheKey)
+                               : evaluation.bindingFrames->constEnd();
     traceSyntaxAttempt("declarationBindings", cacheKey, cached != evaluation.bindingFrames->constEnd());
     if (cached != evaluation.bindingFrames->constEnd())
         return cached.value();
@@ -2761,9 +2874,12 @@ CppTypeResolver::PTemplateBindingFrame CppTypeResolver::declarationBindings(
             result->complete = false;
             continue;
         }
+        ++result->revision;
         result->values.insert(parameter.name, argument);
     }
-    if (result->complete && evaluation.operationCount <= 4096 && !evaluation.resolutionFailed)
+    if (cacheEnabled && result->complete
+            && evaluation.operationCount <= 4096 && !evaluation.resolutionFailed) {
         evaluation.bindingFrames->insert(cacheKey, result);
+    }
     return result;
 }

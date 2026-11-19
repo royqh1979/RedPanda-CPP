@@ -2616,7 +2616,6 @@ void TestCppParser::test_standard_library_expression_chains()
 
 void TestCppParser::test_standard_library_trace_edge_cases()
 {
-    QSKIP("Lambda body scopes are not built by the parser yet");
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
@@ -2632,6 +2631,11 @@ void TestCppParser::test_standard_library_trace_edge_cases()
         "    auto compare = [](const auto &left, const auto &right) { return left.size() < right.size(); };",
         "    auto readRecord = [](const Record &record) { return record.value; };",
         "    auto readShared = [](const std::shared_ptr<Record> &record) { return record->value; };",
+        "    int outer = 0;",
+        "    auto withLocal = [&](const Record &record) {",
+        "        int result = record.value;",
+        "        return result + outer;",
+        "    };",
         "}"
     }));
     QString bitsStdcpp;
@@ -2643,11 +2647,6 @@ void TestCppParser::test_standard_library_trace_edge_cases()
         QVERIFY(scope);
         ExpressionEvalTrace trace;
         mParser->evalExpression(main, expression, scope, &trace);
-        if (trace.size() != identifierIndexes.size()) {
-            qWarning() << "TRACE_SCOPE" << line << scope->fullName << expression
-                       << (trace.isEmpty() || !trace.first().statement
-                           ? QString() : trace.first().statement->fullName);
-        }
         QCOMPARE(trace.size(), identifierIndexes.size());
         for (int i = 0; i < trace.size(); ++i) {
             QCOMPARE(trace[i].tokenIndex, identifierIndexes[i]);
@@ -2659,10 +2658,31 @@ void TestCppParser::test_standard_library_trace_edge_cases()
     };
     check(7, {"row", ".", "begin"}, {0, 2});
     check(7, {"row", ".", "end"}, {0, 2});
-    check(8, {"left", ".", "size"}, {0, 2});
-    check(8, {"right", ".", "size"}, {0, 2});
     check(9, {"record", ".", "value"}, {0, 2});
     check(10, {"record", "->", "value"}, {0, 2});
+    PStatement withLocal = mParser->findStatementOf(main, QStringList{"withLocal"}, 12);
+    QVERIFY(withLocal);
+    PStatement lambda = std::dynamic_pointer_cast<Statement>(withLocal)->typeInfo.declaration.lock();
+    QVERIFY(lambda);
+    QCOMPARE(lambda->kind, StatementKind::Lambda);
+    PStatement call;
+    for (const PStatement &member : mParser->membersOfStatement(lambda)) {
+        if (member->kind == StatementKind::OverloadedOperator && member->command == "operator()") {
+            call = member;
+            break;
+        }
+    }
+    QVERIFY(call);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->typeInfo.qualifiedName, QString("int"));
+    check(13, {"record", ".", "value"}, {0, 2});
+    check(14, {"result"}, {0});
+    check(14, {"outer"}, {0});
+    PStatement genericScope = mParser->findScopeStatement(main, 8);
+    QVERIFY(genericScope);
+    QCOMPARE(genericScope->kind, StatementKind::OverloadedOperator);
+    PStatement left = mParser->findStatementOf(main, QStringList{"left"}, 8);
+    QVERIFY(left);
+    QCOMPARE(left->kind, StatementKind::Parameter);
 }
 
 void TestCppParser::test_standard_library_container_eval_profile()
@@ -2701,6 +2721,9 @@ void TestCppParser::test_standard_library_container_eval_profile()
         "    }",
         "    for (auto i = lst.begin(); i != lst.end(); ++i) {",
         "        i->size();",
+        "    }",
+        "    for (const auto &entry : mapping) {",
+        "        entry.first.size();",
         "    }",
         "}"
     }));
@@ -2757,7 +2780,8 @@ void TestCppParser::test_standard_library_container_eval_profile()
         {"while.iterator_deref", 23, {"(", "*", "it", ")"}},
         {"while.prefix_increment_arrow", 23, {"(", "++", "it", ")", "->"}},
         {"range_for.element", 26, {"s"}},
-        {"classic_for.iterator_arrow", 29, {"i", "->"}}
+        {"classic_for.iterator_arrow", 29, {"i", "->"}},
+        {"range_for.entry_first", 31, {"entry", ".", "first"}}
     };
     QElapsedTimer timer;
     timer.start();

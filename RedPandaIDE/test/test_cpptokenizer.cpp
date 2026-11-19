@@ -1706,6 +1706,41 @@ void TestCppTokenizer::test_type_resolver_namespace_defaults_do_not_capture_call
 }
 
 
+void TestCppTokenizer::test_type_resolution_cache_respects_bindings_and_switches()
+{
+    StatementModel model;
+    CppTypeResolver resolver(model);
+    TypeInfo dependent;
+    dependent.qualifiedName = "T";
+    dependent.qualifiedNameText = "T";
+    DeclarationInfo stringDeclaration;
+    DeclarationInfo intDeclaration;
+    DeclarationInfo doubleDeclaration;
+    QVERIFY(parseDeclarationText("std::string value;", stringDeclaration));
+    QVERIFY(parseDeclarationText("int value;", intDeclaration));
+    QVERIFY(parseDeclarationText("double value;", doubleDeclaration));
+    TemplateBindings stringBindings;
+    stringBindings.insert("T", TemplateArgument::fromType(stringDeclaration.specifiers.type));
+    TemplateBindings intBindings;
+    intBindings.insert("T", TemplateArgument::fromType(intDeclaration.specifiers.type));
+    TemplateBindings doubleBindings;
+    doubleBindings.insert("T", TemplateArgument::fromType(doubleDeclaration.specifiers.type));
+
+    CppTypeResolver::EvaluationContext evaluation;
+    QCOMPARE(resolver.resolveInstance(dependent, stringBindings, {}, &evaluation).type.toString(),
+             "std::string");
+    QCOMPARE(resolver.resolveInstance(dependent, intBindings, {}, &evaluation).type.toString(), "int");
+    QCOMPARE(resolver.resolveInstance(dependent, stringBindings, {}, &evaluation).type.toString(),
+             "std::string");
+    int cacheCount = evaluation.resolvedTypes->count();
+
+    evaluation.caches.setFlag(CacheLevel::ResolvedType, false);
+    QCOMPARE(resolver.resolveInstance(dependent, doubleBindings, {}, &evaluation).type.toString(),
+             "double");
+    QCOMPARE(evaluation.resolvedTypes->count(), cacheCount);
+}
+
+
 void TestCppTokenizer::test_member_lookup_cache_ignores_model_changes()
 {
     StatementModel model;
@@ -2480,7 +2515,7 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     QVERIFY(call);
     QCOMPARE(statementType(call), "double");
     QVERIFY(call->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->normalizedArgs, "() const");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(call)->normalizedArgs, "(int) const");
     PStatement value = findStatement(std::dynamic_pointer_cast<Statement>(call)->children, "value");
     QVERIFY(value);
     QCOMPARE(statementType(value), "int");
@@ -2491,7 +2526,7 @@ void TestCppTokenizer::test_lambda_inference_preserves_source_position()
     PStatement mutableCall = findStatement(std::dynamic_pointer_cast<Statement>(mutableLambda)->children, "operator()");
     QVERIFY(mutableCall);
     QVERIFY(!mutableCall->properties.testFlag(StatementProperty::Const));
-    QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "()");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "(int)");
 
     CppTypeResolver resolver(model);
     TypeOperationRegistry operations(resolver);
