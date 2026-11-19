@@ -385,18 +385,20 @@ P4 对每个求值单元执行一次 eval，输出 identifier trace，并使用�
 
 `QSYNEDIT_PAINT_PROFILE=1` 输出 painter 各阶段的 self-time 和调用次数，嵌套阶段扣除直接子阶段耗时。插桩数据只用于比较热点结构，不作为最终帧耗时。
 
-首轮显示：`drawText` 为 65.3 ms / 63,488 次，`seekFromAnchor` 为 64.2 ms / 168 次，整行纯预扫描为 19.0 ms。据此实施两项通用优化：
+首轮显示：`drawText` 为 65.3 ms / 63,488 次，`seekFromAnchor` 为 64.2 ms / 168 次，整行纯预扫描为 19.0 ms。据此实施以下通用优化：
 
 - ligature 关闭时，将可打印 ASCII 合并为绘制 run，run 字体使用 `PreferNoShaping`，避免产生 ligature；非 ASCII、控制字符和空白仍走原路径。合并后 `drawText` 为 18.6 ms / 7,408 次。
 - word-wrap 关闭时直接通过 RowIndex 将 display row 映射为 line/segment，不再逐行步行。word-wrap 开启时仍步行，以逐行实现实际布局并更新 RowIndex。步行成本消除后，必要的冷布局转移到 `wrapLayout`，不能将两者合并后误报为纯收益。
+- 合并相邻、相接或重叠且颜色相同的 token 背景段，背景填充由 3,808 次降为 1,920 次，不改变不同颜色的覆盖顺序。
+- 有整行准备结果时，主循环直接消费该列表并跨 wrap 段保存下标，不再逐 token 读取 syntaxer；仅需要行尾装饰时快进原 syntaxer 以取得状态。`paintLines` 自身由约 10.2 ms 降为 6.6 ms。
 
 最终关闭 painter 插桩、15 轮中位数：
 
 | 场景 | P0 paint | painter 优化后冷 paint | 热 paint |
 | --- | ---: | ---: | ---: |
-| 顺序容器与算法 | 56.455 ms | 43.156 ms | 9.689 ms |
-| 关联容器与字符串 | 52.753 ms | 43.054 ms | 9.018 ms |
-| 智能指针与 chrono | 30.340 ms | 23.003 ms | 8.865 ms |
+| 顺序容器与算法 | 56.455 ms | 42.277 ms | 9.583 ms |
+| 关联容器与字符串 | 52.753 ms | 43.089 ms | 9.126 ms |
+| 智能指针与 chrono | 30.340 ms | 23.350 ms | 8.802 ms |
 
 剩余热点包括必要的冷布局、整帧和 token 背景填充、整行预扫描及 eval；后续优化仍需先测量，不能根据单项调用次数推断收益。
 

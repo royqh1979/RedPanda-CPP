@@ -109,6 +109,7 @@ private:
     void computeSelectionInfo();
     void getDrawingColors(const RowPaintContext &row, bool selected, QColor& foreground , QColor& background);
     int lineXToWidgetX(int segmentStartX, int xpos);
+    void appendTokenBackground(RowPaintContext &row, const TokenBackgroundInfo &info);
     void flushRowTokens(RowPaintContext &row);
     void paintToken(
             RowPaintContext &row,

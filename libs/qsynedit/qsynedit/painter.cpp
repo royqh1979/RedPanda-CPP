@@ -453,6 +453,26 @@ int QSynEditPainter::lineXToWidgetX(int segmentStartX, int xpos)
     return mEdit->textOffset() + xpos - segmentStartX;
 }
 
+void QSynEditPainter::appendTokenBackground(RowPaintContext &ctx,
+                                            const TokenBackgroundInfo &info)
+{
+    if (info.width <= 0)
+        return;
+    if (!ctx.tokenBackgrounds.isEmpty()) {
+        TokenBackgroundInfo &last = ctx.tokenBackgrounds.last();
+        int lastRight = last.left + last.width;
+        int infoRight = info.left + info.width;
+        if (last.background == info.background
+                && last.left <= infoRight && info.left <= lastRight) {
+            int left = std::min(last.left, info.left);
+            last.width = std::max(lastRight, infoRight) - left;
+            last.left = left;
+            return;
+        }
+    }
+    ctx.tokenBackgrounds.append(info);
+}
+
 void QSynEditPainter::flushRowTokens(RowPaintContext &ctx)
 {
     PaintProfileScope profileScope("flushRowTokens");
@@ -513,7 +533,7 @@ void QSynEditPainter::paintToken(
         backInfo.left=rcTokenBack.left();
         backInfo.width=rcTokenBack.width();
         backInfo.background=background;
-        ctx.tokenBackgrounds.append(backInfo);
+        appendTokenBackground(ctx, backInfo);
         //mPainter->fillRect(rcTokenBack,mPainter->brush());
         if (first > tokenWidth) {
         } else {
@@ -826,7 +846,7 @@ void QSynEditPainter::paintHighlightToken(RowPaintContext &ctx,
         backInfo.left=ctx.rcToken.left();
         backInfo.width=ctx.rcToken.width();
         backInfo.background=background;
-        ctx.tokenBackgrounds.append(backInfo);
+        appendTokenBackground(ctx, backInfo);
     }
     if (fillToEOL) {
         flushRowTokens(ctx);
@@ -1154,6 +1174,7 @@ void QSynEditPainter::paintLines()
     int scanTokenLeft = 0;
     SynTokenAccu scanAccu;
     PaintHighlightTokenList scanHighlights;
+    int scanHighlightIndex = 0;
     QList<int> glyphStartCharList;
     QList<int> glyphStartPositionsList;
 
@@ -1324,6 +1345,7 @@ void QSynEditPainter::paintLines()
                 scanHighlights = prepareHighlightTokens(ctx, line, lineTextWithPreedit);
             scanAccu.width = 0;
             scanTokenLeft = 0;
+            scanHighlightIndex = 0;
         }
         // resume the carried scan; the accumulator may still hold a token
         // painted (clipped) at the previous segment - it straddles the
@@ -1334,8 +1356,10 @@ void QSynEditPainter::paintLines()
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
         // is ignored as well.
-        int highlightIndex = 0;
-        while (!mEdit->mSyntaxer->eol()) {
+        bool usePrepared = mEdit->mPaintHighlightTokensPreparer != nullptr;
+        int highlightIndex = scanHighlightIndex;
+        while (usePrepared ? highlightIndex < scanHighlights.size()
+                           : !mEdit->mSyntaxer->eol()) {
             // Stop BEFORE consuming a token that starts past this row's
             // right clip edge: the next wrap segment resumes the scan
             // exactly at it. (Preedit lines compute glyph positions as
@@ -1343,23 +1367,19 @@ void QSynEditPainter::paintLines()
             // needs the whole line.)
             if (!recomputeGlyphPositions && tokenLeft >= ctx.tokenClipRight)
                 break;
-            token = mEdit->mSyntaxer->getToken();
-            if (token.isEmpty())  {
-                mEdit->mSyntaxer->next();
-                continue;
-            }
-            int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
-            int tokenEndChar = tokenStartChar + token.length();
-            while (highlightIndex < scanHighlights.size()
-                   && scanHighlights[highlightIndex].ch < tokenStartChar) {
-                ++highlightIndex;
-            }
-
             PaintHighlightToken highlightToken;
-            if (highlightIndex < scanHighlights.size()
-                    && scanHighlights[highlightIndex].ch == tokenStartChar) {
-                highlightToken = scanHighlights[highlightIndex];
+            int tokenStartChar;
+            if (usePrepared) {
+                highlightToken = scanHighlights[highlightIndex++];
+                token = highlightToken.text;
+                tokenStartChar = highlightToken.ch;
             } else {
+                token = mEdit->mSyntaxer->getToken();
+                if (token.isEmpty())  {
+                    mEdit->mSyntaxer->next();
+                    continue;
+                }
+                tokenStartChar = mEdit->mSyntaxer->getTokenPos();
                 attr = mEdit->mSyntaxer->getTokenAttribute();
                 if (token == "[" || token == "(" || token == "{") {
                     PSyntaxState rangeState = mEdit->mSyntaxer->getState();
@@ -1372,14 +1392,10 @@ void QSynEditPainter::paintLines()
                                       + rangeState->braceLevel
                                       + rangeState->parenthesisLevel + 1, attr);
                 }
-                PaintHighlightTokenList single{
-                    makeHighlightToken(ctx, tokenStartChar, token, attr,
-                                       mEdit->mSyntaxer->getTokenType())
-                };
-                if (mEdit->mPaintHighlightTokensPreparer)
-                    mEdit->mPaintHighlightTokensPreparer(line, single);
-                highlightToken = single.first();
+                highlightToken = makeHighlightToken(ctx, tokenStartChar, token, attr,
+                                                    mEdit->mSyntaxer->getTokenType());
             }
+            int tokenEndChar = tokenStartChar + token.length();
             attr = highlightToken.attr;
             bool showGlyph=false;
             if (attr && highlightToken.tokenType == TokenType::Space) {
@@ -1405,8 +1421,8 @@ void QSynEditPainter::paintLines()
                         glyphStartPositionsList,
                         tokenWidth);
             tokenLeft+=tokenWidth;
-            // Let the highlighter scan the next token.
-            mEdit->mSyntaxer->next();
+            if (!usePrepared)
+                mEdit->mSyntaxer->next();
         }
         // line-end decorations (fold string, line break glyph) belong to the
         // line's LAST wrap segment only
@@ -1415,6 +1431,10 @@ void QSynEditPainter::paintLines()
 
             // Paint folding
             foldRange = mEdit->foldStartAtLine(line);
+            if (usePrepared && ((foldRange && foldRange->collapsed)
+                                || mEdit->mOptions.testFlag(EditorOption::ShowLineBreaks))) {
+                mEdit->mSyntaxer->nextToEol();
+            }
             if ((foldRange) && foldRange->collapsed) {
                 addOnStr = mEdit->mSyntaxer->foldString(lineTextWithPreedit);
                 attr = mEdit->mSyntaxer->symbolAttribute();
@@ -1463,6 +1483,7 @@ void QSynEditPainter::paintLines()
         // painted again (clipped) from its start on the next segment
         scanAccu = ctx.tokenAccu;
         scanTokenLeft = tokenLeft;
+        scanHighlightIndex = highlightIndex;
 
         //Paint editingAreaBorders
         foreach (const PEditingArea& area, areaList) {
