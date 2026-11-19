@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QStack>
+#include <algorithm>
 #include <limits>
 
 namespace {
@@ -575,9 +576,12 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
         QList<MemberResolution> candidates = memberCandidates(receiver, memberName,
                                                               visited, evaluation);
         for (int templateRank = 0; templateRank < 2; ++templateRank) {
-            MemberEvalResult result;
-            int bestScore = std::numeric_limits<int>::min();
-            bool tied = false;
+            struct MatchedCandidate {
+                PStatement statement;
+                PTemplateBindingFrame bindings;
+                int score;
+            };
+            QVector<MatchedCandidate> matches;
             for (const MemberResolution &member : candidates) {
                 int candidateRank = std::dynamic_pointer_cast<Statement>(member.statement)->templateParameters.isEmpty() ? 0 : 1;
                 if (candidateRank != templateRank || !isInvocable(member.statement))
@@ -593,22 +597,41 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                     if (!owner.bindings->complete)
                         continue;
                 }
-                ClassInstance resultInstance;
                 int score = 0;
-                TypeInfo type = invokeFunctionCandidate(member.statement, arguments, {},
-                                                        evaluation, owner.bindings, &resultInstance, &score);
-                if (type.qualifiedName.isEmpty())
-                    continue;
-                if (score > bestScore) {
-                    bestScore = score;
-                    result = {member.statement, type, resultInstance};
-                    tied = false;
-                } else if (score == bestScore) {
-                    tied = true;
-                }
+                PTemplateBindingFrame currentBindings = matchFunctionCandidate(
+                            member.statement, arguments, {}, evaluation, owner.bindings, &score);
+                if (currentBindings)
+                    matches.append({member.statement, currentBindings, score});
             }
-            if (!tied && bestScore != std::numeric_limits<int>::min())
-                return result;
+            std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
+                return left.score > right.score;
+            });
+            int first = 0;
+            while (first < matches.count()) {
+                int last = first + 1;
+                while (last < matches.count() && matches[last].score == matches[first].score)
+                    ++last;
+                MemberEvalResult result;
+                bool tied = false;
+                for (int i = first; i < last; ++i) {
+                    const MatchedCandidate &match = matches[i];
+                    ClassInstance resultInstance = resolveTypeInstance(
+                                std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
+                                match.bindings, match.statement->parentScope.lock(), evaluation);
+                    if (resultInstance.type.qualifiedName.isEmpty())
+                        continue;
+                    if (result.statement) {
+                        tied = true;
+                    } else {
+                        result = {match.statement, resultInstance.type, resultInstance};
+                    }
+                }
+                if (tied)
+                    break;
+                if (result.statement)
+                    return result;
+                first = last;
+            }
         }
         return {};
     }
@@ -641,10 +664,13 @@ TypeInfo CppTypeResolver::invokeFunction(
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    TypeInfo result;
-    ClassInstance instance;
-    int bestScore = std::numeric_limits<int>::min();
-    bool tied = false;
+    struct MatchedCandidate {
+        PStatement statement;
+        PTemplateBindingFrame bindings;
+        EvaluationContext evaluation;
+        int score;
+    };
+    QVector<MatchedCandidate> matches;
     for (const PStatement &candidate : functionCandidates(function)) {
         EvaluationContext candidateEvaluation = evaluation;
         candidateEvaluation.operationCount = 0;
@@ -652,24 +678,49 @@ TypeInfo CppTypeResolver::invokeFunction(
         candidateEvaluation.aliases.clear();
         candidateEvaluation.resolvingTypes.clear();
         candidateEvaluation.resolvingConstraints.clear();
-        ClassInstance currentInstance;
         int score = 0;
-        TypeInfo current = invokeFunctionCandidate(candidate, arguments, explicitArguments,
-                                                   candidateEvaluation, {}, &currentInstance, &score);
-        if (current.qualifiedName.isEmpty())
-            continue;
-        if (score > bestScore) {
-            bestScore = score;
-            result = current;
-            instance = currentInstance;
-            tied = false;
-        } else if (score == bestScore) {
-            tied = true;
-        }
+        PTemplateBindingFrame currentBindings = matchFunctionCandidate(
+                    candidate, arguments, explicitArguments, candidateEvaluation, {}, &score);
+        if (currentBindings)
+            matches.append({candidate, currentBindings, candidateEvaluation, score});
     }
-    if (!tied && resultInstance)
-        *resultInstance = instance;
-    return tied ? TypeInfo() : result;
+    std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
+        return left.score > right.score;
+    });
+    int first = 0;
+    while (first < matches.count()) {
+        int last = first + 1;
+        while (last < matches.count() && matches[last].score == matches[first].score)
+            ++last;
+        PStatement result;
+        ClassInstance instance;
+        bool tied = false;
+        for (int i = first; i < last; ++i) {
+            MatchedCandidate &match = matches[i];
+            ClassInstance current = resolveTypeInstance(
+                        std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
+                        match.bindings, match.statement->parentScope.lock(), match.evaluation);
+            if (current.type.qualifiedName.isEmpty())
+                continue;
+            if (result) {
+                tied = true;
+            } else {
+                result = match.statement;
+                instance = current;
+            }
+        }
+        if (tied)
+            return {};
+        if (result) {
+            if (resultInstance)
+                *resultInstance = instance;
+            return instance.type;
+        }
+        first = last;
+    }
+    if (resultInstance)
+        *resultInstance = {};
+    return {};
 }
 
 QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function) const
@@ -705,17 +756,23 @@ QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function
     return result;
 }
 
-TypeInfo CppTypeResolver::invokeFunctionCandidate(
+PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
         const PStatement &function, const QVector<TypeInfo> &arguments,
         const QVector<TemplateArgument> &explicitArguments,
-        EvaluationContext &evaluation,
-        const PTemplateBindingFrame &outerBindings,
-        ClassInstance *resultInstance, int *matchScore) const
+        EvaluationContext &evaluation, const PTemplateBindingFrame &outerBindings,
+        int *matchScore) const
 {
     if (!function)
         return {};
     traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
-    ResolveOriginScope originScope("invokeFunctionCandidate");
+    ResolveOriginScope originScope("matchFunctionCandidate");
+    bool parameterPack = false;
+    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
+        parameterPack |= parameter.parameterPack;
+    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
+            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
+        return {};
+    }
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;
@@ -765,13 +822,6 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
                                                     frame, function->parentScope.lock(), evaluation);
         frame->values.insert(parameter.name, argument);
     }
-    bool parameterPack = false;
-    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
-        parameterPack |= parameter.parameterPack;
-    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
-            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
-        return {};
-    }
     QVector<TypeInfo> resolvedParameters;
     resolvedParameters.reserve(count);
     for (int i = 0; i < count; ++i) {
@@ -787,8 +837,6 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
             function, frame, function->parentScope.lock(), evaluation);
     if (satisfaction == ConstraintSatisfaction::Unsatisfied)
         return {};
-    ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(function)->typeInfo, frame,
-                                               function->parentScope.lock(), evaluation);
     if (matchScore) {
         int score = 0;
         for (int i = 0; i < count; ++i) {
@@ -827,9 +875,7 @@ TypeInfo CppTypeResolver::invokeFunctionCandidate(
         }
         *matchScore = score;
     }
-    if (resultInstance)
-        *resultInstance = result;
-    return result.type;
+    return frame;
 }
 
 bool CppTypeResolver::compatibleArgument(

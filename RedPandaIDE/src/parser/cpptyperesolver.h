@@ -186,12 +186,11 @@ private:
     void materializeTemplateArguments(TypeInfo &type, EvaluationContext &evaluation) const;
     void materializeTemplateArgumentPatterns(TypeInfo &type, EvaluationContext &evaluation) const;
     QList<PStatement> functionCandidates(const PStatement &function) const;
-    TypeInfo invokeFunctionCandidate(const PStatement &function, const QVector<TypeInfo> &arguments,
-                                     const QVector<TemplateArgument> &explicitArguments,
-                                     EvaluationContext &evaluation,
-                                     const PTemplateBindingFrame &outerBindings = {},
-                                     ClassInstance *resultInstance = nullptr,
-                                     int *matchScore = nullptr) const;
+    PTemplateBindingFrame matchFunctionCandidate(
+            const PStatement &function, const QVector<TypeInfo> &arguments,
+            const QVector<TemplateArgument> &explicitArguments,
+            EvaluationContext &evaluation, const PTemplateBindingFrame &outerBindings,
+            int *matchScore) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
                                              EvaluationContext &evaluation,

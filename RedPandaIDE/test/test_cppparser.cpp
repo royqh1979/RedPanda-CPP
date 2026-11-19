@@ -2722,6 +2722,9 @@ void TestCppParser::test_standard_library_container_eval_profile()
         "    for (auto i = lst.begin(); i != lst.end(); ++i) {",
         "        i->size();",
         "    }",
+        "    for (const auto &entry : mapping) {",
+        "        entry.first.size();",
+        "    }",
         "}"
     }));
     QString bitsStdcpp;
@@ -2777,7 +2780,8 @@ void TestCppParser::test_standard_library_container_eval_profile()
         {"while.iterator_deref", 23, {"(", "*", "it", ")"}},
         {"while.prefix_increment_arrow", 23, {"(", "++", "it", ")", "->"}},
         {"range_for.element", 26, {"s"}},
-        {"classic_for.iterator_arrow", 29, {"i", "->"}}
+        {"classic_for.iterator_arrow", 29, {"i", "->"}},
+        {"range_for.entry_first", 31, {"entry", ".", "first"}}
     };
     QElapsedTimer timer;
     timer.start();
