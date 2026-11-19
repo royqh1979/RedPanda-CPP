@@ -16,245 +16,349 @@
  */
 #include "cppexpressionextractor.h"
 
+#include <algorithm>
 #include <qsynedit/document.h>
 #include <qsynedit/qsynedit.h>
 #include <qsynedit/syntaxer/cpp.h>
 
 namespace {
-enum class LastSymbolType {
-    Identifier,
-    ScopeResolutionOperator,
-    ObjectMemberOperator,
-    PointerMemberOperator,
-    PointerToMemberOfObjectOperator,
-    PointerToMemberOfPointerOperator,
-    MatchingBracket,
-    BracketMatched,
-    MatchingParenthesis,
-    ParenthesisMatched,
-    TildeSign,
-    AsteriskSign,
-    AmpersandSign,
-    MatchingAngleQuotation,
-    AngleQuotationMatched,
-    None
+struct Token {
+    QString text;
+    QSynedit::TokenType type;
+    int line;
+    int ch;
 };
+
+bool isAtom(const Token &token)
+{
+    if (token.type == QSynedit::TokenType::Identifier
+            || token.type == QSynedit::TokenType::Number
+            || token.type == QSynedit::TokenType::String
+            || token.type == QSynedit::TokenType::Character) {
+        return true;
+    }
+    static const QSet<QString> primaryKeywords{
+        "this", "true", "false", "nullptr",
+        "const_cast", "dynamic_cast", "reinterpret_cast", "static_cast",
+        "decltype", "typeid"
+    };
+    return primaryKeywords.contains(token.text);
+}
+
+bool isMemberOperator(const QString &text)
+{
+    return text == "." || text == "->" || text == "::"
+            || text == ".*" || text == "->*";
+}
+
+bool isCloseGroup(const QString &text)
+{
+    return text == ")" || text == "]" || text == "}";
+}
+
+bool isTemplateOpen(const QString &text)
+{
+    return !text.isEmpty()
+            && std::all_of(text.begin(), text.end(), [](const QChar &ch) {
+        return ch == '<';
+    });
+}
+
+bool isTemplateClose(const QString &text)
+{
+    return !text.isEmpty()
+            && std::all_of(text.begin(), text.end(), [](const QChar &ch) {
+        return ch == '>';
+    });
+}
+
+int updateGroupDepth(const QString &text, int &round, int &square, int &curly)
+{
+    if (text == ")")
+        ++round;
+    else if (text == "(")
+        --round;
+    else if (text == "]")
+        ++square;
+    else if (text == "[")
+        --square;
+    else if (text == "}")
+        ++curly;
+    else if (text == "{")
+        --curly;
+    return round + square + curly;
+}
+
+QVector<Token> readLine(const QSynedit::QSynEdit *editor,
+                        const QSynedit::PSyntaxer &syntaxer, int line,
+                        const QSynedit::CharPos &target, bool &targetRejected)
+{
+    QVector<Token> result;
+    editor->startParseLine(syntaxer.get(), line);
+    while (!syntaxer->eol()) {
+        Token token{
+            syntaxer->getToken(),
+            syntaxer->getTokenType(),
+            line,
+            syntaxer->getTokenPos()
+        };
+        if (line == target.line
+                && token.ch <= target.ch
+                && target.ch < token.ch + token.text.length()
+                && (token.type == QSynedit::TokenType::Comment
+                    || token.type == QSynedit::TokenType::String)) {
+            targetRejected = true;
+        }
+        if (token.type != QSynedit::TokenType::Comment
+                && token.type != QSynedit::TokenType::Space) {
+            result.append(token);
+        }
+        syntaxer->next();
+    }
+    return result;
+}
+
+class BackwardTokenStream
+{
+public:
+    BackwardTokenStream(const QSynedit::QSynEdit *editor,
+                        const QSynedit::PSyntaxer &syntaxer,
+                        QVector<Token> tokens, int index, int previousLine)
+        : mEditor(editor), mSyntaxer(syntaxer), mTokens(std::move(tokens)),
+          mIndex(index), mPreviousLine(previousLine)
+    {
+    }
+
+    bool next(Token &token)
+    {
+        if (!ensureAvailable())
+            return false;
+        token = mTokens[mIndex++];
+        return true;
+    }
+
+    bool peek(Token &token)
+    {
+        if (!ensureAvailable())
+            return false;
+        token = mTokens[mIndex];
+        return true;
+    }
+
+private:
+    bool ensureAvailable()
+    {
+        while (mIndex >= mTokens.size() && mPreviousLine >= 0) {
+            QSynedit::CharPos noTarget{-1, -1};
+            bool rejected = false;
+            QVector<Token> line = readLine(mEditor, mSyntaxer, mPreviousLine, noTarget, rejected);
+            --mPreviousLine;
+            std::reverse(line.begin(), line.end());
+            mTokens += line;
+        }
+        return mIndex < mTokens.size();
+    }
+
+    const QSynedit::QSynEdit *mEditor;
+    QSynedit::PSyntaxer mSyntaxer;
+    QVector<Token> mTokens;
+    int mIndex;
+    int mPreviousLine;
+};
+
+struct TemplateSuffix {
+    int open = -1;
+    int close = -1;
+};
+
+TemplateSuffix findTemplateSuffix(const QVector<Token> &tokens, int targetIndex)
+{
+    TemplateSuffix result;
+    int angle = 0;
+    int round = 0;
+    int square = 0;
+    int curly = 0;
+    for (int i = 0; i < targetIndex; ++i) {
+        const Token &token = tokens[i];
+        if (round + square + curly > 0) {
+            updateGroupDepth(token.text, round, square, curly);
+            if (round < 0 || square < 0 || curly < 0)
+                return {};
+            continue;
+        }
+        if (isCloseGroup(token.text)) {
+            updateGroupDepth(token.text, round, square, curly);
+            continue;
+        }
+        if (angle > 0) {
+            if (isTemplateClose(token.text)) {
+                angle += token.text.length();
+            } else if (isTemplateOpen(token.text)) {
+                angle -= token.text.length();
+                if (angle == 0 && i == targetIndex - 1) {
+                    result.open = i;
+                    return result;
+                }
+                if (angle < 0)
+                    return {};
+            } else if (token.text == ";" || token.text == "=") {
+                return {};
+            }
+            continue;
+        }
+        if (isTemplateClose(token.text)) {
+            angle = token.text.length();
+            result.close = i;
+        }
+    }
+    return {};
+}
+
+QStringList extractTokens(const QSynedit::QSynEdit *editor,
+                          const QSynedit::PSyntaxer &syntaxer,
+                          QVector<Token> tokens, int targetIndex, int previousLine)
+{
+    QVector<Token> expression;
+    TemplateSuffix suffix = findTemplateSuffix(tokens, targetIndex);
+    if (suffix.open >= 0) {
+        for (int i = suffix.close; i <= suffix.open; ++i)
+            expression.append(tokens[i]);
+    }
+    expression.append(tokens[targetIndex]);
+
+    BackwardTokenStream stream(editor, syntaxer, std::move(tokens), targetIndex + 1, previousLine);
+    int round = 0;
+    int square = 0;
+    int curly = 0;
+    int angle = 0;
+    bool needReceiver = false;
+    bool needBase = false;
+    bool memberChain = false;
+    Token token;
+    while (stream.next(token)) {
+        if (token.text == "\\")
+            continue;
+        if (round + square + curly > 0) {
+            expression.append(token);
+            updateGroupDepth(token.text, round, square, curly);
+            if (round < 0 || square < 0 || curly < 0)
+                return {};
+            if (round + square + curly == 0 && angle == 0)
+                needBase = true;
+            continue;
+        }
+        if (angle > 0) {
+            expression.append(token);
+            if (isTemplateClose(token.text)) {
+                angle += token.text.length();
+            } else if (isTemplateOpen(token.text)) {
+                angle -= token.text.length();
+                if (angle < 0)
+                    return {};
+                if (angle == 0)
+                    needBase = true;
+            } else if (isCloseGroup(token.text)) {
+                updateGroupDepth(token.text, round, square, curly);
+            }
+            continue;
+        }
+        if (needReceiver) {
+            if (isCloseGroup(token.text)) {
+                expression.append(token);
+                updateGroupDepth(token.text, round, square, curly);
+                needReceiver = false;
+                needBase = false;
+                continue;
+            }
+            if (isTemplateClose(token.text)) {
+                expression.append(token);
+                angle = token.text.length();
+                needReceiver = false;
+                needBase = false;
+                continue;
+            }
+            if (isAtom(token)) {
+                expression.append(token);
+                needReceiver = false;
+                needBase = false;
+                continue;
+            }
+            return {};
+        }
+        if (needBase) {
+            if (isCloseGroup(token.text)) {
+                expression.append(token);
+                updateGroupDepth(token.text, round, square, curly);
+                needBase = false;
+                continue;
+            }
+            if (isTemplateClose(token.text)) {
+                expression.append(token);
+                angle = token.text.length();
+                needBase = false;
+                continue;
+            }
+            if (isAtom(token)) {
+                expression.append(token);
+                needBase = false;
+                continue;
+            }
+            needBase = false;
+        }
+        if (isMemberOperator(token.text)) {
+            expression.append(token);
+            needReceiver = true;
+            memberChain = true;
+            continue;
+        }
+        if (token.text == "~") {
+            Token previous;
+            if (stream.peek(previous) && isMemberOperator(previous.text)) {
+                expression.append(token);
+                continue;
+            }
+        }
+        if (token.text == "new" && memberChain) {
+            expression.append(token);
+        }
+        break;
+    }
+
+    if (needReceiver || round != 0 || square != 0 || curly != 0 || angle != 0)
+        return {};
+    std::reverse(expression.begin(), expression.end());
+    QStringList result;
+    for (const Token &item : expression)
+        result.append(item.text);
+    return result;
+}
 }
 
 QStringList CppExpressionExtractor::extract(
-        const QSynedit::QSynEdit *editor, const QSynedit::CharPos &pos)
+        const QSynedit::QSynEdit *editor, const QSynedit::PConstSyntaxer &syntaxer,
+        const QSynedit::CharPos &pos)
 {
-    QStringList result;
-    int line = pos.line;
-    int ch = pos.ch;
-    int symbolMatchingLevel = 0;
-    LastSymbolType lastSymbolType=LastSymbolType::None;
-    QSynedit::CppSyntaxer syntaxer;
-    while (true) {
-        if (line>=editor->lineCount() || line<0)
+    auto cppSyntaxer = std::dynamic_pointer_cast<const QSynedit::CppSyntaxer>(syntaxer);
+    Q_ASSERT(cppSyntaxer);
+    if (!editor || !cppSyntaxer || pos.ch < 0 || pos.line < 0 || pos.line >= editor->lineCount())
+        return {};
+    QSynedit::PSyntaxer syntaxerInstance = syntaxer->createInstance();
+    bool targetRejected = false;
+    QVector<Token> line = readLine(editor, syntaxerInstance, pos.line, pos, targetRejected);
+    if (targetRejected)
+        return {};
+    int targetIndex = -1;
+    for (int i = line.size() - 1; i >= 0; --i) {
+        const Token &token = line[i];
+        if (token.ch <= pos.ch && pos.ch < token.ch + token.text.length()) {
+            if (token.type != QSynedit::TokenType::Identifier)
+                return {};
+            targetIndex = line.size() - 1 - i;
             break;
-        QStringList tokens;
-        editor->startParseLine(&syntaxer, line);
-        while (!syntaxer.eol()) {
-            int start = syntaxer.getTokenPos();
-            QString token = syntaxer.getToken();
-            int endPos = start + token.length()-1;
-            if (start>ch) {
-                break;
-            }
-            QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
-            if ( (line == pos.line)
-                 && (start<=ch) && (ch<=endPos)) {
-                if (syntaxer.getTokenType() == QSynedit::TokenType::Comment
-                        || syntaxer.getTokenType() == QSynedit::TokenType::String) {
-                    return result;
-                }
-            }
-            if (syntaxer.getTokenType() != QSynedit::TokenType::Comment
-                    && syntaxer.getTokenType() != QSynedit::TokenType::Space){
-                tokens.append(token);
-            }
-            syntaxer.next();
         }
-        for (int i=tokens.count()-1;i>=0;i--) {
-            QString token = tokens[i];
-            if (token=="using")
-                return result;
-            switch(lastSymbolType) {
-            case LastSymbolType::ScopeResolutionOperator: //before '::'
-                if (token==">") {
-                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
-                    symbolMatchingLevel=0;
-                } else if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::ObjectMemberOperator: //before '.'
-            case LastSymbolType::PointerMemberOperator: //before '->'
-            case LastSymbolType::PointerToMemberOfObjectOperator: //before '.*'
-            case LastSymbolType::PointerToMemberOfPointerOperator: //before '->*'
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::AsteriskSign: // before '*':
-                if (token == '*') {
-                } else {
-                    QChar firstCh=token.front();
-                    if (editor->isIdentChar(firstCh)
-                            || firstCh.isDigit()
-                            || firstCh == '.'
-                            || firstCh == ')' ) {
-                        result.pop_front();
-                    }
-                    return result;
-                }
-                break;
-            case LastSymbolType::AmpersandSign: // before '&':
-            {
-                QChar firstCh=token.front();
-                if (editor->isIdentChar(firstCh)
-                        || firstCh.isDigit()
-                        || firstCh == '.'
-                        || firstCh == ')' ) {
-                    result.pop_front();
-                }
-                return result;
-            }
-                break;
-            case LastSymbolType::ParenthesisMatched: //before '()'
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (token == "*") {
-                    lastSymbolType=LastSymbolType::AsteriskSign;
-                } else if (token == "&") {
-                    lastSymbolType=LastSymbolType::AmpersandSign;
-                } else if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::BracketMatched: //before '[]'
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::AngleQuotationMatched: //before '<>'
-                if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::None:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else if (token == ".") {
-                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-                } else if (token=="->") {
-                    lastSymbolType=LastSymbolType::PointerMemberOperator;
-                } else if (token == ".*") {
-                    lastSymbolType=LastSymbolType::PointerToMemberOfObjectOperator;
-                } else if (token=="->*"){
-                    lastSymbolType=LastSymbolType::PointerToMemberOfPointerOperator;
-                } else if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (editor->isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::TildeSign:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else {
-                    // "~" must appear after "::"
-                    result.pop_front();
-                    return result;
-                }
-                break;;
-            case LastSymbolType::Identifier:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else if (token == ".") {
-                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-                } else if (token=="->") {
-                    lastSymbolType=LastSymbolType::PointerMemberOperator;
-                } else if (token == ".*") {
-                    lastSymbolType=LastSymbolType::PointerToMemberOfObjectOperator;
-                } else if (token=="->*"){
-                    lastSymbolType=LastSymbolType::PointerToMemberOfPointerOperator;
-                } else if (token == "~") {
-                    lastSymbolType=LastSymbolType::TildeSign;
-                } else if (token == "*") {
-                    lastSymbolType=LastSymbolType::AsteriskSign;
-                } else if (token == "&") {
-                    lastSymbolType=LastSymbolType::AmpersandSign;
-                } else
-                    return result; // stop matching;
-                break;
-            case LastSymbolType::MatchingParenthesis:
-                if (token=="(") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::ParenthesisMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token==")") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            case LastSymbolType::MatchingBracket:
-                if (token=="[") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::BracketMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token=="]") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            case LastSymbolType::MatchingAngleQuotation:
-                if (token=="<") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::AngleQuotationMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token==">") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            }
-            result.push_front(token);
-        }
-
-        line--;
-        if (line>=0)
-            ch = editor->document()->getLine(line).length()+1;
     }
-    return result;
+    if (targetIndex < 0)
+        return {};
+    std::reverse(line.begin(), line.end());
+    return extractTokens(editor, syntaxerInstance, line, targetIndex, pos.line - 1);
 }

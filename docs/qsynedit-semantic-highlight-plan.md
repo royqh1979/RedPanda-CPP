@@ -115,7 +115,7 @@ painter 自身仍可使用 syntaxer state 处理上述显示规则，无需把�
 
 painter 先收集 token，不立即求值。批量数据及处理状态包含：
 
-- token 的文本、位置和 `matchIndex`；
+- token 的文本、类型及 `line/ch` 位置，以及当前提取会话的嵌套层数；
 - 每个 identifier 所需的接收者链；
 - 仅当调用结果作为接收者时需要保留的完整实参范围；
 - 已被求值单元覆盖、无需再次作为起点的 token 集合；
@@ -148,15 +148,15 @@ painter 先收集 token，不立即求值。批量数据及处理状态包含：
 
 #### 数据形式
 
-syntaxer 输出的 token 保留文本、类型、源码位置及所在 Document line。空白和 Comment 不进入语义 token 流；目标位于 Comment 或 String 时直接返回空。raw string、普通字符串和续行由 syntaxer/state 处理。
+调用方传入的 syntaxer 经 `createInstance()` 创建会话实例，保留自定义设置；token 保留文本、类型及 `line/ch`。空白和 Comment 不进入语义 token 流；目标位于 Comment 或 String 时直接返回空。raw string、普通字符串和续行由 syntaxer/state 处理。
 
-在共享 token 流上建立 `()[]{}` 的匹配索引。提取结果首先表示为半开 token 范围 `[begin, end)`，需要时再生成 `QStringList`；范围同时保留源码位置，P2 不再重新查找 identifier 或复制表达式文本。
+提取使用单一 back-to-front 游标，不记录 token id 或 match 指针。每个提取会话只保存当前 `()[]{}` 和模板 `<...>` 的嵌套层数。提取结果首先表示为 token 范围，需要时再生成 `QStringList`；token 的 `line/ch` 同时供 P2 标记已覆盖位置，避免重复提取。
 
 #### 跨行文本与匹配
 
 SyntaxState 只用于其可靠的词法职责：识别注释、普通字符串、raw string、转义和 `mergeWithNextLine` 续行，排除其中的伪括号。P1 不使用 `lineSeq` 或括号 level 辅助表达式匹配。
 
-从目标位置向前读取必要的 Document line；一旦某行属于可能纳入结果的表达式，该行及起始行到目标行之间的内容都正常 token 化。扫描得到 token 后再建立并验证括号匹配，到达表达式边界立即停止。只有后续 profile 证明跨行扫描是热点时，才另行评估索引或缓存。
+从目标位置向前读取必要的 Document line；一旦某行属于可能纳入结果的表达式，该行及起始行到目标行之间的内容都正常 token 化。反向扫描只用当前嵌套层数验证括号配对，不回看已经处理的 token，到达表达式边界立即停止。只有后续 profile 证明跨行扫描是热点时，才另行评估索引或缓存。
 
 P1 向现有 evaluator 提供完整 token 流，因此 lambda 的 `{...}` 也不能作为不透明整体省略：extractor 不知道后续求值是否需要函数体，而现有 evaluator 在没有 trailing return type 时会扫描顶层 `return` 推导返回类型。目标位于函数体外时，组内各行仍需保留；目标位于函数体内时，则在该组自己的边界内正常提取。本方案不引入 opaque group、惰性 token 化或按需回填函数体的接口。
 
@@ -166,7 +166,7 @@ P1 向现有 evaluator 提供完整 token 流，因此 lambda 的 `{...}` 也不
 2. 仅当目标右侧是其模板实参时，额外保留完整的 `<...>`。
 3. 从目标向左读取一个 primary/postfix atom：
    - identifier、`this` 等原子直接结束该 atom；
-   - 遇到 `)`、`]`、`}` 时，利用匹配索引一次读入整个组，再继续读取它左侧的 callable/base；如果左侧没有 callable/base，则该组自身就是 parenthesized primary；
+   - 遇到 `)`、`]`、`}` 时，按当前嵌套层数读入整个组，再继续读取它左侧的 callable/base；如果左侧没有 callable/base，则该组自身就是 parenthesized primary；
    - 接收者需要的模板 `<...>` 与调用 `(...)`、下标 `[...]` 一样完整保留。
 4. atom 左侧如果是 `.`、`->`、`::`、`.*`、`->*`，则保留该运算符并继续读取左侧接收者 atom；否则提取结束。
 5. 遇到当前子表达式边界、逗号、二元/赋值运算符、语句关键字或其它非接收者 token 时结束，不把一元或二元表达式整体纳入。
@@ -208,7 +208,7 @@ P1 向现有 evaluator 提供完整 token 流，因此 lambda 的 `{...}` 也不
 
 P1 验证后，整行处理才增加调度：
 
-1. painter 收集到绘制截止位，复用同一份 token 流和匹配索引；
+1. painter 收集到绘制截止位，复用同一份反向 token 流；每个提取会话独立维护嵌套层数；
 2. 从最后一个尚未覆盖的 identifier 开始，调用 P1 的同一提取实现取得最小范围；
 3. 对该范围执行一次 eval trace；
 4. 将该范围覆盖的 token 标为已完成，trace 只为其中有语义结果的 identifier 生成颜色；
@@ -313,7 +313,7 @@ lst.front().append
 - 未知 identifier 的现有回退；
 - IME preedit、word-wrap、选区和多视图。
 
-分段器生成的 `matchIndex` 必须与 evaluator 的括号跳过规则一致。独立函数和参数表达式不得被强制并入完整调用；只有接收者链需要调用返回类型时才保留相应实参。
+extractor 自身不生成 `matchIndex`；P4 构造 evaluator TokenList 时，其 `matchIndex` 必须与 evaluator 的括号跳过规则一致。独立函数和参数表达式不得被强制并入完整调用；只有接收者链需要调用返回类型时才保留相应实参。
 
 ## 10. 性能验收
 

@@ -18,6 +18,7 @@
 #define CPPEXPRESSIONEXTRACTOR_H
 
 #include <QStringList>
+#include <qsynedit/syntaxer/syntaxer.h>
 #include <qsynedit/types.h>
 
 namespace QSynedit {
@@ -28,6 +29,7 @@ class CppExpressionExtractor
 {
 public:
     static QStringList extract(const QSynedit::QSynEdit *editor,
+                               const QSynedit::PConstSyntaxer &syntaxer,
                                const QSynedit::CharPos &pos);
 };
 
