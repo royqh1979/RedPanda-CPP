@@ -1,9 +1,13 @@
+#include <QElapsedTimer>
+#include <QFile>
 #include <QTest>
+#include <limits>
 #include <qsynedit/document.h>
 #include <qsynedit/qsynedit.h>
 #include <qsynedit/syntaxer/cpp.h>
 #include <qsynedit/syntaxer/textfile.h>
 #include "src/editor/cppexpressionextractor.h"
+#include "src/editor/editor.h"
 #include "test_cppexpressionextractor.h"
 
 namespace {
@@ -211,4 +215,103 @@ void TestCppExpressionExtractor::test_custom_syntaxer()
     syntaxer->setCustomTypeKeywords({"custom"});
     QCOMPARE(extractAtMarker("|custom", syntaxer), QStringList{});
     QCOMPARE(extractAtMarker("|value", syntaxer), QStringList{"value"});
+}
+
+void TestCppExpressionExtractor::test_session()
+{
+    QSynedit::QSynEdit editor;
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.document()->setText("f(a()).b()");
+    CppExpressionExtractor extractor(&editor, editor.syntaxer());
+    QCOMPARE(extractor.extract({0, 0}), QStringList{"f"});
+    QCOMPARE(extractor.extract({2, 0}), QStringList{"a"});
+    QCOMPARE(extractor.extract({7, 0}),
+             QStringList({"f", "(", "a", "(", ")", ")", ".", "b"}));
+}
+
+void TestCppExpressionExtractor::test_profile()
+{
+    QString fileName = qEnvironmentVariable("REDPANDA_EXPRESSION_PROFILE_FILE");
+    if (fileName.isEmpty())
+        QSKIP("Set REDPANDA_EXPRESSION_PROFILE_FILE to profile expression extraction");
+    QFile file(fileName);
+    QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(fileName));
+
+    Editor &editor = *mEditor;
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.document()->setText(QString::fromUtf8(file.readAll()));
+    QVector<QSynedit::CharPos> positions;
+    QSynedit::CppSyntaxer scanner;
+    for (int line = 0; line < editor.lineCount(); ++line) {
+        editor.startParseLine(&scanner, line);
+        while (!scanner.eol()) {
+            if (scanner.getTokenType() == QSynedit::TokenType::Identifier)
+                positions.append({scanner.getTokenPos(), line});
+            scanner.next();
+        }
+    }
+    QVERIFY(!positions.isEmpty());
+    int repeat = qEnvironmentVariableIntValue("REDPANDA_EXPRESSION_PROFILE_REPEAT");
+    if (repeat <= 0)
+        repeat = 10;
+
+    volatile qint64 oldTokenCount = 0;
+    volatile qint64 newTokenCount = 0;
+    volatile qint64 sessionTokenCount = 0;
+    auto runOld = [&]() {
+        qint64 count = 0;
+        QElapsedTimer timer;
+        timer.start();
+        for (int i = 0; i < repeat; ++i) {
+            for (const QSynedit::CharPos &pos : positions)
+                count += editor.getExpressionAtPosition(pos).size();
+        }
+        oldTokenCount = count;
+        return timer.nsecsElapsed();
+    };
+    auto runNew = [&]() {
+        qint64 count = 0;
+        QElapsedTimer timer;
+        timer.start();
+        for (int i = 0; i < repeat; ++i) {
+            for (const QSynedit::CharPos &pos : positions)
+                count += CppExpressionExtractor::extract(&editor, editor.syntaxer(), pos).size();
+        }
+        newTokenCount = count;
+        return timer.nsecsElapsed();
+    };
+    auto runSession = [&]() {
+        qint64 count = 0;
+        CppExpressionExtractor extractor(&editor, editor.syntaxer());
+        QElapsedTimer timer;
+        timer.start();
+        for (int i = 0; i < repeat; ++i) {
+            for (const QSynedit::CharPos &pos : positions)
+                count += extractor.extract(pos).size();
+        }
+        sessionTokenCount = count;
+        return timer.nsecsElapsed();
+    };
+
+    runOld();
+    runNew();
+    runSession();
+    qint64 oldNs = std::numeric_limits<qint64>::max();
+    qint64 newNs = std::numeric_limits<qint64>::max();
+    qint64 sessionNs = std::numeric_limits<qint64>::max();
+    for (int i = 0; i < 3; ++i) {
+        oldNs = qMin(oldNs, runOld());
+        newNs = qMin(newNs, runNew());
+        sessionNs = qMin(sessionNs, runSession());
+    }
+    qWarning().nospace() << "EXPRESSION_PROFILE file=" << fileName
+                         << " identifiers=" << positions.size()
+                         << " repeat=" << repeat
+                         << " oldNs=" << oldNs
+                         << " newNs=" << newNs
+                         << " sessionNs=" << sessionNs
+                         << " oldTokens=" << oldTokenCount
+                         << " newTokens=" << newTokenCount
+                         << " sessionTokens=" << sessionTokenCount;
+    QCOMPARE(newTokenCount, sessionTokenCount);
 }

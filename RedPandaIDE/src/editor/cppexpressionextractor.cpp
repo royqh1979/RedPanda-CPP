@@ -219,7 +219,9 @@ QStringList extractTokens(const QSynedit::QSynEdit *editor,
                           QVector<Token> tokens, int targetIndex, int previousLine)
 {
     QVector<Token> expression;
-    TemplateSuffix suffix = findTemplateSuffix(tokens, targetIndex);
+    TemplateSuffix suffix;
+    if (targetIndex > 0 && tokens[targetIndex - 1].text == "<")
+        suffix = findTemplateSuffix(tokens, targetIndex);
     if (suffix.open >= 0) {
         for (int i = suffix.close; i <= suffix.open; ++i)
             expression.append(tokens[i]);
@@ -334,17 +336,24 @@ QStringList extractTokens(const QSynedit::QSynEdit *editor,
 }
 }
 
-QStringList CppExpressionExtractor::extract(
-        const QSynedit::QSynEdit *editor, const QSynedit::PConstSyntaxer &syntaxer,
-        const QSynedit::CharPos &pos)
+CppExpressionExtractor::CppExpressionExtractor(
+        const QSynedit::QSynEdit *editor, const QSynedit::PConstSyntaxer &syntaxer)
+    : mEditor(editor), mValid(false)
 {
     auto cppSyntaxer = std::dynamic_pointer_cast<const QSynedit::CppSyntaxer>(syntaxer);
     Q_ASSERT(cppSyntaxer);
-    if (!editor || !cppSyntaxer || pos.ch < 0 || pos.line < 0 || pos.line >= editor->lineCount())
+    if (!mEditor || !cppSyntaxer)
+        return;
+    mSyntaxer = syntaxer->createInstance();
+    mValid = mSyntaxer != nullptr;
+}
+
+QStringList CppExpressionExtractor::extract(const QSynedit::CharPos &pos)
+{
+    if (!mValid || pos.ch < 0 || pos.line < 0 || pos.line >= mEditor->lineCount())
         return {};
-    QSynedit::PSyntaxer syntaxerInstance = syntaxer->createInstance();
     bool targetRejected = false;
-    QVector<Token> line = readLine(editor, syntaxerInstance, pos.line, pos, targetRejected);
+    QVector<Token> line = readLine(mEditor, mSyntaxer, pos.line, pos, targetRejected);
     if (targetRejected)
         return {};
     int targetIndex = -1;
@@ -360,5 +369,13 @@ QStringList CppExpressionExtractor::extract(
     if (targetIndex < 0)
         return {};
     std::reverse(line.begin(), line.end());
-    return extractTokens(editor, syntaxerInstance, line, targetIndex, pos.line - 1);
+    return extractTokens(mEditor, mSyntaxer, line, targetIndex, pos.line - 1);
+}
+
+QStringList CppExpressionExtractor::extract(
+        const QSynedit::QSynEdit *editor, const QSynedit::PConstSyntaxer &syntaxer,
+        const QSynedit::CharPos &pos)
+{
+    CppExpressionExtractor extractor(editor, syntaxer);
+    return extractor.extract(pos);
 }

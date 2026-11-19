@@ -28,9 +28,17 @@ class QSynEdit;
 class CppExpressionExtractor
 {
 public:
+    CppExpressionExtractor(const QSynedit::QSynEdit *editor,
+                           const QSynedit::PConstSyntaxer &syntaxer);
+    QStringList extract(const QSynedit::CharPos &pos);
     static QStringList extract(const QSynedit::QSynEdit *editor,
                                const QSynedit::PConstSyntaxer &syntaxer,
                                const QSynedit::CharPos &pos);
+
+private:
+    const QSynedit::QSynEdit *mEditor;
+    QSynedit::PSyntaxer mSyntaxer;
+    bool mValid;
 };
 
 #endif // CPPEXPRESSIONEXTRACTOR_H

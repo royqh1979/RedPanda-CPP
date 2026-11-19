@@ -1,9 +1,9 @@
 #ifndef TEST_CPPEXPRESSIONEXTRACTOR_H
 #define TEST_CPPEXPRESSIONEXTRACTOR_H
 
-#include <QObject>
+#include "test_editor_base.h"
 
-class TestCppExpressionExtractor : public QObject
+class TestCppExpressionExtractor : public TestEditorBase
 {
     Q_OBJECT
 private slots:
@@ -11,6 +11,8 @@ private slots:
     void test_extract();
     void test_invalid_positions();
     void test_custom_syntaxer();
+    void test_session();
+    void test_profile();
 };
 
 #endif // TEST_CPPEXPRESSIONEXTRACTOR_H
