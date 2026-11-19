@@ -375,6 +375,8 @@ target_qt_plain_cpp(test-widgets
     src/parser/parserutils
     src/parser/statementmodel
 
+    src/editor/cppexpressionextractor
+
     src/utils
     src/utils/escape
     src/utils/file

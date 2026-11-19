@@ -18,7 +18,7 @@
 
 ## 2. 目标
 
-1. painter 每行只提交一次语义高亮准备请求，提交范围为行首到当前绘制截止位。
+1. painter 每个逻辑行只提交一次语义高亮准备请求，输入为实际显示的整行 token；各 word-wrap 段复用同一结果。
 2. 不再执行“token → 拼接字符串 → 再 tokenize”的往返。
 3. 使用 syntaxer 的注释、字符串和跨行状态批量收集 token，再从后向前扩展最小求值单元，不为每个 identifier 独立重复扫描。
 4. evaluator 一次求值即可输出当前求值单元覆盖的各 identifier 中间结果。
@@ -38,12 +38,12 @@
 
 ```text
 QSynEdit syntaxer
-  → painter 批量收集显示 token（行首到绘制截止位）
-  → Editor 建立括号匹配并从后向前扩展最小求值单元
-  → 带 SourcePosition 的 TokenList
+  → painter 批量收集实际显示的整行 token
+  → Editor 从后向前扩展最小求值单元
+  → QStringList 表达式及输入 token 下标映射
   → 现有 CppExpressionEvaluator 对每个单元求值一次
   → identifier trace
-  → 按 SourceRange 回写显示 token 的语义颜色
+  → 按输入下标回写显示 token 的语义颜色
 ```
 
 QSynEdit 只负责显示 token 和通用批量回调。表达式分组、语义求值及缓存归 Editor/CppParser 层，不进入通用 painter。
@@ -63,9 +63,9 @@ struct HighlightToken {
 };
 ```
 
-`attr` 不足以替代 `tokenType`：当前 `onPreparePaintHighlightToken()` 还读取 `syntaxer()->getTokenType()`。批量接口必须显式传递，避免回调依赖 painter 正在使用的 syntaxer 状态。
+`attr` 不足以替代 `tokenType`：批量预处理器必须显式取得 token 类型，不能依赖 painter 正在使用的 syntaxer 状态。
 
-每行调用一次批量准备接口，而不是每个 token 调用一次。输入只覆盖本次需要绘制的范围，不要求扫描整行或整个文档。
+每个逻辑行调用一次批量准备接口，而不是每个 token 调用一次。输入为实际显示的整行 token，各 word-wrap 段复用结果。接口通过可选的 `PaintHighlightTokensPreparer`（`std::function`）注册；未提供实例时，painter 不创建整行 token list，直接使用原 token attr 绘制。
 
 ### 5.2 输出与绘制
 
@@ -210,7 +210,7 @@ P1 向现有 evaluator 提供完整 token 流，因此 lambda 的 `{...}` 也不
 
 P1 验证后，整行处理才增加调度：
 
-1. painter 收集到绘制截止位，将实际显示 token 流及当前行号传给提取器；每个提取会话独立维护嵌套层数；
+1. painter 将实际显示的整行 token 流及当前行号传给提取器；每个提取会话独立维护嵌套层数；
 2. 从最后一个 identifier 开始，调用 P1 的同一提取实现取得最小范围；
 3. 保存表达式、目标输入下标及各表达式 token 的输入下标；
 4. 从单次提取返回的下一反向位置继续，不再重新扫描已纳入表达式的接收者链，也不需要 covered 集合；
@@ -227,13 +227,13 @@ P1 验证后，整行处理才增加调度：
 在现有 evaluator 上增加可选 trace，不另建并行解析路径：
 
 ```cpp
-struct EvalTraceEntry {
-    SourceRange identifierRange;
-    EvalResult result;
+struct ExpressionEvalTraceEntry {
+    int tokenIndex;
+    PStatement statement;
 };
 ```
 
-保留现有 `evaluate()` 包装，并新增接受带位置 `TokenList` 和 trace 输出的接口。旧 `QStringList` 调用可保留为兼容包装，但新路径不再 `join(' ')` 或重新 tokenize。
+保留现有 `evaluate()` 和 `evalExpression()` 包装，trace 作为可选输出。批量路径使用 `CppTokenizer::TokenList` 重载；提取单元同时提供 syntaxer token 类型，不再 `join(' ')` 或重新 tokenize。`tokenIndex` 经提取单元的 `inputTokenIndexes` 映射回 painter 输入。
 
 ### 7.2 记录点
 
@@ -272,7 +272,7 @@ lst.front().append
 - 未知 identifier 的函数/变量回退规则；
 - `StatementKind` 到颜色及字体样式的映射。
 
-这些规则应集中复用，避免 trace 与旧接口产生不同高亮语义。
+这些规则集中复用，避免 trace 与旧接口产生不同高亮语义。批量模式下，trace 缺失或 eval 失败不会重新执行旧表达式求值；未解析 identifier 直接沿用上述未知类型规则。
 
 ## 8. 缓存与失效
 
@@ -284,14 +284,14 @@ lst.front().append
 2. **表达式级 trace 缓存**：以表达式文本、作用域和文档 revision 为 key；
 3. **批量扫描状态缓存**：保存括号匹配和 token 覆盖状态，按 revision 失效。
 
-首先修正 `mIdCache`：在现有失效规则允许时也供 parser 完成后的绘制使用，而不是只在 parsing 时读取。
+`mIdCache` 在 parsing 和 parser 完成后的绘制中都使用。批量层先检查求值单元覆盖的当前行 identifier：全部命中时才跳过该单元 eval；任一缺失仍完整求值并生成 trace。单 token 的后处理继续使用同一缓存。
 
 ### 8.2 生命周期
 
 所有语义缓存都受模型和文档 revision 约束：
 
 - `onParseFinished()` 继续执行现有失效处理；
-- 文档内容变化后，只失效受影响表达式、批量扫描状态及依赖变化内容的跨行接收者链；
+- 当前 `mIdCache` 在 `Document::contentVersion()` 变化时整体清空；若以后引入表达式级缓存，再按依赖关系细分失效范围；
 - parsing 期间可沿用旧缓存以避免闪烁，完成后按新模型重建；
 - 不允许把旧 statement 指针用于已失效模型；
 - evaluator 在查询期不得修改 StatementModel。
@@ -347,7 +347,7 @@ extractor 自身不生成 `matchIndex`；P4 构造 evaluator TokenList 时，其
 
 ### 10.2 整行拆分离线结果
 
-P2 尚未接入 painter/evaluator，以下数据只衡量拆分本身，不代表整帧提速。测试仍使用上述 80 行 STL 场景和 15 轮中位数。
+以下数据只衡量 P2 拆分本身，不代表整帧提速。测试仍使用上述 80 行 STL 场景和 15 轮中位数。
 
 | 场景 | 逐 identifier 提取 | 整行提取 | 提取时间下降 | 原 identifier 数 | 求值单元数 |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -355,7 +355,50 @@ P2 尚未接入 painter/evaluator，以下数据只衡量拆分本身，不代�
 | 关联容器与字符串 | 1.704 ms | 0.431 ms | 74.7% | 273 | 170 |
 | 智能指针与 chrono | 1.752 ms | 0.422 ms | 75.9% | 283 | 183 |
 
-`miniaudio.h` 的 170,416 个 identifier 每轮由 147,612 个求值单元覆盖；逐 identifier 会话提取为 693.283 ms，整行提取为 313.953 ms，下降 54.7%。所有求值单元的目标表达式均与 P1 单独提取一致。跨行接收者可以覆盖前行 identifier，因此整行测试同时检查覆盖位置的真实 `line/ch`，不要求覆盖数等于当前行 identifier 数。
+`miniaudio.h` 的 170,416 个 identifier 每轮由 147,612 个求值单元覆盖；逐 identifier 会话提取为 693.283 ms，整行提取为 313.953 ms，下降 54.7%。所有求值单元的目标表达式均与 P1 单独提取一致。整行测试同时校验表达式 token 到输入下标的映射、当前行 identifier 不重复且不遗漏；跨行接收者带入的前行 token 以 `-1` 标记，不属于本次输入。
+
+### 10.3 P3 批量接口过渡结果
+
+P3 已接入可选整行预处理器和输入下标回写，但仍保持逐 identifier 求值；表达式目标使用 P2 结果，其余 identifier 暂走旧提取路径。因此这一阶段只验证接口和绘制等价，不承担提速目标。最终可选回调版本的 15 轮测量中，独立旧 eval 为 33.776 / 35.810 / 11.736 ms，与 10.1 基线一致；完整 paint 对比如下：
+
+| 场景 | P0 paint | P3 paint |
+| --- | ---: | ---: |
+| 顺序容器与算法 | 56.455 ms | 60.156 ms |
+| 关联容器与字符串 | 52.753 ms | 57.424 ms |
+| 智能指针与 chrono | 30.340 ms | 33.272 ms |
+
+轻微增加来自整行预扫描及过渡期的双表达式路径。P4 必须以 trace 消除逐 identifier 重复求值，不能把 P3 的整帧结果当作最终优化收益。
+
+### 10.4 P4 trace、直接 token 输入与缓存结果
+
+P4 对每个求值单元执行一次 eval，输出 identifier trace，并使用直接 `TokenList` 输入。冷 paint 每轮仍清除 `mIdCache`；热 paint 在同一 revision 下紧接着再次 render，不清缓存，用于近似 DND 连续绘制。15 轮中位数如下：
+
+| 场景 | P0 paint | P4 冷 paint | P4 热 paint |
+| --- | ---: | ---: | ---: |
+| 顺序容器与算法 | 56.455 ms | 53.128 ms | 13.795 ms |
+| 关联容器与字符串 | 52.753 ms | 49.149 ms | 12.281 ms |
+| 智能指针与 chrono | 30.340 ms | 30.505 ms | 12.706 ms |
+
+热路径的收益来自单元级缓存检查，而不是只在单 token 求值之后读取缓存。冷路径同时包含整行提取、每单元一次 eval 和直接 token 输入；其收益明显小于热路径，不应混为一项指标。
+
+### 10.5 painter 整体热点与优化
+
+`QSYNEDIT_PAINT_PROFILE=1` 输出 painter 各阶段的 self-time 和调用次数，嵌套阶段扣除直接子阶段耗时。插桩数据只用于比较热点结构，不作为最终帧耗时。
+
+首轮显示：`drawText` 为 65.3 ms / 63,488 次，`seekFromAnchor` 为 64.2 ms / 168 次，整行纯预扫描为 19.0 ms。据此实施两项通用优化：
+
+- ligature 关闭时，将可打印 ASCII 合并为绘制 run，run 字体使用 `PreferNoShaping`，避免产生 ligature；非 ASCII、控制字符和空白仍走原路径。合并后 `drawText` 为 18.6 ms / 7,408 次。
+- word-wrap 关闭时直接通过 RowIndex 将 display row 映射为 line/segment，不再逐行步行。word-wrap 开启时仍步行，以逐行实现实际布局并更新 RowIndex。步行成本消除后，必要的冷布局转移到 `wrapLayout`，不能将两者合并后误报为纯收益。
+
+最终关闭 painter 插桩、15 轮中位数：
+
+| 场景 | P0 paint | painter 优化后冷 paint | 热 paint |
+| --- | ---: | ---: | ---: |
+| 顺序容器与算法 | 56.455 ms | 43.156 ms | 9.689 ms |
+| 关联容器与字符串 | 52.753 ms | 43.054 ms | 9.018 ms |
+| 智能指针与 chrono | 30.340 ms | 23.003 ms | 8.865 ms |
+
+剩余热点包括必要的冷布局、整帧和 token 背景填充、整行预扫描及 eval；后续优化仍需先测量，不能根据单项调用次数推断收益。
 
 ## 11. 实施阶段
 

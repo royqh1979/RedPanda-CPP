@@ -18,7 +18,9 @@
 #define QSYNEDIT_TYPES_H
 
 #include <QIcon>
+#include <QColor>
 #include <QList>
+#include <QVector>
 #include <QFlags>
 #include <memory>
 #include <QDebug>
@@ -148,6 +150,21 @@ enum FontStyle {
 Q_DECLARE_FLAGS(FontStyles,FontStyle)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(FontStyles)
+
+class TokenAttribute;
+using PTokenAttribute = std::shared_ptr<TokenAttribute>;
+enum class TokenType;
+
+struct PaintHighlightToken {
+    int ch;
+    QString text;
+    PTokenAttribute attr;
+    TokenType tokenType;
+    FontStyles style;
+    QColor foreground;
+    QColor background;
+};
+using PaintHighlightTokenList = QVector<PaintHighlightToken>;
 
 enum class EditingAreaType {
   eatRectangleBorder,

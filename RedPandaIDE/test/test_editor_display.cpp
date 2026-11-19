@@ -470,7 +470,7 @@ void TestEditorDisplay::test_stl_paint_profile()
 
     QTemporaryDir temporaryDir;
     QVERIFY(temporaryDir.isValid());
-    qWarning("scenario,lines,identifiers,extract_ns,eval_ns,semantic_ns,paint_ns,other_ns,line_extract_ns,expression_units");
+    qWarning("scenario,lines,identifiers,extract_ns,eval_ns,semantic_ns,paint_ns,other_ns,line_extract_ns,expression_units,hot_paint_ns");
     for (const PaintProfileScenario &scenario : paintProfileScenarios()) {
         QCOMPARE(scenario.lines.size(), profileLines);
         QString fileName = temporaryDir.filePath(QString("%1.cpp").arg(scenario.name));
@@ -505,14 +505,14 @@ void TestEditorDisplay::test_stl_paint_profile()
             QElapsedTimer extractTimer;
             extractTimer.start();
             for (const QSynedit::CharPos &pos : positions)
-                extractedTokens += mEditor->getExpressionAtPosition(pos).size();
+                extractedTokens += CppExpressionExtractor::extract(mEditor.get(), mEditor->syntaxer(), pos).size();
             qint64 extractNs = extractTimer.nsecsElapsed();
             Q_UNUSED(extractedTokens)
 
             QVector<QStringList> expressions;
             expressions.reserve(positions.size());
             for (const QSynedit::CharPos &pos : positions)
-                expressions.append(mEditor->getExpressionAtPosition(pos));
+                expressions.append(CppExpressionExtractor::extract(mEditor.get(), mEditor->syntaxer(), pos));
             qint64 resolved = 0;
             QElapsedTimer evalTimer;
             evalTimer.start();
@@ -555,29 +555,39 @@ void TestEditorDisplay::test_stl_paint_profile()
             mEditor->viewport()->render(&paintImage);
             return timer.nsecsElapsed();
         };
+        auto measureHotPaint = [&]() {
+            QElapsedTimer timer;
+            timer.start();
+            mEditor->viewport()->render(&paintImage);
+            return timer.nsecsElapsed();
+        };
 
         measureSemantic();
         measureLineExtraction();
         measurePaint();
+        measureHotPaint();
         QVector<qint64> extractSamples;
         QVector<qint64> evalSamples;
         QVector<qint64> lineExtractSamples;
         QVector<qint64> paintSamples;
+        QVector<qint64> hotPaintSamples;
         for (int i = 0; i < repeat; ++i) {
             QPair<qint64, qint64> semantic = measureSemantic();
             extractSamples.append(semantic.first);
             evalSamples.append(semantic.second);
             lineExtractSamples.append(measureLineExtraction());
             paintSamples.append(measurePaint());
+            hotPaintSamples.append(measureHotPaint());
         }
         qint64 extractNs = medianPaintProfileValue(extractSamples);
         qint64 evalNs = medianPaintProfileValue(evalSamples);
         qint64 lineExtractNs = medianPaintProfileValue(lineExtractSamples);
         qint64 paintNs = medianPaintProfileValue(paintSamples);
+        qint64 hotPaintNs = medianPaintProfileValue(hotPaintSamples);
         qWarning().nospace() << scenario.name << ',' << profileLines << ',' << positions.size()
                              << ',' << extractNs << ',' << evalNs << ',' << (extractNs + evalNs)
                              << ',' << paintNs << ',' << (paintNs - extractNs - evalNs)
-                             << ',' << lineExtractNs << ',' << unitCount;
+                             << ',' << lineExtractNs << ',' << unitCount << ',' << hotPaintNs;
     }
 #endif
 }

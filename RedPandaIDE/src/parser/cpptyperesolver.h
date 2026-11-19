@@ -87,6 +87,12 @@ struct EvalResult {
     }
 };
 
+struct ExpressionEvalTraceEntry {
+    int tokenIndex;
+    PStatement statement;
+};
+using ExpressionEvalTrace = QVector<ExpressionEvalTraceEntry>;
+
 struct MemberEvalResult {
     PStatement statement;
     TypeInfo type;
@@ -117,6 +123,7 @@ public:
         int operationCount = 0;
         bool resolutionFailed = false;
         bool allowModelChanges = false;
+        ExpressionEvalTrace *identifierTrace = nullptr;
     };
     using ClassInstance = ::ClassInstance;
     using PTemplateBindingFrame = ::PTemplateBindingFrame;

@@ -52,6 +52,7 @@
 #include "ui_mainwindow.h"
 #include "editormanager.h"
 #include "editor/editor.h"
+#include "editor/cppexpressionextractor.h"
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"
@@ -8512,11 +8513,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
         editor->setCursor(oldCursor);
     });
 
-    QStringList expression = editor->getExpressionAtPosition(oldCaret);
+    QStringList expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), oldCaret);
     if (expression.isEmpty() && oldCaret.ch>=0) {
         QSynedit::CharPos pos=oldCaret;
         pos.ch--;
-        expression = editor->getExpressionAtPosition(pos);
+        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), pos);
     }
 
     if (editor->inProject() && mProject) {

@@ -150,6 +150,8 @@ void TestCppTokenizer::test_integer_and_floating_literals()
         QCOMPARE(mTokenizer[i].kind, CppTokenizer::TokenKind::IntegerLiteral);
     for (int i : {4, 5, 6, 7, 8})
         QCOMPARE(mTokenizer[i].kind, CppTokenizer::TokenKind::FloatingLiteral);
+    for (int i = 0; i < mTokenizer.tokenCount(); ++i)
+        QCOMPARE(CppTokenizer::numberTokenKind(mTokenizer[i].text), mTokenizer[i].kind);
 }
 
 void TestCppTokenizer::test_string_and_character_literals()
@@ -2299,9 +2301,11 @@ void TestCppTokenizer::test_type_operations_resolve_standard_range_views()
     QVector<DeclarationInfo> declarations;
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
+                "  template<typename T> class vector_iterator { public: T& operator*(); };\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
+                "    vector_iterator<T> begin();\n"
                 "    T& front();\n"
                 "  };\n"
                 "}\n"
@@ -2352,9 +2356,11 @@ void TestCppTokenizer::test_expression_evaluator_builds_range_adaptor_pipelines(
     QVERIFY(parseSyntaxText(
                 "namespace std {\n"
                 "  class string { public: unsigned long size() const; };\n"
+                "  template<typename T> class vector_iterator { public: T& operator*(); };\n"
                 "  template<typename T> class vector {\n"
                 "  public:\n"
                 "    using value_type = T;\n"
+                "    vector_iterator<T> begin();\n"
                 "    T& front();\n"
                 "  };\n"
                 "  namespace ranges {\n"

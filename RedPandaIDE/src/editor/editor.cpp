@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "editor.h"
+#include "cppexpressionextractor.h"
 
 #include <QtCore/QFileInfo>
 #include <QFont>
@@ -111,6 +112,10 @@ Editor::Editor(QWidget *parent):
     mCtrlClicking{false},
     mFileType{FileType::None}
 {
+    setPaintHighlightTokensPreparer(
+                [this](int line, QSynedit::PaintHighlightTokenList &tokens) {
+        preparePaintHighlightTokens(line, tokens);
+    });
     mEditorEncoding = ENCODING_UTF8;
     mFileEncoding = ENCODING_ASCII;
     mIsNew = true;
@@ -1132,12 +1137,100 @@ bool Editor::onGetSpecialLineColors(int line, QColor &foreground, QColor &backgr
     return false;
 }
 
-void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
+void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightTokenList &tokens)
 {
+    int contentVersion = document()->contentVersion();
+    if (mIdCacheContentVersion != contentVersion) {
+        mIdCache.clear();
+        mIdCacheContentVersion = contentVersion;
+    }
+    QVector<PStatement> statements(tokens.size());
+    bool useTrace = mParser && mParser->enabled() && !mParser->parsing()
+            && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP
+            && mParser->isLineVisible(mFilename, line)
+            && !mParser->isIncludeLine(lineText(line));
+    if (useTrace) {
+        QVector<CppExpressionInputToken> input;
+        input.reserve(tokens.size());
+        for (const QSynedit::PaintHighlightToken &token : tokens)
+            input.append({token.text, token.tokenType});
+        CppExpressionExtractor extractor(this, syntaxer());
+        QVector<CppExpressionUnit> units = extractor.extractLine(line, input);
+        PStatement scope = mParser->findScopeStatement(mFilename, line);
+        for (CppExpressionUnit &unit : units) {
+            bool needsEvaluation = false;
+            for (int i = 0; i < unit.expression.size() && !needsEvaluation; ++i) {
+                if (unit.tokenTypes[i] != QSynedit::TokenType::Identifier)
+                    continue;
+                int inputIndex = unit.inputTokenIndexes[i];
+                if (inputIndex < 0 || inputIndex >= tokens.size())
+                    continue;
+                const QSynedit::PaintHighlightToken &token = tokens[inputIndex];
+                QString cacheKey = QString("%1 %2 %3").arg(line).arg(token.ch).arg(token.text);
+                needsEvaluation = !mIdCache.contains(cacheKey);
+            }
+            if (!needsEvaluation)
+                continue;
+            CppTokenizer::TokenList expression;
+            expression.reserve(unit.expression.size());
+            for (int i = 0; i < unit.expression.size(); ++i) {
+                CppTokenizer::Token token;
+                token.text = unit.expression[i];
+                token.fileName = mFilename;
+                int inputIndex = unit.inputTokenIndexes[i];
+                if (inputIndex >= 0 && inputIndex < tokens.size())
+                    token.position = SourcePosition{line, tokens[inputIndex].ch};
+                switch (unit.tokenTypes[i]) {
+                case QSynedit::TokenType::Identifier:
+                case QSynedit::TokenType::Keyword:
+                    token.kind = CppTokenizer::TokenKind::Identifier;
+                    break;
+                case QSynedit::TokenType::Number:
+                    token.kind = CppTokenizer::numberTokenKind(token.text);
+                    break;
+                case QSynedit::TokenType::String:
+                    token.kind = CppTokenizer::TokenKind::StringLiteral;
+                    break;
+                case QSynedit::TokenType::Character:
+                    token.kind = CppTokenizer::TokenKind::CharacterLiteral;
+                    break;
+                default:
+                    token.kind = CppTokenizer::TokenKind::Operator;
+                    break;
+                }
+                expression.append(std::move(token));
+            }
+            ExpressionEvalTrace trace;
+            mParser->evalExpression(mFilename, expression, scope, &trace);
+            for (const ExpressionEvalTraceEntry &entry : trace) {
+                if (entry.tokenIndex < 0
+                        || entry.tokenIndex >= unit.inputTokenIndexes.size()) {
+                    continue;
+                }
+                int inputIndex = unit.inputTokenIndexes[entry.tokenIndex];
+                if (inputIndex >= 0 && inputIndex < tokens.size())
+                    statements[inputIndex] = entry.statement;
+            }
+        }
+    }
+    for (int i = 0; i < tokens.size(); ++i) {
+        preparePaintHighlightToken(line, tokens[i].ch, tokens[i],
+                                   useTrace ? &statements[i] : nullptr);
+    }
+}
+
+void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlightToken &paintToken,
+                                        const PStatement *resolvedStatement)
+{
+    const QString &token = paintToken.text;
+    QSynedit::PTokenAttribute attr = paintToken.attr;
+    QSynedit::TokenType tokenType = paintToken.tokenType;
+    QSynedit::FontStyles &style = paintToken.style;
+    QColor &foreground = paintToken.foreground;
+    QColor &background = paintToken.background;
     if (token.isEmpty())
         return;
 
-    QSynedit::TokenType tokenType = syntaxer()->getTokenType();
     if (mParser) {
         // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
@@ -1162,14 +1255,20 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
             CharPos p{ch,line};
 
             StatementKind kind;
-            if (mParser->parsing()){
-                kind=mIdCache.value(QString("%1 %2 %3").arg(line).arg(ch).arg(token),StatementKind::Unknown);
+            QString cacheKey = QString("%1 %2 %3").arg(line).arg(ch).arg(token);
+            auto cached = mIdCache.constFind(cacheKey);
+            if (cached != mIdCache.constEnd()) {
+                kind = cached.value();
+            } else if (mParser->parsing()) {
+                kind = StatementKind::Unknown;
             } else {
-                QStringList expression = getExpressionAtPosition(p);
-                PStatement statement = parser()->findStatementOf(
-                            filename(),
-                            expression,
-                            p.line);
+                PStatement statement;
+                if (resolvedStatement) {
+                    statement = *resolvedStatement;
+                } else {
+                    statement = parser()->findStatementOf(
+                                filename(), CppExpressionExtractor::extract(this, syntaxer(), p), p.line);
+                }
                 while (statement && statement->kind == StatementKind::Alias)
                     statement = mParser->findAliasedStatement(statement);
                 if (statement && statement->kind == StatementKind::Constructor) {
@@ -1183,7 +1282,7 @@ void Editor::onPreparePaintHighlightToken(int line, int ch, const QString &token
                     }
                 }
                 kind = getKindOfStatement(statement);
-                mIdCache.insert(QString("%1 %2 %3").arg(line).arg(ch).arg(token),kind);
+                mIdCache.insert(cacheKey,kind);
             }
             if (kind == StatementKind::Unknown) {
                 CharPos pBeginPos,pEndPos;
@@ -1873,7 +1972,7 @@ void Editor::onTooltipTimer()
             s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
         } else if (!completionPopupVisible()
                  && !headerCompletionPopupVisible()) {
-            expression = getExpressionAtPosition(p);
+            expression = CppExpressionExtractor::extract(this, syntaxer(), p);
             s = expression.join(""); // information during coding
         }
         break;
@@ -2156,242 +2255,12 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QString &memberOperator,
         QStringList &memberExpression)
 {
-    QStringList expression = getExpressionAtPosition(pos);
+    QStringList expression = CppExpressionExtractor::extract(this, syntaxer(), pos);
     // *(Deference) and &(Address-of) has low precedence than '.'/'->',
     //  so don't includes them in the owner expression in comletion calculation
     while (!expression.isEmpty() && (expression.front()=='*' || expression.front()=='&'))
         expression.pop_front();
     return getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
-}
-
-QStringList Editor::getExpressionAtPosition(
-        const QSynedit::CharPos &pos)
-{
-    QStringList result;
-    int line = pos.line;
-    int ch = pos.ch;
-    int symbolMatchingLevel = 0;
-    LastSymbolType lastSymbolType=LastSymbolType::None;
-    QSynedit::CppSyntaxer syntaxer;
-    while (true) {
-        if (line>=lineCount() || line<0)
-            break;
-        QStringList tokens;
-        startParseLine(&syntaxer, line);
-        while (!syntaxer.eol()) {
-            int start = syntaxer.getTokenPos();
-            QString token = syntaxer.getToken();
-            int endPos = start + token.length()-1;
-            if (start>ch) {
-                break;
-            }
-            QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
-            if ( (line == pos.line)
-                 && (start<=ch) && (ch<=endPos)) {
-                if (syntaxer.getTokenType() == QSynedit::TokenType::Comment
-                        || syntaxer.getTokenType() == QSynedit::TokenType::String) {
-                    return result;
-                }
-            }
-            if (syntaxer.getTokenType() != QSynedit::TokenType::Comment
-                    && syntaxer.getTokenType() != QSynedit::TokenType::Space){
-                tokens.append(token);
-            }
-            syntaxer.next();
-        }
-        for (int i=tokens.count()-1;i>=0;i--) {
-            QString token = tokens[i];
-            if (token=="using")
-                return result;
-            switch(lastSymbolType) {
-            case LastSymbolType::ScopeResolutionOperator: //before '::'
-                if (token==">") {
-                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
-                    symbolMatchingLevel=0;
-                } else if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::ObjectMemberOperator: //before '.'
-            case LastSymbolType::PointerMemberOperator: //before '->'
-            case LastSymbolType::PointerToMemberOfObjectOperator: //before '.*'
-            case LastSymbolType::PointerToMemberOfPointerOperator: //before '->*'
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::AsteriskSign: // before '*':
-                if (token == '*') {
-                } else {
-                    QChar firstCh=token.front();
-                    if (isIdentChar(firstCh)
-                            || firstCh.isDigit()
-                            || firstCh == '.'
-                            || firstCh == ')' ) {
-                        result.pop_front();
-                    }
-                    return result;
-                }
-                break;
-            case LastSymbolType::AmpersandSign: // before '&':
-            {
-                QChar firstCh=token.front();
-                if (isIdentChar(firstCh)
-                        || firstCh.isDigit()
-                        || firstCh == '.'
-                        || firstCh == ')' ) {
-                    result.pop_front();
-                }
-                return result;
-            }
-                break;
-            case LastSymbolType::ParenthesisMatched: //before '()'
-//                if (token == ".") {
-//                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-//                } else if (token=="->") {
-//                    lastSymbolType = LastSymbolType::PointerMemberOperator;
-//                } else if (token == ".*") {
-//                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
-//                } else if (token == "->*"){
-//                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
-//                } else if (token==">") {
-//                    lastSymbolType=LastSymbolType::MatchingAngleQuotation;
-//                    symbolMatchingLevel=0;
-//                } else
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (token == "*") {
-                    lastSymbolType=LastSymbolType::AsteriskSign;
-                } else if (token == "&") {
-                    lastSymbolType=LastSymbolType::AmpersandSign;
-                } else if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::BracketMatched: //before '[]'
-                if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::AngleQuotationMatched: //before '<>'
-                if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::None:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else if (token == ".") {
-                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-                } else if (token=="->") {
-                    lastSymbolType = LastSymbolType::PointerMemberOperator;
-                } else if (token == ".*") {
-                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
-                } else if (token == "->*"){
-                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
-                } else if (token == ")" ) {
-                    lastSymbolType=LastSymbolType::MatchingParenthesis;
-                    symbolMatchingLevel = 0;
-                } else if (token == "]") {
-                    lastSymbolType=LastSymbolType::MatchingBracket;
-                    symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
-                    lastSymbolType=LastSymbolType::Identifier;
-                } else
-                    return result;
-                break;
-            case LastSymbolType::TildeSign:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else {
-                    // "~" must appear after "::"
-                    result.pop_front();
-                    return result;
-                }
-                break;;
-            case LastSymbolType::Identifier:
-                if (token =="::") {
-                    lastSymbolType=LastSymbolType::ScopeResolutionOperator;
-                } else if (token == ".") {
-                    lastSymbolType=LastSymbolType::ObjectMemberOperator;
-                } else if (token=="->") {
-                    lastSymbolType = LastSymbolType::PointerMemberOperator;
-                } else if (token == ".*") {
-                    lastSymbolType = LastSymbolType::PointerToMemberOfObjectOperator;
-                } else if (token == "->*"){
-                    lastSymbolType = LastSymbolType::PointerToMemberOfPointerOperator;
-                } else if (token == "~") {
-                    lastSymbolType=LastSymbolType::TildeSign;
-                } else if (token == "*") {
-                    lastSymbolType=LastSymbolType::AsteriskSign;
-                } else if (token == "&") {
-                    lastSymbolType=LastSymbolType::AmpersandSign;
-                } else
-                    return result; // stop matching;
-                break;
-            case LastSymbolType::MatchingParenthesis:
-                if (token=="(") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::ParenthesisMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token==")") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            case LastSymbolType::MatchingBracket:
-                if (token=="[") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::BracketMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token=="]") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            case LastSymbolType::MatchingAngleQuotation:
-                if (token=="<") {
-                    if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::AngleQuotationMatched;
-                    } else {
-                        symbolMatchingLevel--;
-                    }
-                } else if (token==">") {
-                    symbolMatchingLevel++;
-                }
-                break;
-            }
-            result.push_front(token);
-        }
-
-        line--;
-        if (line>=0)
-            ch = document()->getLine(line).length()+1;
-    }
-    return result;
 }
 
 QString Editor::getWordForCompletionSearch(const CharPos &pos,bool permitTilde)
@@ -4167,7 +4036,7 @@ void Editor::updateFunctionTip(bool showTip)
             }
         }
     }
-    QStringList functionExpression = getExpressionAtPosition(functionNamePos);
+    QStringList functionExpression = CppExpressionExtractor::extract(this, syntaxer(), functionNamePos);
     if (!functionExpression.isEmpty())
         s = functionExpression.join("");
 
@@ -4779,7 +4648,7 @@ void Editor::gotoDeclaration(const CharPos &pos)
     if (!parser())
         return;
     // Exit early, don't bother creating a stream (which is slow)
-    QStringList expression = getExpressionAtPosition(pos);
+    QStringList expression = CppExpressionExtractor::extract(this, syntaxer(), pos);
 
     // Find it's definition
     PStatement statement = parser()->findStatementOf(
@@ -4808,7 +4677,7 @@ void Editor::gotoDefinition(const CharPos &pos)
 {
     if (!parser())
         return;
-    QStringList expression = getExpressionAtPosition(pos);
+    QStringList expression = CppExpressionExtractor::extract(this, syntaxer(), pos);
 
     // Find it's definition
     PStatement statement = parser()->findStatementOf(

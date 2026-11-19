@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "test_widgets.h"
+#include "src/editor/cppexpressionextractor.h"
 
 #include <QListView>
 #include <QSet>
@@ -588,7 +589,7 @@ void TestWidgets::test_standard_library_template_consumers()
     });
 
     QSynedit::CharPos sizePos{content[6].indexOf("size"), 6};
-    QCOMPARE(editor.getExpressionAtPosition(sizePos), QStringList({"it", "->", "size"}));
+    QCOMPARE(CppExpressionExtractor::extract(&editor, editor.syntaxer(), sizePos), QStringList({"it", "->", "size"}));
     PStatement size = mParser->findStatement("std::basic_string::size");
     QVERIFY(size);
     editor.gotoDefinition(sizePos);
@@ -858,7 +859,7 @@ void TestWidgets::test_goto_class_declaration_and_definition()
     QVERIFY(classStatement);
     StatementOccurrence declaration = statementDeclarationForNavigation(classStatement, mMainFile);
     QSynedit::CharPos classPos{6, declaration.range.start.line};
-    QCOMPARE(editor.getExpressionAtPosition(classPos), QStringList{"Foo"});
+    QCOMPARE(CppExpressionExtractor::extract(&editor, editor.syntaxer(), classPos), QStringList{"Foo"});
     QSynedit::CharPos target{-1, -1};
     connect(&editor, &Editor::openFileRequested,
             [&target](const QString &, FileType, const QString &,
@@ -899,7 +900,7 @@ void TestWidgets::test_goto_constructor_declaration_and_definition()
     QVERIFY(constructorStatement);
     StatementOccurrence declaration = statementDeclarationForNavigation(constructorStatement, mMainFile);
     QSynedit::CharPos constructorPos{2, declaration.range.start.line};
-    QCOMPARE(editor.getExpressionAtPosition(constructorPos), QStringList{"Foo"});
+    QCOMPARE(CppExpressionExtractor::extract(&editor, editor.syntaxer(), constructorPos), QStringList{"Foo"});
     PStatement resolved = mParser->findStatementOf(
                 mMainFile, QStringList{"Foo"}, constructorPos.line);
     QVERIFY(resolved);

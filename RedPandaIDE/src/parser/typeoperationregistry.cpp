@@ -33,7 +33,8 @@ TypeInfo TypeOperationRegistry::containerValue(
 TypeInfo TypeOperationRegistry::containerReference(
         const TypeInfo &container, CppTypeResolver::EvaluationContext *evaluation) const
 {
-    return mResolver.invokeResult(container, "front", evaluation);
+    TypeInfo iterator = mResolver.invokeResult(container, "begin", evaluation);
+    return iteratorReference(iterator, evaluation);
 }
 
 TypeInfo TypeOperationRegistry::iteratorValue(

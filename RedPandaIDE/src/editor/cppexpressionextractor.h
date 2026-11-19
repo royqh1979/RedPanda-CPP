@@ -34,6 +34,7 @@ struct CppExpressionInputToken {
 struct CppExpressionUnit {
     int targetTokenIndex;
     QStringList expression;
+    QVector<QSynedit::TokenType> tokenTypes;
     QVector<int> inputTokenIndexes;
 };
 

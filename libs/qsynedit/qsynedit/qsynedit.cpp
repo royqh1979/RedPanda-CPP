@@ -6063,7 +6063,7 @@ bool QSynEdit::findLineTextBySeq(size_t lineSeq,  QString& text) const
     return true;
 }
 
-const PConstSyntaxer QSynEdit::syntaxer() const
+PConstSyntaxer QSynEdit::syntaxer() const
 {
     return mSyntaxer;
 }
@@ -7160,10 +7160,9 @@ void QSynEdit::onPaint(QPainter &)
 
 }
 
-void QSynEdit::onPreparePaintHighlightToken(int , int , const QString &,
-                                           PTokenAttribute , FontStyles &, QColor &, QColor &)
+void QSynEdit::setPaintHighlightTokensPreparer(PaintHighlightTokensPreparer preparer)
 {
-
+    mPaintHighlightTokensPreparer = std::move(preparer);
 }
 
 void QSynEdit::processCommand(EditCommand command, QVariant commandData,QVariant extraCommandData)

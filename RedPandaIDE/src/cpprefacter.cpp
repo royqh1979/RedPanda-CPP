@@ -20,6 +20,7 @@
 #include <QProgressDialog>
 #include <qsynedit/document.h>
 #include "cpprefacter.h"
+#include "editor/cppexpressionextractor.h"
 #include "mainwindow.h"
 #include "settings.h"
 #include "editor/editor.h"
@@ -44,7 +45,7 @@ bool CppRefacter::findOccurence(Editor *editor, const CharPos &pos)
         editor->parser()->unFreeze();
     });
     // get full phrase (such as s.name instead of name)
-    QStringList expression = editor->getExpressionAtPosition(pos);
+    QStringList expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), pos);
     // Find it's definition
     PStatement statement = editor->parser()->findStatementOf(
                 editor->filename(),
@@ -121,9 +122,9 @@ void CppRefacter::renameSymbol(Editor *editor, const CharPos &pos, const QString
     QStringList expression;
     QChar s=editor->charAt(pos);
     if (!editor->isIdentStartChar(s)) {
-        expression = editor->getExpressionAtPosition(CharPos{pos.ch-1,pos.line});
+        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), CharPos{pos.ch-1,pos.line});
     } else {
-        expression = editor->getExpressionAtPosition(pos);
+        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), pos);
     }
     // Find it's definition
     PStatement oldStatement = editor->parser()->findStatementOf(
@@ -186,9 +187,9 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
     QStringList expression;
     QChar s=editor->charAt(pos);
     if (!editor->isIdentStartChar(s)) {
-        expression = editor->getExpressionAtPosition(CharPos{pos.ch-1,pos.line});
+        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), CharPos{pos.ch-1,pos.line});
     } else {
-        expression = editor->getExpressionAtPosition(pos);
+        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), pos);
     }
 
     if (expression.length()!=1)
@@ -236,7 +237,7 @@ void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const CharPos &po
                 p.line = posY;
                 p.ch = syntaxer->getTokenPos();
 
-                QStringList tokenExpression = editor->getExpressionAtPosition(p);
+                QStringList tokenExpression = CppExpressionExtractor::extract(editor, editor->syntaxer(), p);
                 if (tokenExpression.length() == 1) {
                     PStatement tokenStatement = editor->parser()->findStatementOf(
                                 editor->filename(),
@@ -364,7 +365,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                     CharPos p;
                     p.line = posY;
                     p.ch = start;
-                    QStringList expression = editor.getExpressionAtPosition(p);
+                    QStringList expression = CppExpressionExtractor::extract(&editor, editor.syntaxer(), p);
                     PStatement tokenStatement = parser->findStatementOf(
                                 filename,
                                 expression, p.line);
@@ -414,7 +415,7 @@ void CppRefacter::renameSymbolInEditor(Editor *editor, const PStatement &stateme
                 p.line = posY;
                 p.ch = syntaxer->getTokenPos();
 
-                QStringList expression = editor->getExpressionAtPosition(p);
+                QStringList expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), p);
                 PStatement tokenStatement = editor->parser()->findStatementOf(
                             editor->filename(), expression, p.line);
                 if (tokenStatement) {

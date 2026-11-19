@@ -21,6 +21,7 @@ private slots:
     void test_forward_declaration_prefers_definition_for_eval();
     void test_base_member_return_uses_declaration_bindings();
     void test_member_overload_resolution();
+    void test_expression_identifier_trace();
     void test_unknown_non_type_default_preserves_alias_resolution();
     void test_using_declaration_function_overload_set();
     void test_overload_rejects_unrelated_class_specialization();
@@ -93,6 +94,7 @@ private slots:
     void test_standard_library_vector_subscript();
     void test_standard_library_make_shared_default();
     void test_standard_library_expression_chains();
+    void test_standard_library_trace_edge_cases();
     void test_standard_library_container_eval_profile();
     void test_standard_library_algorithm_eval_profile();
     void test_standard_library_parse_baseline();

@@ -76,6 +76,8 @@ void TestCppExpressionExtractor::test_extract_data()
 
     QTest::newRow("namespace member")
             << "std::|cout" << QStringList{"std", "::", "cout"};
+    QTest::newRow("global scope member")
+            << "::|value" << QStringList{"::", "value"};
     QTest::newRow("namespace itself") << "|std::cout" << QStringList{"std"};
     QTest::newRow("pointer member")
             << "pointer->|member" << QStringList{"pointer", "->", "member"};
@@ -300,6 +302,8 @@ void TestCppExpressionExtractor::test_extract_line_data()
     QTest::newRow("namespace chains")
             << "std::cout << std::endl;"
             << 0 << QStringList{"std :: endl", "std :: cout"};
+    QTest::newRow("global scope member")
+            << "::value" << 0 << QStringList{":: value"};
     QTest::newRow("new receiver")
             << "new Type().member" << 0 << QStringList{"new Type ( ) . member"};
     QTest::newRow("parenthesized receiver")
@@ -353,14 +357,30 @@ void TestCppExpressionExtractor::test_extract_line()
         const CppExpressionUnit &unit = units[i];
         QCOMPARE(unit.expression.join(' '), expected[i]);
         QCOMPARE(unit.inputTokenIndexes.size(), unit.expression.size());
+        QCOMPARE(unit.tokenTypes.size(), unit.expression.size());
         QVERIFY(unit.targetTokenIndex >= 0 && unit.targetTokenIndex < input.size());
         QCOMPARE(input[unit.targetTokenIndex].type, QSynedit::TokenType::Identifier);
+        int targetCh = -1;
+        int tokenIndex = 0;
+        QSynedit::PSyntaxer scanner = editor.syntaxer()->createInstance();
+        editor.startParseLine(scanner.get(), line);
+        while (!scanner->eol()) {
+            if (tokenIndex == unit.targetTokenIndex) {
+                targetCh = scanner->getTokenPos();
+                break;
+            }
+            ++tokenIndex;
+            scanner->next();
+        }
+        QVERIFY(targetCh >= 0);
+        QCOMPARE(unit.expression, extractor.extract({targetCh, line}));
         for (int j = 0; j < unit.inputTokenIndexes.size(); ++j) {
             int inputIndex = unit.inputTokenIndexes[j];
             if (inputIndex < 0)
                 continue;
             QVERIFY(inputIndex < input.size());
             QCOMPARE(unit.expression[j], input[inputIndex].text);
+            QCOMPARE(unit.tokenTypes[j], input[inputIndex].type);
             if (input[inputIndex].type == QSynedit::TokenType::Identifier) {
                 QVERIFY2(!covered.contains(inputIndex),
                          qPrintable(unit.expression.join(' ')));
@@ -415,22 +435,10 @@ void TestCppExpressionExtractor::test_profile()
     if (repeat <= 0)
         repeat = 10;
 
-    volatile qint64 oldTokenCount = 0;
     volatile qint64 newTokenCount = 0;
     volatile qint64 sessionTokenCount = 0;
     volatile qint64 lineTokenCount = 0;
     volatile qint64 lineUnitCount = 0;
-    auto runOld = [&]() {
-        qint64 count = 0;
-        QElapsedTimer timer;
-        timer.start();
-        for (int i = 0; i < repeat; ++i) {
-            for (const QSynedit::CharPos &pos : positions)
-                count += editor.getExpressionAtPosition(pos).size();
-        }
-        oldTokenCount = count;
-        return timer.nsecsElapsed();
-    };
     auto runNew = [&]() {
         qint64 count = 0;
         QElapsedTimer timer;
@@ -474,16 +482,13 @@ void TestCppExpressionExtractor::test_profile()
         return timer.nsecsElapsed();
     };
 
-    runOld();
     runNew();
     runSession();
     runLines();
-    qint64 oldNs = std::numeric_limits<qint64>::max();
     qint64 newNs = std::numeric_limits<qint64>::max();
     qint64 sessionNs = std::numeric_limits<qint64>::max();
     qint64 lineNs = std::numeric_limits<qint64>::max();
     for (int i = 0; i < 3; ++i) {
-        oldNs = qMin(oldNs, runOld());
         newNs = qMin(newNs, runNew());
         sessionNs = qMin(sessionNs, runSession());
         lineNs = qMin(lineNs, runLines());
@@ -491,11 +496,9 @@ void TestCppExpressionExtractor::test_profile()
     qWarning().nospace() << "EXPRESSION_PROFILE file=" << fileName
                          << " identifiers=" << positions.size()
                          << " repeat=" << repeat
-                         << " oldNs=" << oldNs
                          << " newNs=" << newNs
                          << " sessionNs=" << sessionNs
                          << " lineNs=" << lineNs
-                         << " oldTokens=" << oldTokenCount
                          << " newTokens=" << newTokenCount
                          << " sessionTokens=" << sessionTokenCount
                          << " lineTokens=" << lineTokenCount

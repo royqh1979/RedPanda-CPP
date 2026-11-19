@@ -250,6 +250,7 @@ ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
     bool needReceiver = false;
     bool needBase = false;
     bool memberChain = false;
+    bool globalScope = false;
     int nextIndex = -1;
     Token token;
     while (stream.next(token)) {
@@ -300,6 +301,11 @@ ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
                 needBase = false;
                 continue;
             }
+            if (globalScope) {
+                needReceiver = false;
+                nextIndex = stream.index() - 1;
+                break;
+            }
             return {};
         }
         if (needBase) {
@@ -325,6 +331,7 @@ ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
         if (isMemberOperator(token.text)) {
             expression.append(token);
             needReceiver = true;
+            globalScope = token.text == "::" && !memberChain;
             memberChain = true;
             continue;
         }
@@ -343,7 +350,8 @@ ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
         break;
     }
 
-    if (needReceiver || round != 0 || square != 0 || curly != 0 || angle != 0)
+    if ((needReceiver && !globalScope)
+            || round != 0 || square != 0 || curly != 0 || angle != 0)
         return {};
     std::reverse(expression.begin(), expression.end());
     return {expression, nextIndex >= 0 ? nextIndex : stream.index()};
@@ -415,6 +423,7 @@ QVector<CppExpressionUnit> CppExpressionExtractor::extractLine(
         unit.targetTokenIndex = target.inputIndex;
         for (const Token &token : extracted.expression) {
             unit.expression.append(token.text);
+            unit.tokenTypes.append(token.type);
             unit.inputTokenIndexes.append(token.inputIndex);
         }
         result.append(unit);

@@ -129,14 +129,19 @@ private:
                              const QList<int> &glyphStartCharList,
                              const QList<int> &glyphStartPositionsList,
                              bool fillToEOL);
+    PaintHighlightToken makeHighlightToken(
+            const RowPaintContext &row, int ch, const QString &text,
+            PTokenAttribute attr, TokenType tokenType);
+    PaintHighlightTokenList prepareHighlightTokens(
+            RowPaintContext &row, int line, const QString &lineText);
     // recomputeGlyphPositions: the painted text differs from the document
     // line (IME preedit), so glyph x positions are computed while scanning
     // instead of read from the layout cache (and never written back)
     void addHighlightToken(
             RowPaintContext &row,
             const QString& lineText,
-            const QString& token, int tokenLeft,
-            int line, PTokenAttribute p_Attri, bool showGlyphs,
+            const PaintHighlightToken &highlightToken, int tokenLeft,
+            bool showGlyphs,
             const QList<int> &glyphStartCharList,
             int tokenStartChar,
             int tokenEndChar,
@@ -149,8 +154,8 @@ private:
     void getRainbowColorAttr(int level, PTokenAttribute &attr);
     void getBraceColorAttr(int level, PTokenAttribute &attr);
     void paintLines();
-    // resolve the (line, segment) of a display row by walking from the
-    // anchor; never touches the row index
+    // resolve a display row through the row index without wrapping;
+    // otherwise walk from the anchor to realize each crossed layout
     void seekFromAnchor(int row, int &line, int &segment) const;
 
 private:

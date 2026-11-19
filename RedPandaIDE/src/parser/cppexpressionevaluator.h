@@ -27,7 +27,8 @@ public:
                            const TypeOperationRegistry &operations);
 
     EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {},
-                        CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+                        CppTypeResolver::EvaluationContext *evaluation = nullptr,
+                        ExpressionEvalTrace *trace = nullptr) const;
 
 private:
     using TokenList = QVector<CppTokenizer::Token>;
