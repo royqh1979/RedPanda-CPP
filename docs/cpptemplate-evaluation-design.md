@@ -274,6 +274,16 @@ STL 依据：
 
 已有的 range/view 模拟测试继续作为既有能力回归，但本轮不得宣称真实 range/view 已支持。
 
+### 已确认的后续能力缺口
+
+以下能力在分析 libstdc++ 无序容器时确认缺失，但不因此自动扩大本轮范围：
+
+- **异常规格的保存与求值**：声明解析目前能消费 `noexcept` 和 `noexcept(expr)`，但不保存“可能抛出、不抛出、由常量表达式决定”的语义。完整支持还需要在表达式求值中实现 `noexcept(expr)` 运算符，读取实际选中函数、构造函数、转换及成员访问的异常规格，且不求值其副作用。旧式 `throw(...)` 动态异常规格不是当前 C++17 无序容器链的前置条件。
+- **INVOKE 与可调用性**：`is_invocable`/`is_nothrow_invocable` 需要确定调用是否合法及调用结果类型，不能按 trait 名称直接返回真值。最低依赖包括 `std::declval` 的表达式类型语义、`invoke_result`、普通函数/函数对象调用、成员对象和成员函数指针、引用或指针访问以及 `reference_wrapper` 解包。普通函数对象可以先形成独立的最小支持范围，不必一次实现所有成员指针分支。
+- **与 SFINAE 的关系**：`void_t` 和 detection idiom 常用于判断上述表达式是否合法。若由通用库模板驱动，而不是由有限的编译器内建 trait 直接计算，就需要相应的替换失败语义；不能把语法或类型解析失败一律当成合法的 `false`。
+
+实际依据是 libstdc++ 的 `unordered_map` 默认 `_Tr` 实参：`__cache_default<_Key, _Hash>::value` 同时依赖 `__is_fast_hash` 和 `__is_nothrow_invocable`，后者又依赖 `__is_invocable` 与 `__call_is_nothrow_`。当前无法确定完整 INVOKE/异常规格时，相关特化匹配返回 Unknown 并保持未解析结果。这些能力属于 C++ 正确性扩展，不得仅为了缩短 profile 时间而局部硬编码；实施前必须分别补充确定真、确定假、未知不误导跳转的最小测试和真实 STL 场景。
+
 ## 数据结构设计
 
 ### 持久声明与一次型求值数据

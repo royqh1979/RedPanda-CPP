@@ -2734,17 +2734,28 @@ QString CppTypeResolver::evaluateConstantValue(
         const PStatement &context, EvaluationContext &evaluation) const
 {
     QString expression = text.trimmed();
-    CppTokenizer outerParentheses;
-    outerParentheses.tokenize({expression});
-    if (outerParentheses.tokenCount() >= 2 && outerParentheses[0].text == "("
-            && outerParentheses[0].matchIndex == outerParentheses.tokenCount() - 1) {
-        expression = expression.mid(1, expression.size() - 2).trimmed();
+    if (expression == "true" || expression == "false")
+        return expression;
+    QString literal = expression;
+    while (literal.endsWith('U') || literal.endsWith('u')
+           || literal.endsWith('L') || literal.endsWith('l')) {
+        literal.chop(1);
     }
-    CppTokenizer comparisonTokenizer;
-    comparisonTokenizer.tokenize({expression});
+    bool literalOk = false;
+    qlonglong literalValue = literal.toLongLong(&literalOk, 0);
+    if (literalOk)
+        return QString::number(literalValue);
+
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({expression});
+    if (tokenizer.tokenCount() >= 2 && tokenizer[0].text == "("
+            && tokenizer[0].matchIndex == tokenizer.tokenCount() - 1) {
+        expression = expression.mid(1, expression.size() - 2).trimmed();
+        tokenizer.tokenize({expression});
+    }
     int angleLevel = 0;
-    for (int i = 0; i < comparisonTokenizer.tokenCount(); ++i) {
-        const CppTokenizer::Token &token = comparisonTokenizer[i];
+    for (int i = 0; i < tokenizer.tokenCount(); ++i) {
+        const CppTokenizer::Token &token = tokenizer[i];
         if (token.matchIndex > i) {
             i = token.matchIndex;
             continue;
@@ -2759,9 +2770,9 @@ QString CppTypeResolver::evaluateConstantValue(
             QString left;
             QString right;
             for (int j = 0; j < i; ++j)
-                appendConstraintToken(left, comparisonTokenizer[j].text);
-            for (int j = i + 1; j < comparisonTokenizer.tokenCount(); ++j)
-                appendConstraintToken(right, comparisonTokenizer[j].text);
+                appendConstraintToken(left, tokenizer[j].text);
+            for (int j = i + 1; j < tokenizer.tokenCount(); ++j)
+                appendConstraintToken(right, tokenizer[j].text);
             QString leftValue = evaluateConstantValue(left, bindings, context, evaluation);
             QString rightValue = evaluateConstantValue(right, bindings, context, evaluation);
             if (token.text == "&&") {
@@ -2780,9 +2791,9 @@ QString CppTypeResolver::evaluateConstantValue(
             QString left;
             QString right;
             for (int j = 0; j < i; ++j)
-                appendConstraintToken(left, comparisonTokenizer[j].text);
-            for (int j = i + 1; j < comparisonTokenizer.tokenCount(); ++j)
-                appendConstraintToken(right, comparisonTokenizer[j].text);
+                appendConstraintToken(left, tokenizer[j].text);
+            for (int j = i + 1; j < tokenizer.tokenCount(); ++j)
+                appendConstraintToken(right, tokenizer[j].text);
             QString leftValue = evaluateConstantValue(left, bindings, context, evaluation);
             QString rightValue = evaluateConstantValue(right, bindings, context, evaluation);
             auto integerValue = [](QString value, qlonglong &result) {
