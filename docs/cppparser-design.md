@@ -261,6 +261,8 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移。lambda 是实际声明而非模板实例：声明解析直接在原 token 流中保存参数、body 的结构化 DeclarationInfo 和顶层 return 表达式 token，不重新拼接或切分 body；Builder 在 auto 变量类型推导前建立 Lambda Statement、operator()、参数、body 内 statement 和源码位置作用域。auto 求值按稳定名称复用该 Lambda Statement。显式 trailing return 优先；否则在 operator() 上下文对保留的 return token 复用完整求值器，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
 
+类型求值的各级缓存由 EvaluationContext::caches 独立控制，默认全部启用。完整类型结果只在模型不变时缓存成功解析；键包含类型、声明/context 指针以及逐帧指针和修订号，绑定链变化后旧结果自然失效。帧内 resolvedValues 作为模板参数快路径独立保留。对照 profile 可通过 REDPANDA_PARSER_DISABLE_CACHES 的逗号分隔列表关闭 all、type-text、type-name、type-pattern、binding-frame、resolved-value、specialization、declaration、member 或 resolved-type。
+
 完整模板实例化、SFINAE、concepts 求值和完整 dependent-name 语义仍不在范围内；不生成整套实例化 Statement 副本。auto 函数不做函数体返回类型推导，transform 所需的 lambda 返回表达式推导是独立的有限功能。
 
 验收以常用 STL 容器、C++20 range/view 以及 cppreference 的 container/iterator/algorithm 示例为目标。例如 `std::vector<std::string> lst; lst.front().` 应能列出 string 成员。range/view 的代表性场景取自：

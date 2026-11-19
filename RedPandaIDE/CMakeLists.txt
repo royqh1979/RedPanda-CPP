@@ -226,6 +226,11 @@ target_link_libraries(RedPandaIDE PRIVATE
 #    $<$<CONFIG:MinSizeRel>:-s -static>
 #)
 
+add_custom_target(test-resources
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/test/resources"
+        "${CMAKE_CURRENT_BINARY_DIR}/resources")
+
 #####################
 # test-editor       #
 #####################
@@ -312,12 +317,6 @@ if (QT_FEATURE_static)
     qt_import_plugins(test-editor
         INCLUDE Qt::QOffscreenIntegrationPlugin)
 endif()
-
-add_custom_command(
-    TARGET test-editor POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
-        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
 
 target_compile_definitions(test-editor PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
@@ -439,12 +438,6 @@ if (QT_FEATURE_static)
         INCLUDE Qt::QOffscreenIntegrationPlugin)
 endif()
 
-add_custom_command(
-    TARGET test-widgets POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:test-widgets,SOURCE_DIR>/test/resources"
-        "$<TARGET_PROPERTY:test-widgets,BINARY_DIR>/resources")
-
 target_compile_definitions(test-widgets PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
     APP_NAME=\"test-widgets\"
@@ -494,12 +487,6 @@ target_link_libraries(test-cpptokenizer PRIVATE
     Qt::Core
     Qt::Test
     redpanda_qt_utils)
-
-add_custom_command(
-    TARGET test-cpptokenizer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
-        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
 
 add_test(
     NAME test-cpptokenizer
@@ -555,12 +542,6 @@ if (QT_FEATURE_static)
         INCLUDE Qt::QOffscreenIntegrationPlugin)
 endif()
 
-add_custom_command(
-    TARGET test-cppparser POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:test-editor,SOURCE_DIR>/test/resources"
-        "$<TARGET_PROPERTY:test-editor,BINARY_DIR>/resources")
-
 target_compile_definitions(test-cppparser PRIVATE
     ${GLOBAL_COMPILE_DEFINITIONS}
     APP_NAME=\"test-cppparser\"
@@ -610,6 +591,10 @@ set_tests_properties(
         ENVIRONMENT "${test_environment}")
 
 add_dependencies(all-test-targets test-cppparser)
+add_dependencies(test-editor test-resources)
+add_dependencies(test-widgets test-resources)
+add_dependencies(test-cpptokenizer test-resources)
+add_dependencies(test-cppparser test-resources)
 
 #####################
 # Platform-specific #

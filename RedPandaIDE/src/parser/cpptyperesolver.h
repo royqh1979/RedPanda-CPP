@@ -71,7 +71,43 @@ struct TemplateBindingFrame {
     TemplateBindings values;
     QHash<QString, ClassInstance> resolvedValues;
     std::shared_ptr<TemplateBindingFrame> parent;
+    quint64 revision = 0;
 };
+
+inline bool sameBindingFrames(PTemplateBindingFrame left, PTemplateBindingFrame right)
+{
+    while (left && right) {
+        if (left != right || left->revision != right->revision)
+            return false;
+        left = left->parent;
+        right = right->parent;
+    }
+    return !left && !right;
+}
+
+struct ResolvedTypeKey {
+    QString type;
+    const AbstractStatement *declaration = nullptr;
+    const AbstractStatement *context = nullptr;
+    PTemplateBindingFrame bindings;
+
+    bool operator==(const ResolvedTypeKey &other) const
+    {
+        return type == other.type && declaration == other.declaration
+                && context == other.context && sameBindingFrames(bindings, other.bindings);
+    }
+};
+
+inline uint qHash(const ResolvedTypeKey &key, uint seed = 0) noexcept
+{
+    uint result = qHash(key.type, seed) ^ qHash(reinterpret_cast<quintptr>(key.declaration), seed)
+            ^ qHash(reinterpret_cast<quintptr>(key.context), seed);
+    for (PTemplateBindingFrame frame = key.bindings; frame; frame = frame->parent) {
+        result ^= qHash(reinterpret_cast<quintptr>(frame.get()), seed)
+                ^ qHash(frame->revision, seed);
+    }
+    return result;
+}
 
 struct EvalResult {
     TypeInfo type;
@@ -99,10 +135,28 @@ struct MemberEvalResult {
     ClassInstance instance;
 };
 
+enum class CacheLevel {
+    None = 0,
+    ParsedTypeText = 0x1,
+    ParsedTypeName = 0x2,
+    ParsedTypePattern = 0x4,
+    BindingFrame = 0x8,
+    ResolvedValue = 0x10,
+    SelectedSpecialization = 0x20,
+    Declaration = 0x40,
+    Member = 0x80,
+    ResolvedType = 0x100,
+    All = 0x1ff
+};
+Q_DECLARE_FLAGS(CacheLevels, CacheLevel)
+Q_DECLARE_OPERATORS_FOR_FLAGS(CacheLevels)
+
 class CppTypeResolver
 {
 public:
     struct EvaluationContext {
+        EvaluationContext();
+        CacheLevels caches = CacheLevel::All;
         QSet<QString> aliases;
         QSet<QString> resolvingTypes;
         QSet<QString> resolvingConstraints;
@@ -116,6 +170,8 @@ public:
                 std::make_shared<QHash<QString, PTemplateBindingFrame>>();
         std::shared_ptr<QHash<QString, ClassInstance>> selectedSpecializations =
                 std::make_shared<QHash<QString, ClassInstance>>();
+        std::shared_ptr<QHash<ResolvedTypeKey, ClassInstance>> resolvedTypes =
+                std::make_shared<QHash<ResolvedTypeKey, ClassInstance>>();
         std::shared_ptr<QHash<LookupKey, PStatement>> declarationResults =
                 std::make_shared<QHash<LookupKey, PStatement>>();
         std::shared_ptr<QHash<LookupKey, PStatement>> memberResults =
