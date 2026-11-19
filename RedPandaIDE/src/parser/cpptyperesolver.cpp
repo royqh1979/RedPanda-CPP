@@ -592,7 +592,7 @@ PStatement CppTypeResolver::memberStatement(const TypeInfo &receiver,
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    ClassInstance instance = classInstance(receiver, {}, {}, evaluation);
+    ClassInstance instance = resolveTypeInstance(receiver, {}, {}, evaluation);
     return findMember(instance, memberName, evaluation).statement;
 }
 
@@ -601,7 +601,7 @@ TypeInfo CppTypeResolver::memberType(const TypeInfo &receiver, const QString &me
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    ClassInstance instance = classInstance(receiver, {}, {}, evaluation);
+    ClassInstance instance = resolveTypeInstance(receiver, {}, {}, evaluation);
     TypeInfo trait = traitMemberType(instance, memberName, evaluation);
     if (!trait.qualifiedName.isEmpty())
         return trait;
@@ -617,7 +617,7 @@ TypeInfo CppTypeResolver::invokeResult(const TypeInfo &receiver, const QString &
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    return invokeResult(classInstance(receiver, {}, {}, evaluation), memberName,
+    return invokeResult(resolveTypeInstance(receiver, {}, {}, evaluation), memberName,
                         evaluationContext).type;
 }
 
@@ -636,24 +636,48 @@ MemberEvalResult CppTypeResolver::invokeResult(const ClassInstance &receiver,
     return {member.statement, result.type, result};
 }
 
-MemberEvalResult CppTypeResolver::resolveMember(const TypeInfo &receiver,
-                                                const QString &memberName, bool call,
-                                                const QVector<TypeInfo> &arguments,
-                                                EvaluationContext *evaluationContext) const
+MemberEvalResult CppTypeResolver::memberAccess(
+        const TypeInfo &receiver, const QString &memberName,
+        EvaluationContext *evaluationContext) const
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    return resolveMember(resolveInstance(receiver, {}, {}, &evaluation), memberName, call,
-                         arguments, &evaluation);
+    return memberAccess(resolveInstance(receiver, {}, {}, &evaluation), memberName, &evaluation);
+}
+
+MemberEvalResult CppTypeResolver::memberAccess(
+        const ClassInstance &receiver, const QString &memberName,
+        EvaluationContext *evaluationContext) const
+{
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    return resolveMember(receiver, memberName, false, {}, evaluation);
+}
+
+MemberEvalResult CppTypeResolver::invokeMember(
+        const TypeInfo &receiver, const QString &memberName, const QVector<TypeInfo> &arguments,
+        EvaluationContext *evaluationContext) const
+{
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    return invokeMember(resolveInstance(receiver, {}, {}, &evaluation), memberName,
+                        arguments, &evaluation);
+}
+
+MemberEvalResult CppTypeResolver::invokeMember(
+        const ClassInstance &receiver, const QString &memberName, const QVector<TypeInfo> &arguments,
+        EvaluationContext *evaluationContext) const
+{
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    return resolveMember(receiver, memberName, true, arguments, evaluation);
 }
 
 MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                                                 const QString &memberName, bool call,
                                                 const QVector<TypeInfo> &arguments,
-                                                EvaluationContext *evaluationContext) const
+                                                EvaluationContext &evaluation) const
 {
-    EvaluationContext localEvaluation;
-    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
     ResolveOriginScope originScope("resolveMember");
     if (call) {
         QSet<QString> visited;
@@ -1474,7 +1498,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
                                        || bindingDeclaration->kind == StatementKind::Lambda)) {
                 owner = classInstanceFromResolvedType(*binding->type, bindings, context, evaluation);
             } else {
-                owner = classInstance(*binding->type, bindings, context, evaluation);
+                owner = resolveTypeInstance(*binding->type, bindings, context, evaluation);
             }
             MemberResolution member = findMember(owner, segments[1].name, evaluation);
             if (!member.statement)
@@ -1682,7 +1706,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             member.owner = {instance, declaration, environment};
         } else if (declaration->kind == StatementKind::EnumType
                    || declaration->kind == StatementKind::EnumClassType) {
-            member.statement = findMember(declaration, segments[index + 1].name);
+            member.statement = findMemberDeclaration(declaration, segments[index + 1].name);
             member.owner = {instance, declaration, environment};
         }
         if (!member.statement && declaration->kind == StatementKind::Class)
@@ -1978,14 +2002,6 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
     if (cacheEnabled && !result.qualifiedName.isEmpty())
         evaluation.parsedTypeTexts->insert(text, result);
     return result;
-}
-
-CppTypeResolver::ClassInstance CppTypeResolver::classInstance(
-        const TypeInfo &type, const PTemplateBindingFrame &bindings,
-        const PStatement &context, EvaluationContext &evaluation) const
-{
-    ResolveOriginScope originScope("classInstance");
-    return resolveTypeInstance(type, bindings, context, evaluation);
 }
 
 CppTypeResolver::ClassInstance CppTypeResolver::classInstanceFromResolvedType(
@@ -2407,7 +2423,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         TypeInfo baseType = parseTypeText(baseText, evaluation);
         if (baseType.qualifiedName.isEmpty())
             continue;
-        ClassInstance base = classInstance(baseType, instance.bindings,
+        ClassInstance base = resolveTypeInstance(baseType, instance.bindings,
                                            instance.declaration->parentScope.lock(), evaluation);
         const QList<MemberResolution> baseMembers = memberCandidates(base, name, visited, evaluation);
         for (MemberResolution member : baseMembers) {
@@ -2486,7 +2502,7 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
             PStatement result = findInNamespaceScope(searchScope, parts, firstPartFound, typesOnly);
             if (result || firstPartFound)
                 return finish(result);
-        } else if (PStatement current = findMember(searchScope, parts.first(), typesOnly)) {
+        } else if (PStatement current = findMemberDeclaration(searchScope, parts.first(), typesOnly)) {
             return finish(findDeclarationRemainder(current, parts, typesOnly));
         }
         searchScope = searchScope->parentScope.lock();
@@ -2555,7 +2571,7 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
                 seen.insert(candidate.get());
                 next.append(candidate);
             }
-            PStatement inherited = findMember(scope, parts[i], typesOnly);
+            PStatement inherited = findMemberDeclaration(scope, parts[i], typesOnly);
             if (inherited && !seen.contains(inherited.get())) {
                 seen.insert(inherited.get());
                 next.append(inherited);
@@ -2566,8 +2582,8 @@ PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement
     return current.isEmpty() ? PStatement() : current.first();
 }
 
-PStatement CppTypeResolver::findMember(const PStatement &scope, const QString &name,
-                                       bool typesOnly) const
+PStatement CppTypeResolver::findMemberDeclaration(const PStatement &scope, const QString &name,
+                                                  bool typesOnly) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberDeclarationNs,
                                       resolverProfile.memberDeclarationCalls, "findMember");
@@ -2922,7 +2938,7 @@ QString CppTypeResolver::evaluateConstantValue(
     if (scopeSeparator >= 0) {
         TypeInfo ownerType = parseTypeText(variableName.left(scopeSeparator), evaluation);
         if (!ownerType.qualifiedName.isEmpty()) {
-            ClassInstance owner = classInstance(ownerType, bindings, context, evaluation);
+            ClassInstance owner = resolveTypeInstance(ownerType, bindings, context, evaluation);
             if (owner.declaration) {
                 MemberResolution member = findMember(
                         owner, variableName.mid(scopeSeparator + 2), evaluation);
@@ -3036,7 +3052,7 @@ QString CppTypeResolver::resolveConstantExpression(
     if (traitType.qualifiedName.isEmpty())
         return text.trimmed();
     EvaluationContext traitEvaluation = evaluation;
-    ClassInstance trait = classInstance(traitType, bindings, context, traitEvaluation);
+    ClassInstance trait = resolveTypeInstance(traitType, bindings, context, traitEvaluation);
     if (!trait.declaration || trait.type.templateArguments.isEmpty()
             || trait.type.templateArguments.first().kind != TemplateArgumentKind::Type
             || !trait.type.templateArguments.first().type) {

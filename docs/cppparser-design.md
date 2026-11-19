@@ -288,6 +288,15 @@ TypeInfo 中持久保存的声明引用使用 weak_ptr，防止类、成员 Stat
 
 类型解析先尝试相应的运算符重载，再应用内建指针、引用和算术规则。`->` 递归处理内建指针或 operator->，解引用处理内建指针或 operator*，自增减使用 operator++/operator-- 的返回类型。每一步只保留下一步所需的 TypeInfo，因此 `container.front().size()` 和 `(*it++)->size()` 等链条可以逐段计算。查不到声明或尚不支持的表达式返回无效 EvalResult，不把部分前缀当作完整结果。无调用括号的成员函数访问是函数引用，即使模板返回类型尚不能推导，只要成员 Statement 已找到，表达式结果仍有效；实际调用仍必须成功解析返回类型。
 
+Resolver 接口按“返回什么、执行什么动作”区分：
+
+- `resolve()` 只返回解析后的 TypeInfo；`resolveInstance()` 同时返回声明和绑定环境；`resolveInContext()` 是显式提供现有绑定环境与词法上下文的同一解析入口，不另建一套规则。
+- `memberStatement()` 只查找成员声明；`memberType()` 进一步求成员类型；`memberAccess()` 返回完整成员访问结果，但不进行调用重载决议。
+- `invokeMember()` 处理带实参的成员调用并执行候选匹配；`invokeFunction()` 处理普通函数及显式模板实参。`invokeResult()` 用于不需要候选匹配的已知成员运算符等路径，只求直接找到的可调用成员的返回类型；需要参数匹配的调用不得用它替代 `invokeMember()`。
+- `findMemberDeclaration()` 对未绑定 Statement 做成员声明及基类查找；面向 ClassInstance 的 `findMember()` 则在已绑定类环境中查找成员并保留其 owner。二者不得仅因最终都返回成员而混用。
+- `classInstanceFromResolvedType()` 接收已解析类型，只负责建立类绑定并选择偏特化；`selectSpecialization()` 只负责候选匹配。`resolveSegments()` 按限定名的有序分段推进声明、别名和类实例，不再存在一个仅转发它的 `classInstance()` 接口。
+- TemplateBindingFrame 表示一层词法模板绑定环境，而非调用栈帧。`parent` 连接外层模板环境；namespace 中的声明不得捕获调用方绑定。`declarationBindings()` 建立这一环境，默认实参求值属于绑定过程，不属于名称查找。
+
 配套设计点：
 
 - **解析顺序保证信息可用**：头文件先于包含者解析、文件内声明按出现顺序入表，遇到 `<` 时前序模板声明已在表中，同 phase 查找可行（与 clang 的 Parse/Sema 交织同理）。
@@ -304,6 +313,10 @@ self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时�
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
 
 GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1027 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
+
+libc++ 兼容修正提交 `c69a5200` 后，GCC 15.3、C++17 的 `test_standard_library_public_api_complete` 无插桩完整解析三次耗时分别为 **1009、997、982 ms**，中位数 **997 ms**；预处理、Tokenize、声明解析和 Statement 构建分别为 315–334、110–113、255–273、93–109 ms。相对上述 1027 ms 基线约下降 2.9%，属于正常波动，没有明显性能变化。该用例的第二次解析走缓存 replay，耗时 29–30 ms，不能与完整解析基线混用。
+
+同一提交在 GCC 15.3 Release 下的单点 eval 基线为：容器 39/39 场景通过，中位数、平均值、P90、最大值分别为 **0.419、0.472、0.842、1.488 ms**；算法 95/95 场景通过，分别为 **0.760、0.727、1.007、1.175 ms**。兼容前提交 `47546f1d` 的容器和算法中位数分别为 **0.382、0.661 ms**，平均值分别为 **0.410、0.643 ms**。回归最明显的容器场景是 `optional.value`（0.193 → 0.588 ms）和 `optional.arrow`（0.242 → 0.687 ms）；后者的详细 trace 中 `resolveType` 为 21 → 67 次、特化选择为 11 → 28 次、成员查找为 3 → 7 次。该基线用于在不撤回通用常量求值和偏特化修正的前提下优化公共路径。
 
 对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
 

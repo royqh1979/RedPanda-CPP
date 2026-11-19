@@ -442,8 +442,9 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             bool argumentsValid = !call || evaluateArguments(tokens, index, context, arguments, evaluation);
             if (!argumentsValid)
                 return {};
-            MemberEvalResult member = mResolver.resolveMember(receiver, memberName, call, arguments,
-                                                              evaluation);
+            MemberEvalResult member = call
+                    ? mResolver.invokeMember(receiver, memberName, arguments, evaluation)
+                    : mResolver.memberAccess(receiver, memberName, evaluation);
             result.statement = member.statement;
             result.type = member.type;
             result.instance = member.instance;
@@ -1126,7 +1127,7 @@ ClassInstance CppExpressionEvaluator::memberReceiver(
             return mResolver.resolveInContext(current.type, operatorBindings, operatorContext, evaluation);
         }
         operatorBindings = current.bindings;
-        MemberEvalResult member = mResolver.resolveMember(current, "operator->", true, {}, evaluation);
+        MemberEvalResult member = mResolver.invokeMember(current, "operator->", {}, evaluation);
         if (member.type.qualifiedName.isEmpty())
             return {};
         operatorContext = member.statement ? member.statement->parentScope.lock() : PStatement();

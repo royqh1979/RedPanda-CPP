@@ -205,12 +205,16 @@ public:
                           EvaluationContext *evaluation = nullptr) const;
     MemberEvalResult invokeResult(const ClassInstance &receiver, const QString &memberName,
                                   EvaluationContext *evaluation = nullptr) const;
-    MemberEvalResult resolveMember(const TypeInfo &receiver, const QString &memberName,
-                                   bool call, const QVector<TypeInfo> &arguments = {},
-                                   EvaluationContext *evaluation = nullptr) const;
-    MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
-                                   bool call, const QVector<TypeInfo> &arguments = {},
-                                   EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult memberAccess(const TypeInfo &receiver, const QString &memberName,
+                                  EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult memberAccess(const ClassInstance &receiver, const QString &memberName,
+                                  EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult invokeMember(const TypeInfo &receiver, const QString &memberName,
+                                  const QVector<TypeInfo> &arguments = {},
+                                  EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult invokeMember(const ClassInstance &receiver, const QString &memberName,
+                                  const QVector<TypeInfo> &arguments = {},
+                                  EvaluationContext *evaluation = nullptr) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments,
                             const QVector<TemplateArgument> &explicitArguments = {},
                             EvaluationContext *evaluation = nullptr,
@@ -256,6 +260,9 @@ private:
                                              QSet<QString> &visited,
                                              EvaluationContext &evaluation,
                                              bool stopAtDirectMember = false) const;
+    MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
+                                   bool call, const QVector<TypeInfo> &arguments,
+                                   EvaluationContext &evaluation) const;
     bool compatibleArgument(const TypeInfo &parameter, const TypeInfo &argument,
                             const PTemplateBindingFrame &bindings, const PStatement &context,
                             EvaluationContext &evaluation, TypeInfo &resolvedParameter) const;
@@ -296,8 +303,6 @@ private:
                                         const QString &name) const;
     const QVector<TemplateArgument> *findParameterPack(const PTemplateBindingFrame &bindings,
                                                        const QString &name) const;
-    ClassInstance classInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,
-                                const PStatement &context, EvaluationContext &evaluation) const;
     ClassInstance classInstanceFromResolvedType(const TypeInfo &type,
                                                 const PTemplateBindingFrame &bindings,
                                                 const PStatement &context,
@@ -327,7 +332,8 @@ private:
                                     bool &firstPartFound, bool typesOnly) const;
     PStatement findDeclarationRemainder(const PStatement &statement,
                                         const QStringList &parts, bool typesOnly) const;
-    PStatement findMember(const PStatement &scope, const QString &name, bool typesOnly = false) const;
+    PStatement findMemberDeclaration(const PStatement &scope, const QString &name,
+                                     bool typesOnly = false) const;
     PTemplateBindingFrame declarationBindings(const PStatement &declaration,
                                               const TypeInfo &instance,
                                               const PTemplateBindingFrame &outerBindings,
