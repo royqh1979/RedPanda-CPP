@@ -7,6 +7,7 @@
 #include <QMimeData>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QInputMethodEvent>
 
 #include "test_qsynedit_display.h"
 #include "test_utils.h"
@@ -43,6 +44,27 @@ static QStringList makeFoldableLines()
         "}",
     };
 }
+
+class PaintPreparationEdit : public QSynEdit
+{
+public:
+    PaintPreparationEdit()
+    {
+        setPaintHighlightTokensPreparer(
+                    [this](int line, PaintHighlightTokenList &tokens) {
+            preparedBatchLines.append(line);
+            for (PaintHighlightToken &token : tokens) {
+                preparedTexts.append(token.text);
+                if (token.tokenType == TokenType::Identifier)
+                    token.foreground = identifierColor;
+            }
+        });
+    }
+
+    QVector<int> preparedBatchLines;
+    QStringList preparedTexts;
+    QColor identifierColor{17, 83, 161};
+};
 
 void TestQSyneditDisplay::initTestCase()
 {
@@ -2300,6 +2322,54 @@ void TestQSyneditDisplay::test_wordwrap_boundary_token_painting()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_batched_highlight_preparation()
+{
+    PaintPreparationEdit editor;
+    editor.setSyntaxer(std::make_shared<CppSyntaxer>());
+    QFont font;
+    font.setFamily(defaultMonoFont());
+    font.setStyleStrategy(QFont::NoAntialias);
+    editor.setFont(font);
+    editor.resize(320, 100);
+    editor.loadContent("value");
+
+    QImage image(editor.viewport()->size(), QImage::Format_ARGB32);
+    editor.viewport()->render(&image);
+    QCOMPARE(editor.preparedBatchLines.count(0), 1);
+    bool colorFound = false;
+    for (int y = 0; y < image.height() && !colorFound; ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            if (image.pixel(x, y) == editor.identifierColor.rgb()) {
+                colorFound = true;
+                break;
+            }
+        }
+    }
+    QVERIFY(colorFound);
+
+    EditorOptions options = editor.getOptions();
+    options.setFlag(EditorOption::WordWrap, true);
+    editor.setOptions(options);
+    editor.resize(100, 60);
+    editor.loadContent("object.member + anotherObject.anotherMember");
+    editor.preparedBatchLines.clear();
+    editor.viewport()->render(&image);
+    QVERIFY(editor.wrapLayout(0).segmentStartChars.count() > 1);
+    QCOMPARE(editor.preparedBatchLines.count(0), 1);
+
+    options.setFlag(EditorOption::WordWrap, false);
+    editor.setOptions(options);
+    editor.resize(320, 100);
+    editor.loadContent("value");
+    editor.setCaretPos({5, 0});
+    QInputMethodEvent inputMethodEvent("preedit", {});
+    QApplication::sendEvent(&editor, &inputMethodEvent);
+    editor.preparedTexts.clear();
+    editor.viewport()->render(&image);
+    QVERIFY(editor.preparedTexts.contains("valuepreedit"));
+    QCOMPARE(editor.lineText(0), QString("value"));
 }
 
 }

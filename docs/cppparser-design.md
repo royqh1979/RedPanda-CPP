@@ -338,7 +338,8 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 - 模板类中的成员函数，例如 `A<T>::f`；
 - namespace 成员函数体内的 `extern` 声明归属，例如 `Q::V::h`；
 - if 条件中的结构化绑定，例如 `if (auto [iter, success] = ...; success)`；
-- range-for 中 `char const c` 形式的循环变量。
+- range-for 中 `char const c` 形式的循环变量；
+- lambda body 尚未建立独立的源码位置作用域，按行查询会落在外层函数，lambda 参数及 body 内名称因此不能依赖该路径解析；当前 lazy eval 的临时 lambda statement 不替代源码作用域。
 
 这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。
 

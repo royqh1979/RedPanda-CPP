@@ -35,6 +35,8 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
+    # editor
+    src/editor/cppexpressionextractor
     # problems
     src/problems/competitivecompenionhandler
     src/problems/freeprojectsetformat
@@ -70,7 +72,7 @@ target_moc_classes(RedPandaIDE
     src/caretlist
     src/codesnippetsmanager
     src/cpprefacter
-    src/editor
+    src/editor/editor
     src/editormanager
     src/iconsmanager
     src/main
@@ -254,6 +256,8 @@ target_qt_plain_cpp(test-editor
     src/parser/parserutils
     src/parser/statementmodel
 
+    src/editor/cppexpressionextractor
+
     # utils
     src/utils/escape
     src/utils/file
@@ -272,7 +276,7 @@ target_qt_plain_cpp(test-editor
     )
 
 target_moc_classes(test-editor
-    src/editor
+    src/editor/editor
 
     src/widgets/bookmarkmodel
     src/widgets/codecompletionlistview
@@ -284,6 +288,7 @@ target_moc_classes(test-editor
     src/symbolusagemanager
     src/codesnippetsmanager
     #test
+    test/test_cppexpressionextractor
     test/test_editor_base
     test/test_editor_display
     test/test_editor_general
@@ -370,6 +375,8 @@ target_qt_plain_cpp(test-widgets
     src/parser/parserutils
     src/parser/statementmodel
 
+    src/editor/cppexpressionextractor
+
     src/utils
     src/utils/escape
     src/utils/file
@@ -393,7 +400,7 @@ target_qt_plain_cpp(test-widgets
     )
 
 target_moc_classes(test-widgets
-    src/editor
+    src/editor/editor
 
     src/settingsdialog/settingswidget
     src/widgets/bookmarkmodel
@@ -583,6 +590,9 @@ if(REDPANDA_PARSER_STDLIB_TEST)
         REDPANDA_PARSER_STDLIB_TEST
         REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
     target_compile_definitions(test-widgets PRIVATE
+        REDPANDA_PARSER_STDLIB_TEST
+        REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
+    target_compile_definitions(test-editor PRIVATE
         REDPANDA_PARSER_STDLIB_TEST
         REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}")
 endif()

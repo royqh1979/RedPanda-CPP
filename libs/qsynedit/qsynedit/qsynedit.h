@@ -21,12 +21,15 @@
 #include <QCursor>
 #include <QDateTime>
 #include <QFrame>
+#include <QColor>
+#include <QVector>
 #include <QStringList>
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QWidget>
 #include <QFile>
 #include <QWaitCondition>
+#include <functional>
 #include "gutter.h"
 #include "codefolding.h"
 #include "document.h"
@@ -172,6 +175,8 @@ using PSynEdit = std::shared_ptr<QSynEdit>;
 
 class TokenAttribute;
 using PTokenAttribute = std::shared_ptr<TokenAttribute>;
+using PaintHighlightTokensPreparer = std::function<void(int, PaintHighlightTokenList&)>;
+
 class Document;
 using PDocument = std::shared_ptr<Document>;
 struct SyntaxState;
@@ -500,7 +505,7 @@ public:
     bool modified() const;
     void setModified(bool value, bool skipUndo=false);
 
-    const PConstSyntaxer syntaxer() const;
+    PConstSyntaxer syntaxer() const;
     void setSyntaxer(const PSyntaxer &syntaxer);
 
     bool useCodeFolding() const;
@@ -628,6 +633,8 @@ public:
 
     const PFormatter &formatter() const;
     void setFormatter(const PFormatter &newFormatter);
+
+    void setPaintHighlightTokensPreparer(PaintHighlightTokensPreparer preparer);
 signals:
     void linesDeleted(int firstLine, int count);
     void linesInserted(int firstLine, int count);
@@ -646,9 +653,6 @@ protected:
     virtual void onGutterGetText(int line, QString& text);
     virtual void onGutterPaint(QPainter& painter, int line, int x, int y);
     virtual void onPaint(QPainter& painter);
-    virtual void onPreparePaintHighlightToken(int line,
-            int ch, const QString& token, PTokenAttribute attr,
-            FontStyles& style, QColor& foreground, QColor& background);
 protected:
     int clientWidth() const;
     int clientHeight() const;
@@ -1041,6 +1045,7 @@ private:
     int mWheelAccumulatedDeltaY;
 
     PFormatter mFormatter;
+    PaintHighlightTokensPreparer mPaintHighlightTokensPreparer;
     GlyphPostionsListCache mGlyphPostionCacheForInputMethod;
     bool mDragging;
 

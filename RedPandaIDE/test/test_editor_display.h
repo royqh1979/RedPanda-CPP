@@ -10,6 +10,7 @@ private slots:
     void test_fold_marks_paint();
     void test_reformat_restores_view_state();
     void test_dnd_undo_restores_caret();
+    void test_stl_paint_profile();
 };
 
 #endif // TEST_EDITOR_DISPLAY_H

@@ -18,15 +18,15 @@
 #define EDITOR_H
 
 #include <QObject>
-#include "utils/file.h"
-#include "utils/types.h"
-#include "utils/parsemacros.h"
+#include "../utils/file.h"
+#include "../utils/types.h"
+#include "../utils/parsemacros.h"
 #include "qsynedit/qsynedit.h"
-#include "common.h"
-#include "widgets/codecompletionpopup.h"
-#include "widgets/headercompletionpopup.h"
-#include "compiler/compilerinfo.h"
-#include "reformatter/basereformatter.h"
+#include "../common.h"
+#include "../widgets/codecompletionpopup.h"
+#include "../widgets/headercompletionpopup.h"
+#include "../compiler/compilerinfo.h"
+#include "../reformatter/basereformatter.h"
 
 #define USER_CODE_IN_INSERT_POS "%INSERT%"
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
@@ -71,25 +71,6 @@ class Editor : public QSynedit::QSynEdit
 {
     Q_OBJECT
 public:
-    enum class LastSymbolType {
-        Identifier,
-        ScopeResolutionOperator, //'::'
-        ObjectMemberOperator, //'.'
-        PointerMemberOperator, //'->'
-        PointerToMemberOfObjectOperator, //'.*'
-        PointerToMemberOfPointerOperator, //'->*'
-        MatchingBracket,
-        BracketMatched,
-        MatchingParenthesis,
-        ParenthesisMatched,
-        TildeSign,    // '~'
-        AsteriskSign, // '*'
-        AmpersandSign, // '&'
-        MatchingAngleQuotation,
-        AngleQuotationMatched,
-        None
-    };
-
     enum MarginNumber {
         LineNumberMargin = 0,
         MarkerMargin = 1,
@@ -244,8 +225,6 @@ public:
             QString& memberOperator,
             QStringList& memberExpression);
     QString getWordForCompletionSearch(const QSynedit::CharPos& pos,bool permitTilde);
-    QStringList getExpressionAtPosition(
-            const QSynedit::CharPos& pos);
     void resetBookmarks(BookmarkModel *model);
 
     const PCppParser &parser() const;
@@ -521,6 +500,7 @@ private:
     QString mContextFile;
 
     QMap<QString,StatementKind> mIdCache;
+    int mIdCacheContentVersion = -1;
     qint64 mLastFocusOutTime;
 
     CodeSnippetsManager *mCodeSnippetsManager;
@@ -549,7 +529,9 @@ protected:
     void onGutterPaint(QPainter &painter, int line, int x, int y) override;
     void onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList) override;
     bool onGetSpecialLineColors(int line, QColor &foreground, QColor &backgroundColor) override;
-    void onPreparePaintHighlightToken(int line, int ch, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
+    void preparePaintHighlightTokens(int line, QSynedit::PaintHighlightTokenList &tokens);
+    void preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlightToken &token,
+                                    const PStatement *resolvedStatement);
 
     // QObject interface
 public:

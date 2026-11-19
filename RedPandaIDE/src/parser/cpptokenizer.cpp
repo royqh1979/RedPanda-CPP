@@ -130,6 +130,29 @@ void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition 
     }
 }
 
+void CppTokenizer::setTokens(const TokenList &tokens)
+{
+    clear();
+    for (const Token &source : tokens) {
+        addToken(source.text, source.kind, source.position);
+        mTokenList.last().fileName = source.fileName;
+    }
+    resolveUnmatchedPairs();
+}
+
+CppTokenizer::TokenKind CppTokenizer::numberTokenKind(const QString &text)
+{
+    bool hexadecimal = text.startsWith("0x") || text.startsWith("0X");
+    bool floating = text.startsWith('.');
+    for (const QChar &ch : text) {
+        if (ch == '.' || (!hexadecimal && (ch == 'e' || ch == 'E' || ch == 'f' || ch == 'F'))
+                || (hexadecimal && (ch == 'p' || ch == 'P'))) {
+            floating = true;
+        }
+    }
+    return floating ? TokenKind::FloatingLiteral : TokenKind::IntegerLiteral;
+}
+
 void CppTokenizer::tokenize(const QStringList &buffer)
 {
     if (qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER")) {

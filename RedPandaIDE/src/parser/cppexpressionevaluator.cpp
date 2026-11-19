@@ -135,6 +135,17 @@ TypeInfo floatingLiteralType(const QString &literal)
         return primitiveType("long double");
     return primitiveType("double");
 }
+
+void recordIdentifierTrace(CppTypeResolver::EvaluationContext *evaluation,
+                           int tokenIndex, const EvalResult &result)
+{
+    if (!evaluation || !evaluation->identifierTrace)
+        return;
+    evaluation->identifierTrace->append({
+        tokenIndex,
+        result.statement ? result.statement : result.type.declaration.lock()
+    });
+}
 }
 
 CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
@@ -146,11 +157,12 @@ CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
 
 EvalResult CppExpressionEvaluator::evaluate(
         const CppTokenizer &tokenizer, const PStatement &context,
-        CppTypeResolver::EvaluationContext *evaluation) const
+        CppTypeResolver::EvaluationContext *evaluation, ExpressionEvalTrace *trace) const
 {
     CppTypeResolver::EvaluationContext localEvaluation;
     if (!evaluation)
         evaluation = &localEvaluation;
+    evaluation->identifierTrace = trace;
     int index = 0;
     EvalResult result = evaluateBinary(tokenizer.tokens(), index, context, 1, evaluation);
     return result.isValid() && index == tokenizer.tokenCount() ? result : EvalResult();
@@ -341,10 +353,12 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             PStatement scope = result.type.declaration.lock();
             if (!scope)
                 scope = mResolver.findStatement(result.type.qualifiedName);
+            int memberIndex = index;
             PStatement member = findDirectStatement(scope, tokens[index++].text);
             if (!member)
                 return {};
             result = createResult(member, evaluation);
+            recordIdentifierTrace(evaluation, memberIndex, result);
             continue;
         }
         if (operation == "." || operation == "->") {
@@ -360,6 +374,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                 result.kind = EvalStatementKind::Variable;
                 continue;
             }
+            int memberIndex = index;
             QString memberName = tokens[index++].text;
             bool call = index < tokens.count() && tokens[index].text == "(";
             QVector<TypeInfo> arguments;
@@ -374,6 +389,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                     ? EvalStatementKind::Function : EvalStatementKind::Variable;
             if (result.kind == EvalStatementKind::Function)
                 result.baseStatement = result.statement;
+            recordIdentifierTrace(evaluation, memberIndex, result);
             continue;
         }
         if (operation == "[") {
@@ -464,7 +480,10 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
     if (initial.text == "::") {
         if (index >= tokens.count())
             return {};
-        return createResult(findDirectStatement({}, tokens[index++].text), evaluation);
+        int memberIndex = index;
+        EvalResult result = createResult(findDirectStatement({}, tokens[index++].text), evaluation);
+        recordIdentifierTrace(evaluation, memberIndex, result);
+        return result;
     }
     if (initial.text == "this") {
         if (!context)
@@ -515,6 +534,7 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
             result.kind = EvalStatementKind::Literal;
         } else {
             result = createResult(findVisibleStatement(initial.text, context), evaluation);
+            recordIdentifierTrace(evaluation, index - 1, result);
         }
         break;
     default:

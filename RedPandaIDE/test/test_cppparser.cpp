@@ -340,6 +340,65 @@ void TestCppParser::test_member_overload_resolution()
     QVERIFY(!evaluate({"object", ".", "rvalueOnly", "(", ")"}).isValid());
 }
 
+void TestCppParser::test_expression_identifier_trace()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Object { int value; int get(); };",
+            "Object object;",
+            "Object *pointer;",
+            "namespace outer { int value; } int globalValue;",
+            "Object make(Object value) { return value; }",
+            "template<class T> struct Box { T value; };",
+            "Box<int> box;",
+            "int main() {",
+            "    object.get();",
+            "    pointer->value;",
+            "    outer::value;",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement scope = mParser->findScopeStatement("text.cpp", 8);
+    QVERIFY(scope);
+    auto check = [&](QStringList expression, const QVector<int> &expectedIndexes,
+                     const QVector<int> &expectedStarts = {}) {
+        ExpressionEvalTrace trace;
+        mParser->evalExpression("text.cpp", expression, scope, &trace);
+        QCOMPARE(trace.size(), expectedIndexes.size());
+        for (int i = 0; i < trace.size(); ++i) {
+            QCOMPARE(trace[i].tokenIndex, expectedIndexes[i]);
+            int start = expectedStarts.isEmpty() ? 0 : expectedStarts[i];
+            PStatement expected = mParser->findStatementOf(
+                        "text.cpp", expression.mid(start, trace[i].tokenIndex - start + 1), 8);
+            if (trace[i].statement != expected) {
+                qDebug() << "trace mismatch" << expression << trace[i].tokenIndex
+                         << (trace[i].statement ? trace[i].statement->fullName : QString())
+                         << (expected ? expected->fullName : QString());
+            }
+            QCOMPARE(trace[i].statement, expected);
+        }
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({expression.join(' ')});
+        ExpressionEvalTrace directTrace;
+        mParser->evalExpression("text.cpp", tokenizer.tokens(), scope, &directTrace);
+        QCOMPARE(directTrace.size(), trace.size());
+        for (int i = 0; i < directTrace.size(); ++i) {
+            QCOMPARE(directTrace[i].tokenIndex, trace[i].tokenIndex);
+            QCOMPARE(directTrace[i].statement, trace[i].statement);
+        }
+    };
+    check({"object", ".", "get"}, {0, 2});
+    check({"pointer", "->", "value"}, {0, 2});
+    check({"outer", "::", "value"}, {0, 2});
+    check({"::", "globalValue"}, {1});
+    check({"make", "(", "object", ")", ".", "get"}, {0, 2, 5}, {0, 2, 0});
+    check({"Box", "<", "int", ">", "::", "value"}, {0, 5});
+    check({"object", ".", "missing"}, {0, 2});
+}
+
 void TestCppParser::test_parse_vars()
 {
     mParser->setOnGetFileStream(nullptr);
@@ -2460,6 +2519,13 @@ void TestCppParser::test_standard_library_expression_chains()
         "    output->size();",
         "    std::vector<bool> flags;",
         "    flags[0].flip();",
+        "    for (const auto &s : lst) {",
+        "        s.size();",
+        "    }",
+        "    for (const auto &entry : mapping) {",
+        "        entry.first.size();",
+        "        entry.second.size();",
+        "    }",
         "}"
     }));
     QString bitsStdcpp;
@@ -2528,6 +2594,17 @@ void TestCppParser::test_standard_library_expression_chains()
     expectStringSize(30, {"i", "->", "size"});
     expectStringSize(33, {"found", "->", "size"});
     expectStringSize(35, {"output", "->", "size"});
+    expectStringSize(39, {"s", ".", "size"});
+    PStatement entryScope = mParser->findScopeStatement(main, 42);
+    QVERIFY(entryScope);
+    QStringList entryExpression{"entry"};
+    EvalResult entryResult = mParser->evalExpression(main, entryExpression, entryScope);
+    PStatement entryDeclaration = entryResult.type.declaration.lock();
+    QVERIFY(entryResult.type.toString().startsWith("const std::pair<"));
+    QVERIFY(entryDeclaration);
+    QCOMPARE(entryDeclaration->fullName, QString("std::pair"));
+    expectStringSize(42, {"entry", ".", "first", ".", "size"});
+    expectStringSize(43, {"entry", ".", "second", ".", "size"});
     QStringList flagElementExpression{"flags", "[", "0", "]"};
     EvalResult flagElement = mParser->evalExpression(
                 main, flagElementExpression, mParser->findScopeStatement(main, 37));
@@ -2535,6 +2612,57 @@ void TestCppParser::test_standard_library_expression_chains()
                 main, {"flags", "[", "0", "]", ".", "flip"}, 37);
     QVERIFY2(flip, flagElement.type.toString().toUtf8().constData());
     QCOMPARE(flip, mParser->findStatement("std::_Bit_reference::flip"));
+}
+
+void TestCppParser::test_standard_library_trace_edge_cases()
+{
+    QSKIP("Lambda body scopes are not built by the parser yet");
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "",
+        "struct Record {",
+        "    int value;",
+        "};",
+        "",
+        "int main() {",
+        "    auto sumRow = [](const std::vector<int> &row) { return std::accumulate(row.begin(), row.end(), 0); };",
+        "    auto compare = [](const auto &left, const auto &right) { return left.size() < right.size(); };",
+        "    auto readRecord = [](const Record &record) { return record.value; };",
+        "    auto readShared = [](const std::shared_ptr<Record> &record) { return record->value; };",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    auto check = [&](int line, QStringList expression, const QVector<int> &identifierIndexes) {
+        PStatement scope = mParser->findScopeStatement(main, line);
+        QVERIFY(scope);
+        ExpressionEvalTrace trace;
+        mParser->evalExpression(main, expression, scope, &trace);
+        if (trace.size() != identifierIndexes.size()) {
+            qWarning() << "TRACE_SCOPE" << line << scope->fullName << expression
+                       << (trace.isEmpty() || !trace.first().statement
+                           ? QString() : trace.first().statement->fullName);
+        }
+        QCOMPARE(trace.size(), identifierIndexes.size());
+        for (int i = 0; i < trace.size(); ++i) {
+            QCOMPARE(trace[i].tokenIndex, identifierIndexes[i]);
+            PStatement expected = mParser->findStatementOf(main, expression, line);
+            QVERIFY(trace[i].statement);
+            if (i + 1 == trace.size())
+                QCOMPARE(trace[i].statement, expected);
+        }
+    };
+    check(7, {"row", ".", "begin"}, {0, 2});
+    check(7, {"row", ".", "end"}, {0, 2});
+    check(8, {"left", ".", "size"}, {0, 2});
+    check(8, {"right", ".", "size"}, {0, 2});
+    check(9, {"record", ".", "value"}, {0, 2});
+    check(10, {"record", "->", "value"}, {0, 2});
 }
 
 void TestCppParser::test_standard_library_container_eval_profile()

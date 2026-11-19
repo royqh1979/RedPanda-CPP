@@ -22,7 +22,7 @@
 #include <QWidget>
 #include <QRecursiveMutex>
 #include "utils.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include "reformatter/astyleformatter.h"
 
 class MainWindow;

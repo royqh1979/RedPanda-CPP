@@ -738,31 +738,70 @@ QList<PStatement> CppParser::doListStatements(const QString &fileName, int line,
 }
 
 EvalResult CppParser::evalExpression(const QString &fileName, QStringList &expression,
-                                     const PStatement &currentScope) const
+                                     const PStatement &currentScope,
+                                     ExpressionEvalTrace *trace) const
 {
     QMutexLocker locker(&mMutex);
+    if (trace)
+        trace->clear();
     if (mParsing)
         return {};
-    return doEvalExpression(fileName, expression, currentScope);
+    EvalResult result = doEvalExpression(fileName, expression, currentScope, trace);
+    if (trace) {
+        for (ExpressionEvalTraceEntry &entry : *trace)
+            entry.statement = visibleStatement(fileName, entry.statement);
+    }
+    return result;
+}
+
+EvalResult CppParser::evalExpression(const QString &fileName,
+                                     const CppTokenizer::TokenList &expression,
+                                     const PStatement &currentScope,
+                                     ExpressionEvalTrace *trace) const
+{
+    QMutexLocker locker(&mMutex);
+    if (trace)
+        trace->clear();
+    if (mParsing)
+        return {};
+    CppTokenizer tokenizer;
+    tokenizer.setTokens(expression);
+    EvalResult result = doEvalExpression(fileName, tokenizer, currentScope, trace);
+    if (trace) {
+        for (ExpressionEvalTraceEntry &entry : *trace)
+            entry.statement = visibleStatement(fileName, entry.statement);
+    }
+    return result;
 }
 
 EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &expression,
-                                       const PStatement &currentScope) const
+                                       const PStatement &currentScope,
+                                       ExpressionEvalTrace *trace) const
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({expression.join(' ')});
+    return doEvalExpression(fileName, tokenizer, currentScope, trace);
+}
+
+EvalResult CppParser::doEvalExpression(const QString &fileName, const CppTokenizer &tokenizer,
+                                       const PStatement &currentScope,
+                                       ExpressionEvalTrace *trace) const
 {
     Q_UNUSED(fileName);
     const bool profile = qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE");
     QElapsedTimer timer;
-    if (profile)
+    QString expressionText;
+    if (profile) {
         timer.start();
+        for (const CppTokenizer::Token &token : tokenizer.tokens())
+            expressionText += token.text + ' ';
+    }
     CppTypeResolver::EvaluationContext evaluation;
     evaluation.allowModelChanges = mParsing;
     CppTypeResolver resolver(mStatementList, &evaluation);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(mStatementList, resolver, operations);
-    CppTokenizer tokenizer;
-    const QString expressionText = expression.join(' ');
-    tokenizer.tokenize({expressionText});
-    EvalResult result = evaluator.evaluate(tokenizer, currentScope, &evaluation);
+    EvalResult result = evaluator.evaluate(tokenizer, currentScope, &evaluation, trace);
     if (profile)
         qWarning() << "EVAL_PROFILE" << timer.nsecsElapsed() / 1000000.0 << expressionText;
     return result;

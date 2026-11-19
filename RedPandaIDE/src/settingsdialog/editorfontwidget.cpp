@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "editorfontwidget.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "ui_editorfontwidget.h"
 #include "../settings.h"
 #include "../mainwindow.h"

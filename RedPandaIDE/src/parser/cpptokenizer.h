@@ -54,6 +54,8 @@ public:
 
     void clear();
     void tokenize(const QStringList &buffer);
+    void setTokens(const TokenList &tokens);
+    static TokenKind numberTokenKind(const QString &text);
     void relocateTokens(const QString &fileName, const SourcePosition &start);
     const Token &operator[](int index) const { return mTokenList[index]; }
     int tokenCount() const { return mTokenList.count(); }

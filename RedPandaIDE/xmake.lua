@@ -104,6 +104,8 @@ target("RedPandaIDE")
         "src/parser/cppscopes.cpp",
         "src/parser/parserutils.cpp",
         "src/parser/statementmodel.cpp",
+        -- editor
+        "src/editor/cppexpressionextractor.cpp",
         -- problems
         "src/problems/freeprojectsetformat.cpp",
         "src/problems/problemcasevalidator.cpp",
@@ -136,7 +138,7 @@ target("RedPandaIDE")
         "src/caretlist",
         "src/codesnippetsmanager",
         "src/cpprefacter",
-        "src/editor",
+        "src/editor/editor",
         "src/editormanager",
         "src/iconsmanager",
         "src/main",

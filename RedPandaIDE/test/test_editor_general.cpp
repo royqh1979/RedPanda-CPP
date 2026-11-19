@@ -3,7 +3,7 @@
 #include <QTest>
 #include <atomic>
 #include <qt_utils/utils.h>
-#include "src/editor.h"
+#include "src/editor/editor.h"
 #include "src/parser/cppparser.h"
 #include "test_editor_general.h"
 

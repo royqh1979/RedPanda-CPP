@@ -76,6 +76,7 @@ private slots:
     void test_horizontal_scroll_painting();
     void test_wordwrap_paints_all_segments();
     void test_wordwrap_boundary_token_painting();
+    void test_batched_highlight_preparation();
 };
 
 }

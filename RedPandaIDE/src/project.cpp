@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "project.h"
-#include "editor.h"
+#include "editor/editor.h"
 #include "editormanager.h"
 #include "qt_utils/utils.h"
 #include "utils.h"

@@ -19,7 +19,7 @@
 #include "ui_filepropertiesdialog.h"
 #include "../mainwindow.h"
 #include "../editormanager.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include <qsynedit/constants.h>
 
 #include <QFileInfo>

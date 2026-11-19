@@ -19,7 +19,7 @@
 #include "compilermanager.h"
 #include "../systemconsts.h"
 #include "qt_utils/charsetinfo.h"
-#include "../editor.h"
+#include "../editor/editor.h"
 #include "qt_utils/utils.h"
 #include "../utils.h"
 #include "../utils/escape.h"
