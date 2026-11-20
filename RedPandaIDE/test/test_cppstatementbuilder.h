@@ -13,6 +13,7 @@ private slots:
     void test_declaration_source_ranges();
     void test_statement_builder_expands_declarators_and_types();
     void test_statement_builder_names_anonymous_typedef_type();
+    void test_statement_builder_distinguishes_anonymous_typedef_types();
     void test_statement_builder_names_anonymous_variable_type();
     void test_statement_builder_names_anonymous_enum_types();
     void test_statement_builder_preserves_function_and_access_properties();

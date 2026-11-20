@@ -183,6 +183,42 @@ void TestCppStatementBuilder::test_statement_builder_names_anonymous_typedef_typ
              type);
 }
 
+void TestCppStatementBuilder::test_statement_builder_distinguishes_anonymous_typedef_types()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "typedef struct { int first; } First;\n"
+                "typedef struct { int second; } Second;", declarations));
+    QCOMPARE(declarations.count(), 2);
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    const StatementMap &globals = model.childrenStatements();
+    PStatement firstAlias = findStatement(globals, "First");
+    PStatement secondAlias = findStatement(globals, "Second");
+    QVERIFY(firstAlias && secondAlias);
+    QString firstTypeName = std::dynamic_pointer_cast<Statement>(firstAlias)->typeInfo.qualifiedName;
+    QString secondTypeName = std::dynamic_pointer_cast<Statement>(secondAlias)->typeInfo.qualifiedName;
+    QVERIFY(firstTypeName != secondTypeName);
+    PStatement firstType = findStatement(globals, firstTypeName);
+    PStatement secondType = findStatement(globals, secondTypeName);
+    QVERIFY(firstType && secondType);
+    QVERIFY(firstType != secondType);
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(firstType)->children, "first"));
+    QVERIFY(!findStatement(std::dynamic_pointer_cast<Statement>(firstType)->children, "second"));
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(secondType)->children, "second"));
+    QVERIFY(!findStatement(std::dynamic_pointer_cast<Statement>(secondType)->children, "first"));
+    CppTypeResolver resolver(model);
+    QCOMPARE(resolver.resolve(std::dynamic_pointer_cast<Statement>(firstAlias)->typeInfo).declaration.lock(),
+             firstType);
+    QCOMPARE(resolver.resolve(std::dynamic_pointer_cast<Statement>(secondAlias)->typeInfo).declaration.lock(),
+             secondType);
+}
+
 void TestCppStatementBuilder::test_statement_builder_names_anonymous_variable_type()
 {
     QVector<DeclarationInfo> declarations;
