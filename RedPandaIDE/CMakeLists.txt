@@ -453,48 +453,6 @@ add_test(
 add_dependencies(all-test-targets test-widgets)
 
 #####################
-# test-cpptokenizer #
-#####################
-
-add_executable(test-cpptokenizer test/test-cpptokenizer-main.cpp)
-
-target_qt_plain_cpp(test-cpptokenizer
-    src/parser/cpppreprocessor
-    src/parser/pptoken
-    src/parser/ppexpander
-    src/parser/cpptokenizer
-    src/parser/cpptokencursor
-    src/parser/cpptypes
-    src/parser/cppdeclarationparser
-    src/parser/cppsyntaxparser
-    src/parser/cppstatementbuilder
-    src/parser/cpptyperesolver
-    src/parser/typeoperationregistry
-    src/parser/cppexpressionevaluator
-    src/parser/cppscopes
-    src/parser/parserutils
-)
-
-target_moc_classes(test-cpptokenizer
-    src/parser/statementmodel
-    test/test_cpptokenizer
-)
-
-target_include_directories(test-cpptokenizer PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(test-cpptokenizer PRIVATE
-    Qt::Core
-    Qt::Test
-    redpanda_qt_utils)
-
-add_test(
-    NAME test-cpptokenizer
-    COMMAND test-cpptokenizer)
-
-add_dependencies(all-test-targets test-cpptokenizer)
-
-#####################
 # test-cppparser    #
 #####################
 
@@ -517,14 +475,22 @@ target_qt_plain_cpp(test-cppparser
     src/parser/cppscopes
     src/parser/parserutils
     src/parser/statementmodel
+    test/test_cppparsercomponenttestcase
+    test/test_cppparsertestcase
     )
 
 target_moc_classes(test-cppparser
-    #test
     test/test_cppparser
+    test/test_cppparserinvalidation
+    test/test_cppparsertyntax
+    test/test_cppparserstandardlibrary
     test/test_cpppreprocessor
     test/test_cpppreprocessor_include
     test/test_cpptokenizer
+    test/test_cppdeclarationparser
+    test/test_cppstatementbuilder
+    test/test_cpptyperesolver
+    test/test_cppexpressionevaluator
     test/test_pptoken
     test/test_ppexpander
 )
@@ -589,14 +555,12 @@ set_tests_properties(
     test-editor
     test-widgets
     test-cppparser
-    test-cpptokenizer
     PROPERTIES
         ENVIRONMENT "${test_environment}")
 
 add_dependencies(all-test-targets test-cppparser)
 add_dependencies(test-editor test-resources)
 add_dependencies(test-widgets test-resources)
-add_dependencies(test-cpptokenizer test-resources)
 add_dependencies(test-cppparser test-resources)
 
 #####################

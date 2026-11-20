@@ -184,5 +184,5 @@ Replay 正确后再处理其它缓存：
 - 对每个 replay 根验证用户宏快照、有序跨边界前缀、聚合 define/undef 和 replay 恢复结果；ReplayRecord 不重复保存 include 闭包，Registry 不重复维护 replay 根集合或文件元数据索引。
 - 声明位置和定义位置按边界外、跨边界入口、边界内做 3×3 交叉组合。每种组合均验证首次 parse、稳定 reparse、声明侧失效、定义侧失效及恢复后的 statement 和逐文件索引；只失效一侧时，另一侧的 FileInfo 索引必须保留。
 - 使用无 replay 的全量扫描作为 oracle；结果一致但发生全扫的用例仍算失败。
-- 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。本机启用方式：配置时添加 `-DREDPANDA_PARSER_STDLIB_TEST=ON -DREDPANDA_PARSER_STDLIB_MINGW_ROOT=D:/mingw`，然后运行 `test-cppparser --suite=TestCppParser test_bits_stdcpp_not_rescanned_on_stable_reparse test_standard_library_public_api_complete`。
+- 标准库公开接口验收测试由独立 CMake 开关控制，默认关闭。本机启用方式：配置时添加 `-DREDPANDA_PARSER_STDLIB_TEST=ON -DREDPANDA_PARSER_STDLIB_MINGW_ROOT=D:/mingw`，然后运行 `test-cppparser --suite=TestCppParserStandardLibrary test_bits_stdcpp_not_rescanned_on_stable_reparse test_standard_library_public_api_complete`。
 - 完整 `test-cppparser`、`test-editor` 和真实 IDE 编辑/切换/重解析均通过后，才能进行性能验收。

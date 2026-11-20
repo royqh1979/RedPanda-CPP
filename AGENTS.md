@@ -22,7 +22,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
     - `utils/` — 文件、字体、操作系统、终端、转义等辅助工具。
     - `addon/` — Lua 插件运行时集成（仅在启用 `LUA_ADDON` 时构建）。
     - `vcs/` — Git 集成（仅在启用 `VCS` 时构建）。
-  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-cppparser`，以及重写期间独立运行的 `test-cpptokenizer`。
+  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets` 和包含全部 Parser 组件及集成 Suite 的 `test-cppparser`。
   - `resources/`、`images/`、`*.qrc` — 嵌入资源（图标、主题、配色方案、字体、代码片段、项目模板）。
   - `translations/` — `.ts` 翻译文件。
 - `libs/qsynedit/` — 代码编辑器组件（QSynEdit 的深度改造分支）：文档模型、绘制器、行号栏、代码折叠、搜索器、导出器，以及语法高亮器（cpp、asm/gas/nasm、lua、makefile、glsl）。自带 Qt Test 测试套件，位于 `libs/qsynedit/test/`。
@@ -71,9 +71,9 @@ xmake
 
 ## 测试
 
-测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-cpptokenizer`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。`test-cpptokenizer` 是独立目标，可在 Parser 重写期间单独构建和运行：`cmake --build build --target test-cpptokenizer`。
+测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。Parser 组件和集成测试统一由 `test-cppparser` 构建执行，不再重复构建独立 tokenizer 目标。
 
-测试必须按被测组件的职责放入对应目标和测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`。新增测试不得再把 Parser、StatementBuilder、Resolver 等无关组件塞进 `test-cpptokenizer`；其中已有的历史混放不是新增测试的范例，必要时应拆分目标，而不是继续扩大其职责。
+测试必须按被测组件的职责放入对应 Suite 和同名测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。`test-cppparser` 内使用 `TestCppTokenizer`、`TestCppDeclarationParser`、`TestCppStatementBuilder`、`TestCppTypeResolver`、`TestCppExpressionEvaluator`、`TestCppParser`、`TestCppParserInvalidation`、`TestCppParserSyntax`、`TestCppParserStandardLibrary` 及既有 Preprocessor Suite；可用 `--suite=类名` 单独运行。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`。
 
 ```sh
 # CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
@@ -137,7 +137,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 cd /r/build-redpanda-qt5-static-release-parser-stdlib-gcc81/RedPandaIDE
 PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
   QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 \
-  ./test-cppparser.exe --suite=TestCppParser test_standard_library_public_api_complete
+  ./test-cppparser.exe --suite=TestCppParserStandardLibrary test_standard_library_public_api_complete
 ```
 
   需要 `DECLARATION_PROFILE`、`DECLARATION_SELF`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，先在配置阶段启用 `REDPANDA_PARSER_DECLARATION_PROFILE=ON`（声明细分开关默认 OFF），再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；普通构建的声明 scope 为空操作，整体阶段计时仍可使用。嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。

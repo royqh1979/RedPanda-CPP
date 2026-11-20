@@ -1,18 +1,13 @@
 #ifndef TEST_CPPPARSER_H
 #define TEST_CPPPARSER_H
-#include <QObject>
-#include <memory>
 
-class CppParser;
+#include "test_cppparsertestcase.h"
 
-class TestCppParser: public QObject
+class TestCppParser : public CppParserTestCase
 {
     Q_OBJECT
-public:
-    TestCppParser(QObject *parent=nullptr);
 private slots:
-    void init();
-    void init_parser();
+    void init() { init_parser(); }
     void test_parse_var();
     void test_global_variable_reference_scope();
     void test_unresolved_member_function_reference();
@@ -22,16 +17,6 @@ private slots:
     void test_base_member_return_uses_declaration_bindings();
     void test_member_overload_resolution();
     void test_expression_identifier_trace();
-    void test_unknown_non_type_default_preserves_alias_resolution();
-    void test_using_declaration_function_overload_set();
-    void test_overload_rejects_unrelated_class_specialization();
-    void test_empty_template_argument_list();
-    void test_const_template_parameter_substitution();
-    void test_auto_reference_collapsing();
-    void test_void_t_detection_failure();
-    void test_standard_type_traits_require_cpp11();
-    void test_variable_template_specialization_name();
-    void test_member_alias_template_specialization();
     void test_parse_vars();
     void test_struct();
     void test_resolve_members_of_class_access_scope();
@@ -40,36 +25,18 @@ private slots:
     void test_hard_define_statements();
     void test_predefined_func_variable();
     void test_structured_bindings();
-    void test_shared_boundary_statement_invalidation();
-    void test_shared_boundary_statement_invalidation_only();
-    void test_invalidation_preserves_earlier_boundary_record();
-    void test_removed_boundary_include_remains_inactive_cached_record();
-    void test_repeated_template_include_preserves_each_context();
-    void test_shared_template_statement_ownership();
-    void test_statement_ownership_declaration_definition_invalidation();
-    void test_boundary_invalidation_removes_defines_and_statements();
-    void test_replay_reuses_existing_statements();
-    void test_system_subtree_inheritance_uses_boundary_record();
-    void test_file_info_for_boundary_children();
-    void test_cross_boundary_declaration_definition_file_info();
-    void test_user_header_change_invalidates_dependent_roots();
-    void test_shared_internal_header_change_invalidates_boundary_ancestors();
-    void test_root_switch_with_macro_change_removes_stale_statements();
-    void test_root_switch_with_include_order_change_removes_stale_statements();
-    void test_internal_header_disk_change_removes_stale_statements();
-    void test_bits_stdcpp_not_rescanned_when_switching_roots();
-    void test_reset_parser_clears_registry_and_statements();
-    void test_auto_invalidation_preserves_definition_after_declaration_change();
-    void test_cppreference_declarator_syntax();
-    void test_cppreference_function_syntax();
-    void test_cppreference_class_syntax();
-    void test_cppreference_template_syntax();
-    void test_cppreference_enum_syntax();
-    void test_cppreference_namespace_syntax();
-    void test_cppreference_lambda_syntax();
-    void test_cppreference_structured_binding_syntax();
-    void test_cppreference_range_for_syntax();
-    void test_cppreference_ranges_syntax();
+    void test_find_statement_of_inline_namespace();
+    void test_nested_namespace_scope_parentage();
+    void test_variable_template_specialization_name();
+    void test_member_alias_template_specialization();
+    void test_unknown_non_type_default_preserves_alias_resolution();
+    void test_using_declaration_function_overload_set();
+    void test_overload_rejects_unrelated_class_specialization();
+    void test_empty_template_argument_list();
+    void test_const_template_parameter_substitution();
+    void test_auto_reference_collapsing();
+    void test_void_t_detection_failure();
+    void test_standard_type_traits_require_cpp11();
     void test_member_declaration_definition_in_namespace();
     void test_overloaded_declaration_definition_merge();
     void test_statement_declaration_navigation_selection();
@@ -81,28 +48,7 @@ private slots:
     void test_anonymous_namespaces_remain_distinct();
     void test_inline_namespace_occurrence_invalidation();
     void test_inline_namespace_overloads();
-    void test_find_statement_of_inline_namespace();
-    void test_nested_namespace_scope_parentage();
-#ifdef REDPANDA_PARSER_STDLIB_TEST
-    void test_bits_stdcpp_not_rescanned_on_stable_reparse();
-    void test_standard_library_string();
-    void test_standard_library_header_context();
-    void test_standard_library_nested_include_guard_visibility();
-    void test_standard_library_direct_c_header_context();
-    void test_standard_library_header_guard_context_visibility_data();
-    void test_standard_library_header_guard_context_visibility();
-    void test_standard_library_front_append();
-    void test_standard_library_vector_subscript();
-    void test_standard_library_make_shared_default();
-    void test_standard_library_expression_chains();
-    void test_standard_library_trace_edge_cases();
-    void test_standard_library_container_eval_profile();
-    void test_standard_library_algorithm_eval_profile();
-    void test_standard_library_parse_baseline();
-    void test_standard_library_public_api_complete();
-#endif
-protected:
-    std::shared_ptr<CppParser> mParser;
 };
 
-#endif
+
+#endif // TEST_CPPPARSER_H
