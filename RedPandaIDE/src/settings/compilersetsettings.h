@@ -46,6 +46,7 @@ public:
 
     // Initialization
     void setProperties(const QString& binDir, const QString& c_prog);
+    bool refresh();
     QStringList x86MultilibList(const QString &folder, const QString &c_prog) const;
 
     void resetCompileOptionts();
@@ -93,7 +94,7 @@ public:
     void setDumpMachine(const QString& value);
     const QString& version() const;
     void setVersion(const QString& value);
-    const QString& name() const;
+    QString name() const;
     void setName(const QString& value);
     QStringList defines(bool isCpp);
     const QString& target() const;
@@ -242,7 +243,8 @@ private:
 
 typedef std::shared_ptr<CompilerSet> PCompilerSet;
 typedef std::vector<PCompilerSet> CompilerSetList;
-class CompilerSets {
+class CompilerSets : public QObject {
+    Q_OBJECT
 public:
     explicit CompilerSets(SettingsPersistor* settings, DirSettings *dirSettings);
     PCompilerSet addSet();
@@ -256,6 +258,7 @@ public:
     void saveDefaultIndex();
     void deleteSet(int index);
     void saveSet(int index);
+    void refreshSet(int index);
     size_t size() const;
     int defaultIndex() const;
     void setDefaultIndex(int value);
@@ -265,6 +268,8 @@ public:
 
     static QString getKeyFromCompilerCompatibleIndex(int idx);
     static bool isTarget64Bit(const QString &target);
+signals:
+    void compilerSetChanged(int index);
 private:
     PCompilerSet addSet(const QString& folder, const QString& c_prog);
     PCompilerSet addSet(const QJsonObject &set);

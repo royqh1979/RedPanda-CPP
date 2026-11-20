@@ -18,6 +18,7 @@
 #include <QTest>
 #include "src/mainwindow.h"
 #include "test_widgets.h"
+#include "test_compilersettings.h"
 
 MainWindow *pMainWindow = nullptr;
 
@@ -25,5 +26,8 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     TestWidgets test;
-    return QTest::qExec(&test, argc, argv);
+    int status = QTest::qExec(&test, argc, argv);
+    TestCompilerSettings compilerSettingsTest;
+    status |= QTest::qExec(&compilerSettingsTest, argc, argv);
+    return status;
 }

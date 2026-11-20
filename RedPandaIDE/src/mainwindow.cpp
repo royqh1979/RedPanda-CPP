@@ -211,6 +211,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolbarCompilerSet->insertSeparator(ui->actionCompiler_Options);
     connect(mCompilerSet,QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onCompilerSetChanged);
+    connect(&pSettings->compilerSets(), &CompilerSets::compilerSetChanged,
+            this, [this] { updateCompilerSet(); });
     //updateCompilerSet();
 
     mCompilerManager = new CompilerManager(this);
@@ -6161,12 +6163,14 @@ void MainWindow::onCompilerSetChanged(int index)
         }
         mProject->setCompilerSet(index);
         mProject->saveOptions();
+        pSettings->compilerSets().refreshSet(index);
         scanActiveProject(true);
         return;
     }
 
     pSettings->compilerSets().setDefaultIndex(index);
     pSettings->compilerSets().saveDefaultIndex();
+    pSettings->compilerSets().refreshSet(index);
 
     reparseNonProjectEditors();
     validateCompilerSet(index);

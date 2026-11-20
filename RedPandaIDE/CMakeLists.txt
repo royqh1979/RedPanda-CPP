@@ -396,6 +396,7 @@ target_qt_plain_cpp(test-widgets
     src/systemconsts
     src/compiler/compilerinfo
     src/reformatter/basereformatter
+    test/test_compilersettings
     )
 
 target_moc_classes(test-widgets
@@ -415,6 +416,7 @@ target_moc_classes(test-widgets
     src/symbolusagemanager
     src/codesnippetsmanager
     test/test_widgets
+    test/test_compilersettings
     )
 target_ui_classes(test-widgets
     src/settingsdialog/editorcolorschemewidget

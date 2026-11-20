@@ -73,6 +73,8 @@ void CompilerSetOptionWidget::init()
         ui->cbEncoding->addItem(langName,langName);
     }
     SettingsWidget::init();
+    connect(&pSettings->compilerSets(), &CompilerSets::compilerSetChanged,
+            this, [this] { doLoad(); });
 }
 
 
