@@ -175,7 +175,9 @@ void CppParser::internalParse(const QString &fileName)
         }
         DeclarationInfo declaration;
         if (!mStopForReset) {
-            CppSyntaxParser parser(cursor);
+            CppSyntaxParser parser(cursor, [this] {
+                return QString("__RED_PANDA_IDE__%1").arg(++mUniqId);
+            });
             parser.setCppVersion(mPreprocessor.cppVersion());
             stepTimer.start();
             if (parser.parseDeclaration(declaration)) {

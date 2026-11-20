@@ -61,6 +61,8 @@ private slots:
     void test_class_browser_current_file_out_of_line_member();
     void test_class_browser_inline_namespace_aliases();
     void test_class_browser_direct_members();
+    void test_class_browser_anonymous_typedef_type();
+    void test_anonymous_type_lookup_completion_and_eval();
     void test_unscoped_enum_completion_and_class_browser();
     void test_goto_class_declaration_and_definition();
     void test_goto_constructor_declaration_and_definition();
