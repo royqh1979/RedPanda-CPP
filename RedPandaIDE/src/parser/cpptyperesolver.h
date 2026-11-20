@@ -237,6 +237,8 @@ public:
                                             const PStatement &accessScope) const;
 
 private:
+    friend class TestCppTypeResolver;
+
     struct MemberResolution {
         PStatement statement;
         ClassInstance owner;
@@ -313,6 +315,8 @@ private:
     EvalResult evaluateInvocation(const QVector<TemplateArgument> &arguments, int functionIndex,
                                   const PStatement &context, const PTemplateBindingFrame &bindings,
                                   EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateNoexceptCall(
+            const EvalResult &evaluated, EvaluationContext &evaluation) const;
     ConstraintSatisfaction evaluateInvocableR(
             const QVector<TemplateArgument> &arguments, const PStatement &context,
             const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const;
@@ -320,9 +324,13 @@ private:
             const QVector<TemplateArgument> &arguments, bool conjunction,
             const PStatement &context, const PTemplateBindingFrame &bindings,
             EvaluationContext &evaluation) const;
-    ConstraintSatisfaction evaluateConstructible(
+    ConstraintSatisfaction evaluateConstructibleExpression(
             const QString &expression, const PStatement &context,
             const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateConstructible(
+            const TypeInfo &target, const QVector<TypeInfo> &arguments,
+            const PStatement &context, const PTemplateBindingFrame &bindings,
+            EvaluationContext &evaluation) const;
     TypeInfo traitMemberType(const ClassInstance &instance, const QString &memberName,
                              EvaluationContext &evaluation) const;
     const TemplateArgument *findBinding(const PTemplateBindingFrame &bindings,

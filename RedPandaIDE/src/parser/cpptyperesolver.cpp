@@ -854,6 +854,31 @@ EvalResult CppTypeResolver::evaluateInvocation(
         if (argument.kind != TemplateArgumentKind::Type || !argument.type)
             return {};
     }
+    ClassInstance callable = resolveTypeInstance(
+                *arguments[functionIndex].type, bindings, context, evaluation);
+    if (callable.declaration
+            && (callable.declaration->kind == StatementKind::Class
+                || callable.declaration->kind == StatementKind::Lambda)) {
+        QVector<TypeInfo> callArguments;
+        for (int i = functionIndex + 1; i < arguments.count(); ++i) {
+            TypeInfo argument = resolveType(*arguments[i].type, bindings, context, evaluation);
+            if (argument.qualifiedName.isEmpty())
+                return {};
+            callArguments.append(argument);
+        }
+        MemberEvalResult member = invokeMember(callable, "operator()", callArguments, &evaluation);
+        EvalResult result;
+        result.type = member.type;
+        result.instance = member.instance;
+        result.kind = EvalStatementKind::Variable;
+        result.baseStatement = member.statement;
+        result.statement = member.statement;
+        result.invocation = member.invocation;
+        result.type.valueCategory = !result.type.derivations.isEmpty()
+                && result.type.derivations.first().kind == TypeDerivationKind::LvalueReference
+                ? ReferenceQualifier::Lvalue : ReferenceQualifier::Rvalue;
+        return result;
+    }
     QString expression = "std::declval<"
             + arguments[functionIndex].toString() + ">()(";
     QStringList callArguments;
@@ -955,7 +980,7 @@ ConstraintSatisfaction CppTypeResolver::evaluateInvocableR(
             ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
 }
 
-ConstraintSatisfaction CppTypeResolver::evaluateConstructible(
+ConstraintSatisfaction CppTypeResolver::evaluateConstructibleExpression(
         const QString &expression, const PStatement &context, const PTemplateBindingFrame &bindings,
         EvaluationContext &evaluation) const
 {
@@ -1001,6 +1026,20 @@ ConstraintSatisfaction CppTypeResolver::evaluateConstructible(
         if (argument.qualifiedName.isEmpty())
             return ConstraintSatisfaction::Unknown;
         arguments.append(argument);
+    }
+    return evaluateConstructible(target, arguments, context, bindings, evaluation);
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateConstructible(
+        const TypeInfo &target, const QVector<TypeInfo> &arguments, const PStatement &context,
+        const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const
+{
+    for (const TypeInfo &argument : arguments) {
+        if (argument.qualifiedName.isEmpty()
+                || (!isBuiltinType(argument) && !argument.declaration.lock()
+                    && !findDeclaration(argument.qualifiedName, context, true))) {
+            return ConstraintSatisfaction::Unknown;
+        }
     }
     if (isBuiltinType(target)) {
         if (target.qualifiedName == "void")
@@ -1066,6 +1105,12 @@ ConstraintSatisfaction CppTypeResolver::evaluateNoexceptExpression(
     CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mModel), *this, operations,
                                      bindings);
     EvalResult evaluated = evaluator.evaluate(tokenizer, context, &evaluation);
+    return evaluateNoexceptCall(evaluated, evaluation);
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateNoexceptCall(
+        const EvalResult &evaluated, EvaluationContext &evaluation) const
+{
     if (!evaluated.isValid())
         return ConstraintSatisfaction::Unknown;
     if (evaluated.invocation.statement) {
@@ -3209,7 +3254,8 @@ QString CppTypeResolver::evaluateConstantValue(
     const QString constructibleBuiltin = "__is_constructible(";
     if (constantBuiltins.contains(constructibleBuiltin)
             && expression.startsWith(constructibleBuiltin) && expression.endsWith(')')) {
-        ConstraintSatisfaction result = evaluateConstructible(expression, context, bindings, evaluation);
+        ConstraintSatisfaction result = evaluateConstructibleExpression(
+                    expression, context, bindings, evaluation);
         if (result == ConstraintSatisfaction::Satisfied)
             return "true";
         if (result == ConstraintSatisfaction::Unsatisfied)
@@ -3543,18 +3589,9 @@ QString CppTypeResolver::resolveConstantExpression(
         return text.trimmed();
     }
     if (traitName == "__is_nothrow_invocable" || traitName == "is_nothrow_invocable") {
-        QString expression = "noexcept(std::declval<"
-                + trait.type.templateArguments.first().toString() + ">()(";
-        QStringList arguments;
-        for (int i = 1; i < trait.type.templateArguments.count(); ++i) {
-            const TemplateArgument &argument = trait.type.templateArguments[i];
-            if (argument.kind != TemplateArgumentKind::Type || !argument.type)
-                return text.trimmed();
-            arguments.append("std::declval<" + argument.toString() + ">()");
-        }
-        expression += arguments.join(",") + "))";
-        ConstraintSatisfaction result = evaluateNoexceptExpression(
-                    expression, context, bindings, &evaluation);
+        EvalResult evaluated = evaluateInvocation(
+                    trait.type.templateArguments, 0, context, bindings, evaluation);
+        ConstraintSatisfaction result = evaluateNoexceptCall(evaluated, evaluation);
         if (result == ConstraintSatisfaction::Satisfied)
             return "true";
         if (result == ConstraintSatisfaction::Unsatisfied)
@@ -3588,15 +3625,19 @@ QString CppTypeResolver::resolveConstantExpression(
     }
     if (traitName == "is_copy_constructible" || traitName == "is_move_constructible"
             || traitName == "is_default_constructible") {
-        QString argumentText = argument.toString();
-        QString expression = "__is_constructible(" + argumentText;
-        if (traitName == "is_copy_constructible")
-            expression += ",std::__add_lvalue_reference_t<const " + argumentText + ">";
-        else if (traitName == "is_move_constructible")
-            expression += ",std::__add_rvalue_reference_t<" + argumentText + ">";
-        expression += ")";
+        QVector<TypeInfo> arguments;
+        if (traitName != "is_default_constructible") {
+            TypeInfo source = argument;
+            if (traitName == "is_copy_constructible") {
+                source.qualifiers |= TypeQualifier::Const;
+                source = applyTypeBuiltin("__add_lvalue_reference", source);
+            } else {
+                source = applyTypeBuiltin("__add_rvalue_reference", source);
+            }
+            arguments.append(source);
+        }
         ConstraintSatisfaction result = evaluateConstructible(
-                    expression, context, bindings, evaluation);
+                    argument, arguments, context, bindings, evaluation);
         if (result == ConstraintSatisfaction::Satisfied)
             return "true";
         if (result == ConstraintSatisfaction::Unsatisfied)

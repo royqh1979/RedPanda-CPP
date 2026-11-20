@@ -324,6 +324,8 @@ GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **
 
 补齐 constructible、invocable_r、逻辑 trait 和 libc++ hash 链后，三次逐场景中位数汇总为：GCC 容器/算法 **0.383/0.703 ms**，libc++ **0.177/0.471 ms**，117/117 与 285/285 次求值均有效。GCC `unordered_map.find_second` 为 **1.552 ms**；libc++ 同项为 **3.062 ms**，`deque.insert` 为 **1.939 ms**。无序容器的额外真实 trait 求值仍有明确性能代价，不能用 Unknown 或名称兜底换取耗时下降。
 
+将 constructible、函数对象调用和选中调用的 noexcept 改为结构化求值后，三次逐场景中位数为：GCC 容器/算法 **0.379/0.662 ms**，libc++ **0.174/0.464 ms**。GCC `unordered_map.find_second` 为 **1.694 ms**，libc++ 同项降至 **2.637 ms**。普通场景中位数略有改善，但最慢项并非在各库上一致受益；保留该修改的依据是消除无意义的字符串化和重复语法分析，而不是宣称所有场景都提速。
+
 对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
 
 基类列表已由 `readBaseClasses()` 在当前 token 流中一次完成切分：顶层逗号分段，配对括号通过 matchIndex 整体消费，并保留 `<`、`>`、`>>` 的模板深度处理；不再先由 `readUntil()` 拼接、再由 `splitTopLevel()` 二次 tokenize。嵌套模板逗号、函数指针参数逗号和多行基类列表均有行为测试。

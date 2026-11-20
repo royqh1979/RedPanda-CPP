@@ -36,6 +36,7 @@ private slots:
     void test_type_resolver_evaluates_nothrow_invocable_for_functors();
     void test_type_resolver_matches_explicit_specialization_through_alias();
     void test_type_resolver_evaluates_constructible_traits();
+    void test_type_resolver_evaluates_constructible_from_types();
     void test_type_resolver_evaluates_copy_constructible_through_reference_alias();
     void test_type_resolver_evaluates_copy_constructible_in_inline_namespace();
     void test_type_resolver_evaluates_move_and_default_constructible();

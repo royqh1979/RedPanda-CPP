@@ -1110,6 +1110,10 @@ void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_fun
                 "}\n"
                 "struct NoexceptFunctor { void operator()(int) noexcept; };\n"
                 "struct ThrowingFunctor { void operator()(int); };\n"
+                "template<bool B> struct ConditionalFunctor {\n"
+                "  void operator()(int) noexcept(B);\n"
+                "  };\n"
+                "struct UnknownFunctor { void operator()(int) noexcept(Unknown); };\n"
                 "template<typename T, bool = std::__is_nothrow_invocable<T, int>::value>\n"
                 "struct Selector { using type = int; };\n"
                 "template<typename T> struct Selector<T, true> { using type = std::string; };\n",
@@ -1130,6 +1134,33 @@ void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_fun
 
     QCOMPARE(memberType("Selector<NoexceptFunctor> value;").toString(), "std::string");
     QCOMPARE(memberType("Selector<ThrowingFunctor> value;").toString(), "int");
+
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        return resolver.resolve(declaration.specifiers.type);
+    };
+    TypeInfo integer = type("int");
+    auto evaluate = [&](const QString &callable) {
+        QVector<TemplateArgument> arguments{
+            TemplateArgument::fromType(type(callable)), TemplateArgument::fromType(integer)
+        };
+        CppTypeResolver::EvaluationContext evaluation;
+        EvalResult call = resolver.evaluateInvocation(arguments, 0, {}, {}, evaluation);
+        return resolver.evaluateNoexceptCall(call, evaluation);
+    };
+    QCOMPARE(evaluate("NoexceptFunctor"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("ThrowingFunctor"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("ConditionalFunctor<true>"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("ConditionalFunctor<false>"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("UnknownFunctor"), ConstraintSatisfaction::Unknown);
+
+    CppTypeResolver::EvaluationContext evaluation;
+    EvalResult literal;
+    literal.type = integer;
+    QCOMPARE(resolver.evaluateNoexceptCall(literal, evaluation), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateNoexceptCall({}, evaluation), ConstraintSatisfaction::Unknown);
 }
 
 void TestCppTypeResolver::test_type_resolver_matches_explicit_specialization_through_alias()
@@ -1203,6 +1234,54 @@ void TestCppTypeResolver::test_type_resolver_evaluates_constructible_traits()
     QCOMPARE(evaluate("Implicit,const Implicit&").declaration.lock(), string);
     QCOMPARE(evaluate("int").declaration.lock(), string);
     QCOMPARE(evaluate("void").declaration.lock(), falseType);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_constructible_from_types()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Default { Default(); };\n"
+                "struct NoDefault { NoDefault(int); };\n"
+                "struct Implicit {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructible_types.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        return resolver.resolve(declaration.specifiers.type);
+    };
+    auto evaluate = [&](const TypeInfo &target, const QVector<TypeInfo> &arguments) {
+        CppTypeResolver::EvaluationContext evaluation;
+        return resolver.evaluateConstructible(target, arguments, {}, {}, evaluation);
+    };
+    TypeInfo defaultType = type("Default");
+    TypeInfo noDefault = type("NoDefault");
+    TypeInfo implicit = type("Implicit");
+    TypeInfo integer = type("int");
+    TypeInfo voidType = type("void");
+    TypeInfo missing = type("Missing");
+    TypeInfo implicitConstReference = type("const Implicit&");
+    QVERIFY(!defaultType.qualifiedName.isEmpty() && !noDefault.qualifiedName.isEmpty()
+            && !implicit.qualifiedName.isEmpty() && !integer.qualifiedName.isEmpty()
+            && !voidType.qualifiedName.isEmpty() && !missing.qualifiedName.isEmpty()
+            && !implicitConstReference.qualifiedName.isEmpty());
+
+    QCOMPARE(evaluate(defaultType, {}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(noDefault, {}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(noDefault, {integer}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(defaultType, {integer}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(implicit, {implicitConstReference}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(integer, {}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(integer, {integer, integer}), ConstraintSatisfaction::Unknown);
+    QCOMPARE(evaluate(voidType, {}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(missing, {}), ConstraintSatisfaction::Unknown);
+    QCOMPARE(evaluate(noDefault, {missing}), ConstraintSatisfaction::Unknown);
 }
 
 void TestCppTypeResolver::test_type_resolver_evaluates_copy_constructible_through_reference_alias()

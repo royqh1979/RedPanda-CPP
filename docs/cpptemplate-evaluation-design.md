@@ -259,6 +259,8 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 
 当前只支持布尔/整数字面量、括号、`!`、`&&`、`||`、整数 `==`/`!=`、已有常量 trait、受限常量变量模板及既有特化匹配，以及实际需要的编译器内建。`__is_array` 按数组 derivation 计算，不根据标准库名称或候选顺序特判。`__is_constructible` 通过实际构造函数或隐式构造匹配计算；copy/move/default constructible 分别使用对应的引用变换或无参数构造。`__is_invocable_r_v` 先求实际调用，再检查返回类型转换。`__and_`、`__or_`、`__not_`、`__all` 逐项计算并短路，支持当前需要的非类型 pack 展开；alias 展开后的逻辑求值必须使用 alias 定义处的词法作用域，不能在调用方作用域解析其未限定名称。普通类的静态 `value` 成员也按实际类实例和继承绑定求值，不走变量模板兜底。约束原文直接从已有 token 原文截取，不逐 token 拼接；求值时才 tokenize。
 
+这些 trait 的语义层直接接收 `TypeInfo` 和结构化实参列表，GCC 与 Clang 共用，不按编译器复制算法。只有输入仍为表达式原文时才由适配层解析一次；标准 trait 包装不再把已解析类型序列化为内建调用文本。类/lambda 可调用对象直接通过 `invokeMember` 求值，不再拼接 `declval` 调用表达式；选中调用的异常规格直接读取 `EvalResult` 中的 invocation 和绑定帧。所有直接语义接口仍返回三态结果，未知参数类型不得进入确定 false 的候选匹配。
+
 验收：C++17 行为不变；C++20 下约束函数可排除相反约束的重载，`_NonArray<string>` 可用而 `_BoundedArray<string>` 不可用，`make_shared<string>()` 只保留普通对象候选并支持后续成员访问。
 
 ## 明确不在本轮支持的内容
