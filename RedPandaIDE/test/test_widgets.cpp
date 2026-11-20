@@ -1385,6 +1385,24 @@ void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
     QVERIFY(parser->findStatement("conio_value"));
 }
 
+void TestWidgets::test_class_browser_current_file_change_clears_immediately()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"struct A { int member; };"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "first.cpp", false, "");
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile("first.cpp");
+    model.fillStatements();
+    QVERIFY(model.rowCount({}) > 0);
+
+    model.setCurrentFile("second.cpp");
+    QCOMPARE(model.currentFile(), QString("second.cpp"));
+    QCOMPARE(model.rowCount({}), 0);
+}
+
 void TestWidgets::test_class_browser_anonymous_typedef_type()
 {
     const QString fileName = "anonymous_typedef.cpp";

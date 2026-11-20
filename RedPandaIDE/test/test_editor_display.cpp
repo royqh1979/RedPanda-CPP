@@ -438,6 +438,18 @@ qint64 medianPaintProfileValue(QVector<qint64> values)
 }
 #endif
 
+void TestEditorDisplay::test_semantic_highlight_cache_survives_edit_until_parse()
+{
+    mEditor->loadContent(QStringList{"int value;"});
+    mEditor->mIdCache.insert("test-key", StatementKind::Class);
+    mEditor->loadContent(QStringList{"int changed;"});
+    QSynedit::PaintHighlightTokenList tokens;
+    mEditor->preparePaintHighlightTokens(0, tokens);
+    QCOMPARE(mEditor->mIdCache.value("test-key"), StatementKind::Class);
+    mEditor->onParseFinished();
+    QVERIFY(mEditor->mIdCache.isEmpty());
+}
+
 void TestEditorDisplay::test_stl_paint_profile()
 {
 #ifndef REDPANDA_PARSER_STDLIB_TEST

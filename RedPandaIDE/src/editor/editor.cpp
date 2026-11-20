@@ -1139,11 +1139,6 @@ bool Editor::onGetSpecialLineColors(int line, QColor &foreground, QColor &backgr
 
 void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightTokenList &tokens)
 {
-    int contentVersion = document()->contentVersion();
-    if (mIdCacheContentVersion != contentVersion) {
-        mIdCache.clear();
-        mIdCacheContentVersion = contentVersion;
-    }
     QVector<PStatement> statements(tokens.size());
     bool useTrace = mParser && mParser->enabled() && !mParser->parsing()
             && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP
@@ -1166,7 +1161,7 @@ void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightToken
                 if (inputIndex < 0 || inputIndex >= tokens.size())
                     continue;
                 const QSynedit::PaintHighlightToken &token = tokens[inputIndex];
-                QString cacheKey = QString("%1 %2 %3").arg(line).arg(token.ch).arg(token.text);
+                QString cacheKey = QString("%1 %2 %3").arg(lineSeq(line)).arg(token.ch).arg(token.text);
                 needsEvaluation = !mIdCache.contains(cacheKey);
             }
             if (!needsEvaluation)
@@ -1255,7 +1250,7 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
             CharPos p{ch,line};
 
             StatementKind kind;
-            QString cacheKey = QString("%1 %2 %3").arg(line).arg(ch).arg(token);
+            QString cacheKey = QString("%1 %2 %3").arg(lineSeq(line)).arg(ch).arg(token);
             auto cached = mIdCache.constFind(cacheKey);
             if (cached != mIdCache.constEnd()) {
                 kind = cached.value();

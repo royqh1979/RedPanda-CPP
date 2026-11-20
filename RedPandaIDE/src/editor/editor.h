@@ -499,8 +499,8 @@ private:
     FileType mFileType;
     QString mContextFile;
 
+    friend class TestEditorDisplay;
     QMap<QString,StatementKind> mIdCache;
-    int mIdCacheContentVersion = -1;
     qint64 mLastFocusOutTime;
 
     CodeSnippetsManager *mCodeSnippetsManager;

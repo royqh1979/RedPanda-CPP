@@ -518,6 +518,9 @@ const QString &ClassBrowserModel::currentFile() const
 
 void ClassBrowserModel::setCurrentFile(const QString &newCurrentFile)
 {
+    if (mCurrentFile == newCurrentFile)
+        return;
+    clear();
     mCurrentFile = newCurrentFile;
 }
 
