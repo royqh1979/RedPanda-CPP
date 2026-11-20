@@ -45,6 +45,10 @@ private slots:
     void test_type_resolver_expands_non_type_pack_arguments();
     void test_type_resolver_evaluates_logical_trait_single_values();
     void test_type_resolver_resolves_alias_to_clang_type_builtin();
+    void test_type_resolver_internal_member_interfaces();
+    void test_type_resolver_internal_binding_interfaces();
+    void test_type_resolver_internal_type_and_lookup_interfaces();
+    void test_type_resolver_internal_constant_interfaces();
 };
 
 #endif // TEST_CPPTYPERESOLVER_H

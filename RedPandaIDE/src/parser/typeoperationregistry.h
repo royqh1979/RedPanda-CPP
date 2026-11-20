@@ -50,6 +50,8 @@ public:
                         CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
 
 private:
+    friend class TestTypeOperationRegistry;
+
     TypeInfo makeView(const QString &name, const QVector<TemplateArgument> &arguments,
                       CppTypeResolver::EvaluationContext *evaluation) const;
     TypeInfo rangeElement(const TypeInfo &range, bool reference,

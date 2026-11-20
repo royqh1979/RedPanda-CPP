@@ -512,3 +512,288 @@ void TestCppExpressionEvaluator::test_noexcept_evaluates_selected_calls()
     QCOMPARE(evaluate("1"), ConstraintSatisfaction::Satisfied);
     QCOMPARE(evaluate("missing()"), ConstraintSatisfaction::Unknown);
 }
+
+void TestCppExpressionEvaluator::test_evaluator_internal_lookup_and_results()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace Visible { int function(); int variable; }\n"
+                "namespace Outer { using namespace Visible; }\n"
+                "struct Foo { Foo(); int value; };\n"
+                "using FooAlias = Foo;\n"
+                "namespace V = Visible;\n"
+                "int global;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/evaluator_lookup.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+
+    PStatement visible = resolver.findStatement("Visible");
+    PStatement outer = resolver.findStatement("Outer");
+    PStatement foo = resolver.findStatement("Foo");
+    PStatement function = resolver.findStatement("Visible::function");
+    PStatement variable = resolver.findStatement("Visible::variable");
+    PStatement global = resolver.findStatement("global");
+    QVERIFY(visible && outer && foo && function && variable && global);
+    QCOMPARE(evaluator.findDirectStatement({}, "global"), global);
+    QCOMPARE(evaluator.findDirectStatement(visible, "variable"), variable);
+    QCOMPARE(evaluator.findDirectFunction(visible, "function"), function);
+    QCOMPARE(evaluator.findVisibleStatement("variable", outer), variable);
+    QCOMPARE(evaluator.findVisibleFunction("function", outer), function);
+    QVERIFY(!evaluator.findVisibleStatement("missing", outer));
+
+    CppTypeResolver::EvaluationContext evaluation;
+    QCOMPARE(evaluator.createResult(global, &evaluation).kind, EvalStatementKind::Variable);
+    QCOMPARE(evaluator.createResult(global, &evaluation).type.qualifiedName, "int");
+    QCOMPARE(evaluator.createResult(function, &evaluation).kind, EvalStatementKind::Function);
+    QCOMPARE(evaluator.createResult(foo, &evaluation).kind, EvalStatementKind::Type);
+    QCOMPARE(evaluator.createResult(visible, &evaluation).kind, EvalStatementKind::Namespace);
+    QCOMPARE(evaluator.createResult(resolver.findStatement("FooAlias"), &evaluation)
+                     .type.qualifiedName, "Foo");
+    QCOMPARE(evaluator.createResult(resolver.findStatement("V"), &evaluation).type.qualifiedName,
+             "Visible");
+    PStatement constructor = findStatement(std::dynamic_pointer_cast<Statement>(foo)->children, "Foo");
+    QVERIFY(constructor);
+    EvalResult constructed = evaluator.createResult(constructor, &evaluation);
+    QCOMPARE(constructed.type.qualifiedName, "Foo");
+    QCOMPARE(constructed.baseStatement, constructor);
+    QVERIFY(!evaluator.createResult({}, &evaluation).isValid());
+}
+
+void TestCppExpressionEvaluator::test_evaluator_internal_token_parsing()
+{
+    StatementModel model;
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTypeResolver::EvaluationContext evaluation;
+
+    TypeInfo type = evaluator.parseTypeText("const std::pair<int, double>&");
+    QCOMPARE(type.qualifiedName, "std::pair");
+    QVERIFY(type.qualifiers.testFlag(TypeQualifier::Const));
+    QVERIFY(!type.derivations.isEmpty());
+    QCOMPARE(type.derivations.first().kind, TypeDerivationKind::LvalueReference);
+    QVERIFY(evaluator.parseTypeText("").qualifiedName.isEmpty());
+
+    CppTokenizer templateTokens;
+    templateTokens.tokenize({"<int, 2, std::pair<int, double>>"});
+    int index = 0;
+    QVector<TemplateArgument> templateArguments;
+    QVERIFY(evaluator.readTemplateArguments(templateTokens.tokens(), index, templateArguments));
+    QCOMPARE(index, templateTokens.tokenCount());
+    QCOMPARE(templateArguments.count(), 3);
+    QCOMPARE(templateArguments[0].kind, TemplateArgumentKind::Type);
+    QCOMPARE(templateArguments[0].type->qualifiedName, "int");
+    QCOMPARE(templateArguments[1].kind, TemplateArgumentKind::NonType);
+    QCOMPARE(templateArguments[1].constantExpression, "2");
+    QCOMPARE(templateArguments[2].type->qualifiedName, "std::pair");
+    CppTokenizer emptyTemplate;
+    emptyTemplate.tokenize({"<>"});
+    index = 0;
+    templateArguments.clear();
+    QVERIFY(!evaluator.readTemplateArguments(emptyTemplate.tokens(), index, templateArguments));
+
+    CppTokenizer argumentTokens;
+    argumentTokens.tokenize({"(1, 2.0, true)"});
+    index = 0;
+    QVector<TypeInfo> arguments;
+    QVERIFY(evaluator.evaluateArguments(argumentTokens.tokens(), index, {}, arguments, &evaluation));
+    QCOMPARE(index, argumentTokens.tokenCount());
+    QCOMPARE(arguments.count(), 3);
+    QCOMPARE(arguments[0].qualifiedName, "int");
+    QCOMPARE(arguments[1].qualifiedName, "double");
+    QCOMPARE(arguments[2].qualifiedName, "bool");
+    CppTokenizer emptyArguments;
+    emptyArguments.tokenize({"()"});
+    index = 0;
+    arguments.clear();
+    QVERIFY(evaluator.evaluateArguments(emptyArguments.tokens(), index, {}, arguments, &evaluation));
+    QVERIFY(arguments.isEmpty());
+    CppTokenizer malformedArguments;
+    malformedArguments.tokenize({"(1"});
+    index = 0;
+    QVERIFY(!evaluator.evaluateArguments(malformedArguments.tokens(), index, {}, arguments, &evaluation));
+
+    CppTokenizer balanced;
+    balanced.tokenize({"(1)"});
+    QCOMPARE(evaluator.skipBalanced(balanced.tokens(), 0), 3);
+    QCOMPARE(evaluator.skipBalanced(balanced.tokens(), 1), 2);
+    QCOMPARE(evaluator.skipBalanced(balanced.tokens(), -1), balanced.tokenCount());
+
+    const QList<QPair<QString, int>> precedences{
+        {",", 1}, {"=", 2}, {"?", 3}, {"||", 4}, {"&&", 5}, {"|", 6},
+        {"^", 7}, {"&", 8}, {"==", 9}, {"<=>", 10}, {"<<", 11},
+        {"+", 12}, {"*", 13}, {".*", 14}, {"unknown", 0}
+    };
+    for (const auto &precedence : precedences)
+        QCOMPARE(evaluator.binaryPrecedence(precedence.first), precedence.second);
+    QVERIFY(evaluator.isRightAssociative("="));
+    QVERIFY(!evaluator.isRightAssociative("+"));
+    QVERIFY(!evaluator.isRightAssociative("?"));
+}
+
+void TestCppExpressionEvaluator::test_evaluator_internal_evaluation_stages()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Foo { int value; int operator()(int); };\n"
+                "int global;\n"
+                "int function(int);\n"
+                "Foo foo;\n"
+                "Foo* pointer;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/evaluator_stages.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTypeResolver::EvaluationContext evaluation;
+    auto tokens = [](const QString &text) {
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        return tokenizer.tokens();
+    };
+
+    int index = 0;
+    auto literalTokens = tokens("1");
+    EvalResult result = evaluator.evaluatePrimary(literalTokens, index, {}, &evaluation);
+    QCOMPARE(result.type.qualifiedName, "int");
+    QCOMPARE(result.kind, EvalStatementKind::Literal);
+    QCOMPARE(index, 1);
+    index = 0;
+    auto typeTokens = tokens("int");
+    QCOMPARE(evaluator.evaluatePrimary(typeTokens, index, {}, &evaluation).kind,
+             EvalStatementKind::Type);
+    index = 0;
+    auto variableTokens = tokens("global");
+    QCOMPARE(evaluator.evaluatePrimary(variableTokens, index, {}, &evaluation).type.qualifiedName,
+             "int");
+
+    auto unary = [&](const QString &text) {
+        int tokenIndex = 0;
+        auto tokenList = tokens(text);
+        return evaluator.evaluateUnary(tokenList, tokenIndex, {}, &evaluation);
+    };
+    QCOMPARE(unary("*pointer").type.toString(), "Foo &");
+    QCOMPARE(unary("&global").type.toString(), "int *");
+    QCOMPARE(unary("sizeof(int)").type.qualifiedName, "std::size_t");
+    QCOMPARE(unary("new Foo").type.toString(), "Foo *");
+    QCOMPARE(unary("static_cast<double>(1)").type.qualifiedName, "double");
+    QCOMPARE(unary("noexcept(function(1))").type.qualifiedName, "bool");
+    QVERIFY(!unary("noexcept(missing())").isValid());
+
+    auto postfix = [&](const QString &text) {
+        int tokenIndex = 0;
+        auto tokenList = tokens(text);
+        return evaluator.evaluatePostfix(tokenList, tokenIndex, {}, &evaluation);
+    };
+    QCOMPARE(postfix("foo.value").type.qualifiedName, "int");
+    QCOMPARE(postfix("function(1)").type.qualifiedName, "int");
+    QCOMPARE(postfix("foo(1)").type.qualifiedName, "int");
+    index = 0;
+    auto memberTokens = tokens(".value");
+    EvalResult foo = evaluator.createResult(resolver.findStatement("Foo"), &evaluation);
+    EvalResult variable = evaluator.createResult(resolver.findStatement("foo"), &evaluation);
+    QCOMPARE(evaluator.evaluatePostfixTail(variable, memberTokens, index, {}, &evaluation)
+                     .type.qualifiedName, "int");
+    QCOMPARE(index, memberTokens.count());
+    QVERIFY(foo.isValid());
+
+    auto binary = [&](const QString &text) {
+        int tokenIndex = 0;
+        auto tokenList = tokens(text);
+        EvalResult value = evaluator.evaluateBinary(tokenList, tokenIndex, {}, 1, &evaluation);
+        if (tokenIndex != tokenList.count())
+            return EvalResult();
+        return value;
+    };
+    QCOMPARE(binary("1+2*3").type.qualifiedName, "int");
+    QCOMPARE(binary("true?1:2.0").type.qualifiedName, "double");
+    QCOMPARE(binary("1=2").type.qualifiedName, "int");
+
+    CppTypeResolver::EvaluationContext lambdaEvaluation;
+    lambdaEvaluation.allowModelChanges = true;
+    index = 0;
+    auto lambdaTokens = tokens("[](int value) -> int { return value; }");
+    EvalResult lambda = evaluator.evaluateLambda(lambdaTokens, index, {}, &lambdaEvaluation);
+    QVERIFY(lambda.isValid());
+    QCOMPARE(lambda.type.declaration.lock()->kind, StatementKind::Lambda);
+    QCOMPARE(index, lambdaTokens.count());
+    index = 0;
+    EvalResult cached = evaluator.evaluateLambda(lambdaTokens, index, {}, &lambdaEvaluation);
+    QCOMPARE(cached.type.declaration.lock(), lambda.type.declaration.lock());
+    index = 0;
+    auto invalidLambdaTokens = tokens("[");
+    QVERIFY(!evaluator.evaluateLambda(invalidLambdaTokens, index, {}, &lambdaEvaluation).isValid());
+}
+
+void TestCppExpressionEvaluator::test_evaluator_internal_type_operations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Foo {\n"
+                "  int value;\n"
+                "  Foo* operator->();\n"
+                "  int& operator*();\n"
+                "  Foo& operator++();\n"
+                "  int operator+(int);\n"
+                "};\n"
+                "Foo foo;\n"
+                "Foo* pointer;\n"
+                "int global;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/evaluator_type_operations.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTypeResolver::EvaluationContext evaluation;
+    PStatement fooStatement = resolver.findStatement("Foo");
+    EvalResult foo = evaluator.createResult(resolver.findStatement("foo"), &evaluation);
+    EvalResult pointer = evaluator.createResult(resolver.findStatement("pointer"), &evaluation);
+    EvalResult global = evaluator.createResult(resolver.findStatement("global"), &evaluation);
+    QVERIFY(fooStatement && foo.isValid() && pointer.isValid() && global.isValid());
+
+    QCOMPARE(evaluator.memberReceiver(foo, false, &evaluation).declaration, fooStatement);
+    QCOMPARE(evaluator.memberReceiver(pointer, true, &evaluation).declaration, fooStatement);
+    QCOMPARE(evaluator.memberReceiver(foo, true, &evaluation).declaration, fooStatement);
+    QCOMPARE(evaluator.dereference(pointer, &evaluation).type.toString(), "Foo &");
+    QCOMPARE(evaluator.dereference(foo, &evaluation).type.toString(), "int &");
+    TypeInfo globalReference = global.type;
+    globalReference.derivations.append(TypeDerivation::lvalueReference());
+    QCOMPARE(evaluator.addressOf(globalReference, &evaluation).toString(), "int *");
+    QCOMPARE(evaluator.applyIncrement(foo, "operator++", &evaluation).type.toString(), "Foo &");
+    QCOMPARE(evaluator.applyIncrement(global, "operator++", &evaluation).type.qualifiedName, "int");
+    TypeInfo rvalueReference = global.type;
+    rvalueReference.derivations.append(TypeDerivation::rvalueReference());
+    QCOMPARE(evaluator.removeReferences(rvalueReference).toString(), "int");
+
+    EvalResult integer = evaluator.createResult(resolver.findStatement("global"), &evaluation);
+    EvalResult floating = integer;
+    floating.type.qualifiedName = "double";
+    floating.instance = {};
+    QCOMPARE(evaluator.applyBinary(integer, floating, "+", &evaluation).type.qualifiedName,
+             "double");
+    QCOMPARE(evaluator.applyBinary(integer, integer, "==", &evaluation).type.qualifiedName,
+             "bool");
+    QCOMPARE(evaluator.applyBinary(pointer, pointer, "-", &evaluation).type.qualifiedName,
+             "std::ptrdiff_t");
+    QCOMPARE(evaluator.applyBinary(integer, floating, ",", &evaluation).type.qualifiedName,
+             "double");
+    QCOMPARE(evaluator.applyBinary(foo, integer, "+", &evaluation).type.qualifiedName, "int");
+    EvalResult memberPointer = integer;
+    memberPointer.type.derivations.prepend(TypeDerivation::memberPointer("Foo"));
+    QCOMPARE(evaluator.applyBinary(foo, memberPointer, ".*", &evaluation).type.qualifiedName,
+             "int");
+}

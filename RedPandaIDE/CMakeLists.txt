@@ -491,6 +491,7 @@ target_moc_classes(test-cppparser
     test/test_cppstatementbuilder
     test/test_cpptyperesolver
     test/test_cppexpressionevaluator
+    test/test_typeoperationregistry
     test/test_pptoken
     test/test_ppexpander
 )

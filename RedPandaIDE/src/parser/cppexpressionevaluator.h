@@ -32,6 +32,8 @@ public:
                         ExpressionEvalTrace *trace = nullptr) const;
 
 private:
+    friend class TestCppExpressionEvaluator;
+
     using TokenList = QVector<CppTokenizer::Token>;
 
     EvalResult evaluateBinary(const TokenList &tokens, int &index, const PStatement &context,

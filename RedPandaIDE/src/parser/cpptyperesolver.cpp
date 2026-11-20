@@ -1392,8 +1392,9 @@ bool CppTypeResolver::compatibleArgument(
         PStatement argumentDeclaration = argument.declaration.lock();
         if (!argumentDeclaration)
             argumentDeclaration = findDeclaration(argument.qualifiedName, context, true);
-        if (argumentDeclaration && argumentDeclaration->kind == StatementKind::Class
-                && argumentDeclaration != formalInstance.declaration) {
+        if (argumentDeclaration != formalInstance.declaration) {
+            if (!argumentDeclaration || argumentDeclaration->kind != StatementKind::Class)
+                return false;
             QSet<const AbstractStatement *> visited;
             QStack<PStatement> pending;
             pending.push(argumentDeclaration);
@@ -1629,11 +1630,6 @@ void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInf
     removeReferences(actual);
     actual.qualifiers = TypeQualifier::None;
 
-    if (templateParameters.contains(formal.qualifiedName)) {
-        if (!bindings.contains(formal.qualifiedName))
-            bindings.insert(formal.qualifiedName, TemplateArgument::fromType(actual));
-        return;
-    }
     if (!formal.derivations.isEmpty() && !actual.derivations.isEmpty()
             && formal.derivations.first().kind == actual.derivations.first().kind
             && (formal.derivations.first().kind == TypeDerivationKind::Pointer
@@ -1641,6 +1637,11 @@ void CppTypeResolver::bindParameterType(const TypeInfo &parameter, const TypeInf
         formal.derivations.removeFirst();
         actual.derivations.removeFirst();
         bindParameterType(formal, actual, templateParameters, bindings, evaluation);
+        return;
+    }
+    if (templateParameters.contains(formal.qualifiedName)) {
+        if (!bindings.contains(formal.qualifiedName))
+            bindings.insert(formal.qualifiedName, TemplateArgument::fromType(actual));
         return;
     }
     if (formal.qualifiedName != actual.qualifiedName) {
