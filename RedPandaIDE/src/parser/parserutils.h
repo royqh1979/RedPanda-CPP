@@ -242,6 +242,8 @@ struct Statement : AbstractStatement {
     DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;
     QString templateRequiresClause;
     QString requiresClause;
+    NoexceptKind noexceptKind = NoexceptKind::None;
+    QString noexceptExpression;
     TypeInfo templatePattern;
     QVector<TemplateParameterInfo> templateParameters;
     QVector<QString> inheritedDefaultArgumentTexts;

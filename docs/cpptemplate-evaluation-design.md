@@ -251,13 +251,13 @@ STL 依据：
 
 约束只在表达式求值需要筛选候选或展开受限别名时计算，不在声明解析阶段实例化或求值。`__cplusplus` 是唯一版本依据；未提供该宏时默认 C++17。版本号使用 `CppVersion::Cpp11/Cpp17/Cpp20/Cpp23` 常量。只有版本至少为 C++20 时才把模板声明前和函数 declarator 后的 requires 原文保存到 DeclarationInfo/Statement，旧版本仍只跳过。受限常量变量模板在同一版本条件下保存初始化式，供约束求值使用。Preprocessor 将实际编译器类型和版本通过 `CppEvaluationOptions` 传给 StatementBuilder 和 Resolver；StatementModel 不保存语言配置。即使存在约束文本，C++17 及更早版本仍忽略约束。
 
-trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按 GCC、Clang 各自的可用 trait 集合一次分派；Clang 集合额外包含当前支持的 triviality traits 和 libc++ 的 `__has_iterator_typedefs`。类型内建与常量内建也分别按 GCC、Clang 的实际支持集合选择，共有的 `__is_array` 在两个集合中分别登记，命中后不再重复判断编译器。
+trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按 GCC、Clang 各自的可用 trait 集合一次分派；Clang 集合额外包含当前支持的 triviality traits、copy/move/default constructible 和 libc++ 的 `__has_iterator_typedefs`。类型内建与常量内建也分别按 GCC、Clang 的实际支持集合选择，共有的 `__is_array` 在两个集合中分别登记，命中后不再重复判断编译器。
 
-函数 trailing return 必须同时写入 `TypeInfo::qualifiedName` 和 `qualifiedNameText`，不能残留 auto。Evaluator 保存当前模板绑定帧，函数候选匹配通过 outer bindings 使用它，因此 decltype 内的 `declval<T>()` 及同类调用不会丢失外层实参。引用折叠仍由通用类型变换完成，不对 declval 添加名称特判。
+函数 trailing return 必须同时写入 `TypeInfo::qualifiedName` 和 `qualifiedNameText`，不能残留 auto。直接以 `decltype(expr)` 声明的返回类型也必须正常进入 DeclSpecifier，不得因后随 `(` 而被误判为构造函数。Evaluator 保存当前模板绑定帧，函数候选匹配通过 outer bindings 使用它，因此 decltype 内的 `declval<T>()` 及同类调用不会丢失外层实参。引用折叠仍由通用类型变换完成，不对 declval 添加名称特判。
 
 约束求值采用 `Satisfied / Unsatisfied / Unknown` 三态。只有明确不满足时才排除候选；未知候选保持可行，因此未知与可行候选并存时仍按歧义返回未解析结果。函数自身约束在参数和模板绑定完成后检查；别名约束在建立别名自身绑定后、展开目标类型前检查。两者均只使用一次求值的绑定帧和递归状态，不回写模型。约束参与同签名函数的声明合并判定，不同约束的重载不得合并；同一约束的声明与定义按 token 序列比较，忽略空白差异。
 
-当前只支持布尔/整数字面量、括号、`!`、`&&`、`||`、整数 `==`/`!=`、已有常量 trait、受限常量变量模板及既有特化匹配，以及实际需要的编译器内建。`__is_array` 按数组 derivation 计算，不根据标准库名称或候选顺序特判。约束原文直接从已有 token 原文截取，不逐 token 拼接；求值时才 tokenize。
+当前只支持布尔/整数字面量、括号、`!`、`&&`、`||`、整数 `==`/`!=`、已有常量 trait、受限常量变量模板及既有特化匹配，以及实际需要的编译器内建。`__is_array` 按数组 derivation 计算，不根据标准库名称或候选顺序特判。`__is_constructible` 通过实际构造函数或隐式构造匹配计算；copy/move/default constructible 分别使用对应的引用变换或无参数构造。`__is_invocable_r_v` 先求实际调用，再检查返回类型转换。`__and_`、`__or_`、`__not_`、`__all` 逐项计算并短路，支持当前需要的非类型 pack 展开；alias 展开后的逻辑求值必须使用 alias 定义处的词法作用域，不能在调用方作用域解析其未限定名称。普通类的静态 `value` 成员也按实际类实例和继承绑定求值，不走变量模板兜底。约束原文直接从已有 token 原文截取，不逐 token 拼接；求值时才 tokenize。
 
 验收：C++17 行为不变；C++20 下约束函数可排除相反约束的重载，`_NonArray<string>` 可用而 `_BoundedArray<string>` 不可用，`make_shared<string>()` 只保留普通对象候选并支持后续成员访问。
 
@@ -269,7 +269,7 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 - 通用 SFINAE、detection idiom、`void_t` 语义；
 - 完整重载决议、隐式转换序列和模板特化排序的完整规则；
 - 通用 constexpr 求值和任意模板元编程；
-- parameter pack 展开、包索引和依赖包的复杂返回类型；
+- 超出当前逻辑 trait 非类型实参场景的通用 parameter pack 展开、包索引和依赖包的复杂返回类型；
 - CTAD、deduction guide 求值；
 - 函数体模板实例化、auto 函数返回类型的通用函数体推导；
 - 完整表达式 AST 或实例化 Statement 树；
@@ -282,11 +282,11 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 
 以下能力在分析 libstdc++ 无序容器时确认缺失，但不因此自动扩大本轮范围：
 
-- **异常规格的保存与求值**：声明解析目前能消费 `noexcept` 和 `noexcept(expr)`，但不保存“可能抛出、不抛出、由常量表达式决定”的语义。完整支持还需要在表达式求值中实现 `noexcept(expr)` 运算符，读取实际选中函数、构造函数、转换及成员访问的异常规格，且不求值其副作用。旧式 `throw(...)` 动态异常规格不是当前 C++17 无序容器链的前置条件。
-- **INVOKE 与可调用性**：`is_invocable`/`is_nothrow_invocable` 需要确定调用是否合法及调用结果类型，不能按 trait 名称直接返回真值。`std::declval` 的表达式类型语义及外层模板绑定已支持；剩余依赖包括 `invoke_result`、普通函数/函数对象调用、成员对象和成员函数指针、引用或指针访问以及 `reference_wrapper` 解包。普通函数对象可以先形成独立的最小支持范围，不必一次实现所有成员指针分支。
+- **异常规格的保存与求值**：普通函数、模板函数、函数对象和 lambda 已保存无规格、无条件 `noexcept`、条件 `noexcept(expr)`，表达式求值读取实际选中调用及其绑定帧。字面量和能够确定规格的调用可以求值；尚未覆盖的构造函数、转换、函数指针和成员指针等路径返回 Unknown。旧式 `throw(...)` 动态异常规格不在当前范围内。
+- **INVOKE 与可调用性**：普通函数对象的调用和 `__is_nothrow_invocable`/`is_nothrow_invocable` 已能根据实际 `Fn, Args...` 求值，不按名称硬编码真值。完整 `is_invocable` 的无效调用语义、`invoke_result` 的其它分支、成员对象和成员函数指针、引用或指针访问以及 `reference_wrapper` 解包仍未完整支持；不能将未知一律当成 false。
 - **与 SFINAE 的关系**：`void_t` 和 detection idiom 常用于判断上述表达式是否合法。若由通用库模板驱动，而不是由有限的编译器内建 trait 直接计算，就需要相应的替换失败语义；不能把语法或类型解析失败一律当成合法的 `false`。
 
-实际依据是 libstdc++ 的 `unordered_map` 默认 `_Tr` 实参：`__cache_default<_Key, _Hash>::value` 同时依赖 `__is_fast_hash` 和 `__is_nothrow_invocable`，后者又依赖 `__is_invocable` 与 `__call_is_nothrow_`。当前无法确定完整 INVOKE/异常规格时，相关特化匹配返回 Unknown 并保持未解析结果。这些能力属于 C++ 正确性扩展，不得仅为了缩短 profile 时间而局部硬编码；实施前必须分别补充确定真、确定假、未知不误导跳转的最小测试和真实 STL 场景。
+实际依据是 libstdc++ 的 `unordered_map` 默认 `_Tr` 实参：`__cache_default<_Key, _Hash>::value` 同时依赖 `__is_fast_hash` 和 `__is_nothrow_invocable`。当前 `std::string` 的这条实际路径已按层次覆盖直接 noexcept、nothrow trait、fast-hash 元数据、逻辑与/非及 cache 默认值。其它未支持的 INVOKE 分支仍返回 Unknown；不得为缩短 profile 时间而局部硬编码，新增分支必须分别补充确定真、确定假、未知不误导跳转的最小测试和真实 STL 场景。
 
 ## 数据结构设计
 
@@ -496,7 +496,7 @@ struct TemplateBindingFrame {
 5. 所有特化都明确不匹配时才选择主模板。
 
 匹配结果是三态：匹配、不匹配、无法判断。任一可能影响结果的候选为“无法判断”时，不得直接退回
-主模板并伪造成功。
+主模板并伪造成功。每个候选使用独立的求值状态副本并共享只读缓存；不匹配候选在递归展开中产生的失败只淘汰该候选，不得污染主类型或其它候选。若候选自身已经匹配但求值状态失败，则该候选按无法判断处理，不能把部分结果当成确定匹配。
 
 偏特化优先级是明确的后续工作，本轮不实现。典型场景是 `iterator_traits<T*>` 与
 `iterator_traits<const T*>` 同时匹配 `const std::string*`；当前必须保持未解析，不能按声明顺序或

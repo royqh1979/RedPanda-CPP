@@ -428,3 +428,87 @@ void TestCppExpressionEvaluator::test_declval_preserves_type_and_outer_template_
     QVERIFY(parseDeclarationText("Holder<std::string> value;", dependent));
     QCOMPARE(resolver.memberType(dependent.specifiers.type, "type").toString(), "std::string &&");
 }
+
+void TestCppExpressionEvaluator::test_declval_with_direct_decltype_return()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> decltype(std::__declval<T>(0)) declval() noexcept;\n"
+                "}\n", declarations));
+    QVERIFY(!declarations.isEmpty());
+    bool parsedDeclval = false;
+    for (const DeclarationInfo &declaration : declarations.first().children) {
+        if (declaration.declarators.isEmpty()
+                || declaration.declarators.first().name != "declval") {
+            continue;
+        }
+        parsedDeclval = true;
+        QCOMPARE(declaration.specifiers.type.qualifiedName, "decltype(std::__declval<T>(0))");
+        QCOMPARE(declaration.specifiers.type.qualifiedNameText, "decltype(std::__declval<T>(0))");
+    }
+    QVERIFY(parsedDeclval);
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/direct_decltype_declval.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement declval = resolver.findStatement("std::declval");
+    QVERIFY(declval);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(declval)->typeInfo.qualifiedName,
+             "decltype(std::__declval<T>(0))");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(declval)->typeInfo.qualifiedNameText,
+             "decltype(std::__declval<T>(0))");
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    CppTokenizer expression;
+    expression.tokenize({"std::declval<std::string>()"});
+    QCOMPARE(evaluator.evaluate(expression).type.toString(), "std::string &&");
+}
+
+void TestCppExpressionEvaluator::test_noexcept_evaluates_selected_calls()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "void throwing();\n"
+                "void nonthrowing() noexcept;\n"
+                "template<bool B> void conditional() noexcept(B);\n"
+                "void overloaded() noexcept;\n"
+                "void overloaded(int);\n"
+                "struct Functor { void operator()() noexcept; };\n"
+                "struct ThrowingFunctor { void operator()(); };\n"
+                "Functor functor;\n"
+                "ThrowingFunctor throwingFunctor;\n"
+                "auto lambda = []() noexcept(true) {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/noexcept.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement nonthrowing = resolver.findStatement("nonthrowing");
+    QVERIFY(nonthrowing);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(nonthrowing)->noexceptKind,
+             NoexceptKind::Always);
+    auto evaluate = [&](const QString &text) {
+        return resolver.evaluateNoexceptExpression("noexcept(" + text + ")");
+    };
+
+    QCOMPARE(evaluate("throwing()"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("nonthrowing()"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("conditional<true>()"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("conditional<false>()"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("overloaded()"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("overloaded(0)"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("functor()"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("throwingFunctor()"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("lambda()"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("1"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("missing()"), ConstraintSatisfaction::Unknown);
+}

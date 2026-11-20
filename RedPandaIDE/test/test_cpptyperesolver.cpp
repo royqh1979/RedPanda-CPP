@@ -402,6 +402,43 @@ void TestCppTypeResolver::test_type_resolver_selects_specializations_and_rebind(
 }
 
 
+void TestCppTypeResolver::test_type_resolver_ignores_recursive_nonmatching_specialization()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  struct string {};\n"
+                "  template<typename... T> struct variant {};\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<bool B, typename T = void> struct enable_if {};\n"
+                "  template<typename T> struct enable_if<true, T> { using type = T; };\n"
+                "  template<bool B, typename T> using enable_if_t = typename enable_if<B, T>::type;\n"
+                "  template<typename T> using remove_const_t = T;\n"
+                "  template<typename Key, typename Hash = hash<Key>> using has_enabled =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>;\n"
+                "  template<typename Type, typename> using enable_helper_imp = Type;\n"
+                "  template<typename Type, typename... Keys> using enable_helper =\n"
+                "    enable_helper_imp<Type, enable_if_t<__all<has_enabled<Keys>::value...>::value>>;\n"
+                "  template<typename... Types>\n"
+                "  struct hash<enable_helper<variant<Types...>, remove_const_t<Types>...>> {};\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/recursive_specialization.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("std::hash<std::string> value;", variable));
+    QCOMPARE(resolver.resolveInstance(variable.specifiers.type).declaration,
+             resolver.findStatement("std::hash"));
+}
+
 void TestCppTypeResolver::test_type_resolver_preserves_fixed_arguments_in_specialization_scope()
 {
     QVector<DeclarationInfo> declarations;
@@ -1058,4 +1095,428 @@ void TestCppTypeResolver::test_inherited_member_enumeration_and_access()
     QCOMPARE(basePublicValue->accessibility, StatementAccessibility::Public);
     QCOMPARE(baseProtectedValue->accessibility, StatementAccessibility::Protected);
     QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_functors()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Fn, typename... Args> struct __is_nothrow_invocable {};\n"
+                "}\n"
+                "struct NoexceptFunctor { void operator()(int) noexcept; };\n"
+                "struct ThrowingFunctor { void operator()(int); };\n"
+                "template<typename T, bool = std::__is_nothrow_invocable<T, int>::value>\n"
+                "struct Selector { using type = int; };\n"
+                "template<typename T> struct Selector<T, true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/nothrow_invocable.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto memberType = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText(text, variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+
+    QCOMPARE(memberType("Selector<NoexceptFunctor> value;").toString(), "std::string");
+    QCOMPARE(memberType("Selector<ThrowingFunctor> value;").toString(), "int");
+}
+
+void TestCppTypeResolver::test_type_resolver_matches_explicit_specialization_through_alias()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct basic_string {};\n"
+                "  using string = basic_string<char>;\n"
+                "}\n"
+                "template<typename T> struct Trait { using type = int; };\n"
+                "template<> struct Trait<std::string> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/alias_specialization.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement specialization = findStatement(model.childrenStatements(), "Trait<std::string>");
+    QVERIFY(specialization);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(specialization)->templateKind,
+             TemplateDeclarationKind::ExplicitSpecialization);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Trait<std::string> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").qualifiedName,
+             "std::basic_string");
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_constructible_traits()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n"
+                "struct Default { Default(); };\n"
+                "struct NoDefault { NoDefault(int); };\n"
+                "struct Implicit {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::integral_constant<bool, __is_constructible("
+                                  + text + ")>::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    PStatement falseType = resolver.findStatement("FalseType");
+    QVERIFY(string && falseType);
+    QVERIFY(resolver.findStatement("std::integral_constant"));
+
+    QCOMPARE(evaluate("Default").declaration.lock(), string);
+    QCOMPARE(evaluate("NoDefault").declaration.lock(), falseType);
+    QCOMPARE(evaluate("NoDefault,int").declaration.lock(), string);
+    QCOMPARE(evaluate("Default,int").declaration.lock(), falseType);
+    QCOMPARE(evaluate("Implicit").declaration.lock(), string);
+    QCOMPARE(evaluate("Implicit,const Implicit&").declaration.lock(), string);
+    QCOMPARE(evaluate("int").declaration.lock(), string);
+    QCOMPARE(evaluate("void").declaration.lock(), falseType);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_copy_constructible_through_reference_alias()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_lvalue_reference_t = __add_lvalue_reference(T);\n"
+                "  template<typename T> struct is_copy_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_lvalue_reference_t<const T>)> {};\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/copy_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<" + text + "> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    QVERIFY(string);
+    QCOMPARE(evaluate("std::integral_constant<bool, __is_constructible("
+                      "std::string, const std::string&)>::value").declaration.lock(), string);
+    QCOMPARE(evaluate("std::is_copy_constructible<std::string>::value").declaration.lock(), string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_copy_constructible_in_inline_namespace()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_lvalue_reference_t = __add_lvalue_reference(T);\n"
+                "  template<typename T> struct is_copy_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_lvalue_reference_t<const T>)> {};\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/inline_copy_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::is_copy_constructible<std::string>::value> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").declaration.lock(),
+             resolver.findStatement("std::string"));
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_move_and_default_constructible()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_rvalue_reference_t = __add_rvalue_reference(T);\n"
+                "  template<typename T> struct is_move_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_rvalue_reference_t<T>)> {};\n"
+                "  template<typename T> struct is_default_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T)> {};\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/move_default_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<" + text + "> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    QVERIFY(string);
+    QCOMPARE(evaluate("std::is_move_constructible<std::string>::value").declaration.lock(), string);
+    QCOMPARE(evaluate("std::is_default_constructible<std::string>::value").declaration.lock(),
+             string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_invocable_r()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Ret, typename Fn, typename... Args>\n"
+                "  constexpr bool __is_invocable_r_v = false;\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "struct Functor { std::string operator()(int); };\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/invocable_r.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::__is_invocable_r_v<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    PStatement falseType = resolver.findStatement("FalseType");
+    QVERIFY(string && falseType);
+    QVERIFY(resolver.findStatement("std::__is_invocable_r_v"));
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator expressionEvaluator(model, resolver, operations);
+    CppTokenizer directExpression;
+    directExpression.tokenize({"std::declval<Functor>()(std::declval<int>())"});
+    QCOMPARE(expressionEvaluator.evaluate(directExpression).type.toString(), "std::string");
+
+    QCOMPARE(evaluate("std::string,Functor,int").declaration.lock(), string);
+    QCOMPARE(evaluate("int,Functor,int").declaration.lock(), falseType);
+    QCOMPARE(evaluate("void,Functor,int").declaration.lock(), string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_invocable_r_with_inherited_call()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  using size_t = unsigned long;\n"
+                "  template<typename T> struct allocator {};\n"
+                "  template<typename T> struct char_traits {};\n"
+                "  template<typename C, typename T, typename A> struct basic_string {};\n"
+                "  using string = basic_string<char, char_traits<char>, allocator<char>>;\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Ret, typename Fn, typename... Args>\n"
+                "  constexpr bool __is_invocable_r_v = false;\n"
+                "  template<typename C, typename A> struct string_hash {\n"
+                "    size_t operator()(const basic_string<C, char_traits<C>, A>&) const;\n"
+                "  };\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename A> struct hash<basic_string<char, char_traits<char>, A>>\n"
+                "    : string_hash<char, A> {};\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/inherited_invocable_r.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::__is_invocable_r_v<std::size_t, std::hash<std::string>,"
+                " const std::string&>::value> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").declaration.lock(),
+             resolver.findStatement("std::basic_string"));
+}
+
+void TestCppTypeResolver::test_type_resolver_expands_non_type_pack_arguments()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { template<bool... B> struct __all {}; }\n"
+                "template<typename... T> using AllArrays = std::__all<(__is_array(T))...>;\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = int; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/non_type_pack.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<AllArrays<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    DeclarationInfo selectedVariable;
+    QVERIFY(parseDeclarationText("Selector<AllArrays<int[],int[]>::value> value;", selectedVariable));
+    PStatement selected = resolver.resolveInstance(selectedVariable.specifiers.type).declaration;
+    QVERIFY(selected);
+    QCOMPARE(selected->command, "Selector<true>");
+
+    QCOMPARE(evaluate("int[],int[]").qualifiedName, "int");
+    QCOMPARE(evaluate("int[],int").qualifiedName, "FalseType");
+    QCOMPARE(evaluate("").qualifiedName, "int");
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_logical_trait_single_values()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  struct string {};\n"
+                "  template<typename T> using Enabled =\n"
+                "    integral_constant<bool, __is_constructible(T)>;\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename Key, typename Hash = hash<Key>> using EnabledWithDefault =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&) &&\n"
+                "      __is_constructible(Hash)>;\n"
+                "  template<typename... T> struct __and_ {};\n"
+                "  template<typename T> struct __not_ {};\n"
+                "  template<typename T, typename Hash> using Cache = __not_<__and_<"
+                "    integral_constant<bool, false>,"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>>>;\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = int; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/logical_single_values.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::__all<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    QCOMPARE(evaluate("true").qualifiedName, "int");
+    QCOMPARE(evaluate("false").qualifiedName, "FalseType");
+    DeclarationInfo direct;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::integral_constant<bool, true>::value> value;", direct));
+    QCOMPARE(resolver.memberType(direct.specifiers.type, "type").qualifiedName, "int");
+    QCOMPARE(evaluate("std::integral_constant<bool, true>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::Enabled<std::string>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::EnabledWithDefault<std::string>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::Cache<std::string, std::hash<std::string>>::value").qualifiedName,
+             "int");
+    DeclarationInfo cache;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::Cache<std::string, std::hash<std::string>>::value> value;", cache));
+    QCOMPARE(resolver.memberType(cache.specifiers.type, "type").qualifiedName, "int");
+}
+
+void TestCppTypeResolver::test_type_resolver_resolves_alias_to_clang_type_builtin()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T> using Reference = __add_lvalue_reference(T);\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/builtin_alias.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo direct;
+    QVERIFY(parseDeclarationText("const std::string value;", direct));
+    QCOMPARE(direct.specifiers.type.qualifiedName, "std::string");
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("std::Reference<const std::string> value;", variable));
+    TypeInfo resolved = resolver.resolve(variable.specifiers.type);
+    QCOMPARE(resolved.qualifiedName, "std::string");
+    QCOMPARE(resolved.toString(), "const std::string &");
+    for (const QString &typeText : {QString("std::string const"),
+                                    QString("const volatile std::string"),
+                                    QString("std::string const volatile")}) {
+        DeclarationInfo qualified;
+        QVERIFY(parseDeclarationText("std::Reference<" + typeText + "> value;", qualified));
+        TypeInfo result = resolver.resolve(qualified.specifiers.type);
+        QCOMPARE(result.qualifiedName, "std::string");
+        QCOMPARE(result.toString(), typeText.contains("volatile")
+                 ? "const volatile std::string &" : "const std::string &");
+    }
 }

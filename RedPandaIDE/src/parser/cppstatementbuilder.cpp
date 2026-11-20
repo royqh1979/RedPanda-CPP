@@ -493,6 +493,8 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
         existingStatement->parameters = candidateStatement->parameters;
         existingStatement->args = candidateStatement->args;
         existingStatement->normalizedArgs = candidateStatement->normalizedArgs;
+        existingStatement->noexceptKind = candidateStatement->noexceptKind;
+        existingStatement->noexceptExpression = candidateStatement->noexceptExpression;
     }
     if (!candidateStatement->baseClasses.isEmpty())
         existingStatement->baseClasses = candidateStatement->baseClasses;
@@ -842,6 +844,8 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
     if (isFunction(declarator)) {
         const TypeDerivation function = declarator.derivations.first();
         normalStatement->requiresClause = function.requiresClause;
+        normalStatement->noexceptKind = function.noexceptKind;
+        normalStatement->noexceptExpression = function.noexceptExpression;
         std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations.removeFirst();
         std::dynamic_pointer_cast<Statement>(statement)->parameters = function.parameters;
         std::dynamic_pointer_cast<Statement>(statement)->args = renderParameters(function, true);
@@ -1250,11 +1254,14 @@ void CppStatementBuilder::buildLambdas(const DeclaratorInfo &declarator,
         call->properties.setFlag(StatementProperty::InProject, context.inProject);
         call->properties.setFlag(StatementProperty::InSystemHeader, context.inSystemHeader);
         auto normalCall = std::dynamic_pointer_cast<Statement>(call);
+        normalCall->noexceptKind = info->noexceptKind;
+        normalCall->noexceptExpression = info->noexceptExpression;
         normalCall->typeInfo = info->returnType;
         normalCall->typeInfo.qualifiedName = info->hasTrailingReturnType
                 ? info->returnType.qualifiedName : "auto";
         TypeDerivation function = TypeDerivation::function(info->parameters);
         function.qualifiers.setFlag(TypeQualifier::Const, !info->isMutable);
+        normalCall->parameters = info->parameters;
         normalCall->args = renderParameters(function, true);
         normalCall->normalizedArgs = renderNormalizedParameters(function, {});
         mModel.add(call);

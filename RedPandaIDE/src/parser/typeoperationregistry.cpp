@@ -75,8 +75,10 @@ TypeInfo TypeOperationRegistry::subscriptReference(
 
 TypeInfo TypeOperationRegistry::invokeResult(
         const TypeInfo &callable, const QVector<TypeInfo> &arguments,
-        CppTypeResolver::EvaluationContext *evaluation) const
+        CppTypeResolver::EvaluationContext *evaluation, CallResolution *invocation) const
 {
+    if (invocation)
+        *invocation = {};
     if (arguments.count() == 1
             && (callable.qualifiedName == "std::ranges::filter_fn"
                 || callable.qualifiedName == "std::ranges::transform_fn")) {
@@ -86,7 +88,10 @@ TypeInfo TypeOperationRegistry::invokeResult(
     }
     if (arguments.isEmpty() && callable.qualifiedName == "std::ranges::join_fn")
         return makeView("std::ranges::join_closure", {}, evaluation);
-    return mResolver.invokeResult(callable, "operator()", evaluation);
+    MemberEvalResult result = mResolver.invokeMember(callable, "operator()", arguments, evaluation);
+    if (invocation)
+        *invocation = result.invocation;
+    return result.type;
 }
 
 TypeInfo TypeOperationRegistry::explicitTemplateResult(

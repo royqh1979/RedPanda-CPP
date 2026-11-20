@@ -235,6 +235,7 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
             || mCursor.currentText() == "operator"
             || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
                 && mCursor.currentText() != "explicit"
+                && mCursor.currentText() != "decltype"
                 && !isBuiltinType(mCursor.currentText())
                 && !isClangTypeBuiltin(mCursor.currentText())
                 && mCursor.peek().text == "(");
@@ -757,8 +758,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
                 else if (mCursor.consume("&"))
                     function.refQualifier = ReferenceQualifier::Lvalue;
                 else if (mCursor.consume("noexcept")) {
-                    if (mCursor.currentText() == "(")
-                        skipBalancedToken();
+                    readNoexcept(function.noexceptKind, function.noexceptExpression);
                 } else if (mCursor.consume("override")) {
                     function.functionProperties.setFlag(FunctionProperty::Override);
                 } else if (mCursor.consume("final")) {
@@ -1273,8 +1273,7 @@ bool CppDeclarationParser::parseLambda(LambdaInfo &result)
             result.isMutable = true;
         } else if (mCursor.consume("constexpr") || mCursor.consume("consteval")) {
         } else if (mCursor.consume("noexcept")) {
-            if (mCursor.currentText() == "(")
-                skipBalancedToken();
+            readNoexcept(result.noexceptKind, result.noexceptExpression);
         } else {
             break;
         }
@@ -1468,6 +1467,19 @@ void CppDeclarationParser::skipTemplateDefaultArgument(bool nonType)
             return;
         mCursor.advance();
     }
+}
+
+void CppDeclarationParser::readNoexcept(NoexceptKind &kind, QString &expression)
+{
+    kind = NoexceptKind::Always;
+    expression.clear();
+    if (mCursor.currentText() != "(")
+        return;
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
+    skipBalancedToken();
+    kind = NoexceptKind::Expression;
+    QString text = readConsumedText(start);
+    expression = text.mid(1, text.size() - 2).trimmed();
 }
 
 void CppDeclarationParser::applyTrailingReturn(TypeDerivation &function)

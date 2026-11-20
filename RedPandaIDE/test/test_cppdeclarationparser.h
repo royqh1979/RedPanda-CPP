@@ -40,6 +40,7 @@ private slots:
     void test_requires_before_member_declaration();
     void test_function_try_block_recovery();
     void test_constructor_declarations_with_specifiers();
+    void test_noexcept_specifications_are_preserved();
 };
 
 #endif // TEST_CPPDECLARATIONPARSER_H

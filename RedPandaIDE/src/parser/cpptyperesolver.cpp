@@ -167,6 +167,18 @@ QString lookupKeyText(const LookupKey &key)
             + (key.typesOnly ? "types" : "all");
 }
 
+QString substituteIdentifier(QString text, const QString &name, const QString &replacement)
+{
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({text});
+    for (int i = tokenizer.tokenCount() - 1; i >= 0; --i) {
+        const auto &token = tokenizer[i];
+        if (token.kind == CppTokenizer::TokenKind::Identifier && token.text == name)
+            text.replace(token.position.ch, name.size(), replacement);
+    }
+    return text;
+}
+
 void traceEvent(QHash<QString, qint64> &trace, const QString &key)
 {
     if (resolverProfile.traceEnabled)
@@ -344,10 +356,10 @@ const QStringList &typeBuiltinsForCompiler(CppCompilerType compilerType)
 
 const QStringList &constantBuiltinsForCompiler(CppCompilerType compilerType)
 {
-    static const QStringList gcc{"__is_array("};
+    static const QStringList gcc{"__is_array(", "__is_constructible("};
     static const QStringList clang{
-        "__is_array(", "__is_trivially_destructible(", "__is_trivially_constructible(",
-        "__is_trivially_assignable(", "__is_trivially_copyable("
+        "__is_array(", "__is_constructible(", "__is_trivially_destructible(",
+        "__is_trivially_constructible(", "__is_trivially_assignable(", "__is_trivially_copyable("
     };
     return compilerType == CppCompilerType::Clang ? clang : gcc;
 }
@@ -356,7 +368,9 @@ const QSet<QString> &constantTraitsForCompiler(CppCompilerType compilerType)
 {
     static const QSet<QString> gcc{
         "integral_constant", "is_array", "is_void", "is_reference",
-        "is_lvalue_reference", "is_rvalue_reference", "is_convertible"
+        "is_lvalue_reference", "is_rvalue_reference", "is_convertible",
+        "__is_nothrow_invocable", "is_nothrow_invocable", "__and_", "__or_", "__not_",
+        "__is_fast_hash", "__all"
     };
     static const QSet<QString> clang{
         "integral_constant", "is_array", "is_void", "is_reference",
@@ -364,7 +378,10 @@ const QSet<QString> &constantTraitsForCompiler(CppCompilerType compilerType)
         "is_trivially_destructible", "is_trivially_constructible",
         "is_trivially_default_constructible", "is_trivially_copy_constructible",
         "is_trivially_move_constructible", "is_trivially_assignable",
-        "is_trivially_copy_assignable", "is_trivially_move_assignable", "is_trivially_copyable"
+        "is_trivially_copy_assignable", "is_trivially_move_assignable", "is_trivially_copyable",
+        "is_copy_constructible", "is_move_constructible", "is_default_constructible",
+        "__is_nothrow_invocable", "is_nothrow_invocable", "__and_", "__or_", "__not_",
+        "__is_fast_hash", "__all"
     };
     return compilerType == CppCompilerType::Clang ? clang : gcc;
 }
@@ -694,7 +711,7 @@ MemberEvalResult CppTypeResolver::invokeResult(const ClassInstance &receiver,
         return {};
     ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
                                                member.statement->parentScope.lock(), evaluation);
-    return {member.statement, result.type, result};
+    return {member.statement, result.type, result, {member.statement, member.owner.bindings}};
 }
 
 MemberEvalResult CppTypeResolver::memberAccess(
@@ -792,7 +809,8 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                     if (result.statement) {
                         tied = true;
                     } else {
-                        result = {match.statement, resultInstance.type, resultInstance};
+                        result = {match.statement, resultInstance.type, resultInstance,
+                                  {match.statement, match.bindings}};
                     }
                 }
                 if (tied)
@@ -826,14 +844,262 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
     return {member.statement, result.type, result};
 }
 
+EvalResult CppTypeResolver::evaluateInvocation(
+        const QVector<TemplateArgument> &arguments, int functionIndex, const PStatement &context,
+        const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const
+{
+    if (functionIndex < 0 || functionIndex >= arguments.count())
+        return {};
+    for (const TemplateArgument &argument : arguments) {
+        if (argument.kind != TemplateArgumentKind::Type || !argument.type)
+            return {};
+    }
+    QString expression = "std::declval<"
+            + arguments[functionIndex].toString() + ">()(";
+    QStringList callArguments;
+    for (int i = functionIndex + 1; i < arguments.count(); ++i)
+        callArguments.append("std::declval<" + arguments[i].toString() + ">()");
+    expression += callArguments.join(",") + ")";
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({expression});
+    TypeOperationRegistry operations(*this);
+    CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mModel), *this, operations,
+                                     bindings);
+    return evaluator.evaluate(tokenizer, context, &evaluation);
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateLogicalTrait(
+        const QVector<TemplateArgument> &arguments, bool conjunction, const PStatement &context,
+        const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const
+{
+    auto evaluateOne = [&](const TemplateArgument &argument) {
+        QString text = argument.toString();
+        if (argument.kind == TemplateArgumentKind::Type && !text.endsWith("::value"))
+            text += "::value";
+        QString value = evaluateConstantValue(text, bindings, context, evaluation);
+        if (value == "true")
+            return ConstraintSatisfaction::Satisfied;
+        if (value == "false")
+            return ConstraintSatisfaction::Unsatisfied;
+        return ConstraintSatisfaction::Unknown;
+    };
+    bool unknown = false;
+    auto combine = [&](ConstraintSatisfaction result) {
+        if (result == ConstraintSatisfaction::Unknown) {
+            unknown = true;
+            return false;
+        }
+        return conjunction ? result == ConstraintSatisfaction::Unsatisfied
+                           : result == ConstraintSatisfaction::Satisfied;
+    };
+    for (const TemplateArgument &argument : arguments) {
+        QString pattern = argument.constantExpression.trimmed();
+        if (argument.kind != TemplateArgumentKind::NonType || !pattern.endsWith("...")) {
+            if (combine(evaluateOne(argument)))
+                return conjunction ? ConstraintSatisfaction::Unsatisfied
+                                   : ConstraintSatisfaction::Satisfied;
+            continue;
+        }
+        pattern.chop(3);
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({pattern});
+        QSet<QString> identifiers;
+        for (const auto &token : tokenizer.tokens()) {
+            if (token.kind == CppTokenizer::TokenKind::Identifier)
+                identifiers.insert(token.text);
+        }
+        bool foundPack = false;
+        for (const QString &identifier : identifiers) {
+            const QVector<TemplateArgument> *pack = findParameterPack(bindings, identifier);
+            if (!pack)
+                continue;
+            foundPack = true;
+            for (const TemplateArgument &packArgument : *pack) {
+                QString expanded = substituteIdentifier(pattern, identifier, packArgument.toString());
+                ConstraintSatisfaction expandedResult = evaluateOne(
+                            TemplateArgument::fromConstant(expanded));
+                if (combine(expandedResult))
+                    return conjunction ? ConstraintSatisfaction::Unsatisfied
+                                       : ConstraintSatisfaction::Satisfied;
+            }
+            break;
+        }
+        if (!foundPack)
+            unknown = true;
+    }
+    if (unknown)
+        return ConstraintSatisfaction::Unknown;
+    return conjunction ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateInvocableR(
+        const QVector<TemplateArgument> &arguments, const PStatement &context,
+        const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const
+{
+    if (arguments.count() < 2 || arguments.first().kind != TemplateArgumentKind::Type
+            || !arguments.first().type) {
+        return ConstraintSatisfaction::Unknown;
+    }
+    EvalResult result = evaluateInvocation(arguments, 1, context, bindings, evaluation);
+    if (!result.isValid())
+        return ConstraintSatisfaction::Unknown;
+    TypeInfo target = resolveType(*arguments.first().type, bindings, context, evaluation);
+    if (target.qualifiedName.isEmpty())
+        return ConstraintSatisfaction::Unknown;
+    if (target.qualifiedName == "void" && target.derivations.isEmpty())
+        return ConstraintSatisfaction::Satisfied;
+    if (isBuiltinType(target) && !isBuiltinType(result.type))
+        return ConstraintSatisfaction::Unsatisfied;
+    TypeInfo resolvedTarget;
+    return compatibleArgument(target, result.type, bindings, context, evaluation, resolvedTarget)
+            ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateConstructible(
+        const QString &expression, const PStatement &context, const PTemplateBindingFrame &bindings,
+        EvaluationContext &evaluation) const
+{
+    const QString prefix = "__is_constructible(";
+    if (!expression.startsWith(prefix) || !expression.endsWith(')'))
+        return ConstraintSatisfaction::Unknown;
+    QString argumentsText = expression.mid(prefix.size(), expression.size() - prefix.size() - 1);
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({argumentsText});
+    QStringList parts;
+    int partStart = 0;
+    int angleLevel = 0;
+    const auto &tokens = tokenizer.tokens();
+    for (int i = 0; i < tokens.count(); ++i) {
+        if (tokens[i].matchIndex > i) {
+            i = tokens[i].matchIndex;
+            continue;
+        }
+        if (tokens[i].text == "<") {
+            ++angleLevel;
+            continue;
+        }
+        if (tokens[i].text == ">" || tokens[i].text == ">>") {
+            angleLevel = qMax(0, angleLevel - tokens[i].text.size());
+            continue;
+        }
+        if (tokens[i].text != "," || angleLevel != 0)
+            continue;
+        parts.append(argumentsText.mid(partStart, tokens[i].position.ch - partStart));
+        partStart = tokens[i].position.ch + 1;
+    }
+    parts.append(argumentsText.mid(partStart));
+    if (parts.isEmpty())
+        return ConstraintSatisfaction::Unknown;
+    TypeInfo target = resolveType(parseTypeText(parts.first().trimmed(), evaluation),
+                                  bindings, context, evaluation);
+    if (target.qualifiedName.isEmpty())
+        return ConstraintSatisfaction::Unknown;
+    QVector<TypeInfo> arguments;
+    for (int i = 1; i < parts.count(); ++i) {
+        TypeInfo argument = resolveType(parseTypeText(parts[i].trimmed(), evaluation),
+                                        bindings, context, evaluation);
+        if (argument.qualifiedName.isEmpty())
+            return ConstraintSatisfaction::Unknown;
+        arguments.append(argument);
+    }
+    if (isBuiltinType(target)) {
+        if (target.qualifiedName == "void")
+            return ConstraintSatisfaction::Unsatisfied;
+        if (arguments.isEmpty())
+            return ConstraintSatisfaction::Satisfied;
+        if (arguments.count() != 1)
+            return ConstraintSatisfaction::Unknown;
+        TypeInfo resolvedTarget;
+        return compatibleArgument(target, arguments.first(), bindings, context, evaluation,
+                                  resolvedTarget)
+                ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
+    }
+    PStatement declaration = target.declaration.lock();
+    if (!declaration)
+        declaration = findDeclaration(target.qualifiedName, context, true);
+    if (!declaration || declaration->kind != StatementKind::Class)
+        return ConstraintSatisfaction::Unknown;
+
+    QVector<PStatement> constructors;
+    for (const std::weak_ptr<AbstractStatement> &weak
+         : std::dynamic_pointer_cast<Statement>(declaration)->children) {
+        PStatement candidate = weak.lock();
+        if (candidate && candidate->kind == StatementKind::Constructor)
+            constructors.append(candidate);
+    }
+    if (constructors.isEmpty()) {
+        if (arguments.isEmpty())
+            return ConstraintSatisfaction::Satisfied;
+        if (arguments.count() == 1) {
+            TypeInfo resolvedTarget;
+            return compatibleArgument(target, arguments.first(), bindings, context, evaluation,
+                                      resolvedTarget)
+                    ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unsatisfied;
+        }
+        return ConstraintSatisfaction::Unsatisfied;
+    }
+    for (const PStatement &constructor : constructors) {
+        EvaluationContext candidateEvaluation = evaluation;
+        candidateEvaluation.operationCount = 0;
+        candidateEvaluation.resolutionFailed = false;
+        candidateEvaluation.aliases.clear();
+        candidateEvaluation.resolvingTypes.clear();
+        candidateEvaluation.resolvingConstraints.clear();
+        if (matchFunctionCandidate(constructor, arguments, {}, candidateEvaluation, {}, nullptr))
+            return ConstraintSatisfaction::Satisfied;
+    }
+    return ConstraintSatisfaction::Unsatisfied;
+}
+
+ConstraintSatisfaction CppTypeResolver::evaluateNoexceptExpression(
+        const QString &expression, const PStatement &context, const PTemplateBindingFrame &bindings,
+        EvaluationContext *evaluationContext) const
+{
+    QString text = expression.trimmed();
+    if (!text.startsWith("noexcept(") || !text.endsWith(')'))
+        return ConstraintSatisfaction::Unknown;
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({text.mid(9, text.size() - 10)});
+    TypeOperationRegistry operations(*this);
+    CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mModel), *this, operations,
+                                     bindings);
+    EvalResult evaluated = evaluator.evaluate(tokenizer, context, &evaluation);
+    if (!evaluated.isValid())
+        return ConstraintSatisfaction::Unknown;
+    if (evaluated.invocation.statement) {
+        const auto function = std::dynamic_pointer_cast<Statement>(evaluated.invocation.statement);
+        switch (function->noexceptKind) {
+        case NoexceptKind::None:
+            return ConstraintSatisfaction::Unsatisfied;
+        case NoexceptKind::Always:
+            return ConstraintSatisfaction::Satisfied;
+        case NoexceptKind::Expression: {
+            QString value = evaluateConstantValue(function->noexceptExpression,
+                    evaluated.invocation.bindings, function->parentScope.lock(), evaluation);
+            if (value == "true")
+                return ConstraintSatisfaction::Satisfied;
+            if (value == "false")
+                return ConstraintSatisfaction::Unsatisfied;
+            return ConstraintSatisfaction::Unknown;
+        }
+        }
+    }
+    return evaluated.kind == EvalStatementKind::Literal
+            ? ConstraintSatisfaction::Satisfied : ConstraintSatisfaction::Unknown;
+}
+
 TypeInfo CppTypeResolver::invokeFunction(
         const PStatement &function, const QVector<TypeInfo> &arguments,
         const QVector<TemplateArgument> &explicitArguments,
         EvaluationContext *evaluationContext, ClassInstance *resultInstance,
-        const PTemplateBindingFrame &outerBindings) const
+        const PTemplateBindingFrame &outerBindings, CallResolution *invocation) const
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    if (invocation)
+        *invocation = {};
     struct MatchedCandidate {
         PStatement statement;
         PTemplateBindingFrame bindings;
@@ -864,6 +1130,7 @@ TypeInfo CppTypeResolver::invokeFunction(
             ++last;
         PStatement result;
         ClassInstance instance;
+        PTemplateBindingFrame resultBindings;
         bool tied = false;
         for (int i = first; i < last; ++i) {
             MatchedCandidate &match = matches[i];
@@ -876,6 +1143,7 @@ TypeInfo CppTypeResolver::invokeFunction(
                 tied = true;
             } else {
                 result = match.statement;
+                resultBindings = match.bindings;
                 instance = current;
             }
         }
@@ -884,6 +1152,8 @@ TypeInfo CppTypeResolver::invokeFunction(
         if (result) {
             if (resultInstance)
                 *resultInstance = instance;
+            if (invocation)
+                *invocation = {result, resultBindings};
             return instance.type;
         }
         first = last;
@@ -1464,22 +1734,9 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
                || segments.isEmpty()) {
         return {};
     }
+    TypeInfo reference = type;
     if (segments.count() == 1 && segments.first().arguments.isEmpty()) {
         QString name = segments.first().name;
-        TypeInfo reference = type;
-        bool qualifier = true;
-        while (qualifier) {
-            if (name.startsWith("const ")) {
-                reference.qualifiers.setFlag(TypeQualifier::Const);
-                name.remove(0, 6);
-            } else if (name.startsWith("volatile ")) {
-                reference.qualifiers.setFlag(TypeQualifier::Volatile);
-                name.remove(0, 9);
-            } else {
-                qualifier = false;
-            }
-        }
-        segments.first().name = name;
         PTemplateBindingFrame bindingFrame = bindings;
         const TemplateArgument *binding = nullptr;
         ClassInstance result;
@@ -1591,10 +1848,43 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             const QVector<TemplateArgument> *pack = nullptr;
             if (argument.kind == TemplateArgumentKind::Type && argument.type)
                 pack = findParameterPack(bindings, argument.type->qualifiedName);
-            if (pack)
+            if (pack) {
                 expandedArguments += *pack;
-            else
-                expandedArguments.append(argument);
+                continue;
+            }
+            if (argument.kind == TemplateArgumentKind::NonType) {
+                QString pattern = argument.constantExpression.trimmed();
+                if (pattern.endsWith("...")) {
+                    pattern.chop(3);
+                    CppTokenizer patternTokenizer;
+                    patternTokenizer.tokenize({pattern});
+                    QSet<QString> identifiers;
+                    for (const auto &token : patternTokenizer.tokens()) {
+                        if (token.kind == CppTokenizer::TokenKind::Identifier)
+                            identifiers.insert(token.text);
+                    }
+                    bool foundPack = false;
+                    for (const QString &identifier : identifiers) {
+                        const QVector<TemplateArgument> *constantPack = findParameterPack(
+                                    bindings, identifier);
+                        if (!constantPack)
+                            continue;
+                        foundPack = true;
+                        for (const TemplateArgument &packArgument : *constantPack) {
+                            QString expanded = substituteIdentifier(
+                                        pattern, identifier, packArgument.toString());
+                            QString value = evaluateConstantValue(
+                                        expanded, bindings, context, evaluation);
+                            expandedArguments.append(TemplateArgument::fromConstant(
+                                    value.isEmpty() ? expanded : value));
+                        }
+                        break;
+                    }
+                    if (foundPack)
+                        continue;
+                }
+            }
+            expandedArguments.append(argument);
         }
         instance.templateArguments = expandedArguments;
         for (int argumentIndex = 0; argumentIndex < instance.templateArguments.count();
@@ -1631,8 +1921,9 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
                 argument.type.reset();
                 continue;
             }
+            TypeInfo input = *argument.type;
             argument.type = std::make_shared<TypeInfo>(resolveType(
-                    *argument.type, bindings, context, evaluation));
+                    input, bindings, context, evaluation));
             if (argument.type->qualifiedName.isEmpty())
                 return {};
         }
@@ -1847,10 +2138,15 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
         target += part;
     };
     auto parseArgument = [&](const QString &argumentText) {
+        QString trimmed = argumentText.trimmed();
+        if (trimmed.endsWith("...")
+                && (trimmed.startsWith('(') || trimmed.contains("::value"))) {
+            return TemplateArgument::fromConstant(trimmed);
+        }
         if (!materializeArguments) {
             TemplateArgument result;
             result.kind = TemplateArgumentKind::Type;
-            result.constantExpression = argumentText.trimmed();
+            result.constantExpression = trimmed;
             return result;
         }
         TypeInfo argumentType = parseTypeText(argumentText, evaluation);
@@ -1868,10 +2164,15 @@ bool CppTypeResolver::parseTypeNameSegments(const QString &text,
             return false;
         }
         TypeNameSegment segment;
-        segment.name = tokens[index++].text;
         while (index < tokens.count()
                && tokens[index].kind == CppTokenizer::TokenKind::Identifier) {
-            appendText(segment.name, tokens[index++].text);
+            const QString word = tokens[index++].text;
+            if (word == "const")
+                segment.qualifiers.setFlag(TypeQualifier::Const);
+            else if (word == "volatile")
+                segment.qualifiers.setFlag(TypeQualifier::Volatile);
+            else
+                appendText(segment.name, word);
         }
         if (segment.name == "decltype" && index < tokens.count()
                 && tokens[index].text == "(" && tokens[index].matchIndex > index) {
@@ -2010,31 +2311,19 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
             bool simpleType = true;
             TypeQualifiers qualifiers = TypeQualifier::None;
             QStringList names;
-            for (int index = 0; index < segments.count(); ++index) {
-                QString name = segments[index].name;
-                if (index == 0) {
-                    bool qualifier = true;
-                    while (qualifier) {
-                        if (name.startsWith("const ")) {
-                            qualifiers.setFlag(TypeQualifier::Const);
-                            name = name.mid(6);
-                        } else if (name.startsWith("volatile ")) {
-                            qualifiers.setFlag(TypeQualifier::Volatile);
-                            name = name.mid(9);
-                        } else {
-                            qualifier = false;
-                        }
-                    }
-                }
-                simpleType &= !name.isEmpty() && !name.startsWith("decltype")
-                        && (!name.contains(' ') || isBuiltinTypeName(name));
-                names.append(name);
+            for (const TypeNameSegment &segment : segments) {
+                qualifiers |= segment.qualifiers;
+                simpleType &= !segment.name.isEmpty() && !segment.name.startsWith("decltype")
+                        && (!segment.name.contains(' ') || isBuiltinTypeName(segment.name));
+                names.append(segment.name);
             }
             if (simpleType) {
                 TypeInfo result;
                 result.qualifiedName = (globallyQualified ? "::" : "") + names.join("::");
                 result.qualifiedNameText = text;
                 result.qualifiers = qualifiers;
+                if (!segments.isEmpty())
+                    result.templateArguments = segments.last().arguments;
                 if (cacheEnabled)
                     evaluation.parsedTypeTexts->insert(text, result);
                 return result;
@@ -2163,8 +2452,12 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
                 continue;
             }
             TemplateBindings bindings;
+            EvaluationContext candidateEvaluation = evaluation;
             SpecializationMatch match = matchSpecialization(candidate, result.type.templateArguments,
-                                                            parent, bindings, evaluation);
+                                                            parent, bindings, candidateEvaluation);
+            evaluation.operationCount = candidateEvaluation.operationCount;
+            if (candidateEvaluation.resolutionFailed && match != SpecializationMatch::NoMatch)
+                match = SpecializationMatch::Unknown;
             if (match == SpecializationMatch::Unknown) {
                 unknown = true;
                 continue;
@@ -2365,7 +2658,21 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
         if (isBuiltinType(formal) || isBuiltinType(real))
             return SpecializationMatch::NoMatch;
         PStatement formalDeclaration = findDeclaration(formal.qualifiedName, context, true);
+        if (isAlias(formalDeclaration)) {
+            auto formalBindings = std::make_shared<TemplateBindingFrame>();
+            formalBindings->values = bindings;
+            ClassInstance resolved = resolveTypeInstance(formal, formalBindings, context, evaluation);
+            formal = resolved.type;
+            formalDeclaration = formal.declaration.lock();
+        }
         PStatement realDeclaration = real.declaration.lock();
+        if (isAlias(realDeclaration)) {
+            auto actualBindings = std::make_shared<TemplateBindingFrame>();
+            actualBindings->values = bindings;
+            ClassInstance resolved = resolveTypeInstance(real, actualBindings, context, evaluation);
+            real = resolved.type;
+            realDeclaration = real.declaration.lock();
+        }
         if (realDeclaration && realDeclaration->kind == StatementKind::Class) {
             TemplateDeclarationKind kind = std::dynamic_pointer_cast<Statement>(realDeclaration)->templateKind;
             if (kind == TemplateDeclarationKind::PartialSpecialization
@@ -2791,6 +3098,15 @@ QString CppTypeResolver::evaluateConstantValue(
         const PStatement &context, EvaluationContext &evaluation) const
 {
     QString expression = text.trimmed();
+    if (expression.startsWith("noexcept(") && expression.endsWith(')')) {
+        ConstraintSatisfaction result = evaluateNoexceptExpression(
+                    expression, context, bindings, &evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return {};
+    }
     if (expression == "true" || expression == "false")
         return expression;
     QString literal = expression;
@@ -2890,6 +3206,16 @@ QString CppTypeResolver::evaluateConstantValue(
         return QString::number(numericValue);
 
     const QStringList &constantBuiltins = constantBuiltinsForCompiler(mOptions.compilerType);
+    const QString constructibleBuiltin = "__is_constructible(";
+    if (constantBuiltins.contains(constructibleBuiltin)
+            && expression.startsWith(constructibleBuiltin) && expression.endsWith(')')) {
+        ConstraintSatisfaction result = evaluateConstructible(expression, context, bindings, evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return {};
+    }
     const QString arrayBuiltin = "__is_array(";
     if (constantBuiltins.contains(arrayBuiltin)
             && expression.startsWith(arrayBuiltin) && expression.endsWith(')')) {
@@ -2982,7 +3308,11 @@ QString CppTypeResolver::evaluateConstantValue(
         return {};
     }
 
-    TypeInfo variableType = parseTypeText(expression, evaluation);
+    QString variableExpression = expression;
+    bool classValue = variableExpression.endsWith("::value");
+    if (classValue)
+        variableExpression.truncate(variableExpression.size() - QString("::value").size());
+    TypeInfo variableType = parseTypeText(variableExpression, evaluation);
     if (variableType.qualifiedName.isEmpty())
         return QString();
     materializeTemplateArguments(variableType, evaluation);
@@ -2996,10 +3326,25 @@ QString CppTypeResolver::evaluateConstantValue(
     }
     PStatement variable;
     PTemplateBindingFrame variableBindings = bindings;
+    auto isVariable = [](const PStatement &statement) {
+        return statement && (statement->kind == StatementKind::Variable
+                             || statement->kind == StatementKind::GlobalVariable
+                             || statement->kind == StatementKind::LocalVariable);
+    };
+    if (classValue) {
+        ClassInstance owner = resolveTypeInstance(variableType, bindings, context, evaluation);
+        if (owner.declaration && owner.declaration->kind == StatementKind::Class) {
+            MemberResolution member = findMember(owner, "value", evaluation);
+            if (isVariable(member.statement)) {
+                variable = member.statement;
+                variableBindings = member.owner.bindings;
+            }
+        }
+    }
     const QString &variableName = variableType.qualifiedNameText.isEmpty()
             ? variableType.qualifiedName : variableType.qualifiedNameText;
     int scopeSeparator = variableName.lastIndexOf("::");
-    if (scopeSeparator >= 0) {
+    if (!variable && scopeSeparator >= 0) {
         TypeInfo ownerType = parseTypeText(variableName.left(scopeSeparator), evaluation);
         if (!ownerType.qualifiedName.isEmpty()) {
             ClassInstance owner = resolveTypeInstance(ownerType, bindings, context, evaluation);
@@ -3013,13 +3358,17 @@ QString CppTypeResolver::evaluateConstantValue(
     }
     if (!variable)
         variable = findDeclaration(variableType.qualifiedName, context);
-    auto isVariable = [](const PStatement &statement) {
-        return statement && (statement->kind == StatementKind::Variable
-                             || statement->kind == StatementKind::GlobalVariable
-                             || statement->kind == StatementKind::LocalVariable);
-    };
     if (!isVariable(variable))
         return QString();
+    if (variable->command == "__is_invocable_r_v" || variable->command == "is_invocable_r_v") {
+        ConstraintSatisfaction result = evaluateInvocableR(
+                    variableType.templateArguments, context, bindings, evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return {};
+    }
     const auto normalVariable = std::dynamic_pointer_cast<Statement>(variable);
     bool variableTemplate = normalVariable->templateKind != TemplateDeclarationKind::None;
     bool staticConstMember = statementIsStatic(variable)
@@ -3115,6 +3464,51 @@ QString CppTypeResolver::resolveConstantExpression(
     TypeInfo traitType = parseTypeText(expression, evaluation);
     if (traitType.qualifiedName.isEmpty())
         return text.trimmed();
+    QString logicalName = traitType.qualifiedName.section("::", -1);
+    QVector<TemplateArgument> logicalArguments = traitType.templateArguments;
+    PTemplateBindingFrame logicalBindings = bindings;
+    PStatement logicalContext = context;
+    QSet<const AbstractStatement *> visitedAliases;
+    PStatement logicalDeclaration = findDeclaration(traitType.qualifiedName, context, true);
+    while (isAlias(logicalDeclaration) && !visitedAliases.contains(logicalDeclaration.get())) {
+        visitedAliases.insert(logicalDeclaration.get());
+        const auto alias = std::dynamic_pointer_cast<Statement>(logicalDeclaration);
+        QString target = alias->value.isEmpty() ? alias->typeInfo.qualifiedName : alias->value;
+        if (target.isEmpty())
+            break;
+        logicalName = target.section('<', 0, 0).section("::", -1);
+        TypeInfo targetType = parseTypeText(target, evaluation);
+        logicalArguments = targetType.templateArguments;
+        logicalBindings = declarationBindings(logicalDeclaration, traitType,
+                                              logicalBindings, evaluation);
+        logicalContext = logicalDeclaration->parentScope.lock();
+        logicalDeclaration = findDeclaration(target.section('<', 0, 0),
+                                             logicalContext, true);
+    }
+    if (logicalName == "__not_") {
+        if (logicalArguments.count() != 1)
+            return text.trimmed();
+        QString value = evaluateConstantValue(
+                    logicalArguments.first().toString() + "::value",
+                    logicalBindings, logicalContext, evaluation);
+        if (value == "true")
+            return "false";
+        if (value == "false")
+            return "true";
+        return text.trimmed();
+    }
+    if (logicalName == "__and_" || logicalName == "__or_" || logicalName == "__all") {
+        if (!supportsConstantTrait(logicalName))
+            return text.trimmed();
+        ConstraintSatisfaction result = evaluateLogicalTrait(
+                    logicalArguments, logicalName != "__or_", logicalContext,
+                    logicalBindings, evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return text.trimmed();
+    }
     EvaluationContext traitEvaluation = evaluation;
     ClassInstance trait = resolveTypeInstance(traitType, bindings, context, traitEvaluation);
     if (!trait.declaration || trait.type.templateArguments.isEmpty()
@@ -3123,7 +3517,7 @@ QString CppTypeResolver::resolveConstantExpression(
         return text.trimmed();
     }
     const TypeInfo &argument = *trait.type.templateArguments.first().type;
-    const QString &traitName = trait.declaration->command;
+    const QString traitName = trait.declaration->command.section('<', 0, 0);
     if (!supportsConstantTrait(traitName))
         return text.trimmed();
     if (traitName == "__has_iterator_typedefs") {
@@ -3135,6 +3529,37 @@ QString CppTypeResolver::resolveConstantExpression(
                 return "false";
         }
         return "true";
+    }
+    if (traitName == "__is_fast_hash") {
+        MemberResolution value = findMember(trait, "value", evaluation);
+        if (value.statement && (value.statement->kind == StatementKind::Variable
+                                || value.statement->kind == StatementKind::GlobalVariable
+                                || value.statement->kind == StatementKind::LocalVariable)) {
+            const auto normal = std::dynamic_pointer_cast<Statement>(value.statement);
+            if (!normal->value.isEmpty())
+                return evaluateConstantValue(normal->value, value.owner.bindings,
+                                             value.statement->parentScope.lock(), evaluation);
+        }
+        return text.trimmed();
+    }
+    if (traitName == "__is_nothrow_invocable" || traitName == "is_nothrow_invocable") {
+        QString expression = "noexcept(std::declval<"
+                + trait.type.templateArguments.first().toString() + ">()(";
+        QStringList arguments;
+        for (int i = 1; i < trait.type.templateArguments.count(); ++i) {
+            const TemplateArgument &argument = trait.type.templateArguments[i];
+            if (argument.kind != TemplateArgumentKind::Type || !argument.type)
+                return text.trimmed();
+            arguments.append("std::declval<" + argument.toString() + ">()");
+        }
+        expression += arguments.join(",") + "))";
+        ConstraintSatisfaction result = evaluateNoexceptExpression(
+                    expression, context, bindings, &evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return text.trimmed();
     }
     if (traitName == "integral_constant"
             && trait.type.templateArguments.count() == 2
@@ -3160,6 +3585,23 @@ QString CppTypeResolver::resolveConstantExpression(
         bool result = traitName == "is_lvalue_reference" ? lvalue
                 : traitName == "is_rvalue_reference" ? rvalue : lvalue || rvalue;
         return result ? "true" : "false";
+    }
+    if (traitName == "is_copy_constructible" || traitName == "is_move_constructible"
+            || traitName == "is_default_constructible") {
+        QString argumentText = argument.toString();
+        QString expression = "__is_constructible(" + argumentText;
+        if (traitName == "is_copy_constructible")
+            expression += ",std::__add_lvalue_reference_t<const " + argumentText + ">";
+        else if (traitName == "is_move_constructible")
+            expression += ",std::__add_rvalue_reference_t<" + argumentText + ">";
+        expression += ")";
+        ConstraintSatisfaction result = evaluateConstructible(
+                    expression, context, bindings, evaluation);
+        if (result == ConstraintSatisfaction::Satisfied)
+            return "true";
+        if (result == ConstraintSatisfaction::Unsatisfied)
+            return "false";
+        return text.trimmed();
     }
     if (traitName == "is_convertible" && trait.type.templateArguments.count() == 2
             && trait.type.templateArguments[0].kind == TemplateArgumentKind::Type

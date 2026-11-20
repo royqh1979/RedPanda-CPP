@@ -709,6 +709,12 @@ void TestCppStatementBuilder::test_lambda_inference_preserves_source_position()
     QCOMPARE(std::dynamic_pointer_cast<Statement>(mutableCall)->normalizedArgs, "(int)");
 
     CppTypeResolver resolver(model);
+    TypeInfo intType;
+    intType.qualifiedName = "int";
+    MemberEvalResult directCall = resolver.invokeMember(
+                std::dynamic_pointer_cast<Statement>(callback)->typeInfo, "operator()", {intType});
+    QVERIFY(directCall.statement);
+    QCOMPARE(directCall.type.toString(), "double");
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(model, resolver, operations);
     CppTokenizer expression;
