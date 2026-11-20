@@ -24,13 +24,16 @@ class CppExpressionEvaluator
 {
 public:
     CppExpressionEvaluator(StatementModel &model, const CppTypeResolver &resolver,
-                           const TypeOperationRegistry &operations);
+                           const TypeOperationRegistry &operations,
+                           const PTemplateBindingFrame &bindings = {});
 
     EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {},
                         CppTypeResolver::EvaluationContext *evaluation = nullptr,
                         ExpressionEvalTrace *trace = nullptr) const;
 
 private:
+    friend class TestCppExpressionEvaluator;
+
     using TokenList = QVector<CppTokenizer::Token>;
 
     EvalResult evaluateBinary(const TokenList &tokens, int &index, const PStatement &context,
@@ -76,6 +79,7 @@ private:
     StatementModel &mModel;
     const CppTypeResolver &mResolver;
     const TypeOperationRegistry &mOperations;
+    PTemplateBindingFrame mBindings;
 };
 
 #endif // CPPEXPRESSIONEVALUATOR_H

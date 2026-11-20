@@ -402,6 +402,43 @@ void TestCppTypeResolver::test_type_resolver_selects_specializations_and_rebind(
 }
 
 
+void TestCppTypeResolver::test_type_resolver_ignores_recursive_nonmatching_specialization()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  struct string {};\n"
+                "  template<typename... T> struct variant {};\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<bool B, typename T = void> struct enable_if {};\n"
+                "  template<typename T> struct enable_if<true, T> { using type = T; };\n"
+                "  template<bool B, typename T> using enable_if_t = typename enable_if<B, T>::type;\n"
+                "  template<typename T> using remove_const_t = T;\n"
+                "  template<typename Key, typename Hash = hash<Key>> using has_enabled =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>;\n"
+                "  template<typename Type, typename> using enable_helper_imp = Type;\n"
+                "  template<typename Type, typename... Keys> using enable_helper =\n"
+                "    enable_helper_imp<Type, enable_if_t<__all<has_enabled<Keys>::value...>::value>>;\n"
+                "  template<typename... Types>\n"
+                "  struct hash<enable_helper<variant<Types...>, remove_const_t<Types>...>> {};\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/recursive_specialization.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("std::hash<std::string> value;", variable));
+    QCOMPARE(resolver.resolveInstance(variable.specifiers.type).declaration,
+             resolver.findStatement("std::hash"));
+}
+
 void TestCppTypeResolver::test_type_resolver_preserves_fixed_arguments_in_specialization_scope()
 {
     QVector<DeclarationInfo> declarations;
@@ -1058,4 +1095,1039 @@ void TestCppTypeResolver::test_inherited_member_enumeration_and_access()
     QCOMPARE(basePublicValue->accessibility, StatementAccessibility::Public);
     QCOMPARE(baseProtectedValue->accessibility, StatementAccessibility::Protected);
     QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_functors()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Fn, typename... Args> struct __is_nothrow_invocable {};\n"
+                "}\n"
+                "struct NoexceptFunctor { void operator()(int) noexcept; };\n"
+                "struct ThrowingFunctor { void operator()(int); };\n"
+                "template<bool B> struct ConditionalFunctor {\n"
+                "  void operator()(int) noexcept(B);\n"
+                "  };\n"
+                "struct UnknownFunctor { void operator()(int) noexcept(Unknown); };\n"
+                "template<typename T, bool = std::__is_nothrow_invocable<T, int>::value>\n"
+                "struct Selector { using type = int; };\n"
+                "template<typename T> struct Selector<T, true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/nothrow_invocable.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto memberType = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText(text, variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+
+    QCOMPARE(memberType("Selector<NoexceptFunctor> value;").toString(), "std::string");
+    QCOMPARE(memberType("Selector<ThrowingFunctor> value;").toString(), "int");
+
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        TypeInfo result = declaration.specifiers.type;
+        if (!declaration.declarators.isEmpty())
+            result.derivations += declaration.declarators.first().derivations;
+        return resolver.resolve(result);
+    };
+    TypeInfo integer = type("int");
+    auto evaluate = [&](const QString &callable) {
+        QVector<TemplateArgument> arguments{
+            TemplateArgument::fromType(type(callable)), TemplateArgument::fromType(integer)
+        };
+        CppTypeResolver::EvaluationContext evaluation;
+        EvalResult call = resolver.evaluateInvocation(arguments, 0, {}, {}, evaluation);
+        return resolver.evaluateNoexceptCall(call, evaluation);
+    };
+    QCOMPARE(evaluate("NoexceptFunctor"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("ThrowingFunctor"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("ConditionalFunctor<true>"), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate("ConditionalFunctor<false>"), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate("UnknownFunctor"), ConstraintSatisfaction::Unknown);
+
+    CppTypeResolver::EvaluationContext evaluation;
+    EvalResult literal;
+    literal.type = integer;
+    QCOMPARE(resolver.evaluateNoexceptCall(literal, evaluation), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateNoexceptCall({}, evaluation), ConstraintSatisfaction::Unknown);
+}
+
+void TestCppTypeResolver::test_type_resolver_matches_explicit_specialization_through_alias()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct basic_string {};\n"
+                "  using string = basic_string<char>;\n"
+                "}\n"
+                "template<typename T> struct Trait { using type = int; };\n"
+                "template<> struct Trait<std::string> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/alias_specialization.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement specialization = findStatement(model.childrenStatements(), "Trait<std::string>");
+    QVERIFY(specialization);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(specialization)->templateKind,
+             TemplateDeclarationKind::ExplicitSpecialization);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Trait<std::string> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").qualifiedName,
+             "std::basic_string");
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_constructible_traits()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n"
+                "struct Default { Default(); };\n"
+                "struct NoDefault { NoDefault(int); };\n"
+                "struct Implicit {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::integral_constant<bool, __is_constructible("
+                                  + text + ")>::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    PStatement falseType = resolver.findStatement("FalseType");
+    QVERIFY(string && falseType);
+    QVERIFY(resolver.findStatement("std::integral_constant"));
+
+    QCOMPARE(evaluate("Default").declaration.lock(), string);
+    QCOMPARE(evaluate("NoDefault").declaration.lock(), falseType);
+    QCOMPARE(evaluate("NoDefault,int").declaration.lock(), string);
+    QCOMPARE(evaluate("Default,int").declaration.lock(), falseType);
+    QCOMPARE(evaluate("Implicit").declaration.lock(), string);
+    QCOMPARE(evaluate("Implicit,const Implicit&").declaration.lock(), string);
+    QCOMPARE(evaluate("int").declaration.lock(), string);
+    QCOMPARE(evaluate("void").declaration.lock(), falseType);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_constructible_from_types()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Default { Default(); };\n"
+                "struct NoDefault { NoDefault(int); };\n"
+                "struct Implicit {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructible_types.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        TypeInfo result = declaration.specifiers.type;
+        if (!declaration.declarators.isEmpty())
+            result.derivations += declaration.declarators.first().derivations;
+        return resolver.resolve(result);
+    };
+    auto evaluate = [&](const TypeInfo &target, const QVector<TypeInfo> &arguments) {
+        CppTypeResolver::EvaluationContext evaluation;
+        return resolver.evaluateConstructible(target, arguments, {}, {}, evaluation);
+    };
+    TypeInfo defaultType = type("Default");
+    TypeInfo noDefault = type("NoDefault");
+    TypeInfo implicit = type("Implicit");
+    TypeInfo integer = type("int");
+    TypeInfo voidType = type("void");
+    TypeInfo missing = type("Missing");
+    TypeInfo implicitConstReference = type("const Implicit&");
+    QVERIFY(!defaultType.qualifiedName.isEmpty() && !noDefault.qualifiedName.isEmpty()
+            && !implicit.qualifiedName.isEmpty() && !integer.qualifiedName.isEmpty()
+            && !voidType.qualifiedName.isEmpty() && !missing.qualifiedName.isEmpty()
+            && !implicitConstReference.qualifiedName.isEmpty());
+
+    QCOMPARE(evaluate(defaultType, {}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(noDefault, {}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(noDefault, {integer}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(defaultType, {integer}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(implicit, {implicitConstReference}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(integer, {}), ConstraintSatisfaction::Satisfied);
+    QCOMPARE(evaluate(integer, {integer, integer}), ConstraintSatisfaction::Unknown);
+    QCOMPARE(evaluate(voidType, {}), ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(evaluate(missing, {}), ConstraintSatisfaction::Unknown);
+    QCOMPARE(evaluate(noDefault, {missing}), ConstraintSatisfaction::Unknown);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_copy_constructible_through_reference_alias()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_lvalue_reference_t = __add_lvalue_reference(T);\n"
+                "  template<typename T> struct is_copy_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_lvalue_reference_t<const T>)> {};\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/copy_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<" + text + "> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    QVERIFY(string);
+    QCOMPARE(evaluate("std::integral_constant<bool, __is_constructible("
+                      "std::string, const std::string&)>::value").declaration.lock(), string);
+    QCOMPARE(evaluate("std::is_copy_constructible<std::string>::value").declaration.lock(), string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_copy_constructible_in_inline_namespace()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_lvalue_reference_t = __add_lvalue_reference(T);\n"
+                "  template<typename T> struct is_copy_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_lvalue_reference_t<const T>)> {};\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/inline_copy_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::is_copy_constructible<std::string>::value> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").declaration.lock(),
+             resolver.findStatement("std::string"));
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_move_and_default_constructible()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<typename T> using __add_rvalue_reference_t = __add_rvalue_reference(T);\n"
+                "  template<typename T> struct is_move_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T, __add_rvalue_reference_t<T>)> {};\n"
+                "  template<typename T> struct is_default_constructible\n"
+                "    : integral_constant<bool, __is_constructible(T)> {};\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/move_default_constructible.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<" + text + "> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    QVERIFY(string);
+    QCOMPARE(evaluate("std::is_move_constructible<std::string>::value").declaration.lock(), string);
+    QCOMPARE(evaluate("std::is_default_constructible<std::string>::value").declaration.lock(),
+             string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_invocable_r()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Ret, typename Fn, typename... Args>\n"
+                "  constexpr bool __is_invocable_r_v = false;\n"
+                "}\n"
+                "struct FalseType {};\n"
+                "struct Functor { std::string operator()(int); };\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/invocable_r.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::__is_invocable_r_v<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    PStatement string = resolver.findStatement("std::string");
+    PStatement falseType = resolver.findStatement("FalseType");
+    QVERIFY(string && falseType);
+    QVERIFY(resolver.findStatement("std::__is_invocable_r_v"));
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator expressionEvaluator(model, resolver, operations);
+    CppTokenizer directExpression;
+    directExpression.tokenize({"std::declval<Functor>()(std::declval<int>())"});
+    QCOMPARE(expressionEvaluator.evaluate(directExpression).type.toString(), "std::string");
+
+    QCOMPARE(evaluate("std::string,Functor,int").declaration.lock(), string);
+    QCOMPARE(evaluate("int,Functor,int").declaration.lock(), falseType);
+    QCOMPARE(evaluate("void,Functor,int").declaration.lock(), string);
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_invocable_r_with_inherited_call()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  using size_t = unsigned long;\n"
+                "  template<typename T> struct allocator {};\n"
+                "  template<typename T> struct char_traits {};\n"
+                "  template<typename C, typename T, typename A> struct basic_string {};\n"
+                "  using string = basic_string<char, char_traits<char>, allocator<char>>;\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "  template<typename Ret, typename Fn, typename... Args>\n"
+                "  constexpr bool __is_invocable_r_v = false;\n"
+                "  template<typename C, typename A> struct string_hash {\n"
+                "    size_t operator()(const basic_string<C, char_traits<C>, A>&) const;\n"
+                "  };\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename A> struct hash<basic_string<char, char_traits<char>, A>>\n"
+                "    : string_hash<char, A> {};\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = std::string; };\n",
+                declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/inherited_invocable_r.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::__is_invocable_r_v<std::size_t, std::hash<std::string>,"
+                " const std::string&>::value> value;", variable));
+    QCOMPARE(resolver.memberType(variable.specifiers.type, "type").declaration.lock(),
+             resolver.findStatement("std::basic_string"));
+}
+
+void TestCppTypeResolver::test_type_resolver_expands_non_type_pack_arguments()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { template<bool... B> struct __all {}; }\n"
+                "template<typename... T> using AllArrays = std::__all<(__is_array(T))...>;\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = int; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/non_type_pack.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<AllArrays<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    DeclarationInfo selectedVariable;
+    QVERIFY(parseDeclarationText("Selector<AllArrays<int[],int[]>::value> value;", selectedVariable));
+    PStatement selected = resolver.resolveInstance(selectedVariable.specifiers.type).declaration;
+    QVERIFY(selected);
+    QCOMPARE(selected->command, "Selector<true>");
+
+    QCOMPARE(evaluate("int[],int[]").qualifiedName, "int");
+    QCOMPARE(evaluate("int[],int").qualifiedName, "FalseType");
+    QCOMPARE(evaluate("").qualifiedName, "int");
+}
+
+void TestCppTypeResolver::test_type_resolver_evaluates_logical_trait_single_values()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  struct string {};\n"
+                "  template<typename T> using Enabled =\n"
+                "    integral_constant<bool, __is_constructible(T)>;\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename Key, typename Hash = hash<Key>> using EnabledWithDefault =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&) &&\n"
+                "      __is_constructible(Hash)>;\n"
+                "  template<typename... T> struct __and_ {};\n"
+                "  template<typename T> struct __not_ {};\n"
+                "  template<typename T, typename Hash> using Cache = __not_<__and_<"
+                "    integral_constant<bool, false>,"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>>>;\n"
+                "  template<typename Hash, typename T> using Forward = Cache<T, Hash>;\n"
+                "} }\n"
+                "struct FalseType {};\n"
+                "template<bool B> struct Selector { using type = FalseType; };\n"
+                "template<> struct Selector<true> { using type = int; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/logical_single_values.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto evaluate = [&](const QString &text) {
+        DeclarationInfo variable;
+        if (!parseDeclarationText("Selector<std::__all<" + text + ">::value> value;", variable))
+            return TypeInfo();
+        return resolver.memberType(variable.specifiers.type, "type");
+    };
+    QCOMPARE(evaluate("true").qualifiedName, "int");
+    QCOMPARE(evaluate("false").qualifiedName, "FalseType");
+    DeclarationInfo direct;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::integral_constant<bool, true>::value> value;", direct));
+    QCOMPARE(resolver.memberType(direct.specifiers.type, "type").qualifiedName, "int");
+    QCOMPARE(evaluate("std::integral_constant<bool, true>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::Enabled<std::string>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::EnabledWithDefault<std::string>::value").qualifiedName, "int");
+    QCOMPARE(evaluate("std::Cache<std::string, std::hash<std::string>>::value").qualifiedName,
+             "int");
+    DeclarationInfo cache;
+    QVERIFY(parseDeclarationText(
+                "Selector<std::Cache<std::string, std::hash<std::string>>::value> value;", cache));
+    QCOMPARE(resolver.memberType(cache.specifiers.type, "type").qualifiedName, "int");
+    QVERIFY(resolver.findStatement("std::Forward"));
+    DeclarationInfo forwardAlias;
+    QVERIFY(parseDeclarationText(
+                "std::Forward<std::hash<std::string>, std::string> value;", forwardAlias));
+    TypeInfo resolvedForward = resolver.resolve(forwardAlias.specifiers.type);
+    QCOMPARE(resolvedForward.qualifiedName, "std::__1::__not_");
+    CppTypeResolver::EvaluationContext forwardEvaluation;
+    QCOMPARE(resolver.evaluateConstantValue(
+                 resolvedForward.toString() + "::value", {}, {}, forwardEvaluation), "true");
+}
+
+void TestCppTypeResolver::test_type_resolver_resolves_alias_to_clang_type_builtin()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T> using Reference = __add_lvalue_reference(T);\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/builtin_alias.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
+    DeclarationInfo direct;
+    QVERIFY(parseDeclarationText("const std::string value;", direct));
+    QCOMPARE(direct.specifiers.type.qualifiedName, "std::string");
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("std::Reference<const std::string> value;", variable));
+    TypeInfo resolved = resolver.resolve(variable.specifiers.type);
+    QCOMPARE(resolved.qualifiedName, "std::string");
+    QCOMPARE(resolved.toString(), "const std::string &");
+    for (const QString &typeText : {QString("std::string const"),
+                                    QString("const volatile std::string"),
+                                    QString("std::string const volatile")}) {
+        DeclarationInfo qualified;
+        QVERIFY(parseDeclarationText("std::Reference<" + typeText + "> value;", qualified));
+        TypeInfo result = resolver.resolve(qualified.specifiers.type);
+        QCOMPARE(result.qualifiedName, "std::string");
+        QCOMPARE(result.toString(), typeText.contains("volatile")
+                 ? "const volatile std::string &" : "const std::string &");
+    }
+}
+
+void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Base {\n"
+                "  Base();\n"
+                "  int action();\n"
+                "  int publicValue;\n"
+                "protected: int protectedValue;\n"
+                "private: int privateValue;\n"
+                "};\n"
+                "struct Derived : public Base { int action(); };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/resolver_member_interfaces.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    CppTypeResolver::EvaluationContext evaluation;
+    PStatement base = resolver.findStatement("Base");
+    PStatement derived = resolver.findStatement("Derived");
+    QVERIFY(base && derived);
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Derived value;", variable));
+    TypeInfo derivedType = resolver.resolve(variable.specifiers.type);
+    CppTypeResolver::ClassInstance instance = resolver.resolveInstance(derivedType);
+    QCOMPARE(instance.declaration, derived);
+
+    StatementAccessibility inheritance = StatementAccessibility::None;
+    QCOMPARE(resolver.baseClass(derived, "public Base", inheritance), base);
+    QCOMPARE(inheritance, StatementAccessibility::Public);
+    QCOMPARE(resolver.applyInheritance(StatementAccessibility::Public, inheritance),
+             StatementAccessibility::Public);
+    QCOMPARE(resolver.applyInheritance(StatementAccessibility::Protected, inheritance),
+             StatementAccessibility::Protected);
+    QCOMPARE(resolver.applyInheritance(StatementAccessibility::Public,
+                                       StatementAccessibility::Private),
+             StatementAccessibility::Private);
+    QCOMPARE(resolver.applyInheritance(StatementAccessibility::None, inheritance),
+             StatementAccessibility::None);
+
+    CppTypeResolver::MemberEntryList entries;
+    QSet<const AbstractStatement *> visited;
+    resolver.appendMembers(derived, false, visited, entries);
+    QSet<QString> names;
+    for (const auto &entry : entries)
+        names.insert(entry.statement->command);
+    QVERIFY(names.contains("action") && names.contains("publicValue")
+            && names.contains("protectedValue") && names.contains("privateValue"));
+    QCOMPARE(names.count(), 4);
+
+    QSet<QString> candidateVisited;
+    QList<CppTypeResolver::MemberResolution> candidates = resolver.memberCandidates(
+                instance, "action", candidateVisited, evaluation, true);
+    QCOMPARE(candidates.count(), 1);
+    QCOMPARE(candidates.first().statement->parentScope.lock(), derived);
+    candidateVisited.clear();
+    candidates = resolver.memberCandidates(instance, "publicValue", candidateVisited, evaluation);
+    QCOMPARE(candidates.count(), 1);
+    QCOMPARE(candidates.first().statement->parentScope.lock(), base);
+    QCOMPARE(resolver.findMember(instance, "publicValue", evaluation).statement,
+             candidates.first().statement);
+    candidateVisited.clear();
+    QCOMPARE(resolver.findMember(instance, "publicValue", candidateVisited, evaluation).statement,
+             candidates.first().statement);
+    QCOMPARE(resolver.findMemberDeclaration(derived, "action")->parentScope.lock(), derived);
+    QCOMPARE(resolver.findMemberDeclaration(derived, "publicValue")->parentScope.lock(), base);
+
+    PStatement action = resolver.findMemberDeclaration(derived, "action");
+    PStatement publicValue = candidates.first().statement;
+    QVERIFY(action && publicValue);
+    QCOMPARE(resolver.memberStatement(derivedType, "publicValue", &evaluation), publicValue);
+    QCOMPARE(resolver.memberType(derivedType, "publicValue", &evaluation).qualifiedName, "int");
+    QCOMPARE(resolver.memberAccess(derivedType, "publicValue", &evaluation).statement, publicValue);
+    QCOMPARE(resolver.memberAccess(instance, "publicValue", &evaluation).statement, publicValue);
+    QCOMPARE(resolver.invokeResult(instance, "action", &evaluation).statement, action);
+    QCOMPARE(resolver.invokeMember(derivedType, "action", {}, &evaluation).statement, action);
+    QCOMPARE(resolver.invokeMember(instance, "action", {}, &evaluation).statement, action);
+    QCOMPARE(resolver.resolveMember(instance, "publicValue", false, {}, evaluation).statement,
+             publicValue);
+    QCOMPARE(resolver.resolveMember(instance, "action", true, {}, evaluation).statement, action);
+
+    QList<PStatement> members = resolver.membersOf(derived);
+    QVERIFY(members.contains(action) && members.contains(publicValue));
+    QList<PStatement> publicMembers = resolver.resolveMembersOfClass(base, {});
+    QVERIFY(publicMembers.contains(publicValue));
+    QVERIFY(!publicMembers.contains(resolver.findMemberDeclaration(base, "privateValue")));
+    QList<PStatement> ownMembers = resolver.resolveMembersOfClass(base, base);
+    QVERIFY(ownMembers.contains(resolver.findMemberDeclaration(base, "privateValue")));
+    QList<PStatement> derivedAccess = resolver.resolveMembersOfClass(base, derived);
+    QVERIFY(derivedAccess.contains(resolver.findMemberDeclaration(base, "protectedValue")));
+    QVERIFY(!derivedAccess.contains(resolver.findMemberDeclaration(base, "privateValue")));
+    QVERIFY(resolver.resolveMembersOfClass({}, {}).isEmpty());
+}
+
+void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Base {};\n"
+                "struct Derived : Base {};\n"
+                "struct Other {};\n"
+                "template<typename T> struct Box {};\n"
+                "template<typename T> struct Box<T*> {};\n"
+                "template<typename... T> struct Pack {};\n"
+                "template<typename T> int identity(T);\n"
+                "int overloaded(int);\n"
+                "double overloaded(double);\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/resolver_binding_interfaces.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    CppTypeResolver::EvaluationContext evaluation;
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        TypeInfo result = declaration.specifiers.type;
+        if (!declaration.declarators.isEmpty())
+            result.derivations += declaration.declarators.first().derivations;
+        return resolver.resolve(result);
+    };
+    TypeInfo integer = type("int");
+    TypeInfo integerPointer = type("int*");
+    TypeInfo constIntegerReference = type("const int&");
+
+    TemplateBindings bindings;
+    resolver.bindParameterType(type("T&"), constIntegerReference, {"T"}, bindings, evaluation);
+    QVERIFY(bindings.contains("T"));
+    QCOMPARE(bindings["T"].type->toString(), "int");
+    bindings.clear();
+    resolver.bindParameterType(type("T*"), integerPointer, {"T"}, bindings, evaluation);
+    QCOMPARE(bindings["T"].type->toString(), "int");
+    bindings.clear();
+    resolver.bindParameterType(type("Box<T>"), type("Box<int>"), {"T"}, bindings, evaluation);
+    QCOMPARE(bindings["T"].type->toString(), "int");
+
+    TypeInfo materialized;
+    materialized.qualifiedName = "Box";
+    materialized.qualifiedNameText = "Box<int>";
+    resolver.materializeTemplateArguments(materialized, evaluation);
+    QCOMPARE(materialized.templateArguments.count(), 1);
+    QCOMPARE(materialized.templateArguments.first().type->qualifiedName, "int");
+    TypeInfo pattern;
+    pattern.qualifiedName = "Box";
+    pattern.qualifiedNameText = "Box<T>";
+    resolver.materializeTemplateArgumentPatterns(pattern, evaluation);
+    QCOMPARE(pattern.templateArguments.count(), 1);
+    QCOMPARE(pattern.templateArguments.first().constantExpression, "T");
+
+    PStatement overloaded = resolver.findStatement("overloaded");
+    QCOMPARE(resolver.functionCandidates(overloaded).count(), 2);
+    QVERIFY(resolver.functionCandidates({}).isEmpty());
+    PStatement identity = resolver.findStatement("identity");
+    int score = 0;
+    CppTypeResolver::PTemplateBindingFrame functionBindings = resolver.matchFunctionCandidate(
+                identity, {integer}, {}, evaluation, {}, &score);
+    QVERIFY(functionBindings);
+    QCOMPARE(functionBindings->values["T"].type->toString(), "int");
+    QVERIFY(score > 0);
+    QVERIFY(!resolver.matchFunctionCandidate(identity, {}, {}, evaluation, {}, nullptr));
+
+    TypeInfo resolvedParameter;
+    QVERIFY(resolver.compatibleArgument(integer, integer, {}, {}, evaluation, resolvedParameter));
+    QCOMPARE(resolvedParameter.qualifiedName, "int");
+    QVERIFY(resolver.compatibleArgument(type("Base"), type("Derived"), {}, {}, evaluation,
+                                        resolvedParameter));
+    QVERIFY(!resolver.compatibleArgument(type("Base"), type("Other"), {}, {}, evaluation,
+                                         resolvedParameter));
+
+    TemplateArgument constant = resolver.resolveArgument(
+                "true", TemplateParameterKind::NonType, {}, {}, evaluation);
+    QCOMPARE(constant.kind, TemplateArgumentKind::NonType);
+    QCOMPARE(constant.constantExpression, "true");
+    TemplateArgument resolvedType = resolver.resolveArgument(
+                "Box<int>", TemplateParameterKind::Type, {}, {}, evaluation);
+    QCOMPARE(resolvedType.kind, TemplateArgumentKind::Type);
+    QCOMPARE(resolvedType.type->qualifiedName, "Box");
+
+    PStatement box = resolver.findStatement("Box");
+    CppTypeResolver::PTemplateBindingFrame boxBindings = resolver.declarationBindings(
+                box, type("Box<int>"), {}, evaluation);
+    QVERIFY(boxBindings && boxBindings->complete);
+    QCOMPARE(resolver.findBinding(boxBindings, "T")->type->toString(), "int");
+    QVERIFY(!resolver.findBinding(boxBindings, "Missing"));
+    CppTypeResolver::PTemplateBindingFrame packBindings = resolver.declarationBindings(
+                resolver.findStatement("Pack"), type("Pack<int, double>"), {}, evaluation);
+    const QVector<TemplateArgument> *pack = resolver.findParameterPack(packBindings, "T");
+    QVERIFY(pack);
+    QCOMPARE(pack->count(), 2);
+    QVERIFY(!resolver.findParameterPack(packBindings, "Missing"));
+
+    TypeInfo referenced = integer;
+    TypeInfo reference = type("int&");
+    resolver.applyReference(referenced, reference);
+    QCOMPARE(referenced.toString(), "int &");
+    TypeInfo collapsed = type("int&");
+    TypeInfo rvalue = type("int&&");
+    resolver.applyReference(collapsed, rvalue);
+    QCOMPARE(collapsed.toString(), "int &");
+
+    TypeInfo pointerBox = type("Box<int*>");
+    CppTypeResolver::ClassInstance primary;
+    primary.type = pointerBox;
+    primary.declaration = box;
+    primary.bindings = resolver.declarationBindings(box, pointerBox, {}, evaluation);
+    CppTypeResolver::ClassInstance selected = resolver.selectSpecialization(primary, evaluation);
+    QCOMPARE(selected.declaration, findStatement(model.childrenStatements(), "Box<T*>"));
+    TemplateBindings matchedBindings;
+    QCOMPARE(resolver.matchSpecialization(selected.declaration, pointerBox.templateArguments,
+                                          {}, matchedBindings, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(matchedBindings["T"].type->toString(), "int");
+    TemplateBindings typeBindings;
+    QCOMPARE(resolver.matchType(type("T*"), integerPointer, {"T"}, typeBindings, {}, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(type("T*"), type("double"), {"T"}, typeBindings, {}, evaluation),
+             CppTypeResolver::SpecializationMatch::NoMatch);
+    TemplateArgument pointerPattern = TemplateArgument::fromType(type("T*"));
+    QCOMPARE(resolver.matchArgument(pointerPattern, TemplateArgument::fromType(integerPointer),
+                                    {"T"}, typeBindings, {}, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchArgument(TemplateArgument::fromConstant("1+1"),
+                                    TemplateArgument::fromConstant("2"), {}, typeBindings,
+                                    {}, evaluation),
+             CppTypeResolver::SpecializationMatch::Unknown);
+}
+
+void TestCppTypeResolver::test_type_resolver_internal_type_and_lookup_interfaces()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace Outer {\n"
+                "  struct Class { struct Nested {}; };\n"
+                "  template<typename T> struct Box {};\n"
+                "}\n"
+                "namespace Outer { struct Other {}; }\n"
+                "namespace std { inline namespace __1 {\n"
+                "  struct string {};\n"
+                "  template<typename T> struct add_lvalue_reference {};\n"
+                "} }\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/resolver_type_lookup_interfaces.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    CppTypeResolver::EvaluationContext evaluation;
+    PStatement outer = resolver.findStatement("Outer");
+    PStatement classStatement = resolver.findStatement("Outer::Class");
+    PStatement nested = resolver.findStatement("Outer::Class::Nested");
+    QVERIFY(outer && classStatement && nested);
+
+    QVector<TypeNameSegment> segments;
+    bool globallyQualified = false;
+    QVERIFY(resolver.parseTypeNameSegments("const Outer::Class", segments, globallyQualified,
+                                           evaluation));
+    QCOMPARE(segments.count(), 2);
+    QVERIFY(segments.first().qualifiers.testFlag(TypeQualifier::Const));
+    QVERIFY(!globallyQualified);
+    QVERIFY(resolver.parseTypeNameSegments("::Outer::Class", segments, globallyQualified,
+                                           evaluation));
+    QVERIFY(globallyQualified);
+    QVERIFY(!resolver.parseTypeNameSegments("Outer::", segments, globallyQualified, evaluation));
+    QVERIFY(resolver.parseTypeNameSegments("Outer::Box<int>", segments, globallyQualified,
+                                           evaluation, false));
+    QCOMPARE(segments.last().arguments.count(), 1);
+    QCOMPARE(segments.last().arguments.first().constantExpression, "int");
+
+    TypeInfo parsed = resolver.parseTypeText("const Outer::Class&", evaluation);
+    QCOMPARE(parsed.qualifiedName, "Outer::Class");
+    QVERIFY(parsed.qualifiers.testFlag(TypeQualifier::Const));
+    QCOMPARE(parsed.derivations.first().kind, TypeDerivationKind::LvalueReference);
+    TypeInfo parsedTemplate = resolver.parseTypeText("Outer::Box<int>", evaluation);
+    resolver.materializeTemplateArguments(parsedTemplate, evaluation);
+    QCOMPARE(parsedTemplate.templateArguments.count(), 1);
+    TypeInfo lazyTemplate = resolver.parseTypeText("Outer::Box<int>", evaluation, false);
+    QCOMPARE(lazyTemplate.templateArguments.count(), 1);
+    QCOMPARE(lazyTemplate.templateArguments.first().constantExpression, "int");
+
+    TypeInfo classType;
+    classType.qualifiedName = classType.qualifiedNameText = "Outer::Class";
+    QCOMPARE(resolver.resolveType(classType, {}, {}, evaluation).qualifiedName, "Outer::Class");
+    QCOMPARE(resolver.resolve(classType).qualifiedName, "Outer::Class");
+    QCOMPARE(resolver.resolveInstance(classType).declaration, classStatement);
+    QCOMPARE(resolver.resolveInContext(classType, {}, {}, &evaluation).declaration, classStatement);
+    QVERIFY(resolver.parseTypeNameSegments("Outer::Class", segments, globallyQualified, evaluation));
+    QCOMPARE(resolver.resolveSegments({}, segments, false, {}, {}, evaluation).declaration,
+             classStatement);
+    QCOMPARE(resolver.classInstanceFromResolvedType(classType, {}, {}, evaluation).declaration,
+             classStatement);
+
+    QCOMPARE(resolver.findDeclaration("Outer::Class", {}, true), classStatement);
+    QCOMPARE(resolver.findStatement("Outer::Class"), classStatement);
+    bool firstPartFound = false;
+    QCOMPARE(resolver.findInNamespaceScope(outer, {"Class", "Nested"}, firstPartFound, true),
+             nested);
+    QVERIFY(firstPartFound);
+    firstPartFound = false;
+    QVERIFY(!resolver.findInNamespaceScope(outer, {"Class", "Missing"}, firstPartFound, true));
+    QVERIFY(firstPartFound);
+    firstPartFound = false;
+    QVERIFY(!resolver.findInNamespaceScope(outer, {"Missing"}, firstPartFound, true));
+    QVERIFY(!firstPartFound);
+    QCOMPARE(resolver.findDeclarationRemainder(outer, {"Outer", "Class", "Nested"}, true),
+             nested);
+    QVERIFY(!resolver.findDeclarationRemainder(outer, {"Outer", "Missing"}, true));
+    QVERIFY(resolver.supportsTypeTrait("add_lvalue_reference"));
+    QVERIFY(resolver.supportsConstantTrait("is_array"));
+    QVERIFY(!resolver.supportsTypeTrait("missing"));
+    QVERIFY(!resolver.supportsConstantTrait("missing"));
+
+    TypeInfo referenceTrait;
+    referenceTrait.qualifiedName = referenceTrait.qualifiedNameText = "std::add_lvalue_reference<int>";
+    CppTypeResolver::ClassInstance trait;
+    trait.type = resolver.resolve(referenceTrait);
+    trait.declaration = resolver.findStatement("std::add_lvalue_reference");
+    QCOMPARE(resolver.traitMemberType(trait, "type", evaluation).toString(), "int &");
+    QVERIFY(resolver.traitMemberType(trait, "value", evaluation).qualifiedName.isEmpty());
+}
+
+void TestCppTypeResolver::test_type_resolver_internal_constant_interfaces()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<typename... T> struct __and_ {};\n"
+                "  template<typename T> struct __not_ {};\n"
+                "  template<typename T> using Alias = integral_constant<bool, true>;\n"
+                "  struct Functor { int operator()(int) noexcept; };\n"
+                "}\n"
+                "template<bool B> requires (B) int constrained();\n", declarations,
+                CppVersion::Cpp20));
+    StatementModel model;
+    CppStatementBuilder builder(model, {CppCompilerType::GCC, CppVersion::Cpp20});
+    StatementBuildContext context;
+    context.fileName = "/tmp/resolver_constant_interfaces.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model, nullptr, {CppCompilerType::GCC, CppVersion::Cpp20});
+    CppTypeResolver::EvaluationContext evaluation;
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        TypeInfo result = declaration.specifiers.type;
+        if (!declaration.declarators.isEmpty())
+            result.derivations += declaration.declarators.first().derivations;
+        return resolver.resolve(result);
+    };
+
+    QCOMPARE(resolver.evaluateConstantValue("true", {}, {}, evaluation), "true");
+    QCOMPARE(resolver.evaluateConstantValue("!false", {}, {}, evaluation), "true");
+    QCOMPARE(resolver.evaluateConstantValue("true&&false", {}, {}, evaluation), "false");
+    QCOMPARE(resolver.evaluateConstantValue("false||true", {}, {}, evaluation), "true");
+    QCOMPARE(resolver.evaluateConstantValue("1==1", {}, {}, evaluation), "true");
+    QCOMPARE(resolver.evaluateConstantValue("(false)", {}, {}, evaluation), "false");
+    QCOMPARE(resolver.evaluateConstantValue(
+                 "std::integral_constant<bool, true>::value", {}, {}, evaluation), "true");
+    QCOMPARE(resolver.evaluateConstantValue("missing", {}, {}, evaluation), "");
+    QCOMPARE(resolver.resolveConstantExpression(
+                 "std::integral_constant<bool, false>::value", {}, {}, evaluation), "false");
+    QCOMPARE(resolver.resolveConstantExpression("std::Alias<int>::value", {}, {}, evaluation),
+             "true");
+    QCOMPARE(resolver.evaluateConstraintAtom("true", {}, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateConstraint("true&&false", {}, {}, evaluation),
+             ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(resolver.evaluateConstraint("unknown", {}, {}, evaluation),
+             ConstraintSatisfaction::Unknown);
+
+    PStatement constrained = resolver.findStatement("constrained");
+    QVERIFY(constrained);
+    auto falseBindings = std::make_shared<TemplateBindingFrame>();
+    falseBindings->values.insert("B", TemplateArgument::fromConstant("false"));
+    QCOMPARE(resolver.constraintsSatisfied(constrained, falseBindings, {}, evaluation),
+             ConstraintSatisfaction::Unsatisfied);
+    auto trueBindings = std::make_shared<TemplateBindingFrame>();
+    trueBindings->values.insert("B", TemplateArgument::fromConstant("true"));
+    QCOMPARE(resolver.constraintsSatisfied(constrained, trueBindings, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+
+    QVector<TemplateArgument> logicalArguments{
+        TemplateArgument::fromConstant("true"), TemplateArgument::fromConstant("false")
+    };
+    QCOMPARE(resolver.evaluateLogicalTrait(logicalArguments, true, {}, {}, evaluation),
+             ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(resolver.evaluateLogicalTrait(logicalArguments, false, {}, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateLogicalTrait({}, true, {}, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+
+    QCOMPARE(resolver.evaluateConstructibleExpression(
+                 "__is_constructible(std::Functor)", {}, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateConstructibleExpression("not-a-builtin", {}, {}, evaluation),
+             ConstraintSatisfaction::Unknown);
+
+    QVector<TemplateArgument> invocationArguments{
+        TemplateArgument::fromType(type("std::Functor")), TemplateArgument::fromType(type("int"))
+    };
+    EvalResult invocation = resolver.evaluateInvocation(invocationArguments, 0, {}, {}, evaluation);
+    QVERIFY(invocation.isValid());
+    QCOMPARE(invocation.type.qualifiedName, "int");
+    QVERIFY(!resolver.evaluateInvocation(invocationArguments, -1, {}, {}, evaluation).isValid());
+    QVERIFY(!resolver.evaluateInvocation({TemplateArgument::fromConstant("1")}, 0, {}, {}, evaluation)
+                     .isValid());
+    QVector<TemplateArgument> invocableArguments{TemplateArgument::fromType(type("int"))};
+    invocableArguments += invocationArguments;
+    QCOMPARE(resolver.evaluateInvocableR(invocableArguments, {}, {}, evaluation),
+             ConstraintSatisfaction::Satisfied);
+    invocableArguments[0] = TemplateArgument::fromType(type("std::string"));
+    QCOMPARE(resolver.evaluateInvocableR(invocableArguments, {}, {}, evaluation),
+             ConstraintSatisfaction::Unsatisfied);
+    QCOMPARE(resolver.evaluateInvocableR({}, {}, {}, evaluation),
+             ConstraintSatisfaction::Unknown);
+    QCOMPARE(resolver.evaluateNoexceptExpression("noexcept(1)", {}, {}, &evaluation),
+             ConstraintSatisfaction::Satisfied);
+    QCOMPARE(resolver.evaluateNoexceptExpression("noexcept(missing())", {}, {}, &evaluation),
+             ConstraintSatisfaction::Unknown);
+}
+
+void TestCppTypeResolver::test_type_resolver_matches_alias_patterns_structurally()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  struct string {};\n"
+                "  template<typename... T> struct variant {};\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<bool B, typename T = void> struct enable_if {};\n"
+                "  template<typename T> struct enable_if<true, T> { using type = T; };\n"
+                "  template<bool B, typename T> using enable_if_t = typename enable_if<B, T>::type;\n"
+                "  template<typename T> using remove_const_t = T;\n"
+                "  template<typename Key, typename Hash = hash<Key>> using has_enabled =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>;\n"
+                "  template<typename Type, typename> using enable_helper_imp = Type;\n"
+                "  template<typename Type, typename... Keys> using enable_helper =\n"
+                "    enable_helper_imp<Type, enable_if_t<__all<has_enabled<Keys>::value...>::value>>;\n"
+                "  template<typename T> using Identity = T;\n"
+                "  typedef int Int;\n"
+                "  template<typename T, typename U = int> struct Pair {};\n"
+                "  template<typename T> using First = Pair<T>;\n"
+                "  template<bool B, typename T> using Conditional = enable_if_t<B, T>;\n"
+                "  template<typename T> using Cycle = Cycle<T>;\n"
+                "} }\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/structural_alias_matching.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    CppTypeResolver::EvaluationContext evaluation;
+    PStatement stdScope = resolver.findStatement("std");
+    QVERIFY(stdScope);
+    TypeInfo pattern = resolver.parseTypeText(
+                "std::enable_helper<std::variant<Types...>, std::remove_const_t<Types>...>",
+                evaluation, false);
+    TypeInfo actual = resolver.parseTypeText("std::string", evaluation);
+    QVERIFY(!pattern.qualifiedName.isEmpty() && !actual.qualifiedName.isEmpty());
+
+    QSet<const AbstractStatement *> visited;
+    TypeInfo expanded = resolver.expandTypePattern(pattern, stdScope, visited, evaluation);
+    QCOMPARE(expanded.qualifiedName, "std::variant");
+    QCOMPARE(expanded.templateArguments.count(), 1);
+    QCOMPARE(evaluation.operationCount, 0);
+    TemplateBindings bindings;
+    QCOMPARE(resolver.matchType(pattern, actual, {"Types"}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::NoMatch);
+    QCOMPARE(evaluation.operationCount, 0);
+
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
+                                actual, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::NoMatch);
+    TypeInfo integer = resolver.parseTypeText("int", evaluation);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Int", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    TypeInfo firstPattern = resolver.parseTypeText("std::First<char>", evaluation);
+    TypeInfo expandedFirst = resolver.expandTypePattern(firstPattern, stdScope, visited, evaluation);
+    QCOMPARE(expandedFirst.qualifiedName, "Pair");
+    QCOMPARE(expandedFirst.templateArguments.count(), 2);
+    QCOMPARE(resolver.matchType(firstPattern,
+                                resolver.resolve(resolver.parseTypeText(
+                                        "std::Pair<char, int>", evaluation)),
+                                {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<true, int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<false, int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Unknown);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Cycle<int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Unknown);
 }

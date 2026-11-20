@@ -39,6 +39,7 @@ struct ClassInstance {
 struct TypeNameSegment {
     QString name;
     QVector<TemplateArgument> arguments;
+    TypeQualifiers qualifiers = TypeQualifier::None;
     bool hasTemplateArguments = false;
     bool templateKeyword = false;
 };
@@ -110,6 +111,11 @@ inline uint qHash(const ResolvedTypeKey &key, uint seed = 0) noexcept
     return result;
 }
 
+struct CallResolution {
+    PStatement statement;
+    PTemplateBindingFrame bindings;
+};
+
 struct EvalResult {
     TypeInfo type;
     ClassInstance instance;
@@ -117,6 +123,7 @@ struct EvalResult {
     PStatement baseStatement;
     PStatement statement;
     QVector<TemplateArgument> explicitTemplateArguments;
+    CallResolution invocation;
 
     bool isValid() const {
         return !type.qualifiedName.isEmpty() || kind == EvalStatementKind::Function
@@ -134,6 +141,7 @@ struct MemberEvalResult {
     PStatement statement;
     TypeInfo type;
     ClassInstance instance;
+    CallResolution invocation;
 };
 
 enum class CacheLevel {
@@ -215,15 +223,22 @@ public:
     MemberEvalResult invokeMember(const ClassInstance &receiver, const QString &memberName,
                                   const QVector<TypeInfo> &arguments = {},
                                   EvaluationContext *evaluation = nullptr) const;
+    ConstraintSatisfaction evaluateNoexceptExpression(
+            const QString &expression, const PStatement &context = {},
+            const PTemplateBindingFrame &bindings = {}, EvaluationContext *evaluation = nullptr) const;
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments,
                             const QVector<TemplateArgument> &explicitArguments = {},
                             EvaluationContext *evaluation = nullptr,
-                            ClassInstance *resultInstance = nullptr) const;
+                            ClassInstance *resultInstance = nullptr,
+                            const PTemplateBindingFrame &outerBindings = {},
+                            CallResolution *invocation = nullptr) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
     QList<PStatement> resolveMembersOfClass(const PStatement &classStatement,
                                             const PStatement &accessScope) const;
 
 private:
+    friend class TestCppTypeResolver;
+
     struct MemberResolution {
         PStatement statement;
         ClassInstance owner;
@@ -297,6 +312,25 @@ private:
                                                   EvaluationContext &evaluation) const;
     QString evaluateConstantValue(const QString &text, const PTemplateBindingFrame &bindings,
                                   const PStatement &context, EvaluationContext &evaluation) const;
+    EvalResult evaluateInvocation(const QVector<TemplateArgument> &arguments, int functionIndex,
+                                  const PStatement &context, const PTemplateBindingFrame &bindings,
+                                  EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateNoexceptCall(
+            const EvalResult &evaluated, EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateInvocableR(
+            const QVector<TemplateArgument> &arguments, const PStatement &context,
+            const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateLogicalTrait(
+            const QVector<TemplateArgument> &arguments, bool conjunction,
+            const PStatement &context, const PTemplateBindingFrame &bindings,
+            EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateConstructibleExpression(
+            const QString &expression, const PStatement &context,
+            const PTemplateBindingFrame &bindings, EvaluationContext &evaluation) const;
+    ConstraintSatisfaction evaluateConstructible(
+            const TypeInfo &target, const QVector<TypeInfo> &arguments,
+            const PStatement &context, const PTemplateBindingFrame &bindings,
+            EvaluationContext &evaluation) const;
     TypeInfo traitMemberType(const ClassInstance &instance, const QString &memberName,
                              EvaluationContext &evaluation) const;
     const TemplateArgument *findBinding(const PTemplateBindingFrame &bindings,
@@ -321,6 +355,12 @@ private:
                                       const TemplateArgument &actual,
                                       const QSet<QString> &parameters, TemplateBindings &bindings,
                                       const PStatement &context, EvaluationContext &evaluation) const;
+    TypeInfo expandTypePattern(const TypeInfo &type, const PStatement &context,
+                               QSet<const AbstractStatement *> &visited,
+                               EvaluationContext &evaluation) const;
+    TypeInfo substituteTypePattern(const TypeInfo &pattern, const TemplateBindings &bindings,
+                                   const QHash<QString, QVector<TemplateArgument>> &packs,
+                                   EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,
                                 EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,

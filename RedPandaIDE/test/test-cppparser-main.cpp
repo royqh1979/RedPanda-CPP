@@ -11,6 +11,7 @@
 #include "test_cppstatementbuilder.h"
 #include "test_cpptyperesolver.h"
 #include "test_cppexpressionevaluator.h"
+#include "test_typeoperationregistry.h"
 #include "test_pptoken.h"
 #include "test_ppexpander.h"
 
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
     runTestSuite<TestCppStatementBuilder>(suite, argc, argv, status);
     runTestSuite<TestCppTypeResolver>(suite, argc, argv, status);
     runTestSuite<TestCppExpressionEvaluator>(suite, argc, argv, status);
+    runTestSuite<TestTypeOperationRegistry>(suite, argc, argv, status);
     runTestSuite<TestPpTokenizer>(suite, argc, argv, status);
     runTestSuite<TestPpExpander>(suite, argc, argv, status);
     runTestSuite<TestCppParser>(suite, argc, argv, status);

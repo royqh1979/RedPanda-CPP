@@ -164,8 +164,9 @@ void recordIdentifierTrace(CppTypeResolver::EvaluationContext *evaluation,
 
 CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
                                                const CppTypeResolver &resolver,
-                                               const TypeOperationRegistry &operations)
-    : mModel(model), mResolver(resolver), mOperations(operations)
+                                               const TypeOperationRegistry &operations,
+                                               const PTemplateBindingFrame &bindings)
+    : mModel(model), mResolver(resolver), mOperations(operations), mBindings(bindings)
 {
 }
 
@@ -234,6 +235,27 @@ EvalResult CppExpressionEvaluator::evaluateUnary(
             result.instance.type = result.type;
         }
         return result;
+    }
+    if (unaryOperator == "noexcept") {
+        int start = index;
+        ++index;
+        if (index >= tokens.count() || tokens[index].text != "(")
+            return {};
+        int close = tokens[index].matchIndex;
+        if (close <= index || close >= tokens.count())
+            return {};
+        QString expression;
+        for (int i = start; i <= close; ++i)
+            appendExpressionToken(expression, tokens[i].text);
+        ConstraintSatisfaction result = mResolver.evaluateNoexceptExpression(
+                    expression, context, mBindings, evaluation);
+        if (result == ConstraintSatisfaction::Unknown)
+            return {};
+        index = close + 1;
+        EvalResult evaluated;
+        evaluated.type = primitiveType("bool");
+        evaluated.kind = EvalStatementKind::Literal;
+        return evaluated;
     }
     if (unaryOperator == "sizeof") {
         ++index;
@@ -490,13 +512,14 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                 ClassInstance called;
                 result.type = mResolver.invokeFunction(result.baseStatement, arguments,
                                                        result.explicitTemplateArguments, evaluation,
-                                                       &called);
+                                                       &called, mBindings, &result.invocation);
                 result.instance = called;
             } else {
                 QVector<TypeInfo> arguments;
                 if (!evaluateArguments(tokens, index, context, arguments, evaluation))
                     return {};
-                result.type = mOperations.invokeResult(result.type, arguments, evaluation);
+                result.type = mOperations.invokeResult(result.type, arguments, evaluation,
+                                                       &result.invocation);
                 result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
             }
             result.kind = EvalStatementKind::Variable;
@@ -699,6 +722,12 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
                                       boundaryAncestor, {});
             }
             std::dynamic_pointer_cast<Statement>(parameter)->typeInfo = parseTypeText(typeText);
+            ParameterInfo parameterInfo;
+            parameterInfo.name = parameter->command;
+            parameterInfo.position = parameter->definition.range.start;
+            parameterInfo.type = std::make_shared<TypeInfo>(
+                        std::dynamic_pointer_cast<Statement>(parameter)->typeInfo);
+            std::dynamic_pointer_cast<Statement>(call)->parameters.append(parameterInfo);
             if (allowModelChanges)
                 mModel.add(parameter);
         };
@@ -720,6 +749,20 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
         std::dynamic_pointer_cast<Statement>(call)->args = "()";
         std::dynamic_pointer_cast<Statement>(call)->normalizedArgs = "()";
         ++index;
+    }
+    if (index < tokens.count() && tokens[index].text == "noexcept") {
+        auto normalCall = std::dynamic_pointer_cast<Statement>(call);
+        normalCall->noexceptKind = NoexceptKind::Always;
+        ++index;
+        if (index < tokens.count() && tokens[index].text == "(") {
+            int close = tokens[index].matchIndex;
+            if (close <= index || close >= tokens.count())
+                return {};
+            normalCall->noexceptKind = NoexceptKind::Expression;
+            for (int i = index + 1; i < close; ++i)
+                appendExpressionToken(normalCall->noexceptExpression, tokens[i].text);
+            index = close + 1;
+        }
     }
 
     TypeInfo trailingReturn;

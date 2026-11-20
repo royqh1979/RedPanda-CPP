@@ -129,6 +129,12 @@ enum class TypeDerivationKind {
     Function
 };
 
+enum class NoexceptKind {
+    None,
+    Always,
+    Expression
+};
+
 struct TypeDerivation {
     TypeDerivationKind kind = TypeDerivationKind::Pointer;
     TypeQualifiers qualifiers = TypeQualifier::None;
@@ -137,6 +143,8 @@ struct TypeDerivation {
     QVector<ParameterInfo> parameters;
     FunctionProperties functionProperties = FunctionProperty::None;
     ReferenceQualifier refQualifier = ReferenceQualifier::None;
+    NoexceptKind noexceptKind = NoexceptKind::None;
+    QString noexceptExpression;
     QString trailingReturnType;
     QString requiresClause;
 

@@ -1164,6 +1164,179 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
     }
 }
 
+void TestCppParserStandardLibrary::test_standard_library_libcxx_hash_requirements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "struct FalseType {};",
+        "template<bool B> struct Selector { using type = FalseType; };",
+        "template<> struct Selector<true> { using type = std::string; };",
+        "using Direct = Selector<std::integral_constant<bool,",
+        "    __is_constructible(std::hash<std::string>, const std::hash<std::string>&)>::value>::type;",
+        "using Copy = Selector<std::is_copy_constructible<std::hash<std::string>>::value>::type;",
+        "using Invocable = Selector<std::__is_invocable_r_v<std::size_t,",
+        "    std::hash<std::string>, const std::string&>::value>::type;",
+        "using Check = Selector<std::__check_hash_requirements<",
+        "    std::string, std::hash<std::string>>::value>::type;",
+        "using Enabled = Selector<std::__has_enabled_hash<std::string>::value>::type;",
+        "using All = Selector<std::__all<std::__has_enabled_hash<std::string>::value>::value>::type;"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    if (mParser->compilerType() != CppCompilerType::Clang)
+        QSKIP("This test uses libc++ internal traits");
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement string = mParser->findStatement("std::basic_string");
+    QVERIFY(string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Direct", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Copy", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Invocable", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Check", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Enabled", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "All", {}), string);
+}
+
+void TestCppParserStandardLibrary::test_standard_library_libcxx_copy_constructible()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "struct FalseType {};",
+        "template<bool B> struct Selector { using type = FalseType; };",
+        "template<> struct Selector<true> { using type = std::string; };",
+        "using Reference = std::__add_lvalue_reference_t<const std::hash<std::string>>;",
+        "using DirectReference = Selector<std::integral_constant<bool, __is_constructible(",
+        "    std::hash<std::string>, std::__add_lvalue_reference_t<const std::hash<std::string>>)",
+        "    >::value>::type;",
+        "using Constructible = Selector<std::integral_constant<bool,",
+        "    __is_constructible(std::hash<std::string>, Reference)>::value>::type;",
+        "using FullyQualified = Selector<std::integral_constant<bool, __is_constructible(",
+        "    std::__1::hash<std::__1::basic_string<char, std::__1::char_traits<char>,",
+        "    std::__1::allocator<char>>>, std::__add_lvalue_reference_t<const std::__1::hash<",
+        "    std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>>>)",
+        "    >::value>::type;",
+        "using Copy = Selector<std::is_copy_constructible<std::hash<std::string>>::value>::type;"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    if (mParser->compilerType() != CppCompilerType::Clang)
+        QSKIP("This test uses libc++ internal traits");
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement string = mParser->findStatement("std::basic_string");
+    QVERIFY(string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "DirectReference", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Constructible", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "FullyQualified", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Copy", {}), string);
+}
+
+void TestCppParserStandardLibrary::test_standard_library_libcxx_invocable()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "struct FalseType {};",
+        "template<bool B> struct Selector { using type = FalseType; };",
+        "template<> struct Selector<true> { using type = std::string; };",
+        "using Invocable = Selector<std::__is_invocable_r_v<std::size_t,",
+        "    std::hash<std::string>, const std::string&>::value>::type;"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    if (mParser->compilerType() != CppCompilerType::Clang)
+        QSKIP("This test uses libc++ internal traits");
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    CppTypeResolver::EvaluationContext evaluation;
+    CppTypeResolver resolver(mParser->statementList(), &evaluation,
+                             {mParser->compilerType(), mParser->cppVersion()});
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mParser->statementList()),
+                                     resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        return evaluator.evaluate(tokenizer, {}, &evaluation);
+    };
+    EvalResult stringValue = evaluate("std::declval<std::string>()");
+    QVERIFY2(stringValue.isValid(), "declval<string>");
+    EvalResult directValue = evaluate("std::__declval<std::hash<std::string>>(0)");
+    QVERIFY2(directValue.isValid(), "__declval<hash<string>>");
+    EvalResult callable = evaluate("std::declval<std::hash<std::string>>()");
+    QVERIFY2(callable.isValid(), "declval<hash<string>>");
+    EvalResult call = evaluate(
+                "std::declval<std::hash<std::string>>()(std::declval<const std::string&>())");
+    QVERIFY2(call.isValid(), "hash<string>(string)");
+    QVERIFY(call.invocation.statement);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(call.invocation.statement)->noexceptKind,
+             NoexceptKind::Always);
+    QCOMPARE(resolver.evaluateNoexceptExpression(
+                 "noexcept(std::declval<std::hash<std::string>>()"
+                 "(std::declval<const std::string&>()))", {}, {}, &evaluation),
+             ConstraintSatisfaction::Satisfied);
+    PStatement string = mParser->findStatement("std::basic_string");
+    QVERIFY(string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Invocable", {}), string);
+}
+
+void TestCppParserStandardLibrary::test_standard_library_nothrow_invocable()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <bits/stdc++.h>",
+        "struct FalseType {};",
+        "template<bool B> struct Selector { using type = FalseType; };",
+        "template<> struct Selector<true> { using type = std::string; };",
+        "using Nothrow = Selector<std::__is_nothrow_invocable<",
+        "    const std::hash<std::string>&, const std::string&>::value>::type;",
+        "using Fast = Selector<std::__is_fast_hash<std::hash<std::string>>::value>::type;",
+        "using And = Selector<std::__and_<std::__is_fast_hash<std::hash<std::string>>,",
+        "    std::__is_nothrow_invocable<const std::hash<std::string>&,",
+        "    const std::string&>>::value>::type;",
+        "using Not = Selector<std::__not_<std::__and_<",
+        "    std::__is_fast_hash<std::hash<std::string>>,",
+        "    std::__is_nothrow_invocable<const std::hash<std::string>&,",
+        "    const std::string&>>>::value>::type;",
+        "using Cache = Selector<std::__cache_default<",
+        "    std::string, std::hash<std::string>>::value>::type;"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    if (mParser->compilerType() == CppCompilerType::Clang)
+        QSKIP("This test uses libstdc++ internal traits");
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    QVERIFY(mParser->findStatement("std::__is_nothrow_invocable"));
+    PStatement string = mParser->findStatement("std::basic_string");
+    QVERIFY(string);
+    QStringList directNoexcept{
+        "noexcept", "(", "std", "::", "declval", "<", "const", "std", "::", "hash",
+        "<", "std", "::", "string", ">", "&", ">", "(", ")", "(",
+        "std", "::", "declval", "<", "const", "std", "::", "string", "&", ">",
+        "(", ")", ")", ")"
+    };
+    QVERIFY(mParser->evalExpression(main, directNoexcept, {}).isValid());
+    PStatement falseType = mParser->findStatement("FalseType");
+    QVERIFY(falseType);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Nothrow", {}), string);
+    PStatement fastSpecialization = mParser->findTypeDefinitionOf(
+                main, "std::__is_fast_hash<std::hash<std::string>>", {});
+    QVERIFY(fastSpecialization);
+    QVERIFY(fastSpecialization->definition.fileName.endsWith("basic_string.h"));
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Fast", {}), falseType);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "And", {}), falseType);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Not", {}), string);
+    QCOMPARE(mParser->findTypeDefinitionOf(main, "Cache", {}), string);
+}
+
 void TestCppParserStandardLibrary::test_standard_library_parse_baseline()
 {
     QTemporaryDir tmp;

@@ -41,7 +41,8 @@ public:
     TypeInfo subscriptReference(const TypeInfo &receiver,
                                 CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
     TypeInfo invokeResult(const TypeInfo &callable, const QVector<TypeInfo> &arguments,
-                          CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
+                          CppTypeResolver::EvaluationContext *evaluation = nullptr,
+                          CallResolution *invocation = nullptr) const;
     TypeInfo explicitTemplateResult(const EvalResult &target,
                                     const QVector<TemplateArgument> &arguments,
                                     CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
@@ -49,6 +50,8 @@ public:
                         CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
 
 private:
+    friend class TestTypeOperationRegistry;
+
     TypeInfo makeView(const QString &name, const QVector<TemplateArgument> &arguments,
                       CppTypeResolver::EvaluationContext *evaluation) const;
     TypeInfo rangeElement(const TypeInfo &range, bool reference,

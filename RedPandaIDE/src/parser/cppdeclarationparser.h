@@ -27,6 +27,8 @@ struct LambdaInfo {
     TypeInfo returnType;
     bool hasTrailingReturnType = false;
     bool isMutable = false;
+    NoexceptKind noexceptKind = NoexceptKind::None;
+    QString noexceptExpression;
     CppTokenizer::TokenList returnExpression;
     std::shared_ptr<DeclarationInfo> body;
 };
@@ -68,6 +70,7 @@ private:
     void skipTemplateRequiresClause();
     void skipRequiresClause();
     void skipTemplateDefaultArgument(bool nonType = false);
+    void readNoexcept(NoexceptKind &kind, QString &expression);
     void applyTrailingReturn(TypeDerivation &function);
     bool isBuiltinType(const QString &text) const;
     bool isDeclarationDelimiter(const QString &text) const;

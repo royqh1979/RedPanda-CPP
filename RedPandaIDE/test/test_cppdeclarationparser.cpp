@@ -746,3 +746,25 @@ void TestCppDeclarationParser::test_constructor_declarations_with_specifiers()
     QVERIFY(boxConstructor);
     QCOMPARE(boxConstructor->kind, StatementKind::Constructor);
 }
+
+void TestCppDeclarationParser::test_noexcept_specifications_are_preserved()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "void throwing();\n"
+                "void nonthrowing() noexcept;\n"
+                "template<bool B> void conditional() noexcept(B);\n"
+                "auto lambda = []() noexcept(true) {};\n", declarations));
+    QCOMPARE(declarations.count(), 4);
+    QCOMPARE(declarations[0].declarators.first().derivations.first().noexceptKind,
+             NoexceptKind::None);
+    QCOMPARE(declarations[1].declarators.first().derivations.first().noexceptKind,
+             NoexceptKind::Always);
+    QCOMPARE(declarations[2].declarators.first().derivations.first().noexceptKind,
+             NoexceptKind::Expression);
+    QCOMPARE(declarations[2].declarators.first().derivations.first().noexceptExpression, "B");
+    QCOMPARE(declarations[3].declarators.first().lambdas.count(), 1);
+    QCOMPARE(declarations[3].declarators.first().lambdas.first()->noexceptKind,
+             NoexceptKind::Expression);
+    QCOMPARE(declarations[3].declarators.first().lambdas.first()->noexceptExpression, "true");
+}

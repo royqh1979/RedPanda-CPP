@@ -23,6 +23,10 @@ private slots:
     void test_standard_library_trace_edge_cases();
     void test_standard_library_container_eval_profile();
     void test_standard_library_algorithm_eval_profile();
+    void test_standard_library_nothrow_invocable();
+    void test_standard_library_libcxx_hash_requirements();
+    void test_standard_library_libcxx_copy_constructible();
+    void test_standard_library_libcxx_invocable();
     void test_standard_library_parse_baseline();
     void test_standard_library_public_api_complete();
 };
