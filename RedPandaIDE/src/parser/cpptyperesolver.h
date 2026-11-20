@@ -355,6 +355,12 @@ private:
                                       const TemplateArgument &actual,
                                       const QSet<QString> &parameters, TemplateBindings &bindings,
                                       const PStatement &context, EvaluationContext &evaluation) const;
+    TypeInfo expandTypePattern(const TypeInfo &type, const PStatement &context,
+                               QSet<const AbstractStatement *> &visited,
+                               EvaluationContext &evaluation) const;
+    TypeInfo substituteTypePattern(const TypeInfo &pattern, const TemplateBindings &bindings,
+                                   const QHash<QString, QVector<TemplateArgument>> &packs,
+                                   EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,
                                 EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,

@@ -515,6 +515,10 @@ const 数量猜测。后续设计至少需要区分“声明结构相同、cv �
 - 非类型实参只比较字面量、已绑定形参和本轮可计算的 bool/枚举值；
 - 不执行 SFINAE、约束求值、用户定义转换或通用 constexpr。
 
+形式类型为 alias/typedef 且名称不同，`matchType()` 现在先按定义做纯语法替换：只代入实际使用的类型形参，未使用的前置条件不求值；目标类的默认模板实参也按同样方式补齐。结构不匹配时立即返回 NoMatch，不再提前求值 `enable_if`、逻辑 trait 或其它无关 alias。结构匹配后才在统一匹配阶段处理必要实参。若目标确实依赖无法确定的非类型条件，必须返回 Unknown，不得把“不确定”当成不匹配；需要条件成员类型求值的 alias 保留完整语义路径。
+
+例如 `hash<basic_string>` 尝试 `hash<__enable_hash_helper<variant<...>>>` 时，结构替换直接得到 `variant<...>` 并拒绝，不再求值 `__has_enabled_hash` 或递归引入 `unique_ptr` 等无关候选。libstdc++ 与 libc++ 对同名功能可能使用不同 alias 结构和展开结果，必须分别用真实库测试验证，不能用一套内部名称假设另一套实现。
+
 候选 Statement 在声明阶段保存外层 `templatePattern`，eval 直接消费，不再 tokenize 外层声明。
 嵌套实参仍保留原文，只有外层节点匹配后才继续 lazy 解析；不匹配时立即拒绝。模式缺失表示声明解析
 存在缺陷，Debug 必须触发断言，Release 返回 `Unknown`，不得回退到运行时重新解析或伪造成功。

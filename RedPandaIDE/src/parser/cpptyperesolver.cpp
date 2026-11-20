@@ -2624,6 +2624,210 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchArgument(
     return SpecializationMatch::Unknown;
 }
 
+TypeInfo CppTypeResolver::substituteTypePattern(
+        const TypeInfo &pattern, const TemplateBindings &bindings,
+        const QHash<QString, QVector<TemplateArgument>> &packs,
+        EvaluationContext &evaluation) const
+{
+    TypeInfo result = pattern;
+    materializeTemplateArgumentPatterns(result, evaluation);
+    auto bound = bindings.constFind(result.qualifiedName);
+    if (bound != bindings.constEnd()) {
+        if (bound->kind != TemplateArgumentKind::Type || !bound->type)
+            return {};
+        TypeInfo replacement = *bound->type;
+        applyReference(replacement, result);
+        return replacement;
+    }
+    QVector<TemplateArgument> substituted;
+    for (TemplateArgument argument : result.templateArguments) {
+        if (argument.kind == TemplateArgumentKind::Type && !argument.type
+                && !argument.constantExpression.trimmed().isEmpty()) {
+            TypeInfo parsed = parseTypeText(argument.constantExpression, evaluation, false);
+            if (!parsed.qualifiedName.isEmpty())
+                argument.type = std::make_shared<TypeInfo>(parsed);
+        }
+        QString packName;
+        bool packExpansion = false;
+        if (argument.kind == TemplateArgumentKind::Type && argument.type) {
+            packName = argument.type->qualifiedName;
+            packExpansion = argument.constantExpression.trimmed().endsWith("...")
+                    || argument.type->qualifiedNameText.trimmed().endsWith("...");
+        } else if (argument.kind == TemplateArgumentKind::NonType) {
+            packName = argument.constantExpression.trimmed();
+            packExpansion = packName.endsWith("...");
+            if (packExpansion)
+                packName.chop(3);
+        }
+        auto pack = packs.constFind(packName);
+        if (pack != packs.constEnd()) {
+            if (!packExpansion)
+                return {};
+            substituted += pack.value();
+            continue;
+        }
+        if (argument.kind == TemplateArgumentKind::Type && argument.type) {
+            auto nonType = bindings.constFind(argument.type->qualifiedName);
+            if (nonType != bindings.constEnd()
+                    && nonType->kind == TemplateArgumentKind::NonType) {
+                argument.kind = TemplateArgumentKind::NonType;
+                argument.constantExpression = nonType->constantExpression;
+                argument.type.reset();
+                substituted.append(argument);
+                continue;
+            }
+            TypeInfo nested = substituteTypePattern(*argument.type, bindings, packs, evaluation);
+            if (nested.qualifiedName.isEmpty())
+                return {};
+            argument.type = std::make_shared<TypeInfo>(nested);
+        }
+        substituted.append(argument);
+    }
+    result.templateArguments = substituted;
+    for (TypeDerivation &derivation : result.derivations) {
+        auto member = bindings.constFind(derivation.memberClass);
+        if (member != bindings.constEnd() && member->kind == TemplateArgumentKind::Type
+                && member->type) {
+            derivation.memberClass = member->type->qualifiedName;
+        }
+        for (ParameterInfo &parameter : derivation.parameters) {
+            if (!parameter.type)
+                continue;
+            TypeInfo nested = substituteTypePattern(*parameter.type, bindings, packs, evaluation);
+            if (nested.qualifiedName.isEmpty())
+                return {};
+            parameter.type = std::make_shared<TypeInfo>(nested);
+        }
+    }
+    return result;
+}
+
+TypeInfo CppTypeResolver::expandTypePattern(
+        const TypeInfo &type, const PStatement &context,
+        QSet<const AbstractStatement *> &visited, EvaluationContext &evaluation) const
+{
+    TypeInfo instance = type;
+    materializeTemplateArgumentPatterns(instance, evaluation);
+    for (TemplateArgument &argument : instance.templateArguments) {
+        if (argument.kind != TemplateArgumentKind::Type || argument.type)
+            continue;
+        TypeInfo parsed = parseTypeText(argument.constantExpression, evaluation, false);
+        if (parsed.qualifiedName.isEmpty())
+            return {};
+        argument.type = std::make_shared<TypeInfo>(parsed);
+    }
+    PStatement declaration = instance.declaration.lock();
+    if (!declaration || declaration->fullName != instance.qualifiedName)
+        declaration = findDeclaration(instance.qualifiedName, context, true);
+    if (!declaration)
+        return instance;
+    if (instance.declaration.lock() != declaration)
+        instance.declaration = declaration;
+    if (!isAlias(declaration)) {
+        if (declaration->kind != StatementKind::Class)
+            return instance;
+        const auto &parameters = std::dynamic_pointer_cast<Statement>(declaration)->templateParameters;
+        if (instance.templateArguments.count() >= parameters.count())
+            return instance;
+        TemplateBindings localBindings;
+        QHash<QString, QVector<TemplateArgument>> packs;
+        int argumentIndex = 0;
+        for (const TemplateParameterInfo &parameter : parameters) {
+            if (parameter.parameterPack) {
+                QVector<TemplateArgument> pack;
+                while (argumentIndex < instance.templateArguments.count())
+                    pack.append(instance.templateArguments[argumentIndex++]);
+                packs.insert(parameter.name, pack);
+                continue;
+            }
+            if (argumentIndex < instance.templateArguments.count()) {
+                localBindings.insert(parameter.name, instance.templateArguments[argumentIndex++]);
+                continue;
+            }
+            QString defaultText = parameter.defaultArgumentText;
+            if (defaultText.isEmpty()
+                    && argumentIndex < std::dynamic_pointer_cast<Statement>(declaration)->inheritedDefaultArgumentTexts.count()) {
+                defaultText = std::dynamic_pointer_cast<Statement>(declaration)
+                        ->inheritedDefaultArgumentTexts[argumentIndex];
+            }
+            if (defaultText.isEmpty())
+                return instance;
+            TemplateArgument argument;
+            if (parameter.kind == TemplateParameterKind::Type) {
+                TypeInfo defaultType = parseTypeText(defaultText, evaluation, false);
+                defaultType = substituteTypePattern(defaultType, localBindings, packs, evaluation);
+                if (defaultType.qualifiedName.isEmpty())
+                    return {};
+                argument = TemplateArgument::fromType(defaultType);
+            } else {
+                QString expression = defaultText;
+                for (auto it = localBindings.constBegin(); it != localBindings.constEnd(); ++it) {
+                    if (it.value().kind == TemplateArgumentKind::NonType)
+                        expression = substituteIdentifier(
+                                    expression, it.key(), it.value().constantExpression);
+                }
+                argument = TemplateArgument::fromConstant(expression);
+            }
+            localBindings.insert(parameter.name, argument);
+            instance.templateArguments.append(argument);
+            ++argumentIndex;
+        }
+        return instance;
+    }
+    if (visited.contains(declaration.get()))
+        return {};
+    visited.insert(declaration.get());
+    struct VisitGuard {
+        QSet<const AbstractStatement *> &visited;
+        const AbstractStatement *declaration;
+        ~VisitGuard() { visited.remove(declaration); }
+    } guard{visited, declaration.get()};
+
+    TemplateBindings localBindings;
+    QHash<QString, QVector<TemplateArgument>> packs;
+    int argumentIndex = 0;
+    const auto &parameters = std::dynamic_pointer_cast<Statement>(declaration)->templateParameters;
+    for (const TemplateParameterInfo &parameter : parameters) {
+        if (parameter.parameterPack) {
+            QVector<TemplateArgument> pack;
+            while (argumentIndex < instance.templateArguments.count())
+                pack.append(instance.templateArguments[argumentIndex++]);
+            packs.insert(parameter.name, pack);
+            continue;
+        }
+        if (argumentIndex < instance.templateArguments.count()) {
+            localBindings.insert(parameter.name, instance.templateArguments[argumentIndex++]);
+            continue;
+        }
+        if (parameter.defaultArgumentText.isEmpty())
+            return {};
+        if (parameter.kind == TemplateParameterKind::Type) {
+            TypeInfo defaultType = parseTypeText(
+                        parameter.defaultArgumentText, evaluation, false);
+            if (defaultType.qualifiedName.isEmpty())
+                return {};
+            localBindings.insert(parameter.name, TemplateArgument::fromType(defaultType));
+        } else {
+            localBindings.insert(parameter.name, TemplateArgument::fromConstant(
+                    parameter.defaultArgumentText));
+        }
+    }
+    if (argumentIndex != instance.templateArguments.count())
+        return {};
+
+    TypeInfo target = std::dynamic_pointer_cast<Statement>(declaration)->typeInfo;
+    materializeTemplateArgumentPatterns(target, evaluation);
+    TypeInfo substituted = substituteTypePattern(target, localBindings, packs, evaluation);
+    if (substituted.qualifiedName.isEmpty())
+        return {};
+    TypeInfo expanded = expandTypePattern(
+                substituted, declaration->parentScope.lock(), visited, evaluation);
+    if (expanded.qualifiedName.isEmpty())
+        return {};
+    applyReference(expanded, instance);
+    return expanded;
+}
+
 CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
         const TypeInfo &pattern, const TypeInfo &actual, const QSet<QString> &parameters,
         TemplateBindings &bindings, const PStatement &context, EvaluationContext &evaluation) const
@@ -2701,15 +2905,26 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
         real = voidType;
     }
     if (formal.qualifiedName != real.qualifiedName) {
-        if (isBuiltinType(formal) || isBuiltinType(real))
-            return SpecializationMatch::NoMatch;
         PStatement formalDeclaration = findDeclaration(formal.qualifiedName, context, true);
         if (isAlias(formalDeclaration)) {
-            auto formalBindings = std::make_shared<TemplateBindingFrame>();
-            formalBindings->values = bindings;
-            ClassInstance resolved = resolveTypeInstance(formal, formalBindings, context, evaluation);
-            formal = resolved.type;
+            QSet<const AbstractStatement *> visited;
+            TypeInfo expanded = expandTypePattern(formal, context, visited, evaluation);
+            if (expanded.qualifiedName.isEmpty())
+                return SpecializationMatch::Unknown;
+            if (expanded.qualifiedNameText.trimmed().startsWith("typename")) {
+                auto formalBindings = std::make_shared<TemplateBindingFrame>();
+                formalBindings->values = bindings;
+                ClassInstance resolved = resolveTypeInstance(
+                            formal, formalBindings, context, evaluation);
+                if (resolved.type.qualifiedName.isEmpty())
+                    return SpecializationMatch::Unknown;
+                formal = resolved.type;
+            } else {
+                formal = expanded;
+            }
             formalDeclaration = formal.declaration.lock();
+            if (!formalDeclaration)
+                formalDeclaration = findDeclaration(formal.qualifiedName, context, true);
         }
         PStatement realDeclaration = real.declaration.lock();
         if (isAlias(realDeclaration)) {
@@ -2718,6 +2933,11 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
             ClassInstance resolved = resolveTypeInstance(real, actualBindings, context, evaluation);
             real = resolved.type;
             realDeclaration = real.declaration.lock();
+        }
+        if (isBuiltinType(formal) || isBuiltinType(real)) {
+            return isBuiltinType(formal) && isBuiltinType(real)
+                    && formal.qualifiedName == real.qualifiedName
+                    ? SpecializationMatch::Match : SpecializationMatch::NoMatch;
         }
         if (realDeclaration && realDeclaration->kind == StatementKind::Class) {
             TemplateDeclarationKind kind = std::dynamic_pointer_cast<Statement>(realDeclaration)->templateKind;

@@ -49,6 +49,7 @@ private slots:
     void test_type_resolver_internal_binding_interfaces();
     void test_type_resolver_internal_type_and_lookup_interfaces();
     void test_type_resolver_internal_constant_interfaces();
+    void test_type_resolver_matches_alias_patterns_structurally();
 };
 
 #endif // TEST_CPPTYPERESOLVER_H

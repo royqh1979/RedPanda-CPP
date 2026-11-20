@@ -2047,3 +2047,87 @@ void TestCppTypeResolver::test_type_resolver_internal_constant_interfaces()
     QCOMPARE(resolver.evaluateNoexceptExpression("noexcept(missing())", {}, {}, &evaluation),
              ConstraintSatisfaction::Unknown);
 }
+
+void TestCppTypeResolver::test_type_resolver_matches_alias_patterns_structurally()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std { inline namespace __1 {\n"
+                "  struct string {};\n"
+                "  template<typename... T> struct variant {};\n"
+                "  template<typename T> struct hash {};\n"
+                "  template<typename T, T v> struct integral_constant {\n"
+                "    static constexpr T value = v;\n"
+                "  };\n"
+                "  template<bool... B> struct __all {};\n"
+                "  template<bool B, typename T = void> struct enable_if {};\n"
+                "  template<typename T> struct enable_if<true, T> { using type = T; };\n"
+                "  template<bool B, typename T> using enable_if_t = typename enable_if<B, T>::type;\n"
+                "  template<typename T> using remove_const_t = T;\n"
+                "  template<typename Key, typename Hash = hash<Key>> using has_enabled =\n"
+                "    integral_constant<bool, __is_constructible(Hash, const Hash&)>;\n"
+                "  template<typename Type, typename> using enable_helper_imp = Type;\n"
+                "  template<typename Type, typename... Keys> using enable_helper =\n"
+                "    enable_helper_imp<Type, enable_if_t<__all<has_enabled<Keys>::value...>::value>>;\n"
+                "  template<typename T> using Identity = T;\n"
+                "  typedef int Int;\n"
+                "  template<typename T, typename U = int> struct Pair {};\n"
+                "  template<typename T> using First = Pair<T>;\n"
+                "  template<bool B, typename T> using Conditional = enable_if_t<B, T>;\n"
+                "  template<typename T> using Cycle = Cycle<T>;\n"
+                "} }\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/structural_alias_matching.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    CppTypeResolver::EvaluationContext evaluation;
+    PStatement stdScope = resolver.findStatement("std");
+    QVERIFY(stdScope);
+    TypeInfo pattern = resolver.parseTypeText(
+                "std::enable_helper<std::variant<Types...>, std::remove_const_t<Types>...>",
+                evaluation, false);
+    TypeInfo actual = resolver.parseTypeText("std::string", evaluation);
+    QVERIFY(!pattern.qualifiedName.isEmpty() && !actual.qualifiedName.isEmpty());
+
+    QSet<const AbstractStatement *> visited;
+    TypeInfo expanded = resolver.expandTypePattern(pattern, stdScope, visited, evaluation);
+    QCOMPARE(expanded.qualifiedName, "std::variant");
+    QCOMPARE(expanded.templateArguments.count(), 1);
+    QCOMPARE(evaluation.operationCount, 0);
+    TemplateBindings bindings;
+    QCOMPARE(resolver.matchType(pattern, actual, {"Types"}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::NoMatch);
+    QCOMPARE(evaluation.operationCount, 0);
+
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
+                                actual, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::NoMatch);
+    TypeInfo integer = resolver.parseTypeText("int", evaluation);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Int", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    TypeInfo firstPattern = resolver.parseTypeText("std::First<char>", evaluation);
+    TypeInfo expandedFirst = resolver.expandTypePattern(firstPattern, stdScope, visited, evaluation);
+    QCOMPARE(expandedFirst.qualifiedName, "Pair");
+    QCOMPARE(expandedFirst.templateArguments.count(), 2);
+    QCOMPARE(resolver.matchType(firstPattern,
+                                resolver.resolve(resolver.parseTypeText(
+                                        "std::Pair<char, int>", evaluation)),
+                                {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<true, int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Match);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<false, int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Unknown);
+    QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Cycle<int>", evaluation),
+                                integer, {}, bindings, stdScope, evaluation),
+             CppTypeResolver::SpecializationMatch::Unknown);
+}
