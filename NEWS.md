@@ -26,6 +26,7 @@ Red Panda C++ Version 3.6
   - fix: Inserting a line at the document start keeps the viewport at the first line.
   - enhancement: Click line numbers to select whole lines, and Shift+click to select a range.
   - enhancement: Resolve common STL container, iterator, smart pointer, and traditional algorithm expression chains for completion, navigation, hints, and function tips.
+  - enhancement: Evaluate declval/decltype expressions with outer template bindings.
   - fix: Completion and function tips now follow overloaded operator-> and collect function overloads from the actual namespace or class scope.
   - fix: Correctly parse direct-initialized variables and out-of-line special members from inline namespaces.
   - fix: The class browser no longer crashes when displaying inline namespace aliases.

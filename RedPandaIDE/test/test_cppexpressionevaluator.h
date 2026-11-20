@@ -13,6 +13,7 @@ private slots:
     void test_function_template_argument_deduction_for_algorithms();
     void test_expression_evaluator_preserves_constructor_statement();
     void test_expression_evaluator_forbids_model_changes_outside_parse();
+    void test_declval_preserves_type_and_outer_template_bindings();
 };
 
 #endif // TEST_CPPEXPRESSIONEVALUATOR_H

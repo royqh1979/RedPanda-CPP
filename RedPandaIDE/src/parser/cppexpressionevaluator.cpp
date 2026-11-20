@@ -164,8 +164,9 @@ void recordIdentifierTrace(CppTypeResolver::EvaluationContext *evaluation,
 
 CppExpressionEvaluator::CppExpressionEvaluator(StatementModel &model,
                                                const CppTypeResolver &resolver,
-                                               const TypeOperationRegistry &operations)
-    : mModel(model), mResolver(resolver), mOperations(operations)
+                                               const TypeOperationRegistry &operations,
+                                               const PTemplateBindingFrame &bindings)
+    : mModel(model), mResolver(resolver), mOperations(operations), mBindings(bindings)
 {
 }
 
@@ -490,7 +491,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                 ClassInstance called;
                 result.type = mResolver.invokeFunction(result.baseStatement, arguments,
                                                        result.explicitTemplateArguments, evaluation,
-                                                       &called);
+                                                       &called, mBindings);
                 result.instance = called;
             } else {
                 QVector<TypeInfo> arguments;

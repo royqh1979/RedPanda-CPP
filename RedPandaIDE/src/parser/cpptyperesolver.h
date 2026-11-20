@@ -218,7 +218,8 @@ public:
     TypeInfo invokeFunction(const PStatement &function, const QVector<TypeInfo> &arguments,
                             const QVector<TemplateArgument> &explicitArguments = {},
                             EvaluationContext *evaluation = nullptr,
-                            ClassInstance *resultInstance = nullptr) const;
+                            ClassInstance *resultInstance = nullptr,
+                            const PTemplateBindingFrame &outerBindings = {}) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
     QList<PStatement> resolveMembersOfClass(const PStatement &classStatement,
                                             const PStatement &accessScope) const;

@@ -858,8 +858,10 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         statement->properties.setFlag(StatementProperty::RvalueReference,
                                       function.refQualifier == ReferenceQualifier::Rvalue);
         if (!function.trailingReturnType.isEmpty()
-                && std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName == "auto")
+                && std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName == "auto") {
             std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName = function.trailingReturnType;
+            std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedNameText = function.trailingReturnType;
+        }
     } else {
         for (const TypeDerivation &derivation : declarator.derivations) {
             if (derivation.kind == TypeDerivationKind::Function) {

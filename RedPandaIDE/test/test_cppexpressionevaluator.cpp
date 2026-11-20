@@ -377,3 +377,54 @@ void TestCppExpressionEvaluator::test_expression_evaluator_forbids_model_changes
     QVERIFY(!result.isValid());
     QCOMPARE(model.count(), 0);
 }
+
+void TestCppExpressionEvaluator::test_declval_preserves_type_and_outer_template_bindings()
+{
+    DeclarationInfo declvalDeclaration;
+    QVERIFY(parseDeclarationText(
+                "template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));",
+                declvalDeclaration));
+    QCOMPARE(declvalDeclaration.declarators.first().derivations.first().trailingReturnType,
+             "decltype(__declval<T>(0))");
+
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  struct string {};\n"
+                "  template<typename T, typename U = T&&> U __declval(int);\n"
+                "  template<typename T> T __declval(long);\n"
+                "  template<typename T> auto declval() noexcept -> decltype(__declval<T>(0));\n"
+                "}\n"
+                "template<typename T> struct Holder {\n"
+                "  using type = decltype(std::declval<T>());\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/declval.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement declvalStatement = resolver.findStatement("std::declval");
+    QVERIFY(declvalStatement);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(declvalStatement)->typeInfo.qualifiedName,
+             "decltype(__declval<T>(0))");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(declvalStatement)->typeInfo.qualifiedNameText,
+             "decltype(__declval<T>(0))");
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer expression;
+        expression.tokenize({text});
+        return evaluator.evaluate(expression).type.toString();
+    };
+
+    QCOMPARE(evaluate("std::__declval<std::string>(0)"), "std::string &&");
+    QCOMPARE(evaluate("std::declval<std::string>()"), "std::string &&");
+    QCOMPARE(evaluate("std::declval<std::string&>()"), "std::string &");
+    QCOMPARE(evaluate("std::declval<std::string&&>()"), "std::string &&");
+
+    DeclarationInfo dependent;
+    QVERIFY(parseDeclarationText("Holder<std::string> value;", dependent));
+    QCOMPARE(resolver.memberType(dependent.specifiers.type, "type").toString(), "std::string &&");
+}

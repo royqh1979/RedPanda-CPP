@@ -253,6 +253,8 @@ STL 依据：
 
 trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按 GCC、Clang 各自的可用 trait 集合一次分派；Clang 集合额外包含当前支持的 triviality traits 和 libc++ 的 `__has_iterator_typedefs`。类型内建与常量内建也分别按 GCC、Clang 的实际支持集合选择，共有的 `__is_array` 在两个集合中分别登记，命中后不再重复判断编译器。
 
+函数 trailing return 必须同时写入 `TypeInfo::qualifiedName` 和 `qualifiedNameText`，不能残留 auto。Evaluator 保存当前模板绑定帧，函数候选匹配通过 outer bindings 使用它，因此 decltype 内的 `declval<T>()` 及同类调用不会丢失外层实参。引用折叠仍由通用类型变换完成，不对 declval 添加名称特判。
+
 约束求值采用 `Satisfied / Unsatisfied / Unknown` 三态。只有明确不满足时才排除候选；未知候选保持可行，因此未知与可行候选并存时仍按歧义返回未解析结果。函数自身约束在参数和模板绑定完成后检查；别名约束在建立别名自身绑定后、展开目标类型前检查。两者均只使用一次求值的绑定帧和递归状态，不回写模型。约束参与同签名函数的声明合并判定，不同约束的重载不得合并；同一约束的声明与定义按 token 序列比较，忽略空白差异。
 
 当前只支持布尔/整数字面量、括号、`!`、`&&`、`||`、整数 `==`/`!=`、已有常量 trait、受限常量变量模板及既有特化匹配，以及实际需要的编译器内建。`__is_array` 按数组 derivation 计算，不根据标准库名称或候选顺序特判。约束原文直接从已有 token 原文截取，不逐 token 拼接；求值时才 tokenize。
@@ -281,7 +283,7 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 以下能力在分析 libstdc++ 无序容器时确认缺失，但不因此自动扩大本轮范围：
 
 - **异常规格的保存与求值**：声明解析目前能消费 `noexcept` 和 `noexcept(expr)`，但不保存“可能抛出、不抛出、由常量表达式决定”的语义。完整支持还需要在表达式求值中实现 `noexcept(expr)` 运算符，读取实际选中函数、构造函数、转换及成员访问的异常规格，且不求值其副作用。旧式 `throw(...)` 动态异常规格不是当前 C++17 无序容器链的前置条件。
-- **INVOKE 与可调用性**：`is_invocable`/`is_nothrow_invocable` 需要确定调用是否合法及调用结果类型，不能按 trait 名称直接返回真值。最低依赖包括 `std::declval` 的表达式类型语义、`invoke_result`、普通函数/函数对象调用、成员对象和成员函数指针、引用或指针访问以及 `reference_wrapper` 解包。普通函数对象可以先形成独立的最小支持范围，不必一次实现所有成员指针分支。
+- **INVOKE 与可调用性**：`is_invocable`/`is_nothrow_invocable` 需要确定调用是否合法及调用结果类型，不能按 trait 名称直接返回真值。`std::declval` 的表达式类型语义及外层模板绑定已支持；剩余依赖包括 `invoke_result`、普通函数/函数对象调用、成员对象和成员函数指针、引用或指针访问以及 `reference_wrapper` 解包。普通函数对象可以先形成独立的最小支持范围，不必一次实现所有成员指针分支。
 - **与 SFINAE 的关系**：`void_t` 和 detection idiom 常用于判断上述表达式是否合法。若由通用库模板驱动，而不是由有限的编译器内建 trait 直接计算，就需要相应的替换失败语义；不能把语法或类型解析失败一律当成合法的 `false`。
 
 实际依据是 libstdc++ 的 `unordered_map` 默认 `_Tr` 实参：`__cache_default<_Key, _Hash>::value` 同时依赖 `__is_fast_hash` 和 `__is_nothrow_invocable`，后者又依赖 `__is_invocable` 与 `__call_is_nothrow_`。当前无法确定完整 INVOKE/异常规格时，相关特化匹配返回 Unknown 并保持未解析结果。这些能力属于 C++ 正确性扩展，不得仅为了缩短 profile 时间而局部硬编码；实施前必须分别补充确定真、确定假、未知不误导跳转的最小测试和真实 STL 场景。

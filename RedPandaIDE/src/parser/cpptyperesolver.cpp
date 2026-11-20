@@ -829,7 +829,8 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
 TypeInfo CppTypeResolver::invokeFunction(
         const PStatement &function, const QVector<TypeInfo> &arguments,
         const QVector<TemplateArgument> &explicitArguments,
-        EvaluationContext *evaluationContext, ClassInstance *resultInstance) const
+        EvaluationContext *evaluationContext, ClassInstance *resultInstance,
+        const PTemplateBindingFrame &outerBindings) const
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
@@ -849,7 +850,7 @@ TypeInfo CppTypeResolver::invokeFunction(
         candidateEvaluation.resolvingConstraints.clear();
         int score = 0;
         PTemplateBindingFrame currentBindings = matchFunctionCandidate(
-                    candidate, arguments, explicitArguments, candidateEvaluation, {}, &score);
+                    candidate, arguments, explicitArguments, candidateEvaluation, outerBindings, &score);
         if (currentBindings)
             matches.append({candidate, currentBindings, candidateEvaluation, score});
     }
@@ -1413,7 +1414,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         tokenizer.tokenize({text.mid(decltypePrefix.size(),
                                       text.size() - decltypePrefix.size() - 1)});
         TypeOperationRegistry operations(*this);
-        CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mModel), *this, operations);
+        CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mModel), *this, operations,
+                                         bindings);
         EvalResult evaluated = evaluator.evaluate(tokenizer, context, &evaluation);
         if (!evaluated.isValid())
             return {};
