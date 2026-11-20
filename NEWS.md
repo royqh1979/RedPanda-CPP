@@ -1,7 +1,14 @@
 Red Panda C++ Version 3.6
 
   - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
-  - enhancement: Refresh compiler type, version, and detected paths when the compiler executable changes between sessions, while preserving custom settings.
+  - enhancement: Refresh compiler type, version, detected paths, and tool selection when loading or selecting a compiler configuration, while preserving custom settings.
+  - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
+  - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
+  - enhancement: Improve compatibility with Clang and libc++ headers.
+  - enhancement: Evaluate C++20 constraints lazily when resolving functions and templates.
+  - fix: Correctly parse anonymous struct/enum definitions used by typedefs or variable declarations, with unique internal type names.
+  - fix: Clicking the gutter mark area toggles breakpoints, while clicking line numbers selects whole lines.
+  - fix: Show enum types and their values in the class browser without duplicate entries.
   - fix: Column mode doesn't work.
   - enhancement: Split the editor to two View.
   - enhancement: Rewrite the preprocessor's macro expansion engine with a pp-token based expander.
