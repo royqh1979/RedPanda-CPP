@@ -706,40 +706,46 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
         if (i == 0 && (kind == StatementKind::Class || kind == StatementKind::Namespace))
             buildChildren(declaration, context, statement);
         if (i == 0 && (kind == StatementKind::EnumType || kind == StatementKind::EnumClassType)) {
-            PStatement enumeratorParent = declaration.enumScoped ? statement : context.parentScope;
-            StatementBuildContext enumeratorContext = context;
-            enumeratorContext.parentScope = enumeratorParent;
             QHash<QString, qlonglong> enumeratorValues;
             qlonglong nextEnumeratorValue = 0;
             for (const EnumeratorInfo &enumerator : declaration.enumerators) {
-                auto enumStatement = StatementFactory::createEnum(
-                            enumeratorParent, enumerator.name,
-                            enumeratorParent && !enumeratorParent->fullName.isEmpty()
-                            ? enumeratorParent->fullName + "::" + enumerator.name : enumerator.name);
-                enumStatement->scope = context.scope;
-                enumStatement->accessibility = accessibility(declaration, context);
-                enumStatement->definition = StatementOccurrence{
-                    context.fileName, enumerator.range, context.boundaryAncestor,
-                    declaration.specifiers.properties};
-                setStatementHasDefinition(enumStatement, true);
-                std::dynamic_pointer_cast<Statement>(enumStatement)->typeInfo.qualifiedName = declaration.declarators.first().name;
                 qlonglong numericValue = nextEnumeratorValue;
-                if (!enumerator.value.isEmpty()) {
-                    bool ok = false;
-                    numericValue = evaluateIntegerConstant(enumerator.value, enumeratorValues, ok);
-                    std::dynamic_pointer_cast<Statement>(enumStatement)->value = ok ? QString::number(numericValue) : enumerator.value;
-                } else {
-                    std::dynamic_pointer_cast<Statement>(enumStatement)->value = QString::number(numericValue);
-                }
+                bool validValue = true;
+                if (!enumerator.value.isEmpty())
+                    numericValue = evaluateIntegerConstant(
+                                enumerator.value, enumeratorValues, validValue);
                 enumeratorValues.insert(enumerator.name, numericValue);
                 nextEnumeratorValue = numericValue + 1;
-                enumStatement->properties.setFlag(StatementProperty::InProject, context.inProject);
-                enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
-                                                  context.inSystemHeader);
-                mModel.add(enumStatement);
-                createInlineAliases(enumStatement, enumeratorContext);
-                if (context.fileInfo)
-                    context.fileInfo->addStatement(enumStatement);
+                auto addEnumerator = [&](const PStatement &parent) {
+                    auto enumStatement = StatementFactory::createEnum(
+                                parent, enumerator.name,
+                                parent && !parent->fullName.isEmpty()
+                                ? parent->fullName + "::" + enumerator.name : enumerator.name);
+                    enumStatement->scope = context.scope;
+                    enumStatement->accessibility = accessibility(declaration, context);
+                    enumStatement->definition = StatementOccurrence{
+                        context.fileName, enumerator.range, context.boundaryAncestor,
+                        declaration.specifiers.properties};
+                    setStatementHasDefinition(enumStatement, true);
+                    auto normal = std::dynamic_pointer_cast<Statement>(enumStatement);
+                    normal->typeInfo.qualifiedName = declaration.declarators.first().name;
+                    normal->value = validValue ? QString::number(numericValue) : enumerator.value;
+                    enumStatement->properties.setFlag(StatementProperty::InProject, context.inProject);
+                    enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
+                                                      context.inSystemHeader);
+                    mModel.add(enumStatement);
+                    StatementBuildContext enumeratorContext = context;
+                    enumeratorContext.parentScope = parent;
+                    createInlineAliases(enumStatement, enumeratorContext);
+                    if (context.fileInfo)
+                        context.fileInfo->addStatement(enumStatement);
+                };
+                if (declaration.enumScoped) {
+                    addEnumerator(statement);
+                } else {
+                    addEnumerator(context.parentScope);
+                    addEnumerator(statement);
+                }
             }
         }
         if (isFunction(declarator)) {

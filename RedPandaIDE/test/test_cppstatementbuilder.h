@@ -29,6 +29,7 @@ private slots:
     void test_scope_recovery_preserves_following_declarations();
     void test_integer_constant_expression_invalid_division();
     void test_deduction_guides_are_consumed_without_statements();
+    void test_unscoped_enumerators_have_outer_and_enum_scope();
 };
 
 #endif // TEST_CPPSTATEMENTBUILDER_H

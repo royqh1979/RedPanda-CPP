@@ -2990,7 +2990,9 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
     QList<MemberResolution> result;
     if (!instance.declaration
             || (instance.declaration->kind != StatementKind::Class
-                && instance.declaration->kind != StatementKind::Lambda)) {
+                && instance.declaration->kind != StatementKind::Lambda
+                && instance.declaration->kind != StatementKind::EnumType
+                && instance.declaration->kind != StatementKind::EnumClassType)) {
         return result;
     }
     traceEvent(resolverProfile.memberTrace, instance.declaration->fullName + "::" + name);

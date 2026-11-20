@@ -975,3 +975,41 @@ void TestCppStatementBuilder::test_deduction_guides_are_consumed_without_stateme
     }
     QCOMPARE(entries, 1);
 }
+
+void TestCppStatementBuilder::test_unscoped_enumerators_have_outer_and_enum_scope()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "enum Color { red, green = 4, blue };\n"
+                "enum class Scoped { value };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/enum_scopes.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    PStatement color = resolver.findStatement("Color");
+    QVERIFY(color);
+    TypeInfo colorType;
+    colorType.qualifiedName = colorType.qualifiedNameText = color->fullName;
+    colorType.declaration = color;
+    for (const QString &name : {QString("red"), QString("green"), QString("blue")}) {
+        PStatement outer = resolver.findStatement(name);
+        PStatement member = resolver.findStatement("Color::" + name);
+        QVERIFY(outer && member);
+        QVERIFY(outer != member);
+        QCOMPARE(outer->kind, StatementKind::Enum);
+        QCOMPARE(member->kind, StatementKind::Enum);
+        QCOMPARE(member->parentScope.lock(), color);
+        QCOMPARE(outer->definition.range, member->definition.range);
+        QCOMPARE(std::dynamic_pointer_cast<Statement>(outer)->value,
+                 std::dynamic_pointer_cast<Statement>(member)->value);
+        QCOMPARE(resolver.memberStatement(colorType, name), member);
+    }
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(resolver.findStatement("Color::green"))->value,
+             "4");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(resolver.findStatement("blue"))->value, "5");
+    QVERIFY(resolver.findStatement("Scoped::value"));
+    QVERIFY(!resolver.findStatement("value"));
+}

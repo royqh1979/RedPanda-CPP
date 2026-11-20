@@ -71,11 +71,9 @@ public slots:
     void fillStatements();
 private:
     PClassBrowserNode addChild(ClassBrowserNode* node, const PStatement& statement);
-    void addMembers();
+    void buildStatementTree();
     void sortNode(ClassBrowserNode * node);
-    void filterChildren(ClassBrowserNode * node, const StatementMap& statements);
-    void filterChildren(ClassBrowserNode * node, const StatementList& statements);
-    ClassBrowserNode* getParentNode(const PStatement &parentStatement, int depth);
+    void addDirectChildren(ClassBrowserNode * node, const QSet<PStatement>& statements);
     bool isScopeStatement(const PStatement& statement);
 private:
     ClassBrowserNode * mRoot;

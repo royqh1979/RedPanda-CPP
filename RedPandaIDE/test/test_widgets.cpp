@@ -1244,3 +1244,44 @@ void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
     QVERIFY(parser->findStatement("iostream_value"));
     QVERIFY(parser->findStatement("conio_value"));
 }
+
+void TestWidgets::test_unscoped_enum_completion_and_class_browser()
+{
+    const QString fileName = "enum_completion.cpp";
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "enum Color { red, green, blue };",
+            "enum class Scoped { value };",
+            "struct ZOrdered { int alpha; };"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    QSet<QString> members = completionNames(popup, "Color", fileName,
+            CodeCompletionType::Normal, "", "", {}, 0, "::", {"Color"});
+    QVERIFY(members.contains("red") && members.contains("green") && members.contains("blue"));
+    QVERIFY(completionNames(popup, "", fileName, CodeCompletionType::Normal,
+                            "", "red").contains("red"));
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    model.fillStatements();
+    QCOMPARE(model.rowCount({}), 3);
+    QVERIFY(!findNode(model, {}, "red").isValid());
+    QModelIndex color = findNode(model, {}, "Color");
+    QVERIFY(color.isValid());
+    QCOMPARE(model.rowCount(color), 3);
+    QCOMPARE(childCommands(model, color), QSet<QString>({"red", "green", "blue"}));
+    QModelIndex scoped = findNode(model, {}, "Scoped");
+    QVERIFY(scoped.isValid());
+    QCOMPARE(model.rowCount(scoped), 1);
+    QCOMPARE(childCommands(model, scoped), QSet<QString>({"value"}));
+    QModelIndex ordered = findNode(model, {}, "ZOrdered");
+    QVERIFY(ordered.isValid());
+    QCOMPARE(model.rowCount(ordered), 1);
+    QCOMPARE(childCommands(model, ordered), QSet<QString>({"alpha"}));
+}

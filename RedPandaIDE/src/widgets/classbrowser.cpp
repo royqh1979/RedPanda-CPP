@@ -102,38 +102,6 @@ int ClassBrowserModel::columnCount(const QModelIndex&) const
     return 1;
 }
 
-//void ClassBrowserModel::fetchMore(const QModelIndex &parent)
-//{
-//    if (!parent.isValid()) { // top level
-//        return;
-//    }
-
-//    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
-//    if (!parentNode->childrenFetched) {
-//        parentNode->childrenFetched = true;
-//        if (parentNode->statement && !parentNode->statement->children.isEmpty()) {
-//            filterChildren(parentNode, parentNode->statement->children);
-//            beginInsertRows(parent,0,parentNode->children.count());
-//            endInsertRows();
-//        }
-//    }
-//}
-
-//bool ClassBrowserModel::canFetchMore(const QModelIndex &parent) const
-//{
-//    if (!parent.isValid()) { // top level
-//        return false;
-//    }
-//    ClassBrowserNode *parentNode = static_cast<ClassBrowserNode *>(parent.internalPointer());
-//    if (!parentNode->childrenFetched) {
-//        if (parentNode->statement && !parentNode->statement->children.isEmpty())
-//            return true;
-//        else
-//            parentNode->childrenFetched = true;
-//    }
-//    return false;
-//}
-
 QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid()){
@@ -275,7 +243,7 @@ void ClassBrowserModel::fillStatements()
             return;
         if (!mParser->freeze())
             return;
-        addMembers();
+        buildStatementTree();
         mParser->unFreeze();
     }
 }
@@ -297,7 +265,6 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     PClassBrowserNode newNode = std::make_shared<ClassBrowserNode>();
     newNode->parent = node;
     newNode->statement = statement;
-//    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
     QString normalizedArgs;
@@ -309,14 +276,11 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
     }
-    //don't show enum type's children values (they are displayed in parent scope)
-//    if (statement->kind != StatementKind::skEnumType) {
-        filterChildren(newNode.get(), mParser->membersOfStatement(statement));
-//    }
+    addDirectChildren(newNode.get(), mStatementsToShow);
     return newNode;
 }
 
-void ClassBrowserModel::addMembers()
+void ClassBrowserModel::buildStatementTree()
 {
     QList<PParsedFileInfo> fileInfos;
     if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
@@ -346,8 +310,7 @@ void ClassBrowserModel::addMembers()
             }
         }
     }
-    for (const PParsedFileInfo &fileInfo : fileInfos)
-        filterChildren(mRoot,fileInfo->statements());
+    addDirectChildren(mRoot, mStatementsToShow);
     sortNode(mRoot);
 }
 
@@ -408,28 +371,21 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
     }
 }
 
-void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
-{
-    StatementList lockedStatements;
-    for (const std::weak_ptr<AbstractStatement> &weakStatement : statements) {
-        if (PStatement statement = weakStatement.lock())
-            lockedStatements.append(statement);
-    }
-    filterChildren(node, lockedStatements);
-}
-
-void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementList &statements)
+void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const QSet<PStatement> &statements)
 {
     for (const PStatement &statement : statements) {
-        if (!statement || !mStatementsToShow.contains(statement))
+        if (!statement)
             continue;
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statementInProject(statement))
             continue;
 
-        if (mProcessedStatements.value(node).contains(statement.get()))
+        PStatement parentScope = statement->parentScope.lock();
+        if (statement->kind == StatementKind::Enum
+                && (!parentScope
+                    || (parentScope->kind != StatementKind::EnumType
+                        && parentScope->kind != StatementKind::EnumClassType)))
             continue;
-
         if (statement->kind == StatementKind::Block)
             continue;
         if (statement->kind == StatementKind::Lambda)
@@ -458,48 +414,21 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementLi
                 )
         continue;
 
-        ClassBrowserNode *parentNode=node;
-        // we only test and handle orphan statements in the top level (node->statement is null)
-        PStatement parentScope = statement->parentScope.lock();
-        bool memberOfNode = node->statement && parentScope == node->statement;
-        if (!memberOfNode && (parentScope!=node->statement)
+        if (parentScope != node->statement
                 && (!parentScope || !node->statement
-                    || parentScope->fullName!=node->statement->fullName)) {
-//          //should not happend, just in case of error
-//            if (!parentScope)
-//                continue;
+                    || parentScope->fullName != node->statement->fullName))
+            continue;
+        if (mProcessedStatements.value(node).contains(statement.get()))
+            continue;
 
-            // Processing the orphan statement
-                //the statement's parent is in this file, so it's not a real orphan
-
-
-            ClassBrowserNode *dummyNode = getParentNode(parentScope,1);
-            if (dummyNode)
-                parentNode = dummyNode;
-        }
         if (isScopeStatement(statement)) {
             PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
             if (!scopeNode)
-                addChild(parentNode, statement);
+                addChild(node, statement);
         } else {
-            addChild(parentNode,statement);
+            addChild(node,statement);
         }
     }
-}
-
-ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentStatement, int depth)
-{
-    Q_ASSERT(depth<=10);
-    if (depth>10) return mRoot;
-    if (!parentStatement) return mRoot;
-    if (!isScopeStatement(parentStatement)) return mRoot;
-
-    PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
-    if (!parentNode) {
-        ClassBrowserNode *grandNode = getParentNode(parentStatement->parentScope.lock(), depth+1);
-        parentNode = addChild(grandNode, parentStatement);
-    }
-    return parentNode.get();
 }
 
 bool ClassBrowserModel::isScopeStatement(const PStatement &statement)
