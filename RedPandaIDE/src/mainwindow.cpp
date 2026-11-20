@@ -6163,16 +6163,24 @@ void MainWindow::onCompilerSetChanged(int index)
         }
         mProject->setCompilerSet(index);
         mProject->saveOptions();
-        pSettings->compilerSets().refreshSet(index);
-        scanActiveProject(true);
+        QTimer::singleShot(0, this, [this, index] {
+            if (mCompilerSet->currentIndex() != index)
+                return;
+            pSettings->compilerSets().refreshSet(index);
+            scanActiveProject(true);
+        });
         return;
     }
 
     pSettings->compilerSets().setDefaultIndex(index);
     pSettings->compilerSets().saveDefaultIndex();
-    pSettings->compilerSets().refreshSet(index);
+    QTimer::singleShot(0, this, [this, index] {
+        if (mCompilerSet->currentIndex() != index)
+            return;
+        pSettings->compilerSets().refreshSet(index);
+        reparseNonProjectEditors();
+    });
 
-    reparseNonProjectEditors();
     validateCompilerSet(index);
 }
 
