@@ -17,6 +17,7 @@
 #include "test_widgets.h"
 #include "src/editor/cppexpressionextractor.h"
 
+#include <QElapsedTimer>
 #include <QListView>
 #include <QSet>
 #include <QTemporaryDir>
@@ -520,6 +521,44 @@ void TestWidgets::test_class_browser_standard_library_ostream_context()
     QVERIFY(stdNode.isValid());
     QVERIFY(findNode(model, stdNode, "basic_ostream").isValid());
     QVERIFY(!findNode(model, stdNode, "vector").isValid());
+}
+
+void TestWidgets::test_class_browser_refresh_profile()
+{
+    if (!qEnvironmentVariableIsSet("REDPANDA_CLASS_BROWSER_PROFILE"))
+        QSKIP("Set REDPANDA_CLASS_BROWSER_PROFILE=1 to profile class browser refresh");
+    QString bitsStdcpp;
+    mParser = std::make_shared<CppParser>();
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    QString fileName = QFileInfo(QString::fromUtf8(__FILE__)).dir().filePath(
+                "../../libs/qsynedit/test/resources/miniaudio.h");
+    QVERIFY(QFileInfo::exists(fileName));
+    CppParser::parseFileBlocking(mParser, fileName, true, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    model.fillStatements();
+    std::function<int(const QModelIndex &)> countNodes = [&](const QModelIndex &parent) {
+        int result = model.rowCount(parent);
+        for (int row = 0; row < model.rowCount(parent); ++row)
+            result += countNodes(model.index(row, 0, parent));
+        return result;
+    };
+    int nodeCount = countNodes({});
+    int repeat = qEnvironmentVariableIntValue("REDPANDA_CLASS_BROWSER_PROFILE_REPEAT");
+    if (repeat <= 0)
+        repeat = 5;
+    qint64 total = 0;
+    for (int i = 0; i < repeat; ++i) {
+        QElapsedTimer timer;
+        timer.start();
+        model.fillStatements();
+        total += timer.elapsed();
+    }
+    qWarning().nospace() << "CLASS_BROWSER_REFRESH_PROFILE nodes=" << nodeCount
+                         << " repeat=" << repeat << " totalMs=" << total
+                         << " averageMs=" << (double(total) / repeat);
 }
 
 void TestWidgets::test_standard_library_template_consumers()

@@ -48,6 +48,7 @@ private slots:
     void test_goto_standard_library_string();
     void test_class_browser_standard_library_header_context();
     void test_class_browser_standard_library_ostream_context();
+    void test_class_browser_refresh_profile();
     void test_standard_library_template_consumers();
 #endif
     void test_code_completion_types();

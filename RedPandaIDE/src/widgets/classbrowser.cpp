@@ -215,7 +215,8 @@ void ClassBrowserModel::clear()
     mNodes.clear();
     mNodeIndex.clear();
     mProcessedStatements.clear();
-    mStatementsToShow.clear();
+    mTopLevelStatements.clear();
+    mNestedStatements.clear();
     mScopeNodes.clear();
     endResetModel();
 }
@@ -276,7 +277,7 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
     }
-    addDirectChildren(newNode.get(), mStatementsToShow);
+    addDirectChildren(newNode.get(), mParser->membersOfStatement(statement));
     return newNode;
 }
 
@@ -304,13 +305,17 @@ void ClassBrowserModel::buildStatementTree()
     for (const PParsedFileInfo &fileInfo : fileInfos) {
         for (const std::weak_ptr<AbstractStatement> &weakStatement : fileInfo->statements()) {
             PStatement statement = weakStatement.lock();
-            while (statement && !mStatementsToShow.contains(statement)) {
-                mStatementsToShow.insert(statement);
+            while (statement) {
+                QSet<PStatement> &statements = statement->parentScope.lock()
+                        ? mNestedStatements : mTopLevelStatements;
+                if (statements.contains(statement))
+                    break;
+                statements.insert(statement);
                 statement = statement->parentScope.lock();
             }
         }
     }
-    addDirectChildren(mRoot, mStatementsToShow);
+    addDirectChildren(mRoot, mTopLevelStatements);
     sortNode(mRoot);
 }
 
@@ -373,6 +378,11 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 
 void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const QSet<PStatement> &statements)
 {
+    addDirectChildren(node, statements.values());
+}
+
+void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const StatementList &statements)
+{
     for (const PStatement &statement : statements) {
         if (!statement)
             continue;
@@ -381,6 +391,10 @@ void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const QSet<PSt
             continue;
 
         PStatement parentScope = statement->parentScope.lock();
+        const QSet<PStatement> &statementsToShow = parentScope
+                ? mNestedStatements : mTopLevelStatements;
+        if (!statementsToShow.contains(statement))
+            continue;
         if (statement->kind == StatementKind::Enum
                 && (!parentScope
                     || (parentScope->kind != StatementKind::EnumType

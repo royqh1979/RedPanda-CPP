@@ -74,13 +74,15 @@ private:
     void buildStatementTree();
     void sortNode(ClassBrowserNode * node);
     void addDirectChildren(ClassBrowserNode * node, const QSet<PStatement>& statements);
+    void addDirectChildren(ClassBrowserNode * node, const StatementList& statements);
     bool isScopeStatement(const PStatement& statement);
 private:
     ClassBrowserNode * mRoot;
     QHash<QString,PClassBrowserNode> mScopeNodes;
     QHash<QString,PClassBrowserNode> mNodeIndex;
     QHash<ClassBrowserNode *, QSet<AbstractStatement *>> mProcessedStatements;
-    QSet<PStatement> mStatementsToShow;
+    QSet<PStatement> mTopLevelStatements;
+    QSet<PStatement> mNestedStatements;
     QVector<PClassBrowserNode> mNodes;
     PCppParser mParser;
     bool mUpdating;
