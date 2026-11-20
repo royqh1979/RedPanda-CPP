@@ -931,6 +931,19 @@ void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
         view.setEnabled(true);
     });
 
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    QCOMPARE(resetSpy.count(), 0);
+    QModelIndex unchangedN = findNode(model, {}, "N");
+    QModelIndex unchangedA = findNode(model, unchangedN, "A");
+    QModelIndex unchangedKept = findNode(model, unchangedA, "kept");
+    QVERIFY(unchangedN.isValid() && unchangedA.isValid() && unchangedKept.isValid());
+    QCOMPARE(unchangedN.internalPointer(), nNode);
+    QCOMPARE(unchangedA.internalPointer(), aNode);
+    QCOMPARE(unchangedKept.internalPointer(), keptNode);
+    QVERIFY(view.isExpanded(unchangedN));
+    QVERIFY(view.isExpanded(unchangedA));
+    QCOMPARE(view.currentIndex().internalPointer(), keptNode);
+
     content = QStringList{
         "namespace N {",
         "struct A { int kept; int added; };",
