@@ -1537,6 +1537,7 @@ void TestCppTypeResolver::test_type_resolver_evaluates_logical_trait_single_valu
                 "  template<typename T, typename Hash> using Cache = __not_<__and_<"
                 "    integral_constant<bool, false>,"
                 "    integral_constant<bool, __is_constructible(Hash, const Hash&)>>>;\n"
+                "  template<typename Hash, typename T> using Forward = Cache<T, Hash>;\n"
                 "} }\n"
                 "struct FalseType {};\n"
                 "template<bool B> struct Selector { using type = FalseType; };\n"
@@ -1569,6 +1570,15 @@ void TestCppTypeResolver::test_type_resolver_evaluates_logical_trait_single_valu
     QVERIFY(parseDeclarationText(
                 "Selector<std::Cache<std::string, std::hash<std::string>>::value> value;", cache));
     QCOMPARE(resolver.memberType(cache.specifiers.type, "type").qualifiedName, "int");
+    QVERIFY(resolver.findStatement("std::Forward"));
+    DeclarationInfo forwardAlias;
+    QVERIFY(parseDeclarationText(
+                "std::Forward<std::hash<std::string>, std::string> value;", forwardAlias));
+    TypeInfo resolvedForward = resolver.resolve(forwardAlias.specifiers.type);
+    QCOMPARE(resolvedForward.qualifiedName, "std::__1::__not_");
+    CppTypeResolver::EvaluationContext forwardEvaluation;
+    QCOMPARE(resolver.evaluateConstantValue(
+                 resolvedForward.toString() + "::value", {}, {}, forwardEvaluation), "true");
 }
 
 void TestCppTypeResolver::test_type_resolver_resolves_alias_to_clang_type_builtin()

@@ -31,6 +31,7 @@ Red Panda C++ Version 3.6
   - fix: Completion and function tips now follow overloaded operator-> and collect function overloads from the actual namespace or class scope.
   - fix: Correctly parse direct-initialized variables and out-of-line special members from inline namespaces.
   - fix: Deduplicate matching pointer/array layers during template argument deduction and reject invalid builtin-to-class conversions.
+  - fix: Resolve template arguments and lexical bindings through chained constant aliases.
   - fix: The class browser no longer crashes when displaying inline namespace aliases.
   - fix: Correct ASM single-quote strings and binary suffixes, and trailing-space detection in ASM and plain text.
   - fix: GAS syntax directives now control register highlighting and remain correct across incremental edits.

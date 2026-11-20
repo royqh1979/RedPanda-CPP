@@ -3526,9 +3526,24 @@ QString CppTypeResolver::resolveConstantExpression(
         logicalName = target.section('<', 0, 0).section("::", -1);
         TypeInfo targetType = parseTypeText(target, evaluation);
         logicalArguments = targetType.templateArguments;
+        for (TemplateArgument &argument : traitType.templateArguments) {
+            if (argument.kind == TemplateArgumentKind::Type && argument.type) {
+                TypeInfo resolved = resolveType(*argument.type, logicalBindings,
+                                                logicalContext, evaluation);
+                if (resolved.qualifiedName.isEmpty())
+                    return text.trimmed();
+                argument.type = std::make_shared<TypeInfo>(resolved);
+            } else if (argument.kind == TemplateArgumentKind::NonType) {
+                QString value = evaluateConstantValue(
+                            argument.constantExpression, logicalBindings, logicalContext, evaluation);
+                if (!value.isEmpty())
+                    argument.constantExpression = value;
+            }
+        }
         logicalBindings = declarationBindings(logicalDeclaration, traitType,
                                               logicalBindings, evaluation);
         logicalContext = logicalDeclaration->parentScope.lock();
+        traitType = targetType;
         logicalDeclaration = findDeclaration(target.section('<', 0, 0),
                                              logicalContext, true);
     }
@@ -3557,7 +3572,8 @@ QString CppTypeResolver::resolveConstantExpression(
         return text.trimmed();
     }
     EvaluationContext traitEvaluation = evaluation;
-    ClassInstance trait = resolveTypeInstance(traitType, bindings, context, traitEvaluation);
+    ClassInstance trait = resolveTypeInstance(
+                traitType, logicalBindings, logicalContext, traitEvaluation);
     if (!trait.declaration || trait.type.templateArguments.isEmpty()
             || trait.type.templateArguments.first().kind != TemplateArgumentKind::Type
             || !trait.type.templateArguments.first().type) {
@@ -3591,7 +3607,7 @@ QString CppTypeResolver::resolveConstantExpression(
     }
     if (traitName == "__is_nothrow_invocable" || traitName == "is_nothrow_invocable") {
         EvalResult evaluated = evaluateInvocation(
-                    trait.type.templateArguments, 0, context, bindings, evaluation);
+                    trait.type.templateArguments, 0, logicalContext, logicalBindings, evaluation);
         ConstraintSatisfaction result = evaluateNoexceptCall(evaluated, evaluation);
         if (result == ConstraintSatisfaction::Satisfied)
             return "true";
@@ -3638,7 +3654,7 @@ QString CppTypeResolver::resolveConstantExpression(
             arguments.append(source);
         }
         ConstraintSatisfaction result = evaluateConstructible(
-                    argument, arguments, context, bindings, evaluation);
+                    argument, arguments, logicalContext, logicalBindings, evaluation);
         if (result == ConstraintSatisfaction::Satisfied)
             return "true";
         if (result == ConstraintSatisfaction::Unsatisfied)
@@ -3650,11 +3666,11 @@ QString CppTypeResolver::resolveConstantExpression(
             && trait.type.templateArguments[1].kind == TemplateArgumentKind::Type
             && trait.type.templateArguments[0].type && trait.type.templateArguments[1].type) {
         TypeInfo target = resolveType(*trait.type.templateArguments[1].type,
-                                      bindings, context, evaluation);
+                                      logicalBindings, logicalContext, evaluation);
         TypeInfo source = resolveType(*trait.type.templateArguments[0].type,
-                                      bindings, context, evaluation);
+                                      logicalBindings, logicalContext, evaluation);
         TypeInfo resolvedTarget;
-        bool convertible = compatibleArgument(target, source, {}, context,
+        bool convertible = compatibleArgument(target, source, {}, logicalContext,
                                               evaluation, resolvedTarget);
         return convertible ? "true" : "false";
     }
@@ -3675,7 +3691,7 @@ QString CppTypeResolver::resolveConstantExpression(
         for (const TemplateArgument &templateArgument : trait.type.templateArguments)
             arguments.append(templateArgument.toString());
         return evaluateConstantValue(trivial.value().arg(arguments.join(",")),
-                                     bindings, context, evaluation);
+                                     logicalBindings, logicalContext, evaluation);
     }
     return text.trimmed();
 }
