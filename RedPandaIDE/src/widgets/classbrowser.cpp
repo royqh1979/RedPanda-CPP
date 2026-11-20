@@ -191,7 +191,7 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
         disconnect(mParser.get(),
                    &CppParser::parseStarted,
                    this,
-                   &ClassBrowserModel::clear);
+                   &ClassBrowserModel::refreshStarted);
     }
     mParser = newCppParser;
     if (mParser) {
@@ -202,7 +202,7 @@ void ClassBrowserModel::setParser(const PCppParser &newCppParser)
         connect(mParser.get(),
                    &CppParser::parseStarted,
                    this,
-                   &ClassBrowserModel::clear);
+                   &ClassBrowserModel::refreshStarted);
     } else {
         clear();
     }
@@ -214,10 +214,8 @@ void ClassBrowserModel::clear()
     mRoot->children.clear();
     mNodes.clear();
     mNodeIndex.clear();
-    mProcessedStatements.clear();
     mTopLevelStatements.clear();
     mNestedStatements.clear();
-    mScopeNodes.clear();
     endResetModel();
 }
 
@@ -230,18 +228,15 @@ void ClassBrowserModel::fillStatements()
         mUpdating = true;
     }
     emit refreshStarted();
-    clear();
-    beginResetModel();
     {
         auto action = finally([this]{
-            endResetModel();
             mUpdating = false;
             emit refreshEnd();
         });
-        if (!mParser)
+        if (!mParser || !mParser->enabled()) {
+            clear();
             return;
-        if (!mParser->enabled())
-            return;
+        }
         if (!mParser->freeze())
             return;
         buildStatementTree();
@@ -268,37 +263,33 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     newNode->statement = statement;
     node->children.append(newNode.get());
     mNodes.append(newNode);
-    QString normalizedArgs;
-    if (statement->kind != StatementKind::Namespace
-            && statement->kind != StatementKind::InlineAlias)
-        normalizedArgs = std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs;
     mNodeIndex.insert(generateStatementKey(statement),newNode);
-    mProcessedStatements[node].insert(statement.get());
-    if (isScopeStatement(statement)) {
-        mScopeNodes.insert(statement->fullName,newNode);
-    }
-    addDirectChildren(newNode.get(), mParser->membersOfStatement(statement));
     return newNode;
+}
+
+void ClassBrowserModel::removeNode(ClassBrowserNode *node)
+{
+    const QVector<ClassBrowserNode *> children = node->children;
+    for (ClassBrowserNode *child : children)
+        removeNode(child);
+    mNodeIndex.remove(generateStatementKey(node->statement));
+    mNodes.removeOne(node->shared_from_this());
 }
 
 void ClassBrowserModel::buildStatementTree()
 {
+    mTopLevelStatements.clear();
+    mNestedStatements.clear();
     QList<PParsedFileInfo> fileInfos;
     if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
-        if (mCurrentFile.isEmpty())
-            return;
         PParsedFileInfo p = mParser->findFileInfo(mCurrentFile);
-        if (!p)
-            return;
-        fileInfos.append(p);
+        if (p)
+            fileInfos.append(p);
     } else {
-        if (mParser->projectFiles().isEmpty())
-            return;
         foreach(const QString& file,mParser->projectFiles()) {
             PParsedFileInfo p = mParser->findFileInfo(file);
-            if (!p)
-                return;
-            fileInfos.append(p);
+            if (p)
+                fileInfos.append(p);
         }
     }
 
@@ -315,8 +306,17 @@ void ClassBrowserModel::buildStatementTree()
             }
         }
     }
-    addDirectChildren(mRoot, mTopLevelStatements);
+    updateChildren(mRoot, mTopLevelStatements.values());
+    emit layoutAboutToBeChanged();
+    const QList<QModelIndex> oldIndexes = persistentIndexList();
     sortNode(mRoot);
+    for (const QModelIndex &oldIndex : oldIndexes) {
+        if (oldIndex.isValid()) {
+            auto node = static_cast<ClassBrowserNode *>(oldIndex.internalPointer());
+            changePersistentIndex(oldIndex, indexForNode(node));
+        }
+    }
+    emit layoutChanged();
 }
 
 void ClassBrowserModel::sortNode(ClassBrowserNode *node)
@@ -376,86 +376,107 @@ void ClassBrowserModel::sortNode(ClassBrowserNode *node)
     }
 }
 
-void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const QSet<PStatement> &statements)
+bool ClassBrowserModel::shouldShowStatement(ClassBrowserNode *node, const PStatement &statement) const
 {
-    addDirectChildren(node, statements.values());
-}
+    if (!statement)
+        return false;
+    if (mClassBrowserType==ProjectClassBrowserType::WholeProject
+            && !statementInProject(statement))
+        return false;
 
-void ClassBrowserModel::addDirectChildren(ClassBrowserNode *node, const StatementList &statements)
-{
-    for (const PStatement &statement : statements) {
-        if (!statement)
-            continue;
-        if (mClassBrowserType==ProjectClassBrowserType::WholeProject
-                && !statementInProject(statement))
-            continue;
+    PStatement parentScope = statement->parentScope.lock();
+    const QSet<PStatement> &statementsToShow = parentScope
+            ? mNestedStatements : mTopLevelStatements;
+    if (!statementsToShow.contains(statement))
+        return false;
+    if (statement->kind == StatementKind::Enum
+            && (!parentScope
+                || (parentScope->kind != StatementKind::EnumType
+                    && parentScope->kind != StatementKind::EnumClassType)))
+        return false;
+    if (statement->kind == StatementKind::Block
+            || statement->kind == StatementKind::Lambda
+            || statement == node->statement
+            || statement->scope == StatementScope::Local)
+        return false;
 
-        PStatement parentScope = statement->parentScope.lock();
-        const QSet<PStatement> &statementsToShow = parentScope
-                ? mNestedStatements : mTopLevelStatements;
-        if (!statementsToShow.contains(statement))
-            continue;
-        if (statement->kind == StatementKind::Enum
-                && (!parentScope
-                    || (parentScope->kind != StatementKind::EnumType
-                        && parentScope->kind != StatementKind::EnumClassType)))
-            continue;
-        if (statement->kind == StatementKind::Block)
-            continue;
-        if (statement->kind == StatementKind::Lambda)
-            continue;
-
-        if (statement == node->statement) // prevent infinite recursion
-            continue;
-
-        if (statement->scope == StatementScope::Local)
-            continue;
-
-        StatementOccurrence declaration = statementDeclarationForNavigation(statement, mCurrentFile);
-        StatementOccurrence definition = statementDefinitionForNavigation(statement);
-        if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
+    StatementOccurrence declaration = statementDeclarationForNavigation(statement, mCurrentFile);
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
             && statement->command.startsWith("__")
             && declaration.fileName != mCurrentFile
-                && definition.fileName != mCurrentFile
-                )
-        continue;
+            && definition.fileName != mCurrentFile)
+        return false;
+    if (pSettings->codeCompletion().hideSymbolsStartsWithUnderLine()
+            && statement->kind != StatementKind::LiteralOperator
+            && statement->command.startsWith('_')
+            && declaration.fileName != mCurrentFile
+            && definition.fileName != mCurrentFile)
+        return false;
 
-        if (pSettings->codeCompletion().hideSymbolsStartsWithUnderLine()
-                && statement->kind != StatementKind::LiteralOperator
-                && statement->command.startsWith('_')
-                && declaration.fileName != mCurrentFile
-                && definition.fileName != mCurrentFile
-                )
-        continue;
+    return parentScope == node->statement
+            || (parentScope && node->statement
+                && parentScope->fullName == node->statement->fullName);
+}
 
-        if (parentScope != node->statement
-                && (!parentScope || !node->statement
-                    || parentScope->fullName != node->statement->fullName))
+void ClassBrowserModel::updateChildren(ClassBrowserNode *node, const StatementList &statements)
+{
+    QStringList orderedKeys;
+    QHash<QString, PStatement> statementsByKey;
+    for (const PStatement &statement : statements) {
+        if (!shouldShowStatement(node, statement))
             continue;
-        if (mProcessedStatements.value(node).contains(statement.get()))
-            continue;
+        QString key = generateStatementKey(statement);
+        if (!statementsByKey.contains(key))
+            orderedKeys.append(key);
+        statementsByKey.insert(key, statement);
+    }
 
-        if (isScopeStatement(statement)) {
-            PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
-            if (!scopeNode)
-                addChild(node, statement);
+    QHash<QString, PClassBrowserNode> nodesByKey;
+    for (ClassBrowserNode *child : node->children)
+        nodesByKey.insert(generateStatementKey(child->statement), child->shared_from_this());
+
+    QModelIndex parentIndex = indexForNode(node);
+    for (int row = node->children.count() - 1; row >= 0; --row) {
+        PClassBrowserNode child = node->children[row]->shared_from_this();
+        if (statementsByKey.contains(generateStatementKey(child->statement)))
+            continue;
+        beginRemoveRows(parentIndex, row, row);
+        node->children.remove(row, 1);
+        removeNode(child.get());
+        endRemoveRows();
+    }
+
+    for (const QString &key : orderedKeys) {
+        PStatement statement = statementsByKey.value(key);
+        PClassBrowserNode child = nodesByKey.value(key);
+        if (child) {
+            int row = node->children.indexOf(child.get());
+            QModelIndex childIndex = index(row, 0, parentIndex);
+            child->statement = statement;
+            mNodeIndex.insert(key, child);
+            emit dataChanged(childIndex, childIndex);
         } else {
-            addChild(node,statement);
+            int row = node->children.count();
+            beginInsertRows(parentIndex, row, row);
+            child = addChild(node, statement);
+            endInsertRows();
         }
+        updateChildren(child.get(), mParser->membersOfStatement(statement));
     }
 }
 
-bool ClassBrowserModel::isScopeStatement(const PStatement &statement)
+QModelIndex ClassBrowserModel::indexForNode(ClassBrowserNode *node) const
 {
-    switch(statement->kind) {
-    case StatementKind::Class:
-    case StatementKind::Namespace:
-    case StatementKind::EnumClassType:
-    case StatementKind::EnumType:
-        return true;
-    default:
-        return false;
-    }
+    if (!node || node == mRoot)
+        return QModelIndex();
+    ClassBrowserNode *parentNode = node->parent;
+    if (!parentNode)
+        return QModelIndex();
+    int row = parentNode->children.indexOf(node);
+    if (row < 0)
+        return QModelIndex();
+    return createIndex(row, 0, node);
 }
 
 QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key) const
@@ -463,17 +484,7 @@ QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key) const
     QMutexLocker locker(&mMutex);
     if (mUpdating)
         return QModelIndex();
-    PClassBrowserNode node=mNodeIndex.value(key,PClassBrowserNode());
-    if (!node)
-        return QModelIndex();
-
-    ClassBrowserNode *parentNode=node->parent;
-    if (!parentNode)
-        return QModelIndex();
-    int row=parentNode->children.indexOf(node.get());
-    if (row<0)
-        return QModelIndex();
-    return createIndex(row,0,node.get());
+    return indexForNode(mNodeIndex.value(key).get());
 }
 
 ProjectClassBrowserType ClassBrowserModel::classBrowserType() const

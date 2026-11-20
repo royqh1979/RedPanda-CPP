@@ -21,11 +21,10 @@
 #include "../parser/cppparser.h"
 #include "../projectoptions.h"
 
-struct ClassBrowserNode {
+struct ClassBrowserNode : public std::enable_shared_from_this<ClassBrowserNode> {
     ClassBrowserNode* parent;
     PStatement statement;
     QVector<ClassBrowserNode *> children;
-//    bool childrenFetched;
 };
 
 using PClassBrowserNode = std::shared_ptr<ClassBrowserNode>;
@@ -71,16 +70,15 @@ public slots:
     void fillStatements();
 private:
     PClassBrowserNode addChild(ClassBrowserNode* node, const PStatement& statement);
+    void removeNode(ClassBrowserNode *node);
     void buildStatementTree();
     void sortNode(ClassBrowserNode * node);
-    void addDirectChildren(ClassBrowserNode * node, const QSet<PStatement>& statements);
-    void addDirectChildren(ClassBrowserNode * node, const StatementList& statements);
-    bool isScopeStatement(const PStatement& statement);
+    void updateChildren(ClassBrowserNode *node, const StatementList& statements);
+    bool shouldShowStatement(ClassBrowserNode *node, const PStatement &statement) const;
+    QModelIndex indexForNode(ClassBrowserNode *node) const;
 private:
     ClassBrowserNode * mRoot;
-    QHash<QString,PClassBrowserNode> mScopeNodes;
     QHash<QString,PClassBrowserNode> mNodeIndex;
-    QHash<ClassBrowserNode *, QSet<AbstractStatement *>> mProcessedStatements;
     QSet<PStatement> mTopLevelStatements;
     QSet<PStatement> mNestedStatements;
     QVector<PClassBrowserNode> mNodes;

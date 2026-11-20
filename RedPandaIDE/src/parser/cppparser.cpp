@@ -367,8 +367,8 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
     }
     auto action = finally([&, this] {
         QMutexLocker locker(&mMutex);
-        emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
         mParsing = false;
+        emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
     });
     if (onlyIfNotParsed && mPreprocessor.hasReplayRecord(fileName))
         return false;

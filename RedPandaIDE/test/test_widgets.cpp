@@ -20,8 +20,10 @@
 #include <QElapsedTimer>
 #include <QListView>
 #include <QSet>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTreeView>
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 #include "test_parser_utils.h"
 #endif
@@ -877,6 +879,92 @@ void TestWidgets::test_class_browser_direct_members()
     QVERIFY(derived.isValid());
     QCOMPARE(childCommands(model, derived), QSet<QString>({"action"}));
     QVERIFY(!findNode(model, derived, "publicValue").isValid());
+}
+
+void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
+{
+    const QString fileName = "incremental.cpp";
+    QStringList content{
+        "namespace N {",
+        "struct A { int kept; int removed; };",
+        "int oldGlobal;",
+        "}"
+    };
+    mParser->setOnGetFileStream([&content](const QString &, QStringList &buffer) {
+        buffer = content;
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    model.fillStatements();
+    QTreeView view;
+    view.setModel(&model);
+    QModelIndex n = findNode(model, {}, "N");
+    QModelIndex a = findNode(model, n, "A");
+    QModelIndex kept = findNode(model, a, "kept");
+    QVERIFY(n.isValid() && a.isValid() && kept.isValid());
+    view.expand(n);
+    view.expand(a);
+    view.setCurrentIndex(kept);
+    auto nNode = static_cast<ClassBrowserNode *>(n.internalPointer());
+    auto aNode = static_cast<ClassBrowserNode *>(a.internalPointer());
+    auto keptNode = static_cast<ClassBrowserNode *>(kept.internalPointer());
+    QString nKey = model.generateStatementKey(nNode->statement);
+    QString aKey = model.generateStatementKey(aNode->statement);
+    QCOMPARE(model.modelIndexForStatement(nKey).internalPointer(), nNode);
+    QCOMPARE(model.modelIndexForStatement(aKey).internalPointer(), aNode);
+
+    QSignalSpy resetSpy(&model, &QAbstractItemModel::modelAboutToBeReset);
+    int dataChangeCount = 0;
+    connect(&model, &QAbstractItemModel::dataChanged, &view,
+            [&] { ++dataChangeCount; });
+    bool disabledDuringRefresh = false;
+    connect(&model, &ClassBrowserModel::refreshStarted, &view, [&] {
+        disabledDuringRefresh = true;
+        view.setEnabled(false);
+        QVERIFY(model.rowCount({}) > 0);
+    });
+    connect(&model, &ClassBrowserModel::refreshEnd, &view, [&] {
+        view.setEnabled(true);
+    });
+
+    content = QStringList{
+        "namespace N {",
+        "struct A { int kept; int added; };",
+        "int newGlobal;",
+        "}"
+    };
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    QVERIFY(disabledDuringRefresh);
+    QVERIFY(view.isEnabled());
+    QCOMPARE(resetSpy.count(), 0);
+    QVERIFY(dataChangeCount > 0);
+    QModelIndex newN = findNode(model, {}, "N");
+    QModelIndex newA = findNode(model, newN, "A");
+    QModelIndex newKept = findNode(model, newA, "kept");
+    QVERIFY(newN.isValid() && newA.isValid() && newKept.isValid());
+    QCOMPARE(model.generateStatementKey(nNode->statement), nKey);
+    QCOMPARE(model.generateStatementKey(aNode->statement), aKey);
+    QCOMPARE(newN.internalPointer(), nNode);
+    QCOMPARE(newA.internalPointer(), aNode);
+    QCOMPARE(newKept.internalPointer(), keptNode);
+    QVERIFY(view.isExpanded(newN));
+    QVERIFY(view.isExpanded(newA));
+    QCOMPARE(view.currentIndex().internalPointer(), keptNode);
+    ClassBrowserModel freshModel;
+    freshModel.setParser(mParser);
+    freshModel.setCurrentFile(fileName);
+    freshModel.fillStatements();
+    QModelIndex freshA = findNode(freshModel, findNode(freshModel, {}, "N"), "A");
+    QCOMPARE(childCommands(model, newA), childCommands(freshModel, freshA));
+    QVERIFY(findNode(model, newA, "added").isValid());
+    QVERIFY(!findNode(model, newA, "removed").isValid());
+    QVERIFY(findNode(model, newN, "newGlobal").isValid());
+    QVERIFY(!findNode(model, newN, "oldGlobal").isValid());
 }
 
 void TestWidgets::test_goto_class_declaration_and_definition()

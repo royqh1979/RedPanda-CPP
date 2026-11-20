@@ -5160,6 +5160,7 @@ void MainWindow::onClassBrowserChangeScope()
 
 void MainWindow::onClassBrowserRefreshStart()
 {
+    ui->classBrowser->setEnabled(false);
     mClassBrowserCurrentStatement="";
     QModelIndex index = ui->classBrowser->currentIndex();
     if (!index.isValid())
@@ -5176,6 +5177,7 @@ void MainWindow::onClassBrowserRefreshStart()
 
 void MainWindow::onClassBrowserRefreshEnd()
 {
+    ui->classBrowser->setEnabled(true);
     QModelIndex index = mClassBrowserModel->modelIndexForStatement(mClassBrowserCurrentStatement);
     if (index.isValid()) {
         ui->classBrowser->expand(index);
