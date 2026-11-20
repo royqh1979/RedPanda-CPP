@@ -1718,7 +1718,8 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
     }
 
     if (line >= 0 && line < mDocument->count()
-            && event->button() == Qt::LeftButton) {
+            && event->button() == Qt::LeftButton
+            && mGutter.showLineNumbers() && x >= mGutter.leftOffset()) {
         CharPos start{0, line};
         CharPos end = lineEndPos(this, line);
         if (event->modifiers() == Qt::ShiftModifier

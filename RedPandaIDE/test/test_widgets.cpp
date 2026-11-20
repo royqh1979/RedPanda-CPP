@@ -1385,6 +1385,89 @@ void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
     QVERIFY(parser->findStatement("conio_value"));
 }
 
+void TestWidgets::test_class_browser_anonymous_typedef_type()
+{
+    const QString fileName = "anonymous_typedef.cpp";
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"typedef struct { int xxx; } Test;"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    model.fillStatements();
+    QModelIndex type;
+    for (int row = 0; row < model.rowCount({}); ++row) {
+        QModelIndex candidate = model.index(row, 0, {});
+        auto node = static_cast<ClassBrowserNode *>(candidate.internalPointer());
+        if (node && node->statement
+                && node->statement->command.startsWith("__RED_PANDA_IDE__")
+                && node->statement->kind == StatementKind::Class) {
+            type = candidate;
+            break;
+        }
+    }
+    QVERIFY(type.isValid());
+    QVERIFY(findNode(model, type, "xxx").isValid());
+}
+
+void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
+{
+    const QString fileName = "anonymous_lookup.cpp";
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "typedef struct { int xxx; } Test;",
+            "struct { int yyy; } value;",
+            "enum { red } color;",
+            "Test test;",
+            "int use() { return test.xxx + value.yyy; }"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    PStatement alias = mParser->findStatement("Test");
+    PStatement variable = mParser->findStatement("value");
+    PStatement color = mParser->findStatement("color");
+    PStatement red = mParser->findStatement("red");
+    QVERIFY(alias && variable && color);
+    QVERIFY(red && red->kind == StatementKind::Enum);
+    QString aliasTypeName = std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName;
+    QString variableTypeName = std::dynamic_pointer_cast<Statement>(variable)->typeInfo.qualifiedName;
+    QString enumTypeName = std::dynamic_pointer_cast<Statement>(color)->typeInfo.qualifiedName;
+    PStatement aliasType = mParser->findStatement(aliasTypeName);
+    PStatement variableType = mParser->findStatement(variableTypeName);
+    PStatement enumType = mParser->findStatement(enumTypeName);
+    QVERIFY(aliasType && aliasType->kind == StatementKind::Class);
+    QVERIFY(variableType && variableType->kind == StatementKind::Class);
+    QVERIFY(enumType && enumType->kind == StatementKind::EnumType);
+
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setParser(mParser);
+    QVERIFY(completionNames(popup, "test", fileName).contains("xxx"));
+    QVERIFY(completionNames(popup, "value", fileName).contains("yyy"));
+    QVERIFY(completionNames(popup, "", fileName, CodeCompletionType::Normal,
+                            "", "red", {}, 4).contains("red"));
+
+    PStatement scope = mParser->findScopeStatement(fileName, 4);
+    QVERIFY(scope);
+    QStringList aliasMemberExpression{"test", ".", "xxx"};
+    QStringList variableMemberExpression{"value", ".", "yyy"};
+    QStringList colorExpression{"color"};
+    QCOMPARE(mParser->evalExpression(fileName, aliasMemberExpression, scope).type.toString(), "int");
+    QCOMPARE(mParser->evalExpression(fileName, variableMemberExpression, scope).type.toString(), "int");
+    QCOMPARE(mParser->evalExpression(fileName, colorExpression, scope).type.declaration.lock(),
+             enumType);
+
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    PStatement reparsedAlias = mParser->findStatement("Test");
+    QVERIFY(reparsedAlias);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(reparsedAlias)->typeInfo.qualifiedName,
+             aliasTypeName);
+}
+
 void TestWidgets::test_unscoped_enum_completion_and_class_browser()
 {
     const QString fileName = "enum_completion.cpp";

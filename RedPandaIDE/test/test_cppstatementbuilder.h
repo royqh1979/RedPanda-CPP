@@ -12,6 +12,9 @@ private slots:
     void test_scope_queries_same_line();
     void test_declaration_source_ranges();
     void test_statement_builder_expands_declarators_and_types();
+    void test_statement_builder_names_anonymous_typedef_type();
+    void test_statement_builder_names_anonymous_variable_type();
+    void test_statement_builder_names_anonymous_enum_types();
     void test_statement_builder_preserves_function_and_access_properties();
     void test_statement_builder_preserves_scopes_positions_and_ancestors();
     void test_statement_builder_assigns_out_of_line_special_members_to_class();

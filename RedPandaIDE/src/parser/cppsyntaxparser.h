@@ -22,7 +22,10 @@
 class CppSyntaxParser
 {
 public:
-    explicit CppSyntaxParser(CppTokenCursor &cursor);
+    using AnonymousTypeNameGenerator = std::function<QString()>;
+
+    explicit CppSyntaxParser(CppTokenCursor &cursor,
+                             AnonymousTypeNameGenerator anonymousTypeNameGenerator = {});
 
     void setCppVersion(int cppVersion) { mDeclarationParser.setCppVersion(cppVersion); }
     bool parseDeclaration(DeclarationInfo &result);
@@ -43,10 +46,13 @@ private:
     void skipBalanced();
     void skipDeclaration();
     void finishRanges(DeclarationInfo &result, const SourcePosition &start);
+    void nameAnonymousType(DeclarationInfo &declaration);
 
     CppTokenCursor &mCursor;
     CppDeclarationParser mDeclarationParser;
     QString mRootFileName;
+    AnonymousTypeNameGenerator mAnonymousTypeNameGenerator;
+    int mAnonymousTypeId;
 };
 
 #endif // CPPSYNTAXPARSER_H

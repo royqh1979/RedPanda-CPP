@@ -91,9 +91,16 @@ private:
 };
 }
 
-CppSyntaxParser::CppSyntaxParser(CppTokenCursor &cursor)
-    : mCursor(cursor), mDeclarationParser(cursor), mRootFileName(cursor.current().fileName)
+CppSyntaxParser::CppSyntaxParser(
+        CppTokenCursor &cursor, AnonymousTypeNameGenerator anonymousTypeNameGenerator)
+    : mCursor(cursor), mDeclarationParser(cursor), mRootFileName(cursor.current().fileName),
+      mAnonymousTypeNameGenerator(std::move(anonymousTypeNameGenerator)), mAnonymousTypeId(0)
 {
+    if (!mAnonymousTypeNameGenerator) {
+        mAnonymousTypeNameGenerator = [this] {
+            return QString("__RED_PANDA_IDE__%1").arg(++mAnonymousTypeId);
+        };
+    }
 }
 
 bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
@@ -114,6 +121,12 @@ bool CppSyntaxParser::parseDeclaration(DeclarationInfo &result)
     if (mCursor.currentText() == "inline"
             && mCursor.peek().text == "namespace") {
         result.specifiers.properties.setFlag(DeclSpecifierProperty::Inline);
+        mCursor.advance();
+    }
+    if (mCursor.currentText() == "typedef"
+            && (mCursor.peek().text == "class" || mCursor.peek().text == "struct"
+                || mCursor.peek().text == "union" || mCursor.peek().text == "enum")) {
+        result.specifiers.properties.setFlag(DeclSpecifierProperty::Typedef);
         mCursor.advance();
     }
     bool success = false;
@@ -238,9 +251,25 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
         if (!mCursor.consume(","))
             break;
     }
+    nameAnonymousType(result);
     mDeclarationParser.setCurrentClassName(previousClassName);
     mCursor.consume(";");
     return true;
+}
+
+void CppSyntaxParser::nameAnonymousType(DeclarationInfo &declaration)
+{
+    if (!declaration.declarators.isEmpty()
+            && declaration.declarators.first().name.isEmpty()
+            && declaration.bodyRange.isValid()) {
+        if (declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Typedef)
+                && declaration.declarators.count() > 1) {
+            declaration.declarators[0].name =
+                    "__RED_PANDA_IDE__" + declaration.declarators[1].name;
+        } else {
+            declaration.declarators[0].name = mAnonymousTypeNameGenerator();
+        }
+    }
 }
 
 bool CppSyntaxParser::parseNamespace(DeclarationInfo &result)
@@ -333,6 +362,16 @@ bool CppSyntaxParser::parseEnum(DeclarationInfo &result)
             ? mCursor.current().position : mCursor.peek(-1).position;
     result.bodyRange = SourceRange{bodyStart, bodyEnd};
     mCursor.consume("}");
+    while (!mCursor.atEnd() && mCursor.currentText() != ";"
+            && mCursor.currentText() != "}") {
+        DeclaratorInfo trailing;
+        if (!mDeclarationParser.parseDeclarator(trailing))
+            return false;
+        result.declarators.append(trailing);
+        if (!mCursor.consume(","))
+            break;
+    }
+    nameAnonymousType(result);
     mCursor.consume(";");
     return true;
 }

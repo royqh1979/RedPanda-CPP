@@ -154,6 +154,93 @@ void TestCppStatementBuilder::test_statement_builder_expands_declarators_and_typ
     QCOMPARE(parameter->fullName, "f::value");
 }
 
+void TestCppStatementBuilder::test_statement_builder_names_anonymous_typedef_type()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("typedef struct { int xxx; } Test;", declarations));
+    QCOMPARE(declarations.count(), 1);
+    QCOMPARE(declarations.first().kind, DeclarationKind::Class);
+    QCOMPARE(declarations.first().declarators.count(), 2);
+
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    const StatementMap &globals = model.childrenStatements();
+    PStatement alias = findStatement(globals, "Test");
+    QVERIFY(alias);
+    QCOMPARE(alias->kind, StatementKind::Typedef);
+    QString typeName = std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName;
+    QVERIFY(typeName.startsWith("__RED_PANDA_IDE__"));
+    PStatement type = findStatement(globals, typeName);
+    QVERIFY(type);
+    QCOMPARE(type->kind, StatementKind::Class);
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(type)->children, "xxx"));
+    CppTypeResolver resolver(model);
+    QCOMPARE(resolver.resolve(std::dynamic_pointer_cast<Statement>(alias)->typeInfo).declaration.lock(),
+             type);
+}
+
+void TestCppStatementBuilder::test_statement_builder_names_anonymous_variable_type()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("struct { int xxx; } test;", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    builder.build(declarations.first(), context);
+
+    const StatementMap &globals = model.childrenStatements();
+    PStatement variable = findStatement(globals, "test");
+    QVERIFY(variable);
+    QCOMPARE(variable->kind, StatementKind::Variable);
+    QString typeName = std::dynamic_pointer_cast<Statement>(variable)->typeInfo.qualifiedName;
+    QVERIFY(typeName.startsWith("__RED_PANDA_IDE__"));
+    QVERIFY(typeName != "test");
+    PStatement type = findStatement(globals, typeName);
+    QVERIFY(type);
+    QCOMPARE(type->kind, StatementKind::Class);
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(type)->children, "xxx"));
+    CppTypeResolver resolver(model);
+    QCOMPARE(resolver.resolve(std::dynamic_pointer_cast<Statement>(variable)->typeInfo).declaration.lock(),
+             type);
+}
+
+void TestCppStatementBuilder::test_statement_builder_names_anonymous_enum_types()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText("typedef enum { A } E;\nenum { B } e;", declarations));
+    QCOMPARE(declarations.count(), 2);
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+
+    const StatementMap &globals = model.childrenStatements();
+    PStatement alias = findStatement(globals, "E");
+    PStatement variable = findStatement(globals, "e");
+    QVERIFY(alias && variable);
+    QCOMPARE(alias->kind, StatementKind::Typedef);
+    QCOMPARE(variable->kind, StatementKind::Variable);
+    QString aliasTypeName = std::dynamic_pointer_cast<Statement>(alias)->typeInfo.qualifiedName;
+    QString variableTypeName = std::dynamic_pointer_cast<Statement>(variable)->typeInfo.qualifiedName;
+    QVERIFY(aliasTypeName.startsWith("__RED_PANDA_IDE__"));
+    QVERIFY(variableTypeName.startsWith("__RED_PANDA_IDE__"));
+    QVERIFY(aliasTypeName != variableTypeName);
+    PStatement aliasType = findStatement(globals, aliasTypeName);
+    PStatement variableType = findStatement(globals, variableTypeName);
+    QVERIFY(aliasType && variableType);
+    QCOMPARE(aliasType->kind, StatementKind::EnumType);
+    QCOMPARE(variableType->kind, StatementKind::EnumType);
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(aliasType)->children, "A"));
+    QVERIFY(findStatement(std::dynamic_pointer_cast<Statement>(variableType)->children, "B"));
+}
+
 void TestCppStatementBuilder::test_statement_builder_preserves_function_and_access_properties()
 {
     QVector<DeclarationInfo> declarations;
