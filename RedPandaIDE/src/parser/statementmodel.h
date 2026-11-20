@@ -56,8 +56,6 @@ public:
         mGlobalStatements.clear();
     }
     int count() const { return mCount; }
-    int cppVersion() const { return mCppVersion; }
-    void setCppVersion(int cppVersion) { mCppVersion = cppVersion; }
     const StatementList &statements() const { return mStatements; }
     void addDeclaration(const PStatement &statement, const QString &fileName,
                         const SourceRange &range, const QString &boundaryAncestor,
@@ -79,7 +77,6 @@ private:
     void dumpStatementMap(const StatementMap& map, QTextStream& out, int level) const;
 private:
     int mCount;
-    int mCppVersion = CppVersion::Cpp17;
     StatementList mStatements;
     StatementMap mGlobalStatements;  //may have overloaded functions, so use QMultiMap
 };

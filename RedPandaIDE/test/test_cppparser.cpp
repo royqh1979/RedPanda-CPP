@@ -2037,6 +2037,41 @@ void TestCppParser::test_void_t_detection_failure()
     QCOMPARE(resolved.declaration.lock(), mParser->findStatement("Traits"));
 }
 
+void TestCppParser::test_standard_type_traits_require_cpp11()
+{
+    struct Result {
+        PStatement resolved;
+        PStatement value;
+    };
+    auto resolveTrait = [&](int cppVersion) {
+        init_parser();
+        const QString fileName = QString("text-%1.cpp").arg(cppVersion);
+        mParser->addHardDefineByLine(QString("#define __cplusplus %1L").arg(cppVersion));
+        mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+            buffer = QStringList{
+                "namespace std { template<typename T> struct add_lvalue_reference {}; }",
+                "struct Value {};"
+            };
+            return true;
+        });
+        CppParser::parseFileBlocking(mParser, fileName, false, "");
+        return Result{
+            mParser->findTypeDefinitionOf(
+                        fileName, "std::add_lvalue_reference<Value>::type", {}),
+            mParser->findStatement("Value")
+        };
+    };
+
+    Result cpp98 = resolveTrait(199711);
+    QVERIFY(cpp98.value);
+    QVERIFY(!cpp98.resolved);
+    for (int cppVersion : {CppVersion::Cpp11, CppVersion::Cpp17, CppVersion::Cpp20}) {
+        Result result = resolveTrait(cppVersion);
+        QVERIFY(result.value);
+        QCOMPARE(result.resolved, result.value);
+    }
+}
+
 #ifdef REDPANDA_PARSER_STDLIB_TEST
 void TestCppParser::test_bits_stdcpp_not_rescanned_on_stable_reparse()
 {
@@ -2455,7 +2490,6 @@ void TestCppParser::test_standard_library_make_shared_default()
     PStatement sharedPtr = mParser->findStatement("std::shared_ptr");
     QVERIFY(sharedPtr);
     if (mParser->cppVersion() >= CppVersion::Cpp20) {
-        QCOMPARE(mParser->statementList().cppVersion(), mParser->cppVersion());
         QVERIFY(mParser->findStatement("std::is_array_v"));
         QVERIFY(mParser->findStatement("std::_NonArray"));
         QCOMPARE(mParser->findTypeDefinitionOf(main, "std::_NonArray<std::string>", {}), basicString);
@@ -3078,7 +3112,8 @@ void TestCppParser::test_standard_library_algorithm_eval_profile()
         }
         qint64 started = timer.nsecsElapsed();
         CppTypeResolver::EvaluationContext evaluation;
-        CppTypeResolver resolver(mParser->statementList(), &evaluation);
+        CppTypeResolver resolver(mParser->statementList(), &evaluation,
+                                 {mParser->compilerType(), mParser->cppVersion()});
         TypeOperationRegistry operations(resolver);
         CppExpressionEvaluator evaluator(const_cast<StatementModel &>(mParser->statementList()),
                                          resolver, operations);

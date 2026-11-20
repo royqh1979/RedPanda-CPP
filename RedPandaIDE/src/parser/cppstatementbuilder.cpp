@@ -369,8 +369,8 @@ qlonglong evaluateIntegerConstant(const QString &text, const QHash<QString, qlon
 }
 }
 
-CppStatementBuilder::CppStatementBuilder(StatementModel &model, bool supportsClangTypeBuiltins)
-    : mModel(model), mTypeResolver(model, nullptr, supportsClangTypeBuiltins), mTypeOperations(mTypeResolver),
+CppStatementBuilder::CppStatementBuilder(StatementModel &model, const CppEvaluationOptions &options)
+    : mModel(model), mTypeResolver(model, nullptr, options), mTypeOperations(mTypeResolver),
       mExpressionEvaluator(model, mTypeResolver, mTypeOperations)
 {
 }

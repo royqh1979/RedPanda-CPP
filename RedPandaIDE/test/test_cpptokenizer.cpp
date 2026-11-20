@@ -1790,7 +1790,8 @@ void TestCppTokenizer::test_type_resolver_reference_collapsing_and_cycles()
     QCOMPARE(builtinReference.specifiers.type.qualifiedName,
              QString("__add_lvalue_reference(std::string)"));
     QVERIFY(resolver.resolve(builtinReference.specifiers.type).qualifiedName.isEmpty());
-    CppTypeResolver clangResolver(model, nullptr, true);
+    CppTypeResolver clangResolver(
+                model, nullptr, {CppCompilerType::Clang, CppVersion::Cpp17});
     QCOMPARE(clangResolver.resolve(builtinReference.specifiers.type).toString(), "std::string &");
     DeclarationInfo builtinPointer;
     QVERIFY(parseDeclarationText("__add_pointer(std::string) value;", builtinPointer));
@@ -2126,14 +2127,14 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
                 "auto shared = std::make_shared<std::string>();\n"
                 "auto unique = std::make_unique<std::string>();\n", declarations, CppVersion::Cpp20));
     StatementModel model;
-    model.setCppVersion(CppVersion::Cpp20);
-    CppStatementBuilder builder(model);
+    const CppEvaluationOptions options{CppCompilerType::GCC, CppVersion::Cpp20};
+    CppStatementBuilder builder(model, options);
     StatementBuildContext context;
     context.fileName = "/tmp/main.cpp";
     for (const DeclarationInfo &declaration : declarations)
         builder.build(declaration, context);
 
-    CppTypeResolver resolver(model);
+    CppTypeResolver resolver(model, nullptr, options);
     TypeOperationRegistry operations(resolver);
     CppExpressionEvaluator evaluator(model, resolver, operations);
     auto evaluate = [&](const QString &text) {
@@ -2192,8 +2193,9 @@ void TestCppTokenizer::test_function_template_explicit_arguments()
     QCOMPARE(statementType(shared), "std::shared_ptr<std::string>");
     QCOMPARE(statementType(unique), "std::unique_ptr<std::string,std::default_delete<std::string>>");
 
-    model.setCppVersion(CppVersion::Cpp17);
-    QVERIFY(resolver.invokeFunction(makeShared, {},
+    CppTypeResolver cpp17Resolver(
+                model, nullptr, {CppCompilerType::GCC, CppVersion::Cpp17});
+    QVERIFY(cpp17Resolver.invokeFunction(makeShared, {},
             {TemplateArgument::fromType(stringVariable.specifiers.type)}).qualifiedName.isEmpty());
 }
 

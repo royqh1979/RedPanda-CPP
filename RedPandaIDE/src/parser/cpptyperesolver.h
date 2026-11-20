@@ -186,7 +186,7 @@ public:
     using PTemplateBindingFrame = ::PTemplateBindingFrame;
 
     explicit CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation = nullptr,
-                             bool supportsClangTypeBuiltins = false);
+                             const CppEvaluationOptions &options = {});
 
     TypeInfo resolve(const TypeInfo &type, const TemplateBindings &bindings = {},
                      const PStatement &context = {}, EvaluationContext *evaluation = nullptr) const;
@@ -339,9 +339,12 @@ private:
                                               const PTemplateBindingFrame &outerBindings,
                                               EvaluationContext &evaluation) const;
 
+    bool supportsConstantTrait(const QString &traitName) const;
+    bool supportsTypeTrait(const QString &traitName) const;
+
     const StatementModel &mModel;
     EvaluationContext *mEvaluation;
-    bool mSupportsClangTypeBuiltins;
+    CppEvaluationOptions mOptions;
 };
 
 #endif // CPPTYPERESOLVER_H

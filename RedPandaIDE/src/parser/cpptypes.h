@@ -28,11 +28,22 @@ struct LambdaInfo;
 struct TypeInfo;
 using PTypeInfo = std::shared_ptr<TypeInfo>;
 
+enum class CppCompilerType {
+    GCC,
+    Clang
+};
+
 namespace CppVersion {
+inline constexpr int Cpp11 = 201103;
 inline constexpr int Cpp17 = 201703;
 inline constexpr int Cpp20 = 202002;
 inline constexpr int Cpp23 = 202302;
 }
+
+struct CppEvaluationOptions {
+    CppCompilerType compilerType = CppCompilerType::GCC;
+    int cppVersion = CppVersion::Cpp17;
+};
 
 struct SourcePosition {
     int line = -1;

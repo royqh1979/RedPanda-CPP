@@ -29,6 +29,7 @@ private slots:
     void test_const_template_parameter_substitution();
     void test_auto_reference_collapsing();
     void test_void_t_detection_failure();
+    void test_standard_type_traits_require_cpp11();
     void test_variable_template_specialization_name();
     void test_member_alias_template_specialization();
     void test_parse_vars();

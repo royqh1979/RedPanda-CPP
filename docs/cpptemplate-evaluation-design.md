@@ -249,7 +249,9 @@ STL 依据：
 
 ## 有限约束的 lazy eval
 
-约束只在表达式求值需要筛选候选或展开受限别名时计算，不在声明解析阶段实例化或求值。`__cplusplus` 是唯一版本依据；未提供该宏时默认 C++17。版本号使用 `CppVersion::Cpp17/Cpp20/Cpp23` 常量。只有版本至少为 C++20 时才把模板声明前和函数 declarator 后的 requires 原文保存到 DeclarationInfo/Statement，旧版本仍只跳过。受限常量变量模板在同一版本条件下保存初始化式，供约束求值使用。StatementModel 保存同一次分析的实际版本，求值入口也显式检查版本；即使存在约束文本，C++17 及更早版本仍忽略约束。
+约束只在表达式求值需要筛选候选或展开受限别名时计算，不在声明解析阶段实例化或求值。`__cplusplus` 是唯一版本依据；未提供该宏时默认 C++17。版本号使用 `CppVersion::Cpp11/Cpp17/Cpp20/Cpp23` 常量。只有版本至少为 C++20 时才把模板声明前和函数 declarator 后的 requires 原文保存到 DeclarationInfo/Statement，旧版本仍只跳过。受限常量变量模板在同一版本条件下保存初始化式，供约束求值使用。Preprocessor 将实际编译器类型和版本通过 `CppEvaluationOptions` 传给 StatementBuilder 和 Resolver；StatementModel 不保存语言配置。即使存在约束文本，C++17 及更早版本仍忽略约束。
+
+trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按 GCC、Clang 各自的可用 trait 集合一次分派；Clang 集合额外包含当前支持的 triviality traits 和 libc++ 的 `__has_iterator_typedefs`。类型内建与常量内建也分别按 GCC、Clang 的实际支持集合选择，共有的 `__is_array` 在两个集合中分别登记，命中后不再重复判断编译器。
 
 约束求值采用 `Satisfied / Unsatisfied / Unknown` 三态。只有明确不满足时才排除候选；未知候选保持可行，因此未知与可行候选并存时仍按歧义返回未解析结果。函数自身约束在参数和模板绑定完成后检查；别名约束在建立别名自身绑定后、展开目标类型前检查。两者均只使用一次求值的绑定帧和递归状态，不回写模型。约束参与同签名函数的声明合并判定，不同约束的重载不得合并；同一约束的声明与定义按 token 序列比较，忽略空白差异。
 

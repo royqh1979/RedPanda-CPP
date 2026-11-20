@@ -21,11 +21,6 @@
 #include <QTextStream>
 #include "parserutils.h"
 
-enum class CppCompilerType {
-    GCC,
-    Clang
-};
-
 enum class DefineArgTokenType{
     Symbol,
     Identifier,

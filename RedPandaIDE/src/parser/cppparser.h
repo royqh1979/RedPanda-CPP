@@ -164,6 +164,7 @@ private:
     void parseFileList(bool updateView = true);
     PParseFileCommand retrievePendingParseFileCommand();
     void internalParse(const QString& fileName);
+    CppEvaluationOptions evaluationOptions() const;
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);

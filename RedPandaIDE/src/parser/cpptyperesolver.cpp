@@ -332,6 +332,56 @@ TypeInfo applyTypeBuiltin(const QString &name, TypeInfo result)
     return result;
 }
 
+const QStringList &typeBuiltinsForCompiler(CppCompilerType compilerType)
+{
+    static const QStringList gcc;
+    static const QStringList clang{
+        "__add_lvalue_reference", "__add_rvalue_reference", "__add_pointer",
+        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t"
+    };
+    return compilerType == CppCompilerType::Clang ? clang : gcc;
+}
+
+const QStringList &constantBuiltinsForCompiler(CppCompilerType compilerType)
+{
+    static const QStringList gcc{"__is_array("};
+    static const QStringList clang{
+        "__is_array(", "__is_trivially_destructible(", "__is_trivially_constructible(",
+        "__is_trivially_assignable(", "__is_trivially_copyable("
+    };
+    return compilerType == CppCompilerType::Clang ? clang : gcc;
+}
+
+const QSet<QString> &constantTraitsForCompiler(CppCompilerType compilerType)
+{
+    static const QSet<QString> gcc{
+        "integral_constant", "is_array", "is_void", "is_reference",
+        "is_lvalue_reference", "is_rvalue_reference", "is_convertible"
+    };
+    static const QSet<QString> clang{
+        "integral_constant", "is_array", "is_void", "is_reference",
+        "is_lvalue_reference", "is_rvalue_reference", "is_convertible", "__has_iterator_typedefs",
+        "is_trivially_destructible", "is_trivially_constructible",
+        "is_trivially_default_constructible", "is_trivially_copy_constructible",
+        "is_trivially_move_constructible", "is_trivially_assignable",
+        "is_trivially_copy_assignable", "is_trivially_move_assignable", "is_trivially_copyable"
+    };
+    return compilerType == CppCompilerType::Clang ? clang : gcc;
+}
+
+const QSet<QString> &typeTraitsForCompiler(CppCompilerType compilerType)
+{
+    static const QSet<QString> gcc{
+        "add_lvalue_reference", "add_rvalue_reference", "add_pointer",
+        "remove_extent", "remove_reference", "remove_cv"
+    };
+    static const QSet<QString> clang{
+        "add_lvalue_reference", "add_rvalue_reference", "add_pointer",
+        "remove_extent", "remove_reference", "remove_cv"
+    };
+    return compilerType == CppCompilerType::Clang ? clang : gcc;
+}
+
 bool isAlias(const PStatement &statement)
 {
     return statement && (statement->kind == StatementKind::Alias
@@ -540,10 +590,21 @@ CppTypeResolver::EvaluationContext::EvaluationContext()
 }
 
 CppTypeResolver::CppTypeResolver(const StatementModel &model, EvaluationContext *evaluation,
-                                 bool supportsClangTypeBuiltins)
-    : mModel(model), mEvaluation(evaluation),
-      mSupportsClangTypeBuiltins(supportsClangTypeBuiltins)
+                                 const CppEvaluationOptions &options)
+    : mModel(model), mEvaluation(evaluation), mOptions(options)
 {
+}
+
+bool CppTypeResolver::supportsConstantTrait(const QString &traitName) const
+{
+    return mOptions.cppVersion >= CppVersion::Cpp11
+            && constantTraitsForCompiler(mOptions.compilerType).contains(traitName);
+}
+
+bool CppTypeResolver::supportsTypeTrait(const QString &traitName) const
+{
+    return mOptions.cppVersion >= CppVersion::Cpp11
+            && typeTraitsForCompiler(mOptions.compilerType).contains(traitName);
 }
 
 TypeInfo CppTypeResolver::resolve(const TypeInfo &type, const TemplateBindings &bindings,
@@ -1364,16 +1425,10 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         return cacheResult(evaluated.instance);
     }
 
-    static const QStringList clangTypeBuiltins{
-        "__add_lvalue_reference", "__add_rvalue_reference", "__add_pointer",
-        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t"
-    };
-    for (const QString &name : clangTypeBuiltins) {
+    for (const QString &name : typeBuiltinsForCompiler(mOptions.compilerType)) {
         QString prefix = name + "(";
         if (!text.startsWith(prefix) || !text.endsWith(")"))
             continue;
-        if (!mSupportsClangTypeBuiltins)
-            return {};
         QString argumentText = text.mid(prefix.size(), text.size() - prefix.size() - 1);
         TypeInfo argument = parseTypeText(argumentText, evaluation);
         if (argument.qualifiedName.isEmpty())
@@ -2682,7 +2737,7 @@ ConstraintSatisfaction CppTypeResolver::constraintsSatisfied(
         const PStatement &statement, const PTemplateBindingFrame &bindings,
         const PStatement &context, EvaluationContext &evaluation) const
 {
-    if (mModel.cppVersion() < CppVersion::Cpp20)
+    if (mOptions.cppVersion < CppVersion::Cpp20)
         return ConstraintSatisfaction::Satisfied;
     if (!statement || statement->kind == StatementKind::Namespace
             || statement->kind == StatementKind::InlineAlias) {
@@ -2832,8 +2887,10 @@ QString CppTypeResolver::evaluateConstantValue(
     if (numericOk)
         return QString::number(numericValue);
 
+    const QStringList &constantBuiltins = constantBuiltinsForCompiler(mOptions.compilerType);
     const QString arrayBuiltin = "__is_array(";
-    if (expression.startsWith(arrayBuiltin) && expression.endsWith(')')) {
+    if (constantBuiltins.contains(arrayBuiltin)
+            && expression.startsWith(arrayBuiltin) && expression.endsWith(')')) {
         int argumentStart = arrayBuiltin.length();
         TypeInfo argument = parseTypeText(
                 expression.mid(argumentStart, expression.length() - argumentStart - 1), evaluation);
@@ -2847,15 +2904,9 @@ QString CppTypeResolver::evaluateConstantValue(
         return "false";
     }
 
-    static const QStringList trivialBuiltins{
-        "__is_trivially_destructible(", "__is_trivially_constructible(",
-        "__is_trivially_assignable(", "__is_trivially_copyable("
-    };
-    for (const QString &builtin : trivialBuiltins) {
+    for (const QString &builtin : constantBuiltins) {
         if (!expression.startsWith(builtin) || !expression.endsWith(")"))
             continue;
-        if (!mSupportsClangTypeBuiltins)
-            return {};
         QString argumentsText = expression.mid(builtin.size(),
                                                expression.size() - builtin.size() - 1);
         CppTokenizer argumentsTokenizer;
@@ -3071,6 +3122,18 @@ QString CppTypeResolver::resolveConstantExpression(
     }
     const TypeInfo &argument = *trait.type.templateArguments.first().type;
     const QString &traitName = trait.declaration->command;
+    if (!supportsConstantTrait(traitName))
+        return text.trimmed();
+    if (traitName == "__has_iterator_typedefs") {
+        static const QStringList members{
+            "value_type", "difference_type", "pointer", "reference", "iterator_category"
+        };
+        for (const QString &member : members) {
+            if (!memberStatement(argument, member, &traitEvaluation))
+                return "false";
+        }
+        return "true";
+    }
     if (traitName == "integral_constant"
             && trait.type.templateArguments.count() == 2
             && trait.type.templateArguments[1].kind == TemplateArgumentKind::NonType) {
@@ -3095,16 +3158,6 @@ QString CppTypeResolver::resolveConstantExpression(
         bool result = traitName == "is_lvalue_reference" ? lvalue
                 : traitName == "is_rvalue_reference" ? rvalue : lvalue || rvalue;
         return result ? "true" : "false";
-    }
-    if (traitName == "__has_iterator_typedefs") {
-        static const QStringList members{
-            "value_type", "difference_type", "pointer", "reference", "iterator_category"
-        };
-        for (const QString &member : members) {
-            if (!memberStatement(argument, member, &traitEvaluation))
-                return "false";
-        }
-        return "true";
     }
     if (traitName == "is_convertible" && trait.type.templateArguments.count() == 2
             && trait.type.templateArguments[0].kind == TemplateArgumentKind::Type
@@ -3151,11 +3204,8 @@ TypeInfo CppTypeResolver::traitMemberType(const ClassInstance &instance,
         return {};
     }
     const QString &traitName = instance.declaration->command;
-    if (traitName != "add_lvalue_reference" && traitName != "add_rvalue_reference"
-            && traitName != "add_pointer" && traitName != "remove_extent"
-            && traitName != "remove_reference" && traitName != "remove_cv") {
+    if (!supportsTypeTrait(traitName))
         return {};
-    }
     const TemplateArgument &argument = instance.type.templateArguments.first();
     if (argument.kind != TemplateArgumentKind::Type || !argument.type)
         return {};
