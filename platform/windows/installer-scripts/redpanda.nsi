@@ -91,6 +91,7 @@ InstType "$(StrInstTypeSafe)"    ;3
 
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "Italian"
 
 ####################################################################
 # Silently uninstall previous version
@@ -126,6 +127,7 @@ Section "$(SectionMainName)" SectionMain
   File "NEWS.md"
   File "README.md"
   File "qt.conf"
+
   !ifdef HAVE_OPENCONSOLE
     File "OpenConsole.exe"
   !endif
@@ -356,6 +358,7 @@ SectionEnd
 # Functions, utilities
 
 Function .onInit
+  StrCpy $LANGUAGE ${LANG_ENGLISH}
   !insertmacro MULTIUSER_INIT
   !insertmacro MUI_LANGDLL_DISPLAY
   !insertmacro DetectOsArch

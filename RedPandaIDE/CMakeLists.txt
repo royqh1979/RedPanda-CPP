@@ -756,6 +756,7 @@ target_sources(RedPandaIDE PRIVATE
 
 target_embed_translations(RedPandaIDE
     TS_FILES
+        translations/RedPandaIDE_it_IT.ts
         translations/RedPandaIDE_pt_BR.ts
         translations/RedPandaIDE_ru_RU.ts
         translations/RedPandaIDE_zh_CN.ts
@@ -763,6 +764,7 @@ target_embed_translations(RedPandaIDE
 
 if(QT_FEATURE_static)
     set(qtbase_translation_filenames
+        qtbase_it.qm
         qtbase_pt_BR.qm
         qtbase_ru_RU.qm
         qtbase_zh_CN.qm
