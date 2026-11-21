@@ -11,6 +11,7 @@ Red Panda C++ Version 3.6
   - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
+  - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Improve compatibility with Clang and libc++ headers.
   - enhancement: Evaluate C++20 constraints lazily when resolving functions and templates.
   - fix: Correctly parse anonymous struct/enum definitions used by typedefs or variable declarations, with unique internal type names.

@@ -144,9 +144,8 @@ item 在两栈间原样往返（不经字段拷贝），`perLineLeftChars` 因�
    （`mWrapLayouts`），由 `wrapLayout()` 按需同步精算或后台 worker 补算；
    painter 只为含 IME preedit 的行现算位置（preedit 文本不属于文档行，
    结果只供当次绘制与输入法光标定位缓存，**不写回**布局缓存）。
-   最长行跟踪（`mMaxLineWidthSeq`）在缓存写入点簿记
-   （`noteLineWidthKnown`），从未就绪的部分缓存采纳可能低估，
-   后台 sweep 就绪时经 `recomputeMaxLineWidthAndNotify` 校正。
+   最长行跟踪（`mMaxLineWidthSeq`）在缓存写入点比较更新；非最长行变长只与当前最大值比较，最长行失效时才从缓存重找。失效期间不刷新水平滚动条，得到有效值后统一通知一次；重找只读缓存，不触发布局计算。
+   单行插入和 SetLine 同步计算并更新 RowIndex，不创建重复后台任务；后台 Job 只处理缓存缺失行，结果仍按 seq 回写 RowIndex。
    失效规则：SetLine 按 seq 删缓存项；Delete 的死项不可达、惰性压缩；
    Move 的 seq 随行走、缓存自然有效。**Document 不再持有字体/字号/tabSize
    等任何度量状态**（构造函数不再接收 `QFont`），也不再提供像素 API。

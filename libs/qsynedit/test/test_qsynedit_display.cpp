@@ -8,6 +8,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QInputMethodEvent>
+#include <QElapsedTimer>
 
 #include "test_qsynedit_display.h"
 #include "test_utils.h"
@@ -92,6 +93,35 @@ void TestQSyneditDisplay::initTestCase()
 void TestQSyneditDisplay::init()
 {
     clearContent();
+}
+
+void TestQSyneditDisplay::drainLayoutJobs(QSynEdit *editor)
+{
+    if (!editor)
+        editor = mEdit.get();
+    QTRY_VERIFY(editor->mWrapAllComputed);
+    QTRY_VERIFY(editor->mWrapJobState->jobsInFlight == 0);
+}
+
+void TestQSyneditDisplay::expectRowMapping(QSynEdit *editor)
+{
+    if (!editor)
+        editor = mEdit.get();
+    int expectedRows = 0;
+    for (int line = 0; line < editor->lineCount(); ++line) {
+        int segments = editor->wrapSegmentCount(line);
+        QCOMPARE(editor->lineToRow(line), expectedRows);
+        QCOMPARE(editor->rowToLine(expectedRows), line);
+        for (int segment = 0; segment < segments; ++segment) {
+            int row = editor->lineSegmentToRow(line, segment);
+            int mappedLine, mappedSegment;
+            editor->rowToLineSegment(row, mappedLine, mappedSegment);
+            QCOMPARE(mappedLine, line);
+            QCOMPARE(mappedSegment, segment);
+        }
+        expectedRows += segments;
+    }
+    QCOMPARE(editor->displayLineCount(), expectedRows);
 }
 
 void TestQSyneditDisplay::test_line_row_roundtrip()
@@ -2186,6 +2216,202 @@ void TestQSyneditDisplay::test_wrap_job_early_abort()
     QVERIFY(!batches3[0].aborted);
     QVERIFY(batches3[0].finished);
     QCOMPARE(batches3[0].layouts.count(), 20);
+}
+
+void TestQSyneditDisplay::test_wrap_job_only_computes_pending_lines()
+{
+    mEdit->loadContent(makeLines(10));
+    PWrapJobSharedState state = std::make_shared<WrapJobSharedState>();
+    state->latestGeneration = 1;
+    state->jobsInFlight = 1;
+    QSet<size_t> pending{mEdit->document()->getLineSeq(1),
+                         mEdit->document()->getLineSeq(3)};
+    WrapLayoutJob job(mEdit->document(), 1, 0,
+                      mEdit->syntaxer()->createInstance(),
+                      mEdit->font(), mEdit->mGlyphCalculator,
+                      mEdit->wrapWidth(), true, state, pending);
+    QList<WrapLayoutBatch> batches;
+    QObject context;
+    connect(&job, &WrapLayoutJob::layoutsReady, &context,
+            [&](const WrapLayoutBatch &batch) {
+        batches.append(batch);
+    });
+    job.run();
+
+    QSet<size_t> computed;
+    for (const WrapLayoutBatch &batch : batches) {
+        QVERIFY(!batch.aborted);
+        for (auto it = batch.layouts.constBegin(); it != batch.layouts.constEnd(); ++it)
+            computed.insert(it.key());
+    }
+    QCOMPARE(computed, pending);
+    QVERIFY(batches.constLast().finished);
+}
+
+void TestQSyneditDisplay::test_single_line_edit_indexes_without_job()
+{
+    QSynedit::EditorOptions options = mEdit->getOptions();
+    options.setFlag(EditorOption::WordWrap, true);
+    mEdit->setOptions(options);
+    mEdit->loadContent({"short", "mid", "last"});
+    drainLayoutJobs();
+    QString longText = QString(200, 'x');
+
+    mEdit->document()->beginUpdate();
+    mEdit->properInsertLine(1, "", false);
+    mEdit->properSetLine(0, longText, true);
+    mEdit->document()->endUpdate();
+
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QVERIFY(mEdit->mWrapAllComputed);
+    size_t insertedSeq = mEdit->document()->getLineSeq(1);
+    QVERIFY(mEdit->mWrapLayouts.contains(insertedSeq));
+    expectRowMapping();
+    QCOMPARE(mEdit->maxLineWidth(), mEdit->lineWidth(0));
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(0));
+
+    mEdit->properDeleteLines(1, 1, true);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    expectRowMapping();
+
+    mEdit->setCaretPos(mEdit->lineEnd(0));
+    QTest::keyPress(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->lineCount(), 4);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    expectRowMapping();
+    mEdit->undo();
+    QCOMPARE(mEdit->lineCount(), 3);
+    expectRowMapping();
+    mEdit->redo();
+    QCOMPARE(mEdit->lineCount(), 4);
+    expectRowMapping();
+
+    options.setFlag(EditorOption::WordWrap, false);
+    mEdit->setOptions(options);
+}
+
+void TestQSyneditDisplay::test_miniaudio_single_line_edit_profile()
+{
+    if (qEnvironmentVariable("QSYNEDIT_INCREMENTAL_LAYOUT_PROFILE") != "1")
+        QSKIP("Set QSYNEDIT_INCREMENTAL_LAYOUT_PROFILE=1 to run the miniaudio profile");
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/miniaudio.h", ENCODING_AUTO_DETECT, encoding);
+    drainLayoutJobs();
+    QSignalSpy rangeSpy(mEdit->horizontalScrollBar(), &QAbstractSlider::rangeChanged);
+    QElapsedTimer timer;
+    timer.start();
+    for (int repeat = 0; repeat < 10; ++repeat) {
+        mEdit->document()->beginUpdate();
+        mEdit->properInsertLine(1, "", false);
+        mEdit->properSetLine(0, mEdit->lineText(0), true);
+        mEdit->document()->endUpdate();
+        QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+        mEdit->properDeleteLines(1, 1, true);
+        QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    }
+    expectRowMapping();
+    QCOMPARE(rangeSpy.count(), 0);
+    qInfo().noquote() << QString("INCREMENTAL_LAYOUT_PROFILE edits=20 ns=%1 lines=%2")
+                         .arg(timer.nsecsElapsed()).arg(mEdit->lineCount());
+}
+
+void TestQSyneditDisplay::test_multi_line_edit_indexes()
+{
+    QSynedit::EditorOptions options = mEdit->getOptions();
+    options.setFlag(EditorOption::WordWrap, true);
+    mEdit->setOptions(options);
+    mEdit->loadContent(makeLines(5));
+    drainLayoutJobs();
+
+    mEdit->properInsertLines(1, 3, false);
+    drainLayoutJobs();
+    expectRowMapping();
+
+    size_t movedSeq = mEdit->document()->getLineSeq(0);
+    int movedWidth = mEdit->lineWidth(0);
+    mEdit->properMoveLine(0, 4, true);
+    expectRowMapping();
+    QCOMPARE(mEdit->document()->getLineSeq(4), movedSeq);
+    QCOMPARE(mEdit->lineWidth(4), movedWidth);
+
+    mEdit->properDeleteLines(1, 2, true);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    expectRowMapping();
+
+    options.setFlag(EditorOption::WordWrap, false);
+    mEdit->setOptions(options);
+}
+
+void TestQSyneditDisplay::test_max_width_notifications()
+{
+    mEdit->loadContent({"x", QString(1000, 'y'), QString(800, 'z')});
+    drainLayoutJobs();
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
+    QSignalSpy rangeSpy(mEdit->horizontalScrollBar(), &QAbstractSlider::rangeChanged);
+
+    mEdit->replaceLine(0, QString(2000, 'x'));
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->maxLineWidth(), mEdit->lineWidth(0));
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(0));
+
+    rangeSpy.clear();
+    mEdit->replaceLine(2, QString(700, 'z'));
+    drainLayoutJobs();
+    QCoreApplication::processEvents();
+    QCOMPARE(rangeSpy.count(), 0);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(0));
+
+    rangeSpy.clear();
+    mEdit->replaceLine(0, "x");
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
+
+    rangeSpy.clear();
+    mEdit->replaceLine(1, QString(600, 'x'));
+    QCOMPARE(rangeSpy.count(), 0);
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(2));
+
+    rangeSpy.clear();
+    mEdit->properDeleteLines(2, 1, true);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
+    expectRowMapping();
+}
+
+void TestQSyneditDisplay::test_shared_document_edit_indexes()
+{
+    QSynedit::EditorOptions options = mEdit->getOptions();
+    options.setFlag(EditorOption::WordWrap, true);
+    mEdit->setOptions(options);
+    mEdit->loadContent(makeLines(4));
+    auto second = std::make_shared<QSynEdit>();
+    second->setSyntaxer(std::make_shared<CppSyntaxer>());
+    second->setFont(mEdit->font());
+    second->resize(500, 300);
+    second->setDocument(mEdit->document());
+    drainLayoutJobs();
+    drainLayoutJobs(second.get());
+
+    mEdit->document()->beginUpdate();
+    mEdit->properInsertLine(1, "", false);
+    mEdit->properSetLine(0, QString(100, 'x'), true);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QCOMPARE(second->mWrapJobState->jobsInFlight, 0);
+    expectRowMapping();
+    expectRowMapping(second.get());
+
+    mEdit->properMoveLine(0, 2, true);
+    expectRowMapping();
+    expectRowMapping(second.get());
+    mEdit->properDeleteLines(1, 1, true);
+    expectRowMapping();
+    expectRowMapping(second.get());
+
+    options.setFlag(EditorOption::WordWrap, false);
+    mEdit->setOptions(options);
 }
 
 void TestQSyneditDisplay::test_layout_with_zero_wrap_width()

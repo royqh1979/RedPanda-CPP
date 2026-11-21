@@ -37,7 +37,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）、`qsynedit-incremental-layout-design.md`（增量布局与 max width 更新设计）。
 
 ## 构建
 
@@ -123,6 +123,8 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 - **Syntaxer profiling**：Release 下设置 `QSYNEDIT_PROFILE_FILE`，直接运行 `test-qsynedit` 的 `TestCppSyntaxer`、`TestASMSyntaxer` 或 `TestTextSyntaxer` 中 `test_profile_file`，例如 `QSYNEDIT_PROFILE_FILE=resources/miniaudio.h ./test-qsynedit.exe --suite=TestCppSyntaxer test_profile_file`（大文件已收入 `libs/qsynedit/test/resources/`，构建时复制到测试目录，也可供后续 QSynEdit 编辑性能检查复用）。文件读取不计时；用例分别跑三轮纯扫描和三轮包含 `getToken()` 的遍历，以 `SYNTAXER_PROFILE` 行输出纳秒、token 数和字符数。短文件可用 `QSYNEDIT_PROFILE_REPEAT=10000` 在计时前展开；未设置文件变量时正常测试自动跳过。
 
 - **Search profiling**：Release 下设置 `QSYNEDIT_SEARCH_PROFILE=1`，直接运行 `test-file-search --suite=TestFileSearchEngine test_profile`；输出普通、整词、regex、长行、目录枚举及文件读取匹配的纳秒耗时和匹配数，未设置开关时正常测试自动跳过。
+
+- **Incremental layout profiling**：Release 下设置 `QSYNEDIT_INCREMENTAL_LAYOUT_PROFILE=1`，直接运行 `test-qsynedit --suite=TestQSyneditDisplay test_miniaudio_single_line_edit_profile`；在 `miniaudio.h` 上执行 20 次单行插入/修改/删除，逐轮断言不创建后台 Job，并核对最终索引及滚动范围通知，未设置开关时正常测试自动跳过。
 
 - **STL 单屏绘制 profiling**：`REDPANDA_PARSER_STDLIB_TEST` 也会为 `test-editor` 提供标准库配置。Release 下设置 `REDPANDA_STL_PAINT_PROFILE=1`，直接运行 `test-editor --suite=TestEditorDisplay test_stl_paint_profile`；`REDPANDA_STL_PAINT_PROFILE_REPEAT` 控制采样轮数（默认 9）。测试固定每屏 80 行、关闭 word-wrap，分别输出逐 identifier 表达式提取、整行拆分、statement 求值、求值单元数、冷 paint 及同 revision 热 paint 的纳秒中位数；未设置开关时正常测试自动跳过。
 

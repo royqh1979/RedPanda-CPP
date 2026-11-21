@@ -19,6 +19,7 @@
 
 #include <QPointer>
 #include <QRunnable>
+#include <QSet>
 #include "qsynedit.h"
 
 namespace QSynedit {
@@ -33,8 +34,8 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
                                     const QFont &baseFont, int wrapWidth,
                                     bool wordWrap);
 
-// background whole-document wrap-layout computation. Result batches are
-// delivered by the layoutsReady signal (queued to the view); the view is
+// background wrap-layout computation for all or selected missing lines.
+// Result batches are delivered by the layoutsReady signal (queued to the view); the view is
 // the ONLY writer of the layout cache. Discipline: every batch is a fresh
 // container, emitted once and never touched again (post-and-forget).
 class WrapLayoutJob : public QObject, public QRunnable
@@ -44,7 +45,8 @@ public:
     WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
                   PSyntaxer syntaxer,
                   const QFont &baseFont, const GlyphCalculator &glyphCalculator,
-                  int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState);
+                  int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState,
+                  const QSet<size_t> &pendingSeqs = {});
     void run() override;
 signals:
     void layoutsReady(const QSynedit::WrapLayoutBatch &batch);
@@ -67,6 +69,7 @@ private:
     int mWrapWidth;
     bool mWordWrap;
     PWrapJobSharedState mSharedState;
+    QSet<size_t> mPendingSeqs;
     QHash<size_t, WrapLayout> mLayouts;
     // seq -> line index at compute time, delivered alongside mLayouts so
     // the view can point-update its row index

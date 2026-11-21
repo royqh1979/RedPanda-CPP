@@ -770,14 +770,15 @@ private:
     bool lineVisibleForWrap(int line) const;
     void scheduleWrapLayoutJob() const;
     Q_INVOKABLE void onWrapLayoutBatch(const WrapLayoutBatch &batch);
-    // request a horizontal scrollbar range refresh (the longest-line width
-    // changed); event-posted so it is safe from const cache-filling paths
+    // mark that the horizontal scrollbar needs a refresh once the longest-line
+    // width is valid; no temporary candidate may trigger an update
     void noteMaxLineWidthDirty() const;
     // longest-line bookkeeping for a freshly computed/accepted layout
     void noteLineWidthKnown(size_t seq, int width) const;
-    // recompute the longest line from the (complete) layout cache; called
-    // when a background sweep finishes with a possibly underestimated max
-    void recomputeMaxLineWidthAndNotify();
+    // recompute the longest line using only cached layouts, then notify once
+    // if a valid result is available and an update is pending
+    void recomputeMaxLineWidthAndNotify() const;
+    void finalizeMaxLineWidth() const;
     PCodeBlock foldStartAtLine(int line) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeBlock foldAroundLine(int line);
@@ -954,6 +955,7 @@ private:
     // set when the max was adopted from a partial (still computing) cache:
     // recompute from the complete cache once the sweep finishes
     mutable bool mMaxLineWidthMaybeStale = false;
+    mutable bool mMaxLineWidthUpdatePending = false;
     QPoint mMouseOrigin;
     int mMouseDownPreviousGlyphWidth;
     int mMouseDownNextGlyphWidth;
