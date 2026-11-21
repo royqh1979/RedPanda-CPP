@@ -23,7 +23,8 @@ namespace QSynedit {
 WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int contentVersion,
                              PSyntaxer syntaxer,
                              const QFont &baseFont, const GlyphCalculator &glyphCalculator,
-                             int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState):
+                             int wrapWidth, bool wordWrap, const PWrapJobSharedState &sharedState,
+                             const QSet<size_t> &pendingSeqs):
     mDocument(document),
     mSyntaxer(syntaxer),
     mGeneration(generation),
@@ -33,7 +34,8 @@ WrapLayoutJob::WrapLayoutJob(const PDocument &document, int generation, int cont
     mGlyphCalculator(glyphCalculator),
     mWrapWidth(wrapWidth),
     mWordWrap(wordWrap),
-    mSharedState(sharedState)
+    mSharedState(sharedState),
+    mPendingSeqs(pendingSeqs)
 {
 }
 
@@ -57,6 +59,8 @@ void WrapLayoutJob::run()
             break;
         }
         size_t seq = mDocument->getLineSeq(line);
+        if (!mPendingSeqs.isEmpty() && !mPendingSeqs.contains(seq))
+            continue;
         WrapLayout layout = computeWrapLayoutForLine(
                     mDocument, line, syntaxer.get(), mGlyphCalculator, mBaseFont, mWrapWidth, mWordWrap);
         mLayouts.insert(seq, layout);

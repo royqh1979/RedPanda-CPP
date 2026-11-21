@@ -268,20 +268,24 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
 
 void QSynEdit::noteLineWidthKnown(size_t seq, int width) const
 {
-    // longest-line bookkeeping for the horizontal scrollbar range. Only
-    // identity changes and growth are tracked here: maxLineWidth() reads
-    // the cache entry's live width, and the shrink side is covered by the
-    // removal paths resetting mMaxLineWidthSeq. Adoption from an incomplete
-    // cache may underestimate; recompute when the sweep finishes.
-    if (mMaxLineWidthSeq == 0 || mMaxLineWidthSeq == seq) {
+    if (mMaxLineWidthSeq == 0) {
         mMaxLineWidthSeq = seq;
-        mMaxLineWidthMaybeStale = mMaxLineWidthMaybeStale
-                || mWrapLayouts.count() < mDocument->count();
+        mMaxLineWidthMaybeStale = true;
         noteMaxLineWidthDirty();
         return;
     }
+    if (mMaxLineWidthSeq == seq) {
+        auto it = mWrapLayouts.constFind(seq);
+        if (it != mWrapLayouts.constEnd() && it->totalWidth != width)
+            noteMaxLineWidthDirty();
+        return;
+    }
     auto maxIt = mWrapLayouts.constFind(mMaxLineWidthSeq);
-    if (maxIt == mWrapLayouts.constEnd() || maxIt->totalWidth < width) {
+    if (maxIt == mWrapLayouts.constEnd()) {
+        mMaxLineWidthSeq = seq;
+        mMaxLineWidthMaybeStale = true;
+        noteMaxLineWidthDirty();
+    } else if (maxIt->totalWidth < width) {
         mMaxLineWidthSeq = seq;
         noteMaxLineWidthDirty();
     }
@@ -462,6 +466,19 @@ void QSynEdit::scheduleWrapLayoutJob() const
         mWrapAllComputed = true;
         return;
     }
+    QSet<size_t> pendingSeqs;
+    for (int line = 0; line < mDocument->count(); ++line) {
+        size_t seq = mDocument->getLineSeq(line);
+        if (!mWrapLayouts.contains(seq))
+            pendingSeqs.insert(seq);
+    }
+    if (pendingSeqs.isEmpty()) {
+        mWrapAllComputed = true;
+        if (mMaxLineWidthMaybeStale)
+            recomputeMaxLineWidthAndNotify();
+        finalizeMaxLineWidth();
+        return;
+    }
     qRegisterMetaType<WrapLayoutBatch>();
     int docContentVersion = mDocument->contentVersion();
     QMutexLocker locker(&mWrapJobState->mutex);
@@ -482,7 +499,7 @@ void QSynEdit::scheduleWrapLayoutJob() const
                 // styles (they affect glyph widths)
                 mSyntaxer->createInstance(),
                 font(), mGlyphCalculator, wrapWidth(),
-                mOptions.testFlag(EditorOption::WordWrap), mWrapJobState);
+                mOptions.testFlag(EditorOption::WordWrap), mWrapJobState, pendingSeqs);
     connect(job, &WrapLayoutJob::layoutsReady,
             this, &QSynEdit::onWrapLayoutBatch, Qt::QueuedConnection);
     QThreadPool::globalInstance()->start(job);
@@ -547,10 +564,10 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
         updateVScrollbar();
         if (!mWrapAllComputed) {
             scheduleWrapLayoutJob();
-        } else if (mMaxLineWidthMaybeStale) {
-            // the max line width may have been adopted from an incomplete
-            // cache; recompute it now that every layout is known
-            recomputeMaxLineWidthAndNotify();
+        } else {
+            if (mMaxLineWidthMaybeStale)
+                recomputeMaxLineWidthAndNotify();
+            finalizeMaxLineWidth();
         }
     } else {
         updateVScrollbar();
@@ -1286,11 +1303,15 @@ int QSynEdit::lineWidth(int line, const QString &newText) const
 
 int QSynEdit::maxLineWidth() const
 {
+    if (mMaxLineWidthMaybeStale)
+        return -1;
     if (mMaxLineWidthSeq != 0) {
         auto it = mWrapLayouts.constFind(mMaxLineWidthSeq);
         if (it != mWrapLayouts.constEnd())
             return it->totalWidth;
-        mMaxLineWidthSeq = 0;  // stale entry (e.g. its line was deleted)
+        mMaxLineWidthSeq = 0;
+        mMaxLineWidthMaybeStale = true;
+        noteMaxLineWidthDirty();
     }
     if (mDocument->empty())
         return 0;
@@ -1370,6 +1391,8 @@ void QSynEdit::invalidateAllLineMetrics()
     mWrapDirtySeqs.clear();
     mWrapAllComputed = false;
     mMaxLineWidthSeq = 0;
+    mMaxLineWidthMaybeStale = true;
+    noteMaxLineWidthDirty();
     // every cached layout is gone: the row index falls back to the
     // 1-segment estimate for all lines (hidden flags are kept)
     mRowIndex.resetSegCounts();
@@ -1399,27 +1422,41 @@ void QSynEdit::compactLineMetrics()
 
 void QSynEdit::noteMaxLineWidthDirty() const
 {
-    updateHScrollBarLater();
+    mMaxLineWidthUpdatePending = true;
 }
 
-void QSynEdit::recomputeMaxLineWidthAndNotify()
+void QSynEdit::recomputeMaxLineWidthAndNotify() const
 {
-    // the layout cache is complete when this runs (a finished sweep), so
-    // this is a pure cache read
     int maxWidth = -1;
     size_t maxSeq = 0;
-    for (int i=0;i<mDocument->count();i++) {
-        int width = wrapLayout(i).totalWidth;
-        if (width > maxWidth) {
-            maxWidth = width;
-            maxSeq = mDocument->getLineSeq(i);
+    bool complete = true;
+    for (int line = 0; line < mDocument->count(); ++line) {
+        size_t seq = mDocument->getLineSeq(line);
+        auto it = mWrapLayouts.constFind(seq);
+        if (it == mWrapLayouts.constEnd()) {
+            complete = false;
+            continue;
+        }
+        if (it->totalWidth > maxWidth) {
+            maxWidth = it->totalWidth;
+            maxSeq = seq;
         }
     }
-    mMaxLineWidthMaybeStale = false;
-    if (maxSeq != 0) {
+    if (maxSeq != 0)
         mMaxLineWidthSeq = maxSeq;
-        updateHScrollBarLater();
-    }
+    mMaxLineWidthMaybeStale = !complete;
+    if (complete)
+        finalizeMaxLineWidth();
+}
+
+void QSynEdit::finalizeMaxLineWidth() const
+{
+    if (!mMaxLineWidthUpdatePending || mMaxLineWidthMaybeStale)
+        return;
+    if (mMaxLineWidthSeq == 0 && !mDocument->empty())
+        return;
+    mMaxLineWidthUpdatePending = false;
+    updateHScrollBarLater();
 }
 
 int QSynEdit::getLineIndent(const QString &lineText) const
@@ -4028,12 +4065,8 @@ void QSynEdit::ensureCaretVisible(bool forceToMiddle)
             setTopLineSegment(l, s);
         }
     }
-    // Make sure X is visible
-    if (maxLineWidth()<0) {
-        mStateFlags.setFlag(StateFlag::EnsureCaretVisible, !forceToMiddle);
-        mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, forceToMiddle);
-        return;
-    }
+    // Make sure X is visible. This depends on the caret layout, not on
+    // whether the longest line in the document is currently known.
     int visibleX = displayX();
     if (visibleX < leftPos()) {
         if (viewWidth() / 3 >visibleX)
@@ -8158,13 +8191,18 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             // the row index mirrors the document's structure (new lines
             // get the 1-segment estimate and are visible)
             mRowIndex.insertLines(change.line, change.count);
-            // layouts computed mid-batch (before the index caught up) are
-            // already cached: restore their exact segment counts without
-            // forcing computation of the rest
-            for (int i = change.line; i < change.line + change.count; i++) {
-                auto it = mWrapLayouts.constFind(mDocument->getLineSeq(i));
-                if (it != mWrapLayouts.constEnd())
-                    mRowIndex.setSegCount(i, it->segmentStartChars.count());
+            mWrapAllComputed = false;
+            if (change.count == 1) {
+                mRowIndex.setSegCount(change.line, wrapSegmentCount(change.line));
+            } else {
+                // layouts computed mid-batch (before the index caught up) are
+                // already cached: restore their exact segment counts without
+                // forcing computation of the rest
+                for (int i = change.line; i < change.line + change.count; i++) {
+                    auto it = mWrapLayouts.constFind(mDocument->getLineSeq(i));
+                    if (it != mWrapLayouts.constEnd())
+                        mRowIndex.setSegCount(i, it->segmentStartChars.count());
+                }
             }
             emit linesInserted(change.line, change.count);
             scrollbarChanged = true;
@@ -8178,6 +8216,12 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             scrollbarChanged = true;
             if (invalidateFrom < 0 || change.line < invalidateFrom)
                 invalidateFrom = change.line;
+            if (mMaxLineWidthSeq != 0
+                    && !mDocument->findLineBySeq(mMaxLineWidthSeq)) {
+                mMaxLineWidthSeq = 0;
+                mMaxLineWidthMaybeStale = true;
+                noteMaxLineWidthDirty();
+            }
             // seqs of deleted lines die with them; their cached metrics are
             // unreachable (seqs are never reused) and get purged lazily
             compactLineMetrics();
@@ -8200,8 +8244,11 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             for (int i=change.line; i<change.line+change.count; i++) {
                 // the text changed: the cached metrics are stale now
                 size_t seq = mDocument->getLineSeq(i);
-                if (seq == mMaxLineWidthSeq)
+                if (seq == mMaxLineWidthSeq) {
                     mMaxLineWidthSeq = 0;
+                    mMaxLineWidthMaybeStale = true;
+                    noteMaxLineWidthDirty();
+                }
                 mWrapLayouts.remove(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;
@@ -8272,8 +8319,13 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
     // never leave the sweep stalled: edits mark the state not-ready, so
     // make sure a job is (re)scheduled — otherwise an aborted/missed job
     // would leave the layout cache permanently incomplete
-    if (!mWrapAllComputed)
+    if (!mWrapAllComputed) {
         scheduleWrapLayoutJob();
+    } else {
+        if (mMaxLineWidthMaybeStale)
+            recomputeMaxLineWidthAndNotify();
+        finalizeMaxLineWidth();
+    }
 }
 
 void QSynEdit::shiftAnchorByChange(const DocumentChange &change, int &line, int &segment)

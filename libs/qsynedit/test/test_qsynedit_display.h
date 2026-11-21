@@ -7,6 +7,10 @@ namespace QSynedit{
 class TestQSyneditDisplay : public TestQSyneditBase
 {
     Q_OBJECT
+private:
+    void drainLayoutJobs(QSynEdit *editor = nullptr);
+    void expectRowMapping(QSynEdit *editor = nullptr);
+
 private slots:
     void initTestCase();
     void init();
@@ -71,6 +75,12 @@ private slots:
     void test_public_edit_fold_rescan();
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();
+    void test_wrap_job_only_computes_pending_lines();
+    void test_single_line_edit_indexes_without_job();
+    void test_miniaudio_single_line_edit_profile();
+    void test_multi_line_edit_indexes();
+    void test_max_width_notifications();
+    void test_shared_document_edit_indexes();
     void test_layout_with_zero_wrap_width();
     void test_enter_first_line_keeps_top();
     void test_enter_first_line_repaints_old_first_line();
