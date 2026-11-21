@@ -25,8 +25,6 @@ CodeFoldingOptions::CodeFoldingOptions():
     fillIndents{false},
     rainbowIndentGuides{true},
     rainbowIndents{true},
-    showCollapsedLine{true},
-    collapsedLineColor{"black"},
     folderBarLinesColor{"black"},
     indentGuidesColor("gray")
 {

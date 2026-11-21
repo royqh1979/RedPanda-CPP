@@ -393,6 +393,7 @@ void CppSyntaxer::procBraceClose()
     } else {
         mRange.blockEnded++ ;
     }
+    mRange.blockEvents.append({mRun - 1, false});
     popIndents(IndentType::Block);
 }
 
@@ -406,6 +407,7 @@ void CppSyntaxer::procBraceOpen()
     mRange.braceLevel += 1;
     mRange.blockLevel += 1;
     mRange.blockStarted++;
+    mRange.blockEvents.append({mRun - 1, true});
     if (mRange.getLastIndentType() == IndentType::Statement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
@@ -1774,6 +1776,7 @@ void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq
     mRun = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
+    mRange.blockEvents.clear();
 
     mRange.hasTrailingSpaces = false;
     mLastKeyword="";

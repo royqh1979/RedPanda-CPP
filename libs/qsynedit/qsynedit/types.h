@@ -43,6 +43,9 @@ struct DocumentChange {
     DocumentChangeKind kind;
     int line;
     int count;
+    int startCh = 0;
+    int endCh = 0;
+    bool wholeLine = false;
 };
 
 /**

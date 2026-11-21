@@ -216,6 +216,7 @@ public:
      * @return
      */
     int blockEnded(int line) const;
+    QVector<BlockDelimiterEvent> blockEvents(int line) const;
 
     /**
      * @brief get line break of the current document
@@ -519,7 +520,8 @@ protected:
     void internalClear();
 private:
     void ensureHasLine();
-    void recordChange(DocumentChangeKind kind, int line, int count);
+    void recordChange(DocumentChangeKind kind, int line, int count,
+                      int startCh, int endCh, bool wholeLine);
     // reparse lines [startLine, endLine) with mSyntaxer and store the states;
     // when parseToEnd is set and the syntaxer needs line states, parsing
     // continues past endLine until the states converge. Emits linesReparsed

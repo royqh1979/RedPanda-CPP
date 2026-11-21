@@ -451,8 +451,10 @@ public:
     QString text();
 
     CharPos ensureCharPosValid(const CharPos& pos) const;
+    CharPos ensureCaretPosValid(const CharPos& pos) const;
     bool validLine(int line) const;
     bool validInDoc(int line, int ch) const;
+    bool validCaretPos(const CharPos &pos) const;
     bool validInDoc(const CharPos& pos) const { return validInDoc(pos.line, pos.ch); }
     bool validGlyphStart(const CharPos& pos) const;
     bool getPositionOfMouse(CharPos& pos) const;
@@ -780,6 +782,12 @@ private:
     void recomputeMaxLineWidthAndNotify() const;
     void finalizeMaxLineWidth() const;
     PCodeBlock foldStartAtLine(int line) const;
+    bool foldEndLineVisible(const PCodeBlock &block) const;
+    bool foldHasHiddenLines(const PCodeBlock &block) const;
+    QString foldDisplayText(const PCodeBlock &block, const QString &lineText) const;
+    CharPos documentPositionForFoldCaret(const CharPos &pos) const;
+    void normalizeVirtualCaretForEditing();
+    void expandCollapsedFoldsForChange(const DocumentChange &change);
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeBlock foldAroundLine(int line);
     PCodeBlock foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);

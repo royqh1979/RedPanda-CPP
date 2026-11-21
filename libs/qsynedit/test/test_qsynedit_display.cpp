@@ -58,6 +58,11 @@ public:
                 preparedTexts.append(token.text);
                 if (token.tokenType == TokenType::Identifier)
                     token.foreground = identifierColor;
+                if (token.text == "...}" || token.text == "...") {
+                    foldPlaceholderSeen = true;
+                    foldPlaceholderType = token.tokenType;
+                    foldPlaceholderColor = token.foreground;
+                }
             }
         });
     }
@@ -65,6 +70,9 @@ public:
     QVector<int> preparedBatchLines;
     QStringList preparedTexts;
     QColor identifierColor{17, 83, 161};
+    bool foldPlaceholderSeen = false;
+    TokenType foldPlaceholderType = TokenType::Default;
+    QColor foldPlaceholderColor;
 };
 
 void TestQSyneditDisplay::initTestCase()
@@ -363,6 +371,233 @@ void TestQSyneditDisplay::test_gutter_fold_button_paints()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_fold_placeholder_painting()
+{
+    PaintPreparationEdit edit;
+    edit.setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit.resize(800, 600);
+    edit.loadContent(makeFoldableLines());
+    QColor symbolColor(17, 83, 161);
+    QColor backgroundColor(250, 250, 250);
+    edit.syntaxer()->symbolAttribute()->setForeground(symbolColor);
+    edit.setBackgroundColor(backgroundColor);
+    QVERIFY(edit.collapse(0, 6));
+    edit.setCaretPos(CharPos{0, 7});
+    QImage image = edit.grab().toImage();
+
+    QVERIFY(edit.foldPlaceholderSeen);
+    QCOMPARE(edit.foldPlaceholderType, TokenType::Symbol);
+    QCOMPARE(edit.foldPlaceholderColor, symbolColor);
+    QCOMPARE(image.pixelColor(edit.width() - 20, edit.textHeight() - 1),
+             backgroundColor);
+}
+
+void TestQSyneditDisplay::test_fold_placeholder_navigation()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    int lineLength = mEdit->lineText(0).length();
+    int displayLength = mEdit->getDisplayStringAtLine(0).length();
+    mEdit->setCaretPos(CharPos{lineLength, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength + QString("...}").length(), 0));
+    QCOMPARE(mEdit->caretCh(), displayLength);
+    QVERIFY(mEdit->validCaretPos(mEdit->caretPos()));
+    QVERIFY(!mEdit->validInDoc(mEdit->caretPos()));
+    QVERIFY(mEdit->displayX() > 0);
+
+    QTest::keyClick(mEdit.get(), Qt::Key_Left);
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength, 0));
+    mEdit->setCaretPos(CharPos{0, 7});
+    QTest::keyClick(mEdit.get(), Qt::Key_Left);
+    QCOMPARE(mEdit->caretPos(), CharPos(displayLength, 0));
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 7));
+}
+
+void TestQSyneditDisplay::test_fold_end_line_suffix_visibility()
+{
+    const QStringList suffixes{"", " ", "\t", ";", " // comment"};
+    for (const QString &suffix : suffixes) {
+        mEdit->loadContent(QStringList{"void f() {", "    work();", "}" + suffix});
+        QVERIFY(mEdit->collapse(0, 2));
+        PCodeBlock block = mEdit->foldStartAtLine(0);
+        QVERIFY(block);
+        QCOMPARE(block->fromCh, mEdit->lineText(0).indexOf("{"));
+        QCOMPARE(block->toCh, 0);
+        bool endLineVisible = !suffix.isEmpty();
+        QCOMPARE(mEdit->foldEndLineVisible(block), endLineVisible);
+        QCOMPARE(mEdit->mRowIndex.isHidden(1), true);
+        QCOMPARE(mEdit->mRowIndex.isHidden(2), !endLineVisible);
+        QCOMPARE(mEdit->getDisplayStringAtLine(0),
+                 QString("void f() {") + (endLineVisible ? "..." : "...}"));
+        if (endLineVisible) {
+            int lineLength = mEdit->lineText(0).length();
+            mEdit->setCaretPos(CharPos{lineLength, 0});
+            QTest::keyClick(mEdit.get(), Qt::Key_Right);
+            QCOMPARE(mEdit->caretPos(), CharPos(0, 2));
+            QTest::keyClick(mEdit.get(), Qt::Key_Left);
+            QCOMPARE(mEdit->caretPos(), CharPos(lineLength, 0));
+        }
+    }
+
+    mEdit->loadContent(QStringList{"void f() {", "} trailing;"});
+    QVERIFY(mEdit->collapse(0, 1));
+    QVERIFY(!mEdit->foldHasHiddenLines(mEdit->foldStartAtLine(0)));
+    QCOMPARE(mEdit->getDisplayStringAtLine(0), QString("void f() {"));
+}
+
+void TestQSyneditDisplay::test_fold_else_same_line()
+{
+    mEdit->loadContent(QStringList{
+        "void f() {",
+        "    if (ok) {",
+        "        work();",
+        "    } else {",
+        "        other();",
+        "    }",
+        "}"
+    });
+    QVERIFY(mEdit->collapse(1, 3));
+    PCodeBlock block = mEdit->foldStartAtLine(1);
+    QVERIFY(block);
+    QCOMPARE(block->fromCh, mEdit->lineText(1).indexOf("{"));
+    QCOMPARE(block->toCh, mEdit->lineText(3).indexOf("}"));
+    QVERIFY(mEdit->foldEndLineVisible(block));
+    QVERIFY(mEdit->mRowIndex.isHidden(2));
+    QVERIFY(!mEdit->mRowIndex.isHidden(3));
+    QCOMPARE(mEdit->getDisplayStringAtLine(1), QString("    if (ok) {..."));
+    QCOMPARE(mEdit->lineToRow(3), mEdit->lineToRow(1) + 1);
+}
+
+void TestQSyneditDisplay::test_fold_edit_inside_expands_and_undo()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    int lineLength = mEdit->lineText(0).length();
+    mEdit->setCaretPos(CharPos{lineLength, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QVERIFY(!mEdit->isCollapsed(0, 6));
+    QCOMPARE(mEdit->lineText(0), QString("int main() {x"));
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength + 1, 0));
+    mEdit->undo();
+    QCOMPARE(mEdit->lineText(0), QString("int main() {"));
+    QVERIFY(!mEdit->isCollapsed(0, 6));
+}
+
+void TestQSyneditDisplay::test_fold_virtual_close_backspace()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(6), QString());
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 6));
+    QVERIFY(!mEdit->isCollapsed(0, 6));
+    mEdit->undo();
+    QCOMPARE(mEdit->lineText(6), QString("}"));
+    QVERIFY(!mEdit->isCollapsed(0, 6));
+}
+
+void TestQSyneditDisplay::test_fold_edit_outside_and_suffix_transitions()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    int openCh = mEdit->lineText(0).indexOf("{");
+    mEdit->setCaretPos(CharPos{openCh, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(0), QString("int main() x{"));
+    QVERIFY(mEdit->isCollapsed(0, 6));
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(0), QString("int main() {"));
+    QVERIFY(mEdit->isCollapsed(0, 6));
+
+    mEdit->loadContent(QStringList{
+        "void f() {", "    work();", "} trailing;", "void g() {}"
+    });
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(2).length(), 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(2), QString("} trailing;x"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(2), QString("} trailing;"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+    mEdit->setCaretPos(CharPos{1, 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->lineText(2), QString("}trailing;"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+
+    mEdit->setCaretAndSelection(CharPos{1, 2}, CharPos{1, 2},
+                                CharPos{mEdit->lineText(2).length(), 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(2), QString("}"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(6), QString("}x"));
+    QVERIFY(!mEdit->isCollapsed(0, 6));
+
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QTest::keyClick(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 7));
+    QVERIFY(mEdit->isCollapsed(0, 6));
+}
+
+void TestQSyneditDisplay::test_fold_edit_shared_document_views()
+{
+    mEdit->loadContent(QStringList{
+        "void first() {", "    work();", "}",
+        "void second() {", "    other();", "}"
+    });
+    QSynEdit other;
+    other.setSyntaxer(std::make_shared<CppSyntaxer>());
+    other.setDocument(mEdit->document());
+    QVERIFY(mEdit->collapse(0, 2));
+    QVERIFY(other.collapse(3, 5));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    QVERIFY(other.isCollapsed(3, 5));
+    QCOMPARE(other.lineText(0), mEdit->lineText(0));
+}
+
+void TestQSyneditDisplay::test_fold_merge_before_open_does_not_expand()
+{
+    mEdit->loadContent(QStringList{
+        "int before = 0;", "void f() {", "    work();", "}"
+    });
+    QVERIFY(mEdit->collapse(1, 3));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Delete);
+    QCOMPARE(mEdit->lineText(0), QString("int before = 0;void f() {"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+}
+
+void TestQSyneditDisplay::test_fold_whole_block_delete_exception()
+{
+    mEdit->loadContent(QStringList{
+        "void first() {", "    work();", "}",
+        "void second() {", "    other();", "}"
+    });
+    QVERIFY(mEdit->collapse(0, 2));
+    QVERIFY(mEdit->collapse(3, 5));
+    mEdit->setCaretAndSelection(CharPos{0, 0}, CharPos{0, 0}, CharPos{0, 3});
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->content(), QStringList({
+        "void second() {", "    other();", "}"
+    }));
+    QVERIFY(mEdit->isCollapsed(0, 2));
 }
 
 void TestQSyneditDisplay::test_gutter_click_selects_line()
