@@ -53,7 +53,6 @@ ProjectOptions::ProjectOptions()
     staticLink = true;
     addCharset = true;
     modelType = ProjectModelType::FileSystem;
-    classBrowserType = ProjectClassBrowserType::CurrentFile;
     execEncoding = ENCODING_SYSTEM_DEFAULT;
     allowParallelBuilding=false;
     parellelBuildingJobs=0;

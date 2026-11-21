@@ -671,8 +671,10 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                 }
             }
         }
-        if (isFunction(declarator) && context.scope == StatementScope::Local
-                && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)) {
+        bool externalLocalDeclaration = context.scope == StatementScope::Local
+                && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)
+                && (isFunction(declarator) || kind == StatementKind::Variable);
+        if (externalLocalDeclaration) {
             declarationContext.scope = StatementScope::Global;
             declarationContext.accessibility = StatementAccessibility::None;
             PStatement parent = context.parentScope;
@@ -686,7 +688,8 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                     || declaration.kind == DeclarationKind::Enum)) {
             std::dynamic_pointer_cast<Statement>(statement)->typeInfo.qualifiedName = declaration.declarators.first().name;
         }
-        PStatement merged = mergeDeclaration(statement, context);
+        PStatement merged = mergeDeclaration(
+                    statement, externalLocalDeclaration ? declarationContext : context);
         if (merged) {
             statement = merged;
         } else {
@@ -728,7 +731,7 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                         declaration.specifiers.properties};
                     setStatementHasDefinition(enumStatement, true);
                     auto normal = std::dynamic_pointer_cast<Statement>(enumStatement);
-                    normal->typeInfo.qualifiedName = declaration.declarators.first().name;
+                    normal->typeInfo.qualifiedName = statement->fullName;
                     normal->value = validValue ? QString::number(numericValue) : enumerator.value;
                     enumStatement->properties.setFlag(StatementProperty::InProject, context.inProject);
                     enumStatement->properties.setFlag(StatementProperty::InSystemHeader,
@@ -927,8 +930,11 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
 
     bool variable = kind == StatementKind::Variable || kind == StatementKind::GlobalVariable
             || kind == StatementKind::LocalVariable;
-    bool declarationOnly = variable
-            && declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern);
+    bool declarationOnly = variable && !declarator.initializerPosition.isValid()
+            && (declaration.specifiers.properties.testFlag(DeclSpecifierProperty::Extern)
+                || (context.scope == StatementScope::ClassLocal && statementIsStatic(statement)
+                    && !declaration.specifiers.properties.testFlag(
+                        DeclSpecifierProperty::Inline)));
     bool hasBodyDefinition = isFunction(declarator) || kind == StatementKind::Class
             || kind == StatementKind::Namespace || kind == StatementKind::EnumType
             || kind == StatementKind::EnumClassType;

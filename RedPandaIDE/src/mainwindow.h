@@ -23,6 +23,7 @@
 #include <QFileSystemModel>
 #include <QElapsedTimer>
 #include <QSortFilterProxyModel>
+#include <QPointer>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -64,6 +65,8 @@ class QLabel;
 class QComboBox;
 class CompilerManager;
 class Editor;
+struct SymbolReferenceResults;
+enum class RenameResult;
 class Debugger;
 class CPUDialog;
 class QPlainTextEdit;
@@ -316,6 +319,9 @@ private:
             QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
     void showSearchReplacePanel(bool show);
+    PSearchResults addSymbolReferenceResults(const SymbolReferenceResults &references);
+    void clearRenamePreview();
+    void showRenameError(RenameResult result);
     void clearIssues();
     void doCompileRun(RunType runType);
     void doGenerateAssembly();
@@ -422,7 +428,6 @@ private slots:
     void onClassBrowserGotoDefinition();
     void onClassBrowserSortByType();
     void onClassBrowserSortByName();
-    void onClassBrowserChangeScope();
     void onClassBrowserRefreshStart();
     void onClassBrowserRefreshEnd();
 
@@ -576,6 +581,8 @@ private slots:
     void on_actionGoto_Definition_triggered();
 
     void on_actionFind_references_triggered();
+
+    void on_actionLocate_in_Class_Browser_triggered();
 
     void on_actionOpen_Containing_Folder_triggered();
 
@@ -945,6 +952,10 @@ private:
     std::unique_ptr<CustomFileIconProvider> mFileSystemModelIconProvider;
     TodoModel *mTodoModel;
     SearchResultModel *mSearchResultModel;
+    std::shared_ptr<SymbolReferenceResults> mPendingRenameReferences;
+    PSearchResults mPendingRenameResults;
+    QPointer<Editor> mPendingRenameEditor;
+    QString mPendingRenameWord;
     BookmarkModel *mBookmarkModel;
     SearchResultTreeViewDelegate *mSearchViewDelegate;
     ClassBrowserModel *mClassBrowserModel;
@@ -1010,8 +1021,6 @@ private:
     QAction * mClassBrowser_Sort_By_Name;
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
-    QAction * mClassBrowser_Show_CurrentFile;
-    QAction * mClassBrowser_Show_WholeProject;
     QWidget * mClassBrowserToolbar;
 
     //actions for files view

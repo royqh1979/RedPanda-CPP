@@ -47,6 +47,9 @@
 #include <QScrollBar>
 #include <QTextDocumentFragment>
 #include <QActionGroup>
+#include <QDialogButtonBox>
+#include <QListWidget>
+#include <QVBoxLayout>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -103,7 +106,7 @@
 #include "settingsdialog/settingsdialog.h"
 #include "compiler/compilermanager.h"
 #include <qsynedit/document.h>
-#include "cpprefacter.h"
+#include "refactor/cpprefactor.h"
 
 #include "widgets/newprojectunitdialog.h"
 #include "widgets/searchinfiledialog.h"
@@ -119,6 +122,41 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
             return i;
     }    
     return -1;
+}
+
+static CppRefactor::ContentProvider openedEditorContentProvider(MainWindow *mainWindow)
+{
+    return [mainWindow](const QString &fileName, QStringList &buffer) {
+        return mainWindow->editorManager()->getContentFromOpenedEditor(fileName, buffer);
+    };
+}
+
+static CppRefactor::EditorProvider openedEditorProvider(MainWindow *mainWindow)
+{
+    return [mainWindow](const QString &fileName) {
+        return mainWindow->editorManager()->getOpenedEditor(fileName);
+    };
+}
+
+static QModelIndex classBrowserIndexForCurrentSymbol(
+        Editor *editor, const ClassBrowserModel *model)
+{
+    if (!editor || !model || !editor->parser() || !editor->parser()->enabled())
+        return QModelIndex();
+    QSynedit::CharPos pos = editor->caretPos();
+    PStatement statement = editor->parser()->findStatementOf(
+                editor->filename(),
+                CppExpressionExtractor::extract(editor, editor->syntaxer(), pos),
+                pos.line);
+    if (!statement)
+        return QModelIndex();
+    StatementOccurrence declaration = statementDeclarationForNavigation(
+                statement, editor->filename());
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    if (declaration.fileName != editor->filename()
+            && definition.fileName != editor->filename())
+        return QModelIndex();
+    return model->modelIndexForStatement(statement);
 }
 
 MainWindow* pMainWindow;
@@ -715,6 +753,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(false);
         ui->actionGoto_Definition->setEnabled(false);
         ui->actionFind_references->setEnabled(false);
+        ui->actionLocate_in_Class_Browser->setEnabled(false);
 
         ui->actionMove_To_Other_View->setEnabled(false);
         ui->actionSplit_View->setEnabled(false);
@@ -807,6 +846,8 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(e->parser()!=nullptr);
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
+        ui->actionLocate_in_Class_Browser->setEnabled(
+                    e->parser() && e->parser()->enabled());
         ui->actionMove_To_Other_View->setEnabled(editorManager()->pageCount()>1);
         ui->actionSplit_View->setEnabled(editorManager()->peerOf(e)==nullptr);
 
@@ -1745,11 +1786,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
              && (mClassBrowserModel->parser() == editor->parser()))
                 return;
 
-        if (mClassBrowserModel->parser() == editor->parser() && mClassBrowserModel->classBrowserType()==ProjectClassBrowserType::WholeProject) {
-            mClassBrowserModel->setCurrentFile(editor->filename());
-            return;
-        }
-
         if (editor->inProject() && !mProject) {
             //project is in creation
             mClassBrowserModel->setCurrentFile(editor->filename());
@@ -1758,11 +1794,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 
         mClassBrowserModel->beginUpdate();
         mClassBrowserModel->setParser(editor->parser());
-        if (editor->inProject()) {
-            mClassBrowserModel->setClassBrowserType(mProject->options().classBrowserType);
-        } else {
-            mClassBrowserModel->setClassBrowserType(ProjectClassBrowserType::CurrentFile);
-        }
         mClassBrowserModel->setCurrentFile(editor->filename());
         mClassBrowserModel->endUpdate();
     } else if (mProject) {
@@ -1775,7 +1806,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 
         mClassBrowserModel->beginUpdate();
         mClassBrowserModel->setParser(mProject->cppParser());
-        mClassBrowserModel->setClassBrowserType(mProject->options().classBrowserType);
         mClassBrowserModel->setCurrentFile("");
         mClassBrowserModel->endUpdate();
     } else {
@@ -2936,6 +2966,80 @@ void MainWindow::showSearchPanel(bool showReplace)
     ui->tabMessages->setCurrentWidget(ui->tabSearch);
 }
 
+PSearchResults MainWindow::addSymbolReferenceResults(
+        const SymbolReferenceResults &references)
+{
+    SearchFileScope scope = references.scope == SymbolReferenceScope::WholeProject
+            ? SearchFileScope::wholeProject : SearchFileScope::currentFile;
+    PSearchResults results = mSearchResultModel->addSearchResults(
+                references.symbol, references.scopeFullName, scope);
+    for (const SymbolReferenceFile &file : references.files) {
+        PSearchResultTreeItem parentItem = std::make_shared<SearchResultTreeItem>();
+        parentItem->filename = file.fileName;
+        parentItem->parent = nullptr;
+        parentItem->selected = true;
+        for (const SymbolReference &reference : file.references) {
+            PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
+            item->filename = file.fileName;
+            item->line = reference.line;
+            item->start = reference.ch;
+            item->len = reference.length;
+            item->parent = parentItem.get();
+            item->text = reference.lineText;
+            item->text.replace('\t', ' ');
+            item->matchedText = reference.lineText.mid(
+                        reference.ch, reference.length);
+            item->selected = true;
+            parentItem->results.append(item);
+        }
+        mSearchResultModel->addResultToSearchResults(results, parentItem);
+    }
+    return results;
+}
+
+void MainWindow::clearRenamePreview()
+{
+    mPendingRenameReferences.reset();
+    mPendingRenameResults.reset();
+    mPendingRenameEditor.clear();
+    mPendingRenameWord.clear();
+}
+
+void MainWindow::showRenameError(RenameResult result)
+{
+    QString message;
+    switch (result) {
+    case RenameResult::InvalidInput:
+        message = tr("Invalid symbol name.");
+        break;
+    case RenameResult::ParserUnavailable:
+        message = tr("Parser is not available.");
+        break;
+    case RenameResult::SymbolNotFound:
+        message = tr("Symbol not found.");
+        break;
+    case RenameResult::OutsideAllowedScope:
+        message = tr("Can't rename symbols outside the current file or project.");
+        break;
+    case RenameResult::NameConflict:
+        message = tr("New symbol already exists!");
+        break;
+    case RenameResult::NotInScope:
+        message = tr("Can't rename symbols outside functions.");
+        break;
+    case RenameResult::ContentChanged:
+        message = tr("Contents has changed since last search!");
+        break;
+    case RenameResult::FileAccess:
+        message = tr("Can't open or save a file for rename.");
+        break;
+    case RenameResult::Success:
+    case RenameResult::NoSelection:
+        return;
+    }
+    QMessageBox::critical(this, tr("Rename Symbol Error"), message);
+}
+
 void MainWindow::showCPUInfoDialog()
 {
     if (mCPUDialog==nullptr) {
@@ -3334,14 +3438,6 @@ void MainWindow::createCustomActions()
     mClassBrowser_goto_definition = createAction(
                 tr("Goto definition"),
                 ui->tabStructure);
-    mClassBrowser_Show_CurrentFile = createAction(
-                tr("In current file"),
-                ui->tabStructure);
-    mClassBrowser_Show_CurrentFile->setCheckable(true);
-    mClassBrowser_Show_WholeProject = createAction(
-                tr("In current project"),
-                ui->tabStructure);
-    mClassBrowser_Show_WholeProject->setCheckable(true);
 
     mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
     mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
@@ -3355,12 +3451,6 @@ void MainWindow::createCustomActions()
 
     connect(mClassBrowser_goto_declaration,&QAction::triggered,
             this, &MainWindow::onClassBrowserGotoDeclaration);
-
-    connect(mClassBrowser_Show_CurrentFile,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
-
-    connect(mClassBrowser_Show_WholeProject,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
 
 
     //Files view
@@ -3556,7 +3646,9 @@ void MainWindow::scanActiveProject(bool parse)
     if (parse) {
         resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
+        Editor *editor = mEditorManager->getEditor();
+        if (editor && editor->inProject())
+            editor->reparse();
     } else {
         mProject->resetParserProjectFiles();
     };
@@ -4301,17 +4393,6 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mClassBrowser_Sort_By_Name);
     menu.addAction(mClassBrowser_Sort_By_Type);
-    Editor * editor = mEditorManager->getEditor();
-    if ((editor &&editor->inProject()) || mProject) {
-        menu.addSeparator();
-        menu.addAction(mClassBrowser_Show_CurrentFile);
-        menu.addAction(mClassBrowser_Show_WholeProject);
-
-        if (mProject) {
-            mClassBrowser_Show_CurrentFile->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile);
-            mClassBrowser_Show_WholeProject->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::WholeProject);
-        }
-    }
 
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
@@ -5142,25 +5223,6 @@ void MainWindow::onClassBrowserSortByName()
     mClassBrowserModel->fillStatements();
 }
 
-void MainWindow::onClassBrowserChangeScope()
-{
-    if (!mProject)
-        return;
-    ProjectClassBrowserType classBrowserType;
-    if (mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile) {
-        classBrowserType=ProjectClassBrowserType::WholeProject;
-    } else {
-        classBrowserType=ProjectClassBrowserType::CurrentFile;
-    }
-    mProject->options().classBrowserType=classBrowserType;
-    mProject->saveOptions();
-    Editor* editor = mEditorManager->getEditor();
-    if ((!editor || editor->inProject())  &&
-            mClassBrowserModel->classBrowserType()!=classBrowserType) {
-        mClassBrowserModel->setClassBrowserType(classBrowserType);
-    }
-}
-
 void MainWindow::onClassBrowserRefreshStart()
 {
     mClassBrowserCurrentStatement="";
@@ -5370,6 +5432,10 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addAction(ui->actionGoto_Declaration);
             menu.addAction(ui->actionGoto_Definition);
             menu.addAction(ui->actionFind_references);
+            menu.addAction(ui->actionLocate_in_Class_Browser);
+            ui->actionLocate_in_Class_Browser->setEnabled(
+                        classBrowserIndexForCurrentSymbol(
+                            editor, mClassBrowserModel).isValid());
             menu.addSeparator();
         }
 
@@ -7041,13 +7107,17 @@ void MainWindow::on_btnSearchAgain_clicked()
         if (results->scope()==SearchFileScope::wholeProject
                 && pMainWindow->project()==nullptr)
             return;
-        CppRefacter refactor(this);
-        Editor* editor;
-        editor = mEditorManager->getEditor();
-
+        Editor *editor = mEditorManager->getEditor();
         if (!editor)
             return;
-        refactor.findOccurence(editor, results->keyword(), results->symbolScopeFullName(), results->scope());
+        CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
+        SymbolReferenceResults references;
+        SymbolReferenceScope scope = results->scope() == SearchFileScope::wholeProject
+                ? SymbolReferenceScope::WholeProject : SymbolReferenceScope::CurrentFile;
+        if (refactor.findOccurrences(editor, results->keyword(),
+                                     results->symbolScopeFullName(), scope, references))
+            addSymbolReferenceResults(references);
     }
     ui->searchView->expandAll();
 }
@@ -7287,12 +7357,33 @@ void MainWindow::on_actionGoto_Definition_triggered()
 
 void MainWindow::on_actionFind_references_triggered()
 {
-    Editor * editor = mEditorManager->getEditor();
-    if (editor) {
-        CppRefacter refactor(this);
-        refactor.findOccurence(editor, editor->caretPos());
+    Editor *editor = mEditorManager->getEditor();
+    if (!editor)
+        return;
+    CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
+    SymbolReferenceResults references;
+    if (refactor.findOccurrences(editor, editor->caretPos(), references)) {
+        addSymbolReferenceResults(references);
         showSearchPanel(false);
     }
+}
+
+
+void MainWindow::on_actionLocate_in_Class_Browser_triggered()
+{
+    QModelIndex index = classBrowserIndexForCurrentSymbol(
+                mEditorManager->getEditor(), mClassBrowserModel);
+    if (!index.isValid())
+        return;
+    showHideInfosTab(ui->tabStructure, true);
+    ui->actionStructure->setChecked(true);
+    ui->tabExplorer->setCurrentWidget(ui->tabStructure);
+    stretchExplorerPanel(true);
+    for (QModelIndex parent = index.parent(); parent.isValid(); parent = parent.parent())
+        ui->classBrowser->expand(parent);
+    ui->classBrowser->setCurrentIndex(index);
+    ui->classBrowser->scrollTo(index, QAbstractItemView::PositionAtCenter);
 }
 
 
@@ -7596,7 +7687,6 @@ void MainWindow::on_actionAdd_to_project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
     }
 }
 
@@ -7943,7 +8033,6 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 
     mProject->saveAll();
 
-    CppParser::parseFileListNonBlocking(mProject->cppParser());
     Editor * editor = mProject->openUnit(newUnit, false);
     mEditorManager->activeEditor(editor,true);
 #ifdef ENABLE_VCS
@@ -8148,7 +8237,8 @@ void MainWindow::initEditorActions()
     changeEditorActionParent(ui->actionToggle_Breakpoint, tr("Debug"));
     changeEditorActionParent(ui->actionGoto_Declaration, tr("Code"));
     changeEditorActionParent(ui->actionGoto_Definition, tr("Code"));
-    changeEditorActionParent(ui->actionFile_Properties, tr("Code"));
+    changeEditorActionParent(ui->actionLocate_in_Class_Browser, tr("Code"));
+    changeEditorActionParent(ui->actionFile_Properties, tr("File"));
     changeEditorActionParent(ui->actionLocate_in_Files_View, tr("Code"));
     changeEditorActionParent(ui->actionSwitchHeaderSource, tr("Code"));
 
@@ -8285,7 +8375,6 @@ void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString 
     mProject->cppParser()->invalidateFile(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
     mProject->cppParser()->addProjectFile(newFilename,true);
-    CppParser::parseFileListNonBlocking(mProject->cppParser());
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(oldFilename);
         mTodoParser->parseFile(newFilename,true);
@@ -8507,109 +8596,107 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionRename_Symbol_triggered()
 {
-    Editor * editor = mEditorManager->getEditor();
-    if (!editor)
+    Editor *editor = mEditorManager->getEditor();
+    if (!editor || !editor->parser())
         return;
-    if (!editor->parser())
-        return;
-    editor->beginEditing();
     QSynedit::CharPos oldCaret = editor->caretPos();
-    //    mClassBrowserModel->beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
-    auto action = finally([oldCursor,editor]{
-        editor->endEditing();
-//        mClassBrowserModel->EndTreeUpdate;
+    auto restoreCursor = finally([oldCursor, editor] {
         editor->setCursor(oldCursor);
     });
 
-    QStringList expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), oldCaret);
-    if (expression.isEmpty() && oldCaret.ch>=0) {
-        QSynedit::CharPos pos=oldCaret;
-        pos.ch--;
-        expression = CppExpressionExtractor::extract(editor, editor->syntaxer(), pos);
+    QStringList expression = CppExpressionExtractor::extract(
+                editor, editor->syntaxer(), oldCaret);
+    if (expression.isEmpty() && oldCaret.ch > 0) {
+        expression = CppExpressionExtractor::extract(
+                    editor, editor->syntaxer(),
+                    QSynedit::CharPos{oldCaret.ch - 1, oldCaret.line});
     }
-
-    if (editor->inProject() && mProject) {
-        for (int i=0;i<mEditorManager->pageCount();i++) {
-            Editor * e=(*mEditorManager)[i];
-            if (e->modified())  {
-                //here we must reparse the file in sync, or rename may fail
-                CppParser::parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
-            }
-        }
-
-        // Find it's definition
-        PStatement oldStatement = editor->parser()->findStatementOf(
-                        editor->filename(),
-                        expression,
-                        oldCaret.line);
-        // definition of the symbol not found
-        if (!oldStatement)
-            return;
-        StatementOccurrence declaration = statementDeclarationForNavigation(
-                    oldStatement, editor->filename());
-        StatementOccurrence definition = statementDefinitionForNavigation(oldStatement);
-        // found but not in this file
-        if (editor->filename() != declaration.fileName
-            || editor->filename() != definition.fileName) {
-            // it's defined in system header, dont rename
-            if (mProject->cppParser()->isSystemHeaderFile(declaration.fileName)) {
-                QMessageBox::critical(editor,
-                            tr("Rename Error"),
-                            tr("Symbol '%1' is defined in system header.")
-                                      .arg(oldStatement->fullName));
-                return;
-            }
-            CppRefacter refactor(this);
-            refactor.findOccurence(editor,oldCaret);
-            showSearchPanel(true);
-            return;
-        }
+    if (expression.isEmpty())
+        return;
+    if (editor->modified()) {
+        CppParser::parseFileBlocking(editor->parser(), editor->filename(),
+                                     editor->inProject(), editor->contextFile(),
+                                     false, false);
     }
-    QString word;
-    //not in project
     PStatement oldStatement = editor->parser()->findStatementOf(
-                    editor->filename(),
-                    expression,
-                    oldCaret.line);
-    bool isUndefinedLocalVar = false;
-    if (!oldStatement) {
-        if (expression.length()!=1)
-            return;
-        word = expression[0];
-        isUndefinedLocalVar = true;
-    } else {
-        word = oldStatement->command;
-    }
-    if (word.isEmpty())
+                editor->filename(), expression, oldCaret.line);
+    bool isUndefinedLocalVar = !oldStatement;
+    if (isUndefinedLocalVar && expression.size() != 1)
         return;
-    if (isCppKeyword(word)) {
+    QString word = oldStatement ? oldStatement->command : expression.constFirst();
+    if (word.isEmpty() || isCppKeyword(word))
         return;
-    }
 
     bool ok;
     QString newWord = QInputDialog::getText(editor,
                                             tr("Rename Symbol"),
                                             tr("New Name"),
-                                            QLineEdit::Normal,word, &ok);
-    if (!ok)
+                                            QLineEdit::Normal, word, &ok);
+    if (!ok || word == newWord)
         return;
 
-    if (word == newWord)
-        return;
-
-    if (!editor->inProject() && editor->modified() ) {
-        //here we must reparse the file in sync, or rename may fail
-        CppParser::parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
-    }
-    CppRefacter refactor(this);
-
+    CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
+    RenameResult result;
     if (isUndefinedLocalVar) {
-        refactor.renameUndefinedLocalVariable(editor,oldCaret,newWord);
+        result = refactor.renameUndefinedLocalVariable(editor, oldCaret, newWord);
     } else {
-        refactor.renameSymbol(editor,oldCaret,newWord);
+        std::optional<QVector<PStatement>> selectedOverloads;
+        QVector<PStatement> overloads = refactor.overloadsOf(editor, oldCaret);
+        if (overloads.size() > 1) {
+            QDialog dialog(editor);
+            dialog.setWindowTitle(tr("Rename Symbol"));
+            QVBoxLayout layout(&dialog);
+            QLabel label(tr("Select overloads to rename:"), &dialog);
+            QListWidget list(&dialog);
+            for (const PStatement &overload : overloads) {
+                auto normal = std::dynamic_pointer_cast<Statement>(overload);
+                QListWidgetItem *item = new QListWidgetItem(
+                            overload->fullName + normal->args, &list);
+                item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+                item->setCheckState(Qt::Checked);
+            }
+            QDialogButtonBox buttons(
+                        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+            layout.addWidget(&label);
+            layout.addWidget(&list);
+            layout.addWidget(&buttons);
+            connect(&buttons, &QDialogButtonBox::accepted,
+                    &dialog, &QDialog::accept);
+            connect(&buttons, &QDialogButtonBox::rejected,
+                    &dialog, &QDialog::reject);
+            if (dialog.exec() != QDialog::Accepted)
+                return;
+            selectedOverloads = QVector<PStatement>{};
+            for (int i = 0; i < list.count(); ++i) {
+                if (list.item(i)->checkState() == Qt::Checked)
+                    selectedOverloads->append(overloads.at(i));
+            }
+        }
+        auto references = std::make_shared<SymbolReferenceResults>();
+        result = refactor.prepareRename(editor, oldCaret, newWord,
+                                        selectedOverloads, *references);
+        if (result == RenameResult::Success
+                && oldStatement->scope != StatementScope::Local) {
+            clearRenamePreview();
+            mPendingRenameReferences = references;
+            mPendingRenameResults = addSymbolReferenceResults(*references);
+            mPendingRenameEditor = editor;
+            mPendingRenameWord = newWord;
+            showSearchPanel(true);
+            ui->cbReplaceInHistory->setCurrentText(newWord);
+            return;
+        }
+        if (result == RenameResult::Success)
+            result = refactor.applyRename(editor, *references, newWord);
     }
+    if (result != RenameResult::Success) {
+        showRenameError(result);
+        return;
+    }
+    showSearchReplacePanel(false);
     editor->reparse();
     editor->checkSyntaxInBack();
     editor->reparseTodo();
@@ -8620,11 +8707,14 @@ void MainWindow::showSearchReplacePanel(bool show)
 {
     ui->replacePanel->setVisible(show);
     ui->cbSearchHistory->setDisabled(show);
+    ui->cbReplaceInHistory->setEnabled(!show || !mPendingRenameReferences);
     if (show && mSearchResultModel->currentResults()) {
         ui->cbReplaceInHistory->setCurrentText(
                     mSearchResultModel->currentResults()->keyword());
     }
-    mSearchResultModel->treeModel()->setSelectable(show);
+    mSearchResultModel->treeModel()->setSelectable(show && !mPendingRenameReferences);
+    if (!show)
+        clearRenamePreview();
 }
 
 void MainWindow::setFilesViewRoot(const QString &path, bool setOpenFolder)
@@ -8759,6 +8849,31 @@ void MainWindow::on_btnReplace_clicked()
 {
     PSearchResults results = mSearchResultModel->currentResults();
     if (!results) {
+        return;
+    }
+    if (mPendingRenameReferences && results == mPendingRenameResults) {
+        Editor *editor = mPendingRenameEditor.data();
+        if (!editor)
+            return;
+        CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
+        RenameResult result = refactor.applyRename(
+                    editor, *mPendingRenameReferences, mPendingRenameWord);
+        if (result != RenameResult::Success) {
+            showRenameError(result);
+            return;
+        }
+        QVector<SymbolReferenceFile> renamedFiles = mPendingRenameReferences->files;
+        showSearchReplacePanel(false);
+        stretchMessagesPanel(false);
+        for (const SymbolReferenceFile &file : renamedFiles) {
+            Editor *modified = mEditorManager->getOpenedEditor(file.fileName);
+            if (!modified)
+                continue;
+            modified->reparse();
+            modified->checkSyntaxInBack();
+            modified->reparseTodo();
+        }
         return;
     }
     QString newWord = ui->cbReplaceInHistory->currentText();
@@ -9631,7 +9746,6 @@ void MainWindow::on_actionNew_Header_triggered()
         PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->saveAll();
 
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
         setProjectViewCurrentUnit(newUnit);
         updateProjectView();
 
@@ -9710,7 +9824,6 @@ void MainWindow::on_actionNew_Class_triggered()
         newUnit=mProject->addUnit(sourceFilename,mProject->rootNode());
         setProjectViewCurrentUnit(newUnit);
         mProject->saveAll();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
         updateProjectView();
 
         openFile(headerFilename);

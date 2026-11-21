@@ -1,6 +1,8 @@
 Red Panda C++ Version 3.6
 
   - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
+  - enhancement: Make Find References and Rename Symbol scope-aware, with overload selection, linked symbol renaming, and atomic rename previews.
+  - enhancement: Support atomic symbol renaming across project files while rejecting declarations, definitions, or references outside the project.
   - enhancement: Refresh compiler type, version, detected paths, and tool selection when loading or selecting a compiler configuration, while preserving custom settings.
   - enhancement: Use consistent Unicode-aware whole-word matching and search open buffers in Find in Files without changing editor state.
   - fix: Correct multi-line and zero-length replacements, and keep Replace All in one Undo group.
@@ -8,8 +10,19 @@ Red Panda C++ Version 3.6
   - enhancement: Remember Find in Files case sensitivity, whole-word, and regex options.
   - enhancement: Add a Find in Files button to the main window's Search panel.
   - fix: Correctly replace only selected Find in Files results, including case-insensitive, regex, Unicode, and multi-line matches.
+  - fix: Use the selected-item highlight palette for matched text in search results.
+  - fix: Exclude inactive preprocessor branches from semantic reference searches.
   - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
+  - enhancement: Locate the symbol under the caret in the current file's class browser from the editor context menu or a configurable shortcut.
+  - enhancement: Hide generated names of anonymous types in the class browser and place them before named types of the same kind by definition line.
+  - enhancement: Sort macros before other symbol kinds in the class browser.
+  - fix: Group File Properties under File in the shortcut settings.
+  - change: Remove the class browser's whole-project symbol view; it now shows the current file's C/C++ context.
+  - change: Remove the option to clear symbol tables when an editor is hidden; showing an editor reparses it only when needed.
+  - fix: Correctly distinguish extern declarations from initialized definitions, merge local extern declarations with external symbols, and recognize static data-member declarations.
+  - fix: Recompute statement linkage and declaration properties after invalidating declarations or definitions.
+  - fix: Avoid treating type-less function calls as declarations while preserving constructors and deduction guides.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Improve compatibility with Clang and libc++ headers.

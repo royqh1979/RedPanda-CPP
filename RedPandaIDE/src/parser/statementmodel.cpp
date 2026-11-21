@@ -132,6 +132,19 @@ void StatementModel::removeDeclarations(const PStatement &statement, const QStri
         else
             ++it;
     }
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    if (!normal)
+        return;
+    DeclSpecifierProperties properties;
+    if (statementHasDefinition(statement))
+        properties = statement->definition.declSpecifierProperties;
+    for (const StatementOccurrence &occurrence : statement->declarations)
+        properties |= occurrence.declSpecifierProperties;
+    normal->declSpecifierProperties = properties;
+    statement->properties.setFlag(StatementProperty::Static,
+                                  properties.testFlag(DeclSpecifierProperty::Static));
+    statement->properties.setFlag(StatementProperty::Constexpr,
+                                  properties.testFlag(DeclSpecifierProperty::Constexpr));
 }
 
 void StatementModel::removeNamespaceDeclarations(const PStatement &statement,

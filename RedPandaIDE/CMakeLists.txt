@@ -40,6 +40,8 @@ target_qt_plain_cpp(RedPandaIDE
     # search
     src/search/filesearchengine
     src/search/searchresultreplacer
+    # refactor
+    src/refactor/cpprefactor
     # problems
     src/problems/competitivecompenionhandler
     src/problems/freeprojectsetformat
@@ -74,7 +76,6 @@ target_qt_plain_cpp(RedPandaIDE
 target_moc_classes(RedPandaIDE
     src/caretlist
     src/codesnippetsmanager
-    src/cpprefacter
     src/editor/editor
     src/editormanager
     src/iconsmanager
@@ -104,6 +105,8 @@ target_moc_classes(RedPandaIDE
     # parser
     src/parser/cppparser
     src/parser/statementmodel
+    # refactor
+    src/refactor/cpprefactor
     # problems
     src/problems/competitivecompenionhandler
     # reformatter
@@ -391,7 +394,7 @@ target_qt_plain_cpp(test-widgets
 
     src/compiler/runner
     src/compiler/executablerunner
-    src/cpprefacter
+    src/refactor/cpprefactor
     src/projectoptions
     src/colorscheme
     src/syntaxermanager
@@ -499,6 +502,119 @@ add_test(
 set_tests_properties(test-file-search PROPERTIES
     ENVIRONMENT "${test_environment}")
 add_dependencies(all-test-targets test-file-search)
+
+#####################
+# test-refactor     #
+#####################
+
+add_executable(test-refactor test/test-refactor-main.cpp)
+
+target_qt_plain_cpp(test-refactor
+    src/settings
+    src/settings/basesettings
+    src/settings/codecompletionsettings
+    src/settings/codeformattersettings
+    src/settings/compilersetsettings
+    src/settings/compilesettings
+    src/settings/debuggersettings
+    src/settings/dirsettings
+    src/settings/editorsettings
+    src/settings/environmentsettings
+    src/settings/executorsettings
+    src/settings/languagesettings
+    src/settings/uisettings
+    src/parser/cppparser
+    src/parser/cpppreprocessor
+    src/parser/pptoken
+    src/parser/ppexpander
+    src/parser/cpptokenizer
+    src/parser/cpptokencursor
+    src/parser/cpptypes
+    src/parser/cppdeclarationparser
+    src/parser/cppsyntaxparser
+    src/parser/cppstatementbuilder
+    src/parser/cpptyperesolver
+    src/parser/typeoperationregistry
+    src/parser/cppexpressionevaluator
+    src/parser/cppscopes
+    src/parser/parserutils
+    src/parser/statementmodel
+    src/editor/cppexpressionextractor
+    src/refactor/cpprefactor
+    src/utils
+    src/utils/escape
+    src/utils/file
+    src/utils/font
+    src/utils/os
+    src/utils/parsearg
+    src/utils/parsemacros
+    src/utils/pe
+    src/utils/ui
+    src/compiler/runner
+    src/compiler/executablerunner
+    src/projectoptions
+    src/colorscheme
+    src/customfileiconprovider
+    src/syntaxermanager
+    src/iconsmanager
+    src/systemconsts
+    src/compiler/compilerinfo
+    src/reformatter/basereformatter
+    test/test_cpprefactor
+    test/test_refactor_stubs)
+
+target_moc_classes(test-refactor
+    src/editor/editor
+    src/project
+    src/projecttemplate
+    src/settingsdialog/settingswidget
+    src/widgets/bookmarkmodel
+    src/widgets/classbrowser
+    src/widgets/codecompletionlistview
+    src/widgets/codecompletionpopup
+    src/widgets/coloredit
+    src/widgets/customdisablediconengine
+    src/widgets/qpatchedcombobox
+    src/widgets/functiontooltipwidget
+    src/widgets/headercompletionpopup
+    src/widgets/searchresultview
+    src/symbolusagemanager
+    src/codesnippetsmanager
+    test/test_cpprefactor)
+
+target_include_directories(test-refactor PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-refactor PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::PrintSupport
+    Qt::Svg
+    Qt::Test
+    Qt::Widgets
+    Qt::Xml
+    qsynedit
+    redpanda_qt_utils)
+
+if (QT_FEATURE_static)
+    qt_import_plugins(test-refactor
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
+
+target_compile_definitions(test-refactor PRIVATE
+    ${GLOBAL_COMPILE_DEFINITIONS}
+    APP_NAME=\"test-refactor\"
+    LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"
+    REDPANDA_CPP_VERSION=\"${REDPANDA_VERSION}\"
+    ARCH_X86_64=1
+    ARCH_X86=1)
+
+add_test(
+    NAME test-refactor
+    COMMAND test-refactor)
+set_tests_properties(test-refactor PROPERTIES
+    ENVIRONMENT "${test_environment}")
+add_dependencies(all-test-targets test-refactor)
 
 #####################
 # test-cppparser    #
@@ -628,6 +744,7 @@ if(WIN32)
         shlwapi
         user32)
     target_link_libraries(test-widgets PRIVATE dbghelp)
+    target_link_libraries(test-refactor PRIVATE dbghelp)
 endif()
 
 if(MACOS)
@@ -690,6 +807,7 @@ set (MAIN_PROGRAM_PATH_DEFS
 target_compile_definitions(RedPandaIDE PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 target_compile_definitions(test-editor PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 target_compile_definitions(test-widgets PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
+target_compile_definitions(test-refactor PRIVATE ${MAIN_PROGRAM_PATH_DEFS})
 
 ###################
 # Feature options #

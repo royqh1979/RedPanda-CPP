@@ -5160,6 +5160,10 @@
         <translation>Найти ссылки/упоминания</translation>
     </message>
     <message>
+        <source>Locate in Class Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/mainwindow.ui" line="2582"/>
         <source>Open containing folder</source>
         <translation>Открыть содержащий каталог</translation>
@@ -10910,6 +10914,13 @@
         <location filename="../src/settingsdialog/editorgeneralwidget.ui" line="514"/>
         <source>Right edge line color</source>
         <translation>Цвет линии правой границы</translation>
+    </message>
+</context>
+<context>
+    <name>ClassBrowserModel</name>
+    <message>
+        <source>anonymous</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

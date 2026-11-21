@@ -26,11 +26,6 @@ enum class ProjectModelType {
     Custom
 };
 
-enum class ProjectClassBrowserType {
-    CurrentFile,
-    WholeProject
-};
-
 enum class ProjectType {
     GUI=0,
     Console=1,
@@ -98,7 +93,6 @@ struct ProjectOptions{
     QByteArray execEncoding;
     QByteArray encoding;
     ProjectModelType modelType;
-    ProjectClassBrowserType classBrowserType;
     bool allowParallelBuilding;
     int parellelBuildingJobs;
 };

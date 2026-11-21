@@ -6038,6 +6038,10 @@ p, li { white-space: pre-wrap; }
         <translation>查找符号的引用</translation>
     </message>
     <message>
+        <source>Locate in Class Browser</source>
+        <translation>在结构浏览器中定位符号</translation>
+    </message>
+    <message>
         <location line="-13"/>
         <source>Ctrl+J</source>
         <translation>Ctrl+J</translation>
@@ -12884,6 +12888,13 @@ p, li { white-space: pre-wrap; }
         <location line="+17"/>
         <source>Caret Color</source>
         <translation>光标颜色</translation>
+    </message>
+</context>
+<context>
+    <name>ClassBrowserModel</name>
+    <message>
+        <source>anonymous</source>
+        <translation>匿名</translation>
     </message>
 </context>
 </TS>

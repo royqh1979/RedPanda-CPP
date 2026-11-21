@@ -224,6 +224,91 @@ void TestCppParserInvalidation::test_statement_ownership_declaration_definition_
     QCOMPARE(statement->definition.boundaryAncestor, definition);
 }
 
+void TestCppParserInvalidation::test_extern_declaration_invalidation_recomputes_variable_properties()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString declaration = tmp.filePath("declare.h");
+    QString definition = tmp.filePath("define.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(declaration, {"extern int value;"}));
+    QVERIFY(writeLines(definition, {"int value=1;"}));
+    QVERIFY(writeLines(main, {"#include \"declare.h\"", "#include \"define.h\""}));
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    PStatement statement = mParser->findStatement("value");
+    QVERIFY(statement && statementHasDefinition(statement));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(statement)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    mParser->invalidateFileRecordForTest(declaration);
+    statement = mParser->findStatement("value");
+    QVERIFY(statement && statementHasDefinition(statement));
+    QVERIFY(statement->declarations.isEmpty());
+    QVERIFY(!std::dynamic_pointer_cast<Statement>(statement)
+             ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    statement = mParser->findStatement("value");
+    QVERIFY(statement);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(statement)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+
+    QVERIFY(writeLines(definition, {"extern int value=1;"}));
+    mParser->invalidateFile(definition);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    statement = mParser->findStatement("value");
+    QVERIFY(statement && statementHasDefinition(statement));
+    mParser->invalidateFileRecordForTest(declaration);
+    statement = mParser->findStatement("value");
+    QVERIFY(statement && statementHasDefinition(statement));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(statement)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+}
+
+void TestCppParserInvalidation::test_static_function_definition_invalidation_does_not_create_extern()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString declaration = tmp.filePath("declare.h");
+    QString definition = tmp.filePath("define.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(declaration, {"static void f();"}));
+    QVERIFY(writeLines(definition, {"static void f() {}"}));
+    QVERIFY(writeLines(main, {"#include \"declare.h\"", "#include \"define.h\""}));
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    PStatement statement = mParser->findStatement("f");
+    QVERIFY(statement && statementHasDefinition(statement));
+    mParser->invalidateFileRecordForTest(definition);
+    statement = mParser->findStatement("f");
+    QVERIFY(statement && !statementHasDefinition(statement));
+    QVERIFY(statementIsStatic(statement));
+    QVERIFY(!std::dynamic_pointer_cast<Statement>(statement)
+             ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QCOMPARE(statement->declarations.count(), 1);
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    statement = mParser->findStatement("f");
+    QVERIFY(statement && statementHasDefinition(statement));
+    QVERIFY(statementIsStatic(statement));
+}
+
+void TestCppParserInvalidation::test_last_variable_occurrence_invalidation_removes_statement()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"int value;"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    QVERIFY(mParser->findStatement("value"));
+    mParser->invalidateFileRecordForTest("text.cpp");
+    QVERIFY(!mParser->findStatement("value"));
+}
+
 void TestCppParserInvalidation::test_boundary_invalidation_removes_defines_and_statements()
 {
     QTemporaryDir tmp;

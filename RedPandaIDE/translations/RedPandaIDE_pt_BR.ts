@@ -5383,6 +5383,10 @@
         <translation>Encontrar referências</translation>
     </message>
     <message>
+        <source>Locate in Class Browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="-13"/>
         <source>Ctrl+J</source>
         <translation type="unfinished"></translation>
@@ -11811,6 +11815,13 @@
         <location line="+51"/>
         <source>Right edge line color</source>
         <translation>Cor da margem à direita</translation>
+    </message>
+</context>
+<context>
+    <name>ClassBrowserModel</name>
+    <message>
+        <source>anonymous</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

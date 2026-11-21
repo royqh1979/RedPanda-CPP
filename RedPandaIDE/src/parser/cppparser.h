@@ -150,7 +150,6 @@ public:
     static void parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inProject,
                                      const QString &contextFilename, bool onlyIfNotParsed = false,
                                      bool updateView = true);
-    static void parseFileListNonBlocking(PCppParser parser, bool updateView = true);
 
 signals:
     void progress(const QString& fileName, int total, int current);
@@ -161,7 +160,6 @@ signals:
 private:
     bool parseFile(const QString& fileName, bool inProject, const QString& contextFilename,
                    bool onlyIfNotParsed = false, bool updateView = true);
-    void parseFileList(bool updateView = true);
     PParseFileCommand retrievePendingParseFileCommand();
     void internalParse(const QString& fileName);
     CppEvaluationOptions evaluationOptions() const;
@@ -225,7 +223,6 @@ private:
     CppTokenizer::TokenList mTokenizerTokensForTest;
 #endif
 
-    friend class CppFileListParserThread;
     friend class CppFileParserThread;
 };
 
@@ -248,17 +245,5 @@ protected:
     void run() override;
 };
 using PCppParserThread = std::shared_ptr<CppFileParserThread>;
-
-class CppFileListParserThread: public QThread {
-    Q_OBJECT
-public:
-    explicit CppFileListParserThread(PCppParser parser, bool updateView = true,
-                                     QObject *parent = nullptr);
-private:
-    PCppParser mParser;
-    bool mUpdateView;
-protected:
-    void run() override;
-};
 
 #endif // CPPPARSER_H

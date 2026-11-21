@@ -25,10 +25,18 @@
 #include "../utils.h"
 #include "../iconsmanager.h"
 
+static bool isAnonymousType(const PStatement &statement)
+{
+    return statement
+            && statement->command.startsWith("__RED_PANDA_IDE__")
+            && (statement->kind == StatementKind::Class
+                || statement->kind == StatementKind::EnumType
+                || statement->kind == StatementKind::EnumClassType);
+}
+
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent),
     mMutex()
 {
-    mClassBrowserType = ProjectClassBrowserType::CurrentFile;
     mRoot = new ClassBrowserNode();
     mRoot->parent = nullptr;
     mRoot->statement = PStatement();
@@ -112,6 +120,8 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
+            if (isAnonymousType(node->statement))
+                return tr("anonymous");
             if (node->statement->kind == StatementKind::Namespace
                     || node->statement->kind == StatementKind::InlineAlias)
                 return node->statement->command;
@@ -281,17 +291,9 @@ void ClassBrowserModel::buildStatementTree()
     mTopLevelStatements.clear();
     mNestedStatements.clear();
     QList<PParsedFileInfo> fileInfos;
-    if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
-        PParsedFileInfo p = mParser->findFileInfo(mCurrentFile);
-        if (p)
-            fileInfos.append(p);
-    } else {
-        foreach(const QString& file,mParser->projectFiles()) {
-            PParsedFileInfo p = mParser->findFileInfo(file);
-            if (p)
-                fileInfos.append(p);
-        }
-    }
+    PParsedFileInfo current = mParser->findFileInfo(mCurrentFile);
+    if (current)
+        fileInfos.append(current);
 
     for (const PParsedFileInfo &fileInfo : fileInfos) {
         for (const std::weak_ptr<AbstractStatement> &weakStatement : fileInfo->statements()) {
@@ -321,56 +323,33 @@ void ClassBrowserModel::buildStatementTree()
 
 void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 {
-    if (!pSettings->ui().classBrowserSortAlpha()) {
-        if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
-            std::sort(node->children.begin(),node->children.end(),
-                      [this](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                StatementOccurrence first = statementDeclarationForNavigation(
-                            node1->statement, mCurrentFile);
-                StatementOccurrence second = statementDeclarationForNavigation(
-                            node2->statement, mCurrentFile);
-                return first.range.start.line < second.range.start.line;
-            });
-        } else {
-            std::sort(node->children.begin(),node->children.end(),
-                      [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                StatementOccurrence first = statementDeclarationForNavigation(
-                            node1->statement, QString());
-                StatementOccurrence second = statementDeclarationForNavigation(
-                            node2->statement, QString());
-                int comp = QString::compare(first.fileName, second.fileName);
-                if (comp < 0)
-                    return true;
-                if (comp == 0)
-                    return first.range.start.line < second.range.start.line;
-                return false;
-            });
-        };
-    }
-
-    if (pSettings->ui().classBrowserSortAlpha()
-            && pSettings->ui().classBrowserSortType()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-            if (node1->statement->kind < node2->statement->kind) {
-                return true;
-            } else if (node1->statement->kind == node2->statement->kind) {
-                return node1->statement->command.toLower() < node2->statement->command.toLower();
-            } else {
-                return false;
-            }
-        });
-    } else if (pSettings->ui().classBrowserSortAlpha()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-            return node1->statement->command.toLower() < node2->statement->command.toLower();
-        });
-    } else if (pSettings->ui().classBrowserSortType()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+    const bool sortAlpha = pSettings->ui().classBrowserSortAlpha();
+    const bool sortType = pSettings->ui().classBrowserSortType();
+    std::sort(node->children.begin(),node->children.end(),
+              [this, sortAlpha, sortType](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+        if (sortType && node1->statement->kind != node2->statement->kind)
             return node1->statement->kind < node2->statement->kind;
-        });
-    }
+        if (sortType) {
+            bool firstAnonymous = isAnonymousType(node1->statement);
+            bool secondAnonymous = isAnonymousType(node2->statement);
+            if (firstAnonymous != secondAnonymous)
+                return firstAnonymous;
+            if (firstAnonymous) {
+                StatementOccurrence first = statementDefinitionForNavigation(node1->statement);
+                StatementOccurrence second = statementDefinitionForNavigation(node2->statement);
+                return first.range.start.line < second.range.start.line;
+            }
+        }
+        if (sortAlpha)
+            return node1->statement->command.toLower() < node2->statement->command.toLower();
+        if (sortType)
+            return false;
+        StatementOccurrence first = statementDeclarationForNavigation(
+                    node1->statement, mCurrentFile);
+        StatementOccurrence second = statementDeclarationForNavigation(
+                    node2->statement, mCurrentFile);
+        return first.range.start.line < second.range.start.line;
+    });
     foreach(ClassBrowserNode* child,node->children) {
         sortNode(child);
     }
@@ -380,10 +359,6 @@ bool ClassBrowserModel::shouldShowStatement(ClassBrowserNode *node, const PState
 {
     if (!statement)
         return false;
-    if (mClassBrowserType==ProjectClassBrowserType::WholeProject
-            && !statementInProject(statement))
-        return false;
-
     PStatement parentScope = statement->parentScope.lock();
     const QSet<PStatement> &statementsToShow = parentScope
             ? mNestedStatements : mTopLevelStatements;
@@ -487,18 +462,27 @@ QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key) const
     return indexForNode(mNodeIndex.value(key).get());
 }
 
-ProjectClassBrowserType ClassBrowserModel::classBrowserType() const
+QModelIndex ClassBrowserModel::modelIndexForStatement(const PStatement &statement) const
 {
-    return mClassBrowserType;
-}
-
-void ClassBrowserModel::setClassBrowserType(ProjectClassBrowserType newClassBrowserType)
-{
-    if (mClassBrowserType != newClassBrowserType) {
-        beginUpdate();
-        mClassBrowserType = newClassBrowserType;
-        endUpdate();
+    if (!statement)
+        return QModelIndex();
+    QModelIndex index = modelIndexForStatement(generateStatementKey(statement));
+    if (index.isValid() || statement->kind != StatementKind::Enum || !mParser)
+        return index;
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    if (!definition.range.start.isValid() || !normal)
+        return QModelIndex();
+    PStatement enumType = mParser->findStatement(normal->typeInfo.qualifiedName);
+    if (!enumType)
+        return QModelIndex();
+    for (const PStatement &member : mParser->membersOfStatement(enumType)) {
+        if (member->kind == StatementKind::Enum
+                && member->definition.fileName == definition.fileName
+                && member->definition.range == definition.range)
+            return modelIndexForStatement(generateStatementKey(member));
     }
+    return QModelIndex();
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &ClassBrowserModel::colors() const

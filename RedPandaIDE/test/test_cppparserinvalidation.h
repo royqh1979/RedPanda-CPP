@@ -15,6 +15,9 @@ private slots:
     void test_repeated_template_include_preserves_each_context();
     void test_shared_template_statement_ownership();
     void test_statement_ownership_declaration_definition_invalidation();
+    void test_extern_declaration_invalidation_recomputes_variable_properties();
+    void test_static_function_definition_invalidation_does_not_create_extern();
+    void test_last_variable_occurrence_invalidation_removes_statement();
     void test_boundary_invalidation_removes_defines_and_statements();
     void test_replay_reuses_existing_statements();
     void test_system_subtree_inheritance_uses_boundary_record();

@@ -48,6 +48,288 @@ void TestCppParser::test_global_variable_reference_scope()
     QCOMPARE(getKindOfStatement(reference), StatementKind::GlobalVariable);
 }
 
+void TestCppParser::test_include_visibility()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QString header = dir.filePath("project.h");
+    QString main = dir.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"class Bar {};"}));
+    QVERIFY(writeLines(main, {"#include \"project.h\"", "Bar value;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    QVERIFY(mParser->getIncludedFiles(main).contains(header));
+    PStatement statement = mParser->findStatementOf(main, QStringList{"Bar"}, 1);
+    QVERIFY(statement);
+    QCOMPARE(statement->fullName, "Bar");
+    QCOMPARE(statementDefinitionForNavigation(statement).fileName, header);
+    QCOMPARE(statementDefinitionForNavigation(statement).range.start.line, 0);
+    QCOMPARE(statementDefinitionForNavigation(statement).range.start.ch, 0);
+}
+
+void TestCppParser::test_class_forward_declaration_merges_with_definition()
+{
+    for (bool forwardFirst : {true, false}) {
+        init_parser();
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QString declaration = dir.filePath("declare.h");
+        QString otherDeclaration = dir.filePath("declare_other.h");
+        QString definition = dir.filePath("define.h");
+        QString main = dir.filePath("main.cpp");
+        QVERIFY(writeLines(declaration, {"class Foo;"}));
+        QVERIFY(writeLines(otherDeclaration, {"class Foo;"}));
+        QVERIFY(writeLines(definition, {"class Foo {};"}));
+        QStringList includes = forwardFirst
+                ? QStringList{"#include \"declare.h\"", "#include \"declare_other.h\"",
+                              "#include \"define.h\""}
+                : QStringList{"#include \"define.h\"", "#include \"declare.h\"",
+                              "#include \"declare_other.h\""};
+        QVERIFY(writeLines(main, includes));
+        CppParser::parseFileBlocking(mParser, main, false, "");
+
+        QCOMPARE(mParser->statementList().childrenStatements().values("Foo").size(), 1);
+        PStatement statement = mParser->findStatement("Foo");
+        QVERIFY(statement && statementHasDefinition(statement));
+        QCOMPARE(statement->definition.fileName, definition);
+        QCOMPARE(statement->declarations.count(), 2);
+        QCOMPARE(mParser->findTypeDefinitionOf(main, "Foo", {}), statement);
+    }
+}
+
+void TestCppParser::test_include_global_variable_reference()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QString header = dir.filePath("project.h");
+    QString main = dir.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"int shared;"}));
+    QVERIFY(writeLines(main, {"#include \"project.h\"", "void f(){shared=1;}"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    PStatement statement = mParser->findStatementOf(main, QStringList{"shared"}, 1);
+    QVERIFY(statement);
+    QCOMPARE(statement->fullName, "shared");
+    QCOMPARE(statementDefinitionForNavigation(statement).fileName, header);
+}
+
+void TestCppParser::test_include_inline_function_call()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QString header = dir.filePath("project.h");
+    QString main = dir.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"inline void inlineFunction() {}"}));
+    QVERIFY(writeLines(main, {"#include \"project.h\"", "void f(){inlineFunction();}"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    PStatement declaration = mParser->findStatement("inlineFunction");
+    QVERIFY(declaration);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(declaration)->typeInfo.qualifiedName,
+             "void");
+    QVERIFY(!mParser->findStatement("f::inlineFunction"));
+    QVERIFY(mParser->findStatementOf(main, QStringList{"inlineFunction"}, 1));
+    CppTypeResolver resolver(mParser->statementList(), nullptr, CppEvaluationOptions{});
+    CallResolution invocation;
+    CppTypeResolver::EvaluationContext evaluation;
+    TypeInfo returnType = resolver.invokeFunction(
+                declaration, {}, {}, &evaluation, nullptr, {}, &invocation);
+    QVERIFY(invocation.statement);
+    QCOMPARE(returnType.qualifiedName, "void");
+    QStringList call{"inlineFunction", "(", ")"};
+    ExpressionEvalTrace trace;
+    EvalResult eval = mParser->evalExpression(
+                main, call, mParser->findScopeStatement(main, 1), &trace);
+    QCOMPARE(trace.size(), 1);
+    QVERIFY(trace.constFirst().statement);
+    QVERIFY(eval.statement);
+    QCOMPARE(eval.statement->fullName, "inlineFunction");
+    PStatement statement = mParser->findStatementOf(
+                main, QStringList{"inlineFunction", "(", ")"}, 1);
+    QVERIFY(statement);
+    QCOMPARE(statement->fullName, "inlineFunction");
+    QCOMPARE(statementDefinitionForNavigation(statement).fileName, header);
+}
+
+void TestCppParser::test_local_extern_variable_uses_external_statement()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"int external;", "void f(){extern int external; external=1;}"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement external = mParser->findStatement("external");
+    QVERIFY(external);
+    PStatement localDeclaration = mParser->findStatementOf(
+                "text.cpp", QStringList{"external"}, 1);
+    QCOMPARE(localDeclaration, external);
+    QCOMPARE(localDeclaration->scope, StatementScope::Global);
+    QVERIFY(localDeclaration->declarations.contains("text.cpp"));
+    QVERIFY(!mParser->findStatement("f::external"));
+}
+
+void TestCppParser::test_static_extern_variable_definitions()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "int global=1;",
+            "static int internal=2;",
+            "extern int declaration;",
+            "extern int defined=3;",
+            "struct C {static int member; inline static int inlineMember;};",
+            "void f(){static int local=4; extern int declaration;}",
+            "extern int braceDefined{};",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement global = mParser->findStatement("global");
+    QVERIFY(global && statementHasDefinition(global));
+    QCOMPARE(global->scope, StatementScope::Global);
+    QVERIFY(!statementIsStatic(global));
+    QVERIFY(!std::dynamic_pointer_cast<Statement>(global)
+             ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+
+    PStatement internal = mParser->findStatement("internal");
+    QVERIFY(internal && statementHasDefinition(internal));
+    QCOMPARE(internal->scope, StatementScope::Global);
+    QVERIFY(statementIsStatic(internal));
+
+    PStatement declaration = mParser->findStatement("declaration");
+    QVERIFY(declaration && !statementHasDefinition(declaration));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(declaration)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"declaration"}, 5),
+             declaration);
+
+    PStatement defined = mParser->findStatement("defined");
+    QVERIFY(defined && statementHasDefinition(defined));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(defined)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QVERIFY(!statementIsStatic(defined));
+    PStatement braceDefined = mParser->findStatement("braceDefined");
+    QVERIFY(braceDefined && statementHasDefinition(braceDefined));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(braceDefined)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+
+    PStatement member = mParser->findStatement("C::member");
+    QVERIFY(member && !statementHasDefinition(member));
+    QCOMPARE(member->scope, StatementScope::ClassLocal);
+    QVERIFY(statementIsStatic(member));
+    PStatement inlineMember = mParser->findStatement("C::inlineMember");
+    QVERIFY(inlineMember && statementHasDefinition(inlineMember));
+    QCOMPARE(inlineMember->scope, StatementScope::ClassLocal);
+    QVERIFY(statementIsStatic(inlineMember));
+
+    PStatement local = mParser->findStatementOf("text.cpp", QStringList{"local"}, 5);
+    QVERIFY(local);
+    QVERIFY(statementHasDefinition(local));
+    QCOMPARE(local->scope, StatementScope::Local);
+    QVERIFY(statementIsStatic(local));
+}
+
+void TestCppParser::test_static_extern_function_definitions()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "void global() {}",
+            "static void internal() {}",
+            "extern void declaration();",
+            "extern void defined() {}",
+            "struct C {static void member();};",
+            "void caller(){extern void declaration();}",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement global = mParser->findStatement("global");
+    QVERIFY(global && statementHasDefinition(global));
+    QCOMPARE(global->scope, StatementScope::Global);
+    QVERIFY(!statementIsStatic(global));
+
+    PStatement internal = mParser->findStatement("internal");
+    QVERIFY(internal && statementHasDefinition(internal));
+    QVERIFY(statementIsStatic(internal));
+
+    PStatement declaration = mParser->findStatement("declaration");
+    QVERIFY(declaration && !statementHasDefinition(declaration));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(declaration)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QCOMPARE(mParser->findStatementOf("text.cpp", QStringList{"declaration"}, 5),
+             declaration);
+
+    PStatement defined = mParser->findStatement("defined");
+    QVERIFY(defined && statementHasDefinition(defined));
+    QVERIFY(std::dynamic_pointer_cast<Statement>(defined)
+            ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    QVERIFY(!statementIsStatic(defined));
+
+    PStatement member = mParser->findStatement("C::member");
+    QVERIFY(member && !statementHasDefinition(member));
+    QCOMPARE(member->scope, StatementScope::ClassLocal);
+    QVERIFY(statementIsStatic(member));
+}
+
+void TestCppParser::test_extern_variable_declaration_definition_order()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "extern int first;",
+            "int first=1;",
+            "int second=2;",
+            "extern int second;",
+            "extern int repeated;",
+            "extern int repeated;",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    for (const QString &name : {QString("first"), QString("second")}) {
+        PStatement statement = mParser->findStatement(name);
+        QVERIFY(statement && statementHasDefinition(statement));
+        QCOMPARE(mParser->statementList().childrenStatements().values(name).size(), 1);
+        QCOMPARE(statement->declarations.count(), 1);
+        QVERIFY(std::dynamic_pointer_cast<Statement>(statement)
+                ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    }
+    QCOMPARE(mParser->findStatement("first")->definition.range.start.line, 1);
+    QCOMPARE(mParser->findStatement("second")->definition.range.start.line, 2);
+
+    PStatement repeated = mParser->findStatement("repeated");
+    QVERIFY(repeated && !statementHasDefinition(repeated));
+    QCOMPARE(mParser->statementList().childrenStatements().values("repeated").size(), 1);
+    QCOMPARE(repeated->declarations.count(), 2);
+}
+
+void TestCppParser::test_extern_function_declaration_definition_order()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "extern void first();",
+            "void first() {}",
+            "void second() {}",
+            "extern void second();",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    for (const QString &name : {QString("first"), QString("second")}) {
+        PStatement statement = mParser->findStatement(name);
+        QVERIFY(statement && statementHasDefinition(statement));
+        QCOMPARE(mParser->statementList().childrenStatements().values(name).size(), 1);
+        QCOMPARE(statement->declarations.count(), 1);
+        QVERIFY(std::dynamic_pointer_cast<Statement>(statement)
+                ->declSpecifierProperties.testFlag(DeclSpecifierProperty::Extern));
+    }
+    QCOMPARE(mParser->findStatement("first")->definition.range.start.line, 1);
+    QCOMPARE(mParser->findStatement("second")->definition.range.start.line, 2);
+}
+
 void TestCppParser::test_unresolved_member_function_reference()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
@@ -239,6 +521,71 @@ void TestCppParser::test_member_overload_resolution()
     QVERIFY(!evaluate({"object", ".", "explicitOnly", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "ambiguous", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "rvalueOnly", "(", ")"}).isValid());
+}
+
+void TestCppParser::test_find_statement_of_overload_resolution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "void f(int);",
+            "void f(double);",
+            "void f(int) {}",
+            "void f(double) {}",
+            "void call(){f(1);f(1.0);}",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement integer = mParser->findStatementOf(
+                "text.cpp", {"f", "(", "1", ")"}, 4);
+    QVERIFY(integer);
+    QCOMPARE(statementDefinitionForNavigation(integer).range.start.line, 2);
+    QCOMPARE(statementDefinitionForNavigation(integer).range.start.ch, 0);
+    QCOMPARE(statementDeclarationForNavigation(integer, "text.cpp").range.start.line, 0);
+    QCOMPARE(statementDeclarationForNavigation(integer, "text.cpp").range.start.ch, 0);
+
+    PStatement real = mParser->findStatementOf(
+                "text.cpp", {"f", "(", "1.0", ")"}, 4);
+    QVERIFY(real);
+    QCOMPARE(statementDefinitionForNavigation(real).range.start.line, 3);
+    QCOMPARE(statementDefinitionForNavigation(real).range.start.ch, 0);
+    QCOMPARE(statementDeclarationForNavigation(real, "text.cpp").range.start.line, 1);
+    QCOMPARE(statementDeclarationForNavigation(real, "text.cpp").range.start.ch, 0);
+}
+
+void TestCppParser::test_find_statement_of_template_specialization()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<class T> struct Foo {int primary;};",
+            "template<class T> struct Foo<T*> {int partial;};",
+            "template<> struct Foo<int*> {int full;};",
+            "Foo<char> primary;",
+            "Foo<char*> partial;",
+            "Foo<int*> full;",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    const QVector<QPair<QStringList, int>> cases{
+        {{"Foo", "<", "char", ">"}, 0},
+        {{"Foo", "<", "char", "*", ">"}, 1},
+        {{"Foo", "<", "int", "*", ">"}, 2},
+    };
+    for (int i = 0; i < cases.size(); ++i) {
+        PStatement statement = mParser->findStatementOf(
+                    "text.cpp", cases.at(i).first, i + 3);
+        QVERIFY2(statement, qPrintable(QString("template case %1").arg(i)));
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
+        QCOMPARE(definition.range.start.line, cases.at(i).second);
+        QCOMPARE(definition.range.start.ch, 0);
+        StatementOccurrence declaration = statementDeclarationForNavigation(
+                    statement, "text.cpp");
+        QCOMPARE(declaration.range.start.line, cases.at(i).second);
+        QCOMPARE(declaration.range.start.ch, 0);
+    }
 }
 
 void TestCppParser::test_expression_identifier_trace()

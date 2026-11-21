@@ -381,17 +381,8 @@ void EditorManager::onEditorShown(Editor *e)
     Q_ASSERT(e!=nullptr);
     if (e->parser() && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()) {
-        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && pSettings->codeCompletion().shareParser()
-                && !e->inProject()) {
-                if (e->needReparse()) {
-                    resetCppParser(e->parser());
-                    e->reparse();
-                }
-            } else
-                e->reparseIfNeeded();
-        }
+        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
+            e->reparseIfNeeded();
     }
     pMainWindow->debugger()->setIsForProject(e->inProject());
     pMainWindow->bookmarkModel()->setIsForProject(e->inProject());

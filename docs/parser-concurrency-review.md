@@ -13,8 +13,7 @@
 ## 待分析：解析入口与结束状态
 
 - `parseFile()` 在入口锁之外读取 `mEnabled`。需要确认该读取应移入现有入口锁，还是由调用方提供更强的线程约定。
-- `parseFile()` 和 `parseFileList()` 只在短临界区持锁，实际解析期间不持锁。不能为消除数据竞争简单改为全程持锁，否则 `resetParser()` 无法及时设置停止状态，public 查询也不能在解析中快速返回。
-- `parseFileList()` 的 finally 恢复 `mParsing` 并发送完成信号。操作级不变量是：`mParsing == false` 时不存在其他正在执行的分析操作，再次置为 true 前不应启动新分析。需要单独判断 bool 和计数的内存同步，不能把该问题误述为两个分析 writer 并发修改 StatementMap。
+- `parseFile()` 只在短临界区持锁，实际解析期间不持锁。不能为消除数据竞争简单改为全程持锁，否则 `resetParser()` 无法及时设置停止状态，public 查询也不能在解析中快速返回。操作级不变量是：`mParsing == false` 时不存在其他正在执行的分析操作，再次置为 true 前不应启动新分析。需要单独判断 bool 和计数的内存同步，不能把该问题误述为两个分析 writer 并发修改 StatementMap。
 - `retrievePendingParseFileCommand()` 位于工作线程的命令边界，现有锁不能仅按 private 方法名称机械删除。
 
 ## 待分析：resetParser
