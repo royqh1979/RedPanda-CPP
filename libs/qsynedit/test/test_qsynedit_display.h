@@ -37,6 +37,8 @@ private slots:
     void test_mouse_alt_press_column_mode();
     void test_gutter_click_toggles_fold();
     void test_gutter_fold_button_paints();
+    void test_fold_placeholder_painting();
+    void test_fold_placeholder_navigation();
     void test_gutter_click_selects_line();
     void test_gutter_mark_click_emits_signal();
     void test_gutter_shift_click_selects_line_range();

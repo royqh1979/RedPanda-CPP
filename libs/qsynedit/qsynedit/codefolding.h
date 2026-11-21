@@ -27,8 +27,6 @@ struct CodeFoldingOptions {
       bool fillIndents;
       bool rainbowIndentGuides;
       bool rainbowIndents;
-      bool showCollapsedLine;
-      QColor collapsedLineColor;
       QColor folderBarLinesColor;
       QColor indentGuidesColor;
       //CodeFoldingDefines foldRegions;

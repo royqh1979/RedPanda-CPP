@@ -1103,24 +1103,6 @@ void QSynEditPainter::paintFoldAttributes()
         mPainter->setPen(oldPen);
     }
 
-    if (!mEdit->useCodeFolding())
-        return;
-
-    // Paint collapsed lines using changed pen
-    if (mEdit->mCodeFolding.showCollapsedLine) {
-        mPainter->setPen(mEdit->mCodeFolding.collapsedLineColor);
-        foreach(const PCodeBlock& block, mEdit->mCodeBlocks) {
-            if (block->collapsed && !block->parentCollapsed() &&
-                    (block->fromLine <= mLastLine) && (block->fromLine >= mFirstLine) ) {
-                // Get starting and end points; the window row is walked
-                // from the anchor (exact under any mapping state)
-                int y = (mEdit->windowRowOfLineSegment(block->fromLine, 0) + 1) * mEdit->mTextHeight
-                        - (mEdit->mTopPos % mEdit->mTextHeight) - 1;
-                mPainter->drawLine(mClip.left(),y, mClip.right(),y);
-            }
-        }
-    }
-
 }
 
 void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
@@ -1438,7 +1420,6 @@ void QSynEditPainter::paintLines()
             if ((foldRange) && foldRange->collapsed) {
                 addOnStr = mEdit->mSyntaxer->foldString(lineTextWithPreedit);
                 attr = mEdit->mSyntaxer->symbolAttribute();
-                getBraceColorAttr(mEdit->mSyntaxer->getState()->braceLevel,attr);
             } else {
                 // Draw LineBreak glyph.
                 if (mEdit->mOptions.testFlag(EditorOption::ShowLineBreaks)) {
@@ -1456,7 +1437,7 @@ void QSynEditPainter::paintLines()
                 lineTextWithPreedit += addOnStr;
                 PaintHighlightTokenList single{
                     makeHighlightToken(ctx, oldLen, addOnStr, attr,
-                                       mEdit->mSyntaxer->getTokenType())
+                                       TokenType::Symbol)
                 };
                 if (mEdit->mPaintHighlightTokensPreparer)
                     mEdit->mPaintHighlightTokensPreparer(line, single);

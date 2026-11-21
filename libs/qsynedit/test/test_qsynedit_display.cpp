@@ -58,6 +58,11 @@ public:
                 preparedTexts.append(token.text);
                 if (token.tokenType == TokenType::Identifier)
                     token.foreground = identifierColor;
+                if (token.text == "...}") {
+                    foldPlaceholderSeen = true;
+                    foldPlaceholderType = token.tokenType;
+                    foldPlaceholderColor = token.foreground;
+                }
             }
         });
     }
@@ -65,6 +70,9 @@ public:
     QVector<int> preparedBatchLines;
     QStringList preparedTexts;
     QColor identifierColor{17, 83, 161};
+    bool foldPlaceholderSeen = false;
+    TokenType foldPlaceholderType = TokenType::Default;
+    QColor foldPlaceholderColor;
 };
 
 void TestQSyneditDisplay::initTestCase()
@@ -363,6 +371,46 @@ void TestQSyneditDisplay::test_gutter_fold_button_paints()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_fold_placeholder_painting()
+{
+    PaintPreparationEdit edit;
+    edit.setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit.resize(800, 600);
+    edit.loadContent(makeFoldableLines());
+    QColor symbolColor(17, 83, 161);
+    QColor backgroundColor(250, 250, 250);
+    edit.syntaxer()->symbolAttribute()->setForeground(symbolColor);
+    edit.setBackgroundColor(backgroundColor);
+    QVERIFY(edit.collapse(0, 6));
+    edit.setCaretPos(CharPos{0, 7});
+    QImage image = edit.grab().toImage();
+
+    QVERIFY(edit.foldPlaceholderSeen);
+    QCOMPARE(edit.foldPlaceholderType, TokenType::Symbol);
+    QCOMPARE(edit.foldPlaceholderColor, symbolColor);
+    QCOMPARE(image.pixelColor(edit.width() - 20, edit.textHeight() - 1),
+             backgroundColor);
+}
+
+void TestQSyneditDisplay::test_fold_placeholder_navigation()
+{
+    mEdit->loadContent(makeFoldableLines());
+    QVERIFY(mEdit->collapse(0, 6));
+    int lineLength = mEdit->lineText(0).length();
+    int foldLength = QString("...}").length();
+    mEdit->setCaretPos(CharPos{lineLength, 0});
+    for (int i = 0; i < foldLength; ++i)
+        QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength + foldLength, 0));
+    QVERIFY(mEdit->displayX() > 0);
+
+    QTest::keyClick(mEdit.get(), Qt::Key_Left);
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength + foldLength - 1, 0));
+    mEdit->setCaretPos(CharPos{0, 7});
+    QTest::keyClick(mEdit.get(), Qt::Key_Left);
+    QCOMPARE(mEdit->caretPos(), CharPos(lineLength + foldLength, 0));
 }
 
 void TestQSyneditDisplay::test_gutter_click_selects_line()

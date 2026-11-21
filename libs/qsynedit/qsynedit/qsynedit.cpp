@@ -1013,12 +1013,13 @@ bool QSynEdit::validInDoc(int line, int ch) const
         return false;
     if (ch<0)
         return false;
-    return ch<= mDocument->getLine(line).length();
+    return ch <= getDisplayStringAtLine(line).length();
 }
 
 bool QSynEdit::validGlyphStart(const CharPos &pos) const
 {
-    return pos.ch == mDocument->charToGlyphStartChar(pos.line, pos.ch);
+    return pos.ch > mDocument->getLine(pos.line).length()
+            || pos.ch == mDocument->charToGlyphStartChar(pos.line, pos.ch);
 
 }
 
@@ -3106,12 +3107,14 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &pos) const
         return fileEnd();
     if (value.line < 0)
         return fileBegin();
+    int lineLength = mDocument->getLine(value.line).length();
     if (mActiveSelectionMode!=SelectionMode::Column) {
-        maxX = mDocument->getLine(value.line).length();
+        maxX = getDisplayStringAtLine(value.line).length();
         value.ch = std::min(value.ch, maxX);
     }
     value.ch = std::max(value.ch,0);
-    value.ch = mDocument->charToGlyphStartChar(value.line, value.ch);
+    if (value.ch <= lineLength)
+        value.ch = mDocument->charToGlyphStartChar(value.line, value.ch);
     return value;
 }
 
@@ -6232,7 +6235,11 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
         //bool changeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
         bool changeY=true;
         int glyphIndex = mDocument->charToGlyphIndex(dstPos.line,dstPos.ch);
-        if (changeY && (deltaX == -1) && (glyphIndex==0) && (dstPos.line > 0)) {
+        int displayLineLen = getDisplayStringAtLine(dstPos.line).length();
+        if ((deltaX == 1 && dstPos.ch >= lineLen && dstPos.ch < displayLineLen)
+                || (deltaX == -1 && dstPos.ch > lineLen)) {
+            dstPos.ch += deltaX;
+        } else if (changeY && (deltaX == -1) && (glyphIndex==0) && (dstPos.line > 0)) {
             // end of previous line
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
