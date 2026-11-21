@@ -25,7 +25,6 @@
 #include "dirsettings.h"
 #include <QMessageBox>
 #include <QCoreApplication>
-#include <QSettings>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -38,21 +37,6 @@ EnvironmentSettings::EnvironmentSettings(SettingsPersistor *persistor, DirSettin
     Q_ASSERT(dirSettings!=nullptr);
 }
 
-QString EnvironmentSettings::defaultLanguage()
-{
-#ifdef Q_OS_WIN
-    // A saved user preference takes priority over this installation default.
-    QSettings installerLanguage(QCoreApplication::applicationDirPath()
-                               + "/install-language.ini", QSettings::IniFormat);
-    const QString selectedLanguage = installerLanguage.value("Environment/language").toString();
-    if (selectedLanguage == "en" || selectedLanguage == "zh_CN" || selectedLanguage == "it_IT")
-        return selectedLanguage;
-    return QStringLiteral("en");
-#else
-    return QLocale::system().name();
-#endif
-}
-
 void EnvironmentSettings::doLoad()
 {
     //Appearance
@@ -60,7 +44,7 @@ void EnvironmentSettings::doLoad()
     mInterfaceFont = stringValue("interface_font", defaultUiFont());
     mInterfaceFontSize = intValue("interface_font_size",11);
     mIconZoomFactor = doubleValue("icon_zoom_factor",1.0);
-    mLanguage = stringValue("language", defaultLanguage());
+    mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
     mComboboxWheel = boolValue("enable_combobox_wheel", false);

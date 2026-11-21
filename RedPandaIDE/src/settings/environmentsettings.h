@@ -39,8 +39,6 @@ public:
     int interfaceFontSize() const;
     void setInterfaceFontSize(int interfaceFontSize);
 
-    // Shared by early translator setup and loaded environment settings.
-    static QString defaultLanguage();
     QString language() const;
     void setLanguage(const QString &language);
 

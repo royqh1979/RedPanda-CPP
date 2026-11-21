@@ -153,7 +153,3 @@ LangString StrProjectFile 1040 "File di progetto"
 LangString StrSourceFile 1040 "File sorgente"
 LangString StrHeaderFile 1040 "File header"
 LangString StrUninstallerAppName 1040 "Disinstalla ${APP_NAME_EN}"
-
-LangString MessageWriteLanguageFailed 1033 "The installation language could not be saved. Check write permissions for the destination folder and retry."
-LangString MessageWriteLanguageFailed 2052 "无法保存安装语言。请检查目标文件夹的写入权限，然后重试。"
-LangString MessageWriteLanguageFailed 1040 "Impossibile salvare la lingua di installazione. Controlla i permessi di scrittura della cartella e riprova."
