@@ -78,6 +78,7 @@ Red Panda C++ Version 3.6
   - fix: Text selection starts only after moving at least one glyph width or one line height, and can shrink back to its start.
   - fix: Mouse positioning immediately shows the caret and restarts its visible blink phase.
   - fix: Use normal symbol colors for collapsed fold placeholders, allow the caret at the placeholder end, and remove collapsed-line underlines.
+  - fix: Preserve text following a fold's closing brace and expand affected folded blocks independently in each view before editing them.
   - enhancement: Support the function-local predefined identifier __func__ in completion, highlighting, type evaluation, and parser hints.
   - enhancement: Double-click selection now picks words at token boundaries and inside strings, comments, and macro definitions.
   - fix: Goto declaration/definition jumps to the occurrence's source column instead of the start of its line.

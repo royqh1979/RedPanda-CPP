@@ -45,11 +45,20 @@ struct IndentInfo {
     bool operator!=(const IndentInfo &i2) const { return !((*this)==i2); }
 };
 
+struct BlockDelimiterEvent {
+    int ch;
+    bool started;
+    bool operator==(const BlockDelimiterEvent &other) const {
+        return ch == other.ch && started == other.started;
+    }
+};
+
 struct SyntaxState {
     int state;  // current syntax parsing state
     int blockLevel; // needed by block folding
     int blockStarted;  // needed by block folding
     int blockEnded;    // needed by block folding;
+    QVector<BlockDelimiterEvent> blockEvents;
     int braceLevel; // current braces embedding level (needed by rainbow color)
     int bracketLevel; // current brackets embedding level (needed by rainbow color)
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)

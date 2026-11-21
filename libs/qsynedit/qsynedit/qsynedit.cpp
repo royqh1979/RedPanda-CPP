@@ -680,7 +680,7 @@ WrapLayout computeWrapLayoutForLine(const PDocument &document, int line,
 
 void QSynEdit::setCaretPos(const CharPos &pos)
 {
-    CharPos safePos = ensureCharPosValid(pos);
+    CharPos safePos = ensureCaretPosValid(pos);
     beginInternalChanges();
     internalSetSelBegin(safePos);
     internalSetCaretPos(safePos, true);
@@ -689,7 +689,7 @@ void QSynEdit::setCaretPos(const CharPos &pos)
 
 void QSynEdit::setCaretPosCentered(const CharPos &pos)
 {
-    CharPos safePos = ensureCharPosValid(pos);
+    CharPos safePos = ensureCaretPosValid(pos);
     beginInternalChanges();
     internalSetSelBegin(safePos);
     internalSetCaretPos(safePos, false);
@@ -1013,13 +1013,23 @@ bool QSynEdit::validInDoc(int line, int ch) const
         return false;
     if (ch<0)
         return false;
-    return ch <= getDisplayStringAtLine(line).length();
+    return ch <= mDocument->getLine(line).length();
+}
+
+bool QSynEdit::validCaretPos(const CharPos &pos) const
+{
+    if (validInDoc(pos))
+        return true;
+    PCodeBlock block = foldStartAtLine(pos.line);
+    return foldHasHiddenLines(block) && !foldEndLineVisible(block)
+            && pos.ch == getDisplayStringAtLine(pos.line).length();
 }
 
 bool QSynEdit::validGlyphStart(const CharPos &pos) const
 {
-    return pos.ch > mDocument->getLine(pos.line).length()
-            || pos.ch == mDocument->charToGlyphStartChar(pos.line, pos.ch);
+    if (!validInDoc(pos))
+        return validCaretPos(pos);
+    return pos.ch == mDocument->charToGlyphStartChar(pos.line, pos.ch);
 
 }
 
@@ -1163,7 +1173,7 @@ QPoint QSynEdit::displayCoordToPixels(const VisualPos &coord) const
 
 VisualPos QSynEdit::bufferToDisplayPos(const CharPos &p) const
 {
-    Q_ASSERT(validInDoc(p));
+    Q_ASSERT(validCaretPos(p));
     VisualPos result {p.ch, p.line * mTextHeight};
     if (p.line<0)
         return result;
@@ -1631,9 +1641,9 @@ void QSynEdit::setCaretAndSelection(const CharPos &posCaret, const CharPos &posS
     // themselves; mode-preserving (e.g. column-mode) code should use
     // the internal setters instead.
     beginInternalChanges();
-    internalSetCaretPos(ensureCharPosValid(posCaret));
-    internalSetSelBegin(ensureCharPosValid(posSelBegin));
-    internalSetSelEnd(ensureCharPosValid(posSelEnd));
+    internalSetCaretPos(ensureCaretPosValid(posCaret));
+    internalSetSelBegin(ensureCaretPosValid(posSelBegin));
+    internalSetSelEnd(ensureCaretPosValid(posSelEnd));
     endInternalChanges();
 }
 
@@ -2657,6 +2667,70 @@ void QSynEdit::doUndoRedoContentReplacement(const PUndoItem &item, bool undo)
     }
 }
 
+CharPos QSynEdit::documentPositionForFoldCaret(const CharPos &pos) const
+{
+    PCodeBlock block = foldStartAtLine(pos.line);
+    if (block && block->collapsed && block->toCh >= 0
+            && pos.ch > mDocument->getLine(block->fromLine).length())
+        return CharPos{block->toCh + 1, block->toLine};
+    return pos;
+}
+
+void QSynEdit::normalizeVirtualCaretForEditing()
+{
+    CharPos caret = documentPositionForFoldCaret(caretPos());
+    CharPos selBegin = documentPositionForFoldCaret(this->selBegin());
+    CharPos selEnd = documentPositionForFoldCaret(this->selEnd());
+    if (caret != caretPos() || selBegin != this->selBegin()
+            || selEnd != this->selEnd())
+        setCaretAndSelection(caret, selBegin, selEnd);
+}
+
+void QSynEdit::expandCollapsedFoldsForChange(const DocumentChange &change)
+{
+    int endLine = change.line + change.count - 1;
+    if (change.kind == DocumentChangeKind::Delete
+            || change.kind == DocumentChangeKind::Insert)
+        endLine++;
+    else if (change.kind == DocumentChangeKind::Move)
+        endLine = std::max(change.line, change.count);
+    CharPos changeBegin{change.startCh, change.line};
+    CharPos changeEnd{change.endCh, endLine};
+    const QVector<PCodeBlock> blocks = mCodeBlocks;
+    for (const PCodeBlock &block : blocks) {
+        if (!block->collapsed || block->unfinished)
+            continue;
+        CharPos blockBegin{0, block->fromLine};
+        CharPos blockEnd{mDocument->getLine(block->toLine).length(), block->toLine};
+        if (changeEnd < blockBegin || changeBegin > blockEnd)
+            continue;
+        if (change.wholeLine && change.line <= block->fromLine
+                && endLine >= block->toLine)
+            continue;
+        if (block->fromCh >= 0
+                && changeEnd <= CharPos{block->fromCh, block->fromLine})
+            continue;
+        if (block->toCh >= 0
+                && changeBegin >= CharPos{block->toCh + 1, block->toLine}
+                && block->hadEndLineSuffix == foldEndLineVisible(block))
+            continue;
+
+        auto mapPosition = [&](const CharPos &pos) {
+            if (block->toCh >= 0 && pos.line == block->fromLine
+                    && pos.ch > mDocument->getLine(block->fromLine).length())
+                return CharPos{block->toCh + 1, block->toLine};
+            return pos;
+        };
+        CharPos caret = mapPosition(caretPos());
+        CharPos selBegin = mapPosition(this->selBegin());
+        CharPos selEnd = mapPosition(this->selEnd());
+        uncollapse(block);
+        if (caret != caretPos() || selBegin != this->selBegin()
+                || selEnd != this->selEnd())
+            setCaretAndSelection(caret, selBegin, selEnd);
+    }
+}
+
 void QSynEdit::beginEditing()
 {
     mDocument->beginUpdate();
@@ -2686,14 +2760,33 @@ void QSynEdit::endEditing()
     }
 }
 
+bool QSynEdit::foldEndLineVisible(const PCodeBlock &block) const
+{
+    return block && !block->unfinished && block->toCh >= 0
+            && block->toCh + 1 < mDocument->getLine(block->toLine).length();
+}
+
+bool QSynEdit::foldHasHiddenLines(const PCodeBlock &block) const
+{
+    if (!block || !block->collapsed)
+        return false;
+    int lastHidden = foldEndLineVisible(block) ? block->toLine - 1 : block->toLine;
+    return lastHidden > block->fromLine;
+}
+
+QString QSynEdit::foldDisplayText(const PCodeBlock &block, const QString &lineText) const
+{
+    if (!foldHasHiddenLines(block))
+        return QString();
+    if (foldEndLineVisible(block))
+        return "...";
+    return mSyntaxer->foldString(lineText);
+}
+
 QString QSynEdit::getDisplayStringAtLine(int line) const
 {
     QString s = mDocument->getLine(line);
-    PCodeBlock foldRange = foldStartAtLine(line);
-    if ((foldRange) && foldRange->collapsed) {
-        return s+mSyntaxer->foldString(s);
-    }
-    return s;
+    return s + foldDisplayText(foldStartAtLine(line), s);
 }
 
 void QSynEdit::updateHScrollBarLater() const
@@ -2709,6 +2802,7 @@ void QSynEdit::doDeletePrevChar()
     if (mReadOnly || mDocument->empty())
         return ;
 
+    normalizeVirtualCaretForEditing();
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
         CharPos end=selEnd();
@@ -2808,6 +2902,7 @@ void QSynEdit::doDeleteCurrentChar()
     if (mReadOnly || mDocument->empty())
         return;
 
+    normalizeVirtualCaretForEditing();
     if (mActiveSelectionMode==SelectionMode::Column) {
         CharPos start=selBegin();
         CharPos end=selEnd();
@@ -3107,14 +3202,22 @@ CharPos QSynEdit::ensureCharPosValid(const CharPos &pos) const
         return fileEnd();
     if (value.line < 0)
         return fileBegin();
-    int lineLength = mDocument->getLine(value.line).length();
     if (mActiveSelectionMode!=SelectionMode::Column) {
-        maxX = getDisplayStringAtLine(value.line).length();
+        maxX = mDocument->getLine(value.line).length();
         value.ch = std::min(value.ch, maxX);
     }
     value.ch = std::max(value.ch,0);
-    if (value.ch <= lineLength)
-        value.ch = mDocument->charToGlyphStartChar(value.line, value.ch);
+    value.ch = mDocument->charToGlyphStartChar(value.line, value.ch);
+    return value;
+}
+
+CharPos QSynEdit::ensureCaretPosValid(const CharPos &pos) const
+{
+    CharPos value = ensureCharPosValid(pos);
+    PCodeBlock block = foldStartAtLine(value.line);
+    if (foldHasHiddenLines(block) && !foldEndLineVisible(block)
+            && pos.ch > value.ch)
+        value.ch = getDisplayStringAtLine(value.line).length();
     return value;
 }
 
@@ -3255,6 +3358,7 @@ void QSynEdit::doBreakLine()
 {
     if (mReadOnly)
         return;
+    normalizeVirtualCaretForEditing();
     if (!mUndoing)
         beginEditing();
     auto action = finally([this] {
@@ -3670,6 +3774,7 @@ void QSynEdit::doInputStr(const QString& s)
 {
     if (mReadOnly)
         return;
+    normalizeVirtualCaretForEditing();
     QString inputStr = s;
     for(int i=0;i<s.length();i++) {
         if (s[i]=='\r' || s[i]=='\n' || s[i]=='\0') {
@@ -4104,7 +4209,7 @@ void QSynEdit::setCaretDisplayXY(const VisualPos &pos, bool ensureCaretVisible)
 
 void QSynEdit::internalSetCaretPos(CharPos value, bool ensureVisible)
 {
-    Q_ASSERT(validInDoc(value));
+    Q_ASSERT(validCaretPos(value));
     Q_ASSERT(validGlyphStart(value));
     if ((value.ch != mCaretCh) || (value.line != mCaretLine)) {
         beginInternalChanges();
@@ -4582,8 +4687,12 @@ void QSynEdit::syncFoldVisibility()
     if (useCodeFolding()) {
         foreach (const PCodeBlock &block, mCodeBlocks) {
             if (block->collapsed && !block->parentCollapsed()
-                    && block->toLine > block->fromLine)
-                mRowIndex.setHidden(block->fromLine + 1, block->toLine, true);
+                    && foldHasHiddenLines(block)) {
+                int lastHidden = foldEndLineVisible(block)
+                        ? block->toLine - 1 : block->toLine;
+                mRowIndex.setHidden(block->fromLine + 1, lastHidden, true);
+            }
+            block->hadEndLineSuffix = foldEndLineVisible(block);
         }
     }
     // the anchor may have been folded away: re-adsorb it to the fold start
@@ -4660,30 +4769,42 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
     // isomorphic to the full scan from this point on: same initial stack,
     // same deltas ahead
     while (line < count && line < L) {
-        int ended = mDocument->blockEnded(line);
-        int started = mDocument->blockStarted(line);
-        if (ended > 0) {
-            for (int i=0; i<ended; i++) {
+        QVector<BlockDelimiterEvent> events = mDocument->blockEvents(line);
+        if (events.isEmpty()) {
+            int ended = mDocument->blockEnded(line);
+            int started = mDocument->blockStarted(line);
+            for (int i = 0; i < ended + started; ++i)
+                events.append({-1, i >= ended});
+        }
+        for (const BlockDelimiterEvent &event : events) {
+            if (!event.started) {
                 if (!parent)
-                    break;
-                parent->toLine = (started>0) ? line-1 : line;
+                    continue;
+                if (parent->fromLine == line) {
+                    PCodeBlock sameLineBlock = parent;
+                    parent = parent->parent.lock();
+                    newBlocks.removeOne(sameLineBlock);
+                    if (parent)
+                        parent->subBlocks.removeOne(sameLineBlock);
+                    continue;
+                }
+                parent->toLine = line;
+                parent->toCh = event.ch;
                 parent->unfinished = false;
                 // collapsed preservation: restore the flag only when the
                 // rebuilt range matches a previously collapsed block
                 parent->collapsed = collapsedBlocks.contains(
                             {parent->fromLine, parent->toLine});
                 parent = parent->parent.lock();
+                continue;
             }
-        }
-        if (started > 0) {
-            for (int i=0; i<started; i++) {
-                PCodeBlock newBlock = std::make_shared<CodeBlock>(parent,line,line);
-                if (parent) {
-                    parent->subBlocks.append(newBlock);
-                }
-                newBlocks.append(newBlock);
-                parent = newBlock;
+            PCodeBlock newBlock = std::make_shared<CodeBlock>(parent,line,line);
+            newBlock->fromCh = event.ch;
+            if (parent) {
+                parent->subBlocks.append(newBlock);
             }
+            newBlocks.append(newBlock);
+            parent = newBlock;
         }
         line++;
     }
@@ -4693,6 +4814,7 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
         while (parent != nullptr) {
             parent->unfinished = true;
             parent->toLine = count - 1;
+            parent->toCh = -1;
             parent->collapsed = collapsedBlocks.contains(
                         {parent->fromLine, parent->toLine});
             parent = parent->parent.lock();
@@ -4722,6 +4844,7 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
                 // rebuilt block: it closes at the same line as its old
                 // counterpart (deltas below L are frozen)
                 newB->toLine = oldB->toLine;
+                newB->toCh = oldB->toCh;
                 newB->unfinished = oldB->unfinished;
                 newB->collapsed = collapsedBlocks.contains(
                             {newB->fromLine, newB->toLine});
@@ -6236,9 +6359,12 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
         bool changeY=true;
         int glyphIndex = mDocument->charToGlyphIndex(dstPos.line,dstPos.ch);
         int displayLineLen = getDisplayStringAtLine(dstPos.line).length();
-        if ((deltaX == 1 && dstPos.ch >= lineLen && dstPos.ch < displayLineLen)
-                || (deltaX == -1 && dstPos.ch > lineLen)) {
-            dstPos.ch += deltaX;
+        PCodeBlock block = foldStartAtLine(dstPos.line);
+        bool hasVirtualEnd = foldHasHiddenLines(block) && !foldEndLineVisible(block);
+        if (deltaX == 1 && dstPos.ch == lineLen && hasVirtualEnd) {
+            dstPos.ch = displayLineLen;
+        } else if (deltaX == -1 && dstPos.ch == displayLineLen && hasVirtualEnd) {
+            dstPos.ch = lineLen;
         } else if (changeY && (deltaX == -1) && (glyphIndex==0) && (dstPos.line > 0)) {
             // end of previous line
             if (mActiveSelectionMode==SelectionMode::Column) {
@@ -6247,7 +6373,12 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
             int line = mRowIndex.prevVisibleLine(dstPos.line);
             if (line>=0 && line!=dstPos.line) {
                 dstPos.line = line;
-                dstPos.ch = getDisplayStringAtLine(dstPos.line).length();
+                PCodeBlock previousBlock = foldStartAtLine(line);
+                if (foldHasHiddenLines(previousBlock)
+                        && !foldEndLineVisible(previousBlock))
+                    dstPos.ch = getDisplayStringAtLine(line).length();
+                else
+                    dstPos.ch = mDocument->getLine(line).length();
             }
         } else if (changeY && (deltaX == 1) && (glyphIndex >= mDocument->glyphCount(dstPos.line)) && (dstPos.line < mDocument->count()-1)) {
             // start of next line
@@ -6811,6 +6942,8 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
 {
+    startPos = documentPositionForFoldCaret(startPos);
+    endPos = documentPositionForFoldCaret(endPos);
     Q_ASSERT(validInDoc(startPos));
     Q_ASSERT(validInDoc(endPos));
     Q_ASSERT(endPos >= startPos);
@@ -6978,6 +7111,7 @@ void QSynEdit::doInsertText(const CharPos& pos,
 
 void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
 {
+    pos = documentPositionForFoldCaret(pos);
     Q_ASSERT(validInDoc(pos));
     QString leftSide;
     QString rightSide;
@@ -8191,6 +8325,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
     int dirtyFrom = INT_MAX;
     for (int changeIndex = 0; changeIndex < changes.count(); changeIndex++) {
         const DocumentChange &change = changes[changeIndex];
+        expandCollapsedFoldsForChange(change);
         int changeFrom = change.line;
         switch (change.kind) {
         case DocumentChangeKind::Insert:
@@ -8307,6 +8442,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
     // Marker-shifted anchors are resolved after the row index and fold
     // rescan have settled. Deferred intents wait for the outermost
     // endInternalChanges, reached through the Document::changed signal.
+    syncFoldVisibility();
     recalcTopPosFromAnchor();
     if (scrollbarChanged)
         updateVScrollbar();
@@ -8523,7 +8659,7 @@ void QSynEdit::clearSelection()
 
 void QSynEdit::internalSetSelEnd(const CharPos &value)
 {
-    Q_ASSERT(validInDoc(value));
+    Q_ASSERT(validCaretPos(value));
     Q_ASSERT(validGlyphStart(value));
 
     beginInternalChanges();
@@ -8635,7 +8771,7 @@ const CharPos &QSynEdit::selBegin() const
 
 void QSynEdit::internalSetSelBegin(const CharPos &value)
 {
-    Q_ASSERT(validInDoc(value));
+    Q_ASSERT(validCaretPos(value));
     Q_ASSERT(validGlyphStart(value));
     beginInternalChanges();
     if (selAvail()) {

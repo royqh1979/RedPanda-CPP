@@ -138,7 +138,8 @@ static bool sameCodeBlockDeltas(const PSyntaxState &oldState, const PSyntaxState
                  || newState->blockEnded);
     }
     return oldState->blockStarted == newState->blockStarted
-            && oldState->blockEnded == newState->blockEnded;
+            && oldState->blockEnded == newState->blockEnded
+            && oldState->blockEvents == newState->blockEvents;
 }
 
 int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
@@ -263,6 +264,14 @@ int Document::blockEnded(int line) const
         return 0;
 }
 
+QVector<BlockDelimiterEvent> Document::blockEvents(int line) const
+{
+    QMutexLocker locker(&mMutex);
+    if (line>=0 && line < mLines.size())
+        return mLines[line]->syntaxState()->blockEvents;
+    return {};
+}
+
 QString Document::lineBreak() const
 {
     switch(mNewlineType) {
@@ -299,7 +308,7 @@ void Document::insertItem(int line, const QString &s)
     mLines.insert(line,documentLine);
     mLineSeqIndice.insert(documentLine->lineSeq(), documentLine);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    recordChange(DocumentChangeKind::Insert, line, 1);
+    recordChange(DocumentChangeKind::Insert, line, 1, 0, 0, false);
     endUpdate();
 }
 
@@ -311,7 +320,7 @@ void Document::addItem(const QString &s)
     mLines.append(line);
     mLineSeqIndice.insert(line->lineSeq(), line);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    recordChange(DocumentChangeKind::Insert, mLines.count()-1, 1);
+    recordChange(DocumentChangeKind::Insert, mLines.count()-1, 1, 0, 0, false);
     endUpdate();
 }
 
@@ -486,7 +495,8 @@ void Document::replaceContent(const QString &text)
     setText(text);
 }
 
-void Document::recordChange(DocumentChangeKind kind, int line, int count)
+void Document::recordChange(DocumentChangeKind kind, int line, int count,
+                            int startCh, int endCh, bool wholeLine)
 {
     // sanity checks against the post-mutation state
     Q_ASSERT(line >= 0);    
@@ -552,12 +562,16 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
             case DocumentChangeKind::SetLine:
                 if (last.line + last.count == line) {
                     last.count += count;
+                    last.endCh = endCh;
+                    last.wholeLine = last.wholeLine && wholeLine;
                     return;
                 }
                 break;
             case DocumentChangeKind::Delete:
                 if (last.line == line) {
                     last.count += count;
+                    last.endCh = endCh;
+                    last.wholeLine = last.wholeLine && wholeLine;
                     return;
                 }
                 break;
@@ -567,7 +581,7 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count)
         }
     }
     mChangeCoalescingBlocked = false;
-    mPendingChanges.append(DocumentChange{kind, line, count});
+    mPendingChanges.append(DocumentChange{kind, line, count, startCh, endCh, wholeLine});
 }
 
 
@@ -645,7 +659,7 @@ void Document::deleteLines(int index, int numLines, bool parseToEnd)
     }
     mLines.remove(index,numLines);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    recordChange(DocumentChangeKind::Delete, index, numLines);
+    recordChange(DocumentChangeKind::Delete, index, numLines, 0, 0, true);
     ensureHasLine();
     if (parseToEnd)
         reparseLines(index, index+numLines, true);
@@ -663,7 +677,7 @@ void Document::moveLine(int from, int to, bool parseToEnd)
     PDocumentLine temp = mLines[from];
     mLines.remove(from);
     mLines.insert(to, temp);
-    recordChange(DocumentChangeKind::Move, from, to);
+    recordChange(DocumentChangeKind::Move, from, to, 0, 0, false);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     reparseLines(std::min(from,to), std::max(from,to)+1, parseToEnd);
     endUpdate();
@@ -689,7 +703,7 @@ void Document::deleteLine(int index, bool parseToEnd)
     mLineSeqIndice.remove(mLines[index]->lineSeq());
     mLines.removeAt(index);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    recordChange(DocumentChangeKind::Delete, index, 1);
+    recordChange(DocumentChangeKind::Delete, index, 1, 0, 0, true);
     ensureHasLine();
     if (parseToEnd)
         reparseLines(index, index+1, true);
@@ -715,8 +729,23 @@ void Document::putLine(int index, const QString &s, bool parseToEnd) {
     Q_ASSERT(index>=0 && index < mLines.count());
     beginUpdate();
     if (mLines[index]->lineText() != s) {
+        QString oldText = mLines[index]->lineText();
+        int startCh = 0;
+        while (startCh < oldText.length() && startCh < s.length()
+                && oldText[startCh] == s[startCh])
+            startCh++;
+        int oldEnd = oldText.length();
+        int newEnd = s.length();
+        while (oldEnd > startCh && newEnd > startCh
+                && oldText[oldEnd - 1] == s[newEnd - 1]) {
+            oldEnd--;
+            newEnd--;
+        }
+        bool wholeLine = !oldText.isEmpty()
+                && startCh == 0 && oldEnd == oldText.length();
         mLines[index]->setLineText(s);
-        recordChange(DocumentChangeKind::SetLine, index, 1);
+        recordChange(DocumentChangeKind::SetLine, index, 1,
+                     startCh, oldEnd, wholeLine);
     }
     // the reparse is NOT skipped for unchanged text: its job is not (only) to
     // parse the new text, but to repair potentially stale syntax states from
@@ -740,7 +769,7 @@ void Document::insertLines(int index, int numLines, bool parseToEnd)
         mLineSeqIndice.insert(mLines[i]->lineSeq(), mLines[i]);
     }
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    recordChange(DocumentChangeKind::Insert, index, numLines);
+    recordChange(DocumentChangeKind::Insert, index, numLines, 0, 0, false);
     reparseLines(index, index+numLines, parseToEnd);
     endUpdate();
 }
@@ -1112,7 +1141,7 @@ void Document::internalClear()
     mLines.clear();
     mLineSeqIndice.clear();
     if (oldCount > 0)
-        recordChange(DocumentChangeKind::Delete, 0, oldCount);
+        recordChange(DocumentChangeKind::Delete, 0, oldCount, 0, 0, true);
     endUpdate();
 }
 

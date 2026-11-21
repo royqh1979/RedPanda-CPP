@@ -44,6 +44,9 @@ public:
     CodeBlock& operator=(const CodeBlock&)=delete;
     int fromLine; // Beginning line
     int toLine; // End line (count-1 while unfinished)
+    int fromCh = -1;
+    int toCh = -1;
+    bool hadEndLineSuffix = false;
     QVector<PCodeBlock> subBlocks; // Sub fold ranges
     bool collapsed; // Is collapsed?
     bool unfinished = false; // Opened but not closed yet (kept open to EOF)

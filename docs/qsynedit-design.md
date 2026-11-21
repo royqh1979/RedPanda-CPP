@@ -487,15 +487,16 @@ directive 的新增、修改、覆盖和删除都会改变相应行及其后续�
 
 ### 5.1 术语与命名约定
 
-- **CodeBlock**：折叠结构单元（`codefolding.h`，含 `fromLine`/`toLine`/`collapsed`/`parent`/`subBlocks`）。视图侧列表为 `mCodeBlocks`（per-view，多视图各自折叠）。
+- **CodeBlock**：折叠结构单元（`codefolding.h`，含 `fromLine`/`toLine`/`fromCh`/`toCh`/`collapsed`/`parent`/`subBlocks`）。视图侧列表为 `mCodeBlocks`（per-view，多视图各自折叠）。
 - **foldState**：折叠相关的状态/标志命名（如 `foldStateDirty`）；特性开关沿用 `useCodeFolding`。
 - 两者不混用：结构单元一律 CodeBlock，状态/特性一律 fold。
 
 ### 5.2 块列表的维护机制（现状）
 
-折叠结构派生自语法状态：每行 `SyntaxState` 存有 `blockLevel`（嵌套深度）和
-`blockStarted`/`blockEnded`（本行开/闭块数）。维护分两步（都在
-`onDocumentContentChanged`）：
+折叠结构派生自语法状态：每行 `SyntaxState` 存有 `blockLevel`（嵌套深度）、
+`blockStarted`/`blockEnded`（本行开/闭块数）及按源码顺序排列的 `blockEvents`
+（分隔符字符位置和开/闭方向）。CodeBlock 保存实际分隔符的 `fromCh/toCh`。
+维护分两步（都在 `onDocumentContentChanged`）：
 
 1. **增量平移**：`processCodeBlocksOnLinesInserted`/`processFoldsOnLinesDeleted`/
   `processFoldsOnLineMoved` 按 changeSet 平移块行号；插入行落入已折叠块、删除/
@@ -510,6 +511,13 @@ directive 的新增、修改、覆盖和删除都会改变相应行及其后续�
   （改 parent + 挂 subBlocks）。`rescanCodeBlocks()` ≡ `partialScanCodeBlocks(0,
   count)`（无链块自然退化为全扫）。collapsed 状态在闭块时按
   `CodeBlockRangeKey{from,to}` 回贴（范围未变→保留，变了→自动展开）。
+
+**结束行显示与编辑展开**：实际 `}` 后没有任何字符时隐藏整个结束行并显示 `...}`；
+只要其后存在字符（包括空白、注释、`;` 或 `else`），结束行保持完整显示并仅显示 `...`。
+每条 DocumentChange 携带字符范围和整行标记；每个视图在平移/重扫前按自己的折叠状态
+判断编辑是否触及块内部、分隔符或改变尾部内容存在性，必要时只展开当前视图。
+完全位于 `{` 前，或位于 `}` 后且不改变尾部内容存在性的编辑无需展开。虚拟 `}` 后位置
+只属于视图光标，Document 操作使用其实际 `toCh+1/toLine` 映射。
 
 **未闭合块（unfinished）**：不再摘除，按"开放到文件尾"保留（`unfinished=true`、
 `toLine=count-1`）——后续编辑补上 `}` 时折叠自然复活（日常"敲 `{` → 敲 `}`"
@@ -532,7 +540,7 @@ insert-before"的早退（0 基迁移期的防御性绕过，80170a75），它�
 
 - **`foldStateDirty`**：本批次是否可能改变了块配对。为假则跳过重扫（日常打字
   占绝大多数）。累积规则：`reparseLines` 覆盖行状态前比较新旧 state 的
-  `blockStarted/blockEnded`（**行文本固有属性**，刻意不比位置相关的
+  `blockStarted/blockEnded/blockEvents`（**行文本固有属性**，刻意不比位置相关的
   `blockLevel`，否则前一批次未收敛状态的修复性重解析会误报）；`deleteLine`/
   `deleteLines`/`moveLine`（可能不重解析）改为检查被删/被移动行**已存状态**的
   增量（`lineHasCodeBlockDelta`，未解析行保守按有增量）；插入行由紧随的重解析

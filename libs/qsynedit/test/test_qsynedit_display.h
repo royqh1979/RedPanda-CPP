@@ -39,6 +39,14 @@ private slots:
     void test_gutter_fold_button_paints();
     void test_fold_placeholder_painting();
     void test_fold_placeholder_navigation();
+    void test_fold_end_line_suffix_visibility();
+    void test_fold_else_same_line();
+    void test_fold_edit_inside_expands_and_undo();
+    void test_fold_virtual_close_backspace();
+    void test_fold_edit_outside_and_suffix_transitions();
+    void test_fold_edit_shared_document_views();
+    void test_fold_merge_before_open_does_not_expand();
+    void test_fold_whole_block_delete_exception();
     void test_gutter_click_selects_line();
     void test_gutter_mark_click_emits_signal();
     void test_gutter_shift_click_selects_line_range();

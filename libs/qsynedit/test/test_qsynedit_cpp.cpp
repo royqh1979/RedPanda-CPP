@@ -4177,7 +4177,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -4203,7 +4203,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
@@ -4233,7 +4233,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -4259,7 +4259,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     QVERIFY(!mEdit->canRedo());
@@ -4288,7 +4288,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -4314,7 +4314,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
@@ -4396,7 +4396,7 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     //undo
@@ -4423,8 +4423,8 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(12,14));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
@@ -4453,8 +4453,8 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(11,13));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(11,13));
     QVERIFY(!mEdit->canRedo());
 
     //undo again
@@ -4481,8 +4481,8 @@ void TestQSyneditCpp::test_merge_with_next_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(12,14));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
@@ -5091,7 +5091,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -5117,7 +5117,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
@@ -5147,7 +5147,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -5173,7 +5173,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     QVERIFY(!mEdit->canRedo());
@@ -5202,7 +5202,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     clearSignalDatas();
@@ -5228,7 +5228,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
@@ -5310,7 +5310,7 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(8,10));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     //undo
@@ -5337,8 +5337,8 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(12,14));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
@@ -5367,8 +5367,8 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,10));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(11,13));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(11,13));
     QVERIFY(!mEdit->canRedo());
 
     //undo again
@@ -5395,8 +5395,8 @@ void TestQSyneditCpp::test_merge_with_prev_line_with_collapsed_block2()
     QVERIFY(mEdit->hasCodeBlock(12,14));
     QVERIFY(mEdit->isCollapsed(1,3));
     QVERIFY(!mEdit->isCollapsed(5,11));
-    QVERIFY(mEdit->isCollapsed(8,10));
-    QVERIFY(mEdit->isCollapsed(12,14));
+    QVERIFY(!mEdit->isCollapsed(8,10));
+    QVERIFY(!mEdit->isCollapsed(12,14));
 
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->modified());
@@ -6149,7 +6149,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     mEdit->setCaretPos(CharPos{9,6}); //caret between "if (x>0)" and " {"
@@ -6174,7 +6174,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     //undo
@@ -6199,7 +6199,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     clearSignalDatas();
@@ -6223,7 +6223,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(9,11));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,8));
-    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(!mEdit->isCollapsed(5,7));
     QVERIFY(mEdit->isCollapsed(9,11));
 
     QVERIFY(!mEdit->canUndo());
@@ -6251,7 +6251,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     clearSignalDatas();
@@ -6275,7 +6275,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(11,13));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,10));
-    QVERIFY(mEdit->isCollapsed(7,9));
+    QVERIFY(!mEdit->isCollapsed(7,9));
     QVERIFY(mEdit->isCollapsed(11,13));
 
     QVERIFY(!mEdit->canRedo());
@@ -6302,7 +6302,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(10,12));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,9));
-    QVERIFY(mEdit->isCollapsed(6,8));
+    QVERIFY(!mEdit->isCollapsed(6,8));
     QVERIFY(mEdit->isCollapsed(10,12));
 
     clearSignalDatas();
@@ -6326,7 +6326,7 @@ void TestQSyneditCpp::test_break_lines_with_collapsed_block()
     QVERIFY(mEdit->hasCodeBlock(9,11));
     QVERIFY(mEdit->isCollapsed(0,2));
     QVERIFY(!mEdit->isCollapsed(3,8));
-    QVERIFY(mEdit->isCollapsed(5,7));
+    QVERIFY(!mEdit->isCollapsed(5,7));
     QVERIFY(mEdit->isCollapsed(9,11));
 
     QVERIFY(!mEdit->canUndo());
