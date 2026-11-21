@@ -321,6 +321,8 @@ SymbolReferenceFile CppRefactor::findOccurrencesInFile(
     editor.setSyntaxer(syntaxer);
 
     for (int line = 0; line < editor.lineCount(); ++line) {
+        if (!parser->isLineVisible(fileName, line))
+            continue;
         QString lineText = editor.lineText(line);
         if (lineText.isEmpty())
             continue;

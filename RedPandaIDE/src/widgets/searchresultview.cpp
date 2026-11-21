@@ -504,11 +504,16 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
          text=item->text.mid(item->start,item->len);
          metrics = QFontMetrics(font2);
          int width = metrics.horizontalAdvance(text);
-         painter->setPen(qApp->palette().color(QPalette::ColorRole::ButtonText));
+         bool selected = option.state.testFlag(QStyle::State_Selected);
+         QPalette::ColorRole foreground = selected
+                 ? QPalette::HighlightedText : QPalette::ButtonText;
+         QPalette::ColorRole background = selected
+                 ? QPalette::Highlight : QPalette::Button;
+         painter->setPen(option.palette.color(foreground));
          QRect rect = textRect;
          rect.setLeft(x);
          rect.setWidth(width);
-         painter->fillRect(rect,qApp->palette().color(QPalette::ColorRole::Button));
+         painter->fillRect(rect, option.palette.color(background));
          painter->drawText(x,y,text);
          metrics = QFontMetrics(font2);
          x+=width;

@@ -10,6 +10,8 @@ Red Panda C++ Version 3.6
   - enhancement: Remember Find in Files case sensitivity, whole-word, and regex options.
   - enhancement: Add a Find in Files button to the main window's Search panel.
   - fix: Correctly replace only selected Find in Files results, including case-insensitive, regex, Unicode, and multi-line matches.
+  - fix: Use the selected-item highlight palette for matched text in search results.
+  - fix: Exclude inactive preprocessor branches from semantic reference searches.
   - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
   - change: Remove the class browser's whole-project symbol view; it now shows the current file's C/C++ context.

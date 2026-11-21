@@ -97,6 +97,29 @@ void TestCppRefactor::test_find_occurrences_current_file()
     QCOMPARE(results.files.at(0).references.at(2).line, 5);
 }
 
+void TestCppRefactor::test_find_occurrences_excludes_inactive_preprocessor_lines()
+{
+    mFiles[mMainFile] = QStringList{
+        "int value;",
+        "#if 0",
+        "int hidden(){return value;}",
+        "#else",
+        "int active(){return value;}",
+        "#endif",
+        "int read(){return value;}",
+    };
+    mParser->addProjectFile(mMainFile, false);
+    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    auto editor = makeEditor(mMainFile);
+    CppRefactor refactor;
+    SymbolReferenceResults results;
+    QVERIFY(refactor.findOccurrences(editor.get(), {4, 0}, results));
+    QCOMPARE(results.count(), 3);
+    QCOMPARE(results.files.at(0).references.at(0).line, 0);
+    QCOMPARE(results.files.at(0).references.at(1).line, 4);
+    QCOMPARE(results.files.at(0).references.at(2).line, 6);
+}
+
 void TestCppRefactor::test_find_occurrences_same_line_distinct_declarations()
 {
     mFiles[mMainFile] = QStringList{

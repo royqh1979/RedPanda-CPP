@@ -14,6 +14,7 @@ private slots:
     void cleanupTestCase();
     void init();
     void test_find_occurrences_current_file();
+    void test_find_occurrences_excludes_inactive_preprocessor_lines();
     void test_find_occurrences_same_line_distinct_declarations();
     void test_find_occurrences_project_unsaved_content();
     void test_find_occurrences_project_shared_occurrences();
