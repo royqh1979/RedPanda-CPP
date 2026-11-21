@@ -18,26 +18,26 @@
 #include <QDir>
 #include <QSet>
 #include <QStack>
-#include "basicsearcher.h"
-#include "regexsearcher.h"
-
-namespace QSynedit {
+#include <qsynedit/searcher/basicsearcher.h>
+#include <qsynedit/searcher/regexsearcher.h>
 
 int FileSearchEngine::searchText(
         const QString &fileName, const QStringList &lines,
-        const SearchQuery &query, const FileSearchCallbacks &callbacks)
+        const QSynedit::SearchQuery &query, const FileSearchCallbacks &callbacks)
 {
     if (query.pattern.isEmpty())
         return 0;
-    SearchOptions options = query.matchCase ? ssoMatchCase : ssoNone;
-    std::unique_ptr<Searcher> searcher;
+    QSynedit::SearchOptions options = query.matchCase
+            ? QSynedit::ssoMatchCase : QSynedit::ssoNone;
+    std::unique_ptr<QSynedit::Searcher> searcher;
     if (query.useRegex) {
-        std::unique_ptr<RegexSearcher> regexSearcher = std::make_unique<RegexSearcher>();
+        std::unique_ptr<QSynedit::RegexSearcher> regexSearcher =
+                std::make_unique<QSynedit::RegexSearcher>();
         regexSearcher->setOptions(options);
         regexSearcher->setPattern(query.pattern);
         searcher = std::move(regexSearcher);
     } else {
-        searcher = std::make_unique<BasicSearcher>();
+        searcher = std::make_unique<QSynedit::BasicSearcher>();
         searcher->setOptions(options);
         searcher->setPattern(query.pattern);
     }
@@ -54,9 +54,9 @@ int FileSearchEngine::searchText(
         if (callbacks.shouldCancel && callbacks.shouldCancel())
             break;
         const QString &lineText = lines.at(line);
-        const QVector<TextMatch> matches = searcher->findAll(lineText);
-        for (const TextMatch &match : matches) {
-            if (query.wholeWord && !isWholeWordMatch(lineText, match))
+        const QVector<QSynedit::TextMatch> matches = searcher->findAll(lineText);
+        for (const QSynedit::TextMatch &match : matches) {
+            if (query.wholeWord && !QSynedit::isWholeWordMatch(lineText, match))
                 continue;
             batch.append({fileName, line, match.ch, match.length, lineText});
             totalMatches++;
@@ -71,14 +71,14 @@ int FileSearchEngine::searchText(
 }
 
 int FileSearchEngine::searchFile(
-        const QString &fileName, const SearchQuery &query,
+        const QString &fileName, const QSynedit::SearchQuery &query,
         const FileSearchCallbacks &callbacks, const QByteArray &encoding)
 {
-    Document document;
+    QSynedit::Document document;
     QByteArray realEncoding;
     try {
         document.loadFromFile(fileName, encoding, realEncoding);
-    } catch (const BinaryFileError &) {
+    } catch (const QSynedit::BinaryFileError &) {
         return 0;
     } catch (const FileError &) {
         return 0;
@@ -119,6 +119,4 @@ QList<QFileInfo> FileSearchEngine::collectFiles(
             progress(completed, 0);
     }
     return files;
-}
-
 }

@@ -1,8 +1,8 @@
-# Search / Replace 与 Find in Files 设计评审
+# Search / Replace 与 Find in Files 设计
 
 ## 目标
 
-本评审覆盖三个相关但不同的层次：
+本文覆盖三个相关但不同的层次：
 
 1. QSynEdit 单文档搜索与替换；
 2. 编辑器中的交互式搜索/替换；
@@ -225,6 +225,17 @@ int replaceAll(
 
 所有调用方迁移完成后删除旧接口，不保留两套搜索算法。
 
+### IDE 搜索组件的归属
+
+QSynEdit 只保留通用编辑能力：`Searcher`、Unicode whole word、`DocumentSearchSession` 和匹配后的文档编辑。文件枚举、批量文件读取、结果树以及选择性替换属于 IDE 工作流，放在 `RedPandaIDE/src/search/`：
+
+- `FileSearchEngine`：搜索文本、文件和目录，不依赖编辑器控件；
+- `SearchResultReplacer`：替换单个文件内已勾选的结果，不打开或保存文件，也不显示错误对话框；
+- `SearchInFileDialog`：提供搜索范围和未保存的打开缓冲区，生成结果树；
+- `MainWindow`：管理打开文件、磁盘保存、替换面板和错误提示。
+
+对应测试使用独立的 `test-file-search` 目标，不混入 `test-widgets` 或 QSynEdit 测试。
+
 ### Find in Files 调用关系
 
 文件搜索直接复用查询和匹配组件，不创建 QSynEdit：
@@ -272,6 +283,27 @@ public:
 - 引擎不创建树节点，也不直接操作搜索结果视图；取消后是否展示已有部分结果由 UI 决定；
 - 若以后需要后台执行，以整个请求和结果为线程边界，不共享编辑器对象。
 
+### SearchResultReplacer
+
+`SearchResultReplacer` 只服务 Find in Files；查找引用和重命名不经过该组件。它接收一个已打开的 `QSynEdit`、该文件的搜索结果和替换文本，只处理 `selected=true` 的叶子项。`SearchResultTreeItem::line/start` 与 `CharPos` 一样从 0 开始，不得再做 `start-1` 转换。
+
+执行顺序：
+
+1. 收集已选项，并使用生成结果时保存的 `item->matchedText` 作为原始匹配文本；`item->text` 仅用于显示，其中的 Tab 已被替换为空格，不能用于校验；
+2. 按 line/ch 逆序排列，避免替换改变后续匹配的位置；
+3. 修改前先校验所有已选位置仍存在相同的原始匹配文本，任一不符则本文件完全不修改并返回内容变化错误；
+4. 使用 `SearchResults` 中的 matchCase、wholeWord、useRegex 构造 `DocumentSearchSession`；
+5. 通过会话生成每项替换文本，普通替换直接使用给定文本，regex 使用原始匹配展开捕获组；
+6. 通过 `QSynEdit::replaceMatch()` 逆序执行，每个文件只使用一个编辑事务和一个 Undo 组。
+
+打开编辑器的未保存内容、文件打开与编码保存仍由 MainWindow 负责。校验失败不得产生部分替换；未选择任何项时不创建编辑事务。
+
+### 后续：CppRefacter 结果模型
+
+`CppRefacter` 处理的是语义 statement 的引用与重命名，不应复用 Find in Files 的 `SearchResults`、`SearchResultTreeItem` 或其查找面板。复用会迫使语义引用携带 keyword、regex、勾选替换、`matchedText` 等无关概念，容易造成职责混淆。
+
+后续重构 CppRefacter 并完善其测试时，应定义独立的语义引用结果结构和展示路径，至少表达文件、0 起始 line/ch、匹配长度、显示文本及所属 statement；不为它添加 Find in Files 的替换校验数据。该调整本次不实施，与 CppRefacter 测试和重构一起进行。
+
 ## 正确性测试方案
 
 ### Replace 测试矩阵
@@ -305,6 +337,17 @@ public:
 - 取消后的部分结果语义；
 - 搜索不得改变打开编辑器的 caret、selection 或滚动位置。
 
+### SearchResultReplacer 正确性测试
+
+在 `test-file-search` 的 `TestSearchResultReplacer` 中覆盖：
+
+- 只替换已选项，未选项保持不变，单文件一次 Undo/Redo；
+- 首列、同行多个匹配和忽略大小写；
+- regex 捕获组、变长匹配和零长度匹配；
+- 内容变化时拒绝本文件的全部替换且不产生 Undo 项；
+- Unicode、空替换、多行替换和原始 Tab 匹配；
+- 无已选项时不修改文档、不创建编辑事务。
+
 ## 性能基线与优化顺序
 
 修改前后使用同一组临时数据，分别记录：
@@ -327,7 +370,7 @@ public:
 
 ### 当前引擎基线
 
-通过 `QSYNEDIT_SEARCH_PROFILE=1 test-qsynedit --suite=TestFileSearchEngine test_profile` 可重复测量。Windows、GCC 8.1、Qt 5 static Release 的第二轮结果如下：
+通过 `QSYNEDIT_SEARCH_PROFILE=1 test-file-search --suite=TestFileSearchEngine test_profile` 可重复测量。Windows、GCC 8.1、Qt 5 static Release 的第二轮结果如下：
 
 - 2000 行无匹配：0.063 ms；
 - 2000 行普通匹配（2000 个结果）：0.246 ms；

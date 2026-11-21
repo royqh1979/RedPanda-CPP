@@ -203,7 +203,7 @@ void SearchInFileDialog::doSearch(bool replace)
         progressDlg.setWindowModality(Qt::WindowModal);
         progressDlg.show();
         QCoreApplication::processEvents();
-        QSynedit::FileSearchRequest request{
+        FileSearchRequest request{
             rootDir.path(), ui->txtFilters->text().split(";"),
             ui->chkSearchSubFolders->isChecked()};
         QList<QFileInfo> files = mFileSearchEngine.collectFiles(
@@ -344,15 +344,16 @@ void SearchInFileDialog::doSearch(bool replace)
 
 static void appendSearchMatches(
         const PSearchResultTreeItem &parentItem,
-        const QVector<QSynedit::FileSearchMatch> &matches)
+        const QVector<FileSearchMatch> &matches)
 {
-    for (const QSynedit::FileSearchMatch &match : matches) {
+    for (const FileSearchMatch &match : matches) {
         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
         item->filename = match.fileName;
         item->line = match.line;
         item->start = match.ch;
         item->len = match.length;
         item->parent = parentItem.get();
+        item->matchedText = match.lineText.mid(match.ch, match.length);
         item->text = match.lineText;
         item->text.replace('\t',' ');
         parentItem->results.append(item);
@@ -370,8 +371,8 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(
         keyword, useRegex,
         searchOptions.testFlag(QSynedit::ssoMatchCase),
         searchOptions.testFlag(QSynedit::ssoWholeWord)};
-    QSynedit::FileSearchCallbacks callbacks;
-    callbacks.onBatch = [parentItem](const QVector<QSynedit::FileSearchMatch> &matches) {
+    FileSearchCallbacks callbacks;
+    callbacks.onBatch = [parentItem](const QVector<FileSearchMatch> &matches) {
         appendSearchMatches(parentItem, matches);
     };
     mFileSearchEngine.searchText(filename, editor->content(), query, callbacks);
@@ -390,8 +391,8 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInFile(
         keyword, useRegex,
         searchOptions.testFlag(QSynedit::ssoMatchCase),
         searchOptions.testFlag(QSynedit::ssoWholeWord)};
-    QSynedit::FileSearchCallbacks callbacks;
-    callbacks.onBatch = [parentItem](const QVector<QSynedit::FileSearchMatch> &matches) {
+    FileSearchCallbacks callbacks;
+    callbacks.onBatch = [parentItem](const QVector<FileSearchMatch> &matches) {
         appendSearchMatches(parentItem, matches);
     };
     mFileSearchEngine.searchFile(filename, query, callbacks, encoding);

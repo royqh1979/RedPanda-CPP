@@ -18,7 +18,7 @@
 #define SEARCHINFILEDIALOG_H
 
 #include <QDialog>
-#include <qsynedit/searcher/filesearchengine.h>
+#include "../search/filesearchengine.h"
 #include "../utils.h"
 
 namespace Ui {
@@ -69,7 +69,7 @@ private:
            const QByteArray &encoding = ENCODING_AUTO_DETECT);
 private:
     Ui::SearchInFileDialog *ui;
-    QSynedit::FileSearchEngine mFileSearchEngine;
+    FileSearchEngine mFileSearchEngine;
     QStringList mSearchKeys;
 
     // QWidget interface

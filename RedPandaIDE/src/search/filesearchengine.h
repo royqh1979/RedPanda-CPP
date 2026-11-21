@@ -14,14 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef QSYNEDIT_FILESEARCHENGINE_H
-#define QSYNEDIT_FILESEARCHENGINE_H
+#ifndef REDPANDA_FILESEARCHENGINE_H
+#define REDPANDA_FILESEARCHENGINE_H
 
 #include <QFileInfo>
 #include <functional>
-#include "documentsearchsession.h"
-
-namespace QSynedit {
+#include <qsynedit/searcher/documentsearchsession.h>
 
 struct FileSearchMatch {
     QString fileName;
@@ -54,11 +52,11 @@ public:
     int searchText(
             const QString &fileName,
             const QStringList &lines,
-            const SearchQuery &query,
+            const QSynedit::SearchQuery &query,
             const FileSearchCallbacks &callbacks);
     int searchFile(
             const QString &fileName,
-            const SearchQuery &query,
+            const QSynedit::SearchQuery &query,
             const FileSearchCallbacks &callbacks,
             const QByteArray &encoding = ENCODING_AUTO_DETECT);
     QList<QFileInfo> collectFiles(
@@ -67,6 +65,4 @@ public:
             const CancelCallback &cancel = {});
 };
 
-}
-
-#endif // QSYNEDIT_FILESEARCHENGINE_H
+#endif // REDPANDA_FILESEARCHENGINE_H

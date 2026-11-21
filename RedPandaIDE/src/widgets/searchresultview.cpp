@@ -207,21 +207,16 @@ QModelIndex SearchResultTreeModel::parent(const QModelIndex &child) const
     if (!child.isValid())
         return QModelIndex();
     SearchResultTreeItem* item = static_cast<SearchResultTreeItem *>(child.internalPointer());
-    if (!item) {
+    if (!item || item->parent==nullptr)
         return QModelIndex();
-    } else {
-        if (item->parent==nullptr)
-            return QModelIndex();
-        SearchResultTreeItem* parent = item->parent;
-        int row = -1;
-        for (int i=0;i<parent->results.count();i++) {
-            if (parent->results[i].get()==item) {
-                row = i;
-                break;
-            }
-        }
-        return createIndex(row,0,parent);
+    PSearchResults results = mSearchResultModel->currentResults();
+    if (!results)
+        return QModelIndex();
+    for (int row = 0; row < results->results().count(); ++row) {
+        if (results->results().at(row).get() == item->parent)
+            return createIndex(row, 0, item->parent);
     }
+    return QModelIndex();
 }
 
 int SearchResultTreeModel::rowCount(const QModelIndex &parent) const
@@ -277,7 +272,16 @@ QVariant SearchResultTreeModel::data(const QModelIndex &index, int role) const
          }
 
          if (item->parent==nullptr) { //is filename
-             return QVariant();
+             int selectedCount = 0;
+             for (const PSearchResultTreeItem &child : item->results) {
+                 if (child->selected)
+                     selectedCount++;
+             }
+             if (selectedCount == 0)
+                 return Qt::Unchecked;
+             if (selectedCount == item->results.count())
+                 return Qt::Checked;
+             return Qt::PartiallyChecked;
          } else {
              return (item->selected)?Qt::Checked:Qt::Unchecked;
          }
@@ -345,9 +349,21 @@ bool SearchResultTreeModel::setData(const QModelIndex &index, const QVariant &va
          }
 
          if (item->parent==nullptr) { //is filename
-             return false;
+             for (const PSearchResultTreeItem &child : item->results)
+                 child->selected = value.toBool();
+             if (!item->results.isEmpty()) {
+                 emit dataChanged(this->index(0, 0, index),
+                                  this->index(item->results.count() - 1, 0, index),
+                                  {Qt::CheckStateRole});
+             }
+             emit dataChanged(index, index, {Qt::CheckStateRole});
+             return true;
          } else {
              item->selected = value.toBool();
+             emit dataChanged(index, index, {Qt::CheckStateRole});
+             QModelIndex parentIndex = parent(index);
+             if (parentIndex.isValid())
+                 emit dataChanged(parentIndex, parentIndex, {Qt::CheckStateRole});
              return true;
          }
     }

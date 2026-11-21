@@ -35,8 +35,7 @@ target("qsynedit")
         "qsynedit/syntaxer/syntaxer.cpp",
         "qsynedit/syntaxer/textfile.cpp",
         -- searcher
-        "qsynedit/searcher/documentsearchsession.cpp",
-        "qsynedit/searcher/filesearchengine.cpp")
+        "qsynedit/searcher/documentsearchsession.cpp")
 
     add_moc_classes(
         "qsynedit/document",

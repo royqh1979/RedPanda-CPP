@@ -2,9 +2,7 @@
 #define TEST_FILESEARCHENGINE_H
 
 #include <QObject>
-#include <qsynedit/searcher/filesearchengine.h>
-
-namespace QSynedit {
+#include "src/search/filesearchengine.h"
 
 class TestFileSearchEngine : public QObject
 {
@@ -17,7 +15,5 @@ private slots:
     void test_collect_files_filters_recursion_and_cancel();
     void test_profile();
 };
-
-}
 
 #endif // TEST_FILESEARCHENGINE_H

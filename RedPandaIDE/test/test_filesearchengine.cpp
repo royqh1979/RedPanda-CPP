@@ -3,11 +3,9 @@
 #include <algorithm>
 #include "test_filesearchengine.h"
 
-namespace QSynedit {
-
 static QVector<FileSearchMatch> collectMatches(
         FileSearchEngine &engine, const QString &fileName, const QStringList &lines,
-        const SearchQuery &query, FileSearchCallbacks callbacks = {})
+        const QSynedit::SearchQuery &query, FileSearchCallbacks callbacks = {})
 {
     QVector<FileSearchMatch> matches;
     callbacks.onBatch = [&matches](const QVector<FileSearchMatch> &batch) {
@@ -169,7 +167,7 @@ void TestFileSearchEngine::test_profile()
     QStringList lines;
     for (int i = 0; i < 2000; ++i)
         lines.append("int value = value + value;");
-    QList<QPair<QString, SearchQuery>> scenarios{
+    QList<QPair<QString, QSynedit::SearchQuery>> scenarios{
         {"no-match", {"missing", false, true, false}},
         {"few", {"int", false, true, false}},
         {"dense", {"value", false, true, false}},
@@ -225,6 +223,4 @@ void TestFileSearchEngine::test_profile()
         fileMatches += engine.searchFile(file.absoluteFilePath(), {"value", false, true, false}, callbacks);
     qInfo().noquote() << QString("SEARCH_PROFILE scenario=read-and-match ns=%1 files=%2 matches=%3")
                          .arg(filesTimer.nsecsElapsed()).arg(files.size()).arg(fileMatches);
-}
-
 }
