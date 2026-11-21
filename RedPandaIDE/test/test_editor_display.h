@@ -11,6 +11,7 @@ private slots:
     void test_reformat_restores_view_state();
     void test_dnd_undo_restores_caret();
     void test_semantic_highlight_cache_survives_edit_until_parse();
+    void test_open_miniaudio();
     void test_stl_paint_profile();
 };
 

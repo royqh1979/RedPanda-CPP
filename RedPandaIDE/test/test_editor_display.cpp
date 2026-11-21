@@ -450,6 +450,17 @@ void TestEditorDisplay::test_semantic_highlight_cache_survives_edit_until_parse(
     QVERIFY(mEditor->mIdCache.isEmpty());
 }
 
+void TestEditorDisplay::test_open_miniaudio()
+{
+    QString fileName = QFINDTESTDATA("../../libs/qsynedit/test/resources/miniaudio.h");
+    QVERIFY(!fileName.isEmpty());
+    QByteArray encoding;
+    mEditor->setFilename(fileName);
+    mEditor->loadFromFile(fileName, ENCODING_AUTO_DETECT, encoding);
+    mEditor->resize(1200, 800);
+    QVERIFY(!mEditor->grab().isNull());
+}
+
 void TestEditorDisplay::test_stl_paint_profile()
 {
 #ifndef REDPANDA_PARSER_STDLIB_TEST

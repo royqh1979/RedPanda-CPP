@@ -140,7 +140,8 @@ void TodoThread::doParseFile(const QString &filename)
     if (!syntaxer || syntaxer->language() == QSynedit::ProgrammingLanguage::Textfile)
         return;
     QStringList lines;
-    if (!pMainWindow->editorManager()->getContentFromOpenedEditor(filename,lines)) {
+    if (!pMainWindow || !pMainWindow->editorManager()
+            || !pMainWindow->editorManager()->getContentFromOpenedEditor(filename,lines)) {
         lines = readFileToLines(filename);
     }
     syntaxer->resetState();
@@ -159,6 +160,7 @@ void TodoThread::doParseFile(const QString &filename)
                                 pos+syntaxer->getTokenPos(),
                                 lines[i].trimmed()
                                 );
+                    syntaxer->nextToEol();
                     break;
                 }
             }

@@ -19,15 +19,42 @@
 #include "src/mainwindow.h"
 #include "test_widgets.h"
 #include "test_compilersettings.h"
+#include "test_todoparser.h"
 
 MainWindow *pMainWindow = nullptr;
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QString suite = "all";
+    QVector<char *> qtArgs;
+    qtArgs.push_back(argv[0]);
+    for (int i = 1; i < argc; ++i) {
+        const QString arg = QString::fromLocal8Bit(argv[i]);
+        if (arg == "--suite") {
+            if (i + 1 >= argc) {
+                qWarning("--suite requires a name");
+                return 2;
+            }
+            suite = QString::fromLocal8Bit(argv[++i]);
+        } else if (arg.startsWith("--suite=")) {
+            suite = arg.mid(QString("--suite=").size());
+        } else {
+            qtArgs.push_back(argv[i]);
+        }
+    }
+    argc = qtArgs.length();
+    argv = qtArgs.data();
+
+    int status = 0;
     TestWidgets test;
-    int status = QTest::qExec(&test, argc, argv);
+    if (suite == "all" || suite == test.metaObject()->className())
+        status |= QTest::qExec(&test, argc, argv);
     TestCompilerSettings compilerSettingsTest;
-    status |= QTest::qExec(&compilerSettingsTest, argc, argv);
+    if (suite == "all" || suite == compilerSettingsTest.metaObject()->className())
+        status |= QTest::qExec(&compilerSettingsTest, argc, argv);
+    TestTodoParser todoParserTest;
+    if (suite == "all" || suite == todoParserTest.metaObject()->className())
+        status |= QTest::qExec(&todoParserTest, argc, argv);
     return status;
 }

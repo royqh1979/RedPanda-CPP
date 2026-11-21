@@ -74,6 +74,7 @@ signals:
     void todoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void parseFinished();
 private:
+    friend class TestTodoParser;
     void parseFile();
     void parseFiles();
     void doParseFile(const QString& filename);

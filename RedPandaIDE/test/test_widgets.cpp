@@ -62,6 +62,37 @@ EditorManager *MainWindow::editorManager() const
     return nullptr;
 }
 
+bool MainWindow::isClosingAll() const
+{
+    return false;
+}
+
+bool MainWindow::isQuitting() const
+{
+    return false;
+}
+
+bool MainWindow::closingProject() const
+{
+    return false;
+}
+
+void MainWindow::onTodoParseStarted()
+{
+}
+
+void MainWindow::onTodoParsingFile(const QString &)
+{
+}
+
+void MainWindow::onTodoFound(const QString &, int, int, const QString &)
+{
+}
+
+void MainWindow::onTodoParseFinished()
+{
+}
+
 SearchResultModel *MainWindow::searchResultModel()
 {
     return nullptr;
