@@ -27,12 +27,7 @@ class RegexSearcher : public Searcher
 public:
     explicit RegexSearcher(QObject* parent=nullptr);
 
-    // SynSearchBase interface
-public:
-    int length(int index) override;
-    int result(int index) override;
-    int resultCount() override;
-    int findAll(const QString &text) override;
+    QVector<TextMatch> findAll(const QString &text) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
     void setPattern(const QString &value) override;
     void setOptions(const SearchOptions &options) override;
@@ -40,10 +35,7 @@ private:
     void updateRegexOptions();
 private:
     QRegularExpression mRegex;
-    QList<int> mLengths;
-    QList<int> mResults;
 };
-
 }
 
 #endif // SYNSEARCHREGEX_H

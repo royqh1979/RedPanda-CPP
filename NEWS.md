@@ -2,6 +2,8 @@ Red Panda C++ Version 3.6
 
   - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
   - enhancement: Refresh compiler type, version, detected paths, and tool selection when loading or selecting a compiler configuration, while preserving custom settings.
+  - enhancement: Use consistent Unicode-aware whole-word matching and search open buffers in Find in Files without changing editor state.
+  - fix: Correct multi-line and zero-length replacements, and keep Replace All in one Undo group.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - enhancement: Improve compatibility with Clang and libc++ headers.

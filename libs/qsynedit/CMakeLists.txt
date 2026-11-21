@@ -28,7 +28,10 @@ set(QSYNEDIT_QT_PLAIN_CPP
     qsynedit/syntaxer/makefile
     qsynedit/syntaxer/nasm
     qsynedit/syntaxer/syntaxer
-    qsynedit/syntaxer/textfile)
+    qsynedit/syntaxer/textfile
+    # searcher
+    qsynedit/searcher/documentsearchsession
+    qsynedit/searcher/filesearchengine)
 
 set(QSYNEDIT_MOC_CLASSES
     qsynedit/document
@@ -114,6 +117,7 @@ target_moc_classes(test-qsynedit
     test/test_cppsyntaxer
     test/test_textsyntaxer
     test/test_document
+    test/test_filesearchengine
     test/test_qsynedit_base
     test/test_qsynedit_cpp
     test/test_qsynedit_cpp_search_replace

@@ -5,6 +5,7 @@
 #include "test_cppsyntaxer.h"
 #include "test_textsyntaxer.h"
 #include "test_document.h"
+#include "test_filesearchengine.h"
 #include "test_qsynedit_cpp.h"
 #include "test_qsynedit_display.h"
 #include "test_qsynedit_emoji.h"
@@ -77,6 +78,14 @@ int main(int argc, char *argv[]) {
     //QDocument Test
     {
         QSynedit::TestDocument tc;
+        QString className = tc.metaObject()->className();
+        className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    {
+        QSynedit::TestFileSearchEngine tc;
         QString className = tc.metaObject()->className();
         className = className.split("::").last();
         if (suite == className || suite == "all")

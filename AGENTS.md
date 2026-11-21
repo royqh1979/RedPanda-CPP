@@ -121,6 +121,8 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 
 - **Syntaxer profiling**：Release 下设置 `QSYNEDIT_PROFILE_FILE`，直接运行 `test-qsynedit` 的 `TestCppSyntaxer`、`TestASMSyntaxer` 或 `TestTextSyntaxer` 中 `test_profile_file`，例如 `QSYNEDIT_PROFILE_FILE=resources/miniaudio.h ./test-qsynedit.exe --suite=TestCppSyntaxer test_profile_file`（大文件已收入 `libs/qsynedit/test/resources/`，构建时复制到测试目录，也可供后续 QSynEdit 编辑性能检查复用）。文件读取不计时；用例分别跑三轮纯扫描和三轮包含 `getToken()` 的遍历，以 `SYNTAXER_PROFILE` 行输出纳秒、token 数和字符数。短文件可用 `QSYNEDIT_PROFILE_REPEAT=10000` 在计时前展开；未设置文件变量时正常测试自动跳过。
 
+- **Search profiling**：Release 下设置 `QSYNEDIT_SEARCH_PROFILE=1`，直接运行 `test-qsynedit --suite=TestFileSearchEngine test_profile`；输出普通、整词、regex、长行、目录枚举及文件读取匹配的纳秒耗时和匹配数，未设置开关时正常测试自动跳过。
+
 - **STL 单屏绘制 profiling**：`REDPANDA_PARSER_STDLIB_TEST` 也会为 `test-editor` 提供标准库配置。Release 下设置 `REDPANDA_STL_PAINT_PROFILE=1`，直接运行 `test-editor --suite=TestEditorDisplay test_stl_paint_profile`；`REDPANDA_STL_PAINT_PROFILE_REPEAT` 控制采样轮数（默认 9）。测试固定每屏 80 行、关闭 word-wrap，分别输出逐 identifier 表达式提取、整行拆分、statement 求值、求值单元数、冷 paint 及同 revision 热 paint 的纳秒中位数；未设置开关时正常测试自动跳过。
 
 - **Painter self-time profiling**：在上述测试中额外设置 `QSYNEDIT_PAINT_PROFILE=1`，进程结束时以 `PAINTER_SELF` 输出各阶段的累计 self-time（毫秒）和调用次数；嵌套阶段扣除直接子阶段耗时。该数据用于定位热点，最终帧耗时应关闭此开关后测量。

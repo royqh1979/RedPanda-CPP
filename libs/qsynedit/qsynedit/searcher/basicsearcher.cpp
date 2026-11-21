@@ -23,45 +23,22 @@ BasicSearcher::BasicSearcher(QObject *parent):Searcher(parent)
 
 }
 
-int BasicSearcher::length(int index)
+QVector<TextMatch> BasicSearcher::findAll(const QString &text)
 {
-    if (index<0 || index >= mResults.length())
-        return 0;
-    return pattern().length();
-}
-
-int BasicSearcher::result(int index)
-{
-    if (index<0 || index >= mResults.length())
-        return -1;
-    return mResults[index];
-}
-
-int BasicSearcher::resultCount()
-{
-    return mResults.count();
-}
-
-int BasicSearcher::findAll(const QString &text)
-{
-    mResults.clear();
+    QVector<TextMatch> results;
     if (pattern().isEmpty())
-        return 0;
-    int start=0;
-    int next=-1;
+        return results;
+    int start = 0;
+    Qt::CaseSensitivity sensitivity = options().testFlag(ssoMatchCase)
+            ? Qt::CaseSensitive : Qt::CaseInsensitive;
     while (true) {
-        if (options().testFlag(ssoMatchCase)) {
-            next = text.indexOf(pattern(),start,Qt::CaseSensitive);
-        } else {
-            next = text.indexOf(pattern(),start,Qt::CaseInsensitive);
-        }
-        if (next<0) {
+        int next = text.indexOf(pattern(), start, sensitivity);
+        if (next < 0)
             break;
-        }
+        results.append({next, pattern().length()});
         start = next + pattern().length();
-        mResults.append(next);
     }
-    return mResults.size();
+    return results;
 }
 
 QString BasicSearcher::replace(const QString &, const QString &aReplacement)

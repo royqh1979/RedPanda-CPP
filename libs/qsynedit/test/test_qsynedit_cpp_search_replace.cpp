@@ -4686,4 +4686,253 @@ void TestQSyneditCppSearchReplace::test_replace_backward_scope()
     QCOMPARE(newEndPos,CharPos(18,2));
 }
 
+void TestQSyneditCppSearchReplace::test_replace_plain_variants_data()
+{
+    QTest::addColumn<QString>("replacement");
+    QTest::addColumn<QStringList>("expected");
+
+    QTest::newRow("same length") << "b" << QStringList{"b b", "bb"};
+    QTest::newRow("shorter") << "" << QStringList{" ", ""};
+    QTest::newRow("longer") << "long" << QStringList{"long long", "longlong"};
+    QTest::newRow("contains pattern") << "aa" << QStringList{"aa aa", "aaaa"};
+}
+
+void TestQSyneditCppSearchReplace::test_replace_plain_variants()
+{
+    QFETCH(QString, replacement);
+    QFETCH(QStringList, expected);
+
+    mEdit->loadContent({"a a", "aa"});
+    CharPos newScopeEnd;
+    QCOMPARE(mEdit->searchReplace("a", replacement,
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoNone, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 4);
+    QCOMPARE(mEdit->content(), expected);
+    QCOMPARE(newScopeEnd, mEdit->fileEnd());
+}
+
+void TestQSyneditCppSearchReplace::test_replace_regex_captures()
+{
+    mEdit->loadContent({"int value = 12;", "int count = 3;"});
+    CharPos newScopeEnd;
+    QCOMPARE(mEdit->searchReplace("(int) (\\w+) = (\\d+);", "\\2: \\3 (\\1);",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoMatchCase, mRegexSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 2);
+    QStringList expected{"value: 12 (int);", "count: 3 (int);"};
+    QCOMPARE(mEdit->content(), expected);
+    QCOMPARE(newScopeEnd, mEdit->fileEnd());
+}
+
+void TestQSyneditCppSearchReplace::test_replace_unicode()
+{
+    QString oldText = QString::fromUtf8("变量 变量");
+    QString replacement = QString::fromUtf8("值😀");
+    mEdit->loadContent({oldText, QString::fromUtf8("非变量 变量")});
+    CharPos newScopeEnd;
+    QCOMPARE(mEdit->searchReplace(QString::fromUtf8("变量"), replacement,
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoMatchCase, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 4);
+    QCOMPARE(mEdit->content(), QStringList({
+                 replacement + " " + replacement,
+                 QString::fromUtf8("非") + replacement + " " + replacement}));
+    QCOMPARE(newScopeEnd, mEdit->fileEnd());
+}
+
+void TestQSyneditCppSearchReplace::test_replace_multiline()
+{
+    mEdit->loadContent(QStringList{"a a"});
+    CharPos newScopeEnd;
+    QCOMPARE(mEdit->searchReplace("a", "x\ny",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoNone, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 2);
+    QCOMPARE(mEdit->content(), QStringList({"x", "y x", "y"}));
+    QCOMPARE(newScopeEnd, mEdit->fileEnd());
+
+    mEdit->loadContent(QStringList{"a a"});
+    QCOMPARE(mEdit->searchReplace("a", "x\ny",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoBackwards, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 2);
+    QCOMPARE(mEdit->content(), QStringList({"x", "y x", "y"}));
+    QCOMPARE(newScopeEnd, mEdit->fileEnd());
+
+    mEdit->loadContent({"pre a a post", "next"});
+    QCOMPARE(mEdit->searchReplace("a", "x\ny",
+                                  {4, 0}, {7, 0}, newScopeEnd,
+                                  ssoNone, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 2);
+    QCOMPARE(mEdit->content(), QStringList({"pre x", "y x", "y post", "next"}));
+    QCOMPARE(newScopeEnd, CharPos(1, 2));
+}
+
+void TestQSyneditCppSearchReplace::test_replace_zero_length_search_advances()
+{
+    CharPos newScopeEnd;
+    mEdit->loadContent(QStringList{"ab"});
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("x*", "",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoNone, mRegexSearcher.get(),
+                                  mBasicMatchedAndContinueProc, nullptr), 3);
+    QCOMPARE(mFoundPositions, QList<CharPos>({{0, 0}, {1, 0}, {2, 0}}));
+
+    mEdit->setCaretPos(mEdit->fileEnd());
+    clearFounds();
+    QCOMPARE(mEdit->searchReplace("x*", "",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoBackwards, mRegexSearcher.get(),
+                                  mBasicMatchedAndContinueProc, nullptr), 3);
+    QCOMPARE(mFoundPositions, QList<CharPos>({{2, 0}, {1, 0}, {0, 0}}));
+}
+
+void TestQSyneditCppSearchReplace::test_replace_undo_redo_single_group()
+{
+    mEdit->loadContent({"a a", "a"});
+    mEdit->setCaretAndSelection({2, 0}, {0, 0}, {1, 0});
+    CharPos newScopeEnd;
+    auto replaceAll = [](const QString &, const QString &, const CharPos &, int) {
+        return SearchAction::ReplaceAll;
+    };
+    QCOMPARE(mEdit->searchReplace("a", "aa",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoNone, mBasicSearcher.get(),
+                                  replaceAll, nullptr), 3);
+    QStringList replaced = mEdit->content();
+    CharPos replacedCaret = mEdit->caretPos();
+    CharPos replacedSelBegin = mEdit->selBegin();
+    CharPos replacedSelEnd = mEdit->selEnd();
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList({"a a", "a"}));
+    QCOMPARE(mEdit->caretPos(), CharPos(1, 0));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 0));
+    QCOMPARE(mEdit->selEnd(), CharPos(1, 0));
+    QVERIFY(!mEdit->canUndo());
+
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), replaced);
+    QCOMPARE(mEdit->caretPos(), replacedCaret);
+    QCOMPARE(mEdit->selBegin(), replacedSelBegin);
+    QCOMPARE(mEdit->selEnd(), replacedSelEnd);
+}
+
+void TestQSyneditCppSearchReplace::test_replace_read_only()
+{
+    mEdit->loadContent(QStringList{"a a"});
+    mEdit->setReadOnly(true);
+    mEdit->setCaretPos({1, 0});
+    CharPos newScopeEnd;
+    QCOMPARE(mEdit->searchReplace("a", "b",
+                                  mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                  ssoNone, mBasicSearcher.get(),
+                                  mReplaceAndContinueProc, nullptr), 2);
+    QCOMPARE(mEdit->content(), QStringList({"a a"}));
+    QCOMPARE(newScopeEnd, CharPos(3, 0));
+    mEdit->setReadOnly(false);
+}
+
+void TestQSyneditCppSearchReplace::test_replace_selective_then_replace_all()
+{
+    auto run = [this](SearchOptions options, const QStringList &expected) {
+        mEdit->loadContent({"a a a", "a a"});
+        int callbackCalls = 0;
+        auto callback = [&callbackCalls](const QString &, const QString &,
+                const CharPos &, int) {
+            callbackCalls++;
+            if (callbackCalls == 1)
+                return SearchAction::Skip;
+            if (callbackCalls == 2)
+                return SearchAction::Replace;
+            return SearchAction::ReplaceAll;
+        };
+        CharPos newScopeEnd;
+        QCOMPARE(mEdit->searchReplace("a", "b",
+                                      mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                      options, mBasicSearcher.get(), callback, nullptr), 5);
+        QCOMPARE(callbackCalls, 3);
+        QCOMPARE(mEdit->content(), expected);
+        QCOMPARE(newScopeEnd, mEdit->fileEnd());
+    };
+
+    run(ssoNone, {"a b b", "b b"});
+    run(ssoBackwards, {"b b b", "b a"});
+}
+
+void TestQSyneditCppSearchReplace::test_whole_word_unicode_boundaries()
+{
+    auto check = [this](const QStringList &lines, const QString &pattern,
+            const QList<CharPos> &expected) {
+        mEdit->loadContent(lines);
+        clearFounds();
+        CharPos newScopeEnd;
+        QCOMPARE(mEdit->searchReplace(pattern, "",
+                                      mEdit->fileBegin(), mEdit->fileEnd(), newScopeEnd,
+                                      ssoWholeWord | ssoMatchCase, mBasicSearcher.get(),
+                                      mBasicMatchedAndContinueProc, nullptr),
+                 expected.size());
+        QCOMPARE(mFoundPositions, expected);
+    };
+
+    check({"int intx xint _int int_ (int)"}, "int",
+          {{0, 0}, {25, 0}});
+    check({QString::fromUtf8("变量 非变量 变量1 变量_ （变量）")},
+          QString::fromUtf8("变量"), {{0, 0}, {16, 0}});
+    check({"e\u0301 e"}, "e", {{3, 0}});
+    check({QString::fromUtf8("😀int😀")}, "int", {{2, 0}});
+    check({QString::fromUtf8("𐐀int")}, "int", {});
+    check({"// int", "\"int\"", "int"}, "int",
+          {{3, 0}, {1, 1}, {0, 2}});
+    check({"hello world xhello world hello world2"}, "hello world", {{0, 0}});
+}
+
+void TestQSyneditCppSearchReplace::test_document_search_session_wrap_and_stale_match()
+{
+    mEdit->loadContent(QStringList{"a b a"});
+    DocumentSearchSession session(
+                mEdit->document(), {"a", false, true, false},
+                {mEdit->fileBegin(), mEdit->fileEnd()});
+    auto match = session.findNext({5, 0}, SearchDirection::Forward, WrapMode::Once);
+    QVERIFY(match);
+    QCOMPARE(match->start, CharPos(0, 0));
+    match = session.findNext({0, 0}, SearchDirection::Backward, WrapMode::Once);
+    QVERIFY(match);
+    QCOMPARE(match->start, CharPos(4, 0));
+
+    match = session.findNext({0, 0}, SearchDirection::Forward);
+    QVERIFY(match);
+    mEdit->replaceLine(0, "changed");
+    QVERIFY(!mEdit->replaceMatch(*match, "new"));
+    QCOMPARE(mEdit->content(), QStringList({"changed"}));
+}
+
+void TestQSyneditCppSearchReplace::test_replace_all_session()
+{
+    mEdit->loadContent({"a a", "aa"});
+    DocumentSearchSession session(
+                mEdit->document(), {"a", false, true, false},
+                {mEdit->fileBegin(), mEdit->fileEnd()});
+    QCOMPARE(mEdit->replaceAll(session, "b"), 4);
+    QCOMPARE(mEdit->content(), QStringList({"b b", "bb"}));
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList({"a a", "aa"}));
+
+    mEdit->loadContent(QStringList{"ab"});
+    DocumentSearchSession zeroSession(
+                mEdit->document(), {"x*", true, true, false},
+                {mEdit->fileBegin(), mEdit->fileEnd()});
+    QCOMPARE(mEdit->replaceAll(zeroSession, "X"), 3);
+    QCOMPARE(mEdit->content(), QStringList({"XaXbX"}));
+
+    mEdit->loadContent(QStringList{"a a"});
+    DocumentSearchSession multilineSession(
+                mEdit->document(), {"a", false, true, false},
+                {mEdit->fileBegin(), mEdit->fileEnd()});
+    QCOMPARE(mEdit->replaceAll(multilineSession, "x\ny"), 2);
+    QCOMPARE(mEdit->content(), QStringList({"x", "y x", "y"}));
+}
+
 }

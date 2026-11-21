@@ -18,6 +18,7 @@
 #define SYNSEARCHBASE_H
 
 #include <QObject>
+#include <QVector>
 #include <memory>
 
 namespace QSynedit {
@@ -35,6 +36,11 @@ enum SearchOption {
 Q_DECLARE_FLAGS(SearchOptions, SearchOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SearchOptions)
 
+struct TextMatch {
+    int ch;
+    int length;
+};
+
 class Searcher : public QObject
 {
     Q_OBJECT
@@ -42,15 +48,10 @@ public:
     explicit Searcher(QObject *parent = nullptr);
     QString pattern();
     virtual void setPattern(const QString& value);
-    virtual int length(int index) = 0;
-    virtual int result(int index) = 0;
-    virtual int resultCount() = 0;
-    virtual int findAll(const QString& text) = 0;
+    virtual QVector<TextMatch> findAll(const QString& text) = 0;
     virtual QString replace(const QString& aOccurrence, const QString& aReplacement) = 0;
     SearchOptions options() const;
     virtual void setOptions(const SearchOptions &options);
-protected:
-    bool isDelimitChar(const QChar& ch) const;
 
 private:
     QString mPattern;
