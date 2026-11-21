@@ -38,7 +38,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）、`qsynedit-incremental-layout-design.md`（增量布局与 max width 更新设计）、`qsynedit-fold-editing-design.md`（折叠显示、光标与编辑规则设计）、`qsynedit-edit-performance-report.md`（Document 与 Document+View 编辑性能热点和优化建议）、`qsynedit-edit-performance-baseline.md`（编辑性能完整基线）、`qsynedit-edit-performance-tools.md`（编辑 profile 配套脚本与使用方法）。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）、`qsynedit-incremental-layout-design.md`（增量布局与 max width 更新设计）、`qsynedit-fold-editing-design.md`（折叠显示、光标与编辑规则设计）、`qsynedit-edit-performance-report.md`（Document 与 Document+View 编辑性能热点和优化建议）、`qsynedit-edit-performance-baseline.md`（编辑性能完整基线）、`qsynedit-edit-performance-tools.md`（编辑 profile 配套脚本与使用方法）、`qsynedit-pending-layout-incremental-design.md`（pending 行集合增量维护设计）和 `qsynedit-pending-layout-incremental-result.md`（pending 调度优化实施与收益结果）。
 
 ## 构建
 
@@ -195,6 +195,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
 - **代码注释和 git 提交信息一律使用英文**（设计文档语言随已有文档）。
 - **修复 bug 后先报告、确认后提交**：定位并修复问题后，先把发现的问题、根因与修复方案报告给用户，得到确认后再提交；不得修复后直接提交。
 - 大的计划性改动（多批次重构/新功能）**必须在独立分支上进行**，不要直接在 master 上工作。
+- **性能优化必须逐项实施，并为每一项遵循完整流程**：先建独立分支；编写设计文档；按 KISS 原则审核设计并仔细评估修改范围；检查现有测试覆盖并先完善测试保护；严格控制范围编码实施；执行专项测试和 Release→Debug 全量回归；使用相同场景做优化前后 profile 收益评估；审核差异并迭代；编写实施结果总结文档；最后用英文提交信息提交。同一问题存在多个值得验证的改进方案时，必须分别建分支试验，再依据正确性、复杂度、风险和实测收益综合比较，不得只凭推测选择。合并和推送仍须用户另行明确授权。
 - 分支合并回 master 前**必须先询问用户**，得到确认后再合并；不得擅自 push。
 - `BUILD.md`（以及 `BUILD_cn.md`/`BUILD_ru.md`）是权威的构建参考——在自创构建步骤之前请先参考它。
 - `NEWS.md` 是更新日志；查询功能历史时可参考。

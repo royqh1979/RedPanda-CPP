@@ -2485,6 +2485,84 @@ void TestQSyneditDisplay::test_wrap_job_only_computes_pending_lines()
     QVERIFY(batches.constLast().finished);
 }
 
+void TestQSyneditDisplay::test_wrap_missing_seqs_incremental_tracking()
+{
+    auto expectCacheMissingInvariant = [&] {
+        for (int line = 0; line < mEdit->lineCount(); ++line) {
+            size_t seq = mEdit->document()->getLineSeq(line);
+            QCOMPARE(mEdit->mWrapMissingSeqs.contains(seq),
+                     !mEdit->mWrapLayouts.contains(seq));
+        }
+    };
+
+    mEdit->loadContent(makeLines(6));
+    drainLayoutJobs();
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+
+    mEdit->properSetLine(1, "changed", true);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QVERIFY(mEdit->mWrapAllComputed);
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+
+    mEdit->properInsertLine(1, "single", true);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+
+    mEdit->properInsertLines(1, 3, true);
+    QSet<size_t> insertedSeqs;
+    for (int line = 1; line <= 3; ++line)
+        insertedSeqs.insert(mEdit->document()->getLineSeq(line));
+    QCOMPARE(mEdit->mWrapMissingSeqs, insertedSeqs);
+    expectCacheMissingInvariant();
+    drainLayoutJobs();
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+
+    size_t deletedSeq = mEdit->document()->getLineSeq(1);
+    size_t remainingSeq = mEdit->document()->getLineSeq(2);
+    mEdit->mWrapLayouts.remove(deletedSeq);
+    mEdit->mWrapLayouts.remove(remainingSeq);
+    mEdit->mWrapMissingSeqs = {deletedSeq, remainingSeq};
+    mEdit->mWrapAllComputed = false;
+    mEdit->properDeleteLines(1, 1, true);
+    QVERIFY(!mEdit->mWrapMissingSeqs.contains(deletedSeq));
+    QCOMPARE(mEdit->mWrapMissingSeqs, QSet<size_t>{remainingSeq});
+    expectCacheMissingInvariant();
+    drainLayoutJobs();
+    QVERIFY(mEdit->mWrapLayouts.contains(remainingSeq));
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+
+    size_t movedSeq = mEdit->document()->getLineSeq(1);
+    mEdit->properMoveLine(1, 3, true);
+    QVERIFY(mEdit->mWrapLayouts.contains(movedSeq));
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectRowMapping();
+
+    mEdit->invalidateAllLineMetrics();
+    QVERIFY(!mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+    drainLayoutJobs();
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    expectCacheMissingInvariant();
+    expectRowMapping();
+}
+
+void TestQSyneditDisplay::test_wrap_schedule_without_missing_lines()
+{
+    mEdit->loadContent(makeLines(3));
+    drainLayoutJobs();
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+
+    mEdit->mWrapAllComputed = false;
+    mEdit->scheduleWrapLayoutJob();
+    QVERIFY(mEdit->mWrapAllComputed);
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+}
+
 void TestQSyneditDisplay::test_single_line_edit_indexes_without_job()
 {
     QSynedit::EditorOptions options = mEdit->getOptions();

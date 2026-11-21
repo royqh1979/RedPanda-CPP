@@ -86,6 +86,8 @@ private slots:
     void test_fold_shift_maintenance();
     void test_wrap_job_early_abort();
     void test_wrap_job_only_computes_pending_lines();
+    void test_wrap_missing_seqs_incremental_tracking();
+    void test_wrap_schedule_without_missing_lines();
     void test_single_line_edit_indexes_without_job();
 #ifdef QSYNEDIT_PROFILE_TESTS
     void test_miniaudio_single_line_edit_profile();

@@ -26,6 +26,7 @@ Red Panda C++ Version 3.6
   - fix: Avoid treating type-less function calls as declarations while preserving constructors and deduction guides.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
+  - enhancement: Avoid full-document pending-layout scans when scheduling editor layout work.
   - enhancement: Improve compatibility with Clang and libc++ headers.
   - enhancement: Evaluate C++20 constraints lazily when resolving functions and templates.
   - fix: Correctly parse anonymous struct/enum definitions used by typedefs or variable declarations, with unique internal type names.

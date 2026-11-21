@@ -43,11 +43,11 @@
 
 ### 待计算集合
 
-每次 `scheduleWrapLayoutJob()` 生成 `pendingSeqs`，只包含 Document 中存在、但 `mWrapLayouts` 中不存在的行 seq。
+`mWrapMissingSeqs` 增量记录当前 Document 中缺少有效 layout 的行 seq。全局失效时一次建立全集；Insert 只登记尚无缓存的新行，SetLine 在删除旧缓存时登记，同步或后台写入有效缓存时移除，Delete 清理已不存在的 seq。`scheduleWrapLayoutJob()` 直接复制该集合作为 `pendingSeqs`，不再逐行扫描 Document。
 
-`mWrapDirtySeqs` 不直接进入待计算集合。现有 `SetLine` 已经同步重算修改行并写入有效缓存；dirty 集合继续只负责拒绝更早任务返回的过期结果，不能据此再算一次。
+`mWrapDirtySeqs` 不直接进入待计算集合。现有 `SetLine` 已经同步重算修改行并写入有效缓存；dirty 集合继续只负责拒绝更早任务返回的过期结果，不能据此再算一次。`mWrapAllComputed` 由 missing 是否为空决定。
 
-已删除行不加入集合。初次加载或全局失效时缓存为空，因此 `pendingSeqs` 自然覆盖全部行，不需要单独的全量算法。普通 SetLine 后若没有其它缺失行，集合为空，不创建新 Job。
+初次加载或全局失效时集合覆盖所有未布局行，普通 SetLine 后若没有其它缺失行则集合为空，不创建新 Job。
 
 ### Job 接口
 

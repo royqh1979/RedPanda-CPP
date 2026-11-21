@@ -22,6 +22,7 @@
 #include <QDateTime>
 #include <QFrame>
 #include <QColor>
+#include <QSet>
 #include <QVector>
 #include <QStringList>
 #include <QTimer>
@@ -958,6 +959,9 @@ private:
     int mWrapGeneration = 0;
     int mWrapContentVersion = 0;
     QHash<size_t, int> mWrapDirtySeqs;
+    // existing lines without a valid layout; scheduling consumes this set
+    // directly instead of rescanning the document
+    mutable QSet<size_t> mWrapMissingSeqs;
     mutable bool mWrapAllComputed = false;
     mutable size_t mMaxLineWidthSeq = 0;  // 0 = longest line unknown
     // set when the max was adopted from a partial (still computing) cache:

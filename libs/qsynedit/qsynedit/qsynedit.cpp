@@ -256,6 +256,7 @@ const WrapLayout &QSynEdit::wrapLayout(int line) const
         return it.value();
     WrapLayout layout = computeWrapLayout(line);
     auto inserted = mWrapLayouts.insert(seq, layout);
+    mWrapMissingSeqs.remove(seq);
     // keep the row index's estimate in sync with the exact layout. Guard:
     // mid-batch this may compute a line the index does not have yet (it is
     // only synced in the contentChanged slot, which restores such cached
@@ -466,12 +467,7 @@ void QSynEdit::scheduleWrapLayoutJob() const
         mWrapAllComputed = true;
         return;
     }
-    QSet<size_t> pendingSeqs;
-    for (int line = 0; line < mDocument->count(); ++line) {
-        size_t seq = mDocument->getLineSeq(line);
-        if (!mWrapLayouts.contains(seq))
-            pendingSeqs.insert(seq);
-    }
+    QSet<size_t> pendingSeqs = mWrapMissingSeqs;
     if (pendingSeqs.isEmpty()) {
         mWrapAllComputed = true;
         if (mMaxLineWidthMaybeStale)
@@ -528,6 +524,7 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
             mWrapLayouts.insert(seq, it.value());
             noteLineWidthKnown(seq, it->totalWidth);
         }
+        mWrapMissingSeqs.remove(seq);
         if (dirty != mWrapDirtySeqs.constEnd())
             mWrapDirtySeqs.erase(dirty);
         // point-update the row index with the refined segment count; the
@@ -560,7 +557,7 @@ void QSynEdit::onWrapLayoutBatch(const WrapLayoutBatch &batch)
             else
                 ++it;
         }
-        mWrapAllComputed = mWrapDirtySeqs.isEmpty();
+        mWrapAllComputed = mWrapMissingSeqs.isEmpty();
         updateVScrollbar();
         if (!mWrapAllComputed) {
             scheduleWrapLayoutJob();
@@ -1398,6 +1395,9 @@ int QSynEdit::spaceWidth() const
 void QSynEdit::invalidateAllLineMetrics()
 {
     mWrapLayouts.clear();
+    mWrapMissingSeqs.clear();
+    for (int line = 0; line < mDocument->count(); ++line)
+        mWrapMissingSeqs.insert(mDocument->getLineSeq(line));
     mWrapGeneration++;
     mWrapDirtySeqs.clear();
     mWrapAllComputed = false;
@@ -8333,6 +8333,11 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             // the row index mirrors the document's structure (new lines
             // get the 1-segment estimate and are visible)
             mRowIndex.insertLines(change.line, change.count);
+            for (int i = change.line; i < change.line + change.count; ++i) {
+                size_t seq = mDocument->getLineSeq(i);
+                if (!mWrapLayouts.contains(seq))
+                    mWrapMissingSeqs.insert(seq);
+            }
             mWrapAllComputed = false;
             if (change.count == 1) {
                 mRowIndex.setSegCount(change.line, wrapSegmentCount(change.line));
@@ -8367,6 +8372,12 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             // seqs of deleted lines die with them; their cached metrics are
             // unreachable (seqs are never reused) and get purged lazily
             compactLineMetrics();
+            for (auto it = mWrapMissingSeqs.begin(); it != mWrapMissingSeqs.end();) {
+                if (!mDocument->findLineBySeq(*it))
+                    it = mWrapMissingSeqs.erase(it);
+                else
+                    ++it;
+            }
             break;
         case DocumentChangeKind::Move:
             processFoldsOnLineMoved(change.line, change.count);
@@ -8392,6 +8403,7 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
                     noteMaxLineWidthDirty();
                 }
                 mWrapLayouts.remove(seq);
+                mWrapMissingSeqs.insert(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;
                 // force an immediate synchronous relayout of the edited
