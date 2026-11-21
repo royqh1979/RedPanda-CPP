@@ -26,8 +26,10 @@ TokenInfoList parseLine(QSynedit::Syntaxer *syntaxer,
 
 QList<TokenInfoList> parseLines(QSynedit::Syntaxer *syntaxer,
                                  const QStringList &text);
+#ifdef QSYNEDIT_PROFILE_TESTS
 void profileSyntaxerFile(QSynedit::Syntaxer *syntaxer, const QString &fileName,
                          const QString &syntaxerName);
+#endif
 
 QStringList filterTokens(const QList<TokenInfoList> &infoList,
                             const std::unordered_set<QSynedit::PTokenAttribute> &targetAttributes);

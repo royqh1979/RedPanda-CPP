@@ -476,6 +476,7 @@ void TestCppSyntaxer::test_directives_and_identifier_classification()
     QCOMPARE(lines[5][2]->attribute, mSyntaxer.identifierAttribute());
 }
 
+#ifdef QSYNEDIT_PROFILE_TESTS
 void TestCppSyntaxer::test_profile_file()
 {
     QString fileName = qEnvironmentVariable("QSYNEDIT_PROFILE_FILE");
@@ -483,6 +484,7 @@ void TestCppSyntaxer::test_profile_file()
         QSKIP("Set QSYNEDIT_PROFILE_FILE to run syntaxer profiling");
     profileSyntaxerFile(&mSyntaxer, fileName, "cpp");
 }
+#endif
 
 void TestCppSyntaxer::test_create_instance_copies_settings()
 {

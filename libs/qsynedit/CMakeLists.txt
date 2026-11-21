@@ -165,6 +165,11 @@ target_compile_definitions(test-qsynedit PRIVATE
     ARCH_X86_64=1
     ARCH_X86=1)
 
+option(QSYNEDIT_BUILD_PROFILE_TESTS "Compile QSynEdit profiling tests" OFF)
+if (QSYNEDIT_BUILD_PROFILE_TESTS)
+    target_compile_definitions(test-qsynedit PRIVATE QSYNEDIT_PROFILE_TESTS)
+    target_moc_classes(test-qsynedit test/test_document_profile)
+endif()
 
 if (CMAKE_HOST_LINUX AND CMAKE_COMPILER_IS_GNUCXX)
     target_compile_options(test-qsynedit PRIVATE "-fsanitize=undefined" "-fno-omit-frame-pointer")

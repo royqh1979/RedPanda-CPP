@@ -150,6 +150,7 @@ void TestASMSyntaxer::test_gas_state_restoration_and_clone()
     QVERIFY(syntaxer.prefixRegisterNames());
 }
 
+#ifdef QSYNEDIT_PROFILE_TESTS
 void TestASMSyntaxer::test_profile_file()
 {
     QString fileName = qEnvironmentVariable("QSYNEDIT_PROFILE_FILE");
@@ -158,3 +159,4 @@ void TestASMSyntaxer::test_profile_file()
     QSynedit::GASSyntaxer syntaxer;
     profileSyntaxerFile(&syntaxer, fileName, "gas");
 }
+#endif

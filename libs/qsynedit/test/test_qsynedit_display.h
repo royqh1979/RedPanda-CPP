@@ -87,7 +87,12 @@ private slots:
     void test_wrap_job_early_abort();
     void test_wrap_job_only_computes_pending_lines();
     void test_single_line_edit_indexes_without_job();
+#ifdef QSYNEDIT_PROFILE_TESTS
     void test_miniaudio_single_line_edit_profile();
+    void test_miniaudio_edit_profile_data();
+    void test_miniaudio_edit_profile();
+    void test_miniaudio_view_overhead_profile();
+#endif
     void test_multi_line_edit_indexes();
     void test_max_width_notifications();
     void test_shared_document_edit_indexes();

@@ -45,6 +45,7 @@ QList<TokenInfoList> parseLines(QSynedit::Syntaxer *syntaxer, const QStringList 
     return result;
 }
 
+#ifdef QSYNEDIT_PROFILE_TESTS
 void profileSyntaxerFile(QSynedit::Syntaxer *syntaxer, const QString &fileName,
                          const QString &syntaxerName)
 {
@@ -88,6 +89,7 @@ void profileSyntaxerFile(QSynedit::Syntaxer *syntaxer, const QString &fileName,
         }
     }
 }
+#endif
 
 
 QStringList filterTokens(const QList<TokenInfoList> &infoList, const std::unordered_set<QSynedit::PTokenAttribute> &targetAttributes)

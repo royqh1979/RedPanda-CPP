@@ -9,6 +9,8 @@
 #include <QDropEvent>
 #include <QInputMethodEvent>
 #include <QElapsedTimer>
+#include <QFile>
+#include <climits>
 
 #include "test_qsynedit_display.h"
 #include "test_utils.h"
@@ -2525,6 +2527,7 @@ void TestQSyneditDisplay::test_single_line_edit_indexes_without_job()
     mEdit->setOptions(options);
 }
 
+#ifdef QSYNEDIT_PROFILE_TESTS
 void TestQSyneditDisplay::test_miniaudio_single_line_edit_profile()
 {
     if (qEnvironmentVariable("QSYNEDIT_INCREMENTAL_LAYOUT_PROFILE") != "1")
@@ -2549,6 +2552,227 @@ void TestQSyneditDisplay::test_miniaudio_single_line_edit_profile()
     qInfo().noquote() << QString("INCREMENTAL_LAYOUT_PROFILE edits=20 ns=%1 lines=%2")
                          .arg(timer.nsecsElapsed()).arg(mEdit->lineCount());
 }
+
+void TestQSyneditDisplay::test_miniaudio_edit_profile_data()
+{
+    QTest::addColumn<QString>("operation");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<bool>("foldBoundary");
+    QTest::addColumn<QString>("position");
+
+    const QStringList operations{"modify", "insert", "delete", "replace", "move"};
+    const QList<int> counts{1, 10, 100, 1000, 10000};
+    for (const QString &operation : operations) {
+        for (int count : counts) {
+            for (bool foldBoundary : {false, true}) {
+                QString name = QStringLiteral("%1_%2_%3_middle")
+                        .arg(operation).arg(count)
+                        .arg(foldBoundary ? QStringLiteral("fold") : QStringLiteral("plain"));
+                QTest::newRow(name.toUtf8().constData())
+                        << operation << count << foldBoundary << QStringLiteral("middle");
+            }
+        }
+    }
+    for (int count : {1, 1000}) {
+        for (const QString &position : {QStringLiteral("begin"), QStringLiteral("end")}) {
+            for (bool foldBoundary : {false, true}) {
+                QString name = QStringLiteral("modify_%1_%2_%3")
+                        .arg(count).arg(foldBoundary ? QStringLiteral("fold") : QStringLiteral("plain"), position);
+                QTest::newRow(name.toUtf8().constData())
+                        << QStringLiteral("modify") << count << foldBoundary << position;
+            }
+        }
+    }
+}
+
+void TestQSyneditDisplay::test_miniaudio_edit_profile()
+{
+    if (qEnvironmentVariable("QSYNEDIT_EDIT_PROFILE") != "1")
+        QSKIP("Set QSYNEDIT_EDIT_PROFILE=1 to run view edit profiling");
+    QFETCH(QString, operation);
+    QFETCH(int, count);
+    QFETCH(bool, foldBoundary);
+    QFETCH(QString, position);
+
+    static const QStringList sourceLines = [] {
+        QFile file("resources/miniaudio.h");
+        if (!file.open(QIODevice::ReadOnly))
+            return QStringList();
+        return QString::fromUtf8(file.readAll()).split('\n', Qt::KeepEmptyParts);
+    }();
+    QVERIFY(sourceLines.count() > 20000);
+    bool repeatValid = false;
+    int repeats = qEnvironmentVariableIntValue("QSYNEDIT_EDIT_PROFILE_REPEAT", &repeatValid);
+    if (!repeatValid || repeats <= 0)
+        repeats = 3;
+
+    auto profileLine = [](bool fold, int index) {
+        QString suffix = fold ? (index % 2 == 0 ? QStringLiteral("{") : QStringLiteral("}"))
+                              : QStringLiteral(" ");
+        return QStringLiteral("static int red_panda_profile_value = 1; ") + suffix;
+    };
+    auto replaceLines = [&](int startLine, int lineCount, bool fold) {
+        mEdit->document()->beginUpdate();
+        for (int i = 0; i < lineCount; ++i) {
+            mEdit->properSetLine(startLine + i,
+                                 fold ? profileLine(true, i)
+                                      : QStringLiteral("static int red_panda_profile_value = 0;  "),
+                                 i == lineCount - 1);
+        }
+        mEdit->document()->endUpdate();
+    };
+    auto applyEdit = [&](int startLine) {
+        mEdit->document()->beginUpdate();
+        if (operation == QStringLiteral("modify")) {
+            for (int i = 0; i < count; ++i) {
+                mEdit->properSetLine(startLine + i, profileLine(foldBoundary, i),
+                                     i == count - 1);
+            }
+        } else if (operation == QStringLiteral("insert")) {
+            mEdit->properInsertLines(startLine, count, false);
+            for (int i = 0; i < count; ++i) {
+                mEdit->properSetLine(startLine + i, profileLine(foldBoundary, i),
+                                     i == count - 1);
+            }
+        } else if (operation == QStringLiteral("move")) {
+            for (int i = count - 1; i >= 0; --i) {
+                mEdit->properMoveLine(startLine + i, startLine + i + 100, i == 0);
+            }
+        } else if (operation == QStringLiteral("delete")) {
+            mEdit->properDeleteLines(startLine, count, true);
+        } else if (operation == QStringLiteral("replace")) {
+            mEdit->properDeleteLines(startLine, count, false);
+            mEdit->properInsertLines(startLine, count, false);
+            for (int i = 0; i < count; ++i) {
+                mEdit->properSetLine(startLine + i, profileLine(foldBoundary, i),
+                                     i == count - 1);
+            }
+        } else {
+            Q_ASSERT(false);
+        }
+        mEdit->document()->endUpdate();
+    };
+
+    EditorOptions options = mEdit->getOptions();
+    const EditorOptions oldOptions = options;
+    options.setFlag(EditorOption::WordWrap, false);
+    mEdit->setOptions(options);
+    const bool oldFoldingEnabled = mEdit->useCodeFolding();
+    bool foldingEnabled = qEnvironmentVariable("QSYNEDIT_EDIT_PROFILE_FOLDING") != "0";
+    mEdit->setUseCodeFolding(foldingEnabled);
+    mEdit->show();
+    for (int sample = 0; sample < repeats; ++sample) {
+        mEdit->loadContent(sourceLines);
+        drainLayoutJobs();
+        int lastStart = qMax(0, mEdit->lineCount() - count - 1);
+        int startLine = qMin((mEdit->lineCount() - count) / 2, lastStart);
+        if (position == QStringLiteral("begin"))
+            startLine = qMin(1000, lastStart);
+        else if (position == QStringLiteral("end"))
+            startLine = qMax(0, mEdit->lineCount() - count - 1000);
+        auto startSyntaxer = mEdit->document()->createSyntaxerInstance();
+        while (startLine > 0 && startLine < lastStart) {
+            PSyntaxState state = mEdit->document()->getSyntaxState(startLine - 1);
+            if (!state || (!startSyntaxer->isCommentNotFinished(state)
+                           && !startSyntaxer->isStringNotFinished(state)))
+                break;
+            ++startLine;
+        }
+        if (operation != QStringLiteral("insert")) {
+            bool prepareFold = (operation == QStringLiteral("delete")
+                                || operation == QStringLiteral("move")) && foldBoundary;
+            replaceLines(startLine, count, prepareFold);
+            drainLayoutJobs();
+        }
+
+        QObject context;
+        int reparsedLines = 0;
+        int changeEntries = 0;
+        int changedLines = 0;
+        int foldRescans = 0;
+        bool foldStateDirty = false;
+        auto document = mEdit->document();
+        connect(document.get(), &Document::linesReparsed, &context,
+                [&](int firstLine, int endLine) {
+            int boundedEnd = endLine == INT_MAX ? document->count()
+                                                : qMin(endLine, document->count());
+            reparsedLines += qMax(0, boundedEnd - firstLine);
+        });
+        connect(document.get(), &Document::contentChanged, &context,
+                [&](const DocumentChangeSet &changes, bool dirty, int, bool) {
+            changeEntries += changes.count();
+            for (const DocumentChange &change : changes)
+                changedLines += change.kind == DocumentChangeKind::Move ? 1 : change.count;
+            foldStateDirty = foldStateDirty || dirty;
+        });
+        connect(mEdit.get(), &QSynEdit::foldsRescaned, &context, [&] {
+            ++foldRescans;
+        });
+
+        int oldLineCount = mEdit->lineCount();
+        QElapsedTimer timer;
+        timer.start();
+        applyEdit(startLine);
+        qint64 syncElapsed = timer.nsecsElapsed();
+        while ((!mEdit->mWrapAllComputed || mEdit->mWrapJobState->jobsInFlight != 0)
+               && timer.nsecsElapsed() < 120000000000LL) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+        }
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+        qint64 totalElapsed = timer.nsecsElapsed();
+        QVERIFY(mEdit->mWrapAllComputed);
+        QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+
+        int expectedLineCount = oldLineCount;
+        if (operation == QStringLiteral("insert"))
+            expectedLineCount += count;
+        else if (operation == QStringLiteral("delete"))
+            expectedLineCount -= count;
+        QCOMPARE(mEdit->lineCount(), expectedLineCount);
+        QVERIFY(reparsedLines > 0);
+        QCOMPARE(foldStateDirty, foldBoundary);
+
+        qInfo().noquote() << QStringLiteral(
+                    "VIEW_EDIT_PROFILE,%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13")
+                .arg(operation).arg(count)
+                .arg(foldBoundary ? QStringLiteral("fold") : QStringLiteral("plain"), position)
+                .arg(sample).arg(syncElapsed).arg(totalElapsed).arg(reparsedLines)
+                .arg(changeEntries).arg(changedLines).arg(foldStateDirty ? 1 : 0)
+                .arg(foldRescans).arg(foldingEnabled ? 1 : 0);
+    }
+    mEdit->hide();
+    mEdit->setOptions(oldOptions);
+    mEdit->setUseCodeFolding(oldFoldingEnabled);
+}
+
+void TestQSyneditDisplay::test_miniaudio_view_overhead_profile()
+{
+    if (qEnvironmentVariable("QSYNEDIT_EDIT_PROFILE") != "1")
+        QSKIP("Set QSYNEDIT_EDIT_PROFILE=1 to run view overhead profiling");
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/miniaudio.h", ENCODING_AUTO_DETECT, encoding);
+    drainLayoutJobs();
+    for (int sample = 0; sample < 5; ++sample) {
+        mEdit->mWrapAllComputed = false;
+        QElapsedTimer timer;
+        timer.start();
+        mEdit->scheduleWrapLayoutJob();
+        qint64 elapsed = timer.nsecsElapsed();
+        QVERIFY(mEdit->mWrapAllComputed);
+        QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+        qInfo().noquote() << QStringLiteral("VIEW_OVERHEAD_PROFILE,schedule_pending,%1,%2,%3")
+                .arg(mEdit->lineCount()).arg(sample).arg(elapsed);
+    }
+    for (int sample = 0; sample < 5; ++sample) {
+        QElapsedTimer timer;
+        timer.start();
+        mEdit->syncFoldVisibility();
+        qint64 elapsed = timer.nsecsElapsed();
+        qInfo().noquote() << QStringLiteral("VIEW_OVERHEAD_PROFILE,sync_fold_visibility,%1,%2,%3")
+                .arg(mEdit->lineCount()).arg(sample).arg(elapsed);
+    }
+}
+#endif
 
 void TestQSyneditDisplay::test_multi_line_edit_indexes()
 {

@@ -29,7 +29,9 @@ private slots:
     void test_trailing_spaces();
     void test_gas_directive_mode_and_prefix();
     void test_gas_state_restoration_and_clone();
+#ifdef QSYNEDIT_PROFILE_TESTS
     void test_profile_file();
+#endif
 };
 
 #endif // TEST_ASMSYNTAXER_H

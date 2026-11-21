@@ -38,7 +38,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）、`qsynedit-incremental-layout-design.md`（增量布局与 max width 更新设计）、`qsynedit-fold-editing-design.md`（折叠显示、光标与编辑规则设计）。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）、`qsynedit-incremental-layout-design.md`（增量布局与 max width 更新设计）、`qsynedit-fold-editing-design.md`（折叠显示、光标与编辑规则设计）、`qsynedit-edit-performance-report.md`（Document 与 Document+View 编辑性能热点和优化建议）、`qsynedit-edit-performance-baseline.md`（编辑性能完整基线）、`qsynedit-edit-performance-tools.md`（编辑 profile 配套脚本与使用方法）。
 
 ## 构建
 
@@ -68,6 +68,7 @@ xmake
 - `WINDOWS_PREFER_OPENCONSOLE` — Windows 上优先使用 OpenConsole.exe。
 - `REDPANDA_PARSER_STDLIB_TEST`（默认 OFF）— 启用标准库 Parser 验收测试；需同时把 `REDPANDA_PARSER_STDLIB_MINGW_ROOT` 设为工具链根目录。本机 GCC 15.3 使用 `D:/mingw`；Clang 23.1.5 + libc++ 使用 `E:/workspaces/contributes/mingw/llvm-mingw-20261104-ucrt-x86_64`。运行时可用 `REDPANDA_PARSER_TEST_CXX_STANDARD` 指定实际编译器的 `-std=` 参数（默认 `c++17`）；测试根据 Parser 从 `__cplusplus` 取得的版本选择场景。启用时 CTest 会设置 `LC_ALL=C`，确保编译器 `-v` 输出使用固定的英文标记。标准库接口验收优先使用 Release 构建，失败或需要断言、栈信息时再切换 Debug，避免 Debug 解析耗时干扰定位。
 - `REDPANDA_PARSER_DECLARATION_PROFILE`（默认 OFF）— 编译声明解析的细分计时、self-time scope 栈和计数。普通构建使用空 scope，不引入逐声明插桩成本；需要 `DECLARATION_PROFILE`/`DECLARATION_SELF` 输出时设为 ON，并在运行时设置 `REDPANDA_PARSER_PROFILE=1`。整体 `PARSE_TIMING` 及 preprocess/tokenize/parseDeclarations 等阶段计时不受此开关影响。
+- `QSYNEDIT_BUILD_PROFILE_TESTS`（默认 OFF）— 编译 QSynEdit 的 Syntaxer、Document 编辑和 Document+View 编辑 profiling 用例。普通测试构建不包含这些用例；开启后仍需设置各 profile 对应的运行时环境变量才会执行。
 
 新增受特性开关控制的源文件时，必须同时登记在 `RedPandaIDE/CMakeLists.txt` 中对应的 `if(...)` 块内，**以及** `RedPandaIDE/xmake.lua` / 根目录 `xmake.lua` 中，以保持两套构建系统同步。
 
@@ -121,7 +122,11 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
   本机调试版 Qt 没有 `lib/fonts`；offscreen 后端否则会反复报告字体目录 warning。
   `QT_QPA_FONTDIR=C:/Windows/Fonts` 只影响测试进程的字体查找，不修改 Qt 安装。
 
+- **QSynEdit profiling 编译开关**：以下 Syntaxer、增量布局和编辑矩阵用例只在配置时启用 `QSYNEDIT_BUILD_PROFILE_TESTS=ON` 后编译；普通 `all-test-targets` 构建保持 OFF。
+
 - **Syntaxer profiling**：Release 下设置 `QSYNEDIT_PROFILE_FILE`，直接运行 `test-qsynedit` 的 `TestCppSyntaxer`、`TestASMSyntaxer` 或 `TestTextSyntaxer` 中 `test_profile_file`，例如 `QSYNEDIT_PROFILE_FILE=resources/miniaudio.h ./test-qsynedit.exe --suite=TestCppSyntaxer test_profile_file`（大文件已收入 `libs/qsynedit/test/resources/`，构建时复制到测试目录，也可供后续 QSynEdit 编辑性能检查复用）。文件读取不计时；用例分别跑三轮纯扫描和三轮包含 `getToken()` 的遍历，以 `SYNTAXER_PROFILE` 行输出纳秒、token 数和字符数。短文件可用 `QSYNEDIT_PROFILE_REPEAT=10000` 在计时前展开；未设置文件变量时正常测试自动跳过。
+
+- **Document / Document+View 编辑 profiling**：Release 下设置 `QSYNEDIT_EDIT_PROFILE=1`，分别运行 `test-qsynedit --suite=TestDocumentProfile test_edit_matrix` 和 `test-qsynedit --suite=TestQSyneditDisplay test_miniaudio_edit_profile`。两者基于 `miniaudio.h`，覆盖修改、插入、删除、替换、连续行块移动 × 1/10/100/1000/10000 行 × 普通/折叠边界变化，并额外比较修改的前/中/后位置。普通与折叠负载只有末尾分隔符不同，token 主体和显示宽度一致。`QSYNEDIT_EDIT_PROFILE_REPEAT` 控制每场景采样数（默认 3）；View 可用 `QSYNEDIT_EDIT_PROFILE_FOLDING=0` 做关闭折叠维护的对照实验。输出 CSV 风格的 `DOCUMENT_EDIT_PROFILE` 和 `VIEW_EDIT_PROFILE` 行；View 同时记录同步编辑及后台布局完成后的总耗时。
 
 - **Search profiling**：Release 下设置 `QSYNEDIT_SEARCH_PROFILE=1`，直接运行 `test-file-search --suite=TestFileSearchEngine test_profile`；输出普通、整词、regex、长行、目录枚举及文件读取匹配的纳秒耗时和匹配数，未设置开关时正常测试自动跳过。
 
@@ -149,6 +154,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-static-64/bin:$PATH" \
 
   需要 `DECLARATION_PROFILE`、`DECLARATION_SELF`、`MERGE_DECLARATION_PROFILE` 等详细计时输出时，先在配置阶段启用 `REDPANDA_PARSER_DECLARATION_PROFILE=ON`（声明细分开关默认 OFF），再额外设置 `REDPANDA_PARSER_PROFILE=1`。详细 profile 默认关闭，避免计时器干扰生产性能；普通构建的声明 scope 为空操作，整体阶段计时仍可使用。嵌套的细项计时会增加开销，优化前后对比必须以未启用详细 profile 的 Direct Release 结果为准。测量 preprocessor 或完整 parse 时，以独立新进程连续运行两次相同测试并采用第二次结果，排除系统文件缓存 miss；不能用同一进程中的第二次 parse 代替，因为那还会混入 Parser 自身的 replay 缓存收益。定位热点时优先使用 `RESOLVER_SELF`：它已扣除直接子操作耗时；`RESOLVER_PROFILE` 和 `RESOLVER_DETAIL` 的 inclusive 时间只能用于理解调用结构，不能相加或当作独立成本。
 - **tokenize/profile 的目的首先是发现并消除不合理操作，不是让计数或耗时好看**：profile 本身不以预期收益决定是否进行；每个不同 entry 都必须核对触发来源和必要性，不能仅凭总次数下降判断优化完成。cache/memo 可以使用，但统计必须同时保留解析尝试、命中情况和调用链，不能用 cache 命中隐藏冗余查找或重复处理。先查清并消除无意义操作，再用 cache 复用必要工作的结果；是否修改设计和代码时，才根据证据评估收益、复杂度和风险。
+- **测试/profile 配套工具必须持久保存**：Python 脚本、数据汇总与对比工具等要和对应测试的其他 resource 一起存入仓库，不得只放在 `R:` 等临时目录或用完即弃。必须在专门文档中登记其用途、环境依赖、输入输出、运行命令及对应基线，确保后续能够复现和继续扩展。
 
 - **多视图 demo 仅在需要时编译**：CMake 选项 `QSYNEDIT_BUILD_MULTIVIEW_DEMO` 默认 OFF，只在验证多视图行为时显式打开。
 

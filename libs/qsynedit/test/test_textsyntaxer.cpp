@@ -64,6 +64,7 @@ void TestTextSyntaxer::test_create_instance_copies_settings()
     QVERIFY(!clone->supportFolding());
 }
 
+#ifdef QSYNEDIT_PROFILE_TESTS
 void TestTextSyntaxer::test_profile_file()
 {
     QString fileName = qEnvironmentVariable("QSYNEDIT_PROFILE_FILE");
@@ -72,3 +73,4 @@ void TestTextSyntaxer::test_profile_file()
     QSynedit::TextSyntaxer syntaxer;
     profileSyntaxerFile(&syntaxer, fileName, "text");
 }
+#endif

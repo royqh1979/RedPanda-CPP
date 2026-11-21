@@ -11,6 +11,9 @@
 #include "test_qsynedit_cpp_search_replace.h"
 #include "test_qsynedit_infra.h"
 #include "test_rowindex.h"
+#ifdef QSYNEDIT_PROFILE_TESTS
+#include "test_document_profile.h"
+#endif
 #include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
@@ -141,6 +144,16 @@ int main(int argc, char *argv[]) {
         if (suite == className || suite == "all")
             status |= QTest::qExec(&tc, argc, argv);
     }
+
+#ifdef QSYNEDIT_PROFILE_TESTS
+    {
+        QSynedit::TestDocumentProfile tc;
+        QString className = tc.metaObject()->className();
+        className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+#endif
 
     return status;
 }

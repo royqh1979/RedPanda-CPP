@@ -26,7 +26,9 @@ private slots:
     void test_tokens_text_positions_and_attributes();
     void test_empty_lines_and_state();
     void test_create_instance_copies_settings();
+#ifdef QSYNEDIT_PROFILE_TESTS
     void test_profile_file();
+#endif
 };
 
 #endif // TEST_TEXTSYNTAXER_H
