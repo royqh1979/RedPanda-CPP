@@ -36,10 +36,12 @@ int SymbolReferenceResults::count() const
 CppRefactor::CppRefactor(
         std::shared_ptr<Project> project,
         ContentProvider contentProvider,
+        EditorProvider editorProvider,
         QObject *parent)
     : QObject(parent),
       mProject(std::move(project)),
-      mContentProvider(std::move(contentProvider))
+      mContentProvider(std::move(contentProvider)),
+      mEditorProvider(std::move(editorProvider))
 {
 }
 
@@ -286,7 +288,8 @@ SymbolReferenceFile CppRefactor::findOccurrencesInFile(
         const QByteArray &fileEncoding,
         const QVector<PStatement> &targets,
         const PCppParser &parser,
-        const QStringList &openContent)
+        const QStringList &openContent,
+        const QString &contextFile)
 {
     SymbolReferenceFile result;
     result.fileName = fileName;
@@ -312,6 +315,7 @@ SymbolReferenceFile CppRefactor::findOccurrencesInFile(
             return result;
         }
     }
+    result.encoding = editor.editorEncoding();
     QSynedit::PSyntaxer syntaxer = SyntaxerManager::getSyntaxer(
                 QSynedit::ProgrammingLanguage::CPP);
     editor.setSyntaxer(syntaxer);
@@ -342,8 +346,14 @@ SymbolReferenceFile CppRefactor::findOccurrencesInFile(
                     ++next;
                 if (next < lineText.size() && lineText.at(next) == '(')
                     expression = completeCallExpression(&editor, expression, pos);
-                PStatement tokenStatement = parser->findStatementOf(
-                            fileName, expression, line);
+                PStatement tokenStatement;
+                if (contextFile.isEmpty() || contextFile == fileName) {
+                    tokenStatement = parser->findStatementOf(fileName, expression, line);
+                } else {
+                    PStatement scope = parser->findScopeStatement(fileName, line);
+                    tokenStatement = parser->findStatementOf(
+                                contextFile, expression, scope);
+                }
                 if (!tokenStatement && expression.size() == 1
                         && (next == lineText.size() || lineText.at(next) != '('))
                     tokenStatement = parser->findStatement(expression.constFirst());
@@ -618,9 +628,14 @@ void CppRefactor::findOccurrencesInProject(
             SymbolReferenceFile file = findOccurrencesInFile(
                         fileName, encoding, currentTargets, parser,
                         fileName == editor->filename()
-                        ? editor->content() : QStringList());
+                        ? editor->content() : QStringList(), translationUnit);
             if (file.references.isEmpty())
                 continue;
+            if (mEditorProvider) {
+                Editor *openEditor = mEditorProvider(fileName);
+                if (openEditor)
+                    file.documentVersion = openEditor->document()->contentVersion();
+            }
             if (fileName == editor->filename())
                 file.documentVersion = editor->document()->contentVersion();
             auto fileIt = std::find_if(
@@ -799,16 +814,14 @@ QVector<PStatement> CppRefactor::collectRenameTargets(
     return QVector<PStatement>::fromList(targets.values());
 }
 
-RenameResult CppRefactor::renameReferencesInEditor(
+static RenameResult validateReferencesInEditor(
         Editor *editor,
-        const SymbolReferenceFile &file,
-        const QString &newWord)
+        const SymbolReferenceFile &file)
 {
     if (file.fileName != editor->filename()
             || file.documentVersion != editor->document()->contentVersion())
         return RenameResult::ContentChanged;
-    QVector<SymbolReference> references = file.references;
-    for (const SymbolReference &reference : references) {
+    for (const SymbolReference &reference : file.references) {
         if (reference.line < 0 || reference.line >= editor->lineCount()
                 || reference.ch < 0 || reference.length < 0)
             return RenameResult::ContentChanged;
@@ -818,7 +831,18 @@ RenameResult CppRefactor::renameReferencesInEditor(
                     != lineText.mid(reference.ch, reference.length))
             return RenameResult::ContentChanged;
     }
+    return RenameResult::Success;
+}
 
+RenameResult CppRefactor::renameReferencesInEditor(
+        Editor *editor,
+        const SymbolReferenceFile &file,
+        const QString &newWord)
+{
+    RenameResult validation = validateReferencesInEditor(editor, file);
+    if (validation != RenameResult::Success)
+        return validation;
+    QVector<SymbolReference> references = file.references;
     std::sort(references.begin(), references.end(),
               [](const SymbolReference &left, const SymbolReference &right) {
         if (left.line != right.line)
@@ -881,32 +905,40 @@ RenameResult CppRefactor::prepareRename(
                     editor->parser(), oldStatement, selectedOverloads);
         if (targets.isEmpty())
             return RenameResult::NoSelection;
-        for (const PStatement &statement : targets) {
-            for (const StatementOccurrence &declaration : statement->declarations) {
-                if (declaration.fileName != editor->filename())
-                    return RenameResult::NotInCurrentFile;
-            }
-            if (statementHasDefinition(statement)
-                    && statement->definition.fileName != editor->filename())
-                return RenameResult::NotInCurrentFile;
-        }
-        if (hasRenameNameConflict(editor->parser(), targets, newWord))
-            return RenameResult::NameConflict;
-
         scope = oldStatement->scope == StatementScope::Local
                 || !editor->inProject() || !mProject
                 ? SymbolReferenceScope::CurrentFile
                 : SymbolReferenceScope::WholeProject;
+        auto allowedFile = [&](const QString &fileName) {
+            return scope == SymbolReferenceScope::CurrentFile
+                    ? fileName == editor->filename()
+                    : mProject->inProject(fileName);
+        };
+        for (const PStatement &statement : targets) {
+            for (const StatementOccurrence &declaration : statement->declarations) {
+                if (!allowedFile(declaration.fileName))
+                    return RenameResult::OutsideAllowedScope;
+            }
+            if (statementHasDefinition(statement)
+                    && !allowedFile(statement->definition.fileName))
+                return RenameResult::OutsideAllowedScope;
+        }
+        if (hasRenameNameConflict(editor->parser(), targets, newWord))
+            return RenameResult::NameConflict;
     }
     if (!doFindOccurrences(editor, oldStatement, targets, scope, results))
         return RenameResult::SymbolNotFound;
-    bool found = false;
+    if (results.files.isEmpty())
+        return RenameResult::SymbolNotFound;
     for (const SymbolReferenceFile &file : results.files) {
-        if (file.fileName != editor->filename())
-            return RenameResult::NotInCurrentFile;
-        found = true;
+        if (scope == SymbolReferenceScope::CurrentFile
+                && file.fileName != editor->filename())
+            return RenameResult::OutsideAllowedScope;
+        if (scope == SymbolReferenceScope::WholeProject
+                && !mProject->inProject(file.fileName))
+            return RenameResult::OutsideAllowedScope;
     }
-    return found ? RenameResult::Success : RenameResult::SymbolNotFound;
+    return RenameResult::Success;
 }
 
 RenameResult CppRefactor::applyRename(
@@ -921,10 +953,104 @@ RenameResult CppRefactor::applyRename(
     auto unfreeze = finally([&editor] {
         editor->parser()->unFreeze();
     });
-    if (results.files.size() != 1
-            || results.files.constFirst().fileName != editor->filename())
-        return RenameResult::NotInCurrentFile;
-    return renameReferencesInEditor(editor, results.files.constFirst(), newWord);
+    struct PreparedFile {
+        SymbolReferenceFile file;
+        Editor *editor = nullptr;
+        std::shared_ptr<Editor> ownedEditor;
+        QByteArray originalBytes;
+        bool existed = false;
+        bool needsSave = false;
+    };
+    QVector<PreparedFile> prepared;
+    for (const SymbolReferenceFile &file : results.files) {
+        PreparedFile item;
+        item.file = file;
+        if (file.fileName == editor->filename()) {
+            item.editor = editor;
+        } else if (mEditorProvider) {
+            item.editor = mEditorProvider(file.fileName);
+        }
+        if (!item.editor) {
+            item.ownedEditor = std::make_shared<Editor>();
+            item.editor = item.ownedEditor.get();
+            item.editor->setEditorSettings(&pSettings->editor());
+            FileType fileType = getFileType(file.fileName);
+            if (!isC_CPPSourceFile(fileType))
+                fileType = FileType::CCppHeader;
+            item.editor->setFileType(fileType);
+            item.editor->setFilename(file.fileName);
+            item.editor->setSyntaxer(SyntaxerManager::getSyntaxer(
+                        QSynedit::ProgrammingLanguage::CPP));
+            item.existed = fileExists(file.fileName);
+            if (item.existed) {
+                QFile original(file.fileName);
+                if (!original.open(QIODevice::ReadOnly))
+                    return RenameResult::FileAccess;
+                item.originalBytes = original.readAll();
+            }
+            QStringList buffer;
+            if (mContentProvider && mContentProvider(file.fileName, buffer)) {
+                item.editor->setEditorEncoding(file.encoding);
+                item.editor->loadContent(buffer);
+            } else {
+                if (!item.existed)
+                    return RenameResult::FileAccess;
+                QByteArray realEncoding;
+                try {
+                    item.editor->loadFromFile(file.fileName, file.encoding, realEncoding);
+                } catch (const FileError &) {
+                    return RenameResult::FileAccess;
+                }
+            }
+            item.file.documentVersion = item.editor->document()->contentVersion();
+            item.needsSave = true;
+        }
+        RenameResult validation = validateReferencesInEditor(item.editor, item.file);
+        if (validation != RenameResult::Success)
+            return validation;
+        prepared.append(item);
+    }
+    if (prepared.isEmpty())
+        return RenameResult::SymbolNotFound;
+
+    QVector<PreparedFile *> applied;
+    QVector<PreparedFile *> saved;
+    auto rollback = [&] {
+        for (auto it = applied.rbegin(); it != applied.rend(); ++it) {
+            if (!(*it)->ownedEditor)
+                (*it)->editor->undo();
+        }
+        for (auto it = saved.rbegin(); it != saved.rend(); ++it) {
+            if ((*it)->existed) {
+                QFile output((*it)->file.fileName);
+                if (output.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    output.write((*it)->originalBytes);
+            } else {
+                QFile::remove((*it)->file.fileName);
+            }
+        }
+    };
+    for (PreparedFile &item : prepared) {
+        RenameResult result = renameReferencesInEditor(item.editor, item.file, newWord);
+        if (result != RenameResult::Success) {
+            rollback();
+            return result;
+        }
+        applied.append(&item);
+        if (item.needsSave) {
+            saved.append(&item);
+            QFile output(item.file.fileName);
+            QByteArray realEncoding;
+            try {
+                item.editor->saveToFile(output, item.file.encoding, realEncoding);
+            } catch (const FileError &) {
+                rollback();
+                return RenameResult::FileAccess;
+            }
+            output.close();
+        }
+    }
+    return RenameResult::Success;
 }
 
 RenameResult CppRefactor::renameSymbol(
@@ -964,7 +1090,7 @@ RenameResult CppRefactor::renameUndefinedLocalVariable(
         return RenameResult::NotInScope;
     StatementOccurrence scopeDefinition = statementDefinitionForNavigation(scope);
     if (scopeDefinition.fileName != editor->filename())
-        return RenameResult::NotInCurrentFile;
+        return RenameResult::OutsideAllowedScope;
 
     CharPos expressionPos = pos;
     if (!editor->isIdentStartChar(editor->charAt(pos)))

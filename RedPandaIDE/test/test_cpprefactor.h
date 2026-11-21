@@ -23,7 +23,9 @@ private slots:
     void test_find_occurrences_project_local_extern_and_const();
     void test_same_name_isolation_across_scopes();
     void test_rename_rejects_project_external_declaration();
+    void test_rename_rejects_project_external_reference();
     void test_rename_same_class_defined_in_multiple_tus();
+    void test_rename_project_open_editor_undo_and_stale();
     void test_rename_class_constructor_destructor();
     void test_rename_overload_subset();
     void test_rename_overload_name_conflict_uses_signature();

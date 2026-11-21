@@ -50,6 +50,7 @@ struct SymbolReference {
 struct SymbolReferenceFile {
     QString fileName;
     int documentVersion = -1;
+    QByteArray encoding;
     QVector<SymbolReference> references;
 };
 
@@ -69,10 +70,11 @@ enum class RenameResult {
     InvalidInput,
     ParserUnavailable,
     SymbolNotFound,
-    NotInCurrentFile,
+    OutsideAllowedScope,
     NameConflict,
     NotInScope,
     ContentChanged,
+    FileAccess,
 };
 
 class CppRefactor : public QObject
@@ -80,9 +82,11 @@ class CppRefactor : public QObject
     Q_OBJECT
 public:
     using ContentProvider = std::function<bool (const QString &, QStringList &)>;
+    using EditorProvider = std::function<Editor *(const QString &)>;
     explicit CppRefactor(
             std::shared_ptr<Project> project = nullptr,
             ContentProvider contentProvider = {},
+            EditorProvider editorProvider = {},
             QObject *parent = nullptr);
 
     bool findOccurrences(
@@ -133,7 +137,8 @@ private:
             const QByteArray &fileEncoding,
             const QVector<PStatement> &targets,
             const PCppParser &parser,
-            const QStringList &openContent = {});
+            const QStringList &openContent = {},
+            const QString &contextFile = {});
     QVector<PStatement> overloadsOf(
             const PCppParser &parser,
             const PStatement &statement) const;
@@ -157,6 +162,7 @@ private:
 private:
     std::shared_ptr<Project> mProject;
     ContentProvider mContentProvider;
+    EditorProvider mEditorProvider;
 };
 
 #endif // REDPANDA_CPPREFACTOR_H

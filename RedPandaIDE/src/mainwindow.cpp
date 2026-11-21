@@ -131,6 +131,13 @@ static CppRefactor::ContentProvider openedEditorContentProvider(MainWindow *main
     };
 }
 
+static CppRefactor::EditorProvider openedEditorProvider(MainWindow *mainWindow)
+{
+    return [mainWindow](const QString &fileName) {
+        return mainWindow->editorManager()->getOpenedEditor(fileName);
+    };
+}
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -2987,8 +2994,8 @@ void MainWindow::showRenameError(RenameResult result)
     case RenameResult::SymbolNotFound:
         message = tr("Symbol not found.");
         break;
-    case RenameResult::NotInCurrentFile:
-        message = tr("Can't rename symbols not defined in this file.");
+    case RenameResult::OutsideAllowedScope:
+        message = tr("Can't rename symbols outside the current file or project.");
         break;
     case RenameResult::NameConflict:
         message = tr("New symbol already exists!");
@@ -2998,6 +3005,9 @@ void MainWindow::showRenameError(RenameResult result)
         break;
     case RenameResult::ContentChanged:
         message = tr("Contents has changed since last search!");
+        break;
+    case RenameResult::FileAccess:
+        message = tr("Can't open or save a file for rename.");
         break;
     case RenameResult::Success:
     case RenameResult::NoSelection:
@@ -7072,7 +7082,8 @@ void MainWindow::on_btnSearchAgain_clicked()
         Editor *editor = mEditorManager->getEditor();
         if (!editor)
             return;
-        CppRefactor refactor(mProject, openedEditorContentProvider(this));
+        CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
         SymbolReferenceResults references;
         SymbolReferenceScope scope = results->scope() == SearchFileScope::wholeProject
                 ? SymbolReferenceScope::WholeProject : SymbolReferenceScope::CurrentFile;
@@ -7321,7 +7332,8 @@ void MainWindow::on_actionFind_references_triggered()
     Editor *editor = mEditorManager->getEditor();
     if (!editor)
         return;
-    CppRefactor refactor(mProject, openedEditorContentProvider(this));
+    CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
     SymbolReferenceResults references;
     if (refactor.findOccurrences(editor, editor->caretPos(), references)) {
         addSymbolReferenceResults(references);
@@ -8579,7 +8591,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
     if (!ok || word == newWord)
         return;
 
-    CppRefactor refactor(mProject, openedEditorContentProvider(this));
+    CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
     RenameResult result;
     if (isUndefinedLocalVar) {
         result = refactor.renameUndefinedLocalVariable(editor, oldCaret, newWord);
@@ -8796,18 +8809,25 @@ void MainWindow::on_btnReplace_clicked()
         Editor *editor = mPendingRenameEditor.data();
         if (!editor)
             return;
-        CppRefactor refactor(mProject, openedEditorContentProvider(this));
+        CppRefactor refactor(mProject, openedEditorContentProvider(this),
+                                     openedEditorProvider(this));
         RenameResult result = refactor.applyRename(
                     editor, *mPendingRenameReferences, mPendingRenameWord);
         if (result != RenameResult::Success) {
             showRenameError(result);
             return;
         }
+        QVector<SymbolReferenceFile> renamedFiles = mPendingRenameReferences->files;
         showSearchReplacePanel(false);
         stretchMessagesPanel(false);
-        editor->reparse();
-        editor->checkSyntaxInBack();
-        editor->reparseTodo();
+        for (const SymbolReferenceFile &file : renamedFiles) {
+            Editor *modified = mEditorManager->getOpenedEditor(file.fileName);
+            if (!modified)
+                continue;
+            modified->reparse();
+            modified->checkSyntaxInBack();
+            modified->reparseTodo();
+        }
         return;
     }
     QString newWord = ui->cbReplaceInHistory->currentText();

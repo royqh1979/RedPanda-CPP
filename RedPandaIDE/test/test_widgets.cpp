@@ -72,6 +72,11 @@ QList<PProjectUnit> Project::unitList()
     return {};
 }
 
+bool Project::inProject(const QString &) const
+{
+    return false;
+}
+
 ProjectOptions &Project::options()
 {
     static ProjectOptions options;

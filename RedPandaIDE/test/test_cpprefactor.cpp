@@ -408,16 +408,16 @@ void TestCppRefactor::test_same_name_isolation_across_scopes()
 
 void TestCppRefactor::test_rename_rejects_project_external_declaration()
 {
-    QString otherFile = QDir::current().absoluteFilePath("tmp/refactor_other.cpp");
-    mFiles[mMainFile] = QStringList{"int value;", "int use(){return value;}"};
-    mFiles[otherFile] = QStringList{"extern int value;", "int read(){return value;}"};
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
-    mParser->addProjectFile(otherFile, false);
-    CppParser::parseFileBlocking(mParser, otherFile, false, "");
-    mProject = Project::load("test.dev", nullptr, mIconsManager.get(), new QFileSystemWatcher);
-    mProject->addUnit(mMainFile, mProject->rootNode());
-    mProject->addUnit(otherFile, mProject->rootNode());
+    QString external = QDir::current().absoluteFilePath("tmp/refactor_external.h");
+    mFiles[mMainFile] = QStringList{"#include \"refactor_external.h\"",
+                                    "int value;", "int use(){return value;}"};
+    mFiles[external] = QStringList{"extern int value;"};
+    setProjectFiles({mMainFile});
+    QFile output(external);
+    QVERIFY(output.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    output.write("extern int value;\n");
+    output.close();
+    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -426,10 +426,37 @@ void TestCppRefactor::test_rename_rejects_project_external_declaration()
         return true;
     });
     bool couldUndo = editor->canUndo();
-    QCOMPARE(refactor.renameSymbol(editor.get(), {4, 0}, "other"),
-             RenameResult::NotInCurrentFile);
+    QCOMPARE(refactor.renameSymbol(editor.get(), {4, 1}, "other"),
+             RenameResult::OutsideAllowedScope);
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
     QCOMPARE(editor->canUndo(), couldUndo);
+}
+
+void TestCppRefactor::test_rename_rejects_project_external_reference()
+{
+    QString external = QDir::current().absoluteFilePath("tmp/refactor_external_reference.h");
+    mFiles[mMainFile] = QStringList{
+        "void f();", "#include \"refactor_external_reference.h\"", "void f() {}"};
+    mFiles[external] = QStringList{"inline void use(){f();}"};
+    setProjectFiles({mMainFile});
+    QFile output(external);
+    QVERIFY(output.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    output.write("inline void use(){f();}\n");
+    output.close();
+    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    auto editor = makeEditor(mMainFile);
+    CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
+        if (!mFiles.contains(fileName))
+            return false;
+        buffer = mFiles.value(fileName);
+        return true;
+    });
+    QCOMPARE(refactor.renameSymbol(editor.get(), {5, 2}, "renamed"),
+             RenameResult::OutsideAllowedScope);
+    QCOMPARE(editor->content(), mFiles.value(mMainFile));
+    QFile input(external);
+    QVERIFY(input.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(input.readAll()).trimmed(), "inline void use(){f();}");
 }
 
 void TestCppRefactor::test_rename_same_class_defined_in_multiple_tus()
@@ -447,9 +474,77 @@ void TestCppRefactor::test_rename_same_class_defined_in_multiple_tus()
         return true;
     });
 
-    QCOMPARE(static_cast<int>(refactor.renameSymbol(editor.get(), {6, 0}, "Bar")),
-             static_cast<int>(RenameResult::NotInCurrentFile));
-    QCOMPARE(editor->content(), mFiles.value(mMainFile));
+    QCOMPARE(refactor.renameSymbol(editor.get(), {6, 0}, "Bar"), RenameResult::Success);
+    QCOMPARE(editor->content(), QStringList({"class Bar {};", "Bar value;"}));
+    QFile input(other);
+    QVERIFY(input.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(input.readAll()).replace("\r\n", "\n").trimmed().split('\n'),
+             QStringList({"class Bar {};", "Bar other;"}));
+}
+
+void TestCppRefactor::test_rename_project_open_editor_undo_and_stale()
+{
+    QString header = QDir::current().absoluteFilePath("tmp/open_rename.h");
+    QString other = QDir::current().absoluteFilePath("tmp/open_other.cpp");
+    mFiles[header] = QStringList{"void f();"};
+    mFiles[mMainFile] = QStringList{
+        "#include \"open_rename.h\"", "void f() {}", "void a(){f();}"};
+    mFiles[other] = QStringList{"#include \"open_rename.h\"", "void b(){f();}"};
+    setProjectFiles({header, mMainFile, other});
+    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    auto editor = makeEditor(mMainFile);
+    auto otherEditor = makeEditor(other);
+    otherEditor->loadContent(QStringList{
+        "#include \"open_rename.h\"", "void b(){f();}", "// unsaved"});
+    QStringList unsavedContent = otherEditor->content();
+
+    CppRefactor::ContentProvider contentProvider = [&](const QString &fileName,
+                                                       QStringList &buffer) {
+        if (fileName == other)
+            buffer = otherEditor->content();
+        else if (mFiles.contains(fileName))
+            buffer = mFiles.value(fileName);
+        else
+            return false;
+        return true;
+    };
+    CppRefactor::EditorProvider editorProvider = [&](const QString &fileName) -> Editor * {
+        if (fileName == other)
+            return otherEditor.get();
+        if (fileName == mMainFile)
+            return editor.get();
+        return nullptr;
+    };
+    CppRefactor refactor(mProject, contentProvider, editorProvider);
+    SymbolReferenceResults results;
+    QCOMPARE(refactor.prepareRename(editor.get(), {5, 1}, "renamed", std::nullopt, results),
+             RenameResult::Success);
+    QCOMPARE(refactor.applyRename(editor.get(), results, "renamed"), RenameResult::Success);
+    QCOMPARE(editor->content(), QStringList({
+                 "#include \"open_rename.h\"", "void renamed() {}", "void a(){renamed();}"}));
+    QCOMPARE(otherEditor->content(), QStringList({
+                 "#include \"open_rename.h\"", "void b(){renamed();}", "// unsaved"}));
+    QVERIFY(otherEditor->canUndo());
+    otherEditor->undo();
+    QCOMPARE(otherEditor->content(), unsavedContent);
+    otherEditor->redo();
+    QCOMPARE(otherEditor->content(), QStringList({
+                 "#include \"open_rename.h\"", "void b(){renamed();}", "// unsaved"}));
+
+    mFiles[mMainFile] = editor->content();
+    mFiles[header] = QStringList{"void renamed();"};
+    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    QCOMPARE(refactor.prepareRename(editor.get(), {5, 1}, "final", std::nullopt, results),
+             RenameResult::Success);
+    otherEditor->loadContent(QStringList{"// changed"});
+    QCOMPARE(refactor.applyRename(editor.get(), results, "final"),
+             RenameResult::ContentChanged);
+    QCOMPARE(editor->content(), QStringList({
+                 "#include \"open_rename.h\"", "void renamed() {}", "void a(){renamed();}"}));
+    QCOMPARE(otherEditor->content(), QStringList{"// changed"});
+    QFile input(header);
+    QVERIFY(input.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(input.readAll()).trimmed(), "void renamed();");
 }
 
 void TestCppRefactor::test_rename_class_constructor_destructor()
@@ -744,7 +839,7 @@ void TestCppRefactor::test_rename_invalid_and_cross_file()
     QCOMPARE(refactor.renameSymbol(editor.get(), {6, 0}, "bad-name"), RenameResult::InvalidInput);
     QCOMPARE(refactor.renameSymbol(editor.get(), {0, 0}, "Other"), RenameResult::InvalidInput);
     QCOMPARE(static_cast<int>(refactor.renameSymbol(editor.get(), {0, 3}, "Other")),
-             static_cast<int>(RenameResult::NotInCurrentFile));
+             static_cast<int>(RenameResult::OutsideAllowedScope));
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
 }
 
