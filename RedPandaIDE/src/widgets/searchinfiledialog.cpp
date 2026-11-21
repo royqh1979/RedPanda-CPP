@@ -37,6 +37,21 @@ SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
     ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->chkCaseSensetive->setChecked(pSettings->ui().findInFilesMatchCase());
+    ui->chkWholeWord->setChecked(pSettings->ui().findInFilesWholeWord());
+    ui->chkRegExp->setChecked(pSettings->ui().findInFilesUseRegex());
+    connect(ui->chkCaseSensetive, &QCheckBox::toggled, this, [this](bool checked) {
+        pSettings->ui().setFindInFilesMatchCase(checked);
+        pSettings->ui().save();
+    });
+    connect(ui->chkWholeWord, &QCheckBox::toggled, this, [this](bool checked) {
+        pSettings->ui().setFindInFilesWholeWord(checked);
+        pSettings->ui().save();
+    });
+    connect(ui->chkRegExp, &QCheckBox::toggled, this, [this](bool checked) {
+        pSettings->ui().setFindInFilesUseRegex(checked);
+        pSettings->ui().save();
+    });
     connect(ui->rbCurrentFile, &QRadioButton::toggled,
             this, &SearchInFileDialog::onSearchTypeChanged);
     connect(ui->rbProject, &QRadioButton::toggled,

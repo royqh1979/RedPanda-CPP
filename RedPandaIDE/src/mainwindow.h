@@ -537,6 +537,7 @@ private slots:
     void on_cbSearchHistory_currentIndexChanged(int index);
 
     void on_btnSearchAgain_clicked();
+    void on_btnFindInFiles_clicked();
     void on_actionRemove_Watch_triggered();
 
     void on_actionRemove_All_Watches_triggered();

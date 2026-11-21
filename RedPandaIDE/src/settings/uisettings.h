@@ -176,8 +176,18 @@ public:
     bool openEditorsWhenReplace() const;
     void setOpenEditorsWhenReplace(bool newOpenEditorsWhenReplace);
 
+    bool findInFilesMatchCase() const;
+    void setFindInFilesMatchCase(bool value);
+    bool findInFilesWholeWord() const;
+    void setFindInFilesWholeWord(bool value);
+    bool findInFilesUseRegex() const;
+    void setFindInFilesUseRegex(bool value);
+
 private:
     bool mOpenEditorsWhenReplace;
+    bool mFindInFilesMatchCase;
+    bool mFindInFilesWholeWord;
+    bool mFindInFilesUseRegex;
     QByteArray mMainWindowState;
     QByteArray mMainWindowGeometry;
     int mBottomPanelIndex;

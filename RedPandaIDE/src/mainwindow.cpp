@@ -6945,7 +6945,7 @@ void MainWindow::on_actionFind_triggered()
     if (e->selAvail())
         mSearchDialog->find(e->selText());
     else
-        mSearchDialog->find(e->wordAtCursor());
+        mSearchDialog->find("");
 }
 
 void MainWindow::on_actionFind_in_files_triggered()
@@ -6953,15 +6953,12 @@ void MainWindow::on_actionFind_in_files_triggered()
     if (mSearchDialog)
         mSearchDialog->hide();
     prepareSearchInFilesDialog();
-    Editor *e = mEditorManager->getEditor();
-    if (e) {
-        if (e->selAvail())
-            mSearchInFilesDialog->findInFiles(e->selText());
-        else
-            mSearchInFilesDialog->findInFiles(e->wordAtCursor());
-    } else {
-        mSearchInFilesDialog->findInFiles("");
-    }
+    mSearchInFilesDialog->findInFiles("");
+}
+
+void MainWindow::on_btnFindInFiles_clicked()
+{
+    on_actionFind_in_files_triggered();
 }
 
 void MainWindow::on_actionReplace_triggered()
@@ -6976,7 +6973,7 @@ void MainWindow::on_actionReplace_triggered()
     if (e->selAvail())
         mSearchDialog->replace(e->selText());
     else
-        mSearchDialog->replace(e->wordAtCursor());
+        mSearchDialog->replace("");
 }
 
 void MainWindow::on_actionFind_Next_triggered()
