@@ -76,6 +76,7 @@ private slots:
     void test_rename_class_and_constructor();
     void test_rename_from_constructor();
     void test_editor_color_scheme_demo_parser_is_self_contained();
+    void test_find_in_files_options_persistence();
 
 private:
     std::unique_ptr<Settings> mSettings;

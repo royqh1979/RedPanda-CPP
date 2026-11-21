@@ -106,6 +106,9 @@ target("RedPandaIDE")
         "src/parser/statementmodel.cpp",
         -- editor
         "src/editor/cppexpressionextractor.cpp",
+        -- search
+        "src/search/filesearchengine.cpp",
+        "src/search/searchresultreplacer.cpp",
         -- problems
         "src/problems/freeprojectsetformat.cpp",
         "src/problems/problemcasevalidator.cpp",

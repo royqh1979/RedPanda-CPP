@@ -17,6 +17,7 @@
 #include "qsynedit.h"
 #include "document.h"
 #include "wraplayoutjob.h"
+#include "searcher/regexsearcher.h"
 #include "syntaxer/syntaxer.h"
 #include <QThreadPool>
 #include <QApplication>
@@ -789,21 +790,6 @@ bool QSynEdit::getTokenAttr(const CharPos &pos, QString &token, int &start, PTok
     token = "";
     attr = PTokenAttribute();
     return false;
-}
-
-QSet<int> QSynEdit::getTokenBorders(int line) const
-{
-    Q_ASSERT((line >= 0) && (line < mDocument->count()));
-    QSet<int> result;
-    result.insert(0);
-    result.insert(mDocument->getLine(line).length());
-    PSyntaxer syntaxer = mSyntaxer->createInstance();
-    startParseLine(syntaxer.get(), line);
-    while (!syntaxer->eol()) {
-        result.insert(syntaxer->getTokenPos());
-        syntaxer->next();
-    }
-    return result;
 }
 
 void QSynEdit::addGroupUndoBreak()
@@ -6540,33 +6526,109 @@ void QSynEdit::doSetSelText(const QString &value)
     doSetSelTextPrimitive(splitStrings(value));
 }
 
+static CharPos positionAfterReplacement(
+        CharPos pos, const DocumentMatch &match, const QStringList &replacementLines)
+{
+    CharPos matchEnd{match.start.ch + match.length, match.start.line};
+    if (pos < match.start)
+        return pos;
+    int addedLines = replacementLines.size() - 1;
+    if (pos.line == match.start.line && pos.ch <= matchEnd.ch) {
+        if (replacementLines.size() == 1)
+            return CharPos{match.start.ch + replacementLines.constFirst().size(),
+                           match.start.line};
+        return CharPos{replacementLines.constLast().size(),
+                       match.start.line + addedLines};
+    }
+    if (pos.line == matchEnd.line) {
+        if (replacementLines.size() == 1) {
+            pos.ch += replacementLines.constFirst().size() - match.length;
+        } else {
+            pos.ch = replacementLines.constLast().size() + pos.ch - matchEnd.ch;
+            pos.line += addedLines;
+        }
+    } else if (pos.line > matchEnd.line) {
+        pos.line += addedLines;
+    }
+    return pos;
+}
+
+std::optional<ReplacementResult> QSynEdit::replaceMatch(
+        const DocumentMatch &match, const QString &replacement)
+{
+    CharPos end{match.start.ch + match.length, match.start.line};
+    if (mReadOnly || match.documentVersion != mDocument->contentVersion()
+            || !validInDoc(match.start) || !validInDoc(end))
+        return std::nullopt;
+
+    internalSetSelBegin(match.start);
+    internalSetSelEnd(end);
+    bool caretAtStart = caretPos() == match.start;
+    internalSetCaretPos(caretAtStart ? match.start : end);
+    bool oldAutoIndent = mOptions.testFlag(EditorOption::AutoIndent);
+    mOptions.setFlag(EditorOption::AutoIndent, false);
+    auto restoreOption = finally([this, oldAutoIndent] {
+        mOptions.setFlag(EditorOption::AutoIndent, oldAutoIndent);
+    });
+    doSetSelText(replacement);
+    if (caretAtStart)
+        setCaretPos(match.start);
+    return ReplacementResult{caretPos(), selBegin(), selEnd(), fileEnd()};
+}
+
+int QSynEdit::replaceAll(DocumentSearchSession &session, const QString &replacement)
+{
+    if (mReadOnly || session.document() != mDocument)
+        return 0;
+    QVector<QPair<DocumentMatch, QString>> replacements;
+    CharPos from = session.scope().begin;
+    while (true) {
+        auto match = session.findNext(from, SearchDirection::Forward, WrapMode::Never);
+        if (!match)
+            break;
+        replacements.append(qMakePair(*match, session.replacementText(*match, replacement)));
+        from = match->start;
+        from.ch += match->length;
+        if (match->length == 0)
+            from.ch++;
+    }
+    if (replacements.isEmpty())
+        return 0;
+
+    beginInternalChanges();
+    beginEditing();
+    auto finish = finally([this] {
+        endInternalChanges();
+        endEditing();
+    });
+    for (int i = replacements.size() - 1; i >= 0; --i) {
+        DocumentMatch match = replacements.at(i).first;
+        match.documentVersion = mDocument->contentVersion();
+        replaceMatch(match, replacements.at(i).second);
+    }
+    return replacements.size();
+}
+
 int QSynEdit::searchReplace(const QString &searchText, const QString &replaceWith,
-                            const CharPos & scopeBegin,
-                            const CharPos & scopeEnd,
+                            const CharPos &scopeBegin,
+                            const CharPos &scopeEnd,
                             CharPos& newScopeEnd,
                             SearchOptions options, Searcher *searchEngine,
-                    SearchMatchedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
+                            SearchMatchedProc matchedCallback,
+                            SearchConfirmAroundProc confirmAroundCallback)
 {
-    if (!searchEngine)
+    if (!searchEngine || searchText.isEmpty())
         return 0;
-
-    Q_ASSERT(scopeBegin<=scopeEnd);
+    Q_ASSERT(scopeBegin <= scopeEnd);
     Q_ASSERT(validInDoc(scopeBegin));
     Q_ASSERT(validInDoc(scopeEnd));
-    // can't search for or replace an empty string
-    if (searchText.isEmpty()) {
-        return 0;
-    }
-    int result = 0;
 
     bool backwards = options.testFlag(ssoBackwards);
-    bool searchInWholeDoc = (
-                scopeBegin == fileBegin()
-                && scopeEnd == fileEnd());
-    // from caret only in effect if searching in whole document
+    SearchDirection direction = backwards
+            ? SearchDirection::Backward : SearchDirection::Forward;
+    bool searchInWholeDoc = scopeBegin == fileBegin() && scopeEnd == fileEnd();
     bool fromCaret = options.testFlag(ssoFromCaret) && searchInWholeDoc;
     bool wrapped = false;
-    CharPos posCurrent;
     CharPos posBegin = scopeBegin;
     CharPos posEnd = scopeEnd;
     newScopeEnd = scopeEnd;
@@ -6590,158 +6652,87 @@ int QSynEdit::searchReplace(const QString &searchText, const QString &replaceWit
                 posBegin = caretPos();
         }
     }
-    if (backwards)
-        posCurrent = posEnd;
-    else
-        posCurrent = posBegin;
-    CharPos origCurrent{posCurrent};
-    // initialize the search engine
-    searchEngine->setOptions(options);
-    searchEngine->setPattern(searchText);
-    // search while the current search position is inside of the search range
-    bool dobatchReplace = false;
-    {
-        auto action = finally([&,this]{
-            if (dobatchReplace) {
-                endInternalChanges();
-                endEditing();
-            }
-        });
-        int i;
-        // If it's a search only we can leave the procedure now.
-        SearchAction searchAction = SearchAction::Exit;
-        while ((posCurrent.line >= posBegin.line) && (posCurrent.line <= posEnd.line)) {
-            int countInLine = searchEngine->findAll(mDocument->getLine(posCurrent.line));
-            int resultOffset = 0;
-            int totalLineOffset = 0;
-            if (backwards)
-                i = searchEngine->resultCount()-1;
-            else
-                i = 0;
-            // Operate on all results in this line.
-            QSet<int> tokenBorders;
-            if (countInLine>0 && options.testFlag(ssoWholeWord)) {
-                tokenBorders = getTokenBorders(posCurrent.line);
-            }
-            while (countInLine > 0) {
-                // An occurrence may have been replaced with a text of different length
-                int chFound = searchEngine->result(i) + resultOffset;
-                int searchLen = searchEngine->length(i);
-                if (backwards)
-                    i--;
-                else
-                    i++;
-                countInLine--;
-                // Is the search result entirely in the search range?
-                bool isInValidSearchRange = true;
-                int first = chFound;
-                int last = chFound + searchLen;
-                if  ((searchLen==0) &&
-                     (((posCurrent.line == posBegin.line) && (first == posBegin.ch) && !backwards)
-                      ||  ((posCurrent.line == posEnd.line) && (last == posEnd.ch) && backwards))
-                     ) {
-                    isInValidSearchRange = false;
-                } else if (((posCurrent.line == posBegin.line) && (first < posBegin.ch)) ||
-                        ((posCurrent.line == posEnd.line) && (last > posEnd.ch))) {
-                    isInValidSearchRange = false;
-                }
-                if (!isInValidSearchRange)
-                    continue;
-                if (options.testFlag(ssoWholeWord) && first != last) {
-                    if (!tokenBorders.contains(first)
-                            || !tokenBorders.contains(last))
-                        continue;
-                }
-                result++;
-                // Select the text, so the user can see it in the OnReplaceText event
-                // handler or as the search result.
-                posCurrent.ch = chFound;
-                internalSetSelBegin(posCurrent);
-                posCurrent.ch += searchLen;
-                internalSetSelEnd(posCurrent);
 
-                if (backwards)
-                    internalSetCaretPos(selBegin());
-                else
-                    internalSetCaretPos(selEnd());
+    CharPos from = backwards ? posEnd : posBegin;
+    CharPos origCurrent = from;
+    SearchQuery query{searchText, dynamic_cast<RegexSearcher *>(searchEngine) != nullptr,
+                      options.testFlag(ssoMatchCase), options.testFlag(ssoWholeWord)};
+    DocumentSearchSession session(mDocument, query, {posBegin, posEnd});
+    int result = 0;
+    bool batchReplace = false;
+    auto finishBatch = finally([this, &batchReplace] {
+        if (batchReplace) {
+            endInternalChanges();
+            endEditing();
+        }
+    });
+    SearchAction searchAction = SearchAction::Exit;
 
-                QString replaceText = searchEngine->replace(selText(), replaceWith);
-                if (searchAction == SearchAction::ReplaceAndExit) {
-                    searchAction = SearchAction::Exit;
-                } else if (searchAction != SearchAction::ReplaceAll
-                        && matchedCallback && !dobatchReplace) {
-                    searchAction = matchedCallback(
-                                selText(),replaceText,
-                                CharPos{chFound,posCurrent.line},
-                                searchLen);
-                }
-                if (searchAction == SearchAction::Exit) {
-                    return result;
-                } else if (searchAction == SearchAction::Skip) {
-                    continue;
-                } else if (searchAction == SearchAction::Replace
-                           || searchAction == SearchAction::ReplaceAndExit
-                           || searchAction == SearchAction::ReplaceAll) {
-                    if (!dobatchReplace &&
-                            (searchAction == SearchAction::ReplaceAll) ){
-                        beginInternalChanges();
-                        beginEditing();
-                        dobatchReplace = true;
-                    }
-                    bool oldAutoIndent = mOptions.testFlag(EditorOption::AutoIndent);
-                    mOptions.setFlag(EditorOption::AutoIndent,false);
-                    doSetSelText(replaceText);
-                    int replaceLen = replaceText.length();
-                    totalLineOffset += replaceLen - searchLen;
-                    // fix the caret position and the remaining results
-                    if (backwards) {
-                        setCaretCh(chFound);
-                    } else {
-                        if ((searchLen != replaceLen)) {
-                            resultOffset += replaceLen - searchLen;
-                            if (posEnd != fileEnd()  && posCurrent.line == posEnd.line) {
-                                posEnd.ch += replaceLen - searchLen;
-                            }
-                        }
-                    }
-                    if (searchLen != replaceLen && newScopeEnd.line == posCurrent.line)
-                        newScopeEnd.ch += replaceLen - searchLen;
-                    mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
-                }
-            }
-            if (fromCaret && totalLineOffset!=0 && origCurrent.line==posCurrent.line) {
-                if (backwards != wrapped)
-                    origCurrent.ch += totalLineOffset;
-            }
-
-            // search next / previous line
+    while (true) {
+        auto match = session.findNext(from, direction, WrapMode::Never);
+        if (!match) {
+            if (!fromCaret || wrapped || !options.testFlag(ssoWrapAround))
+                break;
+            if (confirmAroundCallback && !confirmAroundCallback())
+                break;
+            wrapped = true;
             if (backwards) {
-                posCurrent.line--;
+                session.setScope({origCurrent, scopeEnd});
+                from = scopeEnd;
             } else {
-                posCurrent.line++;
+                session.setScope({scopeBegin, origCurrent});
+                from = scopeBegin;
             }
-            if ((posCurrent.line < posBegin.line) || (posCurrent.line > posEnd.line)) {
-                if (fromCaret && !wrapped){ //wrap around, should happen only once
-                    if (!options.testFlag(ssoWrapAround)) {
-                        break;
-                    } else {
-                        if (confirmAroundCallback && !confirmAroundCallback())
-                            break;
-                    }
-                    //search start from cursor, search has finished but no result founds
-                    wrapped = true;
-                    posBegin = scopeBegin;
-                    posEnd = scopeEnd;
-                    if (backwards) {
-                        posBegin = origCurrent;
-                        posCurrent = posEnd;
-                    } else {
-                        posEnd= origCurrent;
-                        posCurrent = posBegin;
-                    }
-                } else
-                    break;
+            continue;
+        }
+
+        result++;
+        CharPos matchEnd{match->start.ch + match->length, match->start.line};
+        internalSetSelBegin(match->start);
+        internalSetSelEnd(matchEnd);
+        internalSetCaretPos(backwards ? match->start : matchEnd);
+        QString replaceText = session.replacementText(*match, replaceWith);
+        if (searchAction == SearchAction::ReplaceAndExit) {
+            searchAction = SearchAction::Exit;
+        } else if (searchAction != SearchAction::ReplaceAll
+                   && matchedCallback && !batchReplace) {
+            searchAction = matchedCallback(selText(), replaceText,
+                                           match->start, match->length);
+        }
+        if (searchAction == SearchAction::Exit)
+            return result;
+
+        bool replace = searchAction == SearchAction::Replace
+                || searchAction == SearchAction::ReplaceAndExit
+                || searchAction == SearchAction::ReplaceAll;
+        if (replace) {
+            if (!batchReplace && searchAction == SearchAction::ReplaceAll) {
+                beginInternalChanges();
+                beginEditing();
+                batchReplace = true;
             }
+            std::optional<ReplacementResult> replacementResult = replaceMatch(*match, replaceText);
+            if (replacementResult) {
+                QStringList replacementLines = splitStrings(replaceText);
+                newScopeEnd = positionAfterReplacement(newScopeEnd, *match, replacementLines);
+                SearchRange range = session.scope();
+                range.end = positionAfterReplacement(range.end, *match, replacementLines);
+                session.setScope(range);
+                if (fromCaret && !wrapped)
+                    origCurrent = positionAfterReplacement(origCurrent, *match, replacementLines);
+                from = replacementResult->caret;
+            } else {
+                from = backwards ? match->start : matchEnd;
+            }
+        } else {
+            from = backwards ? match->start : matchEnd;
+        }
+
+        if (match->length == 0) {
+            if (backwards)
+                from.ch = match->start.ch - 1;
+            else
+                from.ch++;
         }
     }
     return result;

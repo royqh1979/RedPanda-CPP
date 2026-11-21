@@ -1526,3 +1526,42 @@ void TestWidgets::test_unscoped_enum_completion_and_class_browser()
     QCOMPARE(model.rowCount(ordered), 1);
     QCOMPARE(childCommands(model, ordered), QSet<QString>({"alpha"}));
 }
+
+void TestWidgets::test_find_in_files_options_persistence()
+{
+    QTemporaryDir temporaryDir;
+    QVERIFY(temporaryDir.isValid());
+    QString filename = temporaryDir.filePath("ui.ini");
+    {
+        SettingsPersistor persistor(filename);
+        UISettings settings(&persistor);
+        settings.load();
+        QVERIFY(!settings.findInFilesMatchCase());
+        QVERIFY(!settings.findInFilesWholeWord());
+        QVERIFY(!settings.findInFilesUseRegex());
+        settings.setFindInFilesMatchCase(true);
+        settings.setFindInFilesWholeWord(true);
+        settings.setFindInFilesUseRegex(true);
+        settings.save();
+    }
+    {
+        SettingsPersistor persistor(filename);
+        UISettings settings(&persistor);
+        settings.load();
+        QVERIFY(settings.findInFilesMatchCase());
+        QVERIFY(settings.findInFilesWholeWord());
+        QVERIFY(settings.findInFilesUseRegex());
+        settings.setFindInFilesMatchCase(false);
+        settings.setFindInFilesWholeWord(false);
+        settings.setFindInFilesUseRegex(false);
+        settings.save();
+    }
+    {
+        SettingsPersistor persistor(filename);
+        UISettings settings(&persistor);
+        settings.load();
+        QVERIFY(!settings.findInFilesMatchCase());
+        QVERIFY(!settings.findInFilesWholeWord());
+        QVERIFY(!settings.findInFilesUseRegex());
+    }
+}

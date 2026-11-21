@@ -2,6 +2,13 @@ Red Panda C++ Version 3.6
 
   - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
   - enhancement: Refresh compiler type, version, detected paths, and tool selection when loading or selecting a compiler configuration, while preserving custom settings.
+  - enhancement: Use consistent Unicode-aware whole-word matching and search open buffers in Find in Files without changing editor state.
+  - fix: Correct multi-line and zero-length replacements, and keep Replace All in one Undo group.
+  - change: Open Find in Files with an empty search field; do not prefill Find or Replace with the word under the caret when there is no selection.
+  - enhancement: Remember Find in Files case sensitivity, whole-word, and regex options.
+  - enhancement: Add a Find in Files button to the main window's Search panel.
+  - fix: Correctly replace only selected Find in Files results, including case-insensitive, regex, Unicode, and multi-line matches.
+  - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - enhancement: Improve compatibility with Clang and libc++ headers.

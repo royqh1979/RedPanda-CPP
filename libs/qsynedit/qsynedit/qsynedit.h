@@ -37,7 +37,7 @@
 #include "rowindex.h"
 #include "types.h"
 #include "keystrokes.h"
-#include "searcher/baseseacher.h"
+#include "searcher/documentsearchsession.h"
 #include "syntaxer/syntaxer.h"
 #include "formatter/formatter.h"
 
@@ -103,6 +103,13 @@ enum class SearchAction {
 using SearchMatchedProc = std::function<SearchAction(const QString& sFound,
     const QString& sReplace, const CharPos& pos, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
+
+struct ReplacementResult {
+    CharPos caret;
+    CharPos selectionBegin;
+    CharPos selectionEnd;
+    CharPos scopeEnd;
+};
 
 struct GlyphPostionsListCache {
     QString str;
@@ -383,6 +390,9 @@ public:
                       SearchOptions options,
                Searcher *searchEngine,  SearchMatchedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);
+    std::optional<ReplacementResult> replaceMatch(
+            const DocumentMatch &match, const QString &replacement);
+    int replaceAll(DocumentSearchSession &session, const QString &replacement);
 
     int maxScrollWidth() const;
     int maxScrollHeight() const;
@@ -397,8 +407,6 @@ public:
     bool getTokenAttr(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attr, PSyntaxState &syntaxState,
       TokenType *tokenType = nullptr) const;
-    QSet<int> getTokenBorders(int line) const;
-
     void beginEditing();
     void endEditing();
     bool editing() const {return mEditingCount!=0;} // for testing

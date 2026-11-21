@@ -1394,6 +1394,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="btnFindInFiles">
+           <property name="text">
+            <string>Find in Files...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

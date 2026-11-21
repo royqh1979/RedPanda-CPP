@@ -68,6 +68,18 @@ private slots:
     void test_replace_backward_from_caret_include_selection();
     void test_replace_forward_scope();
     void test_replace_backward_scope();
+    void test_replace_plain_variants_data();
+    void test_replace_plain_variants();
+    void test_replace_regex_captures();
+    void test_replace_unicode();
+    void test_replace_multiline();
+    void test_replace_zero_length_search_advances();
+    void test_replace_undo_redo_single_group();
+    void test_replace_read_only();
+    void test_replace_selective_then_replace_all();
+    void test_whole_word_unicode_boundaries();
+    void test_document_search_session_wrap_and_stale_match();
+    void test_replace_all_session();
 };
 
 }

@@ -454,7 +454,7 @@ painter 经 `const Document *mDocument` 只读访问文档（编译期强制）�
   （`painter.cpp` 逐行扫描取 token 与颜色）、编辑决策（自动缩进的 `startParseLine` 扫描）、
   元信息（注释符号、`isIdentChar`、`foldString` 等无状态读）使用。两个视图可对同一文档
   用不同配色——配色**不做**文档级同步。
-- **C 类一次性扫描**（`getTokenAttr`/`getTokenBorders`/`getWordAtPosition` 等）用
+- **C 类一次性扫描**（`getTokenAttr`/`getWordAtPosition` 等）用
   `createInstance()` 的默认新实例，用完即弃——这些路径只要 token 文本和位置，不需要颜色；
   `createInstance` 因此保持"默认构造"语义，不做真克隆（真克隆会引入 attribute 跨实例
   共享/拷贝的复杂性与开销，绘制热路径上不可接受）。

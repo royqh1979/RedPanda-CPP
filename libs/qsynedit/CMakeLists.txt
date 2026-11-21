@@ -28,7 +28,9 @@ set(QSYNEDIT_QT_PLAIN_CPP
     qsynedit/syntaxer/makefile
     qsynedit/syntaxer/nasm
     qsynedit/syntaxer/syntaxer
-    qsynedit/syntaxer/textfile)
+    qsynedit/syntaxer/textfile
+    # searcher
+    qsynedit/searcher/documentsearchsession)
 
 set(QSYNEDIT_MOC_CLASSES
     qsynedit/document

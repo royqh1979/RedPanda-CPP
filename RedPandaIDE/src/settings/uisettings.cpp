@@ -166,6 +166,36 @@ void UISettings::setOpenEditorsWhenReplace(bool newOpenEditorsWhenReplace)
     mOpenEditorsWhenReplace = newOpenEditorsWhenReplace;
 }
 
+bool UISettings::findInFilesMatchCase() const
+{
+    return mFindInFilesMatchCase;
+}
+
+void UISettings::setFindInFilesMatchCase(bool value)
+{
+    mFindInFilesMatchCase = value;
+}
+
+bool UISettings::findInFilesWholeWord() const
+{
+    return mFindInFilesWholeWord;
+}
+
+void UISettings::setFindInFilesWholeWord(bool value)
+{
+    mFindInFilesWholeWord = value;
+}
+
+bool UISettings::findInFilesUseRegex() const
+{
+    return mFindInFilesUseRegex;
+}
+
+void UISettings::setFindInFilesUseRegex(bool value)
+{
+    mFindInFilesUseRegex = value;
+}
+
 int UISettings::bookmarkOrder() const
 {
     return mBookmarkOrder;
@@ -539,6 +569,9 @@ void UISettings::setMainWindowState(const QByteArray &newMainWindowState)
 void UISettings::doSave()
 {
     saveValue("open_editor_when_batch_replace",mOpenEditorsWhenReplace);
+    saveValue("find_in_files_match_case", mFindInFilesMatchCase);
+    saveValue("find_in_files_whole_word", mFindInFilesWholeWord);
+    saveValue("find_in_files_use_regex", mFindInFilesUseRegex);
 
     saveValue("main_window_state",mMainWindowState);
     saveValue("main_window_geometry",mMainWindowGeometry);
@@ -603,6 +636,9 @@ void UISettings::doSave()
 void UISettings::doLoad()
 {
     mOpenEditorsWhenReplace=boolValue("open_editor_when_batch_replace",true);
+    mFindInFilesMatchCase = boolValue("find_in_files_match_case", false);
+    mFindInFilesWholeWord = boolValue("find_in_files_whole_word", false);
+    mFindInFilesUseRegex = boolValue("find_in_files_use_regex", false);
 
     mMainWindowState = value("main_window_state",QByteArray()).toByteArray();
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();

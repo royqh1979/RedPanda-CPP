@@ -107,6 +107,7 @@
 
 #include "widgets/newprojectunitdialog.h"
 #include "widgets/searchinfiledialog.h"
+#include "search/searchresultreplacer.h"
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -6945,7 +6946,7 @@ void MainWindow::on_actionFind_triggered()
     if (e->selAvail())
         mSearchDialog->find(e->selText());
     else
-        mSearchDialog->find(e->wordAtCursor());
+        mSearchDialog->find("");
 }
 
 void MainWindow::on_actionFind_in_files_triggered()
@@ -6953,15 +6954,12 @@ void MainWindow::on_actionFind_in_files_triggered()
     if (mSearchDialog)
         mSearchDialog->hide();
     prepareSearchInFilesDialog();
-    Editor *e = mEditorManager->getEditor();
-    if (e) {
-        if (e->selAvail())
-            mSearchInFilesDialog->findInFiles(e->selText());
-        else
-            mSearchInFilesDialog->findInFiles(e->wordAtCursor());
-    } else {
-        mSearchInFilesDialog->findInFiles("");
-    }
+    mSearchInFilesDialog->findInFiles("");
+}
+
+void MainWindow::on_btnFindInFiles_clicked()
+{
+    on_actionFind_in_files_triggered();
 }
 
 void MainWindow::on_actionReplace_triggered()
@@ -6976,7 +6974,7 @@ void MainWindow::on_actionReplace_triggered()
     if (e->selAvail())
         mSearchDialog->replace(e->selText());
     else
-        mSearchDialog->replace(e->wordAtCursor());
+        mSearchDialog->replace("");
 }
 
 void MainWindow::on_actionFind_Next_triggered()
@@ -8759,20 +8757,20 @@ void MainWindow::applyCurrentProblemCaseChanges()
 
 void MainWindow::on_btnReplace_clicked()
 {
-    //select all items by default
     PSearchResults results = mSearchResultModel->currentResults();
     if (!results) {
         return;
     }
     QString newWord = ui->cbReplaceInHistory->currentText();
     foreach (const PSearchResultTreeItem& file, results->results()) {
-        QVector<PSearchResultTreeItem> selections;
+        bool hasSelections = false;
         foreach(const PSearchResultTreeItem& item,file->results) {
             if (item->selected) {
-                selections.push_back(item);
+                hasSelections = true;
+                break;
             }
         }
-        if (selections.isEmpty())
+        if (!hasSelections)
             continue;
         Editor* editor = nullptr;
         if (ui->chkOpenFileInEditors->isChecked()) {
@@ -8790,7 +8788,6 @@ void MainWindow::on_btnReplace_clicked()
         std::shared_ptr<Editor> pEditor;
         if (editor) {
             editor->clearSelection();
-            editor->beginEditing();
         } else {
             needSave=true;
             pEditor = std::make_shared<Editor>(nullptr);
@@ -8806,25 +8803,15 @@ void MainWindow::on_btnReplace_clicked()
                 return;
             }
         }
-        while (!selections.isEmpty()) {
-            const PSearchResultTreeItem& item = selections.back();
-            selections.pop_back();
-            QString line = editor->lineText(item->line);
-            if (line.mid(item->start-1,results->keyword().length())!=results->keyword()) {
-                QMessageBox::critical(editor,
-                            tr("Replace Error"),
-                            tr("Contents has changed since last search!"));
-                if (!needSave)
-                    editor->endEditing();
-                return;
-            }
-            line.remove(item->start-1,results->keyword().length());
-            line.insert(item->start-1, newWord);
-            editor->replaceLine(item->line,line);
+        if (SearchResultReplacer::replaceSelected(
+                    *editor, *results, *file, newWord)
+                != SearchResultReplaceError::None) {
+            QMessageBox::critical(editor,
+                                  tr("Replace Error"),
+                                  tr("Contents has changed since last search!"));
+            return;
         }
-        if (!needSave) {
-            editor->endEditing();
-        } else {
+        if (needSave) {
             QByteArray realEncoding;
             QFile toFile(file->filename);
             try {

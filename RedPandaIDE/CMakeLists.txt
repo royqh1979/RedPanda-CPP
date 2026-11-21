@@ -37,6 +37,9 @@ target_qt_plain_cpp(RedPandaIDE
     src/parser/statementmodel
     # editor
     src/editor/cppexpressionextractor
+    # search
+    src/search/filesearchengine
+    src/search/searchresultreplacer
     # problems
     src/problems/competitivecompenionhandler
     src/problems/freeprojectsetformat
@@ -453,6 +456,49 @@ add_test(
     COMMAND test-widgets)
 
 add_dependencies(all-test-targets test-widgets)
+
+#####################
+# test-file-search  #
+#####################
+
+add_executable(test-file-search test/test-file-search-main.cpp)
+
+target_qt_plain_cpp(test-file-search
+    src/search/filesearchengine
+    src/search/searchresultreplacer
+    src/widgets/searchresultview
+    test/test_filesearchengine
+    test/test_searchresultmodel
+    test/test_searchresultreplacer)
+
+target_moc_classes(test-file-search
+    src/widgets/searchresultview
+    test/test_filesearchengine
+    test/test_searchresultmodel
+    test/test_searchresultreplacer)
+
+target_include_directories(test-file-search PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-file-search PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::Widgets
+    Qt::Test
+    qsynedit
+    redpanda_qt_utils)
+
+if (QT_FEATURE_static)
+    qt_import_plugins(test-file-search
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
+
+add_test(
+    NAME test-file-search
+    COMMAND test-file-search)
+set_tests_properties(test-file-search PROPERTIES
+    ENVIRONMENT "${test_environment}")
+add_dependencies(all-test-targets test-file-search)
 
 #####################
 # test-cppparser    #

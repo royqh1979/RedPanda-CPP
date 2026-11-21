@@ -17,12 +17,13 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
     - `debugger/` — GDB/MI 和 DAP 调试器后端。
     - `problems/` — 问题集 / Competitive Companion 支持。
     - `reformatter/` — 代码格式化（AStyle）。
+    - `search/` — 文件枚举与批量搜索、已选搜索结果替换。
     - `settings/` 和 `settingsdialog/` — 设置模型类与设置对话框控件。
     - `widgets/` — 自定义控件与对话框（通常是 `.cpp`/`.h`[`.ui`] 三件套）。
     - `utils/` — 文件、字体、操作系统、终端、转义等辅助工具。
     - `addon/` — Lua 插件运行时集成（仅在启用 `LUA_ADDON` 时构建）。
     - `vcs/` — Git 集成（仅在启用 `VCS` 时构建）。
-  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets` 和包含全部 Parser 组件及集成 Suite 的 `test-cppparser`。
+  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-file-search` 和包含全部 Parser 组件及集成 Suite 的 `test-cppparser`。
   - `resources/`、`images/`、`*.qrc` — 嵌入资源（图标、主题、配色方案、字体、代码片段、项目模板）。
   - `translations/` — `.ts` 翻译文件。
 - `libs/qsynedit/` — 代码编辑器组件（QSynEdit 的深度改造分支）：文档模型、绘制器、行号栏、代码折叠、搜索器、导出器，以及语法高亮器（cpp、asm/gas/nasm、lua、makefile、glsl）。自带 Qt Test 测试套件，位于 `libs/qsynedit/test/`。
@@ -36,7 +37,7 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
 - `packages/` — 打包配方与构建脚本：`mingw/`（Windows XP+ NSIS/便携版）、`msvc/`（Windows MSVC 便携版）、`linux/`（静态 AppImage）、`macos/`（bundle），以及各发行版配方（`alpine/`、`archlinux/`、`archlinux-hwcaps/`、`brew/`、`debian/`、`fedora/`、`msys/`、`opensuse/` 和共享的 `_common/`）。
 - `platform/` — 各平台支持文件（模板、.desktop 文件、图标、macOS bundle 资源）。
 - `tests/` — 手工测试用的零散示例文件（如 `test.asm`、`untitled1.cpp`、`format/`）；不是自动化测试套件。
-- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）。
+- `docs/` — 设计/开发笔记：`architecture.md`（整体架构设计，以代码现状为准）、`qsynedit-design.md`（QSynEdit 组件设计）、`qsynedit-wordwrap-plan.md`（全局映射/自动换行重构计划：段数前缀树 + 懒推导锚点）、`cpppreprocessor-optimization.md`（跨边界 replay、Session/Registry 与缓存设计）、`cpppreprocessor-replay-scenarios.md`（replay 场景、正确性规则与测试清单）、`cppparser-design.md`（CppParser、Tokenizer、类型推导与 IDE 查询设计）、`cppnamespace-entity-using-design.md`（唯一命名 namespace、InlineAliasStatement 投影、occurrence 与 StatementFactory 设计）、`cpptemplate-evaluation-design.md`（仅在表达式求值时进行的有限模板实例化设计）、`parser-concurrency-review.md`（CppParser 并发约定与待审查事项）、`search-replace-design.md`（搜索替换、文件搜索与已选结果替换设计）。
 
 ## 构建
 
@@ -71,9 +72,9 @@ xmake
 
 ## 测试
 
-测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`、`test-widgets`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。Parser 组件和集成测试统一由 `test-cppparser` 构建执行，不再重复构建独立 tokenizer 目标。
+测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`、`test-widgets`、`test-file-search`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。Parser 组件和集成测试统一由 `test-cppparser` 构建执行，不再重复构建独立 tokenizer 目标。
 
-测试必须按被测组件的职责放入对应 Suite 和同名测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。`test-cppparser` 内使用 `TestCppTokenizer`、`TestCppDeclarationParser`、`TestCppStatementBuilder`、`TestCppTypeResolver`、`TestCppExpressionEvaluator`、`TestCppParser`、`TestCppParserInvalidation`、`TestCppParserSyntax`、`TestCppParserStandardLibrary` 及既有 Preprocessor Suite；可用 `--suite=类名` 单独运行。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`。
+测试必须按被测组件的职责放入对应 Suite 和同名测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。`test-cppparser` 内使用 `TestCppTokenizer`、`TestCppDeclarationParser`、`TestCppStatementBuilder`、`TestCppTypeResolver`、`TestCppExpressionEvaluator`、`TestCppParser`、`TestCppParserInvalidation`、`TestCppParserSyntax`、`TestCppParserStandardLibrary` 及既有 Preprocessor Suite；可用 `--suite=类名` 单独运行。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`，文件搜索与已选结果替换测试属于 `test-file-search`。
 
 ```sh
 # CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
@@ -120,6 +121,8 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
   `QT_QPA_FONTDIR=C:/Windows/Fonts` 只影响测试进程的字体查找，不修改 Qt 安装。
 
 - **Syntaxer profiling**：Release 下设置 `QSYNEDIT_PROFILE_FILE`，直接运行 `test-qsynedit` 的 `TestCppSyntaxer`、`TestASMSyntaxer` 或 `TestTextSyntaxer` 中 `test_profile_file`，例如 `QSYNEDIT_PROFILE_FILE=resources/miniaudio.h ./test-qsynedit.exe --suite=TestCppSyntaxer test_profile_file`（大文件已收入 `libs/qsynedit/test/resources/`，构建时复制到测试目录，也可供后续 QSynEdit 编辑性能检查复用）。文件读取不计时；用例分别跑三轮纯扫描和三轮包含 `getToken()` 的遍历，以 `SYNTAXER_PROFILE` 行输出纳秒、token 数和字符数。短文件可用 `QSYNEDIT_PROFILE_REPEAT=10000` 在计时前展开；未设置文件变量时正常测试自动跳过。
+
+- **Search profiling**：Release 下设置 `QSYNEDIT_SEARCH_PROFILE=1`，直接运行 `test-file-search --suite=TestFileSearchEngine test_profile`；输出普通、整词、regex、长行、目录枚举及文件读取匹配的纳秒耗时和匹配数，未设置开关时正常测试自动跳过。
 
 - **STL 单屏绘制 profiling**：`REDPANDA_PARSER_STDLIB_TEST` 也会为 `test-editor` 提供标准库配置。Release 下设置 `REDPANDA_STL_PAINT_PROFILE=1`，直接运行 `test-editor --suite=TestEditorDisplay test_stl_paint_profile`；`REDPANDA_STL_PAINT_PROFILE_REPEAT` 控制采样轮数（默认 9）。测试固定每屏 80 行、关闭 word-wrap，分别输出逐 identifier 表达式提取、整行拆分、statement 求值、求值单元数、冷 paint 及同 revision 热 paint 的纳秒中位数；未设置开关时正常测试自动跳过。
 

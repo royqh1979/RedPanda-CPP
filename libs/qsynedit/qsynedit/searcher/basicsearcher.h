@@ -26,15 +26,8 @@ class BasicSearcher : public Searcher
 public:
     explicit BasicSearcher(QObject* parent = nullptr);
 
-    // SynSearchBase interface
-public:
-    int length(int index) override;
-    int result(int index) override;
-    int resultCount() override;
-    int findAll(const QString &text) override;
+    QVector<TextMatch> findAll(const QString &text) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
-private:
-    QList<int> mResults;
 };
 }
 

@@ -40,6 +40,7 @@ struct SearchResultTreeItem {
     int start;
     int len;
     QString text;
+    QString matchedText;
     SearchResultTreeItem* parent;
     SearchResultTreeItemList results;
     bool selected;

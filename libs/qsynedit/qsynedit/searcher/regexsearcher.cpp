@@ -16,8 +16,6 @@
  */
 #include "regexsearcher.h"
 
-#include <QRegularExpression>
-
 namespace QSynedit {
 
 RegexSearcher::RegexSearcher(QObject* parent):Searcher(parent)
@@ -25,38 +23,17 @@ RegexSearcher::RegexSearcher(QObject* parent):Searcher(parent)
 
 }
 
-int RegexSearcher::length(int index)
+QVector<TextMatch> RegexSearcher::findAll(const QString &text)
 {
-    if (index<0 || index >= mResults.length())
-        return -1;
-    return mLengths[index];
-}
-
-int RegexSearcher::result(int index)
-{
-    if (index<0 || index >= mResults.length())
-        return -1;
-    return mResults[index];
-}
-
-int RegexSearcher::resultCount()
-{
-    return mResults.size();
-}
-
-int RegexSearcher::findAll(const QString &text)
-{
+    QVector<TextMatch> results;
     if (pattern().isEmpty())
-        return 0;
-    mResults.clear();
-    mLengths.clear();
+        return results;
     QRegularExpressionMatchIterator it = mRegex.globalMatch(text);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        mLengths.append(match.capturedLength());
-        mResults.append(match.capturedStart());
+        results.append({match.capturedStart(), match.capturedLength()});
     }
-    return mResults.size();
+    return results;
 }
 
 QString RegexSearcher::replace(const QString &aOccurrence, const QString &aReplacement)

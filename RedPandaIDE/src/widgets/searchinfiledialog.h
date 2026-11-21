@@ -18,7 +18,7 @@
 #define SEARCHINFILEDIALOG_H
 
 #include <QDialog>
-#include <qsynedit/qsynedit.h>
+#include "../search/filesearchengine.h"
 #include "../utils.h"
 
 namespace Ui {
@@ -40,7 +40,6 @@ public:
     void findInFiles(const QString& keyword, SearchFileScope scope,
                      QSynedit::SearchOptions options, bool useRegex,
                      const QString& folder, const QString& filters, bool searchSubfolders );
-    QSynedit::PSearcher searchEngine() const;
 
 private slots:
    void on_cbFind_currentTextChanged(const QString &arg1);
@@ -56,22 +55,21 @@ private slots:
 
 private:
    void doSearch(bool replace);
-   int execute(QSynedit::QSynEdit* editor, const QString& sSearch,
-               const QString& sReplace,
-               QSynedit::SearchOptions searchOptions,
-               bool useRegex,
-               QSynedit::SearchMatchedProc matchCallback = nullptr,
-               QSynedit::SearchConfirmAroundProc confirmAroundCallback = nullptr);
    std::shared_ptr<SearchResultTreeItem> batchFindInEditor(
-           QSynedit::QSynEdit * editor,
+           Editor *editor,
            const QString& filename,
            const QString& keyword,
            QSynedit::SearchOptions searchOptions,
            bool useRegex);
+   std::shared_ptr<SearchResultTreeItem> batchFindInFile(
+           const QString& filename,
+           const QString& keyword,
+           QSynedit::SearchOptions searchOptions,
+           bool useRegex,
+           const QByteArray &encoding = ENCODING_AUTO_DETECT);
 private:
     Ui::SearchInFileDialog *ui;
-    QSynedit::PSearcher mBasicSearchEngine;
-    QSynedit::PSearcher mRegexSearchEngine;
+    FileSearchEngine mFileSearchEngine;
     QStringList mSearchKeys;
 
     // QWidget interface
