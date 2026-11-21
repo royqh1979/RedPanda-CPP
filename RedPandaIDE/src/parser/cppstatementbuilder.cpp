@@ -731,7 +731,7 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
                         declaration.specifiers.properties};
                     setStatementHasDefinition(enumStatement, true);
                     auto normal = std::dynamic_pointer_cast<Statement>(enumStatement);
-                    normal->typeInfo.qualifiedName = declaration.declarators.first().name;
+                    normal->typeInfo.qualifiedName = statement->fullName;
                     normal->value = validValue ? QString::number(numericValue) : enumerator.value;
                     enumStatement->properties.setFlag(StatementProperty::InProject, context.inProject);
                     enumStatement->properties.setFlag(StatementProperty::InSystemHeader,

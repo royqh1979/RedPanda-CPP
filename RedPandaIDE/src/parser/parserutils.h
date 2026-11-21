@@ -101,11 +101,11 @@ enum class KeywordType {
 };
 
 enum class StatementKind  {
+    Preprocessor,
     Unknown,
     Namespace,
     NamespaceAlias,
     Class,
-    Preprocessor,
     EnumType,
     EnumClassType,
     Typedef,

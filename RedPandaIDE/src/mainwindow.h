@@ -582,6 +582,8 @@ private slots:
 
     void on_actionFind_references_triggered();
 
+    void on_actionLocate_in_Class_Browser_triggered();
+
     void on_actionOpen_Containing_Folder_triggered();
 
     void on_actionOpen_Terminal_triggered();

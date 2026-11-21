@@ -14,6 +14,10 @@ Red Panda C++ Version 3.6
   - fix: Exclude inactive preprocessor branches from semantic reference searches.
   - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
+  - enhancement: Locate the symbol under the caret in the current file's class browser from the editor context menu or a configurable shortcut.
+  - enhancement: Hide generated names of anonymous types in the class browser and place them before named types of the same kind by definition line.
+  - enhancement: Sort macros before other symbol kinds in the class browser.
+  - fix: Group File Properties under File in the shortcut settings.
   - change: Remove the class browser's whole-project symbol view; it now shows the current file's C/C++ context.
   - change: Remove the option to clear symbol tables when an editor is hidden; showing an editor reparses it only when needed.
   - fix: Correctly distinguish extern declarations from initialized definitions, merge local extern declarations with external symbols, and recognize static data-member declarations.

@@ -138,6 +138,27 @@ static CppRefactor::EditorProvider openedEditorProvider(MainWindow *mainWindow)
     };
 }
 
+static QModelIndex classBrowserIndexForCurrentSymbol(
+        Editor *editor, const ClassBrowserModel *model)
+{
+    if (!editor || !model || !editor->parser() || !editor->parser()->enabled())
+        return QModelIndex();
+    QSynedit::CharPos pos = editor->caretPos();
+    PStatement statement = editor->parser()->findStatementOf(
+                editor->filename(),
+                CppExpressionExtractor::extract(editor, editor->syntaxer(), pos),
+                pos.line);
+    if (!statement)
+        return QModelIndex();
+    StatementOccurrence declaration = statementDeclarationForNavigation(
+                statement, editor->filename());
+    StatementOccurrence definition = statementDefinitionForNavigation(statement);
+    if (declaration.fileName != editor->filename()
+            && definition.fileName != editor->filename())
+        return QModelIndex();
+    return model->modelIndexForStatement(statement);
+}
+
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -732,6 +753,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(false);
         ui->actionGoto_Definition->setEnabled(false);
         ui->actionFind_references->setEnabled(false);
+        ui->actionLocate_in_Class_Browser->setEnabled(false);
 
         ui->actionMove_To_Other_View->setEnabled(false);
         ui->actionSplit_View->setEnabled(false);
@@ -824,6 +846,8 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(e->parser()!=nullptr);
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
+        ui->actionLocate_in_Class_Browser->setEnabled(
+                    e->parser() && e->parser()->enabled());
         ui->actionMove_To_Other_View->setEnabled(editorManager()->pageCount()>1);
         ui->actionSplit_View->setEnabled(editorManager()->peerOf(e)==nullptr);
 
@@ -5408,6 +5432,10 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addAction(ui->actionGoto_Declaration);
             menu.addAction(ui->actionGoto_Definition);
             menu.addAction(ui->actionFind_references);
+            menu.addAction(ui->actionLocate_in_Class_Browser);
+            ui->actionLocate_in_Class_Browser->setEnabled(
+                        classBrowserIndexForCurrentSymbol(
+                            editor, mClassBrowserModel).isValid());
             menu.addSeparator();
         }
 
@@ -7342,6 +7370,23 @@ void MainWindow::on_actionFind_references_triggered()
 }
 
 
+void MainWindow::on_actionLocate_in_Class_Browser_triggered()
+{
+    QModelIndex index = classBrowserIndexForCurrentSymbol(
+                mEditorManager->getEditor(), mClassBrowserModel);
+    if (!index.isValid())
+        return;
+    showHideInfosTab(ui->tabStructure, true);
+    ui->actionStructure->setChecked(true);
+    ui->tabExplorer->setCurrentWidget(ui->tabStructure);
+    stretchExplorerPanel(true);
+    for (QModelIndex parent = index.parent(); parent.isValid(); parent = parent.parent())
+        ui->classBrowser->expand(parent);
+    ui->classBrowser->setCurrentIndex(index);
+    ui->classBrowser->scrollTo(index, QAbstractItemView::PositionAtCenter);
+}
+
+
 void MainWindow::on_actionOpen_Containing_Folder_triggered()
 {
     Editor* editor = mEditorManager->getEditor();
@@ -8192,7 +8237,8 @@ void MainWindow::initEditorActions()
     changeEditorActionParent(ui->actionToggle_Breakpoint, tr("Debug"));
     changeEditorActionParent(ui->actionGoto_Declaration, tr("Code"));
     changeEditorActionParent(ui->actionGoto_Definition, tr("Code"));
-    changeEditorActionParent(ui->actionFile_Properties, tr("Code"));
+    changeEditorActionParent(ui->actionLocate_in_Class_Browser, tr("Code"));
+    changeEditorActionParent(ui->actionFile_Properties, tr("File"));
     changeEditorActionParent(ui->actionLocate_in_Files_View, tr("Code"));
     changeEditorActionParent(ui->actionSwitchHeaderSource, tr("Code"));
 

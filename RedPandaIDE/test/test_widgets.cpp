@@ -860,6 +860,69 @@ void TestWidgets::test_class_browser_direct_members()
     QVERIFY(!findNode(model, derived, "publicValue").isValid());
 }
 
+void TestWidgets::test_class_browser_model_index_for_current_file_statement()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    const QString headerFile = tmp.filePath("external.h");
+    const QString sourceFile = tmp.filePath("main.cpp");
+    QFile header(headerFile);
+    QVERIFY(header.open(QIODevice::WriteOnly));
+    QVERIFY(header.write("struct External { int value; };\n") > 0);
+    header.close();
+    QFile source(sourceFile);
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    QVERIFY(source.write("#include \"external.h\"\n"
+                         "namespace N {\n"
+                         "struct Current { int member; };\n"
+                         "}\n") > 0);
+    source.close();
+
+    mParser = std::make_shared<CppParser>();
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(sourceFile, false);
+    CppParser::parseFileBlocking(mParser, sourceFile, false, "");
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(sourceFile);
+    model.fillStatements();
+
+    PStatement currentClass = mParser->findStatementOf(sourceFile, "Current", 2);
+    QVERIFY(currentClass);
+    QCOMPARE(statementDeclarationForNavigation(currentClass, sourceFile).fileName,
+             sourceFile);
+    PStatement member;
+    for (const PStatement &child : mParser->membersOfStatement(currentClass)) {
+        if (child->command == "member") {
+            member = child;
+            break;
+        }
+    }
+    QVERIFY(member);
+    QModelIndex memberIndex = model.modelIndexForStatement(member);
+    QVERIFY(memberIndex.isValid());
+    QModelIndex currentIndex = findNode(model, findNode(model, {}, "N"), "Current");
+    QVERIFY(currentIndex.isValid());
+    QCOMPARE(memberIndex, findNode(model, currentIndex, "member"));
+
+    QTreeView view;
+    view.setModel(&model);
+    for (QModelIndex parent = memberIndex.parent();
+         parent.isValid(); parent = parent.parent())
+        view.expand(parent);
+    view.setCurrentIndex(memberIndex);
+    QCOMPARE(view.currentIndex(), memberIndex);
+    QVERIFY(view.isExpanded(memberIndex.parent()));
+    QVERIFY(view.isExpanded(memberIndex.parent().parent()));
+
+    PStatement externalClass = mParser->findStatementOf(sourceFile, "External", 0);
+    QVERIFY(externalClass);
+    QCOMPARE(statementDeclarationForNavigation(externalClass, sourceFile).fileName,
+             headerFile);
+    QVERIFY(!model.modelIndexForStatement(externalClass).isValid());
+    QVERIFY(!model.modelIndexForStatement(PStatement()).isValid());
+}
+
 void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
 {
     const QString fileName = "incremental.cpp";
@@ -1407,7 +1470,109 @@ void TestWidgets::test_class_browser_anonymous_typedef_type()
         }
     }
     QVERIFY(type.isValid());
+    QCOMPARE(model.data(type, Qt::DisplayRole).toString(), QString("anonymous"));
     QVERIFY(findNode(model, type, "xxx").isValid());
+}
+
+void TestWidgets::test_class_browser_anonymous_type_sorting()
+{
+    const QString fileName = "anonymous_sorting.cpp";
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct ZNamed {};",
+            "struct { int first; } firstValue;",
+            "class { int second; } secondValue;",
+            "union { int third; } thirdValue;",
+            "struct ANamed {};",
+            "enum { fourth } fourthValue;",
+            "enum NamedEnum { enumValue };",
+            "enum class { fifth } fifthValue;",
+            "enum class NamedScopedEnum { scopedValue };"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    bool oldSortAlpha = pSettings->ui().classBrowserSortAlpha();
+    bool oldSortType = pSettings->ui().classBrowserSortType();
+    auto restoreSettings = finally([oldSortAlpha, oldSortType] {
+        pSettings->ui().setClassBrowserSortAlpha(oldSortAlpha);
+        pSettings->ui().setClassBrowserSortType(oldSortType);
+    });
+    pSettings->ui().setClassBrowserSortType(true);
+    for (bool sortAlpha : {true, false}) {
+        pSettings->ui().setClassBrowserSortAlpha(sortAlpha);
+        model.fillStatements();
+        QHash<StatementKind, QList<PStatement>> groups;
+        for (int row = 0; row < model.rowCount({}); ++row) {
+            QModelIndex index = model.index(row, 0, {});
+            auto node = static_cast<ClassBrowserNode *>(index.internalPointer());
+            QVERIFY(node && node->statement);
+            StatementKind kind = node->statement->kind;
+            if (kind == StatementKind::Class || kind == StatementKind::EnumType
+                    || kind == StatementKind::EnumClassType)
+                groups[kind].append(node->statement);
+            if (row > 0) {
+                auto previous = static_cast<ClassBrowserNode *>(
+                            model.index(row - 1, 0, {}).internalPointer());
+                QVERIFY(previous->statement->kind <= kind);
+            }
+        }
+
+        const QVector<QPair<StatementKind, QList<int>>> expectedGroups{
+            {StatementKind::Class, {1, 2, 3}},
+            {StatementKind::EnumType, {5}},
+            {StatementKind::EnumClassType, {7}}
+        };
+        for (const auto &expected : expectedGroups) {
+            const QList<PStatement> statements = groups.value(expected.first);
+            int namedCount = expected.first == StatementKind::Class ? 2 : 1;
+            QCOMPARE(statements.count(), expected.second.count() + namedCount);
+            for (int i = 0; i < expected.second.count(); ++i) {
+                const PStatement &statement = statements[i];
+                QVERIFY(statement->command.startsWith("__RED_PANDA_IDE__"));
+                QCOMPARE(statementDefinitionForNavigation(statement).range.start.line,
+                         expected.second[i]);
+            }
+            for (int i = expected.second.count(); i < statements.count(); ++i)
+                QVERIFY(!statements[i]->command.startsWith("__RED_PANDA_IDE__"));
+        }
+    }
+}
+
+void TestWidgets::test_class_browser_macros_sort_first()
+{
+    const QString fileName = "macro_sorting.cpp";
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace N {}",
+            "#define VALUE 1",
+            "struct S {};"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, fileName, false, "");
+
+    bool oldSortAlpha = pSettings->ui().classBrowserSortAlpha();
+    bool oldSortType = pSettings->ui().classBrowserSortType();
+    auto restoreSettings = finally([oldSortAlpha, oldSortType] {
+        pSettings->ui().setClassBrowserSortAlpha(oldSortAlpha);
+        pSettings->ui().setClassBrowserSortType(oldSortType);
+    });
+    pSettings->ui().setClassBrowserSortAlpha(true);
+    pSettings->ui().setClassBrowserSortType(true);
+    ClassBrowserModel model;
+    model.setParser(mParser);
+    model.setCurrentFile(fileName);
+    model.fillStatements();
+    QVERIFY(model.rowCount({}) >= 3);
+    auto first = static_cast<ClassBrowserNode *>(model.index(0, 0, {}).internalPointer());
+    QVERIFY(first && first->statement);
+    QCOMPARE(first->statement->kind, StatementKind::Preprocessor);
+    QCOMPARE(first->statement->command, QString("VALUE"));
 }
 
 void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
@@ -1472,6 +1637,7 @@ void TestWidgets::test_unscoped_enum_completion_and_class_browser()
         buffer = QStringList{
             "enum Color { red, green, blue };",
             "enum class Scoped { value };",
+            "namespace N { enum Nested { nestedValue }; }",
             "struct ZOrdered { int alpha; };"
         };
         return true;
@@ -1490,16 +1656,36 @@ void TestWidgets::test_unscoped_enum_completion_and_class_browser()
     model.setParser(mParser);
     model.setCurrentFile(fileName);
     model.fillStatements();
-    QCOMPARE(model.rowCount({}), 3);
+    QCOMPARE(model.rowCount({}), 4);
     QVERIFY(!findNode(model, {}, "red").isValid());
     QModelIndex color = findNode(model, {}, "Color");
     QVERIFY(color.isValid());
     QCOMPARE(model.rowCount(color), 3);
     QCOMPARE(childCommands(model, color), QSet<QString>({"red", "green", "blue"}));
+    PStatement redStatement = mParser->findStatementOf(fileName, "red", 0);
+    QVERIFY(redStatement && redStatement->kind == StatementKind::Enum);
+    QCOMPARE(model.modelIndexForStatement(redStatement), findNode(model, color, "red"));
     QModelIndex scoped = findNode(model, {}, "Scoped");
     QVERIFY(scoped.isValid());
     QCOMPARE(model.rowCount(scoped), 1);
     QCOMPARE(childCommands(model, scoped), QSet<QString>({"value"}));
+    PStatement scopedValue = mParser->findStatementOf(
+                fileName, QStringList{"Scoped", "::", "value"}, 0);
+    QVERIFY(scopedValue && scopedValue->kind == StatementKind::Enum);
+    QCOMPARE(model.modelIndexForStatement(scopedValue), findNode(model, scoped, "value"));
+
+    PStatement nestedType = mParser->findStatement("N::Nested");
+    QVERIFY(nestedType);
+    PStatement nestedValue = mParser->findStatementOf(
+                fileName, QStringList{"N", "::", "Nested", "::", "nestedValue"}, 0);
+    QVERIFY(nestedValue && nestedValue->kind == StatementKind::Enum);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(nestedValue)->typeInfo.qualifiedName,
+             nestedType->fullName);
+    QModelIndex nested = findNode(model, findNode(model, {}, "N"), "Nested");
+    QVERIFY(nested.isValid());
+    QCOMPARE(model.modelIndexForStatement(nestedValue),
+             findNode(model, nested, "nestedValue"));
+
     QModelIndex ordered = findNode(model, {}, "ZOrdered");
     QVERIFY(ordered.isValid());
     QCOMPARE(model.rowCount(ordered), 1);

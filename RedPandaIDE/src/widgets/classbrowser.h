@@ -58,6 +58,7 @@ public:
     void setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors);
 
     QModelIndex modelIndexForStatement(const QString& key) const;
+    QModelIndex modelIndexForStatement(const PStatement& statement) const;
     QString generateStatementKey(const PStatement& statement) const;
 signals:
     void refreshStarted();

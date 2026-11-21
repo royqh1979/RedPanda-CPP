@@ -2584,6 +2584,11 @@
     <string>Find references</string>
    </property>
   </action>
+  <action name="actionLocate_in_Class_Browser">
+   <property name="text">
+    <string>Locate in Class Browser</string>
+   </property>
+  </action>
   <action name="actionOpen_Containing_Folder">
    <property name="text">
     <string>Open containing folder</string>
