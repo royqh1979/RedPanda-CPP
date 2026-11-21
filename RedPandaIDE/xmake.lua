@@ -109,6 +109,8 @@ target("RedPandaIDE")
         -- search
         "src/search/filesearchengine.cpp",
         "src/search/searchresultreplacer.cpp",
+        -- refactor
+        "src/refactor/cpprefactor.cpp",
         -- problems
         "src/problems/freeprojectsetformat.cpp",
         "src/problems/problemcasevalidator.cpp",
@@ -140,7 +142,6 @@ target("RedPandaIDE")
     add_moc_classes(
         "src/caretlist",
         "src/codesnippetsmanager",
-        "src/cpprefacter",
         "src/editor/editor",
         "src/editormanager",
         "src/iconsmanager",

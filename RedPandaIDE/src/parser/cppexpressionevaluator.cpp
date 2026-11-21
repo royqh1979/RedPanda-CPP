@@ -394,9 +394,11 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
                 TypeInfo explicitResult = mOperations.explicitTemplateResult(result, arguments,
                                                                              evaluation);
                 if (!explicitResult.qualifiedName.isEmpty()) {
+                    bool typeResult = result.kind == EvalStatementKind::Type;
                     result.type = explicitResult;
                     result.instance = mResolver.resolveInstance(explicitResult, {}, {}, evaluation);
-                    result.kind = EvalStatementKind::Variable;
+                    result.statement = result.instance.declaration;
+                    result.kind = typeResult ? EvalStatementKind::Type : EvalStatementKind::Variable;
                     continue;
                 }
             }
@@ -470,6 +472,7 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             result.statement = member.statement;
             result.type = member.type;
             result.instance = member.instance;
+            result.invocation = member.invocation;
             result.kind = !call && isFunction(result.statement)
                     ? EvalStatementKind::Function : EvalStatementKind::Variable;
             if (result.kind == EvalStatementKind::Function)

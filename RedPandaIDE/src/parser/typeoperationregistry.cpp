@@ -98,14 +98,20 @@ TypeInfo TypeOperationRegistry::explicitTemplateResult(
         const EvalResult &target, const QVector<TemplateArgument> &arguments,
         CppTypeResolver::EvaluationContext *evaluation) const
 {
-    Q_UNUSED(evaluation);
-    if (!target.baseStatement || target.baseStatement->fullName != "std::views::elements"
-            || arguments.count() != 1 || arguments.first().kind != TemplateArgumentKind::NonType)
+    if (target.baseStatement && target.baseStatement->fullName == "std::views::elements"
+            && arguments.count() == 1
+            && arguments.first().kind == TemplateArgumentKind::NonType) {
+        TypeInfo result = target.type;
+        result.qualifiedName = "std::ranges::elements_fn";
+        result.templateArguments = arguments;
+        return result;
+    }
+    if (target.kind != EvalStatementKind::Type || !target.baseStatement)
         return {};
     TypeInfo result = target.type;
-    result.qualifiedName = "std::ranges::elements_fn";
+    result.qualifiedName = target.baseStatement->fullName;
     result.templateArguments = arguments;
-    return result;
+    return mResolver.resolve(result, {}, target.baseStatement->parentScope.lock(), evaluation);
 }
 
 TypeInfo TypeOperationRegistry::pipeResult(

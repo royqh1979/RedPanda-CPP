@@ -635,7 +635,10 @@ PStatement CppParser::doFindStatementOf(const QString &fileName, const QString &
         expression.append(token.text);
     EvalResult result = doEvalExpression(fileName, expression, currentScope);
     parentScopeType = result.type.declaration.lock();
-    return visibleStatement(fileName, result.statement ? result.statement : parentScopeType);
+    PStatement statement = result.invocation.statement
+            && (!result.statement || result.statement == result.baseStatement)
+            ? result.invocation.statement : result.statement;
+    return visibleStatement(fileName, statement ? statement : parentScopeType);
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression,
@@ -652,8 +655,11 @@ PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringLi
 {
     QStringList copy = expression;
     EvalResult result = doEvalExpression(fileName, copy, currentScope);
+    PStatement statement = result.invocation.statement
+            && (!result.statement || result.statement == result.baseStatement)
+            ? result.invocation.statement : result.statement;
     return visibleStatement(fileName,
-                            result.statement ? result.statement : result.type.declaration.lock());
+                            statement ? statement : result.type.declaration.lock());
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression,

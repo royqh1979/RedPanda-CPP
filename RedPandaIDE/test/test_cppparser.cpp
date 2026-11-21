@@ -48,6 +48,25 @@ void TestCppParser::test_global_variable_reference_scope()
     QCOMPARE(getKindOfStatement(reference), StatementKind::GlobalVariable);
 }
 
+void TestCppParser::test_include_visibility()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QString header = dir.filePath("project.h");
+    QString main = dir.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"class Bar {};"}));
+    QVERIFY(writeLines(main, {"#include \"project.h\"", "Bar value;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+
+    QVERIFY(mParser->getIncludedFiles(main).contains(header));
+    PStatement statement = mParser->findStatementOf(main, QStringList{"Bar"}, 1);
+    QVERIFY(statement);
+    QCOMPARE(statement->fullName, "Bar");
+    QCOMPARE(statementDefinitionForNavigation(statement).fileName, header);
+    QCOMPARE(statementDefinitionForNavigation(statement).range.start.line, 0);
+    QCOMPARE(statementDefinitionForNavigation(statement).range.start.ch, 0);
+}
+
 void TestCppParser::test_unresolved_member_function_reference()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
@@ -239,6 +258,71 @@ void TestCppParser::test_member_overload_resolution()
     QVERIFY(!evaluate({"object", ".", "explicitOnly", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "ambiguous", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "rvalueOnly", "(", ")"}).isValid());
+}
+
+void TestCppParser::test_find_statement_of_overload_resolution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "void f(int);",
+            "void f(double);",
+            "void f(int) {}",
+            "void f(double) {}",
+            "void call(){f(1);f(1.0);}",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    PStatement integer = mParser->findStatementOf(
+                "text.cpp", {"f", "(", "1", ")"}, 4);
+    QVERIFY(integer);
+    QCOMPARE(statementDefinitionForNavigation(integer).range.start.line, 2);
+    QCOMPARE(statementDefinitionForNavigation(integer).range.start.ch, 0);
+    QCOMPARE(statementDeclarationForNavigation(integer, "text.cpp").range.start.line, 0);
+    QCOMPARE(statementDeclarationForNavigation(integer, "text.cpp").range.start.ch, 0);
+
+    PStatement real = mParser->findStatementOf(
+                "text.cpp", {"f", "(", "1.0", ")"}, 4);
+    QVERIFY(real);
+    QCOMPARE(statementDefinitionForNavigation(real).range.start.line, 3);
+    QCOMPARE(statementDefinitionForNavigation(real).range.start.ch, 0);
+    QCOMPARE(statementDeclarationForNavigation(real, "text.cpp").range.start.line, 1);
+    QCOMPARE(statementDeclarationForNavigation(real, "text.cpp").range.start.ch, 0);
+}
+
+void TestCppParser::test_find_statement_of_template_specialization()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "template<class T> struct Foo {int primary;};",
+            "template<class T> struct Foo<T*> {int partial;};",
+            "template<> struct Foo<int*> {int full;};",
+            "Foo<char> primary;",
+            "Foo<char*> partial;",
+            "Foo<int*> full;",
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+
+    const QVector<QPair<QStringList, int>> cases{
+        {{"Foo", "<", "char", ">"}, 0},
+        {{"Foo", "<", "char", "*", ">"}, 1},
+        {{"Foo", "<", "int", "*", ">"}, 2},
+    };
+    for (int i = 0; i < cases.size(); ++i) {
+        PStatement statement = mParser->findStatementOf(
+                    "text.cpp", cases.at(i).first, i + 3);
+        QVERIFY2(statement, qPrintable(QString("template case %1").arg(i)));
+        StatementOccurrence definition = statementDefinitionForNavigation(statement);
+        QCOMPARE(definition.range.start.line, cases.at(i).second);
+        QCOMPARE(definition.range.start.ch, 0);
+        StatementOccurrence declaration = statementDeclarationForNavigation(
+                    statement, "text.cpp");
+        QCOMPARE(declaration.range.start.line, cases.at(i).second);
+        QCOMPARE(declaration.range.start.ch, 0);
+    }
 }
 
 void TestCppParser::test_expression_identifier_trace()

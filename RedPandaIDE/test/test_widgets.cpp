@@ -28,7 +28,7 @@
 #include "test_parser_utils.h"
 #endif
 #include "src/colorscheme.h"
-#include "src/cpprefacter.h"
+#include "src/refactor/cpprefactor.h"
 #include "src/editor/editor.h"
 #include "src/editormanager.h"
 #include "src/mainwindow.h"
@@ -1315,7 +1315,7 @@ void TestWidgets::test_rename_class_and_constructor()
     QStringList expectedContent = mMainContent;
     for (QString &lineText : expectedContent)
         lineText.replace("Foo", "Bar");
-    CppRefacter refactor(nullptr);
+    CppRefactor refactor;
     refactor.renameSymbol(&editor, classPos, "Bar");
     QCOMPARE(editor.content(), expectedContent);
 }
@@ -1341,7 +1341,7 @@ void TestWidgets::test_rename_from_constructor()
     QStringList expectedContent = mMainContent;
     for (QString &lineText : expectedContent)
         lineText.replace("Foo", "Bar");
-    CppRefacter refactor(nullptr);
+    CppRefactor refactor;
     refactor.renameSymbol(&editor, constructorPos, "Bar");
     QCOMPARE(editor.content(), expectedContent);
 }

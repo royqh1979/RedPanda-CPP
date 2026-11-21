@@ -1,6 +1,7 @@
 Red Panda C++ Version 3.6
 
   - enhancement: Rewrite the C++ parser with structured declarations, scoped statements, and on-demand type evaluation.
+  - enhancement: Make Find References and Rename Symbol scope-aware, with overload selection, linked symbol renaming, and atomic rename previews.
   - enhancement: Refresh compiler type, version, detected paths, and tool selection when loading or selecting a compiler configuration, while preserving custom settings.
   - enhancement: Use consistent Unicode-aware whole-word matching and search open buffers in Find in Files without changing editor state.
   - fix: Correct multi-line and zero-length replacements, and keep Replace All in one Undo group.

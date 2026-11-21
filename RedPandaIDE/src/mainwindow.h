@@ -23,6 +23,7 @@
 #include <QFileSystemModel>
 #include <QElapsedTimer>
 #include <QSortFilterProxyModel>
+#include <QPointer>
 #include "common.h"
 #include "widgets/searchresultview.h"
 #include "widgets/classbrowser.h"
@@ -64,6 +65,8 @@ class QLabel;
 class QComboBox;
 class CompilerManager;
 class Editor;
+struct SymbolReferenceResults;
+enum class RenameResult;
 class Debugger;
 class CPUDialog;
 class QPlainTextEdit;
@@ -316,6 +319,9 @@ private:
             QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
     void showSearchReplacePanel(bool show);
+    PSearchResults addSymbolReferenceResults(const SymbolReferenceResults &references);
+    void clearRenamePreview();
+    void showRenameError(RenameResult result);
     void clearIssues();
     void doCompileRun(RunType runType);
     void doGenerateAssembly();
@@ -945,6 +951,10 @@ private:
     std::unique_ptr<CustomFileIconProvider> mFileSystemModelIconProvider;
     TodoModel *mTodoModel;
     SearchResultModel *mSearchResultModel;
+    std::shared_ptr<SymbolReferenceResults> mPendingRenameReferences;
+    PSearchResults mPendingRenameResults;
+    QPointer<Editor> mPendingRenameEditor;
+    QString mPendingRenameWord;
     BookmarkModel *mBookmarkModel;
     SearchResultTreeViewDelegate *mSearchViewDelegate;
     ClassBrowserModel *mClassBrowserModel;

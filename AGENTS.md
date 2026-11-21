@@ -18,12 +18,13 @@ Red Panda C++（旧名：Red Panda Dev-C++ 7）是一款快速、轻量、开源
     - `problems/` — 问题集 / Competitive Companion 支持。
     - `reformatter/` — 代码格式化（AStyle）。
     - `search/` — 文件枚举与批量搜索、已选搜索结果替换。
+    - `refactor/` — 语义引用查找、重载/覆盖与模板感知的重命名。
     - `settings/` 和 `settingsdialog/` — 设置模型类与设置对话框控件。
     - `widgets/` — 自定义控件与对话框（通常是 `.cpp`/`.h`[`.ui`] 三件套）。
     - `utils/` — 文件、字体、操作系统、终端、转义等辅助工具。
     - `addon/` — Lua 插件运行时集成（仅在启用 `LUA_ADDON` 时构建）。
     - `vcs/` — Git 集成（仅在启用 `VCS` 时构建）。
-  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-file-search` 和包含全部 Parser 组件及集成 Suite 的 `test-cppparser`。
+  - `test/` — 单元测试（基于 Qt Test）：`test-editor`、`test-widgets`、`test-file-search`、`test-refactor` 和包含全部 Parser 组件及集成 Suite 的 `test-cppparser`。
   - `resources/`、`images/`、`*.qrc` — 嵌入资源（图标、主题、配色方案、字体、代码片段、项目模板）。
   - `translations/` — `.ts` 翻译文件。
 - `libs/qsynedit/` — 代码编辑器组件（QSynEdit 的深度改造分支）：文档模型、绘制器、行号栏、代码折叠、搜索器、导出器，以及语法高亮器（cpp、asm/gas/nasm、lua、makefile、glsl）。自带 Qt Test 测试套件，位于 `libs/qsynedit/test/`。
@@ -72,9 +73,9 @@ xmake
 
 ## 测试
 
-测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`、`test-widgets`、`test-file-search`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。Parser 组件和集成测试统一由 `test-cppparser` 构建执行，不再重复构建独立 tokenizer 目标。
+测试使用 Qt Test（`Qt::Test`）。测试程序：`test-cppparser`、`test-editor`、`test-widgets`、`test-file-search`、`test-refactor`（均位于 `RedPandaIDE/test/`），以及 qsynedit 测试套件（`libs/qsynedit/test/`）。CTest 已在根目录 `CMakeLists.txt` 中接好。Parser 组件和集成测试统一由 `test-cppparser` 构建执行，不再重复构建独立 tokenizer 目标。
 
-测试必须按被测组件的职责放入对应 Suite 和同名测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。`test-cppparser` 内使用 `TestCppTokenizer`、`TestCppDeclarationParser`、`TestCppStatementBuilder`、`TestCppTypeResolver`、`TestCppExpressionEvaluator`、`TestCppParser`、`TestCppParserInvalidation`、`TestCppParserSyntax`、`TestCppParserStandardLibrary` 及既有 Preprocessor Suite；可用 `--suite=类名` 单独运行。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`，文件搜索与已选结果替换测试属于 `test-file-search`。
+测试必须按被测组件的职责放入对应 Suite 和同名测试文件，不得因为某目标已经链接所需实现、编译方便而随意混放。`test-cppparser` 内使用 `TestCppTokenizer`、`TestCppDeclarationParser`、`TestCppStatementBuilder`、`TestCppTypeResolver`、`TestCppExpressionEvaluator`、`TestCppParser`、`TestCppParserInvalidation`、`TestCppParserSyntax`、`TestCppParserStandardLibrary` 及既有 Preprocessor Suite；可用 `--suite=类名` 单独运行。QSynEdit/Syntaxer 测试属于 `test-qsynedit` 中对应的测试类，Editor 测试属于 `test-editor`，Widget 测试属于 `test-widgets`，文件搜索与已选结果替换测试属于 `test-file-search`，语义引用与重命名测试属于 `test-refactor`。
 
 ```sh
 # CMake：构建全部测试目标，然后运行（CTest 自动设置无头运行环境）
@@ -136,6 +137,7 @@ PATH="/d/qt/mingw64/bin:/d/qt/qt5-debug-64/bin:$PATH" \
 
 - **按测试类筛选**：test-qsynedit、test-editor 和 test-cppparser 支持 `--suite=类名`（如 `--suite=TestDocument`、`--suite=TestCppParser`）只跑指定测试类，不带参数则跑全部。
 - **调试产生的有效验证场景必须保留**：修复问题后不得连同临时日志一起删除这些场景。将调试输出整理为正式断言，按职责放入合适的测试目标；通用根因用最小声明覆盖，真实工具链差异用对应真实头文件覆盖。中间类型、作用域归属和声明绑定等关键分层检查也应保留，不能只保留最终端到端结果。
+- **不得因测试不符合当前实现或既有预设而丢弃场景**：测试失败时先判断它是否暴露了新的合法使用场景、语义缺陷或实现 bug。即使夹具或断言本身有误，也只能修正错误部分，并保留原场景或另加等价的最小回归测试；需要改变场景语义时，应新增测试而不是悄悄替换原测试。
 - **Windows 直接运行测试时取得 Qt 日志**：若 `qWarning()`/`qDebug()` 只发往调试器，给测试进程设置 `QT_FORCE_STDERR_LOGGING=1` 即可输出到 Git Bash 终端。性能测量必须直接运行 Release 可执行文件，不能在 gdb 下计时；gdb 只用于崩溃、断言和栈信息。例如：
 
 ```sh
