@@ -1744,11 +1744,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         if (mEditorSettings->syntaxCheckWhenLineChanged())
             checkSyntaxInBack();
         reparseTodo();
-//        if (mCodeCompletionSettings->clearWhenEditorHidden()
-//                && changes.testFlag(SynStatusChange::scOpenFile)) {
-//        } else{
-//            reparse();
-//        }
     }
     mLineCount = lineCount();
     if (changes.testFlag(QSynedit::StatusChange::Modified)) {

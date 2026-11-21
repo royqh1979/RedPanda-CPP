@@ -27,7 +27,6 @@ EditorCodeCompletionWidget::EditorCodeCompletionWidget(const QString& name, cons
     ui(new Ui::EditorCodeCompletionWidget)
 {
     ui->setupUi(this);
-//    ui->chkClearWhenEditorHidden->setVisible(false);
 }
 
 EditorCodeCompletionWidget::~EditorCodeCompletionWidget()
