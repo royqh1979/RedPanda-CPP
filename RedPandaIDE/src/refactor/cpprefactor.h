@@ -124,6 +124,10 @@ private:
             const QVector<PStatement> &targets,
             SymbolReferenceScope scope,
             SymbolReferenceResults &results);
+    void findOccurrencesInProject(
+            Editor *editor,
+            const QVector<PStatement> &targets,
+            SymbolReferenceResults &results);
     SymbolReferenceFile findOccurrencesInFile(
             const QString &fileName,
             const QByteArray &fileEncoding,

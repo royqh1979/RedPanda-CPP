@@ -19,7 +19,6 @@
 
 #include <QAbstractItemModel>
 #include "../parser/cppparser.h"
-#include "../projectoptions.h"
 
 struct ClassBrowserNode : public std::enable_shared_from_this<ClassBrowserNode> {
     ClassBrowserNode* parent;
@@ -58,9 +57,6 @@ public:
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &colors() const;
     void setColors(const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &newColors);
 
-    ProjectClassBrowserType classBrowserType() const;
-    void setClassBrowserType(ProjectClassBrowserType newClassBrowserType);
-
     QModelIndex modelIndexForStatement(const QString& key) const;
     QString generateStatementKey(const PStatement& statement) const;
 signals:
@@ -88,7 +84,6 @@ private:
     mutable QRecursiveMutex mMutex;
     QString mCurrentFile;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
-    ProjectClassBrowserType mClassBrowserType;
 
 };
 

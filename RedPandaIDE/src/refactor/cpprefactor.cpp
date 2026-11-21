@@ -45,7 +45,8 @@ CppRefactor::CppRefactor(
 
 static bool validNewIdentifier(Editor *editor, const QString &newWord)
 {
-    if (!editor || newWord.isEmpty() || !editor->isIdentStartChar(newWord.front()))
+    if (!editor || newWord.isEmpty() || isCppKeyword(newWord)
+            || !editor->isIdentStartChar(newWord.front()))
         return false;
     for (const QChar &ch : newWord) {
         if (!editor->isIdentChar(ch))
@@ -60,28 +61,63 @@ static QString parentName(const PStatement &statement)
     return parent ? parent->fullName : QString();
 }
 
+static QStringList completeCallExpression(
+        Editor *editor,
+        QStringList expression,
+        const CharPos &pos)
+{
+    CharPos wordBegin;
+    CharPos wordEnd;
+    if (getWordAtPosition(editor, pos, wordBegin, wordEnd,
+                          Editor::WordPurpose::wpEvaluation).isEmpty())
+        return expression;
+    QString lineText = editor->lineText(pos.line);
+    int next = wordEnd.ch;
+    while (next < lineText.size() && lineText.at(next).isSpace())
+        ++next;
+    if (next >= lineText.size() || lineText.at(next) != '(')
+        return expression;
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({lineText.mid(next)});
+    int depth = 0;
+    for (const CppTokenizer::Token &token : tokenizer.tokens()) {
+        expression.append(token.text);
+        if (token.text == "(") {
+            ++depth;
+        } else if (token.text == ")" && --depth == 0) {
+            return expression;
+        }
+    }
+    return {};
+}
+
 bool CppRefactor::findOccurrences(
         Editor *editor, const CharPos &pos, SymbolReferenceResults &results)
 {
     if (!editor || !editor->parser())
         return false;
-    if (!editor->parser()->freeze())
-        return false;
-    auto unfreeze = finally([&editor] {
-        editor->parser()->unFreeze();
-    });
-    QStringList expression = CppExpressionExtractor::extract(
-                editor, editor->syntaxer(), pos);
-    if (expression.isEmpty())
-        return false;
-    PStatement statement = editor->parser()->findStatementOf(
-                editor->filename(), expression, pos.line);
-    if (!statement)
-        return false;
-    SymbolReferenceScope scope = statement->scope == StatementScope::Local
-            || !editor->inProject() || !mProject
-            ? SymbolReferenceScope::CurrentFile
-            : SymbolReferenceScope::WholeProject;
+    PStatement statement;
+    SymbolReferenceScope scope;
+    {
+        if (!editor->parser()->freeze())
+            return false;
+        auto unfreeze = finally([&editor] {
+            editor->parser()->unFreeze();
+        });
+        QStringList expression = CppExpressionExtractor::extract(
+                    editor, editor->syntaxer(), pos);
+        expression = completeCallExpression(editor, expression, pos);
+        if (expression.isEmpty())
+            return false;
+        statement = editor->parser()->findStatementOf(
+                    editor->filename(), expression, pos.line);
+        if (!statement)
+            return false;
+        scope = statement->scope == StatementScope::Local
+                || !editor->inProject() || !mProject
+                ? SymbolReferenceScope::CurrentFile
+                : SymbolReferenceScope::WholeProject;
+    }
     return doFindOccurrences(editor, statement, {statement}, scope, results);
 }
 
@@ -94,28 +130,30 @@ bool CppRefactor::findOccurrences(
 {
     if (!editor || !editor->parser())
         return false;
-    if (!editor->parser()->freeze())
-        return false;
-    auto unfreeze = finally([&editor] {
-        editor->parser()->unFreeze();
-    });
     PStatement statement;
-    if (!scopeFullName.isEmpty()) {
-        PStatement scopeStatement = editor->parser()->findStatement(scopeFullName);
-        if (!scopeStatement)
+    {
+        if (!editor->parser()->freeze())
             return false;
-        statement = scopeStatement->kind == StatementKind::Namespace
-                ? std::dynamic_pointer_cast<NamespaceStatement>(scopeStatement)
-                    ->children.value(keyword).lock()
-                : std::dynamic_pointer_cast<Statement>(scopeStatement)
-                    ->children.value(keyword).lock();
-    } else {
-        statement = editor->parser()->findStatement(keyword);
+        auto unfreeze = finally([&editor] {
+            editor->parser()->unFreeze();
+        });
+        if (!scopeFullName.isEmpty()) {
+            PStatement scopeStatement = editor->parser()->findStatement(scopeFullName);
+            if (!scopeStatement)
+                return false;
+            statement = scopeStatement->kind == StatementKind::Namespace
+                    ? std::dynamic_pointer_cast<NamespaceStatement>(scopeStatement)
+                        ->children.value(keyword).lock()
+                    : std::dynamic_pointer_cast<Statement>(scopeStatement)
+                        ->children.value(keyword).lock();
+        } else {
+            statement = editor->parser()->findStatement(keyword);
+        }
+        if (!statement)
+            return false;
+        if (statement->scope == StatementScope::Local)
+            scope = SymbolReferenceScope::CurrentFile;
     }
-    if (!statement)
-        return false;
-    if (statement->scope == StatementScope::Local)
-        scope = SymbolReferenceScope::CurrentFile;
     return doFindOccurrences(editor, statement, {statement}, scope, results);
 }
 
@@ -225,13 +263,12 @@ bool CppRefactor::doFindOccurrences(
     results.targets = targets;
     results.files.clear();
 
-    auto addFile = [&](const QString &fileName, const QByteArray &encoding) {
-        SymbolReferenceFile file = findOccurrencesInFile(
-                    fileName, encoding, targets, editor->parser());
-        if (!file.references.isEmpty())
-            results.files.append(file);
-    };
     if (scope == SymbolReferenceScope::CurrentFile) {
+        if (!editor->parser()->freeze())
+            return false;
+        auto unfreeze = finally([&editor] {
+            editor->parser()->unFreeze();
+        });
         SymbolReferenceFile file = findOccurrencesInFile(
                     editor->filename(), editor->editorEncoding(),
                     targets, editor->parser(), editor->content());
@@ -239,11 +276,7 @@ bool CppRefactor::doFindOccurrences(
         if (!file.references.isEmpty())
             results.files.append(file);
     } else if (mProject) {
-        for (const PProjectUnit &unit : mProject->unitList()) {
-            QByteArray encoding = unit->encoding() == ENCODING_PROJECT
-                    ? mProject->options().encoding : unit->encoding();
-            addFile(unit->fileName(), encoding);
-        }
+        findOccurrencesInProject(editor, targets, results);
     }
     return true;
 }
@@ -307,24 +340,8 @@ SymbolReferenceFile CppRefactor::findOccurrencesInFile(
                 int next = start + token.length();
                 while (next < lineText.size() && lineText.at(next).isSpace())
                     ++next;
-                if (next < lineText.size() && lineText.at(next) == '(') {
-                    CppTokenizer tokenizer;
-                    tokenizer.tokenize({lineText.mid(start)});
-                    QStringList callExpression = expression;
-                    int depth = 0;
-                    bool complete = false;
-                    for (int i = 1; i < tokenizer.tokens().size(); ++i) {
-                        QString text = tokenizer.tokens().at(i).text;
-                        callExpression.append(text);
-                        if (text == "(") {
-                            ++depth;
-                        } else if (text == ")" && --depth == 0) {
-                            complete = true;
-                            break;
-                        }
-                    }
-                    expression = complete ? callExpression : QStringList();
-                }
+                if (next < lineText.size() && lineText.at(next) == '(')
+                    expression = completeCallExpression(&editor, expression, pos);
                 PStatement tokenStatement = parser->findStatementOf(
                             fileName, expression, line);
                 if (!tokenStatement && expression.size() == 1
@@ -358,6 +375,7 @@ QVector<PStatement> CppRefactor::overloadsOf(
     });
     QStringList expression = CppExpressionExtractor::extract(
                 editor, editor->syntaxer(), pos);
+    expression = completeCallExpression(editor, expression, pos);
     if (expression.isEmpty())
         return {};
     return overloadsOf(editor->parser(),
@@ -391,12 +409,11 @@ static bool isFunction(const PStatement &statement)
                          || statement->kind == StatementKind::LiteralOperator);
 }
 
-static bool sameSignature(
+static bool sameFunctionSignature(
         const PStatement &left,
         const PStatement &right)
 {
-    if (!isFunction(left) || !isFunction(right)
-            || left->command != right->command)
+    if (!isFunction(left) || !isFunction(right))
         return false;
     auto normalLeft = std::dynamic_pointer_cast<Statement>(left);
     auto normalRight = std::dynamic_pointer_cast<Statement>(right);
@@ -407,6 +424,254 @@ static bool sameSignature(
                 == right->properties.testFlag(StatementProperty::LvalueReference)
             && left->properties.testFlag(StatementProperty::RvalueReference)
                 == right->properties.testFlag(StatementProperty::RvalueReference);
+}
+
+static bool sameSignature(
+        const PStatement &left,
+        const PStatement &right)
+{
+    return left && right && left->command == right->command
+            && sameFunctionSignature(left, right);
+}
+
+static bool hasCallableSignature(const PStatement &statement)
+{
+    return isFunction(statement)
+            || (statement && (statement->kind == StatementKind::Constructor
+                              || statement->kind == StatementKind::Destructor));
+}
+
+static bool hasAnonymousNamespaceScope(const PStatement &statement)
+{
+    PStatement parent = statement ? statement->parentScope.lock() : nullptr;
+    while (parent) {
+        if (parent->kind == StatementKind::Namespace && parent->command.isEmpty())
+            return true;
+        parent = parent->parentScope.lock();
+    }
+    return false;
+}
+
+struct SymbolIdentity {
+    StatementKind kind;
+    QString fullName;
+    QString parentFullName;
+    StatementScope scope;
+    bool internalLinkage;
+    bool externalDeclaration;
+    QString normalizedArgs;
+    bool isConst;
+    bool isLvalueReference;
+    bool isRvalueReference;
+    QVector<StatementOccurrence> occurrences;
+    QString translationUnit;
+};
+
+static SymbolIdentity symbolIdentity(
+        const PStatement &statement,
+        ParserLanguage language)
+{
+    SymbolIdentity result{
+        statement->kind, statement->fullName, parentName(statement), statement->scope,
+        (statement->scope == StatementScope::Global && statementIsStatic(statement))
+                || hasAnonymousNamespaceScope(statement),
+        false, QString(), false, false, false, {}, QString()
+    };
+    for (const StatementOccurrence &declaration : statement->declarations)
+        result.occurrences.append(declaration);
+    if (statementHasDefinition(statement))
+        result.occurrences.append(statement->definition);
+    if (auto normal = std::dynamic_pointer_cast<Statement>(statement)) {
+        result.externalDeclaration = normal->declSpecifierProperties.testFlag(
+                    DeclSpecifierProperty::Extern);
+        if (language == ParserLanguage::CPlusPlus
+                && statement->scope == StatementScope::Global
+                && !result.externalDeclaration
+                && (statement->kind == StatementKind::Variable
+                    || statement->kind == StatementKind::GlobalVariable)
+                && (normal->typeInfo.qualifiers.testFlag(TypeQualifier::Const)
+                    || normal->declSpecifierProperties.testFlag(
+                        DeclSpecifierProperty::Constexpr)))
+            result.internalLinkage = true;
+        if (hasCallableSignature(statement)) {
+            result.normalizedArgs = normal->normalizedArgs;
+            result.isConst = statement->properties.testFlag(StatementProperty::Const);
+            result.isLvalueReference = statement->properties.testFlag(
+                        StatementProperty::LvalueReference);
+            result.isRvalueReference = statement->properties.testFlag(
+                        StatementProperty::RvalueReference);
+        }
+    }
+    return result;
+}
+
+static bool matchesSymbolIdentity(
+        const PStatement &statement,
+        const SymbolIdentity &identity,
+        const QString &translationUnit,
+        ParserLanguage language)
+{
+    if (!statement || statement->kind != identity.kind)
+        return false;
+    SymbolIdentity candidate = symbolIdentity(statement, language);
+    if (hasCallableSignature(statement)
+            && (candidate.normalizedArgs != identity.normalizedArgs
+                || candidate.isConst != identity.isConst
+                || candidate.isLvalueReference != identity.isLvalueReference
+                || candidate.isRvalueReference != identity.isRvalueReference))
+        return false;
+    if (statement->command.startsWith("__RED_PANDA_IDE__")) {
+        if (candidate.parentFullName != identity.parentFullName)
+            return false;
+        for (const StatementOccurrence &left : candidate.occurrences) {
+            for (const StatementOccurrence &right : identity.occurrences) {
+                if (sameOccurrence(left, right))
+                    return true;
+            }
+        }
+        return false;
+    }
+    if (candidate.fullName != identity.fullName)
+        return false;
+    if (candidate.scope == StatementScope::Local && !candidate.externalDeclaration)
+        return false;
+    if (candidate.internalLinkage != identity.internalLinkage)
+        return false;
+    return !candidate.internalLinkage || identity.translationUnit == translationUnit;
+}
+
+static QVector<PStatement> equivalentTargetsInCurrentParse(
+        const PCppParser &parser,
+        const QVector<SymbolIdentity> &identities,
+        const QString &translationUnit)
+{
+    QVector<PStatement> result;
+    for (const PStatement &candidate : parser->statementList().statements()) {
+        for (const SymbolIdentity &identity : identities) {
+            if (matchesSymbolIdentity(candidate, identity, translationUnit,
+                                      parser->language())) {
+                result.append(candidate);
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+void CppRefactor::findOccurrencesInProject(
+        Editor *editor,
+        const QVector<PStatement> &targets,
+        SymbolReferenceResults &results)
+{
+    PCppParser parser = editor->parser();
+    QVector<SymbolIdentity> identities;
+    {
+        if (!parser->freeze())
+            return;
+        auto unfreeze = finally([&parser] {
+            parser->unFreeze();
+        });
+        for (const PStatement &target : targets) {
+            SymbolIdentity identity = symbolIdentity(target, parser->language());
+            identity.translationUnit = editor->contextFile().isEmpty()
+                    ? editor->filename() : editor->contextFile();
+            identities.append(identity);
+        }
+    }
+
+    QStringList translationUnits;
+    for (const PProjectUnit &unit : mProject->unitList()) {
+        if (isC_CPPSourceFile(getFileType(unit->fileName())))
+            translationUnits.append(unit->fileName());
+    }
+    if (translationUnits.isEmpty())
+        translationUnits.append(editor->filename());
+
+    auto restoreCurrentParse = finally([&parser, &editor] {
+        CppParser::parseFileBlocking(parser, editor->filename(), editor->inProject(),
+                                     editor->contextFile(), false, false);
+    });
+    for (const QString &translationUnit : translationUnits) {
+        CppParser::parseFileBlocking(parser, translationUnit, true, "", false, false);
+        if (!parser->freeze())
+            continue;
+        auto unfreeze = finally([&parser] {
+            parser->unFreeze();
+        });
+        QVector<PStatement> currentTargets = equivalentTargetsInCurrentParse(
+                    parser, identities, translationUnit);
+        if (currentTargets.isEmpty())
+            continue;
+        QStringList files{translationUnit};
+        QStringList includedFiles = parser->getIncludedFiles(translationUnit).values();
+        std::sort(includedFiles.begin(), includedFiles.end());
+        files.append(includedFiles);
+        for (const QString &fileName : files) {
+            QByteArray encoding = ENCODING_AUTO_DETECT;
+            for (const PProjectUnit &unit : mProject->unitList()) {
+                if (unit->fileName() == fileName) {
+                    encoding = unit->encoding() == ENCODING_PROJECT
+                            ? mProject->options().encoding : unit->encoding();
+                    break;
+                }
+            }
+            SymbolReferenceFile file = findOccurrencesInFile(
+                        fileName, encoding, currentTargets, parser,
+                        fileName == editor->filename()
+                        ? editor->content() : QStringList());
+            if (file.references.isEmpty())
+                continue;
+            if (fileName == editor->filename())
+                file.documentVersion = editor->document()->contentVersion();
+            auto fileIt = std::find_if(
+                        results.files.begin(), results.files.end(),
+                        [&fileName](const SymbolReferenceFile &existing) {
+                return existing.fileName == fileName;
+            });
+            if (fileIt == results.files.end()) {
+                results.files.append(file);
+                continue;
+            }
+            for (const SymbolReference &reference : file.references) {
+                bool duplicate = false;
+                for (const SymbolReference &existing : fileIt->references) {
+                    if (existing.line == reference.line && existing.ch == reference.ch
+                            && existing.length == reference.length) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate)
+                    fileIt->references.append(reference);
+            }
+        }
+    }
+}
+
+static bool hasRenameNameConflict(
+        const PCppParser &parser,
+        const QVector<PStatement> &targets,
+        const QString &newWord)
+{
+    QSet<PStatement> targetSet(targets.begin(), targets.end());
+    for (const PStatement &target : targets) {
+        QVector<PStatement> scopes{target->parentScope.lock()};
+        if (target->kind == StatementKind::Class)
+            scopes.append(target);
+        for (const PStatement &scope : scopes) {
+            const StatementMap &siblings = parser->statementList().childrenStatements(scope);
+            for (const std::weak_ptr<AbstractStatement> &weak : siblings.values(newWord)) {
+                PStatement candidate = weak.lock();
+                if (!candidate || targetSet.contains(candidate))
+                    continue;
+                if (isFunction(target) && isFunction(candidate)
+                        && !sameFunctionSignature(target, candidate))
+                    continue;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 static QString normalizedBaseName(QString name)
@@ -587,51 +852,52 @@ RenameResult CppRefactor::prepareRename(
         return RenameResult::InvalidInput;
     if (!editor->parser())
         return RenameResult::ParserUnavailable;
-    if (!editor->parser()->freeze())
-        return RenameResult::ParserUnavailable;
-    auto unfreeze = finally([&editor] {
-        editor->parser()->unFreeze();
-    });
-    QChar current = editor->charAt(pos);
-    CharPos expressionPos = pos;
-    if (!editor->isIdentStartChar(current))
-        expressionPos.ch--;
-    if (expressionPos.ch < 0)
-        return RenameResult::InvalidInput;
-    QStringList expression = CppExpressionExtractor::extract(
-                editor, editor->syntaxer(), expressionPos);
-    if (expression.isEmpty())
-        return RenameResult::InvalidInput;
-    PStatement oldStatement = editor->parser()->findStatementOf(
-                editor->filename(), expression, pos.line);
-    if (!oldStatement)
-        return RenameResult::SymbolNotFound;
+    PStatement oldStatement;
+    QVector<PStatement> targets;
+    SymbolReferenceScope scope;
+    {
+        if (!editor->parser()->freeze())
+            return RenameResult::ParserUnavailable;
+        auto unfreeze = finally([&editor] {
+            editor->parser()->unFreeze();
+        });
+        QChar current = editor->charAt(pos);
+        CharPos expressionPos = pos;
+        if (!editor->isIdentStartChar(current))
+            expressionPos.ch--;
+        if (expressionPos.ch < 0)
+            return RenameResult::InvalidInput;
+        QStringList expression = CppExpressionExtractor::extract(
+                    editor, editor->syntaxer(), expressionPos);
+        expression = completeCallExpression(editor, expression, expressionPos);
+        if (expression.isEmpty())
+            return RenameResult::InvalidInput;
+        oldStatement = editor->parser()->findStatementOf(
+                    editor->filename(), expression, pos.line);
+        if (!oldStatement)
+            return RenameResult::SymbolNotFound;
 
-    QStringList newExpression = expression;
-    newExpression.last() = newWord;
-    PStatement newStatement = editor->parser()->findStatementOf(
-                editor->filename(), newExpression, pos.line);
-    if (newStatement && parentName(newStatement) == parentName(oldStatement))
-        return RenameResult::NameConflict;
-
-    QVector<PStatement> targets = collectRenameTargets(
-                editor->parser(), oldStatement, selectedOverloads);
-    if (targets.isEmpty())
-        return RenameResult::NoSelection;
-    for (const PStatement &statement : targets) {
-        for (const StatementOccurrence &declaration : statement->declarations) {
-            if (declaration.fileName != editor->filename())
+        targets = collectRenameTargets(
+                    editor->parser(), oldStatement, selectedOverloads);
+        if (targets.isEmpty())
+            return RenameResult::NoSelection;
+        for (const PStatement &statement : targets) {
+            for (const StatementOccurrence &declaration : statement->declarations) {
+                if (declaration.fileName != editor->filename())
+                    return RenameResult::NotInCurrentFile;
+            }
+            if (statementHasDefinition(statement)
+                    && statement->definition.fileName != editor->filename())
                 return RenameResult::NotInCurrentFile;
         }
-        if (statementHasDefinition(statement)
-                && statement->definition.fileName != editor->filename())
-            return RenameResult::NotInCurrentFile;
-    }
+        if (hasRenameNameConflict(editor->parser(), targets, newWord))
+            return RenameResult::NameConflict;
 
-    SymbolReferenceScope scope = oldStatement->scope == StatementScope::Local
-            || !editor->inProject() || !mProject
-            ? SymbolReferenceScope::CurrentFile
-            : SymbolReferenceScope::WholeProject;
+        scope = oldStatement->scope == StatementScope::Local
+                || !editor->inProject() || !mProject
+                ? SymbolReferenceScope::CurrentFile
+                : SymbolReferenceScope::WholeProject;
+    }
     if (!doFindOccurrences(editor, oldStatement, targets, scope, results))
         return RenameResult::SymbolNotFound;
     bool found = false;

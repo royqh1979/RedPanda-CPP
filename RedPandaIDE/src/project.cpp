@@ -1104,7 +1104,6 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         ini->SetValue("Project","Encoding",mOptions.encoding);
     if (mOptions.modelType!=ProjectModelType::FileSystem)
         ini->SetLongValue("Project", "ModelType", (int)mOptions.modelType);
-    ini->SetLongValue("Project","ClassBrowserType", (int)mOptions.classBrowserType);
 
     int i=0;
     foreach (const PProjectUnit &unit, mUnits) {
@@ -1212,7 +1211,6 @@ void Project::saveOptions()
     ini.SetValue("Project","ExecEncoding", mOptions.execEncoding);
     ini.SetValue("Project","Encoding",mOptions.encoding);
     ini.SetLongValue("Project","ModelType", (int)mOptions.modelType);
-    ini.SetLongValue("Project","ClassBrowserType", (int)mOptions.classBrowserType);
     ini.SetBoolValue("Project","AllowParallelBuilding",mOptions.allowParallelBuilding);
     ini.SetLongValue("Project","ParellelBuildingJobs",mOptions.parellelBuildingJobs);
 
@@ -2015,7 +2013,6 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.supportXPThemes = ini.GetBoolValue("Project", "SupportXPThemes", false);
         mOptions.compilerSet = ini.GetLongValue("Project", "CompilerSet", pSettings->compilerSets().defaultIndex());
         mOptions.modelType = (ProjectModelType)ini.GetLongValue("Project", "ModelType", (int)ProjectModelType::Custom);
-        mOptions.classBrowserType = (ProjectClassBrowserType)ini.GetLongValue("Project", "ClassBrowserType", (int)ProjectClassBrowserType::CurrentFile);
 
         if (mOptions.compilerSet >= (int)pSettings->compilerSets().size()
                 || mOptions.compilerSet < 0) { // TODO: change from indices to names

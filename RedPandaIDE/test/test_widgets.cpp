@@ -760,32 +760,6 @@ void TestWidgets::test_class_browser_reopened_namespace_single_node()
     QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
 }
 
-void TestWidgets::test_class_browser_project_union()
-{
-    const QString firstFile = "first.cpp";
-    const QString secondFile = "second.cpp";
-    mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([firstFile](const QString &fileName, QStringList &buffer) {
-        if (fileName == firstFile)
-            buffer = QStringList{"namespace N { int first; }"};
-        else
-            buffer = QStringList{"namespace N { int second; }"};
-        return true;
-    });
-    mParser->addProjectFile(firstFile, false);
-    mParser->addProjectFile(secondFile, false);
-    CppParser::parseFileBlocking(mParser, firstFile, true, "");
-    CppParser::parseFileBlocking(mParser, secondFile, true, "");
-
-    ClassBrowserModel model;
-    model.setParser(mParser);
-    model.setClassBrowserType(ProjectClassBrowserType::WholeProject);
-    model.fillStatements();
-    QModelIndex n = findNode(model, {}, "N");
-    QVERIFY(n.isValid());
-    QCOMPARE(childCommands(model, n), QSet<QString>({"first", "second"}));
-}
-
 void TestWidgets::test_class_browser_current_file_limits_reopened_namespace()
 {
     const QString contextFile = "context.cpp";

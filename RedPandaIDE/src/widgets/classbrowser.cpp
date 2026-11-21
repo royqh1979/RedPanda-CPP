@@ -28,7 +28,6 @@
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent),
     mMutex()
 {
-    mClassBrowserType = ProjectClassBrowserType::CurrentFile;
     mRoot = new ClassBrowserNode();
     mRoot->parent = nullptr;
     mRoot->statement = PStatement();
@@ -281,17 +280,9 @@ void ClassBrowserModel::buildStatementTree()
     mTopLevelStatements.clear();
     mNestedStatements.clear();
     QList<PParsedFileInfo> fileInfos;
-    if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
-        PParsedFileInfo p = mParser->findFileInfo(mCurrentFile);
-        if (p)
-            fileInfos.append(p);
-    } else {
-        foreach(const QString& file,mParser->projectFiles()) {
-            PParsedFileInfo p = mParser->findFileInfo(file);
-            if (p)
-                fileInfos.append(p);
-        }
-    }
+    PParsedFileInfo current = mParser->findFileInfo(mCurrentFile);
+    if (current)
+        fileInfos.append(current);
 
     for (const PParsedFileInfo &fileInfo : fileInfos) {
         for (const std::weak_ptr<AbstractStatement> &weakStatement : fileInfo->statements()) {
@@ -322,30 +313,14 @@ void ClassBrowserModel::buildStatementTree()
 void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 {
     if (!pSettings->ui().classBrowserSortAlpha()) {
-        if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
-            std::sort(node->children.begin(),node->children.end(),
-                      [this](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                StatementOccurrence first = statementDeclarationForNavigation(
-                            node1->statement, mCurrentFile);
-                StatementOccurrence second = statementDeclarationForNavigation(
-                            node2->statement, mCurrentFile);
-                return first.range.start.line < second.range.start.line;
-            });
-        } else {
-            std::sort(node->children.begin(),node->children.end(),
-                      [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-                StatementOccurrence first = statementDeclarationForNavigation(
-                            node1->statement, QString());
-                StatementOccurrence second = statementDeclarationForNavigation(
-                            node2->statement, QString());
-                int comp = QString::compare(first.fileName, second.fileName);
-                if (comp < 0)
-                    return true;
-                if (comp == 0)
-                    return first.range.start.line < second.range.start.line;
-                return false;
-            });
-        };
+        std::sort(node->children.begin(),node->children.end(),
+                  [this](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            StatementOccurrence first = statementDeclarationForNavigation(
+                        node1->statement, mCurrentFile);
+            StatementOccurrence second = statementDeclarationForNavigation(
+                        node2->statement, mCurrentFile);
+            return first.range.start.line < second.range.start.line;
+        });
     }
 
     if (pSettings->ui().classBrowserSortAlpha()
@@ -380,10 +355,6 @@ bool ClassBrowserModel::shouldShowStatement(ClassBrowserNode *node, const PState
 {
     if (!statement)
         return false;
-    if (mClassBrowserType==ProjectClassBrowserType::WholeProject
-            && !statementInProject(statement))
-        return false;
-
     PStatement parentScope = statement->parentScope.lock();
     const QSet<PStatement> &statementsToShow = parentScope
             ? mNestedStatements : mTopLevelStatements;
@@ -485,20 +456,6 @@ QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key) const
     if (mUpdating)
         return QModelIndex();
     return indexForNode(mNodeIndex.value(key).get());
-}
-
-ProjectClassBrowserType ClassBrowserModel::classBrowserType() const
-{
-    return mClassBrowserType;
-}
-
-void ClassBrowserModel::setClassBrowserType(ProjectClassBrowserType newClassBrowserType)
-{
-    if (mClassBrowserType != newClassBrowserType) {
-        beginUpdate();
-        mClassBrowserType = newClassBrowserType;
-        endUpdate();
-    }
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &ClassBrowserModel::colors() const

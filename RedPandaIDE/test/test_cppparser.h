@@ -11,6 +11,14 @@ private slots:
     void test_parse_var();
     void test_global_variable_reference_scope();
     void test_include_visibility();
+    void test_class_forward_declaration_merges_with_definition();
+    void test_include_global_variable_reference();
+    void test_include_inline_function_call();
+    void test_local_extern_variable_uses_external_statement();
+    void test_static_extern_variable_definitions();
+    void test_static_extern_function_definitions();
+    void test_extern_variable_declaration_definition_order();
+    void test_extern_function_declaration_definition_order();
     void test_unresolved_member_function_reference();
     void test_nested_template_member_definition();
     void test_extern_template_class_declaration();

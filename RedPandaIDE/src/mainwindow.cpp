@@ -1755,11 +1755,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
              && (mClassBrowserModel->parser() == editor->parser()))
                 return;
 
-        if (mClassBrowserModel->parser() == editor->parser() && mClassBrowserModel->classBrowserType()==ProjectClassBrowserType::WholeProject) {
-            mClassBrowserModel->setCurrentFile(editor->filename());
-            return;
-        }
-
         if (editor->inProject() && !mProject) {
             //project is in creation
             mClassBrowserModel->setCurrentFile(editor->filename());
@@ -1768,11 +1763,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 
         mClassBrowserModel->beginUpdate();
         mClassBrowserModel->setParser(editor->parser());
-        if (editor->inProject()) {
-            mClassBrowserModel->setClassBrowserType(mProject->options().classBrowserType);
-        } else {
-            mClassBrowserModel->setClassBrowserType(ProjectClassBrowserType::CurrentFile);
-        }
         mClassBrowserModel->setCurrentFile(editor->filename());
         mClassBrowserModel->endUpdate();
     } else if (mProject) {
@@ -1785,7 +1775,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 
         mClassBrowserModel->beginUpdate();
         mClassBrowserModel->setParser(mProject->cppParser());
-        mClassBrowserModel->setClassBrowserType(mProject->options().classBrowserType);
         mClassBrowserModel->setCurrentFile("");
         mClassBrowserModel->endUpdate();
     } else {
@@ -3415,14 +3404,6 @@ void MainWindow::createCustomActions()
     mClassBrowser_goto_definition = createAction(
                 tr("Goto definition"),
                 ui->tabStructure);
-    mClassBrowser_Show_CurrentFile = createAction(
-                tr("In current file"),
-                ui->tabStructure);
-    mClassBrowser_Show_CurrentFile->setCheckable(true);
-    mClassBrowser_Show_WholeProject = createAction(
-                tr("In current project"),
-                ui->tabStructure);
-    mClassBrowser_Show_WholeProject->setCheckable(true);
 
     mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
     mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
@@ -3436,12 +3417,6 @@ void MainWindow::createCustomActions()
 
     connect(mClassBrowser_goto_declaration,&QAction::triggered,
             this, &MainWindow::onClassBrowserGotoDeclaration);
-
-    connect(mClassBrowser_Show_CurrentFile,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
-
-    connect(mClassBrowser_Show_WholeProject,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
 
 
     //Files view
@@ -3637,7 +3612,9 @@ void MainWindow::scanActiveProject(bool parse)
     if (parse) {
         resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
+        Editor *editor = mEditorManager->getEditor();
+        if (editor && editor->inProject())
+            editor->reparse();
     } else {
         mProject->resetParserProjectFiles();
     };
@@ -4382,17 +4359,6 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(mClassBrowser_Sort_By_Name);
     menu.addAction(mClassBrowser_Sort_By_Type);
-    Editor * editor = mEditorManager->getEditor();
-    if ((editor &&editor->inProject()) || mProject) {
-        menu.addSeparator();
-        menu.addAction(mClassBrowser_Show_CurrentFile);
-        menu.addAction(mClassBrowser_Show_WholeProject);
-
-        if (mProject) {
-            mClassBrowser_Show_CurrentFile->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile);
-            mClassBrowser_Show_WholeProject->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::WholeProject);
-        }
-    }
 
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
@@ -5221,25 +5187,6 @@ void MainWindow::onClassBrowserSortByName()
     pSettings->ui().setClassBrowserSortAlpha(mClassBrowser_Sort_By_Name->isChecked());
     pSettings->ui().save();
     mClassBrowserModel->fillStatements();
-}
-
-void MainWindow::onClassBrowserChangeScope()
-{
-    if (!mProject)
-        return;
-    ProjectClassBrowserType classBrowserType;
-    if (mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile) {
-        classBrowserType=ProjectClassBrowserType::WholeProject;
-    } else {
-        classBrowserType=ProjectClassBrowserType::CurrentFile;
-    }
-    mProject->options().classBrowserType=classBrowserType;
-    mProject->saveOptions();
-    Editor* editor = mEditorManager->getEditor();
-    if ((!editor || editor->inProject())  &&
-            mClassBrowserModel->classBrowserType()!=classBrowserType) {
-        mClassBrowserModel->setClassBrowserType(classBrowserType);
-    }
 }
 
 void MainWindow::onClassBrowserRefreshStart()
@@ -7683,7 +7630,6 @@ void MainWindow::on_actionAdd_to_project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
     }
 }
 
@@ -8030,7 +7976,6 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 
     mProject->saveAll();
 
-    CppParser::parseFileListNonBlocking(mProject->cppParser());
     Editor * editor = mProject->openUnit(newUnit, false);
     mEditorManager->activeEditor(editor,true);
 #ifdef ENABLE_VCS
@@ -8372,7 +8317,6 @@ void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString 
     mProject->cppParser()->invalidateFile(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
     mProject->cppParser()->addProjectFile(newFilename,true);
-    CppParser::parseFileListNonBlocking(mProject->cppParser());
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(oldFilename);
         mTodoParser->parseFile(newFilename,true);
@@ -9736,7 +9680,6 @@ void MainWindow::on_actionNew_Header_triggered()
         PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
         mProject->saveAll();
 
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
         setProjectViewCurrentUnit(newUnit);
         updateProjectView();
 
@@ -9815,7 +9758,6 @@ void MainWindow::on_actionNew_Class_triggered()
         newUnit=mProject->addUnit(sourceFilename,mProject->rootNode());
         setProjectViewCurrentUnit(newUnit);
         mProject->saveAll();
-        CppParser::parseFileListNonBlocking(mProject->cppParser());
         updateProjectView();
 
         openFile(headerFilename);

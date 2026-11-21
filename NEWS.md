@@ -11,6 +11,10 @@ Red Panda C++ Version 3.6
   - fix: Correctly replace only selected Find in Files results, including case-insensitive, regex, Unicode, and multi-line matches.
   - enhancement: Add per-file checkboxes to Find in Files results for selecting all matches in a file, with partial-selection indication.
   - enhancement: Keep the class browser responsive during parsing, preserve expanded and selected items after incremental refreshes, and clear it immediately when switching editors.
+  - change: Remove the class browser's whole-project symbol view; it now shows the current file's C/C++ context.
+  - fix: Correctly distinguish extern declarations from initialized definitions, merge local extern declarations with external symbols, and recognize static data-member declarations.
+  - fix: Recompute statement linkage and declaration properties after invalidating declarations or definitions.
+  - fix: Avoid treating type-less function calls as declarations while preserving constructors and deduction guides.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Improve compatibility with Clang and libc++ headers.

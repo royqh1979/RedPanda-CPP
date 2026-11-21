@@ -428,7 +428,6 @@ private slots:
     void onClassBrowserGotoDefinition();
     void onClassBrowserSortByType();
     void onClassBrowserSortByName();
-    void onClassBrowserChangeScope();
     void onClassBrowserRefreshStart();
     void onClassBrowserRefreshEnd();
 
@@ -1020,8 +1019,6 @@ private:
     QAction * mClassBrowser_Sort_By_Name;
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
-    QAction * mClassBrowser_Show_CurrentFile;
-    QAction * mClassBrowser_Show_WholeProject;
     QWidget * mClassBrowserToolbar;
 
     //actions for files view

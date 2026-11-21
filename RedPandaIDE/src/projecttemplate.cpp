@@ -144,7 +144,6 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     if (mOptions.encoding == ENCODING_AUTO_DETECT)
         mOptions.encoding = ENCODING_SYSTEM_DEFAULT;
     mOptions.modelType = (ProjectModelType)mIni->GetLongValue("Project", "ModelType", (int)ProjectModelType::FileSystem);
-    mOptions.classBrowserType = (ProjectClassBrowserType)mIni->GetLongValue("Project", "ClassBrowserType", (int)ProjectClassBrowserType::CurrentFile);
 
 }
 

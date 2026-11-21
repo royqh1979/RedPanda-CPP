@@ -231,6 +231,25 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
 #endif
         return false;
     }
+    auto outOfClassConstructor = [this] {
+        if (mCursor.peek(-1).text != "::")
+            return false;
+        if (mCursor.peek(-2).text != ">")
+            return mCursor.peek(-2).text == mCursor.currentText();
+        int open = mCursor.peek(-2).matchIndex;
+        if (open < 0)
+            return false;
+        CppTokenCursor::Checkpoint current = mCursor.checkpoint();
+        CppTokenCursor::Checkpoint opening = current;
+        opening.index = open;
+        mCursor.restore(opening);
+        QString className = mCursor.peek(-1).text;
+        mCursor.restore(current);
+        return className == mCursor.currentText();
+    };
+    bool deductionGuide = mCursor.peek().text == "("
+            && mCursor.peek().matchIndex > mCursor.index()
+            && mCursor.peek(mCursor.peek().matchIndex - mCursor.index() + 1).text == "->";
     bool withoutSpecifiers = mCursor.currentText() == "~"
             || mCursor.currentText() == "operator"
             || (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
@@ -238,7 +257,11 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 && mCursor.currentText() != "decltype"
                 && !isBuiltinType(mCursor.currentText())
                 && !isClangTypeBuiltin(mCursor.currentText())
-                && mCursor.peek().text == "(");
+                && mCursor.peek().text == "("
+                && (deductionGuide || (!currentClassName().isEmpty()
+                     && mCursor.currentText() == currentClassName()
+                        .section('<', 0, 0).section("::", -1, -1))
+                    || outOfClassConstructor()));
     if (!withoutSpecifiers && !parseDeclSpecifierSeq(result.specifiers)) {
 #ifdef REDPANDA_PARSER_DECLARATION_PROFILE
         ++declarationProfile.simpleFailures;
@@ -277,12 +300,12 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
                 explicitDefinition = true;
             }
             if (!explicitDefinition) {
+                result.declarators.last().initializerPosition = mCursor.current().position;
                 bool constantVariable = (result.templateKind != TemplateDeclarationKind::None
                                          || result.specifiers.properties.testFlag(DeclSpecifierProperty::Static))
                         && (result.specifiers.properties.testFlag(DeclSpecifierProperty::Constexpr)
                             || result.specifiers.type.qualifiers.testFlag(TypeQualifier::Const));
                 if (result.specifiers.type.qualifiedName == "auto" || constantVariable) {
-                    result.declarators.last().initializerPosition = mCursor.current().position;
                     result.declarators.last().initializerText = readUntilDelimiter(
                                 {",", ";"}, &result.declarators.last());
                 } else {
@@ -293,8 +316,10 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
         if (!mCursor.atEnd() && mCursor.currentText() == "{") {
             bool function = !declarator.derivations.isEmpty()
                     && declarator.derivations.first().kind == TypeDerivationKind::Function;
-            if (!function)
+            if (!function) {
+                result.declarators.last().initializerPosition = mCursor.current().position;
                 skipBalancedToken();
+            }
         }
         if (!mCursor.atEnd() && mCursor.currentText() == "(")
             skipBalancedToken();

@@ -306,11 +306,13 @@ Resolver 接口按“返回什么、执行什么动作”区分：
 
 CppParser 的正确性承诺以当前主文件为单位：每次解析后，当前主文件及其 include 闭包中的语句、可见性、作用域和表达式分析结果必须准确。`visibleStatement()` 继续按 declaration/definition 的实际文件及当前主文件的 include 闭包判断，不改为 FileInfo 的 statement 索引，也不承担跨 TU 的 statement 合并或项目符号管理。
 
-项目级 Find Occurrences/Refactor 由调用方逐个将 TU 主文件交给 Parser 重新解析并查找，不以 `parseFileList()` 建立项目符号表作为前置条件，也不要求不同 TU 共享 Statement 对象。只有查找从头文件发起时，才额外把该头文件作为主文件解析一次以确定目标；之后仍逐个解析项目 TU。项目查找覆盖当前各 TU 的 include 闭包，不搜索未被任何 TU 包含的其他头文件，也不把注释或字符串中的同名文本当作语义引用。同一头文件经多个 TU 命中相同位置时，结果按文件及 0 起始 line/ch 去重。
+项目级 Find Occurrences/Refactor 由调用方逐个将 TU 主文件交给 Parser 重新解析并查找；Parser 不提供文件列表解析入口或项目符号表，也不要求不同 TU 共享 Statement 对象。只有查找从头文件发起时，才额外把该头文件作为主文件解析一次以确定目标；之后仍逐个解析项目 TU。项目查找覆盖当前各 TU 的 include 闭包，不搜索未被任何 TU 包含的其他头文件，也不把注释或字符串中的同名文本当作语义引用。同一头文件经多个 TU 命中相同位置时，结果按文件及 0 起始 line/ch 去重。
 
-跨 TU 或重解析后 Statement 对象可能重建，`PStatement` 指针只在同一冻结快照内有效。每个 TU 中都必须重新识别目标，并按 kind、完整 scope/name、函数签名、模板信息及关联符号关系判断语义等价；definition position 可用于同一声明/定义 occurrence 的佐证，但不能单独充当跨 TU 身份。匿名类型的自动生成名称不得作为跨解析身份。
+跨 TU 或重解析后 Statement 对象可能重建，`PStatement` 指针只在同一冻结快照内有效。每个 TU 中都必须重新识别目标，并按 kind、完整 scope/name、链接方式、函数签名、模板信息及关联符号关系判断语义等价。外部链接符号可跨 TU 匹配；全局 static 和匿名 namespace 符号增加 TU 边界；普通局部符号不跨 TU；局部 extern 声明使用外部声明上下文并与外部 statement 合并。匿名类型使用定义 occurrence，不使用自动生成的名称作为跨解析身份。
 
-`TestCppParser` 负责主文件及 include 可见性的最小测试，`TestCppExpressionEvaluator` 负责表达式求值，`test-refactor` 负责逐 TU 查找和重命名的端到端行为。测试夹具只建立项目、文件与内容，不代替被测组件匹配名称或查找引用。同一缺陷可以同时保留 Parser 最小根因测试和 Refactor 行为测试，但两层断言不得混合职责。`TestCppRefactor::test_rename_same_class_defined_in_multiple_tus` 保留跨 TU 场景，在单文件阶段暂时跳过，项目查找实现后必须恢复并验证。
+`StatementOccurrence::declSpecifierProperties` 保存各 declaration/definition 的 static/extern 等来源属性。合并可以累计这些属性；失效后必须根据剩余 definition 和 declarations 重算，删除 definition 不得凭空制造 extern，删除最后一个 extern declaration 后也不得保留过期标志。extern 变量只有无初始化器时才仅声明；类内 static 数据成员无初始化器且非 inline 时仅声明。
+
+`TestCppParser` 负责主文件、include 可见性、static/extern、合并顺序及局部 extern 的最小测试，`TestCppParserInvalidation` 负责 occurrence 失效和属性重算，`TestCppExpressionEvaluator` 负责表达式求值，`test-refactor` 负责逐 TU 查找和重命名的端到端行为。测试夹具只建立项目、文件与内容，不代替被测组件匹配名称或查找引用。同一缺陷可以同时保留 Parser 最小根因测试和 Refactor 行为测试，但两层断言不得混合职责。多 TU 同名类、重载、scope、链接方式及项目边界均须有正向和反向场景。
 
 重载选择结果保存在 `EvalResult::invocation.statement`；需要导航到实际调用目标时必须优先使用该结果，而不是最初的同名候选。普通类模板的显式实参应进入既有特化选择路径，并区分主模板、偏特化和显式特化。
 

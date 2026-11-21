@@ -402,41 +402,6 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
     return true;
 }
 
-void CppParser::parseFileList(bool updateView)
-{
-    if (!mEnabled)
-        return;
-    {
-        {
-            QMutexLocker locker(&mMutex);
-            if (mParsing || mLockCount > 0)
-                return;
-            updateSerialId();
-            mParsing = true;
-        }
-        if (updateView)
-            emit onBusy();
-        emit parseStarted();
-    }
-    auto action = finally([&, this] {
-        {
-            QMutexLocker locker(&mMutex);
-            mParsing = false;
-        }
-        emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
-    });
-    mFilesScannedCount = 0;
-    mFilesToScanCount = mFilesToScan.count();
-    QStringList files = sortFilesByIncludeRelations(mFilesToScan);
-    for (const QString &file : files) {
-        ++mFilesScannedCount;
-        emit progress(file, mFilesToScanCount, mFilesScannedCount);
-        if (!mPreprocessor.hasReplayRecord(file))
-            internalParse(file);
-    }
-    mFilesToScan.clear();
-}
-
 CppParser::PParseFileCommand CppParser::retrievePendingParseFileCommand()
 {
     QMutexLocker locker(&mMutex);
@@ -1431,14 +1396,6 @@ void CppParser::parseFileNonBlocking(PCppParser parser, const QString &fileName,
     thread->start();
 }
 
-void CppParser::parseFileListNonBlocking(PCppParser parser, bool updateView)
-{
-    if (!parser || !parser->enabled())
-        return;
-    CppFileListParserThread *thread = new CppFileListParserThread(parser, updateView);
-    thread->start();
-}
-
 CppFileParserThread::CppFileParserThread(PCppParser parser, const QString &fileName, bool inProject,
                                          const QString &contextFilename, bool onlyIfNotParsed,
                                          bool updateView, QObject *parent)
@@ -1464,17 +1421,4 @@ void CppFileParserThread::run()
                 break;
         }
     }
-}
-
-CppFileListParserThread::CppFileListParserThread(PCppParser parser, bool updateView,
-                                                 QObject *parent)
-    : QThread(parent), mParser(parser), mUpdateView(updateView)
-{
-    connect(this, &QThread::finished, this, &QObject::deleteLater);
-}
-
-void CppFileListParserThread::run()
-{
-    if (mParser && !mParser->parsing())
-        mParser->parseFileList(mUpdateView);
 }
