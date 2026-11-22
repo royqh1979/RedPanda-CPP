@@ -23,7 +23,7 @@
 
 /*
  * Token-stream macro expansion engine. See
- * docs/cpppreprocessor-optimization.md (phase 0.6) for the design.
+ * docs/design/parser/cpppreprocessor-optimization.md (phase 0.6) for the design.
  *
  * The engine reads pp-tokens from a PpTokenizer (the "input") and from
  * a stack of expansion frames pushed on top of it (macro replacement

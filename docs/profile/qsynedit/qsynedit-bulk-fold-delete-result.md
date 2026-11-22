@@ -2,7 +2,7 @@
 
 ## 1. 实施范围
 
-本项依据 [折叠块批量删除设计](qsynedit-bulk-fold-delete-design.md) 完成，父提交为 `cf005070`，实施分支为 `document-edit-bulk-fold-delete`。
+本项依据 [折叠块批量删除设计](../../design/qsynedit/qsynedit-bulk-fold-delete-design.md) 完成，父提交为 `cf005070`，实施分支为 `document-edit-bulk-fold-delete`。
 
 `processFoldsOnLinesDeleted()` 已从反向遍历并逐项 `QVector::remove()` 改为正向单遍筛选 `keptBlocks`，遍历结束后一次替换列表。
 

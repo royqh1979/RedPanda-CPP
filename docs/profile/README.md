@@ -1,0 +1,30 @@
+# Red Panda C++ 性能文档总览
+
+## 1. 文档职责
+
+本文是性能基线、分析报告、优化结果和配套工具的总入口。`AGENTS.md` 只链接本文，不再逐项罗列性能文档。
+
+性能数据应记录测试环境、场景、采样方法和限制；不同提交和机器的数值不得直接混为同一基线。
+
+## 2. QSynEdit 编辑性能
+
+### 基线与分析
+
+- `qsynedit/qsynedit-edit-performance-baseline.md` — Document 与 Document+View 完整基线。
+- `qsynedit/qsynedit-edit-performance-report.md` — 热点分析与优化建议。
+- `qsynedit/qsynedit-edit-performance-tools.md` — profile 脚本、输入输出与使用方法。
+
+### 优化结果
+
+- `qsynedit/qsynedit-pending-layout-incremental-result.md` — pending 调度优化。
+- `qsynedit/qsynedit-bulk-setline-layout-result.md` — 大批量 SetLine 布局优化。
+- `qsynedit/qsynedit-delete-reparse-result.md` — 删除后的重解析范围优化。
+- `qsynedit/qsynedit-bulk-insert-deferred-result.md` — 批量插入 deferred 重解析优化。
+- `qsynedit/qsynedit-bulk-fold-delete-result.md` — 折叠块批量删除优化。
+- `qsynedit/qsynedit-reparse-loop-result.md` — 重解析内循环优化。
+
+## 3. 关联文档
+
+- 总体设计：`../design/architecture.md`。
+- QSynEdit 设计：`../design/qsynedit/qsynedit-design.md`。
+- 环境模板：`../env/template/local-development.md`。

@@ -948,7 +948,7 @@ private:
     // mWrapLayouts (point-updated whenever a layout is computed or
     // accepted); hidden flags mirror the effective collapsed fold ranges.
     // All mapping queries are O(log N) tree operations; see
-    // docs/qsynedit-wordwrap-plan.md (batch B).
+    // docs/design/qsynedit/qsynedit-wordwrap-plan.md (batch B).
     mutable RowIndex mRowIndex;
     // shared with in-flight WrapLayoutJobs: the destructor marks the view
     // dead, serialized with the jobs' result posting
@@ -986,7 +986,7 @@ private:
     // anchor: the visible (line, segment) at the viewport's top row.
     // The anchor is the authoritative top state; mTopPos is a derived
     // pixel cache re-computed from it via the row index (see
-    // docs/qsynedit-wordwrap-plan.md)
+    // docs/design/qsynedit/qsynedit-wordwrap-plan.md)
     int mTopLine = 0;
     int mTopSegment = 0;
     // mid-batch setTopLineSegment intent: changes before the command leave

@@ -22,7 +22,7 @@ struct RowIndexNode;
 
 /**
  * @brief Augmented implicit treap over per-line segment counts and hidden
- * flags ("RowIndex" in docs/qsynedit-wordwrap-plan.md).
+ * flags ("RowIndex" in docs/design/qsynedit/qsynedit-wordwrap-plan.md).
  *
  * Each line is a leaf holding its wrap segment count (>= 1; a cache-or-1
  * estimate until the background layout refines it) and a hidden flag

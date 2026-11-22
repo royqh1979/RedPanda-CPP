@@ -2,7 +2,7 @@
 
 ## 1. 实施范围
 
-本项依据 [删除后的重解析范围设计](qsynedit-delete-reparse-design.md) 完成，父提交为 `0bc11805`，实施分支为 `document-edit-delete-reparse`。
+本项依据 [删除后的重解析范围设计](../../design/qsynedit/qsynedit-delete-reparse-design.md) 完成，父提交为 `0bc11805`，实施分支为 `document-edit-delete-reparse`。
 
 生产实现仅把 `Document::deleteLines()` 在 `parseToEnd=true` 时的调用从 `reparseLines(index, index + numLines, true)` 改为 `reparseLines(index, index + 1, true)`。
 

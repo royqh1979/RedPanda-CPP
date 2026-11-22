@@ -23,7 +23,7 @@
 
 /*
  * Light-weight preprocessing-token tokenizer and token structures for
- * the macro expansion engine. See docs/cpppreprocessor-optimization.md
+ * the macro expansion engine. See docs/design/parser/cpppreprocessor-optimization.md
  * (phase 0.6) for the overall design.
  */
 

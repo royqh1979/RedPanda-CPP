@@ -2,7 +2,7 @@
 
 ## 1. 实施范围与场景边界
 
-本项依据 [大批量 SetLine 布局设计](qsynedit-bulk-setline-layout-design.md) 完成，父提交为 `ef3a5ce8`，实施分支为 `document-edit-bulk-layout`。
+本项依据 [大批量 SetLine 布局设计](../../design/qsynedit/qsynedit-bulk-setline-layout-design.md) 完成，父提交为 `ef3a5ce8`，实施分支为 `document-edit-bulk-layout`。
 
 生产实现只修改 `onDocumentContentChanged()` 的 SetLine 分支：
 

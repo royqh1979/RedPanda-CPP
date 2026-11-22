@@ -2,7 +2,7 @@
 
 ## 1. 实施范围
 
-本项依据 [批量插入 Deferred 重解析设计](qsynedit-bulk-insert-deferred-design.md) 完成，父提交为 `c375eae6`，实施分支为 `document-edit-bulk-insert`。
+本项依据 [批量插入 Deferred 重解析设计](../../design/qsynedit/qsynedit-bulk-insert-deferred-design.md) 完成，父提交为 `c375eae6`，实施分支为 `document-edit-bulk-insert`。
 
 新增 `Document::insertLinesDeferred()`，只创建空行和 Insert change，不解析临时空文本。普通 `insertLines()` 复用该入口创建行，随后仍按原规则重解析，独立 primitive 语义不变。普通多行粘贴改用 deferred，随后仍逐行 `putLine()` 写入正式内容。
 

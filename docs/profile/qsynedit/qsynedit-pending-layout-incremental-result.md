@@ -2,7 +2,7 @@
 
 ## 1. 实施范围
 
-本项依据 [Pending Layout 增量维护设计](qsynedit-pending-layout-incremental-design.md) 完成，基线为 `d77823fa`，实施分支为 `document-edit-pending-incremental`。
+本项依据 [Pending Layout 增量维护设计](../../design/qsynedit/qsynedit-pending-layout-incremental-design.md) 完成，基线为 `d77823fa`，实施分支为 `document-edit-pending-incremental`。
 
 实际修改仅涉及：
 

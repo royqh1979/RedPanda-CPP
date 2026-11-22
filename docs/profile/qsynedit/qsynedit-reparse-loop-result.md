@@ -2,7 +2,7 @@
 
 ## 1. 实施范围
 
-本项依据 [重解析内循环优化设计](qsynedit-reparse-loop-design.md) 完成，父提交为 `feb6632b`，实施分支为 `document-edit-reparse-loop`。
+本项依据 [重解析内循环优化设计](../../design/qsynedit/qsynedit-reparse-loop-design.md) 完成，父提交为 `feb6632b`，实施分支为 `document-edit-reparse-loop`。
 
 采用内外接口分层：
 
