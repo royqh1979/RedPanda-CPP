@@ -31,7 +31,7 @@
 #include <QDir>
 
 ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project):
-    Compiler("",false),
+    Compiler("", false, {}),
     mOnlyClean(false)
 {
     setProject(project);

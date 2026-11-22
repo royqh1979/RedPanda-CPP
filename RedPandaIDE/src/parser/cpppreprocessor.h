@@ -70,6 +70,7 @@ class CppPreprocessor
 public:
 
     using FileInvalidationHandler = std::function<void(const QString&)>;
+    using StopRequestedHandler = std::function<bool()>;
 
     explicit CppPreprocessor();
     CppPreprocessor(const CppPreprocessor&)=delete;
@@ -78,6 +79,7 @@ public:
     void clear();
 
     void clearTempResults();
+    void clearParseResults();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
     void addHardDefineByLine(const QString& line);
     void setScanOptions(bool parseSystem, bool parseLocal) {
@@ -85,7 +87,9 @@ public:
         mParseLocal=parseLocal;
     }
     void preprocess(const QString& fileName);
-    void stopForParserReset() {mStopForParserReset = true;}
+    void setStopRequestedHandler(const StopRequestedHandler &handler) {
+        mStopRequestedHandler = handler;
+    }
 
     // Safety net for unconditional include cycles (a user error): real
     // compilers recurse until a nesting limit and then error out; we
@@ -201,6 +205,9 @@ private:
     };
 
     bool supportCPP23() const;
+    bool stopRequested() const {
+        return mStopPreprocessing || (mStopRequestedHandler && mStopRequestedHandler());
+    }
 
     QString expandFunctionLikeMacro(PDefine define,const QString &args, const QSet<QString> &macrosToBeIgnored, bool &ok) const;
     void preprocessBuffer();
@@ -374,11 +381,12 @@ private:
     int mCppVersion = CppVersion::Cpp17;
     CppCompilerType mCompilerType = CppCompilerType::GCC;
 
-    bool mStopForParserReset;
+    bool mStopPreprocessing = false;
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
     FileInvalidationHandler mFileInvalidationHandler;
+    StopRequestedHandler mStopRequestedHandler;
 
 #ifdef REDPANDA_PARSER_TEST
     QHash<QString, int> mScanCounts;

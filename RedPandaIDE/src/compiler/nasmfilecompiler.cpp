@@ -24,8 +24,8 @@
 #include <QMessageBox>
 
 
-NASMFileCompiler::NASMFileCompiler(const QString &filename):
-    Compiler(filename, false)
+NASMFileCompiler::NASMFileCompiler(const QString &filename, const PCppParser &parserForFile):
+    Compiler(filename, false, parserForFile)
 {
 
 }

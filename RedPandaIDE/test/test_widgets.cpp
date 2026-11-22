@@ -1476,6 +1476,22 @@ void TestWidgets::test_class_browser_current_file_change_clears_immediately()
     QCOMPARE(model.rowCount({}), 0);
 }
 
+void TestWidgets::test_class_browser_does_not_own_parser()
+{
+    PCppParser parser = std::make_shared<CppParser>();
+    std::weak_ptr<CppParser> weakParser = parser;
+    ClassBrowserModel model;
+    model.setParser(parser);
+    QCOMPARE(model.parser(), parser);
+
+    parser.reset();
+
+    QVERIFY(weakParser.expired());
+    QVERIFY(!model.parser());
+    model.fillStatements();
+    QCOMPARE(model.rowCount({}), 0);
+}
+
 void TestWidgets::test_class_browser_anonymous_typedef_type()
 {
     const QString fileName = "anonymous_typedef.cpp";

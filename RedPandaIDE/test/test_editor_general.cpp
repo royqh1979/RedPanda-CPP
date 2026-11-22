@@ -5,6 +5,7 @@
 #include <qt_utils/utils.h>
 #include "src/editor/editor.h"
 #include "src/parser/cppparser.h"
+#include "src/settings/codecompletionsettings.h"
 #include "test_editor_general.h"
 
 void TestEditorGeneral::test_syntax_check_target_editor()
@@ -114,4 +115,44 @@ void TestEditorGeneral::test_predefined_func_hint()
     QString hint = mEditor->getParserHint({"__func__"}, {0, 1});
     QVERIFY(hint.contains("\"alpha\""));
     QVERIFY(hint.contains("const char"));
+}
+
+void TestEditorGeneral::test_hide_stops_parsing_and_allows_reparse_after_show()
+{
+    CodeCompletionSettings completionSettings(mSettingsPersistor.get());
+    completionSettings.setEnabled(true);
+    mEditor->setCodeCompletionSettings(&completionSettings);
+    mEditor->applySettings();
+    mEditor->setFilename("text.cpp");
+    mEditor->setContextFile("", false);
+
+    PCppParser parser = std::make_shared<CppParser>();
+    auto entered = std::make_shared<QSemaphore>();
+    auto release = std::make_shared<QSemaphore>();
+    auto readCount = std::make_shared<std::atomic_int>(0);
+    parser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+        if (readCount->fetch_add(1) == 0) {
+            entered->release();
+            release->acquire();
+        }
+        buffer = QStringList{"int value;"};
+        return true;
+    });
+    mEditor->setCppParser(parser);
+
+    mEditor->show();
+    mEditor->reparse();
+    QVERIFY(entered->tryAcquire(1, 5000));
+    mEditor->hide();
+    release->release();
+    QTRY_VERIFY(!parser->parsing());
+    QCOMPARE(parser->statementList().count(), 0);
+    QVERIFY(!parser->findFileInfo("text.cpp"));
+
+    mEditor->show();
+    mEditor->reparse();
+    QTRY_COMPARE(readCount->load(), 2);
+    QTRY_VERIFY(!parser->parsing());
+    QVERIFY(parser->findStatement("value"));
+    mEditor->hide();
 }

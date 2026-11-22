@@ -98,17 +98,18 @@ void CompilerManager::compile(const QString& filename, FileType fileType, const 
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
+        PCppParser parserForFile = getParserForFile(filename);
 #ifdef ENABLE_SDCC
         if (pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-            mCompiler = new SDCCFileCompiler(filename,encoding,compileType,false);
+            mCompiler = new SDCCFileCompiler(filename, encoding, compileType, false, parserForFile);
         } else
 #endif
         if (fileType == FileType::NASM){
-            mCompiler = new NASMFileCompiler(filename);
+            mCompiler = new NASMFileCompiler(filename, parserForFile);
         } else  {
-            mCompiler = new FileCompiler(filename,encoding,fileType,compileType,false);
+            mCompiler = new FileCompiler(filename, encoding, fileType, compileType, false,
+                                         parserForFile);
         }
-        mCompiler->setParserForFile(getParserForFile(filename));
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
@@ -232,9 +233,11 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
         mSyntaxCheckIssueCount = 0;
 
         //deleted when thread finished
-        mBackgroundSyntaxChecker = new StdinCompiler(filename,encoding, content,true);
+        PCppParser parserForFile;
         if (!project)
-            mBackgroundSyntaxChecker->setParserForFile(getParserForFile(filename));
+            parserForFile = getParserForFile(filename);
+        mBackgroundSyntaxChecker = new StdinCompiler(filename, encoding, content, true,
+                                                     parserForFile);
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);

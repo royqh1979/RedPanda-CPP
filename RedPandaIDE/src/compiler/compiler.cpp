@@ -39,15 +39,15 @@
 
 #define COMPILE_PROCESS_END "---//END//----"
 
-Compiler::Compiler(const QString &filename, bool onlyCheckSyntax):
+Compiler::Compiler(const QString &filename, bool onlyCheckSyntax,
+                   const PCppParser &parserForFile):
     QThread{},
     mOnlyCheckSyntax{onlyCheckSyntax},
     mFilename{filename},
     mRebuild{false},
-    mParserForFile{},
+    mParserForFile{parserForFile},
     mForceEnglishOutput{false}
 {
-    mParserForFile = nullptr;
 }
 
 void Compiler::run()
@@ -844,16 +844,6 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
 QString Compiler::escapeCommandForLog(const QString &cmd, const QStringList &arguments)
 {
     return escapeCommandForPlatformShell(extractFileName(cmd), arguments);
-}
-
-const PCppParser &Compiler::parserForFile() const
-{
-    return mParserForFile;
-}
-
-void Compiler::setParserForFile(const PCppParser &newParserForFile)
-{
-    mParserForFile = newParserForFile;
 }
 
 const std::shared_ptr<Project> &Compiler::project() const

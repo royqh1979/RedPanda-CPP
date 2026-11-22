@@ -59,6 +59,10 @@ private slots:
     void test_anonymous_namespaces_remain_distinct();
     void test_inline_namespace_occurrence_invalidation();
     void test_inline_namespace_overloads();
+    void test_stop_parsing_clears_results_before_finish();
+    void test_application_exit_stops_parsing_without_cleanup();
+    void test_normal_destructor_releases_resources();
+    void test_application_exit_destructor_abandons_resources();
 };
 
 

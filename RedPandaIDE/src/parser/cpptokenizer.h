@@ -20,6 +20,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVector>
+#include <functional>
 #include <memory>
 #include "cpptypes.h"
 
@@ -69,7 +70,9 @@ public:
         }();
         return token;
     }
-    void stopForParserReset() { mStopForParserReset = true; }
+    void setStopRequestedHandler(const std::function<bool()> &handler) {
+        mStopRequestedHandler = handler;
+    }
 
 private:
     void addToken(QString text, TokenKind kind, const SourcePosition &position);
@@ -106,7 +109,7 @@ private:
     QVector<int> mUnmatchedBrackets;
     QVector<int> mUnmatchedParentheses;
     QVector<int> mFileBoundaries;
-    bool mStopForParserReset = false;
+    std::function<bool()> mStopRequestedHandler;
 };
 
 Q_DECLARE_TYPEINFO(CppTokenizer::Token, Q_RELOCATABLE_TYPE);

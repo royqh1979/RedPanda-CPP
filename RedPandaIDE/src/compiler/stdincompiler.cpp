@@ -20,8 +20,10 @@
 #include <QFile>
 #include <QFileInfo>
 
-StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content, bool onlyCheckSyntax):
-    Compiler(filename, onlyCheckSyntax),
+StdinCompiler::StdinCompiler(const QString &filename, const QByteArray& encoding,
+                             const QString& content, bool onlyCheckSyntax,
+                             const PCppParser &parserForFile):
+    Compiler(filename, onlyCheckSyntax, parserForFile),
     mContent(content),
     mEncoding(encoding)
 {

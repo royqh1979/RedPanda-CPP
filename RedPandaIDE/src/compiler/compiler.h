@@ -35,7 +35,7 @@ public:
         Project,
         StdIn
     };
-    Compiler(const QString& filename, bool onlyCheckSyntax);
+    Compiler(const QString& filename, bool onlyCheckSyntax, const PCppParser &parserForFile);
     Compiler(const Compiler&)=delete;
     Compiler& operator=(const Compiler&)=delete;
 
@@ -44,9 +44,6 @@ public:
 
     const std::shared_ptr<Project> &project() const;
     void setProject(const std::shared_ptr<Project> &newProject);
-
-    const PCppParser &parserForFile() const;
-    void setParserForFile(const PCppParser &newParserForFile);
 
 signals:
     void compileStarted();

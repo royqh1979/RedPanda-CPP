@@ -25,7 +25,7 @@ class NASMFileCompiler : public Compiler
 {
     Q_OBJECT
 public:
-    NASMFileCompiler(const QString& filename);
+    NASMFileCompiler(const QString& filename, const PCppParser &parserForFile);
     NASMFileCompiler(const NASMFileCompiler&)=delete;
     NASMFileCompiler& operator=(const NASMFileCompiler&)=delete;
 

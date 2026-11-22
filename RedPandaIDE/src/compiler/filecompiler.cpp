@@ -27,8 +27,9 @@
 
 FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
                            FileType fileType,
-                           CppCompileType compileType, bool onlyCheckSyntax):
-    Compiler{filename, onlyCheckSyntax},
+                           CppCompileType compileType, bool onlyCheckSyntax,
+                           const PCppParser &parserForFile):
+    Compiler{filename, onlyCheckSyntax, parserForFile},
     mEncoding{encoding},
     mCompileType{compileType},
     mFileType{fileType}

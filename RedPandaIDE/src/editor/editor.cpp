@@ -1525,6 +1525,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 &CppParser::parseFinished,
                 this,
                 &Editor::onParseFinished);
+        mParser->stopParsing();
     }
     setHideTime(QDateTime::currentDateTime());
 }
