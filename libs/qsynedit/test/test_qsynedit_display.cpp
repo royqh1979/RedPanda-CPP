@@ -2879,6 +2879,70 @@ void TestQSyneditDisplay::test_multi_line_edit_indexes()
     mEdit->setOptions(options);
 }
 
+void TestQSyneditDisplay::test_multi_line_setline_background_layout()
+{
+    EditorOptions options = mEdit->getOptions();
+    const EditorOptions oldOptions = options;
+    options.setFlag(EditorOption::WordWrap, true);
+    mEdit->setOptions(options);
+    QStringList lines = makeLines(120);
+    lines[5] = QString(400, 'y');
+    mEdit->loadContent(lines);
+    mEdit->show();
+    drainLayoutJobs();
+    mEdit->setCaretPos(CharPos{0, 3});
+
+    auto setLines = [&](int first, int count, const QString &text) {
+        mEdit->document()->beginUpdate();
+        for (int i = first; i < first + count; ++i)
+            mEdit->properSetLine(i, text, i == first + count - 1);
+        mEdit->document()->endUpdate();
+    };
+    auto expectPendingEstimates = [&](int first, int count) {
+        int missingCount = 0;
+        for (int i = first; i < first + count; ++i) {
+            size_t seq = mEdit->document()->getLineSeq(i);
+            if (mEdit->mWrapMissingSeqs.contains(seq)) {
+                ++missingCount;
+                QVERIFY(!mEdit->mWrapLayouts.contains(seq));
+                QCOMPARE(mEdit->mRowIndex.segCount(i), 1);
+            } else {
+                QVERIFY(mEdit->mWrapLayouts.contains(seq));
+                QCOMPARE(mEdit->mRowIndex.segCount(i),
+                         mEdit->mWrapLayouts.value(seq).segmentStartChars.count());
+            }
+        }
+        QVERIFY(missingCount > 0);
+    };
+
+    setLines(80, 3, QString(500, 'x'));
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
+    QVERIFY(!mEdit->mWrapAllComputed);
+    expectPendingEstimates(80, 3);
+
+    int segment = mEdit->wrapSegmentOfChar(81, 0);
+    QCOMPARE(segment, 0);
+    size_t queriedSeq = mEdit->document()->getLineSeq(81);
+    QVERIFY(!mEdit->mWrapMissingSeqs.contains(queriedSeq));
+    QCOMPARE(mEdit->mRowIndex.segCount(81),
+             mEdit->mWrapLayouts.value(queriedSeq).segmentStartChars.count());
+
+    drainLayoutJobs();
+    QVERIFY(mEdit->mWrapMissingSeqs.isEmpty());
+    QCOMPARE(mEdit->maxLineWidth(), mEdit->lineWidth(80));
+    expectRowMapping();
+
+    setLines(80, 3, "x");
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
+    expectPendingEstimates(80, 3);
+    drainLayoutJobs();
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(5));
+    expectRowMapping();
+
+    mEdit->hide();
+    mEdit->setOptions(oldOptions);
+}
+
 void TestQSyneditDisplay::test_max_width_notifications()
 {
     mEdit->loadContent({"x", QString(1000, 'y'), QString(800, 'z')});
@@ -2914,6 +2978,28 @@ void TestQSyneditDisplay::test_max_width_notifications()
     QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
     QTRY_COMPARE(rangeSpy.count(), 1);
     QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
+
+    rangeSpy.clear();
+    mEdit->document()->beginUpdate();
+    mEdit->properSetLine(0, QString(1000, 'a'), false);
+    mEdit->properSetLine(1, QString(1200, 'b'), true);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
+    QCOMPARE(rangeSpy.count(), 0);
+    drainLayoutJobs();
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
+
+    rangeSpy.clear();
+    mEdit->document()->beginUpdate();
+    mEdit->properSetLine(0, QString(10, 'a'), false);
+    mEdit->properSetLine(1, QString(20, 'b'), true);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
+    QCOMPARE(rangeSpy.count(), 0);
+    drainLayoutJobs();
+    QTRY_COMPARE(rangeSpy.count(), 1);
+    QCOMPARE(mEdit->mMaxLineWidthSeq, mEdit->document()->getLineSeq(1));
     expectRowMapping();
 }
 
@@ -2944,6 +3030,20 @@ void TestQSyneditDisplay::test_shared_document_edit_indexes()
     expectRowMapping();
     expectRowMapping(second.get());
     mEdit->properDeleteLines(1, 1, true);
+    expectRowMapping();
+    expectRowMapping(second.get());
+
+    mEdit->document()->beginUpdate();
+    mEdit->properSetLine(0, QString(100, 'x'), false);
+    mEdit->properSetLine(1, QString(120, 'y'), false);
+    mEdit->properSetLine(2, QString(140, 'z'), true);
+    mEdit->document()->endUpdate();
+    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
+    QCOMPARE(second->mWrapJobState->jobsInFlight, 1);
+    QVERIFY(!mEdit->mWrapMissingSeqs.isEmpty());
+    QVERIFY(!second->mWrapMissingSeqs.isEmpty());
+    drainLayoutJobs();
+    drainLayoutJobs(second.get());
     expectRowMapping();
     expectRowMapping(second.get());
 

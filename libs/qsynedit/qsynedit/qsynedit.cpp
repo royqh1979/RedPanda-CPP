@@ -8406,10 +8406,15 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
                 mWrapMissingSeqs.insert(seq);
                 mWrapDirtySeqs.insert(seq, mWrapContentVersion++);
                 mWrapAllComputed = false;
-                // force an immediate synchronous relayout of the edited
-                // line and point-update the row index with its exact
-                // segment count
-                mRowIndex.setSegCount(i, wrapSegmentCount(i));
+                if (change.count == 1) {
+                    // ordinary typing gets an exact layout immediately and
+                    // normally needs no background job
+                    mRowIndex.setSegCount(i, wrapSegmentCount(i));
+                } else {
+                    // bulk edits use the same cache-or-1 estimate as a full
+                    // invalidation; queries and the background job refine it
+                    mRowIndex.setSegCount(i, 1);
+                }
             }
             // the segment count may have changed (word wrap): the scroll
             // range and the anchor's pixel offset need a refresh
