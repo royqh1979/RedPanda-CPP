@@ -222,7 +222,10 @@ ProblemTimeLimitUnit OJProblem::timeLimitUnit() const
 
 void OJProblem::setTimeLimitUnit(ProblemTimeLimitUnit newTimeLimitUnit)
 {
-    mTimeLimitUnit = newTimeLimitUnit;
+    if (mTimeLimitUnit != newTimeLimitUnit) {
+        mTimeLimitUnit = newTimeLimitUnit;
+        setModified(true);
+    }
 }
 
 ProblemMemoryLimitUnit OJProblem::memoryLimitUnit() const

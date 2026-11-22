@@ -20,14 +20,28 @@
 #include "ojproblemset.h"
 #include "../utils.h"
 
+enum class ProblemCaseValidationStatus {
+    Passed,
+    Mismatch,
+    Error
+};
+
+struct ProblemCaseValidationResult {
+    ProblemCaseValidationStatus status = ProblemCaseValidationStatus::Mismatch;
+    int outputLineCounts = 0;
+    int expectedLineCounts = 0;
+    int firstDiffLine = -1;
+    QString errorMessage;
+};
+
 class ProblemCaseValidator
 {
 public:
     ProblemCaseValidator();
-    bool validate(POJProblemCase problemCase, ProblemCaseValidateType type);
+    ProblemCaseValidationResult validate(const POJProblemCase &problemCase,
+                                         ProblemCaseValidateType type);
 private:
-    bool equalIgnoringSpaces(const QString& s1, const QString& s2);
-    QStringList split(const QString& s);
+    bool equalIgnoringSpaces(QStringView s1, QStringView s2);
 };
 
 #endif // PROBLEMCASEVALIDATOR_H

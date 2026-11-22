@@ -6493,9 +6493,15 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     if (row>=0) {
         POJProblemCase problemCase = mOJProblemModel->getCase(row);
         ProblemCaseValidator validator;
-        problemCase->testState = validator.validate(problemCase,pSettings->executor().problemCaseValidateType())?
-                    ProblemCaseTestState::Passed:
-                    ProblemCaseTestState::Failed;
+        ProblemCaseValidationResult result = validator.validate(
+                    problemCase, pSettings->executor().problemCaseValidateType());
+        problemCase->testState = result.status == ProblemCaseValidationStatus::Passed
+                ? ProblemCaseTestState::Passed : ProblemCaseTestState::Failed;
+        problemCase->outputLineCounts = result.outputLineCounts;
+        problemCase->expectedLineCounts = result.expectedLineCounts;
+        problemCase->firstDiffLine = result.firstDiffLine;
+        if (result.status == ProblemCaseValidationStatus::Error)
+            QMessageBox::critical(this, tr("Problem Case Validation Error"), result.errorMessage);
         mOJProblemModel->update(row);
         updateProblemCaseOutput(problemCase);
     }

@@ -57,6 +57,10 @@
 
 - `search/search-replace-design.md` — 搜索替换、文件搜索与已选结果替换。
 
+### 试题集
+
+- `problems/problemset-testing-design.md` — 试题集测试脚手架、输出比对规则与大文件优化约束。
+
 ## 4. 相关文档
 
 - 性能基线、报告、结果与工具：`../profile/README.md`。

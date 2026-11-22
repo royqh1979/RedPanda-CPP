@@ -25,7 +25,7 @@
 #include <QMimeData>
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
-#include "../settings.h"
+#include "../utils.h"
 
 OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(parent)
 {
@@ -116,6 +116,16 @@ void OJProblemSetModel::removeAllProblems()
     clear();
 }
 
+static QString makeProblemSetRelativePath(QString path, const QString &problemSetFilePath)
+{
+    path = QDir::fromNativeSeparators(path);
+    QString prefix = QDir::fromNativeSeparators(
+                includeTrailingPathDelimiter(extractFileDir(problemSetFilePath)));
+    if (path.startsWith(prefix, PATH_SENSITIVITY))
+        return "%ProblemSetPath%/" + path.mid(prefix.length());
+    return path;
+}
+
 void OJProblemSetModel::saveToFile(const QString &filePath,bool keepFilePath,int currentIndex)
 {
     if (keepFilePath) {
@@ -133,6 +143,7 @@ void OJProblemSetModel::saveToFile(const QString &filePath,bool keepFilePath,int
             problemObj["name"]=problem->name();
             problemObj["url"]=problem->url();
             problemObj["description"]=problem->description();
+            problemObj["hint"]=problem->hint();
             problemObj["time_limit"]=(int)problem->timeLimit();
             problemObj["memory_limit"]=(int)problem->memoryLimit();
             problemObj["time_limit_unit"]=(int)problem->timeLimitUnit();
@@ -144,17 +155,10 @@ void OJProblemSetModel::saveToFile(const QString &filePath,bool keepFilePath,int
                 QJsonObject caseObj;
                 caseObj["name"]=problemCase->name();
                 caseObj["input"]=problemCase->input();
-                QString path = problemCase->inputFileName();
-                QString prefix = includeTrailingPathDelimiter(extractFileDir(filePath));
-                if (path.startsWith(prefix, PATH_SENSITIVITY)) {
-                    path = "%ProblemSetPath%/"+ path.mid(prefix.length());
-                }
-                caseObj["input_filename"]=path;
-                path = problemCase->expectedOutputFileName();
-                if (path.startsWith(prefix, PATH_SENSITIVITY)) {
-                    path = "%ProblemSetPath%/"+ path.mid(prefix.length());
-                }
-                caseObj["expected_output_filename"]=path;
+                caseObj["input_filename"]=makeProblemSetRelativePath(
+                            problemCase->inputFileName(), filePath);
+                caseObj["expected_output_filename"]=makeProblemSetRelativePath(
+                            problemCase->expectedOutputFileName(), filePath);
                 caseObj["expected"]=problemCase->expected();
                 cases.append(caseObj);
                 problemCase->setModified(false);
@@ -196,6 +200,7 @@ void OJProblemSetModel::loadFromFile(const QString &filePath,bool keepFilePath,i
         }
         beginResetModel();
         QJsonObject obj = doc.object();
+        mProblemSet.setExportFilename(filePath);
         mProblemSet.setName(obj["name"].toString());
         currentIndex = obj["current_index"].toInt(-1);
         mProblemSet.clearProblems();
@@ -211,6 +216,7 @@ void OJProblemSetModel::loadFromFile(const QString &filePath,bool keepFilePath,i
             problem->setMemoryLimitUnit((ProblemMemoryLimitUnit)problemObj["memory_limit_unit"].toInt());
 
             problem->setDescription(problemObj["description"].toString());
+            problem->setHint(problemObj["hint"].toString());
             problem->setAnswerProgram(problemObj["answer_program"].toString());
             QJsonArray casesArray = problemObj["cases"].toArray();
             for(const QJsonValue& caseVal:casesArray) {
@@ -221,14 +227,16 @@ void OJProblemSetModel::loadFromFile(const QString &filePath,bool keepFilePath,i
                 problemCase->setExpected( caseObj["expected"].toString());
                 QString path = caseObj["input_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
-                    path = includeTrailingPathDelimiter(extractFileDir(filePath))+
-                            path.mid(QLatin1String("%ProblemSetPath%/").size());
+                    path = QDir::fromNativeSeparators(
+                                includeTrailingPathDelimiter(extractFileDir(filePath)))
+                            + path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
                 problemCase->setInputFileName(path);
                 path = caseObj["expected_output_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
-                    path = includeTrailingPathDelimiter(extractFileDir(filePath))+
-                            path.mid(QLatin1String("%ProblemSetPath%/").size());
+                    path = QDir::fromNativeSeparators(
+                                includeTrailingPathDelimiter(extractFileDir(filePath)))
+                            + path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
                 problemCase->setExpectedOutputFileName(path);
                 problemCase->testState = ProblemCaseTestState::NotTested;

@@ -471,6 +471,60 @@ add_test(
 add_dependencies(all-test-targets test-widgets)
 
 #####################
+# test-problemset   #
+#####################
+
+add_executable(test-problemset test/test-problemset-main.cpp)
+
+target_qt_plain_cpp(test-problemset
+    src/problems/freeprojectsetformat
+    src/problems/ojproblemset
+    src/problems/problemcasevalidator
+    src/widgets/ojproblemsetmodel
+    )
+target_sources(test-problemset PRIVATE
+    test/test_problemset_stubs.cpp
+    src/iconsmanager.h)
+
+target_moc_classes(test-problemset
+    src/problems/ojproblemset
+    src/widgets/ojproblemsetmodel
+    test/test_problemset
+    test/test_problemsetmodel
+    test/test_freeproblemsetformat
+    test/test_problemcasevalidator
+    )
+
+target_include_directories(test-problemset PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test-problemset PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::Test
+    Qt::Widgets
+    Qt::Xml
+    redpanda_qt_utils)
+
+if (QT_FEATURE_static)
+    qt_import_plugins(test-problemset
+        INCLUDE Qt::QOffscreenIntegrationPlugin)
+endif()
+
+target_compile_definitions(test-problemset PRIVATE
+    ${GLOBAL_COMPILE_DEFINITIONS})
+
+option(REDPANDA_BUILD_PROBLEMSET_PROFILE_TESTS "Compile problem set profiling tests" OFF)
+if (REDPANDA_BUILD_PROBLEMSET_PROFILE_TESTS)
+    target_compile_definitions(test-problemset PRIVATE REDPANDA_PROBLEMSET_PROFILE_TESTS)
+endif()
+
+add_test(
+    NAME test-problemset
+    COMMAND test-problemset)
+add_dependencies(all-test-targets test-problemset)
+
+#####################
 # test-file-search  #
 #####################
 
@@ -729,6 +783,7 @@ add_test(
 set_tests_properties(
     test-editor
     test-widgets
+    test-problemset
     test-cppparser
     PROPERTIES
         ENVIRONMENT "${test_environment}")
