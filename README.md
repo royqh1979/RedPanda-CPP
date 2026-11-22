@@ -48,7 +48,7 @@ English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourcef
 * Support MACRO with arguments
 * Support C++ lambdas
 
-And many other improvements and bug fixes. See docs/reference/NEWS.md for full information.
+And many other improvements and bug fixes. See NEWS.md for full information.
 
 ## Acknowledgement
 

@@ -11,14 +11,13 @@
 ## 2. 文档目录规则
 
 - `AGENTS.md` 只保存长期规则和顶层索引，不堆叠具体设计、profile 数据或本机命令。
-- 根目录只保留 `README*`、`BUILD*` 和 `AGENTS.md`；其它 Markdown 文档一律放入 `docs/` 子目录。
+- 根目录保留 `README*`、`BUILD*`、`AGENTS.md`、`NEWS.md`、`Contributors.md` 和 `PRIVACYPOLICY.md`，便于用户直接查找；内部设计、性能和环境文档放入 `docs/` 子目录。
 - `docs/design/`：现状、约定、算法和实施方案，按模块组织。
 - `docs/profile/`：性能基线、报告、结果与配套工具，按模块组织。
-- `docs/reference/`：更新日志、贡献者、隐私政策等参考资料。
 - `docs/env/template/`：不含机器专有路径的环境模板；`docs/env/local/`：本机实际配置，默认不提交。
 - 设计文档描述现状和约定，具体修改记录写入 git 提交信息，不放进设计文档。
 - `AGENTS.md` 使用中文；代码注释和 git 提交信息使用英文；其它文档语言随已有文档。
-- 完成用户可见功能或修复时，更新 `docs/reference/NEWS.md` 当前版本节，不记录开发过程中临时引入又修复的问题。
+- 完成用户可见功能或修复时，更新 `NEWS.md` 当前版本节，不记录开发过程中临时引入又修复的问题。
 - 修改目录职责、构建选项、测试命令或上述规则时，同步更新本索引及相关文档。
 
 ## 3. 代码与资源约定
@@ -69,9 +68,9 @@
 
 ## 7. 参考资料索引
 
-- `docs/reference/NEWS.md` — 更新日志。
-- `docs/reference/Contributors.md` — 贡献者。
-- `docs/reference/PRIVACYPOLICY.md` — 隐私政策。
+- `NEWS.md` — 更新日志。
+- `Contributors.md` — 贡献者。
+- `PRIVACYPOLICY.md` — 隐私政策。
 
 ## 8. Git 与安全规则
 

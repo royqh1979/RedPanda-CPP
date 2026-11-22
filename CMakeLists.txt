@@ -343,15 +343,15 @@ endif()
 # docs
 if(${FILESYSTEM_LAYOUT} STREQUAL "hierarchy")
     install(
-        FILES README.md docs/reference/NEWS.md LICENSE
+        FILES README.md NEWS.md LICENSE
         DESTINATION share/doc/${APP_NAME})
 elseif(${FILESYSTEM_LAYOUT} STREQUAL "flat")
     install(
-        FILES README.md docs/reference/NEWS.md LICENSE
+        FILES README.md NEWS.md LICENSE
         DESTINATION .)
 elseif(${FILESYSTEM_LAYOUT} STREQUAL "bundle")
     install(
-        FILES README.md docs/reference/NEWS.md LICENSE
+        FILES README.md NEWS.md LICENSE
         DESTINATION RedPandaIDE.app/Contents/Resources/doc)
 else()
     message(FATAL_ERROR "Unknown FILESYSTEM_LAYOUT: ${FILESYSTEM_LAYOUT}")

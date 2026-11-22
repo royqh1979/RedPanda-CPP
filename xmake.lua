@@ -286,9 +286,9 @@ target("resources")
     -- docs
 
     if get_config("filesystem-layout") == "hierarchy" then
-        add_installfiles("README.md", "docs/reference/NEWS.md", "LICENSE", {prefixdir = "share/doc/$(app-name)"})
+        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "share/doc/$(app-name)"})
     elseif get_config("filesystem-layout") == "flat" then
-        add_installfiles("README.md", "docs/reference/NEWS.md", "LICENSE", {prefixdir = ""})
+        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = ""})
     elseif get_config("filesystem-layout") ~= nil then
         trap_unreachable()
     end
