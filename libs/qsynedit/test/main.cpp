@@ -5,6 +5,7 @@
 #include "test_cppsyntaxer.h"
 #include "test_textsyntaxer.h"
 #include "test_document.h"
+#include "test_exporters.h"
 #include "test_qsynedit_cpp.h"
 #include "test_qsynedit_display.h"
 #include "test_qsynedit_emoji.h"
@@ -141,6 +142,18 @@ int main(int argc, char *argv[]) {
         QSynedit::TestQSyneditCppSearchReplace tc;
         QString className = tc.metaObject()->className();
         className = className.split("::").last();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestHTMLExporter tc;
+        QString className = tc.metaObject()->className();
+        if (suite == className || suite == "all")
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestRTFExporter tc;
+        QString className = tc.metaObject()->className();
         if (suite == className || suite == "all")
             status |= QTest::qExec(&tc, argc, argv);
     }

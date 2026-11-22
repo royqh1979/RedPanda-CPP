@@ -1568,11 +1568,16 @@ void Editor::cutToClipboard()
 void Editor::copyAsHTML()
 {
     Q_ASSERT(mColorManager!=nullptr);
-    if (!selAvail()) {
+    if (!selAvail())
         doSelectLine();
-    }
-    //clipboard takes the owner ship
-    QMimeData * mimeData = new QMimeData;
+    std::unique_ptr<QMimeData> mimeData = createCopyMimeData();
+    QGuiApplication::clipboard()->clear();
+    QGuiApplication::clipboard()->setMimeData(mimeData.release());
+}
+
+std::unique_ptr<QMimeData> Editor::createCopyMimeData()
+{
+    auto mimeData = std::make_unique<QMimeData>();
     if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Textfile) {
         QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
@@ -1619,8 +1624,7 @@ void Editor::copyAsHTML()
     }
 
     mimeData->setText(selText());
-    QGuiApplication::clipboard()->clear();
-    QGuiApplication::clipboard()->setMimeData(mimeData);
+    return mimeData;
 }
 
 void Editor::setCaretPosition(const CharPos & pos)
@@ -4248,9 +4252,14 @@ void Editor::setFileType(FileType newFileType, bool parse)
     setFormatter(SyntaxerManager::getFormatter(syntaxer()->language()));
     setUseCodeFolding(syntaxer()->supportFolding());
     applyColorScheme(mEditorSettings->colorScheme());
-    if (parse && oldLanguage!=calcParserLanguage()) {
-        setCppParser();
-        reparse();
+    ParserLanguage newLanguage = calcParserLanguage();
+    if (newLanguage == ParserLanguage::None)
+        setCppParser(nullptr);
+    if (oldLanguage != newLanguage) {
+        if (newLanguage != ParserLanguage::None)
+            setCppParser();
+        if (parse)
+            reparse();
     }
     if (parse && syntaxer()->language() != oldSyntaxer->language()) {
         reparseTodo();

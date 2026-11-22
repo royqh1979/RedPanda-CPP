@@ -9,12 +9,14 @@ class DirSettings;
 class EditorSettings;
 class ColorManager;
 class SystemConsts;
+class CharsetInfoManager;
 
 class TestEditorBase: public QObject
 {
     Q_OBJECT
 public:
     TestEditorBase(QObject *parent=nullptr);
+    ~TestEditorBase() override;
 protected:
     void init_editor();
 
@@ -25,6 +27,7 @@ protected:
     std::shared_ptr<EditorSettings> mEditorSettings;
     std::shared_ptr<ColorManager> mColorManager;
     std::shared_ptr<SystemConsts> mSystemConsts;
+    std::unique_ptr<CharsetInfoManager> mCharsetInfoManager;
 
 };
 

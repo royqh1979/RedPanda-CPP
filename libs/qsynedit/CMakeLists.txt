@@ -116,6 +116,7 @@ target_moc_classes(test-qsynedit
     test/test_cppsyntaxer
     test/test_textsyntaxer
     test/test_document
+    test/test_exporters
     test/test_qsynedit_base
     test/test_qsynedit_cpp
     test/test_qsynedit_cpp_search_replace

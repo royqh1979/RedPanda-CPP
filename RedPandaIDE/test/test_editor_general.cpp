@@ -1,8 +1,10 @@
+#include <QMimeData>
 #include <QSemaphore>
 #include <QTemporaryDir>
 #include <QTest>
 #include <atomic>
 #include <qt_utils/utils.h>
+#include <qsynedit/syntaxer/textfile.h>
 #include "src/editor/editor.h"
 #include "src/parser/cppparser.h"
 #include "src/settings/codecompletionsettings.h"
@@ -247,4 +249,69 @@ void TestEditorGeneral::test_auto_backup_throttles_recent_changes()
     backup.close();
     mEditor->cleanAutoBackup();
     QVERIFY(!QFile::exists(backupName));
+}
+
+void TestEditorGeneral::test_copy_mime_data_selection()
+{
+    mEditor->setFilename("sample.cpp");
+    mEditorSettings->setCopyHTMLUseEditorColor(true);
+    mEditorSettings->setCopyHTMLWithLineNumber(true);
+    mEditorSettings->setCopyHTMLRecalcLineNumber(true);
+    mEditorSettings->setGutterLineNumbersStartZero(false);
+    mEditor->loadContent("int value;\n// next");
+    mEditor->setSelBeginEnd({4, 0}, {7, 1});
+
+    std::unique_ptr<QMimeData> mimeData = mEditor->createCopyMimeData();
+    QVERIFY(mimeData);
+    QCOMPARE(mimeData->text(), mEditor->selText());
+    QVERIFY(mimeData->hasFormat("text/html"));
+    QString html = QString::fromUtf8(mimeData->data("text/html"));
+    QVERIFY(html.contains("<!--StartFragment-->"));
+    QVERIFY(html.contains("<!--EndFragment-->"));
+    QVERIFY(html.contains("value"));
+    QVERIFY(html.contains("next"));
+    QVERIFY(html.contains("<span>1</span>"));
+    QVERIFY(!html.contains("<title>"));
+}
+
+void TestEditorGeneral::test_copy_mime_data_plain_text()
+{
+    mEditor->setFileType(FileType::Text, false);
+    QVERIFY(!mEditor->parser());
+    mEditor->loadContent("plain <&>");
+    mEditor->setSelBeginEnd({0, 0}, {9, 0});
+
+    std::unique_ptr<QMimeData> mimeData = mEditor->createCopyMimeData();
+    QVERIFY(mimeData);
+    QCOMPARE(mimeData->text(), "plain <&>");
+    QVERIFY(!mimeData->hasFormat("text/html"));
+}
+
+void TestEditorGeneral::test_export_files()
+{
+    mEditor->setFilename("input.cpp");
+    mEditor->loadContent("int first;\nint second;");
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+    QString htmlPath = directory.filePath("output.html");
+    QString rtfPath = directory.filePath("output.rtf");
+    mEditorSettings->setCopyRTFUseEditorColor(false);
+    mEditorSettings->setCopyRTFBackgroundColor(QColor(240, 235, 220));
+    mEditor->exportAsHTML(htmlPath);
+    mEditor->exportAsRTF(rtfPath);
+
+    QFile htmlFile(htmlPath);
+    QVERIFY(htmlFile.open(QIODevice::ReadOnly));
+    QByteArray html = htmlFile.readAll();
+    QVERIFY(html.contains("int"));
+    QVERIFY(html.contains("second"));
+    QVERIFY(html.contains("<title>output.html</title>"));
+
+    QFile rtfFile(rtfPath);
+    QVERIFY(rtfFile.open(QIODevice::ReadOnly));
+    QByteArray rtf = rtfFile.readAll();
+    QVERIFY(rtf.startsWith("{\\rtf1\\ansi"));
+    QVERIFY(rtf.contains("second"));
+    QVERIFY(rtf.contains("{\\title output.rtf}"));
+    QVERIFY(rtf.contains("\\red240\\green235\\blue220;"));
 }

@@ -14,6 +14,11 @@
 - `qsynedit/qsynedit-edit-performance-report.md` — 热点分析与优化建议。
 - `qsynedit/qsynedit-edit-performance-tools.md` — profile 脚本、输入输出与使用方法。
 
+### 导出
+
+- `qsynedit/qsynedit-exporter-baseline.md` — HTML/RTF 输出尺寸与导出耗时基线。
+- `qsynedit/qsynedit-exporter-result.md` — HTML 尺寸优化、RTF 兼容处理及复测结果。
+
 ### 优化结果
 
 - `qsynedit/qsynedit-pending-layout-incremental-result.md` — pending 调度优化。

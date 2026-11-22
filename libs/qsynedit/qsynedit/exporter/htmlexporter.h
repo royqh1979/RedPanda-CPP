@@ -27,6 +27,7 @@ public:
     HTMLExporter(const HTMLExporter&)=delete;
     const HTMLExporter& operator=(const HTMLExporter&)=delete;
 
+    void clear() override;
     bool createHTMLFragment() const;
     void setCreateHTMLFragment(bool createHTMLFragment);
 

@@ -34,6 +34,7 @@
 - `qsynedit/qsynedit-bulk-insert-deferred-design.md` — 批量插入 deferred 重解析。
 - `qsynedit/qsynedit-reparse-loop-design.md` — 重解析内循环与内外接口分层。
 - `qsynedit/qsynedit-semantic-highlight-plan.md` — 语义高亮计划。
+- `qsynedit/qsynedit-exporter-design.md` — HTML/RTF 导出、带格式复制的测试与兼容性约定。
 - `qsynedit/qsynedit-indent-tab-design.md`、`qsynedit-indent-tab-size-plan.md`、`qsynedit-indent-always-use-spaces-plan.md` — 缩进与 Tab 设计留痕。
 
 ### Editor 生命周期与自动保存
