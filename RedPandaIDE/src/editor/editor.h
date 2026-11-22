@@ -43,6 +43,7 @@ class BookmarkModel;
 class Settings;
 class CodeSnippetsManager;
 class EditorSettings;
+class QMimeData;
 class CodeCompletionSettings;
 class ColorManager;
 class IconsManager;
@@ -367,6 +368,7 @@ private slots:
     void onParseFinished();
 
 private:
+    std::unique_ptr<QMimeData> createCopyMimeData();
     bool completionPopupVisible() const;
     bool headerCompletionPopupVisible() const;
     bool functionTooltipVisible() const;

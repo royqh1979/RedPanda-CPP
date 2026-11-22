@@ -64,6 +64,10 @@ Red Panda C++ Version 3.6
   - fix: Continue automatic project-file saving after non-project editors.
   - enhancement: Speed up large problem-case output comparisons and report unreadable or invalid UTF-8 expected-output files.
   - fix: Preserve problem hints and portable case paths, and correctly import Free Problem Set case names and split CDATA content.
+  - enhancement: Reduce HTML export size, preserve whitespace with standards-compliant markup, and improve RTF Unicode compatibility.
+  - fix: Correct export range cleanup, HTML line numbering and escaping, and repeated RTF export state.
+  - fix: Prevent RTF colors with equal HSV brightness from sharing a color-table index.
+  - fix: Clear C++ parser associations when an editor switches to a non-C/C++ file type.
   - fix: Undoing drag-and-drop editing restores the pre-drag caret, including reversed selections.
   - fix: Ctrl+hover now shows the pointing-hand cursor on jumpable identifiers.
   - fix: Inserting a line at the document start keeps the viewport at the first line.

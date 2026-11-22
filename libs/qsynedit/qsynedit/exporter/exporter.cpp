@@ -16,6 +16,7 @@
  */
 #include "exporter.h"
 #include "../document.h"
+#include "../miscprocs.h"
 #include "qdebug.h"
 #include <QClipboard>
 #include <QFile>
@@ -56,7 +57,7 @@ void Exporter::exportAll(const std::shared_ptr<const Document>& doc)
 
 void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos start, CharPos end)
 {
-    // abort if not all necessary conditions are met
+    clear();
     if (!doc || (doc->count() == 0))
         return;
     end.line = std::max(0, std::min(end.line, doc->count()-1));
@@ -67,14 +68,12 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
         return;
     if ((start.line == end.line) && (start.ch >= end.ch))
         return;
-    // initialization
-    clear();
     // export all the lines into fBuffer
     mFirstAttribute = true;
 
-    int baseStartLine = 0;
+    int baseStartLine = mLineNumberStartFromZero ? 0 : -1;
     if (mRecalcLineNumber)
-        baseStartLine = mLineNumberStartFromZero?start.line:start.line-1;
+        baseStartLine += start.line;
     if (mExportLineNumber)
         addData(getStartLineNumberString(start.line-baseStartLine, end.line-baseStartLine));
     if (start.line == 0)
@@ -140,9 +139,12 @@ void Exporter::writeToStream(QIODevice &stream)
 {
     TextEncoder encoder = getEncoder();
     auto [ok, encoded] = encoder.encode(mText);
-    if (ok && stream.write(encoded) < 0) {
-        throw FileError(QObject::tr("Failed to write data."));
+    if (!ok) {
+        throw FileError(QObject::tr("Failed to encode exported text as %1.")
+                        .arg(QString::fromLatin1(mCharset)));
     }
+    if (stream.write(encoded) != encoded.size())
+        throw FileError(QObject::tr("Failed to write data."));
 }
 
 QFont Exporter::font() const
@@ -165,9 +167,6 @@ void Exporter::setSyntaxer(PSyntaxer value)
     if (mSyntaxer != value) {
         mSyntaxer = value;
         clear();
-        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground
-                && mSyntaxer->whitespaceAttribute()->background().isValid())
-            mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }
 
@@ -196,9 +195,6 @@ void Exporter::setUseBackground(bool value)
     if (mUseBackground != value) {
         mUseBackground = value;
         clear();
-        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground
-                && mSyntaxer->whitespaceAttribute()->background().isValid())
-            mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }
 
@@ -292,6 +288,15 @@ TextEncoder Exporter::getEncoder() const {
         return TextEncoder::encoderForSystem();
 }
 
+double Exporter::fontPointSize() const
+{
+    if (mFont.pixelSize() > 0)
+        return pixelToPoint(mFont.pixelSize());
+    if (mFont.pointSizeF() > 0)
+        return mFont.pointSizeF();
+    return 10.0;
+}
+
 void Exporter::insertData(int pos, const QString &text)
 {
     if (!text.isEmpty()) {
@@ -304,12 +309,13 @@ QString Exporter::replaceReservedChars(const QString &token)
     if (token.isEmpty())
         return "";
     QString result;
+    result.reserve(token.size());
     for (QChar ch:token) {
-        if (mReplaceReserved.contains(ch)) {
-            result += mReplaceReserved[ch];
-        } else {
+        auto replacement = mReplaceReserved.constFind(ch);
+        if (replacement != mReplaceReserved.constEnd())
+            result += replacement.value();
+        else
             result += ch;
-        }
     }
     return result;
 }

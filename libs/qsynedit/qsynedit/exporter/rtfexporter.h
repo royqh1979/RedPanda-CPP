@@ -27,12 +27,15 @@ public:
     explicit RTFExporter(int tabSize,const QByteArray charset);
     RTFExporter(const RTFExporter&)=delete;
     RTFExporter& operator=(const RTFExporter&)=delete;
+    void clear() override;
 private:
     QList<QColor> mListColors;
-    QMap<int,int> mColorIdx;
+    QMap<QRgb,int> mColorIdx;
     QString colorToRTF(const QColor& AColor) const;
     int getColorIndex(const QColor& AColor);
     QString getFontTable();
+    QString encodeText(const QString &text) const;
+    void formatToken(const QString &token) override;
 
     // SynExporter interface
 protected:

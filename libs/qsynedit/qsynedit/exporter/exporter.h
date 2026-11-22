@@ -271,6 +271,7 @@ protected:
 
 
     TextEncoder getEncoder() const;
+    double fontPointSize() const;
 private:
     QString mText;
     bool mFirstAttribute;

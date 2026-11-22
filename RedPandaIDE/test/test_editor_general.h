@@ -14,6 +14,9 @@ private slots:
     void test_auto_backup_lifecycle();
     void test_auto_backup_disabled_and_read_only();
     void test_auto_backup_throttles_recent_changes();
+    void test_copy_mime_data_selection();
+    void test_copy_mime_data_plain_text();
+    void test_export_files();
 };
 
 #endif // TEST_EDITOR_GENERAL_H
