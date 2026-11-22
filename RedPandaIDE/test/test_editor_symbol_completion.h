@@ -67,6 +67,13 @@ private slots:
     void test_input_periods_in_string();
 
     void test_input_docstring();
+    void test_completion_disabled_by_settings_data();
+    void test_completion_disabled_by_settings();
+    void test_symbol_skip_settings_data();
+    void test_symbol_skip_settings();
+    void test_global_include_completion();
+    void test_remove_symbol_pairs_data();
+    void test_remove_symbol_pairs();
     void test_code_snippet_editing_areas_data();
     void test_code_snippet_editing_areas();
     void test_doxygen_header_editing_areas_data();
