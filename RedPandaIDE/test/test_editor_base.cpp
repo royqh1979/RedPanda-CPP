@@ -3,6 +3,7 @@
 #include "src/settings/dirsettings.h"
 #include "src/settings/editorsettings.h"
 #include "src/colorscheme.h"
+#include "src/systemconsts.h"
 #include "src/editor/editor.h"
 #include "test_editor_base.h"
 #include <qsynedit/syntaxer/cpp.h>
@@ -22,6 +23,8 @@ void TestEditorBase::init_editor()
     mDirSettings->load();
     mEditorSettings->load();
     mColorManager = std::make_unique<ColorManager>(mDirSettings.get());
+    mSystemConsts = std::make_unique<SystemConsts>();
+    pSystemConsts = mSystemConsts.get();
     mEditor = std::make_unique<Editor>();
     mEditor->setEditorSettings(mEditorSettings.get());
     mEditor->setColorManager(mColorManager.get());

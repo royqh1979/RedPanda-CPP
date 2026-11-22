@@ -36,6 +36,10 @@
 - `qsynedit/qsynedit-semantic-highlight-plan.md` — 语义高亮计划。
 - `qsynedit/qsynedit-indent-tab-design.md`、`qsynedit-indent-tab-size-plan.md`、`qsynedit-indent-always-use-spaces-plan.md` — 缩进与 Tab 设计留痕。
 
+### Editor 生命周期与自动保存
+
+- `editor/editor-auto-save-design.md` — 自动备份职责、EditorManager 自动保存及测试环境隔离。
+
 ### Parser / C++ 语义
 
 - `parser/cppparser-design.md` — CppParser、Tokenizer、类型推导与 IDE 查询。

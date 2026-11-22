@@ -294,6 +294,7 @@ bool Editor::save(bool force, bool doReparse) {
             mFileSystemWatcher->addPath(mFilename);
         setModified(false);
         mIsNew = false;
+        cleanAutoBackup();
         setStatusChanged(QSynedit::StatusChange::Custom0);
     } catch (FileError& exception) {
         if (mFileSystemWatcher)
@@ -423,7 +424,7 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
     }
 
 
-    initAutoBackup();
+    cleanAutoBackup();
     return true;
 }
 
@@ -456,6 +457,7 @@ void Editor::rename(const QString &newName)
     }
     emit fileRenamed(this, oldName, newName);
 
+    cleanAutoBackup();
     initAutoBackup();
     return;
 }
@@ -3363,12 +3365,11 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 
 void Editor::initAutoBackup()
 {
-    cleanAutoBackup();
-    if (mAutoBackupEnabled)
+    if (!mAutoBackupEnabled || !mEditorSettings->enableEditTempBackup() || readOnly()) {
+        cleanAutoBackup();
         return;
-    if (!mEditorSettings->enableEditTempBackup())
-        return;
-    if (readOnly())
+    }
+    if (mBackupFile)
         return;
     QFileInfo fileInfo(mFilename);
     if (fileInfo.isAbsolute()) {
@@ -3399,6 +3400,7 @@ void Editor::saveAutoBackup()
 {
     if (mBackupFile) {
         mBackupFile->reset();
+        mBackupFile->resize(0);
         mBackupTime=QDateTime::currentDateTime();
         mBackupFile->write(text().toUtf8());
         mBackupFile->flush();

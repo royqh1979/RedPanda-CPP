@@ -8,6 +8,7 @@ class SettingsPersistor;
 class DirSettings;
 class EditorSettings;
 class ColorManager;
+class SystemConsts;
 
 class TestEditorBase: public QObject
 {
@@ -23,6 +24,7 @@ protected:
     std::shared_ptr<DirSettings> mDirSettings;
     std::shared_ptr<EditorSettings> mEditorSettings;
     std::shared_ptr<ColorManager> mColorManager;
+    std::shared_ptr<SystemConsts> mSystemConsts;
 
 };
 

@@ -224,6 +224,15 @@ MainWindow::MainWindow(QWidget *parent)
                                  ui->EditorPanel, this);
     connect(mEditorManager, &EditorManager::editorClosed,
                this, &MainWindow::onEditorClosed);
+    mEditorManager->setAutoSaveEnvironment(
+                &pSettings->editor(),
+                [this] { return !mQuitting; },
+                [this] { return mProject != nullptr; },
+                [] { return QDateTime::currentDateTime(); });
+    connect(mEditorManager, &EditorManager::autoSaveFinished,
+            this, &MainWindow::onAutoSaveFinished);
+    connect(mEditorManager, &EditorManager::autoSaveError,
+            this, &MainWindow::onAutoSaveError);
     mProject = nullptr;
 
     mColorManager = std::make_unique<ColorManager>(&pSettings->dirs());
@@ -514,8 +523,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     mClassBrowserModel->setColors(mStatementColors);
 
-    connect(&mAutoSaveTimer, &QTimer::timeout,
-            this, &MainWindow::onAutoSaveTimeout);
     resetAutoSaveTimer();
 
     connect(ui->menuFile, &QMenu::aboutToShow,
@@ -1819,14 +1826,7 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
 
 void MainWindow::resetAutoSaveTimer()
 {
-    if (pSettings->editor().enableAutoSave()) {
-        mAutoSaveTimer.stop();
-        //minute to milliseconds
-        mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
-        onAutoSaveTimeout();
-    } else {
-        mAutoSaveTimer.stop();
-    }
+    mEditorManager->resetAutoSaveTimer();
 }
 
 void MainWindow::updateShortcuts()
@@ -3110,50 +3110,6 @@ void MainWindow::prepareDebugger()
     //    mDebugger->deleteWatchVars(false);
 }
 
-void MainWindow::doAutoSave(Editor *e)
-{
-    if (!e || !e->canAutoSave())
-        return;
-    QString filename = e->filename();
-    try {
-        QFileInfo fileInfo(filename);
-        QDir parent = fileInfo.absoluteDir();
-        QString baseName = fileInfo.completeBaseName();
-        QString suffix = fileInfo.suffix();
-        switch(pSettings->editor().autoSaveStrategy()) {
-        case assOverwrite:
-            e->save();
-            return;
-        case assAppendUnixTimestamp:
-            filename = parent.filePath(
-                        QString("%1.%2.%3")
-                        .arg(baseName)
-                        .arg(QDateTime::currentSecsSinceEpoch())
-                        .arg(suffix));
-            break;
-        case assAppendFormatedTimeStamp: {
-            QDateTime time = QDateTime::currentDateTime();
-            filename = parent.filePath(
-                        QString("%1.%2.%3")
-                        .arg(baseName,
-                             time.toString("yyyy.MM.dd.hh.mm.ss"),
-                             suffix));
-        }
-        }
-        if (e->isNew()) {
-            e->saveAs();
-        } else {
-            e->saveFile(filename);
-            e->setCanAutoSave(false);
-        }
-    } catch (FileError& error) {
-        QMessageBox::critical(e,
-                              tr("Auto Save Error"),
-                              tr("Auto save \"%1\" to \"%2\" failed:%3")
-                              .arg(e->filename(), filename, error.reason()));
-    }
-}
-
 void MainWindow::createCustomActions()
 {
     // action for problem set
@@ -4154,47 +4110,17 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand, c
     process.startDetached();
 }
 
-void MainWindow::onAutoSaveTimeout()
+void MainWindow::onAutoSaveFinished(int count)
 {
-    if (mQuitting)
-        return;
-    if (!pSettings->editor().enableAutoSave())
-        return;
-    mAutoSaveTimer.stop();
-    {
-        auto action=finally([this]{
-            mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
-        });
-        int updateCount = 0;
-        switch (pSettings->editor().autoSaveTarget()) {
-        case astCurrentFile: {
-            Editor *e = mEditorManager->getEditor();
-            doAutoSave(e);
-            updateCount++;
-        }
-            break;
-        case astAllOpennedFiles:
-            for (int i=0;i<mEditorManager->pageCount();i++) {
-                Editor *e = (*mEditorManager)[i];
-                doAutoSave(e);
-                updateCount++;
-            }
-            break;
-        case astAllProjectFiles:
-            if (!mProject)
-                return;
-            for (int i=0;i<mEditorManager->pageCount();i++) {
-                Editor *e = (*mEditorManager)[i];
-                if (!e->inProject())
-                    return;
-                doAutoSave(e);
-                updateCount++;
-            }
-            //todo: auto save project files
-            break;
-        }
-        updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
-    }
+    updateStatusbarMessage(tr("%1 files autosaved").arg(count));
+}
+
+void MainWindow::onAutoSaveError(Editor *editor, const QString &filename, const QString &reason)
+{
+    QMessageBox::critical(editor,
+                          tr("Auto Save Error"),
+                          tr("Auto save \"%1\" to \"%2\" failed:%3")
+                          .arg(editor->filename(), filename, reason));
 }
 
 void MainWindow::onWatchViewContextMenu(const QPoint &pos)

@@ -20,6 +20,7 @@
 #include <QVariant>
 #include "mainwindow.h"
 #include <QFileInfo>
+#include <QDir>
 #include "settings.h"
 #include "project.h"
 #include "systemconsts.h"
@@ -39,9 +40,14 @@ EditorManager::EditorManager(QTabWidget* leftPageWidget,
     mRightPageWidget(rightPageWidget),
     mSplitter(splitter),
     mPanel(panel),
-    mUpdateCount(0)
+    mUpdateCount(0),
+    mAutoSaveSettings(nullptr),
+    mAutoSaveAllowed([] { return true; }),
+    mAutoSaveHasProject([] { return false; }),
+    mAutoSaveNow([] { return QDateTime::currentDateTime(); })
 {
-
+    connect(&mAutoSaveTimer, &QTimer::timeout,
+            this, &EditorManager::onAutoSaveTimeout);
 }
 
 Editor* EditorManager::newEditor(const QString& filename, const QByteArray& encoding,
@@ -801,6 +807,117 @@ void EditorManager::saveAll()
         Editor * e= (*this)[i];
         if (e->modified())
             e->save();
+    }
+}
+
+void EditorManager::resetAutoSaveTimer()
+{
+    Q_ASSERT(mAutoSaveSettings);
+    if (!mAutoSaveSettings)
+        return;
+    if (mAutoSaveSettings->enableAutoSave()) {
+        mAutoSaveTimer.stop();
+        //minute to milliseconds
+        mAutoSaveTimer.start(mAutoSaveSettings->autoSaveInterval()*60*1000);
+        onAutoSaveTimeout();
+    } else {
+        mAutoSaveTimer.stop();
+    }
+}
+
+void EditorManager::setAutoSaveEnvironment(EditorSettings *settings,
+                                           AutoSaveCondition allowed,
+                                           AutoSaveCondition hasProject,
+                                           AutoSaveClock now)
+{
+    mAutoSaveSettings = settings;
+    mAutoSaveAllowed = allowed;
+    mAutoSaveHasProject = hasProject;
+    mAutoSaveNow = now;
+}
+
+void EditorManager::doAutoSave(Editor *e)
+{
+    if (!e || !e->canAutoSave())
+        return;
+    QString filename = e->filename();
+    try {
+        QFileInfo fileInfo(filename);
+        QDir parent = fileInfo.absoluteDir();
+        QString baseName = fileInfo.completeBaseName();
+        QString suffix = fileInfo.suffix();
+        switch(mAutoSaveSettings->autoSaveStrategy()) {
+        case assOverwrite:
+            e->save();
+            return;
+        case assAppendUnixTimestamp:
+            filename = parent.filePath(
+                        QString("%1.%2.%3")
+                        .arg(baseName)
+                        .arg(mAutoSaveNow().toSecsSinceEpoch())
+                        .arg(suffix));
+            break;
+        case assAppendFormatedTimeStamp: {
+            QDateTime time = mAutoSaveNow();
+            filename = parent.filePath(
+                        QString("%1.%2.%3")
+                        .arg(baseName,
+                             time.toString("yyyy.MM.dd.hh.mm.ss"),
+                             suffix));
+        }
+        }
+        if (e->isNew()) {
+            e->saveAs();
+        } else {
+            e->saveFile(filename);
+            e->setCanAutoSave(false);
+        }
+    } catch (FileError& error) {
+        emit autoSaveError(e, filename, error.reason());
+    }
+}
+
+void EditorManager::onAutoSaveTimeout()
+{
+    Q_ASSERT(mAutoSaveSettings);
+    if (!mAutoSaveSettings || !mAutoSaveAllowed())
+        return;
+    if (!mAutoSaveSettings->enableAutoSave())
+        return;
+    mAutoSaveTimer.stop();
+    {
+        auto action=finally([this]{
+            mAutoSaveTimer.start(mAutoSaveSettings->autoSaveInterval()*60*1000);
+        });
+        int updateCount = 0;
+        switch (mAutoSaveSettings->autoSaveTarget()) {
+        case astCurrentFile: {
+            Editor *e = getEditor();
+            doAutoSave(e);
+            updateCount++;
+        }
+            break;
+        case astAllOpennedFiles:
+            for (int i=0;i<pageCount();i++) {
+                Editor *e = (*this)[i];
+                doAutoSave(e);
+                updateCount++;
+            }
+            break;
+        case astAllProjectFiles:
+            if (!mAutoSaveHasProject())
+                return;
+            for (int i=0;i<pageCount();i++) {
+                Editor *e = (*this)[i];
+                if (!e->inProject())
+                    continue;
+                doAutoSave(e);
+                updateCount++;
+            }
+            //todo: auto save project files
+            break;
+        }
+        emit autoSaveFinished(updateCount);
     }
 }
 
