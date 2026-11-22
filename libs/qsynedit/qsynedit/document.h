@@ -404,6 +404,7 @@ public:
     void deleteLine(int index, bool parseToEnd);
     void deleteLines(int index, int numLines, bool parseToEnd);
     void moveLine(int from, int to, bool parseToEnd);
+    void moveLines(int from, int to, int numLines, bool parseToEnd);
     void insertLine(int index, const QString& s, bool parseToEnd);
     void insertLines(int index, int numLines, bool parseToEnd);
     // Only for a batch that subsequently calls putLine() for every inserted
@@ -524,7 +525,7 @@ protected:
 private:
     void ensureHasLine();
     void recordChange(DocumentChangeKind kind, int line, int count,
-                      int startCh, int endCh, bool wholeLine);
+                      int startCh, int endCh, bool wholeLine, int moveLineCount = 1);
     // reparse lines [startLine, endLine) with mSyntaxer and store the states;
     // when parseToEnd is set and the syntaxer needs line states, parsing
     // continues past endLine until the states converge. Emits linesReparsed
@@ -586,6 +587,7 @@ enum class ChangeReason {
     LeftTop,
     LineBreak,
     MoveLine,
+    MoveLines,
     ReplaceLine,
     Input,
     DeleteChar,

@@ -36,7 +36,7 @@ enum class DocumentChangeKind {
     SetLine,    // line content replaced: line = first line, count = number of lines
     Insert,     // count lines inserted at line
     Delete,     // count lines deleted at line
-    Move        // one line moved: line = from, count = to
+    Move        // line = from, count = to; moveLineCount = number of moved lines
 };
 
 struct DocumentChange {
@@ -46,6 +46,7 @@ struct DocumentChange {
     int startCh = 0;
     int endCh = 0;
     bool wholeLine = false;
+    int moveLineCount = 1;
 };
 
 /**

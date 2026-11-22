@@ -650,6 +650,7 @@ signals:
     void linesDeleted(int firstLine, int count);
     void linesInserted(int firstLine, int count);
     void lineMoved(int from, int to);
+    void linesMoved(int from, int to, int count);
     void changed();
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
     void statusChanged(QSynedit::StatusChanges changes);
@@ -746,6 +747,7 @@ private:
     void processCodeBlocksOnLinesInserted(int line, int count);
     void processFoldsOnLinesDeleted(int line, int count);
     void processFoldsOnLineMoved(int from, int to);
+    void processFoldsOnLinesMoved(int from, int to, int count);
     void rescanCodeBlocks(); // rescan for folds
     /**
      * @brief local variant of rescanCodeBlocks(): rebuilds the code-block
@@ -820,6 +822,7 @@ private:
     void properDeleteLine(int line, bool parseToEnd) { properDeleteLines(line, 1, parseToEnd); }
     void properInsertLines(int line, int count, bool parseToEnd);
     void properMoveLine(int from, int to, bool parseToEnd);
+    void properMoveLines(int from, int to, int count, bool parseToEnd);
 
     //primitive edit operations
     void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);

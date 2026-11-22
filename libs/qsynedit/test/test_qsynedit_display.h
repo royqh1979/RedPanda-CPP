@@ -97,6 +97,7 @@ private slots:
     void test_miniaudio_view_overhead_profile();
 #endif
     void test_multi_line_edit_indexes();
+    void test_range_move_view_and_undo();
     void test_multi_line_setline_background_layout();
     void test_max_width_notifications();
     void test_shared_document_edit_indexes();

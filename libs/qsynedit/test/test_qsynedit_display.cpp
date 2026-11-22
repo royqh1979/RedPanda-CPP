@@ -2732,9 +2732,7 @@ void TestQSyneditDisplay::test_miniaudio_edit_profile()
                                      i == count - 1);
             }
         } else if (operation == QStringLiteral("move")) {
-            for (int i = count - 1; i >= 0; --i) {
-                mEdit->properMoveLine(startLine + i, startLine + i + 100, i == 0);
-            }
+            mEdit->properMoveLines(startLine, startLine + 100, count, true);
         } else if (operation == QStringLiteral("delete")) {
             mEdit->properDeleteLines(startLine, count, true);
         } else if (operation == QStringLiteral("replace")) {
@@ -2799,7 +2797,7 @@ void TestQSyneditDisplay::test_miniaudio_edit_profile()
                 [&](const DocumentChangeSet &changes, bool dirty, int, bool) {
             changeEntries += changes.count();
             for (const DocumentChange &change : changes)
-                changedLines += change.kind == DocumentChangeKind::Move ? 1 : change.count;
+                changedLines += change.kind == DocumentChangeKind::Move ? change.moveLineCount : change.count;
             foldStateDirty = foldStateDirty || dirty;
         });
         connect(mEdit.get(), &QSynEdit::foldsRescaned, &context, [&] {
@@ -2892,6 +2890,45 @@ void TestQSyneditDisplay::test_multi_line_edit_indexes()
 
     mEdit->properDeleteLines(1, 2, true);
     QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 0);
+    expectRowMapping();
+
+    options.setFlag(EditorOption::WordWrap, false);
+    mEdit->setOptions(options);
+}
+
+void TestQSyneditDisplay::test_range_move_view_and_undo()
+{
+    QSynedit::EditorOptions options = mEdit->getOptions();
+    options.setFlag(EditorOption::WordWrap, true);
+    mEdit->setOptions(options);
+    mEdit->loadContent({"0", "1", "2", "3", "4", "5", "6", "7"});
+    drainLayoutJobs();
+    size_t firstSeq = mEdit->document()->getLineSeq(1);
+    size_t secondSeq = mEdit->document()->getLineSeq(2);
+    QStringList moved{"0", "3", "4", "5", "6", "1", "2", "7"};
+    mEdit->setCaretAndSelection(CharPos{0, 1}, CharPos{0, 1}, CharPos{0, 2});
+
+    mEdit->beginEditing();
+    mEdit->properMoveLines(1, 5, 2, true);
+    mEdit->addChangeToUndo(ChangeReason::MoveLines,
+                           CharPos{0, 1}, CharPos{0, 5},
+                           QStringList{"1", "2"}, SelectionMode::Normal);
+    mEdit->setCaretAndSelection(CharPos{0, 5}, CharPos{0, 5}, CharPos{0, 6});
+    mEdit->endEditing();
+
+    QCOMPARE(mEdit->content(), moved);
+    QCOMPARE(mEdit->document()->getLineSeq(5), firstSeq);
+    QCOMPARE(mEdit->document()->getLineSeq(6), secondSeq);
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 5));
+    QCOMPARE(mEdit->selBegin(), CharPos(0, 5));
+    QCOMPARE(mEdit->selEnd(), CharPos(0, 6));
+    expectRowMapping();
+
+    mEdit->undo();
+    QCOMPARE(mEdit->content(), QStringList({"0", "1", "2", "3", "4", "5", "6", "7"}));
+    expectRowMapping();
+    mEdit->redo();
+    QCOMPARE(mEdit->content(), moved);
     expectRowMapping();
 
     options.setFlag(EditorOption::WordWrap, false);
