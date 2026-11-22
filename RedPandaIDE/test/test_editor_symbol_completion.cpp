@@ -14,6 +14,86 @@ TestEditorSymbolCompletion::TestEditorSymbolCompletion(QObject *parent):
 {
 }
 
+void TestEditorSymbolCompletion::addIndentationCases()
+{
+    QTest::addColumn<bool>("autoIndent");
+    QTest::addColumn<bool>("tabsToSpaces");
+    QTest::addColumn<QString>("indent");
+    QTest::newRow("manual_tabs") << false << false << "    ";
+    QTest::newRow("manual_spaces") << false << true << "    ";
+    QTest::newRow("auto_tabs") << true << false << "\t";
+    QTest::newRow("auto_spaces") << true << true << "    ";
+}
+
+void TestEditorSymbolCompletion::configureIndentation(bool autoIndent, bool tabsToSpaces)
+{
+    mEditor->setTabSize(4);
+    mEditor->setAutoIndent(autoIndent);
+    QSynedit::EditorOptions options = mEditor->getOptions();
+    options.setFlag(QSynedit::EditorOption::TabsToSpaces, tabsToSpaces);
+    mEditor->setOptions(options);
+}
+
+void TestEditorSymbolCompletion::assertEditingArea(int line, int begin, int end)
+{
+    QSynedit::EditingAreaList areas;
+    mEditor->onGetEditingAreas(line, areas);
+    QCOMPARE(areas.count(), 1);
+    QCOMPARE(areas.constFirst()->type, QSynedit::EditingAreaType::eatRectangleBorder);
+    QCOMPARE(areas.constFirst()->beginX, begin);
+    QCOMPARE(areas.constFirst()->endX, end);
+    QCOMPARE(mEditor->caretPos(), CharPos(begin, line));
+    QCOMPARE(mEditor->selBegin(), CharPos(begin, line));
+    QCOMPARE(mEditor->selEnd(), CharPos(end, line));
+    QCOMPARE(mEditor->mTabStopY, line);
+    QCOMPARE(mEditor->mTabStopBegin, begin);
+    QCOMPARE(mEditor->mTabStopEnd, end);
+}
+
+void TestEditorSymbolCompletion::test_code_snippet_editing_areas_data()
+{
+    addIndentationCases();
+}
+
+void TestEditorSymbolCompletion::test_code_snippet_editing_areas()
+{
+    QFETCH(bool, autoIndent);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(QString, indent);
+    configureIndentation(autoIndent, tabsToSpaces);
+    mEditor->setCppParser(nullptr);
+    mEditor->loadContent(QStringList{""});
+    mEditor->setCaretPos(CharPos{0, 0});
+
+    mEditor->insertCodeSnippet(
+                "if (%REPL_BEGIN%condition%REPL_END%) {\n"
+                "    %REPL_BEGIN%first%REPL_END% + %REPL_BEGIN%second%REPL_END%;\n"
+                "    %INSERT%\n"
+                "}");
+
+    QCOMPARE(mEditor->content(), QStringList({
+        "if (condition) {",
+        indent + "first + second;",
+        indent,
+        "}"
+    }));
+    assertEditingArea(0, 4, 13);
+
+    const int offset = indent.length();
+    mEditor->tab();
+    assertEditingArea(1, offset, offset + 5);
+    mEditor->tab();
+    assertEditingArea(1, offset + 8, offset + 14);
+    mEditor->tab();
+    assertEditingArea(2, offset, offset);
+
+    mEditor->tab();
+    QSynedit::EditingAreaList areas;
+    mEditor->onGetEditingAreas(2, areas);
+    QVERIFY(areas.isEmpty());
+    QCOMPARE(mEditor->caretPos(), CharPos(offset, 2));
+}
+
 void TestEditorSymbolCompletion::test_input_double_quotes_in_string1()
 {
     // auto add another '"' when input '"' and put the caret in the middle
@@ -2397,6 +2477,76 @@ void TestEditorSymbolCompletion::test_input_docstring()
     QVERIFY(mEditor->empty());
     QVERIFY(!mEditor->canUndo());
 
+}
+
+void TestEditorSymbolCompletion::test_doxygen_header_editing_areas_data()
+{
+    addIndentationCases();
+}
+
+void TestEditorSymbolCompletion::test_doxygen_header_editing_areas()
+{
+    QFETCH(bool, autoIndent);
+    QFETCH(bool, tabsToSpaces);
+    QFETCH(QString, indent);
+    configureIndentation(autoIndent, tabsToSpaces);
+
+    const QStringList initial{
+        "class Foo {",
+        "    ",
+        "    int add(int first, int second);",
+        "};"
+    };
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setOnGetFileStream([initial](const QString &, QStringList &buffer) {
+        buffer = initial;
+        return true;
+    });
+    CppParser::parseFileBlocking(parser, "text.cpp", false, "");
+    QVERIFY(parser->findFunctionAt("text.cpp", 2));
+    mEditor->setFilename("text.cpp");
+    mEditor->setCppParser(parser);
+    mEditor->loadContent(initial);
+    mEditor->setCaretPos(CharPos{4, 1});
+    QTest::keyPress(mEditor.get(), '/');
+    QTest::keyPress(mEditor.get(), '*');
+    QTest::keyPress(mEditor.get(), '*');
+    QCOMPARE(mEditor->lineText(1), "    /***/");
+
+    QTest::keyPress(mEditor.get(), Qt::Key_Enter);
+
+    const QString generatedIndent = autoIndent ? indent : QString();
+    const QString openingIndent = "    ";
+    const QString closingLine = autoIndent ? indent + " */" : "*/";
+    QCOMPARE(mEditor->content(), QStringList({
+        "class Foo {",
+        openingIndent + "/**",
+        generatedIndent + " * @brief ",
+        generatedIndent + " * ",
+        generatedIndent + " * @param first ",
+        generatedIndent + " * @param second ",
+        generatedIndent + " * ",
+        generatedIndent + " * @return ",
+        closingLine,
+        "    int add(int first, int second);",
+        "};"
+    }));
+
+    const int offset = generatedIndent.length();
+    assertEditingArea(2, offset + 10, offset + 10);
+    mEditor->tab();
+    assertEditingArea(4, offset + 16, offset + 16);
+    mEditor->tab();
+    assertEditingArea(5, offset + 17, offset + 17);
+    mEditor->tab();
+    assertEditingArea(7, offset + 11, offset + 11);
+
+    mEditor->tab();
+    QSynedit::EditingAreaList areas;
+    mEditor->onGetEditingAreas(7, areas);
+    QVERIFY(areas.isEmpty());
+    QCOMPARE(mEditor->caretPos(), CharPos(offset + 11, 7));
+    mEditor->setCppParser(nullptr);
 }
 
 void TestEditorSymbolCompletion::test_input_after_cpp_comment()

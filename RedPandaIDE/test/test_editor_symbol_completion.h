@@ -67,7 +67,16 @@ private slots:
     void test_input_periods_in_string();
 
     void test_input_docstring();
+    void test_code_snippet_editing_areas_data();
+    void test_code_snippet_editing_areas();
+    void test_doxygen_header_editing_areas_data();
+    void test_doxygen_header_editing_areas();
     void test_input_after_cpp_comment();
+
+private:
+    static void addIndentationCases();
+    void configureIndentation(bool autoIndent, bool tabsToSpaces);
+    void assertEditingArea(int line, int begin, int end);
 };
 
 #endif
