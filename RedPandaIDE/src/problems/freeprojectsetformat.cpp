@@ -16,11 +16,13 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
     POJProblem currentProblem;
     POJProblemCase currentCase;
     QString currentEleName;
+    QString currentText;
     while(!xml.atEnd()) {
         xml.readNext();
         switch (xml.tokenType()) {
         case QXmlStreamReader::TokenType::StartElement:
             currentEleName = xml.name().toString();
+            currentText.clear();
             if (xml.name() == QLatin1String("item")) {
                 currentProblem=std::make_shared<OJProblem>();
             } else if (currentProblem &&
@@ -32,7 +34,10 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                         break;
                     }
                 }
-                currentCase->setName(QObject::tr("Problem Case %1").arg(currentProblem->cases().count()+1));
+                if (currentCase->name().isEmpty()) {
+                    currentCase->setName(QObject::tr("Problem Case %1")
+                                         .arg(currentProblem->cases().count()+1));
+                }
             } else if (currentProblem &&
                        xml.name()==QLatin1String("time_limit")) {
                 currentEleName = xml.name().toString();
@@ -62,7 +67,28 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             }
             break;
         case QXmlStreamReader::TokenType::EndElement:
+            if (currentProblem && currentCase && currentEleName=="test_input") {
+                currentCase->setInput(currentText);
+            } else if (currentProblem && currentCase && currentEleName=="test_output") {
+                currentCase->setExpected(currentText);
+                currentCase->setModified(false);
+                currentProblem->addCase(currentCase);
+                currentCase.reset();
+            } else if (currentProblem && currentEleName=="description") {
+                currentProblem->setDescription(currentText);
+            } else if (currentProblem && currentEleName=="hint") {
+                currentProblem->setHint(currentText);
+            } else if (currentProblem && currentEleName=="title") {
+                currentProblem->setName(currentText.trimmed().replace("&nbsp;"," "));
+            } else if (currentProblem && currentEleName=="url") {
+                currentProblem->setUrl(currentText.trimmed());
+            } else if (currentProblem && currentEleName=="time_limit") {
+                currentProblem->setTimeLimit(currentText.toInt());
+            } else if (currentProblem && currentEleName=="memory_limit") {
+                currentProblem->setMemoryLimit(currentText.toInt());
+            }
             currentEleName.clear();
+            currentText.clear();
             if (currentProblem && xml.name()==QLatin1String("item")) {
                 currentProblem->setModified(false);
                 problems.append(currentProblem);
@@ -70,29 +96,15 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             }
             break;
         case QXmlStreamReader::TokenType::Characters:
-            if (currentCase && currentProblem && currentEleName=="test_input") {
-                    currentCase->setInput(xml.text().toString());
-            } else if (currentCase && currentProblem && currentEleName=="test_output" ) {
-                currentCase->setExpected(xml.text().toString());
-                currentCase->setModified(false);
-                currentProblem->addCase(currentCase);
-                currentCase.reset();
-            } else if (currentProblem &&  currentEleName=="description") {
-                currentProblem->setDescription(xml.text().toString());
-            } else if (currentProblem &&  currentEleName=="hint") {
-                currentProblem->setHint( xml.text().toString() );
-            } else if (currentProblem &&  currentEleName=="title") {
-                currentProblem->setName(xml.text().toString().trimmed().replace("&nbsp;"," "));
-            } else if (currentProblem &&  currentEleName=="url") {
-                currentProblem->setUrl(xml.text().toString().trimmed());
-            } else if (currentProblem &&  currentEleName=="time_limit") {
-                currentProblem->setTimeLimit(xml.text().toInt());
-            } else if (currentProblem &&  currentEleName=="memory_limit") {
-                currentProblem->setMemoryLimit(xml.text().toInt());
-            }
+            if (currentProblem)
+                currentText += xml.text();
         default:
             break;
         }
+    }
+    if (xml.hasError()) {
+        throw FileError(QObject::tr("Can't parse problem set file '%1':%2")
+                        .arg(filename, xml.errorString()));
     }
     return problems;
 }

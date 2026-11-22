@@ -15,95 +15,144 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "problemcasevalidator.h"
+#include <QFile>
+
+namespace {
+
+class TextLineCursor
+{
+public:
+    explicit TextLineCursor(const QString &text)
+        : mText(text)
+    {
+    }
+
+    bool next(QStringView &line)
+    {
+        if (mPosition >= mText.size())
+            return false;
+        int end = mText.indexOf('\n', mPosition);
+        if (end < 0) {
+            line = QStringView(mText).mid(mPosition);
+            mPosition = mText.size();
+        } else {
+            line = QStringView(mText).mid(mPosition, end - mPosition);
+            mPosition = end + 1;
+        }
+        if (line.endsWith('\r'))
+            line.chop(1);
+        return true;
+    }
+
+private:
+    const QString &mText;
+    int mPosition = 0;
+};
+
+}
 
 ProblemCaseValidator::ProblemCaseValidator()
 {
 
 }
 
-bool ProblemCaseValidator::validate(POJProblemCase problemCase, ProblemCaseValidateType type)
+ProblemCaseValidationResult ProblemCaseValidator::validate(
+        const POJProblemCase &problemCase, ProblemCaseValidateType type)
 {
-    if (!problemCase)
-        return false;
-    QStringList output = textToLines(problemCase->output);
-    QStringList expected;
-    if (fileExists(problemCase->expectedOutputFileName()))
-        expected = readFileToLines(problemCase->expectedOutputFileName());
-    else
-        expected = textToLines(problemCase->expected());
-    problemCase->outputLineCounts = output.count();
-    problemCase->expectedLineCounts = expected.count();
-    if (expected.count() > 5000) {
-        if (output.count()<expected.count()) {
-            problemCase->firstDiffLine=output.count();
-            return false;
-        }  else if (output.count()>expected.count()) {
-            problemCase->firstDiffLine=expected.count();
-            return false;
-        }
+    ProblemCaseValidationResult result;
+    if (!problemCase) {
+        result.status = ProblemCaseValidationStatus::Error;
+        result.errorMessage = QObject::tr("No problem case to validate.");
+        return result;
     }
-    int count=std::min(output.count(), expected.count());
-    switch(type) {
-    case ProblemCaseValidateType::Exact:
-        for (int i=0;i<count;i++) {
-            if (output[i]!=expected[i]) {
-                problemCase->firstDiffLine = i;
-                return false;
-            }
-        }
-        break;
-    case ProblemCaseValidateType::IgnoreLeadingTrailingSpaces:
-        for (int i=0;i<count;i++) {
-            if (output[i].trimmed()!=expected[i].trimmed()) {
-                problemCase->firstDiffLine = i;
-                return false;
-            }
-        }
-        break;
-    case ProblemCaseValidateType::IgnoreSpaces:
-        for (int i=0;i<count;i++) {
-            if (!equalIgnoringSpaces(output[i],expected[i])) {
-                problemCase->firstDiffLine = i;
-                return false;
-            }
-        }
-        break;
-    }
-    if (output.count()<expected.count()) {
-        problemCase->firstDiffLine=output.count();
-        return false;
-    }  else if (output.count()>expected.count()) {
-        problemCase->firstDiffLine=expected.count();
-        return false;
-    }
-    return true;
-}
 
-bool ProblemCaseValidator::equalIgnoringSpaces(const QString &s1, const QString &s2)
-{
-    QStringList strList1=split(s1);
-    QStringList strList2=split(s2);
-    return (strList1==strList2);
-}
-
-QStringList ProblemCaseValidator::split(const QString &s)
-{
-    QStringList result;
-    const QChar* p = getNullTerminatedStringData(s);
-    const QChar* start = p;
-    while (p->unicode()!=0) {
-        if (p->isSpace()) {
-            if (!start->isSpace()) {
-                result.append(QString(start,p-start));
-            }
-            start = p;
-        } else if (start->isSpace()) {
-            start = p;
+    QString expected;
+    if (fileExists(problemCase->expectedOutputFileName())) {
+        QString path = problemCase->expectedOutputFileName();
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly)) {
+            result.status = ProblemCaseValidationStatus::Error;
+            result.errorMessage = QObject::tr("Can't open expected output file '%1' for read.")
+                    .arg(path);
+            return result;
         }
-        p++;
+        TextDecoder decoder = TextDecoder::decoderForUtf8();
+        auto decoded = decoder.decode(file.readAll());
+        if (!decoded.first) {
+            result.status = ProblemCaseValidationStatus::Error;
+            result.errorMessage = QObject::tr("Expected output file '%1' is not valid UTF-8.")
+                    .arg(path);
+            return result;
+        }
+        expected = decoded.second;
+    } else {
+        expected = problemCase->expected();
     }
-    if (!start->isSpace()) {
-        result.append(QString(start,p-start));
+
+    TextLineCursor outputCursor(problemCase->output);
+    TextLineCursor expectedCursor(expected);
+    QStringView outputLine;
+    QStringView expectedLine;
+    bool hasOutput = outputCursor.next(outputLine);
+    bool hasExpected = expectedCursor.next(expectedLine);
+    while (hasOutput || hasExpected) {
+        int line = hasOutput ? result.outputLineCounts : result.expectedLineCounts;
+        if (result.firstDiffLine < 0) {
+            if (hasOutput != hasExpected) {
+                result.firstDiffLine = line;
+            } else if (hasOutput) {
+                bool equal = false;
+                switch (type) {
+                case ProblemCaseValidateType::Exact:
+                    equal = outputLine == expectedLine;
+                    break;
+                case ProblemCaseValidateType::IgnoreLeadingTrailingSpaces:
+                    equal = outputLine.trimmed() == expectedLine.trimmed();
+                    break;
+                case ProblemCaseValidateType::IgnoreSpaces:
+                    equal = equalIgnoringSpaces(outputLine, expectedLine);
+                    break;
+                }
+                if (!equal)
+                    result.firstDiffLine = line;
+            }
+        }
+        if (hasOutput)
+            ++result.outputLineCounts;
+        if (hasExpected)
+            ++result.expectedLineCounts;
+        hasOutput = outputCursor.next(outputLine);
+        hasExpected = expectedCursor.next(expectedLine);
     }
+    result.status = result.firstDiffLine < 0
+            ? ProblemCaseValidationStatus::Passed : ProblemCaseValidationStatus::Mismatch;
     return result;
+}
+
+bool ProblemCaseValidator::equalIgnoringSpaces(QStringView s1, QStringView s2)
+{
+    const QChar *p1 = s1.data();
+    const QChar *p2 = s2.data();
+    const QChar *end1 = p1 + s1.size();
+    const QChar *end2 = p2 + s2.size();
+    while (true) {
+        while (p1 < end1 && p1->isSpace())
+            ++p1;
+        while (p2 < end2 && p2->isSpace())
+            ++p2;
+        if (p1 == end1 || p2 == end2)
+            return p1 == end1 && p2 == end2;
+        const QChar *start1 = p1;
+        const QChar *start2 = p2;
+        while (p1 < end1 && !p1->isSpace())
+            ++p1;
+        while (p2 < end2 && !p2->isSpace())
+            ++p2;
+        if (p1 - start1 != p2 - start2)
+            return false;
+        for (const QChar *a = start1, *b = start2; a < p1; ++a, ++b) {
+            if (*a != *b)
+                return false;
+        }
+    }
 }

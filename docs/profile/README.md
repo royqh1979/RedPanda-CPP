@@ -23,7 +23,12 @@
 - `qsynedit/qsynedit-bulk-fold-delete-result.md` — 折叠块批量删除优化。
 - `qsynedit/qsynedit-reparse-loop-result.md` — 重解析内循环优化。
 
-## 3. 关联文档
+## 3. 试题集
+
+- `problems/problemset-validator-baseline.md` — 大期望输出文件比对基线、场景和运行方法。
+- `problems/problemset-validator-result.md` — 无分配逐行比对的优化结果与限制。
+
+## 4. 关联文档
 
 - 总体设计：`../design/architecture.md`。
 - QSynEdit 设计：`../design/qsynedit/qsynedit-design.md`。

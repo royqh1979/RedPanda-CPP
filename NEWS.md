@@ -62,6 +62,8 @@ Red Panda C++ Version 3.6
   - fix: Undo paired-symbol Backspace deletion as one edit.
   - fix: Keep editor backup files alive across edits and truncate them before rewriting.
   - fix: Continue automatic project-file saving after non-project editors.
+  - enhancement: Speed up large problem-case output comparisons and report unreadable or invalid UTF-8 expected-output files.
+  - fix: Preserve problem hints and portable case paths, and correctly import Free Problem Set case names and split CDATA content.
   - fix: Undoing drag-and-drop editing restores the pre-drag caret, including reversed selections.
   - fix: Ctrl+hover now shows the pointing-hand cursor on jumpable identifiers.
   - fix: Inserting a line at the document start keeps the viewport at the first line.

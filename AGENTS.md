@@ -46,6 +46,7 @@
   - Widgets：`test-widgets`；
   - 文件搜索与替换：`test-file-search`；
   - 语义引用与重命名：`test-refactor`；
+  - 试题集与输出验证：`test-problemset`；
   - QSynEdit/Syntaxer：`libs/qsynedit/test/` 的 `test-qsynedit`。
 - Parser 组件和集成测试统一由 `test-cppparser` 执行，可用 `--suite=类名` 筛选。
 - 调试形成的有效验证场景必须保留为正式断言，不得修完后删除。
