@@ -190,6 +190,29 @@ void TestHTMLExporter::test_combined_text_decorations()
     QVERIFY(exporter->text().contains("text-decoration: underline line-through"));
 }
 
+void TestHTMLExporter::test_line_format_tokens()
+{
+    auto exporter = makeHTMLExporter();
+    QVector<int> formattedLines;
+    exporter->setOnFormatTokens(
+                [&formattedLines](int line, PaintHighlightTokenList &tokens) {
+        formattedLines.append(line);
+        for (PaintHighlightToken &token : tokens) {
+            if (token.tokenType == TokenType::Identifier) {
+                if (line == 0 && token.text == "first")
+                    QCOMPARE(token.ch, 4);
+                token.foreground = QColor(12, 34, 56);
+            }
+        }
+    });
+    exporter->exportRange(makeDocument("int first;\nint second;"), {5, 0}, {11, 1});
+
+    QCOMPARE(formattedLines, QVector<int>({0, 1}));
+    QVERIFY(exporter->text().contains(">irst</span>"));
+    QVERIFY(exporter->text().contains("second"));
+    QVERIFY(exporter->text().contains("#0c2238"));
+}
+
 #ifdef QSYNEDIT_PROFILE_TESTS
 void TestHTMLExporter::test_large_document_profile_data()
 {

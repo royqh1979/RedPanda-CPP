@@ -1149,9 +1149,18 @@ bool Editor::onGetSpecialLineColors(int line, QColor &foreground, QColor &backgr
 
 void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightTokenList &tokens)
 {
+    prepareHighlightTokens(line, tokens, syntaxer(), mStatementColors, true);
+}
+
+void Editor::prepareHighlightTokens(
+        int line, QSynedit::PaintHighlightTokenList &tokens,
+        const QSynedit::PConstSyntaxer &highlightSyntaxer,
+        const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors,
+        bool includeTransientHighlights)
+{
     QVector<PStatement> statements(tokens.size());
     bool useTrace = mParser && mParser->enabled() && !mParser->parsing()
-            && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP
+            && highlightSyntaxer->language() == QSynedit::ProgrammingLanguage::CPP
             && mParser->isLineVisible(mFilename, line)
             && !mParser->isIncludeLine(lineText(line));
     if (useTrace) {
@@ -1159,7 +1168,7 @@ void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightToken
         input.reserve(tokens.size());
         for (const QSynedit::PaintHighlightToken &token : tokens)
             input.append({token.text, token.tokenType});
-        CppExpressionExtractor extractor(this, syntaxer());
+        CppExpressionExtractor extractor(this, highlightSyntaxer);
         QVector<CppExpressionUnit> units = extractor.extractLine(line, input);
         PStatement scope = mParser->findScopeStatement(mFilename, line);
         for (CppExpressionUnit &unit : units) {
@@ -1219,13 +1228,19 @@ void Editor::preparePaintHighlightTokens(int line, QSynedit::PaintHighlightToken
         }
     }
     for (int i = 0; i < tokens.size(); ++i) {
-        preparePaintHighlightToken(line, tokens[i].ch, tokens[i],
-                                   useTrace ? &statements[i] : nullptr);
+        prepareHighlightToken(line, tokens[i].ch, tokens[i],
+                              useTrace ? &statements[i] : nullptr,
+                              highlightSyntaxer, statementColors,
+                              includeTransientHighlights);
     }
 }
 
-void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlightToken &paintToken,
-                                        const PStatement *resolvedStatement)
+void Editor::prepareHighlightToken(
+        int line, int ch, QSynedit::PaintHighlightToken &paintToken,
+        const PStatement *resolvedStatement,
+        const QSynedit::PConstSyntaxer &highlightSyntaxer,
+        const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors,
+        bool includeTransientHighlights)
 {
     const QString &token = paintToken.text;
     QSynedit::PTokenAttribute attr = paintToken.attr;
@@ -1239,9 +1254,9 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
     if (mParser) {
         // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
-            background = syntaxer()->commentAttribute()->background();
+            background = highlightSyntaxer->commentAttribute()->background();
             if (tokenType != QSynedit::TokenType::Space)
-                foreground = syntaxer()->commentAttribute()->foreground();
+                foreground = highlightSyntaxer->commentAttribute()->foreground();
             return;
         }
         QString lineContent = lineText(line);
@@ -1250,9 +1265,9 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
             int pos1=lineContent.indexOf("<");
             int pos2=lineContent.indexOf(">",pos1);
             if (pos1>=0 && pos2>=0 && pos1<ch && ch<pos2) {
-                style = syntaxer()->identifierAttribute()->styles();
-                foreground = syntaxer()->identifierAttribute()->foreground();
-                background = syntaxer()->identifierAttribute()->background();
+                style = highlightSyntaxer->identifierAttribute()->styles();
+                foreground = highlightSyntaxer->identifierAttribute()->foreground();
+                background = highlightSyntaxer->identifierAttribute()->background();
             }
             return;
         } else if (mParser->enabled() && tokenType == QSynedit::TokenType::Identifier) {
@@ -1272,7 +1287,7 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
                     statement = *resolvedStatement;
                 } else {
                     statement = parser()->findStatementOf(
-                                filename(), CppExpressionExtractor::extract(this, syntaxer(), p), p.line);
+                                filename(), CppExpressionExtractor::extract(this, highlightSyntaxer, p), p.line);
                 }
                 while (statement && statement->kind == StatementKind::Alias)
                     statement = mParser->findAliasedStatement(statement);
@@ -1301,7 +1316,7 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
                     kind = StatementKind::Variable;
                 }
             }
-            PColorSchemeItem item = mStatementColors->value(kind,PColorSchemeItem());
+            PColorSchemeItem item = statementColors->value(kind,PColorSchemeItem());
 
             if (item) {
                 foreground = item->foreground();
@@ -1311,10 +1326,10 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
                 style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
                 style.setFlag(QSynedit::FontStyle::fsStrikeOut,item->strikeout());
             } else {
-                foreground = syntaxer()->identifierAttribute()->foreground();
-                background = syntaxer()->identifierAttribute()->background();
+                foreground = highlightSyntaxer->identifierAttribute()->foreground();
+                background = highlightSyntaxer->identifierAttribute()->background();
             }
-            if (line == mHoverModifiedLine) {
+            if (includeTransientHighlights && line == mHoverModifiedLine) {
                 CharPos mouseCharPos;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),mouseCharPos)) {
                     if (line==mouseCharPos.line && (ch<=mouseCharPos.ch && mouseCharPos.ch<ch+token.length())) {
@@ -1331,13 +1346,13 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
             if (CppTypeKeywords.contains(token)
                     ||
                     (
-                        syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP
+                        highlightSyntaxer->language()==QSynedit::ProgrammingLanguage::CPP
                         &&
-                        ((QSynedit::CppSyntaxer*)syntaxer().get())->customTypeKeywords().contains(token)
+                        static_cast<const QSynedit::CppSyntaxer*>(highlightSyntaxer.get())->customTypeKeywords().contains(token)
                         )
                 )
             {
-                PColorSchemeItem item = mStatementColors->value(StatementKind::KeywordType,PColorSchemeItem());
+                PColorSchemeItem item = statementColors->value(StatementKind::KeywordType,PColorSchemeItem());
 
                 if (item) {
                     foreground = item->foreground();
@@ -1349,37 +1364,39 @@ void Editor::preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlig
                 }
             }
         }
-        if (((tokenType == QSynedit::TokenType::Identifier)
-             || (tokenType == QSynedit::TokenType::Keyword)
-             || (tokenType == QSynedit::TokenType::Preprocessor)
-             || (tokenType == QSynedit::TokenType::String)
-             || (tokenType == QSynedit::TokenType::Comment)
-                )
-            && (token == mCurrentHighlightedWord)) {
-            // occurrencies of the selected identifier
-            if (mCurrentHighlighWordForeground.isValid())
-                foreground = mCurrentHighlighWordForeground;
-            if (mCurrentHighlighWordBackground.isValid())
-                background = mCurrentHighlighWordBackground;
-        } else if (!selAvail() && attr->name() == SYNS_AttrSymbol
-                   && mEditorSettings->highlightMathingBraces()) {
-            // matching braces
-            if ( (line == mHighlightCharPos1.line)
-                    && (ch == mHighlightCharPos1.ch)) {
+        if (includeTransientHighlights) {
+            if (((tokenType == QSynedit::TokenType::Identifier)
+                 || (tokenType == QSynedit::TokenType::Keyword)
+                 || (tokenType == QSynedit::TokenType::Preprocessor)
+                 || (tokenType == QSynedit::TokenType::String)
+                 || (tokenType == QSynedit::TokenType::Comment)
+                    )
+                && (token == mCurrentHighlightedWord)) {
+                // occurrencies of the selected identifier
                 if (mCurrentHighlighWordForeground.isValid())
                     foreground = mCurrentHighlighWordForeground;
                 if (mCurrentHighlighWordBackground.isValid())
                     background = mCurrentHighlighWordBackground;
-            }
-            if ((line == mHighlightCharPos2.line)
-                    && (ch == mHighlightCharPos2.ch)) {
-                if (mCurrentHighlighWordForeground.isValid())
-                    foreground = mCurrentHighlighWordForeground;
-                if (mCurrentHighlighWordBackground.isValid())
-                    background = mCurrentHighlighWordBackground;
+            } else if (!selAvail() && attr->name() == SYNS_AttrSymbol
+                       && mEditorSettings->highlightMathingBraces()) {
+                // matching braces
+                if ( (line == mHighlightCharPos1.line)
+                        && (ch == mHighlightCharPos1.ch)) {
+                    if (mCurrentHighlighWordForeground.isValid())
+                        foreground = mCurrentHighlighWordForeground;
+                    if (mCurrentHighlighWordBackground.isValid())
+                        background = mCurrentHighlighWordBackground;
+                }
+                if ((line == mHighlightCharPos2.line)
+                        && (ch == mHighlightCharPos2.ch)) {
+                    if (mCurrentHighlighWordForeground.isValid())
+                        foreground = mCurrentHighlighWordForeground;
+                    if (mCurrentHighlighWordBackground.isValid())
+                        background = mCurrentHighlighWordBackground;
+                }
             }
         }
-    } else {
+    } else if (includeTransientHighlights) {
         // occurrencies of the selected word
         if (token == mCurrentHighlightedWord) {
             if (mCurrentHighlighWordForeground.isValid())
@@ -1590,20 +1607,13 @@ std::unique_ptr<QMimeData> Editor::createCopyMimeData()
         exporter.setUseBackground(true);
         exporter.setFont(font());
         QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-        if (mEditorSettings->copyHTMLUseEditorColor()) {
-            mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
-        } else {
-            mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
-        }
+        bool useEditorColors = mEditorSettings->copyHTMLUseEditorColor();
+        QString schemeName = useEditorColors
+                ? mEditorSettings->colorScheme()
+                : mEditorSettings->copyHTMLColorScheme();
+        mColorManager->applySchemeToSyntaxer(pSyntaxer, schemeName);
         exporter.setSyntaxer(pSyntaxer);
-        exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-                                            this,
-                                            std::placeholders::_1,
-                                            std::placeholders::_2,
-                                            std::placeholders::_3,
-                                            std::placeholders::_4,
-                                            std::placeholders::_5
-                                            ));
+        setExporterHighlightHandler(exporter, pSyntaxer, schemeName, useEditorColors);
         exporter.setCreateHTMLFragment(true);
 
         if (mEditorSettings->copyHTMLWithLineNumber()) {
@@ -2974,16 +2984,10 @@ void Editor::print()
 
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-    mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
+    QString schemeName = mEditorSettings->copyHTMLColorScheme();
+    mColorManager->applySchemeToSyntaxer(pSyntaxer, schemeName);
     exporter.setSyntaxer(pSyntaxer);
-    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-                                        this,
-                                        std::placeholders::_1,
-                                        std::placeholders::_2,
-                                        std::placeholders::_3,
-                                        std::placeholders::_4,
-                                        std::placeholders::_5
-                                        ));
+    setExporterHighlightHandler(exporter, pSyntaxer, schemeName, false);
 
     if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
         exporter.exportRange(document(),selBegin(),selEnd());
@@ -3044,20 +3048,13 @@ void Editor::exportAsRTF(const QString &rtfFilename)
     exporter.setUseBackground(true);
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-    if (mEditorSettings->copyRTFUseEditorColor()) {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
-    } else {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyRTFColorScheme());
-    }
+    bool useEditorColors = mEditorSettings->copyRTFUseEditorColor();
+    QString schemeName = useEditorColors
+            ? mEditorSettings->colorScheme()
+            : mEditorSettings->copyRTFColorScheme();
+    mColorManager->applySchemeToSyntaxer(pSyntaxer, schemeName);
     exporter.setSyntaxer(pSyntaxer);
-    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-                                        this,
-                                        std::placeholders::_1,
-                                        std::placeholders::_2,
-                                        std::placeholders::_3,
-                                        std::placeholders::_4,
-                                        std::placeholders::_5
-                                        ));
+    setExporterHighlightHandler(exporter, pSyntaxer, schemeName, useEditorColors);
     exporter.exportAll(document());
     exporter.saveToFile(rtfFilename);
 }
@@ -3076,20 +3073,13 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.setUseBackground(true);
     exporter.setFont(font());
     QSynedit::PSyntaxer pSyntaxer = syntaxer()->createInstance();
-    if (mEditorSettings->copyHTMLUseEditorColor()) {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->colorScheme());
-    } else {
-        mColorManager->applySchemeToSyntaxer(pSyntaxer,mEditorSettings->copyHTMLColorScheme());
-    }
+    bool useEditorColors = mEditorSettings->copyHTMLUseEditorColor();
+    QString schemeName = useEditorColors
+            ? mEditorSettings->colorScheme()
+            : mEditorSettings->copyHTMLColorScheme();
+    mColorManager->applySchemeToSyntaxer(pSyntaxer, schemeName);
     exporter.setSyntaxer(pSyntaxer);
-    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
-                                        this,
-                                        std::placeholders::_1,
-                                        std::placeholders::_2,
-                                        std::placeholders::_3,
-                                        std::placeholders::_4,
-                                        std::placeholders::_5
-                                        ));
+    setExporterHighlightHandler(exporter, pSyntaxer, schemeName, useEditorColors);
     if (mEditorSettings->copyHTMLWithLineNumber()) {
         exporter.setExportLineNumber(true);
         exporter.setRecalcLineNumber(false);
@@ -4129,77 +4119,20 @@ void Editor::popUserCodeInTabStops()
     }
 }
 
-void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int line, int ch, const QString &token, QSynedit::PTokenAttribute& attr)
+void Editor::setExporterHighlightHandler(
+        QSynedit::Exporter &exporter, const QSynedit::PSyntaxer &syntaxer,
+        const QString &schemeName, bool useEditorColors)
 {
-    if (!syntaxer)
-        return;
-    if (token.isEmpty())
-        return;
-    //don't do this
-    if (completionPopupVisible() || headerCompletionPopupVisible())
-        return;
-
-    if (mParser && (attr == syntaxer->identifierAttribute())) {
-        CharPos p{ch,line};
-        CharPos pBeginPos,pEndPos;
-        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-//        qDebug()<<s;
-        PStatement statement = mParser->findStatementOf(mFilename,
-          s , p.line);
-        while (statement && statement->kind == StatementKind::Alias)
-            statement = mParser->findAliasedStatement(statement);
-        StatementKind kind = getKindOfStatement(statement);
-        if (kind == StatementKind::Unknown) {
-            if ((pEndPos.line>=1)
-              && (pEndPos.ch>=0)
-              && (pEndPos.ch < lineText(pEndPos.line).length())
-              && (lineText(pEndPos.line)[pEndPos.ch] == '(')) {
-                kind = StatementKind::Function;
-            } else {
-                kind = StatementKind::Variable;
-            }
-        }
-        QSynedit::CppSyntaxer* cppSyntaxer = dynamic_cast<QSynedit::CppSyntaxer*>(syntaxer.get());
-        switch(kind) {
-        case StatementKind::Function:
-        case StatementKind::Constructor:
-        case StatementKind::Destructor:
-        case StatementKind::OverloadedOperator:
-        case StatementKind::LiteralOperator:
-            attr = cppSyntaxer->functionAttribute();
-            break;
-        case StatementKind::Class:
-        case StatementKind::Typedef:
-            attr = cppSyntaxer->classAttribute();
-            break;
-        case StatementKind::EnumClassType:
-        case StatementKind::EnumType:
-            break;
-        case StatementKind::LocalVariable:
-        case StatementKind::Parameter:
-            attr = cppSyntaxer->localVarAttribute();
-            break;
-        case StatementKind::Variable:
-            attr = cppSyntaxer->variableAttribute();
-            break;
-        case StatementKind::GlobalVariable:
-            attr = cppSyntaxer->globalVarAttribute();
-            break;
-        case StatementKind::Enum:
-        case StatementKind::Preprocessor:
-            attr = cppSyntaxer->preprocessorAttribute();
-            break;
-        case StatementKind::Keyword:
-            attr = cppSyntaxer->keywordAttribute();
-            break;
-        case StatementKind::Namespace:
-        case StatementKind::NamespaceAlias:
-            attr = cppSyntaxer->stringAttribute();
-            break;
-        default:
-            break;
-        }
+    auto exportStatementColors = mStatementColors;
+    if (!useEditorColors) {
+        exportStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
+        mColorManager->updateStatementColors(exportStatementColors, schemeName);
     }
+    exporter.setOnFormatTokens(
+                [this, syntaxer, exportStatementColors]
+                (int line, QSynedit::PaintHighlightTokenList &tokens) {
+        prepareHighlightTokens(line, tokens, syntaxer, exportStatementColors, false);
+    });
 }
 
 void Editor::onScrollBarValueChanged()

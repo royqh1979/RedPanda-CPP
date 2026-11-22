@@ -39,7 +39,8 @@ void HTMLExporter::clear()
 {
     Exporter::clear();
     mCssNames.clear();
-    mLastAttr.reset();
+    mStyleTokens.clear();
+    mLastToken = PaintHighlightToken{};
 }
 
 bool HTMLExporter::createHTMLFragment() const
@@ -52,21 +53,21 @@ void HTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString HTMLExporter::attrToCSS(PTokenAttribute attr, const QString &styleName)
+QString HTMLExporter::attrToCSS(const PaintHighlightToken &token, const QString &styleName)
 {
     QString result = "." + styleName + " { ";
-    if (mUseBackground && attr->background().isValid())
-        result += "background-color: " + colorToHTML(attr->background()) + "; ";
-    if (attr->foreground().isValid())
-        result += "color: " + colorToHTML(attr->foreground()) + "; ";
-    if (attr->styles().testFlag(FontStyle::fsBold))
+    if (mUseBackground && token.background.isValid())
+        result += "background-color: " + colorToHTML(token.background) + "; ";
+    if (token.foreground.isValid())
+        result += "color: " + colorToHTML(token.foreground) + "; ";
+    if (token.style.testFlag(FontStyle::fsBold))
         result += "font-weight: bold; ";
-    if (attr->styles().testFlag(FontStyle::fsItalic))
+    if (token.style.testFlag(FontStyle::fsItalic))
         result += "font-style: italic; ";
     QStringList decorations;
-    if (attr->styles().testFlag(FontStyle::fsUnderline))
+    if (token.style.testFlag(FontStyle::fsUnderline))
         decorations.append("underline");
-    if (attr->styles().testFlag(FontStyle::fsStrikeOut))
+    if (token.style.testFlag(FontStyle::fsStrikeOut))
         decorations.append("line-through");
     if (!decorations.isEmpty())
         result += "text-decoration: " + decorations.join(' ') + "; ";
@@ -79,14 +80,22 @@ QString HTMLExporter::colorToHTML(const QColor &color) const
     return color.name();
 }
 
-QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attr)
+QString HTMLExporter::getStyleName(PSyntaxer syntaxer, const PaintHighlightToken &token)
 {
-    QString name  = syntaxer->languageName() + '-' + attr->name();
+    QString attributeName = token.attr ? token.attr->name() : QString();
+    QString name = QString("%1-%2-%3-%4-%5-%6-%7")
+            .arg(syntaxer->languageName(), attributeName)
+            .arg(token.foreground.isValid())
+            .arg(token.foreground.rgba())
+            .arg(token.background.isValid())
+            .arg(token.background.rgba())
+            .arg(int(token.style));
     QString cssName = mCssNames.value(name);
     if (cssName.isEmpty()) {
         //cssName = makeValidName(name);
         cssName = QString("c%1").arg(mCssNames.count());
         mCssNames.insert(name,cssName);
+        mStyleTokens.insert(name, token);
     }
     return cssName;
 }
@@ -111,7 +120,7 @@ void HTMLExporter::formatAttributeDone(bool , bool , FontStyles )
 
 void HTMLExporter::formatAttributeInit(bool , bool , FontStyles )
 {
-    QString styleName = getStyleName(mSyntaxer, mLastAttr);
+    QString styleName = getStyleName(mSyntaxer, mLastToken);
     addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
@@ -122,7 +131,7 @@ void HTMLExporter::formatAfterLastAttribute()
 
 void HTMLExporter::formatBeforeFirstAttribute(bool, bool, FontStyles)
 {
-    QString styleName = getStyleName(mSyntaxer, mLastAttr);
+    QString styleName = getStyleName(mSyntaxer, mLastToken);
     addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
@@ -150,8 +159,15 @@ QString HTMLExporter::getHeader()
 {
     QString styles;
     foreach (const PTokenAttribute &pAttr, mSyntaxer->attributes()){
-        QString uniqueAttrName = getStyleName(mSyntaxer, pAttr);
-        styles.append(attrToCSS(pAttr,uniqueAttrName) + lineBreak());
+        PaintHighlightToken token{};
+        token.attr = pAttr;
+        token.foreground = pAttr->foreground();
+        token.background = pAttr->background();
+        token.style = pAttr->styles();
+        getStyleName(mSyntaxer, token);
+    }
+    for (auto it = mStyleTokens.constBegin(); it != mStyleTokens.constEnd(); ++it) {
+        styles.append(attrToCSS(it.value(), mCssNames.value(it.key())) + lineBreak());
     }
 
     QString title;
@@ -185,10 +201,10 @@ QString HTMLExporter::getHeader()
     return result;
 }
 
-void HTMLExporter::setTokenAttribute(PTokenAttribute attr)
+void HTMLExporter::setTokenAttribute(const PaintHighlightToken &token)
 {
-    mLastAttr = attr;
-    Exporter::setTokenAttribute(attr);
+    mLastToken = token;
+    Exporter::setTokenAttribute(token);
 }
 
 QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)

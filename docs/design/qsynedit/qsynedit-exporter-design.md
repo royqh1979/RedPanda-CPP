@@ -62,3 +62,16 @@ HTML 另外覆盖完整文档与 clipboard fragment、转义、CSS 样式合并�
 ## 测量与实施
 
 先用原实现记录 10,000/100,000 行 C++ 文档的 HTML/RTF 字节数和 Release 导出时间，再逐项修改。正确性场景不随实现删除。每项优化后复测输出内容、文件大小和性能，最后执行完整 Release/Debug 回归。
+
+## 逐行语义高亮
+
+QSynEdit Exporter 与 Painter 共用逐行语义高亮流程，不再由 Exporter 对每个 identifier 单独提取表达式和调用 `findStatementOf()`：
+
+- Exporter 负责用导出 Syntaxer 对一整行分词，组装 `PaintHighlightTokenList`，每行调用一次高亮回调，再按各 token 最终的前景色、背景色和字体样式序列化；范围裁切只影响输出文本，不改变整行表达式分析的坐标。
+- Editor 的语义高亮核心同时服务绘制与导出：整行提取表达式、批量求值、statement 种类到颜色的映射只保留一条实现。
+- 绘制路径可以继续叠加鼠标悬停、当前单词和匹配括号等临时状态；导出路径不得带入这些状态。
+- 导出使用独立颜色方案时，高亮核心接收该方案的 Syntaxer 和 statement 颜色表，不能误用 Editor 当前颜色表。使用 Editor 配色时，导出与绘制的稳定语义颜色应一致。
+- `PaintHighlightToken::ch` 始终是完整源文本行中的 0 起始字符位置。选区从 token 中间开始时，只裁切输出字符串，不移动后续 token 的坐标。
+- HTML 的 CSS 样式键必须包含最终前景色、背景色和字体样式，不能只使用 Syntaxer 属性名；同一个 Identifier 属性经语义分析后会对应多种 statement 颜色。
+
+性能对比使用真实 Editor、CppParser 和 `miniaudio.h`，分别记录 HTML 与 RTF 的冷/热 `mIdCache` 导出耗时；同时保留无 Parser 的 QSynEdit 大文档基线，用于区分通用序列化开销与语义求值收益。

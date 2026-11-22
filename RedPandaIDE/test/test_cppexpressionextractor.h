@@ -15,6 +15,7 @@ private slots:
     void test_extract_line_data();
     void test_extract_line();
     void test_display_input();
+    void test_completion_trailing_member_operator();
     void test_profile();
 };
 

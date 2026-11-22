@@ -27,6 +27,7 @@ Red Panda C++ Version 3.6
   - fix: Recompute statement linkage and declaration properties after invalidating declarations or definitions.
   - fix: Avoid treating type-less function calls as declarations while preserving constructors and deduction guides.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
+  - fix: Show code completion immediately after namespace and member access operators, before typing the next identifier.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Avoid full-document pending-layout scans when scheduling editor layout work.
   - enhancement: Move non-urgent multi-line layout work off the UI thread during bulk edits.
@@ -65,6 +66,7 @@ Red Panda C++ Version 3.6
   - enhancement: Speed up large problem-case output comparisons and report unreadable or invalid UTF-8 expected-output files.
   - fix: Preserve problem hints and portable case paths, and correctly import Free Problem Set case names and split CDATA content.
   - enhancement: Reduce HTML export size, preserve whitespace with standards-compliant markup, and improve RTF Unicode compatibility.
+  - enhancement: Share line-based semantic highlighting between editor painting and HTML/RTF export, reducing repeated expression evaluation.
   - fix: Correct export range cleanup, HTML line numbering and escaping, and repeated RTF export state.
   - fix: Prevent RTF colors with equal HSV brightness from sharing a color-table index.
   - fix: Clear C++ parser associations when an editor switches to a non-C/C++ file type.

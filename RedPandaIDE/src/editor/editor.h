@@ -47,6 +47,9 @@ class QMimeData;
 class CodeCompletionSettings;
 class ColorManager;
 class IconsManager;
+namespace QSynedit {
+class Exporter;
+}
 struct TabStop {
     int x;
     int endX;
@@ -424,8 +427,10 @@ private:
     void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-    void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int line, int ch, const QString& token,
-        QSynedit::PTokenAttribute &attr);
+    void setExporterHighlightHandler(QSynedit::Exporter &exporter,
+                                     const QSynedit::PSyntaxer &syntaxer,
+                                     const QString &schemeName,
+                                     bool useEditorColors);
     void onScrollBarValueChanged();
     void updateHoverLink(int line);
     void cancelHoverLink();
@@ -534,8 +539,17 @@ protected:
     void onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList) override;
     bool onGetSpecialLineColors(int line, QColor &foreground, QColor &backgroundColor) override;
     void preparePaintHighlightTokens(int line, QSynedit::PaintHighlightTokenList &tokens);
-    void preparePaintHighlightToken(int line, int ch, QSynedit::PaintHighlightToken &token,
-                                    const PStatement *resolvedStatement);
+    void prepareHighlightTokens(
+            int line, QSynedit::PaintHighlightTokenList &tokens,
+            const QSynedit::PConstSyntaxer &highlightSyntaxer,
+            const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors,
+            bool includeTransientHighlights);
+    void prepareHighlightToken(
+            int line, int ch, QSynedit::PaintHighlightToken &token,
+            const PStatement *resolvedStatement,
+            const QSynedit::PConstSyntaxer &highlightSyntaxer,
+            const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors,
+            bool includeTransientHighlights);
 
     // QObject interface
 public:

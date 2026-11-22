@@ -17,7 +17,7 @@
 ### 导出
 
 - `qsynedit/qsynedit-exporter-baseline.md` — HTML/RTF 输出尺寸与导出耗时基线。
-- `qsynedit/qsynedit-exporter-result.md` — HTML 尺寸优化、RTF 兼容处理及复测结果。
+- `qsynedit/qsynedit-exporter-result.md` — HTML 尺寸优化、RTF 兼容处理、逐行语义高亮统一及复测结果。
 
 ### 优化结果
 
