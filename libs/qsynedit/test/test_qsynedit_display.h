@@ -47,6 +47,7 @@ private slots:
     void test_fold_edit_shared_document_views();
     void test_fold_merge_before_open_does_not_expand();
     void test_fold_whole_block_delete_exception();
+    void test_fold_bulk_delete_matches_full_rescan();
     void test_gutter_click_selects_line();
     void test_gutter_mark_click_emits_signal();
     void test_gutter_shift_click_selects_line_range();

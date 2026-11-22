@@ -602,6 +602,25 @@ void TestQSyneditDisplay::test_fold_whole_block_delete_exception()
     QVERIFY(mEdit->isCollapsed(0, 2));
 }
 
+void TestQSyneditDisplay::test_fold_bulk_delete_matches_full_rescan()
+{
+    QStringList lines;
+    for (int block = 0; block < 40; ++block) {
+        lines.append(QStringLiteral("void f%1() {").arg(block));
+        lines.append("    work();");
+        lines.append("}");
+    }
+    mEdit->loadContent(lines);
+    for (int block = 0; block < 40; block += 3)
+        QVERIFY(mEdit->collapse(block * 3, block * 3 + 2));
+
+    mEdit->properDeleteLines(2, 60, true);
+    QList<std::tuple<int, int, bool>> partial = mEdit->foldRangesForTest();
+    QVERIFY(mEdit->isCollapsed(30, 32));
+    mEdit->fullRescanCodeBlocksForTest();
+    QCOMPARE(mEdit->foldRangesForTest(), partial);
+}
+
 void TestQSyneditDisplay::test_gutter_click_selects_line()
 {
     mEdit->loadContent(makeLines(5));

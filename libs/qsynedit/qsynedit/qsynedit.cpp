@@ -4589,14 +4589,16 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
 
     bool collapseChanged=false;
     beginInternalChanges();
-    for (int i = mCodeBlocks.count()-1;i>=0;i--) {
-        PCodeBlock block = mCodeBlocks[i];
+    QVector<PCodeBlock> keptBlocks;
+    keptBlocks.reserve(mCodeBlocks.count());
+    for (const PCodeBlock &block : mCodeBlocks) {
         if (block->fromLine >= line
                 && block->fromLine < line+count)  {
             // the opener is deleted: the block is gone for good
-            mCodeBlocks.remove(i);
-        } else if (block->toLine >= line
-                   && block->toLine < line+count) {
+            continue;
+        }
+        if (block->toLine >= line
+                && block->toLine < line+count) {
             // only the closure is deleted: the block is still open and
             // must stay in the list (the rescan assigns its new toLine),
             // otherwise the partial scan loses it from its initial stack
@@ -4608,16 +4610,16 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
             block->move(-count);
         } else if (block->toLine >= line + count) {
             if (block->toLine <= block->fromLine)
-                mCodeBlocks.remove(i);
-            else {
-                block->toLine -= count;
-                if (block->collapsed) { // uncollapse it
-                    collapseChanged = true;
-                    block->collapsed = false;
-                }
+                continue;
+            block->toLine -= count;
+            if (block->collapsed) { // uncollapse it
+                collapseChanged = true;
+                block->collapsed = false;
             }
         }
+        keptBlocks.append(block);
     }
+    mCodeBlocks = keptBlocks;
     if (collapseChanged) {
         updateHScrollbar();
         updateVScrollbar();
