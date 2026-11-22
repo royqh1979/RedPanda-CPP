@@ -46,7 +46,7 @@ public:
 //    void fetchMore(const QModelIndex &parent) override;
 //    bool canFetchMore(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
-    const PCppParser &parser() const;
+    PCppParser parser() const;
     void setParser(const PCppParser &newCppParser);
     void clear();
     const QString &currentFile() const;
@@ -68,9 +68,11 @@ public slots:
 private:
     PClassBrowserNode addChild(ClassBrowserNode* node, const PStatement& statement);
     void removeNode(ClassBrowserNode *node);
-    void buildStatementTree();
+    void doFillStatements(const PCppParser &parser);
+    void buildStatementTree(const PCppParser &parser);
     void sortNode(ClassBrowserNode * node);
-    void updateChildren(ClassBrowserNode *node, const StatementList& statements);
+    void updateChildren(ClassBrowserNode *node, const StatementList& statements,
+                        const PCppParser &parser);
     bool shouldShowStatement(ClassBrowserNode *node, const PStatement &statement) const;
     QModelIndex indexForNode(ClassBrowserNode *node) const;
 private:
@@ -79,7 +81,7 @@ private:
     QSet<PStatement> mTopLevelStatements;
     QSet<PStatement> mNestedStatements;
     QVector<PClassBrowserNode> mNodes;
-    PCppParser mParser;
+    std::weak_ptr<CppParser> mParser;
     bool mUpdating;
     int mUpdateCount;
     mutable QRecursiveMutex mMutex;

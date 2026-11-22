@@ -64,6 +64,7 @@ private slots:
     void test_class_browser_model_index_for_current_file_statement();
     void test_class_browser_incremental_refresh_preserves_view_state();
     void test_class_browser_current_file_change_clears_immediately();
+    void test_class_browser_does_not_own_parser();
     void test_class_browser_anonymous_typedef_type();
     void test_class_browser_anonymous_type_sorting();
     void test_class_browser_macros_sort_first();

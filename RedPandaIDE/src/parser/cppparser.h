@@ -21,6 +21,8 @@
 #include <QObject>
 #include <QThread>
 #include <QVector>
+#include <atomic>
+#include <memory>
 #include "statementmodel.h"
 #include "cpppreprocessor.h"
 #include "cppexpressionevaluator.h"
@@ -100,10 +102,11 @@ public:
 #ifdef REDPANDA_PARSER_TEST
     void invalidateFileRecordForTest(const QString &fileName) { internalInvalidateFile(fileName); }
     CppPreprocessor::EventCounts preprocessorEventCountsForTest(const QString &fileName) const {
-        return mPreprocessor.eventCounts(fileName);
+        return mPreprocessor->eventCounts(fileName);
     }
     const QStringList &preprocessedForTest() const { return mPreprocessedForTest; }
     const CppTokenizer::TokenList &tokenizerTokensForTest() const { return mTokenizerTokensForTest; }
+    static void resetApplicationExitForTest();
 #endif
     bool isLineVisible(const QString& fileName, int line) const;
     bool isIncludeLine(const QString &line) const;
@@ -114,6 +117,8 @@ public:
     CppCompilerType compilerType() const;
     bool parsing() const;
     int cppVersion() const;
+    static void prepareForApplicationExit();
+    void stopParsing();
     void resetParser();
     void unFreeze();
     bool hasReplayRecord(const QString& fileName) const;
@@ -121,8 +126,6 @@ public:
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1) const;
     bool enabled() const;
     void setEnabled(bool newEnabled);
-    const QSet<QString> &filesToScan() const;
-    void setFilesToScan(const QSet<QString> &newFilesToScan);
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream);
     int parserId() const;
     const QString &serialId() const;
@@ -162,6 +165,9 @@ private:
                    bool onlyIfNotParsed = false, bool updateView = true);
     PParseFileCommand retrievePendingParseFileCommand();
     void internalParse(const QString& fileName);
+    void internalParseHardDefines();
+    bool shouldStopParsing() const;
+    void clearParseResults();
     CppEvaluationOptions evaluationOptions() const;
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
@@ -207,15 +213,15 @@ private:
     bool mEnabled;
     bool mSharedByFiles;
     bool mIsSystemHeader;
-    mutable StatementModel mStatementList;
-    CppPreprocessor mPreprocessor;
+    static std::atomic_bool sApplicationExiting;
+    mutable std::unique_ptr<StatementModel> mStatementList;
+    std::unique_ptr<CppPreprocessor> mPreprocessor;
     QSet<QString> mProjectFiles;
-    QSet<QString> mFilesToScan;
     int mFilesScannedCount;
     int mFilesToScanCount;
     int mLockCount;
     bool mParsing;
-    bool mStopForReset;
+    std::atomic_bool mStopParsing;
     PParseFileCommand mLastParseFileCommand;
     mutable QRecursiveMutex mMutex;
 #ifdef REDPANDA_PARSER_TEST

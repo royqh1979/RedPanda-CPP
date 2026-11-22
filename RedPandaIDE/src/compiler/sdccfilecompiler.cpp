@@ -25,8 +25,9 @@
 
 
 SDCCFileCompiler::SDCCFileCompiler(const QString &filename, const QByteArray &encoding,
-                           CppCompileType compileType, bool onlyCheckSyntax):
-    Compiler(filename, onlyCheckSyntax),
+                                   CppCompileType compileType, bool onlyCheckSyntax,
+                                   const PCppParser &parserForFile):
+    Compiler(filename, onlyCheckSyntax, parserForFile),
     mEncoding(encoding),
     mCompileType(compileType),
     mNoStartup(false)

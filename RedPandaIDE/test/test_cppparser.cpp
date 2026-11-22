@@ -1,5 +1,7 @@
 #include <QTest>
+#include <QSemaphore>
 #include <QTemporaryDir>
+#include <qt_utils/utils.h>
 #include "test_cppparser.h"
 #include "src/parser/cpptyperesolver.h"
 
@@ -1833,4 +1835,121 @@ void TestCppParser::test_inline_namespace_overloads()
     n = mParser->findStatement("N");
     QVERIFY(n);
     QCOMPARE(mParser->statementList().childrenStatements(n).values("f").count(), 2);
+}
+
+void TestCppParser::test_stop_parsing_clears_results_before_finish()
+{
+    mParser->addHardDefineByLine("#define __STOP_TEST__ 1");
+    auto entered = std::make_shared<QSemaphore>();
+    auto release = std::make_shared<QSemaphore>();
+    auto blockFirstRead = std::make_shared<std::atomic_bool>(true);
+    mParser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+        if (blockFirstRead->exchange(false)) {
+            entered->release();
+            release->acquire();
+        }
+        buffer = QStringList{"int value;"};
+        return true;
+    });
+    QObject context;
+    int statementCountAtFinish = -1;
+    bool hasFileInfoAtFinish = false;
+    connect(mParser.get(), &CppParser::parseFinished, &context, [&] {
+        statementCountAtFinish = mParser->statementList().count();
+        hasFileInfoAtFinish = static_cast<bool>(mParser->findFileInfo("text.cpp"));
+    }, Qt::DirectConnection);
+
+    CppParser::parseFileNonBlocking(mParser, "text.cpp", false, "");
+    QVERIFY(entered->tryAcquire(1, 5000));
+    mParser->stopParsing();
+    release->release();
+    QTRY_VERIFY(!mParser->parsing());
+
+    QCOMPARE(statementCountAtFinish, 1);
+    QVERIFY(!hasFileInfoAtFinish);
+    QVERIFY(!mParser->findStatement("value"));
+    QVERIFY(mParser->findStatement("__STOP_TEST__"));
+    QVERIFY(!mParser->findFileInfo("text.cpp"));
+}
+
+void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
+{
+    for (bool stopLocally : {false, true}) {
+        init_parser();
+        auto entered = std::make_shared<QSemaphore>();
+        auto release = std::make_shared<QSemaphore>();
+        auto blockFirstRead = std::make_shared<std::atomic_bool>(true);
+        mParser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+            if (blockFirstRead->exchange(false)) {
+                entered->release();
+                release->acquire();
+            }
+            buffer = QStringList{"int value;"};
+            return true;
+        });
+        QObject context;
+        int statementCountAtFinish = -1;
+        PParsedFileInfo fileInfoAtFinish;
+        connect(mParser.get(), &CppParser::parseFinished, &context, [&] {
+            statementCountAtFinish = mParser->statementList().count();
+            fileInfoAtFinish = mParser->findFileInfo("text.cpp");
+        }, Qt::DirectConnection);
+
+        CppParser::parseFileNonBlocking(mParser, "text.cpp", false, "");
+        QVERIFY(entered->tryAcquire(1, 5000));
+        CppParser::prepareForApplicationExit();
+        auto restoreExitState = finally([] {
+            CppParser::resetApplicationExitForTest();
+        });
+        if (stopLocally)
+            mParser->stopParsing();
+        release->release();
+        QTRY_VERIFY(!mParser->parsing());
+
+        QCOMPARE(statementCountAtFinish, 0);
+        QVERIFY(fileInfoAtFinish);
+        std::weak_ptr<ParsedFileInfo> fileInfo = fileInfoAtFinish;
+        mParser.reset();
+        QVERIFY(!fileInfo.expired());
+    }
+}
+
+void TestCppParser::test_normal_destructor_releases_resources()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"int value;"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    std::weak_ptr<AbstractStatement> statement = mParser->findStatement("value");
+    std::weak_ptr<ParsedFileInfo> fileInfo = mParser->findFileInfo("text.cpp");
+    QVERIFY(!statement.expired());
+    QVERIFY(!fileInfo.expired());
+
+    mParser.reset();
+
+    QVERIFY(statement.expired());
+    QVERIFY(fileInfo.expired());
+}
+
+void TestCppParser::test_application_exit_destructor_abandons_resources()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{"int value;"};
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    std::weak_ptr<AbstractStatement> statement = mParser->findStatement("value");
+    std::weak_ptr<ParsedFileInfo> fileInfo = mParser->findFileInfo("text.cpp");
+
+    CppParser::prepareForApplicationExit();
+    int statementCount = mParser->statementList().count();
+    bool hasFileInfo = static_cast<bool>(mParser->findFileInfo("text.cpp"));
+    mParser.reset();
+    CppParser::resetApplicationExitForTest();
+
+    QCOMPARE(statementCount, 1);
+    QVERIFY(hasFileInfo);
+    QVERIFY(!statement.expired());
+    QVERIFY(!fileInfo.expired());
 }

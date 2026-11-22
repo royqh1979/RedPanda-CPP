@@ -376,14 +376,19 @@ void EditorManager::onBreakpointsCleared(const Editor *e)
     pMainWindow->debugger()->deleteBreakpoints(e->filename(), e->inProject());
 }
 
+void EditorManager::reparseEditor(Editor *editor)
+{
+    if (!editor || mUpdateCount > 0 || pMainWindow->isClosingAll()
+            || pMainWindow->isQuitting() || pMainWindow->openingFiles()
+            || pMainWindow->openingProject())
+        return;
+    editor->reparseIfNeeded();
+}
+
 void EditorManager::onEditorShown(Editor *e)
 {
     Q_ASSERT(e!=nullptr);
-    if (e->parser() && !pMainWindow->isClosingAll()
-            && !pMainWindow->isQuitting()) {
-        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
-            e->reparseIfNeeded();
-    }
+    reparseEditor(e);
     pMainWindow->debugger()->setIsForProject(e->inProject());
     pMainWindow->bookmarkModel()->setIsForProject(e->inProject());
     pMainWindow->todoModel()->setIsForProject(e->inProject());
@@ -675,25 +680,32 @@ Editor* EditorManager::getEditor(int index, QTabWidget* tabsWidget) const {
     return (Editor*)selectedWidget->widget(index);
 }
 
+bool EditorManager::saveEditorForClose(Editor *editor, bool force)
+{
+    if (force)
+        return editor->save(true, false);
+    QMessageBox::StandardButton reply = QMessageBox::question(
+                editor, QObject::tr("Save"),
+                QString(QObject::tr("Save changes to %1?")).arg(editor->filename()),
+                QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    if (reply == QMessageBox::Cancel)
+        return false;
+    if (reply == QMessageBox::Yes)
+        return editor->save(false, false);
+    editor->setModified(false);
+    return true;
+}
+
 bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) {
     QMutexLocker locker(&mMutex);
     if (editor == nullptr)
         return false;
     if (force) {
-        editor->save(true,false);
-    } else if ( (editor->modified()) && (!editor->empty())) {
-        // ask user if he wants to save
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(editor,QObject::tr("Save"),
-                                      QString(QObject::tr("Save changes to %1?")).arg(editor->filename()),
-                                      QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-        if (reply == QMessageBox::Cancel) {
+        if (!saveEditorForClose(editor, true))
             return false;
-        } else if (reply == QMessageBox::Yes) {
-            if (!editor->save(false,false)) {
-                return false;
-            }
-        }
+    } else if (editor->modified() && !editor->empty()) {
+        if (!saveEditorForClose(editor, false))
+            return false;
     }
 
     beginUpdate();
@@ -741,6 +753,7 @@ bool EditorManager::closeEditor(Editor* editor, bool transferFocus, bool force) 
     }
     emit editorClosed();
     endUpdate();
+    reparseEditor(getEditor());
     return true;
 }
 
@@ -789,6 +802,16 @@ void EditorManager::saveAll()
         if (e->modified())
             e->save();
     }
+}
+
+bool EditorManager::saveAllForClose(bool force)
+{
+    for (int i = 0; i < pageCount(); ++i) {
+        Editor *editor = (*this)[i];
+        if (editor->modified() && !saveEditorForClose(editor, force))
+            return false;
+    }
+    return true;
 }
 
 bool EditorManager::saveAllForProject()
@@ -964,31 +987,33 @@ Editor *EditorManager::operator[](int index)
 }
 
 bool EditorManager::closeAll(bool force) {
-//    beginUpdate();
-//    auto end = finally([this] {
-//        this->endUpdate();
-//    });
+    if (!saveAllForClose(force))
+        return false;
+    beginUpdate();
+    auto action = finally([this] {
+        endUpdate();
+        reparseEditor(getEditor());
+    });
     while (mLeftPageWidget->count()>0) {
         Editor* e = getEditor(0,mLeftPageWidget);
-        if (e->parser())
-            resetCppParser(e->parser());
-        if (!closeEditor(e,false,force)) {
+        if (!closeEditor(e,false,force))
             return false;
-        }
     }
     while (mRightPageWidget->count()>0) {
         Editor* e = getEditor(0,mRightPageWidget);
-        if (e->parser())
-            resetCppParser(e->parser());
-        if (!closeEditor(e,false,force)) {
+        if (!closeEditor(e,false,force))
             return false;
-        }
     }
     return true;
 }
 
 bool EditorManager::closeOthers(Editor *editor)
 {
+    beginUpdate();
+    auto action = finally([this] {
+        endUpdate();
+        reparseEditor(getEditor());
+    });
     QList<Editor*> editors;
     for (int i=0;i<mLeftPageWidget->count();i++) {
         editors.append(static_cast<Editor*>(mLeftPageWidget->widget(i)));

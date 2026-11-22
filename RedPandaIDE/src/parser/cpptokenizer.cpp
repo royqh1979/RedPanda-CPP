@@ -117,7 +117,6 @@ void CppTokenizer::clear()
     mUnmatchedBrackets.clear();
     mUnmatchedParentheses.clear();
     mFileBoundaries.clear();
-    mStopForParserReset = false;
 }
 
 void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition &start)
@@ -167,7 +166,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
 
     while (true) {
         skipWhitespace();
-        if (mStopForParserReset) {
+        if (mStopRequestedHandler && mStopRequestedHandler()) {
             mTokenList.clear();
             return;
         }

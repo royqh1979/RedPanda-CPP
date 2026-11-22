@@ -186,30 +186,31 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-const PCppParser &ClassBrowserModel::parser() const
+PCppParser ClassBrowserModel::parser() const
 {
-    return mParser;
+    return mParser.lock();
 }
 
 void ClassBrowserModel::setParser(const PCppParser &newCppParser)
 {
-    if (mParser) {
-        disconnect(mParser.get(),
+    PCppParser oldParser = mParser.lock();
+    if (oldParser) {
+        disconnect(oldParser.get(),
                    &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
-        disconnect(mParser.get(),
+        disconnect(oldParser.get(),
                    &CppParser::parseStarted,
                    this,
                    &ClassBrowserModel::refreshStarted);
     }
     mParser = newCppParser;
-    if (mParser) {
-        connect(mParser.get(),
+    if (newCppParser) {
+        connect(newCppParser.get(),
                    &CppParser::parseFinished,
                    this,
                    &ClassBrowserModel::fillStatements);
-        connect(mParser.get(),
+        connect(newCppParser.get(),
                    &CppParser::parseStarted,
                    this,
                    &ClassBrowserModel::refreshStarted);
@@ -231,6 +232,11 @@ void ClassBrowserModel::clear()
 
 void ClassBrowserModel::fillStatements()
 {
+    doFillStatements(mParser.lock());
+}
+
+void ClassBrowserModel::doFillStatements(const PCppParser &parser)
+{
     {
         QMutexLocker locker(&mMutex);
         if (mUpdateCount!=0 || mUpdating)
@@ -243,14 +249,14 @@ void ClassBrowserModel::fillStatements()
             mUpdating = false;
             emit refreshEnd();
         });
-        if (!mParser || !mParser->enabled()) {
+        if (!parser || !parser->enabled()) {
             clear();
             return;
         }
-        if (!mParser->freeze())
+        if (!parser->freeze())
             return;
-        buildStatementTree();
-        mParser->unFreeze();
+        buildStatementTree(parser);
+        parser->unFreeze();
     }
 }
 
@@ -286,12 +292,12 @@ void ClassBrowserModel::removeNode(ClassBrowserNode *node)
     mNodes.removeOne(node->shared_from_this());
 }
 
-void ClassBrowserModel::buildStatementTree()
+void ClassBrowserModel::buildStatementTree(const PCppParser &parser)
 {
     mTopLevelStatements.clear();
     mNestedStatements.clear();
     QList<PParsedFileInfo> fileInfos;
-    PParsedFileInfo current = mParser->findFileInfo(mCurrentFile);
+    PParsedFileInfo current = parser->findFileInfo(mCurrentFile);
     if (current)
         fileInfos.append(current);
 
@@ -308,7 +314,7 @@ void ClassBrowserModel::buildStatementTree()
             }
         }
     }
-    updateChildren(mRoot, mTopLevelStatements.values());
+    updateChildren(mRoot, mTopLevelStatements.values(), parser);
     emit layoutAboutToBeChanged();
     const QList<QModelIndex> oldIndexes = persistentIndexList();
     sortNode(mRoot);
@@ -394,7 +400,8 @@ bool ClassBrowserModel::shouldShowStatement(ClassBrowserNode *node, const PState
                 && parentScope->fullName == node->statement->fullName);
 }
 
-void ClassBrowserModel::updateChildren(ClassBrowserNode *node, const StatementList &statements)
+void ClassBrowserModel::updateChildren(ClassBrowserNode *node, const StatementList &statements,
+                                       const PCppParser &parser)
 {
     QStringList orderedKeys;
     QHash<QString, PStatement> statementsByKey;
@@ -437,7 +444,7 @@ void ClassBrowserModel::updateChildren(ClassBrowserNode *node, const StatementLi
             child = addChild(node, statement);
             endInsertRows();
         }
-        updateChildren(child.get(), mParser->membersOfStatement(statement));
+        updateChildren(child.get(), parser->membersOfStatement(statement), parser);
     }
 }
 
@@ -467,16 +474,19 @@ QModelIndex ClassBrowserModel::modelIndexForStatement(const PStatement &statemen
     if (!statement)
         return QModelIndex();
     QModelIndex index = modelIndexForStatement(generateStatementKey(statement));
-    if (index.isValid() || statement->kind != StatementKind::Enum || !mParser)
+    if (index.isValid() || statement->kind != StatementKind::Enum)
         return index;
+    PCppParser parser = mParser.lock();
+    if (!parser)
+        return QModelIndex();
     StatementOccurrence definition = statementDefinitionForNavigation(statement);
     auto normal = std::dynamic_pointer_cast<Statement>(statement);
     if (!definition.range.start.isValid() || !normal)
         return QModelIndex();
-    PStatement enumType = mParser->findStatement(normal->typeInfo.qualifiedName);
+    PStatement enumType = parser->findStatement(normal->typeInfo.qualifiedName);
     if (!enumType)
         return QModelIndex();
-    for (const PStatement &member : mParser->membersOfStatement(enumType)) {
+    for (const PStatement &member : parser->membersOfStatement(enumType)) {
         if (member->kind == StatementKind::Enum
                 && member->definition.fileName == definition.fileName
                 && member->definition.range == definition.range)
@@ -517,8 +527,8 @@ void ClassBrowserModel::endUpdate()
 {
     mUpdateCount--;
     if (mUpdateCount == 0) {
-        if (mParser && !mParser->parsing()) {
-            fillStatements();
-        }
+        PCppParser parser = mParser.lock();
+        if (parser && !parser->parsing())
+            doFillStatements(parser);
     }
 }

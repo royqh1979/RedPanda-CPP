@@ -39,6 +39,7 @@
 
 - `parser/cppparser-design.md` — CppParser、Tokenizer、类型推导与 IDE 查询。
 - `parser/parser-concurrency-review.md` — Parser 并发约定。
+- `parser/shutdown-lifecycle-design.md` — 应用退出、Close All 与单 Editor 关闭的 Parser 生命周期。
 - `parser/cpptemplate-evaluation-design.md` — 有限模板实例化。
 - `parser/cpppreprocessor-optimization.md` — 预处理 replay、Session/Registry 与缓存。
 - `parser/cpppreprocessor-replay-scenarios.md` — replay 场景和测试清单。

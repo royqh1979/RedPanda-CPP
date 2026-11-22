@@ -67,6 +67,7 @@ public:
     void activeEditorAndSetCaret(Editor *e, QSynedit::CharPos pos);
 
     void saveAll();
+    bool saveAllForClose(bool force);
     bool saveAllForProject();
 
     bool projectEditorsModified();
@@ -130,6 +131,8 @@ private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
+    bool saveEditorForClose(Editor *editor, bool force);
+    void reparseEditor(Editor *editor);
     void doRemoveEditor(Editor* e);
     // breakpoint/bookmark/caret-list shifting must run only once per shared
     // document: exactly one view of a peer pair is connected to the

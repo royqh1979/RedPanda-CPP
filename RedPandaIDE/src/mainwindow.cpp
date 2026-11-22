@@ -1971,7 +1971,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
             editor->setFileType(fileType);
         if (activate) {
             mEditorManager->activeEditor(editor,true);
-            editor->reparseIfNeeded();
+            if (!openingFiles() && !openingProject())
+                editor->reparseIfNeeded();
         }
         return editor;
     }
@@ -2001,7 +2002,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
 
         if (activate) {
             mEditorManager->activeEditor(editor,true);
-            editor->reparseIfNeeded();
+            if (!openingFiles() && !openingProject())
+                editor->reparseIfNeeded();
         } else {
             updateEditorActions();
         }
@@ -5983,6 +5985,13 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     //Don't save config twice ( lastopen info will get lost )
     if (!mQuitting) {
         mQuitting = true;
+        if (!mEditorManager->saveAllForClose(false)) {
+            mClosingAll = false;
+            mQuitting = false;
+            event->ignore();
+            return;
+        }
+        CppParser::prepareForApplicationExit();
         if (!mShouldRemoveAllSettings) {
             if (mCPUDialog)
                 mCPUDialog->close();

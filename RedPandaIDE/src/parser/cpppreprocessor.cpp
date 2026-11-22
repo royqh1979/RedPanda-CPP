@@ -483,6 +483,14 @@ void CppPreprocessor::clearTempResults()
     mSession.clear();
 }
 
+void CppPreprocessor::clearParseResults()
+{
+    clearTempResults();
+    mRegistry.fileInfos.clear();
+    mRegistry.replayRecords.clear();
+    mRegistry.pendingInvalidations.clear();
+}
+
 QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrence) const
 {
     const QStringList ancestors = mSession.boundaryAncestors.value(fileName);
@@ -699,8 +707,10 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
 
 void CppPreprocessor::preprocess(const QString &fileName)
 {
-    mStopForParserReset = false;
+    mStopPreprocessing = false;
     clearTempResults();
+    if (stopRequested())
+        return;
     QSet<QString> pendingInvalidations = mRegistry.pendingInvalidations;
     mRegistry.pendingInvalidations.clear();
     for (const QString &pendingFile : pendingInvalidations)
@@ -1115,7 +1125,7 @@ void CppPreprocessor::openInclude(QString fileName)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.openIncludeNs,
                                           preprocessorProfile.openIncludeCalls);
-    if (mStopForParserReset)
+    if (stopRequested())
         return;
     if (mSession.includeStack.count() >= mMaxIncludeNestingDepth) {
 #ifdef REDPANDA_PARSER_TEST
@@ -1254,7 +1264,7 @@ void CppPreprocessor::openInclude(QString fileName)
         if (mSession.scannedIncludeCount >= INCLUDE_SCAN_STOP_THRESHOLD) {
             qWarning() << "Too many files scanned during preprocessing; stopping at"
                        << mSession.scannedIncludeCount << fileName;
-            mStopForParserReset = true;
+            mStopPreprocessing = true;
             mSession.result.clear();
             Q_ASSERT_X(false, "openInclude", "Too many files scanned during preprocessing");
             return;
@@ -1643,7 +1653,7 @@ void CppPreprocessor::preprocessBuffer()
     while (mSession.includeStack.count() > 0) {
         QString s;
         do {
-            if (mStopForParserReset) {
+            if (stopRequested()) {
                 mSession.buffer.clear();
                 return;
             }
