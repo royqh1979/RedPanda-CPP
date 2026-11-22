@@ -448,6 +448,58 @@ void TestCppSyntaxer::test_ansi_c_comments()
                                  }));
 }
 
+void TestCppSyntaxer::test_block_comment_fold_events()
+{
+    const QStringList text{
+        "/* first",
+        "*/ int value; /* second",
+        "continued",
+        "*/",
+        "#define VALUE 1 /* directive",
+        "continued",
+        "*/",
+        "/* single */"
+    };
+    QList<TokenInfoList> lines = parseLines(&mSyntaxer, text);
+    const auto commentEvent = [](int ch, bool started) {
+        return QSynedit::BlockDelimiterEvent{
+            ch, started, QSynedit::CodeBlockKind::Comment};
+    };
+
+    QVERIFY(lines[0].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(0, true)});
+    QVERIFY((lines[1].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(0, false), commentEvent(text[1].indexOf("/*"), true)}));
+    QVERIFY(lines[2].last()->state->blockEvents.isEmpty());
+    QVERIFY(lines[3].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(0, false)});
+    QVERIFY(lines[4].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(text[4].indexOf("/*"), true)});
+    QVERIFY(lines[6].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(0, false)});
+    QVERIFY((lines[7].last()->state->blockEvents == QVector<QSynedit::BlockDelimiterEvent>{
+                commentEvent(0, true), commentEvent(text[7].lastIndexOf("*/"), false)}));
+    for (const TokenInfoList &line : lines) {
+        for (const PTokenInfo &token : line) {
+            QCOMPARE(token->state->blockStarted, 0);
+            QCOMPARE(token->state->blockEnded, 0);
+        }
+    }
+}
+
+void TestCppSyntaxer::test_block_comment_fold_ignores_non_comments()
+{
+    QList<TokenInfoList> lines = parseLines(&mSyntaxer, {
+        "const char *text = \"/* not a comment */\";",
+        "char slash = '/'; // /* not a comment",
+        "const char *raw = R\"tag(",
+        "/* still raw text */",
+        ")tag\";"
+    });
+    for (const TokenInfoList &line : lines)
+        QVERIFY(line.last()->state->blockEvents.isEmpty());
+}
+
 void TestCppSyntaxer::test_directives_and_identifier_classification()
 {
     mSyntaxer.setCustomTypeKeywords(QSet<QString>{"Widget"});

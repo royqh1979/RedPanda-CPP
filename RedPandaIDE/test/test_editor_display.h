@@ -8,6 +8,7 @@ class TestEditorDisplay : public TestEditorBase
     Q_OBJECT
 private slots:
     void test_fold_marks_paint();
+    void test_comment_fold_placeholder_uses_comment_color();
     void test_reformat_restores_view_state();
     void test_dnd_undo_restores_caret();
     void test_semantic_highlight_cache_survives_edit_until_parse();

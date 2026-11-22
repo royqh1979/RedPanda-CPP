@@ -38,7 +38,15 @@ private slots:
     void test_gutter_click_toggles_fold();
     void test_gutter_fold_button_paints();
     void test_fold_placeholder_painting();
+    void test_comment_fold_placeholder_painting();
     void test_fold_placeholder_navigation();
+    void test_comment_fold_ranges();
+    void test_comment_fold_close_open_same_line();
+    void test_comment_fold_end_line_suffix_visibility();
+    void test_comment_fold_navigation();
+    void test_comment_fold_edit_rules();
+    void test_comment_fold_incremental_rescan();
+    void test_comment_fold_shared_document_views();
     void test_fold_end_line_suffix_visibility();
     void test_fold_else_same_line();
     void test_fold_edit_inside_expands_and_undo();

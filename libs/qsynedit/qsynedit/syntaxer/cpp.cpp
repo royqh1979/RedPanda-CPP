@@ -300,6 +300,7 @@ void CppSyntaxer::procDocstring()
             if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
                 if (isWord)
                     break;
+                mRange.blockEvents.append({mRun, false, CodeBlockKind::Comment});
                 mRun += 2;
                 mRange.state = RangeState::rsUnknown;
                 break;
@@ -332,6 +333,7 @@ void CppSyntaxer::procAnsiCStyleComment()
             if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
                 if (isWord)
                     break;
+                mRange.blockEvents.append({mRun, false, CodeBlockKind::Comment});
                 mRun += 2;
                 if (mRange.state == RangeState::rsDirectiveComment &&
                             mRun<mLineSize && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
@@ -511,6 +513,7 @@ void CppSyntaxer::procDefineRemaining()
                     mRange.state = RangeState::rsUnknown;
                     return;
                 case '*': // might be embeded only
+                    mRange.blockEvents.append({mRun, true, CodeBlockKind::Comment});
                     mRange.state = RangeState::rsDirectiveComment;
                     return;
                 }
@@ -539,6 +542,7 @@ void CppSyntaxer::procDirectiveEnd()
                     mRange.state = RangeState::rsUnknown;
                     return;
                 case '*': // might be embeded only
+                    mRange.blockEvents.append({mRun, true, CodeBlockKind::Comment});
                     mRange.state = RangeState::rsDirectiveComment;
                     return;
                 }
@@ -1067,6 +1071,7 @@ void CppSyntaxer::procSlash()
             return;
         case '*': // C style comment
             mTokenId = TokenId::Comment;
+            mRange.blockEvents.append({mRun, true, CodeBlockKind::Comment});
             if (mRange.state == RangeState::rsDirective) {
                 mRange.state = RangeState::rsDirectiveComment;
             } else {

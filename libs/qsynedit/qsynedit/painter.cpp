@@ -1419,7 +1419,9 @@ void QSynEditPainter::paintLines()
             }
             if ((foldRange) && foldRange->collapsed) {
                 addOnStr = mEdit->foldDisplayText(foldRange, lineTextWithPreedit);
-                attr = mEdit->mSyntaxer->symbolAttribute();
+                attr = foldRange->kind == CodeBlockKind::Comment
+                        ? mEdit->mSyntaxer->commentAttribute()
+                        : mEdit->mSyntaxer->symbolAttribute();
             } else {
                 // Draw LineBreak glyph.
                 if (mEdit->mOptions.testFlag(EditorOption::ShowLineBreaks)) {

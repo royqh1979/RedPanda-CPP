@@ -135,7 +135,8 @@ static bool sameCodeBlockDeltas(const PSyntaxState &oldState, const PSyntaxState
 {
     if (!oldState) {
         return !(newState->blockStarted
-                 || newState->blockEnded);
+                 || newState->blockEnded
+                 || !newState->blockEvents.isEmpty());
     }
     return oldState->blockStarted == newState->blockStarted
             && oldState->blockEnded == newState->blockEnded
@@ -199,7 +200,7 @@ bool Document::lineHasCodeBlockDelta(int line) const
     if (!state)
         // unknown: conservative
         return true;
-    return state->blockStarted || state->blockEnded;
+    return state->blockStarted || state->blockEnded || !state->blockEvents.isEmpty();
 }
 
 void Document::notifyUndoRedoStateChanged()

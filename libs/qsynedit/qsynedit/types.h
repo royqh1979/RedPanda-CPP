@@ -66,6 +66,11 @@ enum class ScrollStyle {
     None, OnlyHorizontal, OnlyVertical, Both
 };
 
+enum class CodeBlockKind {
+    Code,
+    Comment
+};
+
 enum class ProgrammingLanguage {
     DecideBySuffix,
     Composition,

@@ -32,8 +32,8 @@ CodeFoldingOptions::CodeFoldingOptions():
 }
 
 
-CodeBlock::CodeBlock(PCodeBlock parentBlock, int from, int to)
-    : fromLine{from}, toLine{to}, collapsed{false}, parent{parentBlock}
+CodeBlock::CodeBlock(PCodeBlock parentBlock, int from, int to, CodeBlockKind blockKind)
+    : fromLine{from}, toLine{to}, kind{blockKind}, collapsed{false}, parent{parentBlock}
 {
 }
 

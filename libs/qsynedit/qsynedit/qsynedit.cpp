@@ -51,16 +51,19 @@
 namespace QSynedit {
 
 // key for preserving the collapsed flag across a fold-block rescan:
-// matches blocks by their (fromLine, toLine) range without string
+// matches blocks by their kind and (fromLine, toLine) range without string
 // formatting
 struct CodeBlockRangeKey {
+    CodeBlockKind kind;
     int from;
     int to;
 };
 
 inline bool operator<(const CodeBlockRangeKey &a, const CodeBlockRangeKey &b)
 {
-    return a.from < b.from || (a.from == b.from && a.to < b.to);
+    return a.kind < b.kind
+            || (a.kind == b.kind
+                && (a.from < b.from || (a.from == b.from && a.to < b.to)));
 }
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mEditingCount{0},
@@ -2312,7 +2315,8 @@ bool QSynEdit::shouldInsertAfterCurrentLine(int line, const QString &newLineText
         return true;
     PSyntaxState oldState = mDocument->getSyntaxState(line);
     PSyntaxState newState = calcSyntaxStateAtLine(line, newLineText);
-    if (newState->blockStarted == 0 && newState->blockEnded==0)
+    if (newState->blockStarted == 0 && newState->blockEnded==0
+            && newState->blockEvents.isEmpty())
         return false;
     return true;
 }
@@ -2324,7 +2328,8 @@ bool QSynEdit::shouldDeleteNextLine(int line, const QString &currentLineText, co
     if (nextLineText.trimmed().isEmpty())
         return true;
     PSyntaxState prevLineState = mDocument->getSyntaxState(line);
-    if (prevLineState->blockStarted == 0 && prevLineState->blockEnded==0)
+    if (prevLineState->blockStarted == 0 && prevLineState->blockEnded==0
+            && prevLineState->blockEvents.isEmpty())
         return false;
     return true;
 }
@@ -2672,7 +2677,7 @@ CharPos QSynEdit::documentPositionForFoldCaret(const CharPos &pos) const
     PCodeBlock block = foldStartAtLine(pos.line);
     if (block && block->collapsed && block->toCh >= 0
             && pos.ch > mDocument->getLine(block->fromLine).length())
-        return CharPos{block->toCh + 1, block->toLine};
+        return CharPos{block->toCh + block->endDelimiterLength(), block->toLine};
     return pos;
 }
 
@@ -2711,14 +2716,14 @@ void QSynEdit::expandCollapsedFoldsForChange(const DocumentChange &change)
                 && changeEnd <= CharPos{block->fromCh, block->fromLine})
             continue;
         if (block->toCh >= 0
-                && changeBegin >= CharPos{block->toCh + 1, block->toLine}
+                && changeBegin >= CharPos{block->toCh + block->endDelimiterLength(), block->toLine}
                 && block->hadEndLineSuffix == foldEndLineVisible(block))
             continue;
 
         auto mapPosition = [&](const CharPos &pos) {
             if (block->toCh >= 0 && pos.line == block->fromLine
                     && pos.ch > mDocument->getLine(block->fromLine).length())
-                return CharPos{block->toCh + 1, block->toLine};
+                return CharPos{block->toCh + block->endDelimiterLength(), block->toLine};
             return pos;
         };
         CharPos caret = mapPosition(caretPos());
@@ -2763,7 +2768,7 @@ void QSynEdit::endEditing()
 bool QSynEdit::foldEndLineVisible(const PCodeBlock &block) const
 {
     return block && !block->unfinished && block->toCh >= 0
-            && block->toCh + 1 < mDocument->getLine(block->toLine).length();
+            && block->toCh + block->endDelimiterLength() < mDocument->getLine(block->toLine).length();
 }
 
 bool QSynEdit::foldHasHiddenLines(const PCodeBlock &block) const
@@ -2780,6 +2785,8 @@ QString QSynEdit::foldDisplayText(const PCodeBlock &block, const QString &lineTe
         return QString();
     if (foldEndLineVisible(block))
         return "...";
+    if (block->kind == CodeBlockKind::Comment)
+        return "...*/";
     return mSyntaxer->foldString(lineText);
 }
 
@@ -4727,11 +4734,11 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
                 && (block->toLine >= fromLine || block->unfinished))
             stack.append(block);
     }
-    // collapsed blocks are re-matched by range when the scan closes a block
+    // collapsed blocks are re-matched by kind and range when the scan closes a block
     QMap<CodeBlockRangeKey, PCodeBlock> collapsedBlocks;
     foreach (const PCodeBlock &block, oldBlocks) {
         if (block->collapsed)
-            collapsedBlocks.insert({block->fromLine, block->toLine}, block);
+            collapsedBlocks.insert({block->kind, block->fromLine, block->toLine}, block);
     }
     // kept blocks before the scan start: identity, flags and subtrees are
     // all preserved (their children lie entirely before the start too)
@@ -4796,11 +4803,11 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
                 // collapsed preservation: restore the flag only when the
                 // rebuilt range matches a previously collapsed block
                 parent->collapsed = collapsedBlocks.contains(
-                            {parent->fromLine, parent->toLine});
+                            {parent->kind, parent->fromLine, parent->toLine});
                 parent = parent->parent.lock();
                 continue;
             }
-            PCodeBlock newBlock = std::make_shared<CodeBlock>(parent,line,line);
+            PCodeBlock newBlock = std::make_shared<CodeBlock>(parent, line, line, event.kind);
             newBlock->fromCh = event.ch;
             if (parent) {
                 parent->subBlocks.append(newBlock);
@@ -4818,7 +4825,7 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
             parent->toLine = count - 1;
             parent->toCh = -1;
             parent->collapsed = collapsedBlocks.contains(
-                        {parent->fromLine, parent->toLine});
+                        {parent->kind, parent->fromLine, parent->toLine});
             parent = parent->parent.lock();
         }
     } else {
@@ -4849,7 +4856,7 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
                 newB->toCh = oldB->toCh;
                 newB->unfinished = oldB->unfinished;
                 newB->collapsed = collapsedBlocks.contains(
-                            {newB->fromLine, newB->toLine});
+                            {newB->kind, newB->fromLine, newB->toLine});
                 // adopt the old counterpart's children below the freeze line
                 foreach (const PCodeBlock &child, oldB->subBlocks) {
                     if (child->fromLine >= L) {
@@ -4860,10 +4867,13 @@ void QSynEdit::partialScanCodeBlocks(int fromLine, int reparseToLine)
             }
         }
 #ifdef QT_DEBUG
-        // remaining old entries must be chain blocks the scan already
-        // closed early (toLine was reassigned below L)
-        for (int i = matched; i < oldStackAtL.count(); i++)
-            Q_ASSERT(oldStackAtL[i]->toLine < L || oldStackAtL[i]->unfinished);
+        // Remaining identity-preserved chain blocks must have been closed
+        // early. Blocks rebuilt or removed inside the scan region do not
+        // carry that invariant.
+        for (int i = matched; i < oldStackAtL.count(); i++) {
+            if (oldStackAtL[i]->fromLine < fromLine)
+                Q_ASSERT(oldStackAtL[i]->toLine < L || oldStackAtL[i]->unfinished);
+        }
 #endif
     }
     // frozen blocks at/below the freeze line are appended wholesale;

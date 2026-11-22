@@ -48,8 +48,9 @@ struct IndentInfo {
 struct BlockDelimiterEvent {
     int ch;
     bool started;
+    CodeBlockKind kind = CodeBlockKind::Code;
     bool operator==(const BlockDelimiterEvent &other) const {
-        return ch == other.ch && started == other.started;
+        return ch == other.ch && started == other.started && kind == other.kind;
     }
 };
 

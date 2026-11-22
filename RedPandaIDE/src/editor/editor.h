@@ -500,6 +500,7 @@ private:
     QString mContextFile;
 
     friend class TestEditorDisplay;
+    friend class TestEditorSymbolCompletion;
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 
