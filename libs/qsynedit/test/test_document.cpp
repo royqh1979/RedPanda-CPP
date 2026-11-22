@@ -1,6 +1,7 @@
 #include <QTest>
 #include <QCoreApplication>
 #include <QSignalSpy>
+#include <climits>
 #include "test_document.h"
 #include "qsynedit/document.h"
 #include "qsynedit/glyphcalculator.h"
@@ -974,6 +975,51 @@ void TestDocument::test_reparse()
     QCOMPARE(reparseSpy.count(), 1);
 }
 
+void TestDocument::test_delete_lines_reparse_scope()
+{
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+    mDoc->setContents({"0", "1", "2", "3", "4", "5", "6", "7"});
+    QSignalSpy reparseSpy(mDoc.get(), &Document::linesReparsed);
+
+    mDoc->deleteLines(2, 3, true);
+    QCOMPARE(reparseSpy.count(), 1);
+    QList<QVariant> args = reparseSpy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), 2);
+    QCOMPARE(args.at(1).toInt(), 3);
+
+    reparseSpy.clear();
+    mDoc->deleteLines(1, 1, true);
+    QCOMPARE(reparseSpy.count(), 1);
+    args = reparseSpy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), 1);
+    QCOMPARE(args.at(1).toInt(), 2);
+
+    reparseSpy.clear();
+    int eof = mDoc->count();
+    mDoc->deleteLines(eof - 1, 1, true);
+    QCOMPARE(reparseSpy.count(), 1);
+    args = reparseSpy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), eof - 1);
+    QCOMPARE(args.at(1).toInt(), INT_MAX);
+
+    mDoc->setText("int before;\n"
+                  "/* comment\n"
+                  "deleted 1\n"
+                  "deleted 2\n"
+                  "*/\n"
+                  "int after;\n"
+                  "int tail;");
+    reparseSpy.clear();
+    mDoc->deleteLines(2, 3, true);
+    QCOMPARE(reparseSpy.count(), 1);
+    args = reparseSpy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), 2);
+    QCOMPARE(args.at(1).toInt(), mDoc->count());
+    auto syntaxer = mDoc->createSyntaxerInstance();
+    QVERIFY(syntaxer->isCommentNotFinished(mDoc->getSyntaxState(2)));
+    QVERIFY(syntaxer->isCommentNotFinished(mDoc->getSyntaxState(3)));
+}
+
 void TestDocument::test_gas_directive_state_cascade()
 {
     mDoc->setSyntaxer(std::make_shared<GASSyntaxer>());
@@ -1003,6 +1049,15 @@ void TestDocument::test_gas_directive_state_cascade()
     mDoc->putLine(1, ".att_syntax prefix", true);
     checkState(2, GASSyntaxer::SyntaxMode::ATT, true);
     checkState(3, GASSyntaxer::SyntaxMode::ATT, true);
+
+    mDoc->setText("mov eax, ebx\n"
+                  ".intel_syntax noprefix\n"
+                  "mov ecx, edx\n"
+                  ".att_syntax prefix\n"
+                  "mov esi, edi");
+    mDoc->deleteLines(1, 2, true);
+    checkState(1, GASSyntaxer::SyntaxMode::ATT, true);
+    checkState(2, GASSyntaxer::SyntaxMode::ATT, true);
 }
 
 void TestDocument::test_find_last_line_by_seq()

@@ -662,7 +662,7 @@ void Document::deleteLines(int index, int numLines, bool parseToEnd)
     recordChange(DocumentChangeKind::Delete, index, numLines, 0, 0, true);
     ensureHasLine();
     if (parseToEnd)
-        reparseLines(index, index+numLines, true);
+        reparseLines(index, index+1, true);
     endUpdate();
 }
 
