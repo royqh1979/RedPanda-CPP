@@ -65,7 +65,9 @@ void applyEdit(Document &document, const QString &operation, int startLine,
                              i == count - 1);
         }
     } else if (operation == QStringLiteral("move")) {
-        document.moveLines(startLine, startLine + 100, count, true);
+        for (int i = count - 1; i >= 0; --i) {
+            document.moveLine(startLine + i, startLine + i + 100, i == 0);
+        }
     } else if (operation == QStringLiteral("delete")) {
         document.deleteLines(startLine, count, true);
     } else if (operation == QStringLiteral("replace")) {
@@ -162,7 +164,7 @@ void TestDocumentProfile::test_edit_matrix()
                 [&](const DocumentChangeSet &changes, bool dirty, int, bool) {
             changeEntries += changes.count();
             for (const DocumentChange &change : changes)
-                changedLines += change.kind == DocumentChangeKind::Move ? change.moveLineCount : change.count;
+                changedLines += change.kind == DocumentChangeKind::Move ? 1 : change.count;
             foldStateDirty = foldStateDirty || dirty;
         });
 

@@ -31,7 +31,6 @@ Red Panda C++ Version 3.6
   - enhancement: Avoid reparsing as many lines after a deletion as were deleted, while preserving syntax-state convergence.
   - enhancement: Avoid parsing temporary empty lines during multi-line insertion and paste.
   - enhancement: Remove invalidated code-folding blocks in one pass after large deletions.
-  - enhancement: Move contiguous lines as one operation, avoiding repeated parsing and view updates.
   - enhancement: Reduce recursive locking during syntax-state reparse.
   - enhancement: Improve compatibility with Clang and libc++ headers.
   - enhancement: Evaluate C++20 constraints lazily when resolving functions and templates.

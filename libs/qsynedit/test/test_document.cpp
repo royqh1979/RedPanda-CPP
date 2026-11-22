@@ -841,54 +841,6 @@ void TestDocument::test_move_line_to2()
     QCOMPARE(mChangedCount,1);
 }
 
-void TestDocument::test_move_lines_range()
-{
-    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
-    mDoc->setContents({"0", "1", "2", "3", "4", "5", "6", "7"});
-    QList<size_t> seqs;
-    for (int line = 0; line < mDoc->count(); ++line)
-        seqs.append(mDoc->getLineSeq(line));
-    QList<DocumentChangeSet> batches;
-    connect(mDoc.get(), &Document::contentChanged, this,
-            [&](const DocumentChangeSet &changes, bool, int, bool) {
-        batches.append(changes);
-    });
-    QSignalSpy reparseSpy(mDoc.get(), &Document::linesReparsed);
-
-    mDoc->moveLines(1, 5, 2, true);
-    QCOMPARE(mDoc->content(), QStringList({"0", "3", "4", "5", "6", "1", "2", "7"}));
-    QCOMPARE(mDoc->getLineSeq(5), seqs[1]);
-    QCOMPARE(mDoc->getLineSeq(6), seqs[2]);
-    QCOMPARE(reparseSpy.count(), 1);
-    QList<QVariant> args = reparseSpy.takeFirst();
-    QCOMPARE(args.at(0).toInt(), 1);
-    QCOMPARE(args.at(1).toInt(), 7);
-    QCOMPARE(batches.count(), 1);
-    QCOMPARE(batches[0].count(), 1);
-    QCOMPARE(batches[0][0].kind, DocumentChangeKind::Move);
-    QCOMPARE(batches[0][0].line, 1);
-    QCOMPARE(batches[0][0].count, 5);
-    QCOMPARE(batches[0][0].moveLineCount, 2);
-
-    batches.clear();
-    mDoc->moveLines(5, 1, 2, true);
-    QCOMPARE(mDoc->content(), QStringList({"0", "1", "2", "3", "4", "5", "6", "7"}));
-    QCOMPARE(mDoc->getLineSeq(1), seqs[1]);
-    QCOMPARE(mDoc->getLineSeq(2), seqs[2]);
-    args = reparseSpy.takeFirst();
-    QCOMPARE(args.at(0).toInt(), 1);
-    QCOMPARE(args.at(1).toInt(), 7);
-    QCOMPARE(batches.count(), 1);
-    QCOMPARE(batches[0][0].moveLineCount, 2);
-
-    batches.clear();
-    mDoc->moveLine(0, 1, true);
-    QCOMPARE(batches[0][0].moveLineCount, 1);
-    args = reparseSpy.takeFirst();
-    QCOMPARE(args.at(0).toInt(), 0);
-    QCOMPARE(args.at(1).toInt(), 2);
-}
-
 void TestDocument::test_clear()
 {
     QByteArray encoding;

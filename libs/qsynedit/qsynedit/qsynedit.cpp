@@ -2693,7 +2693,7 @@ void QSynEdit::expandCollapsedFoldsForChange(const DocumentChange &change)
             || change.kind == DocumentChangeKind::Insert)
         endLine++;
     else if (change.kind == DocumentChangeKind::Move)
-        endLine = std::max(change.line, change.count) + change.moveLineCount - 1;
+        endLine = std::max(change.line, change.count);
     CharPos changeBegin{change.startCh, change.line};
     CharPos changeEnd{change.endCh, endLine};
     const QVector<PCodeBlock> blocks = mCodeBlocks;
@@ -4630,34 +4630,36 @@ void QSynEdit::processFoldsOnLinesDeleted(int line, int count)
 
 void QSynEdit::processFoldsOnLineMoved(int from, int to)
 {
-    processFoldsOnLinesMoved(from, to, 1);
-}
-
-void QSynEdit::processFoldsOnLinesMoved(int from, int to, int count)
-{
     if (!useCodeFolding())
         return;
-    auto mapLine = [&](int line) {
-        if (line >= from && line < from + count)
-            return to + (line - from);
-        if (from < to && line >= from + count && line <= to)
-            return line - count;
-        if (to < from && line >= to && line < from)
-            return line + count;
-        return line;
-    };
     bool collapseChanged=false;
     for (int i = mCodeBlocks.count()-1;i>=0;i--) {
         PCodeBlock block = mCodeBlocks[i];
-        if ((block->fromLine >= from && block->fromLine < from + count)
-                || (block->toLine >= from && block->toLine < from + count)) {
+        if (block->fromLine == from || block->toLine == from) {
             if (block->collapsed) {
                 collapseChanged = true;
                 block->collapsed=false;
             }
         }
-        block->fromLine = mapLine(block->fromLine);
-        block->toLine = mapLine(block->toLine);
+        if (from<to) {
+            if (block->fromLine == from) {
+                block->fromLine = to;
+            } else if (from < block->fromLine && block->fromLine <= to)
+                block->fromLine -=1;
+            if (block->toLine == from) {
+                block->toLine = to;
+            } else if (from < block->toLine && block->toLine <= to)
+                block->toLine -= 1;
+        } else if (from > to) {
+            if (block->fromLine == from) {
+                block->fromLine = to;
+            } else if (to <= block->fromLine && block->fromLine < from)
+                block->fromLine +=1;
+            if (block->toLine == from) {
+                block->toLine = to;
+            } else if (to <= block->toLine && block->toLine < from)
+                block->toLine +=1;
+        }
         if (block->toLine < block->fromLine)
             mCodeBlocks.remove(i);
     }
@@ -5550,20 +5552,6 @@ void QSynEdit::doUndoItem()
                         item->changeNumber());
         }
             break;
-        case ChangeReason::MoveLines: {
-            int fromLine = item->changeEndPos().line;
-            int toLine = item->changeStartPos().line;
-            properMoveLines(fromLine, toLine, item->changeText().count(), true);
-            setCaretPos(item->changeStartPos());
-            mRedoList->addRedo(
-                        item->changeReason(),
-                        item->changeStartPos(),
-                        item->changeEndPos(),
-                        item->changeText(),
-                        item->changeSelMode(),
-                        item->changeNumber());
-        }
-            break;
         case ChangeReason::MergeWithNextLine: {
             CharPos startPos = item->changeStartPos();
             QString tempStr = mDocument->getLine(startPos.line);
@@ -5830,19 +5818,6 @@ void QSynEdit::doRedoItem()
             int fromLine = item->changeStartPos().line;
             int toLine = item->changeEndPos().line;
             properMoveLine(fromLine, toLine, true);
-            mUndoList->restoreChange(
-                        item->changeReason(),
-                        item->changeStartPos(),
-                        item->changeEndPos(),
-                        item->changeText(),
-                        item->changeSelMode(),
-                        item->changeNumber());
-        }
-            break;
-        case ChangeReason::MoveLines: {
-            int fromLine = item->changeStartPos().line;
-            int toLine = item->changeEndPos().line;
-            properMoveLines(fromLine, toLine, item->changeText().count(), true);
             mUndoList->restoreChange(
                         item->changeReason(),
                         item->changeStartPos(),
@@ -6965,13 +6940,6 @@ void QSynEdit::properMoveLine(int from, int to, bool parseToEnd)
     if (from==to)
         return;
     mDocument->moveLine(from, to, parseToEnd);
-}
-
-void QSynEdit::properMoveLines(int from, int to, int count, bool parseToEnd)
-{
-    if (from==to || count <= 0)
-        return;
-    mDocument->moveLines(from, to, count, parseToEnd);
 }
 
 void QSynEdit::doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode)
@@ -8326,16 +8294,14 @@ CharPos shiftPosByChange(const CharPos &pos, const DocumentChange &change)
         break;
     case DocumentChangeKind::Move:
         // count carries the target line
-        if (pos.line >= change.line
-                && pos.line < change.line + change.moveLineCount)
-            return CharPos{pos.ch, change.count + (pos.line - change.line)};
+        if (pos.line == change.line)
+            return CharPos{pos.ch, change.count};
         if (change.line < change.count
-                && change.line + change.moveLineCount <= pos.line
-                && pos.line <= change.count)
-            return CharPos{pos.ch, pos.line - change.moveLineCount};
+                && change.line < pos.line && pos.line <= change.count)
+            return CharPos{pos.ch, pos.line - 1};
         if (change.count < change.line
                 && change.count <= pos.line && pos.line < change.line)
-            return CharPos{pos.ch, pos.line + change.moveLineCount};
+            return CharPos{pos.ch, pos.line + 1};
         break;
     case DocumentChangeKind::SetLine:
         break;
@@ -8416,17 +8382,14 @@ void QSynEdit::onDocumentContentChanged(const DocumentChangeSet &changes, bool f
             }
             break;
         case DocumentChangeKind::Move:
-            processFoldsOnLinesMoved(change.line, change.count, change.moveLineCount);
-            // Move = erase + insert in the row index; moved layouts survive
-            // (their seqs are unchanged), so restore exact segment counts
-            mRowIndex.eraseLines(change.line, change.moveLineCount);
-            mRowIndex.insertLines(change.count, change.moveLineCount);
-            for (int i = 0; i < change.moveLineCount; ++i)
-                mRowIndex.setSegCount(change.count + i, wrapSegmentCount(change.count + i));
-            if (change.moveLineCount == 1)
-                emit lineMoved(change.line, change.count);
-            else
-                emit linesMoved(change.line, change.count, change.moveLineCount);
+            processFoldsOnLineMoved(change.line, change.count);
+            // Move = erase + insert in the row index; the moved line's
+            // layout survives (its seq is unchanged), so restore its exact
+            // segment count from the cache right away
+            mRowIndex.eraseLines(change.line, 1);
+            mRowIndex.insertLines(change.count, 1);
+            mRowIndex.setSegCount(change.count, wrapSegmentCount(change.count));
+            emit lineMoved(change.line, change.count);
             scrollbarChanged = true;
             changeFrom = std::min(change.line, change.count);
             break;
@@ -8545,15 +8508,14 @@ void QSynEdit::shiftAnchorByChange(const DocumentChange &change, int &line, int 
         break;
     case DocumentChangeKind::Move:
         // count carries the target line
-        if (line >= change.line && line < change.line + change.moveLineCount)
-            line = change.count + (line - change.line);
+        if (line == change.line)
+            line = change.count;
         else if (change.line < change.count
-                 && change.line + change.moveLineCount <= line
-                 && line <= change.count)
-            line -= change.moveLineCount;
+                 && change.line < line && line <= change.count)
+            line--;
         else if (change.count < change.line
                  && change.count <= line && line < change.line)
-            line += change.moveLineCount;
+            line++;
         break;
     case DocumentChangeKind::SetLine:
         // the line count doesn't change, but an edited anchor line may

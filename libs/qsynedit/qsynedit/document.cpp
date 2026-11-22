@@ -516,7 +516,7 @@ void Document::replaceContent(const QString &text)
 }
 
 void Document::recordChange(DocumentChangeKind kind, int line, int count,
-                            int startCh, int endCh, bool wholeLine, int moveLineCount)
+                            int startCh, int endCh, bool wholeLine)
 {
     // sanity checks against the post-mutation state
     Q_ASSERT(line >= 0);    
@@ -552,16 +552,14 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count,
                 mReparseToLine = line;
             break;
         case DocumentChangeKind::Move:
-            if (mReparseToLine >= line
-                    && mReparseToLine < line + moveLineCount) {
-                mReparseToLine = count + (mReparseToLine - line);
+            if (mReparseToLine == line) {
+                mReparseToLine = count;
             } else if (line < count
-                       && line + moveLineCount <= mReparseToLine
-                       && mReparseToLine <= count) {
-                mReparseToLine -= moveLineCount;
+                       && line < mReparseToLine && mReparseToLine <= count) {
+                mReparseToLine--;
             } else if (count < line
                        && count <= mReparseToLine && mReparseToLine < line) {
-                mReparseToLine += moveLineCount;
+                mReparseToLine++;
             }
             break;
         case DocumentChangeKind::SetLine:
@@ -603,7 +601,7 @@ void Document::recordChange(DocumentChangeKind kind, int line, int count,
         }
     }
     mChangeCoalescingBlocked = false;
-    mPendingChanges.append(DocumentChange{kind, line, count, startCh, endCh, wholeLine, moveLineCount});
+    mPendingChanges.append(DocumentChange{kind, line, count, startCh, endCh, wholeLine});
 }
 
 
@@ -690,30 +688,18 @@ void Document::deleteLines(int index, int numLines, bool parseToEnd)
 
 void Document::moveLine(int from, int to, bool parseToEnd)
 {
-    moveLines(from, to, 1, parseToEnd);
-}
-
-void Document::moveLines(int from, int to, int numLines, bool parseToEnd)
-{
     QMutexLocker locker(&mMutex);
-    Q_ASSERT(from >= 0 && from + numLines <= mLines.count());
-    Q_ASSERT(numLines > 0);
-    Q_ASSERT(to >= 0 && to <= mLines.count() - numLines);
+    Q_ASSERT(from >= 0 && from < mLines.count());
+    Q_ASSERT(to >= 0 && to < mLines.count());
     beginUpdate();
-    QVector<PDocumentLine> moved;
-    moved.reserve(numLines);
-    for (int i = 0; i < numLines; ++i) {
-        if (!mFoldStateDirty && lineHasCodeBlockDelta(from + i))
-            mFoldStateDirty = true;
-        moved.append(mLines[from + i]);
-    }
-    mLines.remove(from, numLines);
-    mLines.insert(to, numLines, PDocumentLine());
-    for (int i = 0; i < numLines; ++i)
-        mLines[to + i] = moved[i];
-    recordChange(DocumentChangeKind::Move, from, to, 0, 0, false, numLines);
+    if (!mFoldStateDirty && lineHasCodeBlockDelta(from))
+        mFoldStateDirty = true;
+    PDocumentLine temp = mLines[from];
+    mLines.remove(from);
+    mLines.insert(to, temp);
+    recordChange(DocumentChangeKind::Move, from, to, 0, 0, false);
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
-    reparseLines(std::min(from,to), std::max(from,to)+numLines, parseToEnd);
+    reparseLines(std::min(from,to), std::max(from,to)+1, parseToEnd);
     endUpdate();
 }
 

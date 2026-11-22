@@ -88,7 +88,6 @@ private slots:
     void test_put_line1();
     void test_move_line_to1();
     void test_move_line_to2();
-    void test_move_lines_range();
     void test_clear();
     void test_content_changed();
     void test_code_block_delta_lexical_context();
