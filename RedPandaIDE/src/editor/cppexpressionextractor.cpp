@@ -241,16 +241,18 @@ ExtractionResult extractTokens(const QSynedit::QSynEdit *editor,
             expression.append(tokens[i]);
     }
     expression.append(tokens[targetIndex]);
+    bool targetIsMemberOperator = isMemberOperator(tokens[targetIndex].text);
+    bool targetIsGlobalScope = targetIsMemberOperator && tokens[targetIndex].text == "::";
 
     BackwardTokenStream stream(editor, syntaxer, std::move(tokens), targetIndex + 1, previousLine);
     int round = 0;
     int square = 0;
     int curly = 0;
     int angle = 0;
-    bool needReceiver = false;
+    bool needReceiver = targetIsMemberOperator;
     bool needBase = false;
     bool memberChain = false;
-    bool globalScope = false;
+    bool globalScope = targetIsGlobalScope;
     int nextIndex = -1;
     Token token;
     while (stream.next(token)) {
@@ -380,7 +382,8 @@ QStringList CppExpressionExtractor::extract(const QSynedit::CharPos &pos)
                                    targetRejected, targetIndex);
     if (targetRejected || targetIndex < 0)
         return {};
-    if (line[targetIndex].type != QSynedit::TokenType::Identifier)
+    if (line[targetIndex].type != QSynedit::TokenType::Identifier
+            && !isMemberOperator(line[targetIndex].text))
         return {};
     targetIndex = line.size() - 1 - targetIndex;
     std::reverse(line.begin(), line.end());

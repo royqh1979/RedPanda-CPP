@@ -1,3 +1,4 @@
+#include <QElapsedTimer>
 #include <QMimeData>
 #include <QSemaphore>
 #include <QTemporaryDir>
@@ -6,7 +7,9 @@
 #include <qt_utils/utils.h>
 #include <qsynedit/syntaxer/textfile.h>
 #include "src/editor/editor.h"
+#include "src/colorscheme.h"
 #include "src/parser/cppparser.h"
+#include "src/parser/parserutils.h"
 #include "src/settings/codecompletionsettings.h"
 #include "src/settings/editorsettings.h"
 #include "test_editor_general.h"
@@ -314,4 +317,184 @@ void TestEditorGeneral::test_export_files()
     QVERIFY(rtf.contains("second"));
     QVERIFY(rtf.contains("{\\title output.rtf}"));
     QVERIFY(rtf.contains("\\red240\\green235\\blue220;"));
+}
+
+void TestEditorGeneral::test_export_semantic_highlight()
+{
+    mEditor = std::make_shared<Editor>();
+    mEditor->setEditorSettings(mEditorSettings.get());
+    mEditor->setColorManager(mColorManager.get());
+    mEditor->setFileType(FileType::CppSource, false);
+    QStringList lines{
+        "struct Entry { int value; };",
+        "Entry entry;",
+        "int getValue() { return 1; }",
+        "int read() { return entry.value + getValue(); }"
+    };
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setOnGetFileStream([lines](const QString &, QStringList &buffer) {
+        buffer = lines;
+        return true;
+    });
+    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    mEditor->setFilename("main.cpp");
+    mEditor->loadContent(lines);
+    mEditor->setCppParser(parser);
+
+    auto setStatementColor = [this](StatementKind kind, const QColor &color) {
+        PColorSchemeItem item = std::make_shared<ColorSchemeItem>();
+        item->setForeground(color);
+        mEditor->mStatementColors->insert(kind, item);
+    };
+    setStatementColor(StatementKind::Class, QColor(1, 2, 3));
+    setStatementColor(StatementKind::GlobalVariable, QColor(4, 5, 6));
+    setStatementColor(StatementKind::Function, QColor(7, 8, 9));
+    setStatementColor(StatementKind::Variable, QColor(10, 11, 12));
+    mEditor->mCurrentHighlightedWord = "entry";
+    mEditor->mCurrentHighlighWordForeground = QColor(250, 251, 252);
+    mEditor->mCurrentHighlighWordBackground = QColor(253, 254, 255);
+    mEditorSettings->setCopyHTMLUseEditorColor(true);
+    mEditorSettings->setCopyHTMLWithLineNumber(false);
+    mEditor->selectAll();
+
+    std::unique_ptr<QMimeData> mimeData = mEditor->createCopyMimeData();
+    QString html = QString::fromUtf8(mimeData->data("text/html"));
+    for (const QColor &color : {QColor(1, 2, 3), QColor(4, 5, 6),
+                                QColor(7, 8, 9), QColor(10, 11, 12)}) {
+        QVERIFY2(html.contains(color.name()), qPrintable(color.name()));
+    }
+    QVERIFY(!html.contains(QColor(250, 251, 252).name()));
+    QVERIFY(!html.contains("background-color: #fdfeff"));
+
+    auto exportStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
+    PColorSchemeItem exportGlobalColor = std::make_shared<ColorSchemeItem>();
+    exportGlobalColor->setForeground(QColor(13, 14, 15));
+    exportStatementColors->insert(StatementKind::GlobalVariable, exportGlobalColor);
+    QSynedit::PSyntaxer exportSyntaxer = mEditor->syntaxer()->createInstance();
+    QSynedit::PaintHighlightToken token{};
+    token.ch = 6;
+    token.text = "entry";
+    token.attr = exportSyntaxer->identifierAttribute();
+    token.tokenType = QSynedit::TokenType::Identifier;
+    token.foreground = token.attr->foreground();
+    token.background = token.attr->background();
+    token.style = token.attr->styles();
+    PStatement statement = parser->findStatement("entry");
+    QVERIFY(statement);
+    mEditor->prepareHighlightToken(1, 6, token, &statement, exportSyntaxer,
+                                   exportStatementColors, false);
+    QCOMPARE(token.foreground, QColor(13, 14, 15));
+}
+
+void TestEditorGeneral::test_completion_after_member_operator()
+{
+    initParser();
+    mEditor = std::make_shared<Editor>();
+    mEditor->setEditorSettings(mEditorSettings.get());
+    mEditor->setColorManager(mColorManager.get());
+    mEditor->setFileType(FileType::CppSource, false);
+    QStringList parsedLines{
+        "namespace std {",
+        "int cout;",
+        "int endl;",
+        "}",
+        "void f() { std::cout;",
+        "}"
+    };
+    QStringList editorLines = parsedLines;
+    editorLines[4] = "void f() { std:";
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setOnGetFileStream([parsedLines](const QString &, QStringList &buffer) {
+        buffer = parsedLines;
+        return true;
+    });
+    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    mEditor->setFilename("main.cpp");
+    mEditor->loadContent(editorLines);
+    mEditor->setCaretPos({mEditor->lineText(4).length(), 4});
+    mEditor->setCppParser(parser);
+    CodeCompletionSettings completionSettings(mSettingsPersistor.get());
+    completionSettings.setEnabled(true);
+    mEditor->setCodeCompletionSettings(&completionSettings);
+    mEditor->mCodeCompletionEnabled = true;
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setShowEditorCaretFunc([] {});
+    mEditor->setCompletionPopup(&popup);
+    QVERIFY(parser->findStatement("std"));
+
+    QVERIFY(mEditor->handleCodeCompletion(':'));
+
+    QVERIFY(mEditor->lineText(4).endsWith("std::"));
+    QVERIFY(parser->findStatement("std"));
+    QString memberOperator;
+    QStringList memberExpression;
+    QStringList ownerExpression = mEditor->getOwnerExpressionAndMemberAtPositionForCompletion(
+                {mEditor->caretCh() - 1, 4}, memberOperator, memberExpression);
+    QCOMPARE(ownerExpression, QStringList{"std"});
+    QCOMPARE(memberOperator, QString("::"));
+    QVERIFY(memberExpression.isEmpty());
+    QVERIFY(popup.selectedStatement());
+    QVERIFY(popup.isVisible());
+    mEditor->setCompletionPopup(nullptr);
+    mEditor->setCodeCompletionSettings(nullptr);
+}
+
+void TestEditorGeneral::test_semantic_export_profile()
+{
+    if (!qEnvironmentVariableIsSet("REDPANDA_EXPORT_PROFILE"))
+        QSKIP("Set REDPANDA_EXPORT_PROFILE=1 to profile semantic exports");
+
+    int repeat = qEnvironmentVariableIntValue("REDPANDA_EXPORT_PROFILE_REPEAT");
+    if (repeat <= 0)
+        repeat = 3;
+    QString fileName = QFINDTESTDATA("../../libs/qsynedit/test/resources/miniaudio.h");
+    QVERIFY(!fileName.isEmpty());
+    PCppParser parser = std::make_shared<CppParser>();
+    CppParser::parseFileBlocking(parser, fileName, true, "");
+    mEditor->setFilename(fileName);
+    QByteArray encoding;
+    mEditor->loadFromFile(fileName, ENCODING_AUTO_DETECT, encoding);
+    mEditor->setCppParser(parser);
+    mEditorSettings->setCopyHTMLUseEditorColor(true);
+    mEditorSettings->setCopyRTFUseEditorColor(true);
+    mEditorSettings->setCopyHTMLWithLineNumber(false);
+    mEditor->selectAll();
+
+    QTemporaryDir directory("R:/exporter-profile-XXXXXX");
+    QVERIFY(directory.isValid());
+    QString rtfPath = directory.filePath("output.rtf");
+    for (bool cold : {true, false}) {
+        qint64 htmlNs = 0;
+        qint64 rtfNs = 0;
+        qint64 htmlSize = 0;
+        qint64 rtfSize = 0;
+        for (int i = 0; i < repeat; ++i) {
+            if (cold)
+                mEditor->mIdCache.clear();
+            QElapsedTimer timer;
+            timer.start();
+            std::unique_ptr<QMimeData> mimeData = mEditor->createCopyMimeData();
+            htmlNs += timer.nsecsElapsed();
+            htmlSize = mimeData->data("text/html").size();
+            QVERIFY(htmlSize > 0);
+
+            if (cold)
+                mEditor->mIdCache.clear();
+            timer.restart();
+            mEditor->exportAsRTF(rtfPath);
+            rtfNs += timer.nsecsElapsed();
+            rtfSize = QFileInfo(rtfPath).size();
+            QVERIFY(rtfSize > 0);
+        }
+        qInfo().noquote() << QStringLiteral("EXPORT_PROFILE format=html cache=%1 lines=%2 bytes=%3 avg_ms=%4")
+                                 .arg(cold ? "cold" : "warm")
+                                 .arg(mEditor->document()->count())
+                                 .arg(htmlSize)
+                                 .arg(htmlNs / 1000000.0 / repeat, 0, 'f', 3);
+        qInfo().noquote() << QStringLiteral("EXPORT_PROFILE format=rtf cache=%1 lines=%2 bytes=%3 avg_ms=%4")
+                                 .arg(cold ? "cold" : "warm")
+                                 .arg(mEditor->document()->count())
+                                 .arg(rtfSize)
+                                 .arg(rtfNs / 1000000.0 / repeat, 0, 'f', 3);
+    }
 }

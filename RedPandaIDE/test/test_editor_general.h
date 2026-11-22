@@ -17,6 +17,9 @@ private slots:
     void test_copy_mime_data_selection();
     void test_copy_mime_data_plain_text();
     void test_export_files();
+    void test_export_semantic_highlight();
+    void test_completion_after_member_operator();
+    void test_semantic_export_profile();
 };
 
 #endif // TEST_EDITOR_GENERAL_H

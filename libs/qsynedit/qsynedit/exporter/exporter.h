@@ -38,9 +38,8 @@ using PConstSyntaxer = std::shared_ptr<const Syntaxer>;
 class TokenAttribute;
 using PTokenAttribute = std::shared_ptr<TokenAttribute>;
 
-// line: 0-based buffer line index; ch: 0-based index of the token's first char in the line
-using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int ch, const QString& token,
-    PTokenAttribute& attr)>;
+// Tokens cover one complete source line; ch values remain 0-based source-line positions.
+using FormatTokensHandler = std::function<void(int line, PaintHighlightTokenList &tokens)>;
 class Exporter
 {
 
@@ -112,8 +111,8 @@ public:
     QString defaultFilter() const;
     void setDefaultFilter(const QString &defaultFilter);
 
-    FormatTokenHandler onFormatToken() const;
-    void setOnFormatToken(const FormatTokenHandler &onFormatToken);
+    FormatTokensHandler onFormatTokens() const;
+    void setOnFormatTokens(const FormatTokensHandler &onFormatTokens);
 
     QByteArray buffer() const;
     const QString& text() const;
@@ -258,12 +257,10 @@ protected:
      */
     QString replaceReservedChars(const QString &token);
     /**
-     * @brief Sets the token attribute of the next token to determine the changes
-     *   of colors and font styles so the properties of the next token can be
-     *     added to the output buffer.
-     * @param attr
+     * @brief Applies the prepared token colors and font styles to the output buffer.
+     * @param token
      */
-    virtual void setTokenAttribute(PTokenAttribute attr);
+    virtual void setTokenAttribute(const PaintHighlightToken &token);
 
     virtual QString getStartLineNumberString(int startLine, int endLine);
     virtual QString getLineNumberString(int line);
@@ -275,7 +272,7 @@ protected:
 private:
     QString mText;
     bool mFirstAttribute;
-    FormatTokenHandler mOnFormatToken;
+    FormatTokensHandler mOnFormatTokens;
 
 };
 }

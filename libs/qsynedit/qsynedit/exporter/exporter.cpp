@@ -80,37 +80,53 @@ void Exporter::exportRange(const std::shared_ptr<const Document>& doc, CharPos s
         mSyntaxer->resetState();
     else
         mSyntaxer->setState(doc->getSyntaxState(start.line-1));
+    PaintHighlightTokenList tokens;
+    tokens.reserve(16);
     for (int i = start.line; i<=end.line; i++) {
+        tokens.clear();
         if (mExportLineNumber)
             addData(getLineNumberString(i-baseStartLine));
         QString lineText = doc->getLine(i);
         // export the line
         mSyntaxer->setLine(i, lineText, 0);
         while (!mSyntaxer->eol()) {
-            PTokenAttribute attr = mSyntaxer->getTokenAttribute();
-            int startPos = mSyntaxer->getTokenPos();
-            QString token = mSyntaxer->getToken();
-            if (i==start.line && (startPos+token.length() <= start.ch)) {
+            QString tokenText = mSyntaxer->getToken();
+            if (tokenText.isEmpty()) {
                 mSyntaxer->next();
                 continue;
             }
-            if (i==end.line && (startPos >= end.ch)) {
-                mSyntaxer->next();
-                continue;
+            PaintHighlightToken token{};
+            token.ch = mSyntaxer->getTokenPos();
+            token.text = tokenText;
+            token.attr = mSyntaxer->getTokenAttribute();
+            token.tokenType = mSyntaxer->getTokenType();
+            if (token.attr) {
+                token.foreground = token.attr->foreground();
+                token.background = token.attr->background();
+                token.style = token.attr->styles();
+            } else {
+                token.foreground = mForegroundColor;
+                token.background = mBackgroundColor;
             }
-            if (i==end.line && (startPos+token.length() > end.ch )) {
-                token = token.left(end.ch - startPos);
-            }
-            if (i==start.line && startPos < start.ch) {
-                token = token.mid(start.ch-startPos);
-            }
-
-            QString escapedToken = replaceReservedChars(token);
-            if (mOnFormatToken)
-                mOnFormatToken(mSyntaxer, i, mSyntaxer->getTokenPos(), mSyntaxer->getToken(),attr);
-            setTokenAttribute(attr);
-            formatToken(escapedToken);
+            tokens.append(std::move(token));
             mSyntaxer->next();
+        }
+        if (mOnFormatTokens)
+            mOnFormatTokens(i, tokens);
+        for (const PaintHighlightToken &highlightToken : tokens) {
+            int startPos = highlightToken.ch;
+            QString tokenText = highlightToken.text;
+            if (i==start.line && (startPos+tokenText.length() <= start.ch))
+                continue;
+            if (i==end.line && (startPos >= end.ch))
+                continue;
+            if (i==end.line && (startPos+tokenText.length() > end.ch ))
+                tokenText = tokenText.left(end.ch - startPos);
+            if (i==start.line && startPos < start.ch)
+                tokenText = tokenText.mid(start.ch-startPos);
+
+            setTokenAttribute(highlightToken);
+            formatToken(replaceReservedChars(tokenText));
         }
         if (i!=end.line)
             formatNewLine();
@@ -327,29 +343,30 @@ static QColor ValidatedColor(const QColor& color, const QColor& defaultColor) {
         return defaultColor;
 }
 
-void Exporter::setTokenAttribute(PTokenAttribute attr)
+void Exporter::setTokenAttribute(const PaintHighlightToken &token)
 {
+    QColor background = ValidatedColor(token.background, mBackgroundColor);
+    QColor foreground = ValidatedColor(token.foreground, mForegroundColor);
     if (mFirstAttribute) {
         mFirstAttribute = false;
-        mLastBG = ValidatedColor(attr->background(), mBackgroundColor);
-        mLastFG = ValidatedColor(attr->foreground(), mForegroundColor);
-        mLastStyle = attr->styles();
+        mLastBG = background;
+        mLastFG = foreground;
+        mLastStyle = token.style;
         formatBeforeFirstAttribute(
                     mUseBackground && (mLastBG != mBackgroundColor),
-                    mLastFG != mForegroundColor, attr->styles());
+                    mLastFG != mForegroundColor, token.style);
     } else {
-        bool changedBG = mUseBackground &&
-          (mLastBG != ValidatedColor(attr->background(), mBackgroundColor));
-        bool changedFG = (mLastFG != ValidatedColor(attr->foreground(), mForegroundColor));
-        if (changedBG || changedFG ||  (mLastStyle != attr->styles())) {
+        bool changedBG = mUseBackground && (mLastBG != background);
+        bool changedFG = (mLastFG != foreground);
+        if (changedBG || changedFG ||  (mLastStyle != token.style)) {
             // which font style bits are to reset?
-            FontStyles changedStyles = mLastStyle & ~(attr->styles());
+            FontStyles changedStyles = mLastStyle & ~(token.style);
             formatAttributeDone(changedBG, changedFG, changedStyles);
             // which font style bits are to set?
-            changedStyles = attr->styles() & ~(mLastStyle);
-            mLastBG = ValidatedColor(attr->background(), mBackgroundColor);
-            mLastFG = ValidatedColor(attr->foreground(), mForegroundColor);
-            mLastStyle = attr->styles();
+            changedStyles = token.style & ~(mLastStyle);
+            mLastBG = background;
+            mLastFG = foreground;
+            mLastStyle = token.style;
             formatAttributeInit(changedBG, changedFG, changedStyles);
         }
     }
@@ -442,14 +459,14 @@ QByteArray Exporter::clipboardFormat()
     return mClipboardFormat;
 }
 
-FormatTokenHandler Exporter::onFormatToken() const
+FormatTokensHandler Exporter::onFormatTokens() const
 {
-    return mOnFormatToken;
+    return mOnFormatTokens;
 }
 
-void Exporter::setOnFormatToken(const FormatTokenHandler &onFormatToken)
+void Exporter::setOnFormatTokens(const FormatTokensHandler &onFormatTokens)
 {
-    mOnFormatToken = onFormatToken;
+    mOnFormatTokens = onFormatTokens;
 }
 
 QString Exporter::lineBreak()

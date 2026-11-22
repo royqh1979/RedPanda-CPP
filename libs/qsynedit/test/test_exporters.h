@@ -16,6 +16,7 @@ private slots:
     void test_line_numbers_data();
     void test_line_numbers();
     void test_combined_text_decorations();
+    void test_line_format_tokens();
 #ifdef QSYNEDIT_PROFILE_TESTS
     void test_large_document_profile_data();
     void test_large_document_profile();

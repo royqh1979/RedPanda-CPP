@@ -34,11 +34,11 @@ public:
 protected:
     bool mCreateHTMLFragment;
 private:
-    PTokenAttribute mLastAttr;
-    QString attrToCSS(PTokenAttribute attr, const QString& uniqueAttrName);
+    PaintHighlightToken mLastToken;
+    QString attrToCSS(const PaintHighlightToken &token, const QString& uniqueAttrName);
     QString colorToHTML(const QColor &color) const;
     QString getStyleName(PSyntaxer syntaxer,
-                         PTokenAttribute attr);
+                         const PaintHighlightToken &token);
 //    QString makeValidName(const QString &name);
     // Exporter interface
 protected:
@@ -50,12 +50,13 @@ protected:
     QString getFooter() override;
     QString getFormatName() override;
     QString getHeader() override;
-    void setTokenAttribute(PTokenAttribute Attr) override;
+    void setTokenAttribute(const PaintHighlightToken &token) override;
 protected:
     QString getStartLineNumberString(int startLine, int endLine) override;
     QString getEndLineNumberString(int startLine, int endLine) override;
 private:
     QHash<QString,QString> mCssNames;
+    QHash<QString,PaintHighlightToken> mStyleTokens;
 };
 }
 #endif // HTMLEXPORTER_H

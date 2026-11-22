@@ -8,6 +8,7 @@
 #include <qsynedit/syntaxer/textfile.h>
 #include "src/editor/cppexpressionextractor.h"
 #include "src/editor/editor.h"
+#include "src/parser/parserutils.h"
 #include "test_cppexpressionextractor.h"
 
 namespace {
@@ -79,6 +80,12 @@ void TestCppExpressionExtractor::test_extract_data()
     QTest::newRow("global scope member")
             << "::|value" << QStringList{"::", "value"};
     QTest::newRow("namespace itself") << "|std::cout" << QStringList{"std"};
+    QTest::newRow("namespace completion") << "std:|:" << QStringList{"std", "::"};
+    QTest::newRow("global scope completion") << "|::" << QStringList{"::"};
+    QTest::newRow("member completion") << "object|." << QStringList{"object", "."};
+    QTest::newRow("pointer member completion") << "pointer-|>" << QStringList{"pointer", "->"};
+    QTest::newRow("call result member completion")
+            << "f(a())|." << QStringList{"f", "(", "a", "(", ")", ")", "."};
     QTest::newRow("pointer member")
             << "pointer->|member" << QStringList{"pointer", "->", "member"};
     QTest::newRow("pointer to object member")
@@ -407,6 +414,44 @@ void TestCppExpressionExtractor::test_display_input()
     QCOMPARE(units.first().targetTokenIndex, 2);
     QCOMPARE(units.first().expression, QStringList({"display", ".", "preview"}));
     QCOMPARE(units.first().inputTokenIndexes, QVector<int>({0, 1, 2}));
+}
+
+void TestCppExpressionExtractor::test_completion_trailing_member_operator()
+{
+    struct CompletionCase {
+        QString source;
+        QStringList ownerExpression;
+        QString memberOperator;
+    };
+    const QVector<CompletionCase> cases{
+        {"std::", {"std"}, "::"},
+        {"::", {}, "::"},
+        {"object.", {"object"}, "."},
+        {"pointer->", {"pointer"}, "->"},
+        {"object.*", {"object"}, ".*"},
+        {"pointer->*", {"pointer"}, "->*"},
+        {"f(a()).", {"f", "(", "a", "(", ")", ")"}, "."}
+    };
+    initParser();
+    mEditor->setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    for (const CompletionCase &test : cases) {
+        mEditor->document()->setText(test.source);
+        QString memberOperator;
+        QStringList memberExpression;
+        QSynedit::CharPos pos{test.source.length() - 1, 0};
+        QStringList expression = CppExpressionExtractor::extract(
+                    mEditor.get(), mEditor->syntaxer(), pos);
+        QStringList expectedExpression = test.ownerExpression;
+        expectedExpression.append(test.memberOperator);
+        QVERIFY2(expression == expectedExpression,
+                 qPrintable(QString("%1: %2").arg(test.source, expression.join(' '))));
+        QStringList ownerExpression = mEditor->getOwnerExpressionAndMemberAtPositionForCompletion(
+                    pos, memberOperator, memberExpression);
+        QVERIFY2(ownerExpression == test.ownerExpression,
+                 qPrintable(QString("%1: %2").arg(test.source, ownerExpression.join(' '))));
+        QCOMPARE(memberOperator, test.memberOperator);
+        QVERIFY(memberExpression.isEmpty());
+    }
 }
 
 void TestCppExpressionExtractor::test_profile()
