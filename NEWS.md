@@ -59,6 +59,7 @@ Red Panda C++ Version 3.6
   - enhancement: Include cycles now behave like real compilers (unguarded files are re-entered and re-scanned, bounded by a nesting depth of 200).
   - fix: Undoing a multi-line paste or selection replacement with auto-indent preserves existing text and uses valid caret positions.
   - fix: Undo correctly restores text removed by Trim Trailing Spaces.
+  - fix: Undo paired-symbol Backspace deletion as one edit.
   - fix: Undoing drag-and-drop editing restores the pre-drag caret, including reversed selections.
   - fix: Ctrl+hover now shows the pointing-hand cursor on jumpable identifiers.
   - fix: Inserting a line at the document start keeps the viewport at the first line.

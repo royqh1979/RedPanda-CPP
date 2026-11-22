@@ -188,6 +188,8 @@ private slots:
     void test_edit_operations_are_batched();
     void test_auto_indent_for_if_else_2();
     void test_auto_indent_for_if_else_3();
+    void test_auto_indent_edit_matrix_data();
+    void test_auto_indent_edit_matrix();
 
     void test_shared_document_basics();
     void test_shared_document_fold_shift();

@@ -4,6 +4,7 @@
 #include "src/settings/editorsettings.h"
 #include "src/colorscheme.h"
 #include "src/editor/editor.h"
+#include "src/parser/cppparser.h"
 #include "test_editor_symbol_completion.h"
 #include <qsynedit/syntaxer/cpp.h>
 
@@ -2477,6 +2478,212 @@ void TestEditorSymbolCompletion::test_input_docstring()
     QVERIFY(mEditor->empty());
     QVERIFY(!mEditor->canUndo());
 
+}
+
+void TestEditorSymbolCompletion::test_completion_disabled_by_settings_data()
+{
+    QTest::addColumn<QString>("setting");
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<QString>("key");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("global") << "global" << "" << "(" << "(";
+    QTest::newRow("parenthesis") << "parenthesis" << "" << "(" << "(";
+    QTest::newRow("bracket") << "bracket" << "" << "[" << "[";
+    QTest::newRow("brace") << "brace" << "" << "{" << "{";
+    QTest::newRow("single quote") << "single" << "" << "'" << "'";
+    QTest::newRow("double quote") << "double" << "" << "\"" << "\"";
+    QTest::newRow("comment") << "comment" << "/" << "*" << "/*";
+    QTest::newRow("overwrite mode") << "overwrite" << "" << "(" << "(";
+}
+
+void TestEditorSymbolCompletion::test_completion_disabled_by_settings()
+{
+    QFETCH(QString, setting);
+    QFETCH(QString, initial);
+    QFETCH(QString, key);
+    QFETCH(QString, expected);
+
+    mEditorSettings->setCompleteSymbols(true);
+    mEditorSettings->setCompleteParenthese(true);
+    mEditorSettings->setCompleteBracket(true);
+    mEditorSettings->setCompleteBrace(true);
+    mEditorSettings->setCompleteComment(true);
+    mEditorSettings->setCompleteSingleQuote(true);
+    mEditorSettings->setCompleteDoubleQuote(true);
+    mEditor->setInsertMode(true);
+    if (setting == "global")
+        mEditorSettings->setCompleteSymbols(false);
+    else if (setting == "parenthesis")
+        mEditorSettings->setCompleteParenthese(false);
+    else if (setting == "bracket")
+        mEditorSettings->setCompleteBracket(false);
+    else if (setting == "brace")
+        mEditorSettings->setCompleteBrace(false);
+    else if (setting == "comment")
+        mEditorSettings->setCompleteComment(false);
+    else if (setting == "single")
+        mEditorSettings->setCompleteSingleQuote(false);
+    else if (setting == "double")
+        mEditorSettings->setCompleteDoubleQuote(false);
+    else if (setting == "overwrite")
+        mEditor->setInsertMode(false);
+
+    mEditor->loadContent(initial);
+    mEditor->setCaretPos(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), key.at(0).toLatin1());
+    QCOMPARE(mEditor->content(), QStringList{expected});
+}
+
+void TestEditorSymbolCompletion::test_symbol_skip_settings_data()
+{
+    QTest::addColumn<QString>("setting");
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<int>("ch");
+    QTest::addColumn<QString>("key");
+    QTest::addColumn<bool>("overwrite");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<int>("expectedCh");
+
+    QTest::newRow("parenthesis overwrite disabled")
+            << "overwrite" << "()" << 1 << ")" << false << "())" << 2;
+    QTest::newRow("parenthesis completion disabled")
+            << "parenthesis" << "()" << 1 << ")" << true << "())" << 2;
+    QTest::newRow("bracket overwrite disabled")
+            << "overwrite" << "[]" << 1 << "]" << false << "[]]" << 2;
+    QTest::newRow("bracket completion disabled")
+            << "bracket" << "[]" << 1 << "]" << true << "[]]" << 2;
+    QTest::newRow("brace overwrite disabled")
+            << "overwrite" << "{}" << 1 << "}" << false << "{}}" << 2;
+    QTest::newRow("brace completion disabled")
+            << "brace" << "{}" << 1 << "}" << true << "{}}" << 2;
+    QTest::newRow("include overwrite disabled")
+            << "overwrite" << "#include <>" << 10 << ">" << false << "#include <>>" << 11;
+    QTest::newRow("include completion disabled")
+            << "include" << "#include <>" << 10 << ">" << true << "#include <>>" << 11;
+    QTest::newRow("semicolon overwrite disabled")
+            << "overwrite" << ";" << 0 << ";" << false << ";;" << 1;
+    QTest::newRow("comma overwrite disabled")
+            << "overwrite" << "," << 0 << "," << false << ",," << 1;
+}
+
+void TestEditorSymbolCompletion::test_symbol_skip_settings()
+{
+    QFETCH(QString, setting);
+    QFETCH(QString, initial);
+    QFETCH(int, ch);
+    QFETCH(QString, key);
+    QFETCH(bool, overwrite);
+    QFETCH(QString, expected);
+    QFETCH(int, expectedCh);
+
+    mEditorSettings->setCompleteSymbols(true);
+    mEditorSettings->setCompleteParenthese(true);
+    mEditorSettings->setCompleteBracket(true);
+    mEditorSettings->setCompleteBrace(true);
+    mEditorSettings->setCompleteGlobalInclude(true);
+    mEditorSettings->setOverwriteSymbols(overwrite);
+    if (setting == "parenthesis")
+        mEditorSettings->setCompleteParenthese(false);
+    else if (setting == "bracket")
+        mEditorSettings->setCompleteBracket(false);
+    else if (setting == "brace")
+        mEditorSettings->setCompleteBrace(false);
+    else if (setting == "include")
+        mEditorSettings->setCompleteGlobalInclude(false);
+    mEditor->setCppParser(std::make_shared<CppParser>());
+    mEditor->setInsertMode(true);
+    mEditor->loadContent(initial);
+    mEditor->setCaretPos(CharPos{ch, 0});
+    QTest::keyPress(mEditor.get(), key.at(0).toLatin1());
+    QCOMPARE(mEditor->content(), QStringList{expected});
+    QCOMPARE(mEditor->caretPos(), CharPos(expectedCh, 0));
+}
+
+void TestEditorSymbolCompletion::test_global_include_completion()
+{
+    mEditorSettings->setCompleteSymbols(true);
+    mEditorSettings->setCompleteGlobalInclude(true);
+    mEditorSettings->setOverwriteSymbols(true);
+    mEditor->setCppParser(std::make_shared<CppParser>());
+    mEditor->setInsertMode(true);
+    mEditor->loadContent("#include ");
+    mEditor->setCaretPos(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), '<');
+    QCOMPARE(mEditor->content(), QStringList{"#include <>"});
+    QCOMPARE(mEditor->caretPos(), CharPos(10, 0));
+    QTest::keyPress(mEditor.get(), '>');
+    QCOMPARE(mEditor->content(), QStringList{"#include <>"});
+    QCOMPARE(mEditor->caretPos(), CharPos(11, 0));
+
+    mEditor->undo();
+    QCOMPARE(mEditor->content(), QStringList{"#include "});
+    mEditor->redo();
+    QCOMPARE(mEditor->content(), QStringList{"#include <>"});
+
+    mEditor->loadContent("int value");
+    mEditor->setCaretPos(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), '<');
+    QCOMPARE(mEditor->content(), QStringList{"int value<"});
+
+    mEditorSettings->setCompleteGlobalInclude(false);
+    mEditor->loadContent("#include ");
+    mEditor->setCaretPos(mEditor->fileEnd());
+    QTest::keyPress(mEditor.get(), '<');
+    QCOMPARE(mEditor->content(), QStringList{"#include <"});
+}
+
+void TestEditorSymbolCompletion::test_remove_symbol_pairs_data()
+{
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<int>("ch");
+    QTest::addColumn<QString>("operation");
+    QTest::addColumn<QString>("remaining");
+
+    QTest::newRow("parenthesis") << "()" << 1 << "backspace" << ")";
+    QTest::newRow("bracket") << "[]" << 1 << "backspace" << "]";
+    QTest::newRow("brace") << "{}" << 1 << "backspace" << "}";
+    QTest::newRow("single quote") << "''" << 1 << "backspace" << "'";
+    QTest::newRow("double quote") << "\"\"" << 1 << "backspace" << "\"";
+    QTest::newRow("global include") << "#include <>" << 10 << "backspace" << "#include >";
+    QTest::newRow("delete parenthesis") << "()" << 0 << "delete" << ")";
+}
+
+void TestEditorSymbolCompletion::test_remove_symbol_pairs()
+{
+    QFETCH(QString, initial);
+    QFETCH(int, ch);
+    QFETCH(QString, operation);
+    QFETCH(QString, remaining);
+
+    mEditorSettings->setCompleteSymbols(true);
+    mEditorSettings->setCompleteParenthese(true);
+    mEditorSettings->setCompleteBracket(true);
+    mEditorSettings->setCompleteBrace(true);
+    mEditorSettings->setCompleteSingleQuote(true);
+    mEditorSettings->setCompleteDoubleQuote(true);
+    mEditorSettings->setCompleteGlobalInclude(true);
+    mEditor->setCppParser(std::make_shared<CppParser>());
+    mEditor->setInsertMode(true);
+    for (bool removePair : {false, true}) {
+        mEditorSettings->setRemoveSymbolPairs(removePair);
+        mEditor->loadContent(initial);
+        mEditor->setCaretPos(CharPos{ch, 0});
+        if (operation == "backspace")
+            QTest::keyPress(mEditor.get(), Qt::Key_Backspace);
+        else
+            QTest::keyPress(mEditor.get(), Qt::Key_Delete);
+        QString expected = removePair
+                ? (initial.startsWith("#include") ? QString("#include ") : QString())
+                : remaining;
+        QVERIFY2(mEditor->content() == QStringList{expected},
+                 qPrintable(QString("removePair=%1 actual=%2")
+                            .arg(removePair).arg(mEditor->lineText())));
+        mEditor->undo();
+        QCOMPARE(mEditor->content(), QStringList{initial});
+        mEditor->redo();
+        QCOMPARE(mEditor->content(), QStringList{expected});
+    }
 }
 
 void TestEditorSymbolCompletion::test_doxygen_header_editing_areas_data()

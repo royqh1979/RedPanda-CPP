@@ -12207,6 +12207,96 @@ void TestQSyneditCpp::test_auto_indent_for_if_else_3()
     QCOMPARE(mEdit->content(),text1);
 }
 
+void TestQSyneditCpp::test_auto_indent_edit_matrix_data()
+{
+    QTest::addColumn<QStringList>("initial");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("ch");
+    QTest::addColumn<QString>("operation");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QStringList>("indented");
+    QTest::addColumn<QStringList>("plain");
+
+    QTest::newRow("break after open brace")
+            << QStringList{"void f() {", "}"}
+            << 0 << -1 << "break" << QString()
+            << QStringList{"void f() {", "\t", "}"}
+            << QStringList{"void f() {", "", "}"};
+    QTest::newRow("break between braces")
+            << QStringList{"void f() {}"}
+            << 0 << 10 << "break" << QString()
+            << QStringList{"void f() {", "\t", "}"}
+            << QStringList{"void f() {", "", "}"};
+    QTest::newRow("input closing brace")
+            << QStringList{"void f() {", "\twork();", "\t"}
+            << 2 << -1 << "input" << "}"
+            << QStringList{"void f() {", "\twork();", "}"}
+            << QStringList{"void f() {", "\twork();", "\t}"};
+    QTest::newRow("input preprocessor")
+            << QStringList{"void f() {", "\t"}
+            << 1 << -1 << "input" << "#"
+            << QStringList{"void f() {", "#"}
+            << QStringList{"void f() {", "\t#"};
+    QTest::newRow("input access specifier")
+            << QStringList{"class C {", "\tpublic"}
+            << 1 << -1 << "input" << ":"
+            << QStringList{"class C {", "public:"}
+            << QStringList{"class C {", "\tpublic:"};
+    QTest::newRow("input case label")
+            << QStringList{"void f() {", "\tswitch (x) {", "\t\tcase 1"}
+            << 2 << -1 << "input" << ":"
+            << QStringList{"void f() {", "\tswitch (x) {", "\tcase 1:"}
+            << QStringList{"void f() {", "\tswitch (x) {", "\t\tcase 1:"};
+    QTest::newRow("input docstring star")
+            << QStringList{"void f() {", "\t/**", "\t"}
+            << 2 << -1 << "input" << "*"
+            << QStringList{"void f() {", "\t/**", "\t *"}
+            << QStringList{"void f() {", "\t/**", "\t*"};
+    QTest::newRow("insert multiline text")
+            << QStringList{"void f() {", "\t", "}"}
+            << 1 << 1 << "insert" << "if (x) {\nint y = 1;\n}\nint z = 2;"
+            << QStringList{"void f() {", "\tif (x) {", "\t\tint y = 1;", "\t}", "\tint z = 2;", "}"}
+            << QStringList{"void f() {", "\tif (x) {", "int y = 1;", "}", "int z = 2;", "}"};
+}
+
+void TestQSyneditCpp::test_auto_indent_edit_matrix()
+{
+    QFETCH(QStringList, initial);
+    QFETCH(int, line);
+    QFETCH(int, ch);
+    QFETCH(QString, operation);
+    QFETCH(QString, input);
+    QFETCH(QStringList, indented);
+    QFETCH(QStringList, plain);
+
+    for (bool autoIndent : {false, true}) {
+        EditorOptions options = mDefaultOptions;
+        options.setFlag(EditorOption::AutoIndent, autoIndent);
+        mEdit->setOptions(options);
+        mEdit->loadContent(initial);
+        int caretCh = ch >= 0 ? ch : mEdit->lineText(line).length();
+        mEdit->setCaretPos(CharPos{caretCh, line});
+        if (operation == "break") {
+            QTest::keyPress(mEdit.get(), Qt::Key_Return);
+        } else if (operation == "input") {
+            QCOMPARE(input.length(), 1);
+            QTest::keyPress(mEdit.get(), input.at(0).toLatin1());
+        } else if (operation == "insert") {
+            mEdit->setSelText(input);
+        } else {
+            QFAIL("Unknown edit operation");
+        }
+        const QStringList &expected = autoIndent ? indented : plain;
+        QVERIFY2(mEdit->content() == expected,
+                 qPrintable(QString("autoIndent=%1\nactual:\n%2")
+                            .arg(autoIndent).arg(mEdit->content().join("\n"))));
+        mEdit->undo();
+        QCOMPARE(mEdit->content(), initial);
+        mEdit->redo();
+        QCOMPARE(mEdit->content(), expected);
+    }
+}
+
 void TestQSyneditCpp::test_shared_document_basics()
 {
     mEdit->loadContent({"int main() {", "    return 0;", "}"});

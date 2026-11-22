@@ -733,14 +733,22 @@ void Editor::keyPressEvent(QKeyEvent *event)
         return;
     case Qt::Key_Delete:
         // remove completed character
-        if (!selAvail()) {
+        if (!selAvail() && mEditorSettings->removeSymbolPairs()) {
+            beginEditing();
             undoSymbolCompletion(caretPos());
+            processCommand(QSynedit::EditCommand::DeleteChar);
+            endEditing();
+            handled = true;
         }
         return;
     case Qt::Key_Backspace:
         // remove completed character
-        if (!selAvail()) {
+        if (!selAvail() && mEditorSettings->removeSymbolPairs()) {
+            beginEditing();
             undoSymbolCompletion(CharPos{caretCh()-1,caretLine()});
+            processCommand(QSynedit::EditCommand::DeleteLastChar);
+            endEditing();
+            handled = true;
         }
         return;
     }
