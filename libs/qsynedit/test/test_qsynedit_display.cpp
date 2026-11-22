@@ -3329,8 +3329,10 @@ void TestQSyneditDisplay::test_shared_document_edit_indexes()
     mEdit->properSetLine(1, QString(120, 'y'), false);
     mEdit->properSetLine(2, QString(140, 'z'), true);
     mEdit->document()->endUpdate();
-    QCOMPARE(mEdit->mWrapJobState->jobsInFlight, 1);
-    QCOMPARE(second->mWrapJobState->jobsInFlight, 1);
+    QCOMPARE(mEdit->mWrapJobState->latestContentVersion,
+             mEdit->document()->contentVersion());
+    QCOMPARE(second->mWrapJobState->latestContentVersion,
+             second->document()->contentVersion());
     QVERIFY(!mEdit->mWrapMissingSeqs.isEmpty());
     QVERIFY(!second->mWrapMissingSeqs.isEmpty());
     drainLayoutJobs();

@@ -298,7 +298,6 @@ private:
     void stretchMessagesPanel(bool open);
     void stretchExplorerPanel(bool open);
     void prepareDebugger();
-    void doAutoSave(Editor *e);
     void createCustomActions();
     void initToolButtons();
     void buildContextMenus();
@@ -365,7 +364,8 @@ private slots:
     void updateVCSActions();
 #endif
     void invalidateProjectProxyModel();
-    void onAutoSaveTimeout();
+    void onAutoSaveFinished(int count);
+    void onAutoSaveError(Editor *editor, const QString &filename, const QString &reason);
     void onFileChanged(const QString &path);
     void onDirChanged(const QString &path);
     void onFilesViewPathChanged();
@@ -979,8 +979,6 @@ private:
 
     QMap<QWidget*, PTabWidgetInfo> mTabInfosData;
     QMap<QWidget*, PTabWidgetInfo> mTabMessagesData;
-
-    QTimer mAutoSaveTimer;
 
     CaretList mCaretList;
 

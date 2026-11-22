@@ -501,6 +501,7 @@ private:
 
     friend class TestEditorDisplay;
     friend class TestEditorSymbolCompletion;
+    friend class TestEditorGeneral;
     QMap<QString,StatementKind> mIdCache;
     qint64 mLastFocusOutTime;
 

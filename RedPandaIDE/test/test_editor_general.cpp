@@ -6,6 +6,7 @@
 #include "src/editor/editor.h"
 #include "src/parser/cppparser.h"
 #include "src/settings/codecompletionsettings.h"
+#include "src/settings/editorsettings.h"
 #include "test_editor_general.h"
 
 void TestEditorGeneral::test_syntax_check_target_editor()
@@ -155,4 +156,95 @@ void TestEditorGeneral::test_hide_stops_parsing_and_allows_reparse_after_show()
     QTRY_VERIFY(!parser->parsing());
     QVERIFY(parser->findStatement("value"));
     mEditor->hide();
+}
+
+
+void TestEditorGeneral::test_auto_backup_lifecycle()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString filename = tmp.filePath("document.cpp");
+    mEditor->setFilename(filename);
+    mEditor->loadContent("int original;");
+    mEditor->setIsNew(false);
+    mEditorSettings->setEnableEditTempBackup(true);
+    mEditor->setAutoBackupEnabled(true);
+    mEditor->initAutoBackup();
+
+    QVERIFY(mEditor->mBackupFile != nullptr);
+    QVERIFY(mEditor->mBackupFile->isOpen());
+    QVERIFY(mEditor->mAutoBackupTimer.isActive());
+    QString backupName = mEditor->mBackupFile->fileName();
+    QVERIFY(backupName.startsWith(filename + "."));
+    QVERIFY(backupName.endsWith(".editbackup"));
+    QFile backup(backupName);
+    QVERIFY(backup.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(backup.readAll()), QString("int original;"));
+    backup.close();
+
+    mEditor->setAutoBackupEnabled(true);
+    mEditor->selectAll();
+    mEditor->setSelText("int changed;");
+    mEditor->saveAutoBackup();
+    QVERIFY(backup.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(backup.readAll()), QString("int changed;"));
+    backup.close();
+
+    mEditor->save();
+    QVERIFY(mEditor->mBackupFile == nullptr);
+    QVERIFY(!QFile::exists(backupName));
+    QVERIFY(!mEditor->mAutoBackupTimer.isActive());
+}
+
+void TestEditorGeneral::test_auto_backup_disabled_and_read_only()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    mEditor->setFilename(tmp.filePath("document.cpp"));
+    mEditor->loadContent("int value;");
+
+    mEditor->setAutoBackupEnabled(false);
+    mEditorSettings->setEnableEditTempBackup(false);
+    mEditor->initAutoBackup();
+    QVERIFY(mEditor->mBackupFile == nullptr);
+    QVERIFY(!mEditor->mAutoBackupTimer.isActive());
+
+    mEditorSettings->setEnableEditTempBackup(true);
+    mEditor->setReadOnly(true);
+    mEditor->initAutoBackup();
+    QVERIFY(mEditor->mBackupFile == nullptr);
+    QVERIFY(!mEditor->mAutoBackupTimer.isActive());
+
+    mEditor->setReadOnly(false);
+    mEditor->setAutoBackupEnabled(true);
+    mEditor->initAutoBackup();
+    QVERIFY(mEditor->mBackupFile != nullptr);
+    QVERIFY(mEditor->mAutoBackupTimer.isActive());
+    mEditor->cleanAutoBackup();
+}
+
+void TestEditorGeneral::test_auto_backup_throttles_recent_changes()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString filename = tmp.filePath("document.cpp");
+    mEditor->setFilename(filename);
+    mEditor->loadContent("int original;");
+    mEditorSettings->setEnableEditTempBackup(true);
+    mEditor->setAutoBackupEnabled(true);
+    mEditor->initAutoBackup();
+    QVERIFY(mEditor->mBackupFile != nullptr);
+    QString backupName = mEditor->mBackupFile->fileName();
+    mEditor->setAutoBackupEnabled(true);
+
+    mEditor->selectAll();
+    mEditor->setSelText("int recentChange;");
+    mEditor->onAutoBackupTimer();
+
+    QFile backup(backupName);
+    QVERIFY(backup.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(backup.readAll()), QString("int original;"));
+    backup.close();
+    mEditor->cleanAutoBackup();
+    QVERIFY(!QFile::exists(backupName));
 }

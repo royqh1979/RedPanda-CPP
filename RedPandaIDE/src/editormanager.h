@@ -21,6 +21,9 @@
 #include <QSplitter>
 #include <QWidget>
 #include <QRecursiveMutex>
+#include <QDateTime>
+#include <QTimer>
+#include <functional>
 #include "utils.h"
 #include "editor/editor.h"
 #include "reformatter/astyleformatter.h"
@@ -121,10 +124,21 @@ public:
 
     std::unique_ptr<BaseReformatter> createReformatterForEditor(Editor *);
 
+    using AutoSaveCondition = std::function<bool()>;
+    using AutoSaveClock = std::function<QDateTime()>;
+    void resetAutoSaveTimer();
+    void setAutoSaveEnvironment(EditorSettings *settings,
+                                AutoSaveCondition allowed,
+                                AutoSaveCondition hasProject,
+                                AutoSaveClock now);
+
 signals:
     void editorClosed();
     void editorOpenned();
+    void autoSaveFinished(int count);
+    void autoSaveError(Editor *editor, const QString &filename, const QString &reason);
 private:
+    void doAutoSave(Editor *editor);
     PCppParser sharedParser(QHash<ParserLanguage,std::weak_ptr<CppParser>> & sharedParsers, ParserLanguage language);
     void resetSharedParsers(QHash<ParserLanguage,std::weak_ptr<CppParser>> & sharedParsers);
 
@@ -161,7 +175,9 @@ private slots:
     void onEditorFileEncodingChanged(Editor *e);
     void onEditorEncodingChanged(Editor *e);
     void onEditorFileTypeChanged(Editor *e);
+    void onAutoSaveTimeout();
 private:
+    friend class TestEditorManagerAutoSave;
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;
     QTabWidget *mRightPageWidget;
@@ -173,6 +189,11 @@ private:
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForRight;
     QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsersForLeft;
     mutable QRecursiveMutex mMutex;
+    QTimer mAutoSaveTimer;
+    EditorSettings *mAutoSaveSettings;
+    AutoSaveCondition mAutoSaveAllowed;
+    AutoSaveCondition mAutoSaveHasProject;
+    AutoSaveClock mAutoSaveNow;
 };
 
 #endif // EDITORLIST_H

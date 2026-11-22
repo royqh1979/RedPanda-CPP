@@ -286,8 +286,15 @@ target_qt_plain_cpp(test-editor
     src/reformatter/basereformatter
     )
 
+target_sources(test-editor PRIVATE test/test_editor_manager_stubs.cpp)
+
 target_moc_classes(test-editor
     src/editor/editor
+    src/editormanager
+    src/caretlist
+    src/reformatter/astyleformatter
+    src/settings/codeformattersettings
+    src/settings/environmentsettings
 
     src/widgets/bookmarkmodel
     src/widgets/codecompletionlistview
@@ -303,6 +310,7 @@ target_moc_classes(test-editor
     test/test_editor_base
     test/test_editor_display
     test/test_editor_general
+    test/test_editor_auto_save
     test/test_editor_symbol_completion
 )
 target_include_directories(test-editor PRIVATE
