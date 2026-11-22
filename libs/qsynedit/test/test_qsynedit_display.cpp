@@ -60,7 +60,8 @@ public:
                 preparedTexts.append(token.text);
                 if (token.tokenType == TokenType::Identifier)
                     token.foreground = identifierColor;
-                if (token.text == "...}" || token.text == "...") {
+                if (token.text == "...}" || token.text == "..."
+                        || token.text == "...*/") {
                     foldPlaceholderSeen = true;
                     foldPlaceholderType = token.tokenType;
                     foldPlaceholderColor = token.foreground;
@@ -394,6 +395,277 @@ void TestQSyneditDisplay::test_fold_placeholder_painting()
     QCOMPARE(edit.foldPlaceholderColor, symbolColor);
     QCOMPARE(image.pixelColor(edit.width() - 20, edit.textHeight() - 1),
              backgroundColor);
+}
+
+void TestQSyneditDisplay::test_comment_fold_placeholder_painting()
+{
+    PaintPreparationEdit edit;
+    edit.setSyntaxer(std::make_shared<CppSyntaxer>());
+    edit.resize(800, 600);
+    edit.loadContent({"/* comment", " * text", " */", "int value;"});
+    QColor commentColor(17, 83, 161);
+    edit.syntaxer()->commentAttribute()->setForeground(commentColor);
+    QVERIFY(edit.collapse(0, 2));
+    edit.setCaretPos(CharPos{0, 3});
+    edit.grab();
+
+    QVERIFY(edit.foldPlaceholderSeen);
+    QVERIFY(edit.preparedTexts.contains("...*/"));
+    QCOMPARE(edit.foldPlaceholderType, TokenType::Symbol);
+    QCOMPARE(edit.foldPlaceholderColor, commentColor);
+}
+
+void TestQSyneditDisplay::test_comment_fold_ranges()
+{
+    mEdit->loadContent({
+        "/* first",
+        " * { ignored }",
+        " */",
+        "/** doc",
+        " * text",
+        " */",
+        "/* single */",
+        "void f() {",
+        "    /* inner",
+        "     * }",
+        "     */",
+        "}"
+    });
+    PCodeBlock first = mEdit->foldStartAtLine(0);
+    QVERIFY(first);
+    QCOMPARE(first->kind, CodeBlockKind::Comment);
+    QCOMPARE(first->fromLine, 0);
+    QCOMPARE(first->toLine, 2);
+    QCOMPARE(first->fromCh, 0);
+    QCOMPARE(first->toCh, 1);
+
+    PCodeBlock docstring = mEdit->foldStartAtLine(3);
+    QVERIFY(docstring);
+    QCOMPARE(docstring->kind, CodeBlockKind::Comment);
+    QCOMPARE(docstring->toLine, 5);
+    QVERIFY(!mEdit->foldStartAtLine(6));
+
+    PCodeBlock function = mEdit->foldStartAtLine(7);
+    QVERIFY(function);
+    QCOMPARE(function->kind, CodeBlockKind::Code);
+    QCOMPARE(function->toLine, 11);
+    QCOMPARE(mEdit->subBlockCounts(7, 11), 1);
+    PCodeBlock inner = mEdit->foldStartAtLine(8);
+    QVERIFY(inner);
+    QCOMPARE(inner->kind, CodeBlockKind::Comment);
+    QCOMPARE(inner->toLine, 10);
+    QVERIFY(inner->parent.lock() == function);
+
+    mEdit->loadContent({"/* open", "text"});
+    PCodeBlock unfinished = mEdit->foldStartAtLine(0);
+    QVERIFY(unfinished);
+    QCOMPARE(unfinished->kind, CodeBlockKind::Comment);
+    QVERIFY(unfinished->unfinished);
+    QCOMPARE(unfinished->toLine, 1);
+    QVERIFY(mEdit->collapse(0, 1));
+    QCOMPARE(mEdit->getDisplayStringAtLine(0), QString("/* open...*/"));
+
+    mEdit->properSetLine(1, "text */", true);
+    unfinished = mEdit->foldStartAtLine(0);
+    QVERIFY(unfinished);
+    QVERIFY(!unfinished->unfinished);
+    QCOMPARE(unfinished->toLine, 1);
+    QCOMPARE(unfinished->toCh, 5);
+}
+
+void TestQSyneditDisplay::test_comment_fold_close_open_same_line()
+{
+    mEdit->loadContent({
+        "/* first",
+        "*/ int value; /* second",
+        "continued",
+        "*/"
+    });
+    PCodeBlock first = mEdit->foldStartAtLine(0);
+    PCodeBlock second = mEdit->foldStartAtLine(1);
+    QVERIFY(first);
+    QVERIFY(second);
+    QCOMPARE(first->kind, CodeBlockKind::Comment);
+    QCOMPARE(second->kind, CodeBlockKind::Comment);
+    QCOMPARE(first->toLine, 1);
+    QCOMPARE(first->toCh, 0);
+    QCOMPARE(second->fromCh, mEdit->lineText(1).indexOf("/*"));
+    QCOMPARE(second->toLine, 3);
+    QCOMPARE(second->toCh, 0);
+    QVERIFY(first->parent.lock() == nullptr);
+    QVERIFY(second->parent.lock() == nullptr);
+
+    QVERIFY(mEdit->collapse(0, 1));
+    QVERIFY(mEdit->collapse(1, 3));
+    QVERIFY(mEdit->isCollapsed(0, 1));
+    QVERIFY(mEdit->isCollapsed(1, 3));
+}
+
+void TestQSyneditDisplay::test_comment_fold_end_line_suffix_visibility()
+{
+    const QStringList suffixes{"", " ", "\t", ";", " int value;"};
+    for (const QString &suffix : suffixes) {
+        mEdit->loadContent({"/* comment", " * text", " */" + suffix});
+        QVERIFY(mEdit->collapse(0, 2));
+        PCodeBlock block = mEdit->foldStartAtLine(0);
+        QVERIFY(block);
+        QCOMPARE(block->kind, CodeBlockKind::Comment);
+        QCOMPARE(block->toCh, 1);
+        QCOMPARE(block->endDelimiterLength(), 2);
+        bool endLineVisible = !suffix.isEmpty();
+        QCOMPARE(mEdit->foldEndLineVisible(block), endLineVisible);
+        QVERIFY(mEdit->mRowIndex.isHidden(1));
+        QCOMPARE(mEdit->mRowIndex.isHidden(2), !endLineVisible);
+        QCOMPARE(mEdit->getDisplayStringAtLine(0),
+                 QString("/* comment") + (endLineVisible ? "..." : "...*/"));
+        if (endLineVisible)
+            QCOMPARE(mEdit->lineToRow(2), mEdit->lineToRow(0) + 1);
+    }
+
+    mEdit->loadContent({"/* comment", " */ tail"});
+    QVERIFY(mEdit->collapse(0, 1));
+    QVERIFY(!mEdit->foldHasHiddenLines(mEdit->foldStartAtLine(0)));
+    QCOMPARE(mEdit->getDisplayStringAtLine(0), QString("/* comment"));
+}
+
+void TestQSyneditDisplay::test_comment_fold_navigation()
+{
+    mEdit->loadContent({"/* comment", " * text", " */", "int value;"});
+    QVERIFY(mEdit->collapse(0, 2));
+    int lineLength = mEdit->lineText(0).length();
+    CharPos virtualEnd{lineLength + QString("...*/").length(), 0};
+    mEdit->setCaretPos(CharPos{lineLength, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QCOMPARE(mEdit->caretPos(), virtualEnd);
+    QVERIFY(mEdit->validCaretPos(mEdit->caretPos()));
+    QVERIFY(!mEdit->validInDoc(mEdit->caretPos()));
+    QCOMPARE(mEdit->displayToBufferPos(mEdit->bufferToDisplayPos(virtualEnd)),
+             CharPos(lineLength, 0));
+    QCOMPARE(mEdit->documentPositionForFoldCaret(virtualEnd), CharPos(3, 2));
+
+    mEdit->setCaretPos(CharPos{0, 3});
+    QTest::keyClick(mEdit.get(), Qt::Key_Left);
+    QCOMPARE(mEdit->caretPos(), virtualEnd);
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QCOMPARE(mEdit->caretPos(), CharPos(0, 3));
+
+    mEdit->setCaretPos(CharPos{lineLength, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(2), QString(" *"));
+    QCOMPARE(mEdit->caretPos(), CharPos(2, 2));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->undo();
+    QCOMPARE(mEdit->lineText(2), QString(" */"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->redo();
+    QCOMPARE(mEdit->lineText(2), QString(" *"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+}
+
+void TestQSyneditDisplay::test_comment_fold_edit_rules()
+{
+    mEdit->loadContent({
+        "int before = 0; /* comment", " * text", " */ tail", "int after;"
+    });
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->setCaretPos(CharPos{0, 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(0), QString("xint before = 0; /* comment"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QVERIFY(mEdit->isCollapsed(0, 2));
+
+    mEdit->setCaretPos(CharPos{mEdit->lineText(2).length(), 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(2), QString(" */ tailx"));
+    QVERIFY(mEdit->isCollapsed(0, 2));
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QVERIFY(mEdit->isCollapsed(0, 2));
+
+    mEdit->setCaretAndSelection(CharPos{3, 2}, CharPos{3, 2},
+                                CharPos{mEdit->lineText(2).length(), 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_Backspace);
+    QCOMPARE(mEdit->lineText(2), QString(" */"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->undo();
+    QCOMPARE(mEdit->lineText(2), QString(" */ tail"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->redo();
+    QCOMPARE(mEdit->lineText(2), QString(" */"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+
+    mEdit->loadContent({"/* comment", " * text", " */", "int after;"});
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(1).length(), 1});
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(1), QString(" * textx"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->undo();
+    QCOMPARE(mEdit->lineText(1), QString(" * text"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    mEdit->redo();
+    QCOMPARE(mEdit->lineText(1), QString(" * textx"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+
+    mEdit->loadContent({"/* comment", " * text", " */", "int after;"});
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->setCaretPos(CharPos{mEdit->lineText(0).length(), 0});
+    QTest::keyClick(mEdit.get(), Qt::Key_Right);
+    QTest::keyClick(mEdit.get(), Qt::Key_X);
+    QCOMPARE(mEdit->lineText(2), QString(" */x"));
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+}
+
+void TestQSyneditDisplay::test_comment_fold_incremental_rescan()
+{
+    mEdit->loadContent({"void f() {", "    work();", "}"});
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->beginEditing();
+    mEdit->properSetLine(0, "/* comment", true);
+    mEdit->properSetLine(2, " */", true);
+    mEdit->endEditing();
+
+    PCodeBlock block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QCOMPARE(block->kind, CodeBlockKind::Comment);
+    QCOMPARE(block->toLine, 2);
+    QCOMPARE(block->toCh, 1);
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    auto verifyFullRescan = [&] {
+        QList<std::tuple<int, int, bool>> partial = mEdit->foldRangesForTest();
+        mEdit->fullRescanCodeBlocksForTest();
+        QCOMPARE(mEdit->foldRangesForTest(), partial);
+    };
+    verifyFullRescan();
+
+    mEdit->properSetLine(2, " */ trailing", true);
+    block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QCOMPARE(block->kind, CodeBlockKind::Comment);
+    QVERIFY(mEdit->foldEndLineVisible(block));
+    verifyFullRescan();
+
+    mEdit->properSetLine(0, "int value;", true);
+    QVERIFY(!mEdit->foldStartAtLine(0));
+    verifyFullRescan();
+}
+
+void TestQSyneditDisplay::test_comment_fold_shared_document_views()
+{
+    mEdit->loadContent({"/* comment", " * text", " */", "int value;"});
+    QSynEdit other;
+    other.setSyntaxer(std::make_shared<CppSyntaxer>());
+    other.setDocument(mEdit->document());
+    QVERIFY(mEdit->collapse(0, 2));
+    QVERIFY(!other.isCollapsed(0, 2));
+    QVERIFY(mEdit->foldHidesLine(1));
+    QVERIFY(!other.foldHidesLine(1));
+
+    mEdit->properSetLine(1, " * changed", true);
+    QVERIFY(!mEdit->isCollapsed(0, 2));
+    QVERIFY(!other.isCollapsed(0, 2));
+    QCOMPARE(other.lineText(1), QString(" * changed"));
 }
 
 void TestQSyneditDisplay::test_fold_placeholder_navigation()

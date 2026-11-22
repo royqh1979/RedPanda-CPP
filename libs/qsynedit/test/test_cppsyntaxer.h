@@ -30,6 +30,8 @@ private slots:
 
     void test_cpp_style_comments();
     void test_ansi_c_comments();
+    void test_block_comment_fold_events();
+    void test_block_comment_fold_ignores_non_comments();
     void test_directives_and_identifier_classification();
 
 #ifdef QSYNEDIT_PROFILE_TESTS

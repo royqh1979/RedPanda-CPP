@@ -33,6 +33,32 @@ private:
     QString mContent;
 };
 
+class PaintInspectionEditor : public Editor
+{
+public:
+    PaintInspectionEditor()
+    {
+        setPaintHighlightTokensPreparer(
+                    [this](int line, QSynedit::PaintHighlightTokenList &tokens) {
+            preparePaintHighlightTokens(line, tokens);
+            if (line == mInspectedLine)
+                capturedTokens = tokens;
+        });
+    }
+
+    void inspectLine(int line)
+    {
+        mInspectedLine = line;
+        capturedTokens.clear();
+        grab();
+    }
+
+    QSynedit::PaintHighlightTokenList capturedTokens;
+
+private:
+    int mInspectedLine = -1;
+};
+
 }
 
 void TestEditorDisplay::test_fold_marks_paint()
@@ -56,6 +82,57 @@ void TestEditorDisplay::test_fold_marks_paint()
         for (int y = 2; y < h - 2; y++)
             colors.insert(image.pixel(x, y));
     QVERIFY(colors.count() >= 2);
+}
+
+void TestEditorDisplay::test_comment_fold_placeholder_uses_comment_color()
+{
+    auto inspectionEditor = std::make_shared<PaintInspectionEditor>();
+    mEditor = inspectionEditor;
+    mEditor->setEditorSettings(mEditorSettings.get());
+    mEditor->setColorManager(mColorManager.get());
+    auto syntaxer = std::make_shared<QSynedit::CppSyntaxer>();
+    mEditor->setSyntaxer(syntaxer);
+    mEditor->applySettings();
+    mEditor->setCppParser(std::make_shared<CppParser>());
+    mEditor->resize(600, 400);
+    const QColor symbolColor(Qt::blue);
+    const QColor commentColor(Qt::darkGreen);
+    const QColor errorColor(Qt::red);
+    auto setTestColors = [&] {
+        syntaxer->symbolAttribute()->setForeground(symbolColor);
+        syntaxer->invalidAttribute()->setForeground(errorColor);
+        syntaxer->commentAttribute()->setForeground(commentColor);
+        mEditor->setBackgroundColor(Qt::white);
+    };
+    auto verifyPlaceholder = [&](int line) {
+        inspectionEditor->inspectLine(line);
+        bool found = false;
+        for (const QSynedit::PaintHighlightToken &token : inspectionEditor->capturedTokens) {
+            if (token.text != "...*/")
+                continue;
+            found = true;
+            QCOMPARE(token.tokenType, QSynedit::TokenType::Symbol);
+            QCOMPARE(token.foreground, commentColor);
+            QVERIFY(token.foreground != errorColor);
+        }
+        QVERIFY(found);
+    };
+
+    setTestColors();
+    mEditor->loadContent({"/* comment", " * text", " */", "int value;"});
+    QVERIFY(mEditor->collapse(0, 2));
+    verifyPlaceholder(0);
+
+    QString fileName = QFINDTESTDATA("../../libs/qsynedit/test/resources/miniaudio.h");
+    QVERIFY(!fileName.isEmpty());
+    QByteArray encoding;
+    mEditor->setFilename(fileName);
+    mEditor->loadFromFile(fileName, ENCODING_AUTO_DETECT, encoding);
+    setTestColors();
+    QVERIFY(mEditor->collapse(6543, 6548));
+    mEditor->setCaretPos(QSynedit::CharPos{0, 6543});
+    mEditor->setTopLineSegment(6543, 0);
+    verifyPlaceholder(6543);
 }
 
 void TestEditorDisplay::test_reformat_restores_view_state()

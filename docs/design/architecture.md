@@ -28,6 +28,7 @@
 - `qsynedit/qsynedit-pending-layout-incremental-design.md` — pending 行集合增量维护。
 - `qsynedit/qsynedit-bulk-setline-layout-design.md` — 大批量 SetLine 布局。
 - `qsynedit/qsynedit-fold-editing-design.md` — 折叠显示、光标与编辑规则。
+- `qsynedit/qsynedit-comment-fold-design.md` — 多行块注释折叠及有序注释事件。
 - `qsynedit/qsynedit-bulk-fold-delete-design.md` — 折叠块批量删除。
 - `qsynedit/qsynedit-delete-reparse-design.md` — 删除后的重解析范围。
 - `qsynedit/qsynedit-bulk-insert-deferred-design.md` — 批量插入 deferred 重解析。

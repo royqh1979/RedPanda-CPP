@@ -20,6 +20,7 @@
 #include <vector>
 #include <memory>
 #include <QVector>
+#include "types.h"
 
 namespace QSynedit {
 struct CodeFoldingOptions {
@@ -39,13 +40,15 @@ typedef std::shared_ptr<CodeBlock> PCodeBlock;
 // A single fold
 class CodeBlock {
 public:
-    explicit CodeBlock(PCodeBlock parentBlock, int from, int to);
+    explicit CodeBlock(PCodeBlock parentBlock, int from, int to, CodeBlockKind kind);
     CodeBlock(const CodeBlock&)=delete;
     CodeBlock& operator=(const CodeBlock&)=delete;
     int fromLine; // Beginning line
     int toLine; // End line (count-1 while unfinished)
     int fromCh = -1;
     int toCh = -1;
+    CodeBlockKind kind;
+    int endDelimiterLength() const { return kind == CodeBlockKind::Comment ? 2 : 1; }
     bool hadEndLineSuffix = false;
     QVector<PCodeBlock> subBlocks; // Sub fold ranges
     bool collapsed; // Is collapsed?

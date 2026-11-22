@@ -546,8 +546,8 @@ public:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     /**
      * @brief whether the stored syntax state of `line` carries
-     * code-block pairing deltas (blockStarted/blockEnded). Unparsed
-     * lines (null state) are treated conservatively as carrying deltas.
+     * block-pairing deltas or delimiter events. Unparsed lines (null state)
+     * are treated conservatively as carrying deltas.
      */
     bool lineHasCodeBlockDelta(int line) const;
     void loadUTF16BOMFile(QFile& file);

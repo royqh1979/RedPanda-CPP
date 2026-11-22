@@ -5833,7 +5833,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->caretPos(), CharPos(0,1));
     QCOMPARE(mEdit->selBegin(), CharPos(0,1));
     QCOMPARE(mEdit->selEnd(), CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({1,1}));
     QCOMPARE(mInsertLineCounts, QList<int>({1,1}));
     QCOMPARE(mDeleteStartLines, QList<int>({}));
     QCOMPARE(mDeleteLineCounts, QList<int>({}));
@@ -5863,7 +5863,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,4,4}));
     QCOMPARE(mReparseCounts, QList<int>({1,1,1}));
-    QCOMPARE(mEdit->codeBlockCount(),1);
+    QCOMPARE(mEdit->codeBlockCount(),2);
     QVERIFY(mEdit->hasCodeBlock(3,5));
 
     mEdit->setCaretPos(CharPos{3,6});
@@ -5921,7 +5921,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
-    QCOMPARE(mEdit->codeBlockCount(),0);
+    QCOMPARE(mEdit->codeBlockCount(),1);
 
     clearSignalDatas();
     mEdit->undo();
@@ -5931,8 +5931,8 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->selEnd(), CharPos(3,0));
     QCOMPARE(mInsertStartLines, QList<int>({}));
     QCOMPARE(mInsertLineCounts, QList<int>({}));
-    QCOMPARE(mDeleteStartLines, QList<int>({1,0}));
-    QCOMPARE(mDeleteLineCounts, QList<int>({1,1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({1}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<int>({
@@ -5951,7 +5951,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->caretPos(), CharPos(0,1));
     QCOMPARE(mEdit->selBegin(), CharPos(0,1));
     QCOMPARE(mEdit->selEnd(), CharPos(0,1));
-    QCOMPARE(mInsertStartLines, QList<int>({0,1}));
+    QCOMPARE(mInsertStartLines, QList<int>({1,1}));
     QCOMPARE(mInsertLineCounts, QList<int>({1,1}));
     QCOMPARE(mDeleteStartLines, QList<int>({}));
     QCOMPARE(mDeleteLineCounts, QList<int>({}));
@@ -5980,7 +5980,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,4,3,4}));
     QCOMPARE(mReparseCounts, QList<int>({1,1,1,1}));
-    QCOMPARE(mEdit->codeBlockCount(),1);
+    QCOMPARE(mEdit->codeBlockCount(),2);
     QVERIFY(mEdit->hasCodeBlock(3,5));
 
     clearSignalDatas();
@@ -6038,7 +6038,7 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
              }));
     QCOMPARE(mReparseStarts, QList<int>({3,3}));
     QCOMPARE(mReparseCounts, QList<int>({1,1}));
-    QCOMPARE(mEdit->codeBlockCount(),0);
+    QCOMPARE(mEdit->codeBlockCount(),1);
 
     clearSignalDatas();
     mEdit->undo();
@@ -6048,8 +6048,8 @@ void QSynedit::TestQSyneditCpp::test_break_lines()
     QCOMPARE(mEdit->selEnd(), CharPos(3,0));
     QCOMPARE(mInsertStartLines, QList<int>({}));
     QCOMPARE(mInsertLineCounts, QList<int>({}));
-    QCOMPARE(mDeleteStartLines, QList<int>({1,0}));
-    QCOMPARE(mDeleteLineCounts, QList<int>({1,1}));
+    QCOMPARE(mDeleteStartLines, QList<int>({1}));
+    QCOMPARE(mDeleteLineCounts, QList<int>({2}));
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mStatusChanges,
              QList<int>({
