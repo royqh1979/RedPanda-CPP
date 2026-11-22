@@ -161,7 +161,7 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
 
     if (startLine == 0) {
         mSyntaxer->resetState();
-    } else if (PSyntaxState prevState = getSyntaxState(startLine-1)) {
+    } else if (PSyntaxState prevState = doGetSyntaxState(startLine-1)) {
         mSyntaxer->setState(prevState);
     } else {
         // the predecessor's state is unknown (e.g. content filled via the
@@ -171,16 +171,16 @@ int Document::reparseLines(int startLine, int endLine, bool parseToEnd)
     }
     int line = startLine;
     do {
-        mSyntaxer->setLine(line, getLine(line), getLineSeq(line));
+        mSyntaxer->setLine(line, doGetLine(line), doGetLineSeq(line));
         mSyntaxer->nextToEol();
         PSyntaxState state = mSyntaxer->getState();
-        PSyntaxState oldState = getSyntaxState(line);
+        PSyntaxState oldState = doGetSyntaxState(line);
         if (line >= endLine && state->equals(oldState) ) {
             break;
         }
         if (!mFoldStateDirty && !sameCodeBlockDeltas(oldState, state))
             mFoldStateDirty = true;
-        setSyntaxState(line, state);
+        doSetSyntaxState(line, state);
         line++;
     } while (line < maxLine);
     // `line` is the stabilization line. When the reparse converged there
@@ -288,9 +288,14 @@ QString Document::lineBreak() const
 PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
+    return doGetSyntaxState(line);
+}
+
+PSyntaxState Document::doGetSyntaxState(int line) const
+{
     // Crash Prevention (also hit by the background wrap-layout worker with a
     // stale line index; the guard below is the intended behavior)
-    if (line<0 || line>=count())
+    if (line<0 || line>=mLines.count())
         return std::make_shared<SyntaxState>();
     PSyntaxState state = mLines[line]->syntaxState();
     if (!state)
@@ -339,6 +344,11 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
 void Document::setSyntaxState(int line, const PSyntaxState& state)
 {
     QMutexLocker locker(&mMutex);
+    doSetSyntaxState(line, state);
+}
+
+void Document::doSetSyntaxState(int line, const PSyntaxState& state)
+{
     Q_ASSERT(line >=0 && line < mLines.count());
     mLines[line]->setSyntaxState(state);
 }
@@ -346,7 +356,12 @@ void Document::setSyntaxState(int line, const PSyntaxState& state)
 QString Document::getLine(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=count())
+    return doGetLine(line);
+}
+
+QString Document::doGetLine(int line) const
+{
+    if (line<0 || line>=mLines.count())
         return 0;
     return mLines[line]->lineText();
 }
@@ -354,7 +369,12 @@ QString Document::getLine(int line) const
 size_t Document::getLineSeq(int line) const
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>=count())
+    return doGetLineSeq(line);
+}
+
+size_t Document::doGetLineSeq(int line) const
+{
+    if (line<0 || line>=mLines.count())
         return 0;
     return mLines[line]->lineSeq();
 }

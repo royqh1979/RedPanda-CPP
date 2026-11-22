@@ -524,6 +524,10 @@ protected:
     void internalClear();
 private:
     void ensureHasLine();
+    QString doGetLine(int line) const;
+    size_t doGetLineSeq(int line) const;
+    PSyntaxState doGetSyntaxState(int line) const;
+    void doSetSyntaxState(int line, const PSyntaxState &state);
     void recordChange(DocumentChangeKind kind, int line, int count,
                       int startCh, int endCh, bool wholeLine, int moveLineCount = 1);
     // reparse lines [startLine, endLine) with mSyntaxer and store the states;
