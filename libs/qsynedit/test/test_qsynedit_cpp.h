@@ -148,6 +148,7 @@ private slots:
     void test_move_down_before_collapsed_block();
 
     void test_copy_paste_rawstring();
+    void test_paste_multiline_auto_indent();
     void test_cut_selection();
     void test_cut_current_line_without_selection();
     void test_paste_replaces_selection();

@@ -436,6 +436,9 @@ painter 经 `const Document *mDocument` 只读访问文档（编译期强制）�
   - **`putLine` 内容不变也重解析**：重解析的职责不只是解析新文本，还是"从本行起修复
     可能过期的语法状态"——`doDeleteText` 的协议就是删行（`parseToEnd=false`）后紧跟
     `setLine(..., true)` 收敛被平移行的状态，而那些行的文本可能没变。
+  - **deferred 空行插入是显式例外**：`insertLinesDeferred()` 只创建空行并记录 Insert，
+    不解析临时空文本。它仅用于随后会对每个插入行逐次调用 `putLine()` 的批处理（普通多行
+    粘贴）；正式内容和自动缩进仍逐行建立 state。普通 `insertLines()` 的解析语义不变。
   - `Document` 的 syntaxer **实例不对外暴露**：外部只有两个加锁接口——
     `createSyntaxerInstance()`（返回默认配置的克隆，线程局部扫描状态；编译线程
     WORDXY 路径 `getTokenAttr` 经此克隆）和 `syntaxerLanguage()`（返回语言值）。

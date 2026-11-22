@@ -93,6 +93,7 @@ private slots:
     void test_code_block_delta_lexical_context();
     void test_reparse();
     void test_delete_lines_reparse_scope();
+    void test_insert_lines_deferred_reparse();
     void test_gas_directive_state_cascade();
     void test_find_last_line_by_seq();
 

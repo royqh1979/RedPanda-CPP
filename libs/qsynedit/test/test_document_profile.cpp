@@ -59,7 +59,7 @@ void applyEdit(Document &document, const QString &operation, int startLine,
                              i == count - 1);
         }
     } else if (operation == QStringLiteral("insert")) {
-        document.insertLines(startLine, count, false);
+        document.insertLinesDeferred(startLine, count);
         for (int i = 0; i < count; ++i) {
             document.putLine(startLine + i, profileLine(foldBoundary, i),
                              i == count - 1);
@@ -72,7 +72,7 @@ void applyEdit(Document &document, const QString &operation, int startLine,
         document.deleteLines(startLine, count, true);
     } else if (operation == QStringLiteral("replace")) {
         document.deleteLines(startLine, count, false);
-        document.insertLines(startLine, count, false);
+        document.insertLinesDeferred(startLine, count);
         for (int i = 0; i < count; ++i) {
             document.putLine(startLine + i, profileLine(foldBoundary, i),
                              i == count - 1);

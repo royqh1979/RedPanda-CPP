@@ -1020,6 +1020,40 @@ void TestDocument::test_delete_lines_reparse_scope()
     QVERIFY(syntaxer->isCommentNotFinished(mDoc->getSyntaxState(3)));
 }
 
+void TestDocument::test_insert_lines_deferred_reparse()
+{
+    mDoc->setSyntaxer(std::make_shared<CppSyntaxer>());
+    mDoc->setContents({"int a;", "int b;"});
+    QSignalSpy reparseSpy(mDoc.get(), &Document::linesReparsed);
+
+    mDoc->insertLines(1, 2, false);
+    QCOMPARE(reparseSpy.count(), 1);
+    QList<QVariant> args = reparseSpy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), 1);
+    QCOMPARE(args.at(1).toInt(), 3);
+
+    mDoc->setContents({"int a;", "int b;"});
+    reparseSpy.clear();
+    int reparsedLines = 0;
+    QObject context;
+    connect(mDoc.get(), &Document::linesReparsed, &context,
+            [&](int firstLine, int endLine) {
+        reparsedLines += endLine - firstLine;
+    });
+    mDoc->beginUpdate();
+    mDoc->insertLinesDeferred(1, 3);
+    mDoc->putLine(1, "int one;", false);
+    mDoc->putLine(2, "", false);
+    mDoc->putLine(3, "int three;", true);
+    mDoc->endUpdate();
+
+    QCOMPARE(mDoc->content(), QStringList({"int a;", "int one;", "", "int three;", "int b;"}));
+    QCOMPARE(reparsedLines, 3);
+    QCOMPARE(reparseSpy.count(), 3);
+    for (int line = 0; line < mDoc->count(); ++line)
+        QVERIFY(mDoc->getSyntaxState(line));
+}
+
 void TestDocument::test_gas_directive_state_cascade()
 {
     mDoc->setSyntaxer(std::make_shared<GASSyntaxer>());

@@ -2707,7 +2707,7 @@ void TestQSyneditDisplay::test_miniaudio_edit_profile()
                                      i == count - 1);
             }
         } else if (operation == QStringLiteral("insert")) {
-            mEdit->properInsertLines(startLine, count, false);
+            mEdit->document()->insertLinesDeferred(startLine, count);
             for (int i = 0; i < count; ++i) {
                 mEdit->properSetLine(startLine + i, profileLine(foldBoundary, i),
                                      i == count - 1);
@@ -2720,7 +2720,7 @@ void TestQSyneditDisplay::test_miniaudio_edit_profile()
             mEdit->properDeleteLines(startLine, count, true);
         } else if (operation == QStringLiteral("replace")) {
             mEdit->properDeleteLines(startLine, count, false);
-            mEdit->properInsertLines(startLine, count, false);
+            mEdit->document()->insertLinesDeferred(startLine, count);
             for (int i = 0; i < count; ++i) {
                 mEdit->properSetLine(startLine + i, profileLine(foldBoundary, i),
                                      i == count - 1);

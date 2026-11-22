@@ -406,6 +406,9 @@ public:
     void moveLine(int from, int to, bool parseToEnd);
     void insertLine(int index, const QString& s, bool parseToEnd);
     void insertLines(int index, int numLines, bool parseToEnd);
+    // Only for a batch that subsequently calls putLine() for every inserted
+    // line: create the lines and record Insert without reparsing empty text.
+    void insertLinesDeferred(int index, int numLines);
 
     PDocumentLine findLineBySeq(size_t lineSeq) const;
 

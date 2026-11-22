@@ -7148,9 +7148,9 @@ void QSynEdit::doInsertTextByNormalMode(CharPos pos, const QStringList& text)
         } else
             str = leftSide + text[0];
         if (leftSide.trimmed().isEmpty()) {
-            properInsertLines(currentLine, text.length()-1, false);
+            mDocument->insertLinesDeferred(currentLine, text.length()-1);
         } else {
-            properInsertLines(currentLine+1, text.length()-1, false);
+            mDocument->insertLinesDeferred(currentLine+1, text.length()-1);
         }
         properSetLine(currentLine, str, false);
         // step2: insert remaining lines of text

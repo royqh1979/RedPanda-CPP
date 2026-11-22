@@ -759,6 +759,15 @@ void Document::putLine(int index, const QString &s, bool parseToEnd) {
 void Document::insertLines(int index, int numLines, bool parseToEnd)
 {
     QMutexLocker locker(&mMutex);
+    beginUpdate();
+    insertLinesDeferred(index, numLines);
+    reparseLines(index, index+numLines, parseToEnd);
+    endUpdate();
+}
+
+void Document::insertLinesDeferred(int index, int numLines)
+{
+    QMutexLocker locker(&mMutex);
     Q_ASSERT(index>=0 && index<=mLines.count());
     Q_ASSERT(numLines>0);
     beginUpdate();
@@ -770,7 +779,6 @@ void Document::insertLines(int index, int numLines, bool parseToEnd)
     }
     Q_ASSERT(mLineSeqIndice.count() == mLines.count());
     recordChange(DocumentChangeKind::Insert, index, numLines, 0, 0, false);
-    reparseLines(index, index+numLines, parseToEnd);
     endUpdate();
 }
 
