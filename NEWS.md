@@ -64,6 +64,7 @@ Red Panda C++ Version 3.6
   - fix: Keep editor backup files alive across edits and truncate them before rewriting.
   - fix: Continue automatic project-file saving after non-project editors.
   - enhancement: Speed up large problem-case output comparisons and report unreadable or invalid UTF-8 expected-output files.
+  - enhancement: Highlight mismatched problem-case lines with error-colored underlined text and matching line numbers.
   - fix: Preserve problem hints and portable case paths, and correctly import Free Problem Set case names and split CDATA content.
   - enhancement: Reduce HTML export size, preserve whitespace with standards-compliant markup, and improve RTF Unicode compatibility.
   - enhancement: Share line-based semantic highlighting between editor painting and HTML/RTF export, reducing repeated expression evaluation.

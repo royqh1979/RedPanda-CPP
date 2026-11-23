@@ -8737,6 +8737,8 @@ void MainWindow::doGeneratePreprocessed()
 
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
+    ui->txtProblemCaseOutput->clearLineNumberHighlight();
+    ui->txtProblemCaseExpected->clearLineNumberHighlight();
     if (problemCase->testState == ProblemCaseTestState::Failed) {
         int diffLine=-1;
         if (problemCase->firstDiffLine!=-1) {
@@ -8753,6 +8755,7 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
             if (ui->txtProblemCaseExpected->document()->blockCount()<=5000) {
                 ui->txtProblemCaseExpected->highlightLine(diffLine, mErrorColor);
             } else {
+                ui->txtProblemCaseExpected->highlightLineNumber(diffLine, mErrorColor);
                 ui->txtProblemCaseExpected->locateLine(diffLine);
             }
         } else {

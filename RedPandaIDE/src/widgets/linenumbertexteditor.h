@@ -44,6 +44,10 @@ public:
 
     void highlightLine(int line, QColor highlightColor);
 
+    void highlightLineNumber(int line, const QColor &highlightColor);
+
+    void clearLineNumberHighlight();
+
     void locateLine(int line);
 
 signals:
@@ -58,12 +62,17 @@ private slots:
     void updateLineNumberArea(const QRect &rect, int dy);
 private:
     void clearStartFormat();
+    void clearHighlightedLine();
 
 private:
     QWidget *lineNumberArea;
     QColor mLineNumberAreaForeground;
     QColor mLineNumberAreaBackground;
     QColor mLineNumberAreaCurrentLine;
+    int mHighlightedLine = -1;
+    QColor mHighlightedLineColor;
+
+    friend class TestWidgets;
 };
 
 class LineNumberArea : public QWidget
