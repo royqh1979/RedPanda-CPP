@@ -447,29 +447,28 @@ private:
 
 CppPreprocessor::CppPreprocessor()
 {
-    mPreprocessorHandlers.insert("if",[this](const QString& tokens){ handleIf(tokens);});
-    mPreprocessorHandlers.insert("ifdef",[this](const QString& tokens){ handleIfdef(tokens);});
-    mPreprocessorHandlers.insert("ifndef",[this](const QString& tokens){ handleIfndef(tokens);});
-    mPreprocessorHandlers.insert("elif",[this](const QString& tokens){ handleElif(tokens);});
-    mPreprocessorHandlers.insert("elifdef",[this](const QString& tokens){ handleElifdef(tokens);});
-    mPreprocessorHandlers.insert("elifndef",[this](const QString& tokens){ handleElifndef(tokens);});
-    mPreprocessorHandlers.insert("else",[this](const QString& tokens){ handleElse(tokens);});
-    mPreprocessorHandlers.insert("endif",[this](const QString& tokens){ handleEndif(tokens);});
-    mPreprocessorHandlers.insert("define",[this](const QString& tokens){ handleDefine(tokens);});
-    mPreprocessorHandlers.insert("undef",[this](const QString& tokens){ handleUndefine(tokens);});
-    mPreprocessorHandlers.insert("include",[this](const QString& tokens){ handleInclude(tokens);});
-    mPreprocessorHandlers.insert("include_next",[this](const QString& tokens){ handleIncludeNext(tokens);});
-    mPreprocessorHandlers.insert("pragma",[this](const QString& tokens){ handlePragma(tokens);});
+    mPreprocessorHandlers.insert("if",[this](Session &session, const QString& tokens){ handleIf(session, tokens);});
+    mPreprocessorHandlers.insert("ifdef",[this](Session &session, const QString& tokens){ handleIfdef(session, tokens);});
+    mPreprocessorHandlers.insert("ifndef",[this](Session &session, const QString& tokens){ handleIfndef(session, tokens);});
+    mPreprocessorHandlers.insert("elif",[this](Session &session, const QString& tokens){ handleElif(session, tokens);});
+    mPreprocessorHandlers.insert("elifdef",[this](Session &session, const QString& tokens){ handleElifdef(session, tokens);});
+    mPreprocessorHandlers.insert("elifndef",[this](Session &session, const QString& tokens){ handleElifndef(session, tokens);});
+    mPreprocessorHandlers.insert("else",[this](Session &session, const QString& tokens){ handleElse(session, tokens);});
+    mPreprocessorHandlers.insert("endif",[this](Session &session, const QString& tokens){ handleEndif(session, tokens);});
+    mPreprocessorHandlers.insert("define",[this](Session &session, const QString& tokens){ handleDefine(session, tokens);});
+    mPreprocessorHandlers.insert("undef",[this](Session &session, const QString& tokens){ handleUndefine(session, tokens);});
+    mPreprocessorHandlers.insert("include",[this](Session &session, const QString& tokens){ handleInclude(session, tokens);});
+    mPreprocessorHandlers.insert("include_next",[this](Session &session, const QString& tokens){ handleIncludeNext(session, tokens);});
+    mPreprocessorHandlers.insert("pragma",[this](Session &session, const QString& tokens){ handlePragma(session, tokens);});
     mParseLocal = true;
     mParseSystem = true;
 }
 
-void CppPreprocessor::clear()
+void CppPreprocessor::resetForReuse()
 {
-    clearTempResults();
-    mRegistry.clear();
+    mRegistry.clearAnalysisResults();
+    mProjectFiles.clear();
     mHardDefines.clear();
-    mSession.defines.clear();
     mProjectIncludePaths.clear();
     mIncludePathList.clear();
     mProjectIncludePathList.clear();
@@ -478,31 +477,23 @@ void CppPreprocessor::clear()
     mCompilerType = CppCompilerType::GCC;
 }
 
-void CppPreprocessor::clearTempResults()
+void CppPreprocessor::clearAnalysisResults()
 {
-    mSession.clear();
+    mRegistry.clearAnalysisResults();
 }
 
-void CppPreprocessor::clearParseResults()
+QString CppPreprocessor::boundaryAncestor(const Session &session, const QString &fileName, int occurrence) const
 {
-    clearTempResults();
-    mRegistry.fileInfos.clear();
-    mRegistry.replayRecords.clear();
-    mRegistry.pendingInvalidations.clear();
-}
-
-QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrence) const
-{
-    const QStringList ancestors = mSession.boundaryAncestors.value(fileName);
+    const QStringList ancestors = session.boundaryAncestors.value(fileName);
     if (occurrence < 0 || occurrence >= ancestors.count())
         return QString();
     return ancestors[occurrence];
 }
 
-QHash<QString,QString> CppPreprocessor::userMacroSnapshot() const
+QHash<QString,QString> CppPreprocessor::userMacroSnapshot(const Session &session) const
 {
     QHash<QString,QString> result;
-    for (auto it = mSession.defines.constBegin(); it != mSession.defines.constEnd(); ++it) {
+    for (auto it = session.defines.constBegin(); it != session.defines.constEnd(); ++it) {
         if (!it.value()->hardCoded)
             result.insert(it.key(), signatureOfDefine(it.value()));
     }
@@ -533,13 +524,13 @@ bool CppPreprocessor::isIncludeProtected(const QString &fileName) const
     return fileInfo && fileInfo->includeProtected();
 }
 
-PReplayRecord CppPreprocessor::replayRecordForFile(const QString &fileName) const
+PReplayRecord CppPreprocessor::replayRecordForFile(const Session &session, const QString &fileName) const
 {
     PReplayRecord record = findReplayRecord(fileName);
     if (record)
         return record;
-    if (!mSession.includeStack.isEmpty()) {
-        const QString &ancestor = mSession.includeStack.back()->boundaryAncestor;
+    if (!session.includeStack.isEmpty()) {
+        const QString &ancestor = session.includeStack.back()->boundaryAncestor;
         if (!ancestor.isEmpty())
             return findReplayRecord(ancestor);
     }
@@ -561,7 +552,18 @@ QSet<QString> CppPreprocessor::calculateAffectedFiles(const QString &fileName) c
 void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
 {
     QSet<QString> affected = calculateAffectedFiles(fileName);
-    for (const PParsedFile &parsedFile : mSession.includeStack) {
+    for (const QString &affectedFile : affected) {
+        if (mFileInvalidationHandler)
+            mFileInvalidationHandler(affectedFile);
+        else
+            removeReplayRecord(affectedFile);
+    }
+}
+
+void CppPreprocessor::invalidateFileAndDependents(Session &session, const QString &fileName)
+{
+    QSet<QString> affected = calculateAffectedFiles(fileName);
+    for (const PParsedFile &parsedFile : session.includeStack) {
         if (affected.contains(parsedFile->fileName)) {
             mRegistry.pendingInvalidations.insert(parsedFile->fileName);
             affected.remove(parsedFile->fileName);
@@ -571,7 +573,7 @@ void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
         if (mFileInvalidationHandler)
             mFileInvalidationHandler(affectedFile);
         else
-            removeReplayRecord(affectedFile);
+            removeReplayRecord(session, affectedFile);
     }
 }
 
@@ -595,14 +597,14 @@ void CppPreprocessor::clearEventCounts()
 }
 #endif
 
-void CppPreprocessor::addDefineByParts(const QString &name, const QString &args, const QString &value, bool hardCoded)
+void CppPreprocessor::addDefineByParts(Session *session, const QString &fileName, const QString &name, const QString &args, const QString &value, bool hardCoded)
 {
     // Check for duplicates
     PDefine define = std::make_shared<Define>();
     define->name = name;
     define->args = args;
     define->value = value;
-    define->filename = mSession.fileName;
+    define->filename = fileName;
     define->hardCoded = hardCoded;
     if (args.isEmpty()) {
         define->valueTokens = tokenizeMacroValue(value);
@@ -615,7 +617,8 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     }
     if (hardCoded) {
         mHardDefines.insert(name,define);
-        mSession.defines.insert(name,define);
+        if (session)
+            session->defines.insert(name,define);
         if (name == "__cplusplus") {
             // strip integer suffixes (U, L, UL, LL, ULL) before converting
             QString v = value.trimmed();
@@ -629,10 +632,10 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
             mCompilerType = CppCompilerType::Clang;
         }
     } else {
-        PReplayRecord replayRecord = replayRecordForFile(mSession.fileName);
+        PReplayRecord replayRecord = replayRecordForFile(*session, fileName);
         if (replayRecord)
             replayRecord->defines()->insert(define->name,define);
-        mSession.defines.insert(name,define);
+        session->defines.insert(name,define);
     }
 }
 
@@ -701,34 +704,34 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
     getDefineParts(s, name, args, value);
 
     // Add to the list
-    addDefineByParts(name, args, value, hardCoded);
+    addDefineByParts(nullptr, QString(), name, args, value, hardCoded);
 }
 
 
-void CppPreprocessor::preprocess(const QString &fileName)
+void CppPreprocessor::preprocess(Session &session, const QString &fileName)
 {
+    session = Session{};
     mStopPreprocessing = false;
-    clearTempResults();
     if (stopRequested())
         return;
     QSet<QString> pendingInvalidations = mRegistry.pendingInvalidations;
     mRegistry.pendingInvalidations.clear();
     for (const QString &pendingFile : pendingInvalidations)
-        invalidateFileAndDependents(pendingFile);
-    mSession.defines = mHardDefines;
-    mSession.fileName = fileName;
+        invalidateFileAndDependents(session, pendingFile);
+    session.defines = mHardDefines;
+    session.fileName = fileName;
     PParsedFileInfo oldRootInfo = findFileInfo(fileName);
     if (oldRootInfo && hasChangedFiles(oldRootInfo->fileName(), oldRootInfo->includes()))
-        invalidateFileAndDependents(fileName);
+        invalidateFileAndDependents(session, fileName);
     else
-        removeReplayRecord(fileName);
-    openInclude(fileName);
-    preprocessBuffer();
+        removeReplayRecord(session, fileName);
+    openInclude(session, fileName);
+    preprocessBuffer(session);
     if (preprocessorProfile.enabled)
-        qWarning() << "PREPROCESSOR_PROTECTION scannedIncludes" << mSession.scannedIncludeCount;
+        qWarning() << "PREPROCESSOR_PROTECTION scannedIncludes" << session.scannedIncludeCount;
 }
 
-void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
+void CppPreprocessor::invalidDefinesInFile(Session &session, const QString &fileName)
 {
     PReplayRecord replayRecord = findReplayRecord(fileName);
     if (!replayRecord)
@@ -736,12 +739,12 @@ void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
     PDefineMap defineMap = replayRecord->defines();
     if (defineMap) {
         for (const PDefine &define : *defineMap) {
-            const PDefine &current = mSession.defines.value(define->name);
+            const PDefine &current = session.defines.value(define->name);
             if (current == define) {
-                mSession.defines.remove(define->name);
+                session.defines.remove(define->name);
                 PDefine hardDefine = mHardDefines.value(define->name);
                 if (hardDefine)
-                    mSession.defines.insert(define->name, hardDefine);
+                    session.defines.insert(define->name, hardDefine);
             }
         }
         defineMap->clear();
@@ -749,17 +752,17 @@ void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
     PDefineMap undefineMap = replayRecord->undefines();
     if (undefineMap) {
         for (const PDefine &define : *undefineMap)
-            mSession.defines.insert(define->name, define);
+            session.defines.insert(define->name, define);
         undefineMap->clear();
     }
 }
 
-void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
+void CppPreprocessor::dumpDefinesTo(const Session &session, const QString &fileName) const
 {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (const PDefine& define:mSession.defines) {
+        for (const PDefine& define:session.defines) {
             stream<<QString("%1 %2 %3 %4\n")
                     .arg(define->name,define->args,define->value)
                     .arg(define->hardCoded)<<Qt::endl;
@@ -812,61 +815,73 @@ void CppPreprocessor::removeReplayRecord(const QString &filename)
     if (mRegistry.replayRecords.contains(filename))
         mInvalidateCounts[filename]++;
 #endif
-    invalidDefinesInFile(filename);
     mRegistry.replayRecords.remove(filename);
+}
+
+void CppPreprocessor::removeReplayRecord(Session &session, const QString &filename)
+{
+    invalidDefinesInFile(session, filename);
+    removeReplayRecord(filename);
 }
 
 QString CppPreprocessor::expandMacros(QString text) const
 {
+    Session session;
+    session.defines = mHardDefines;
+    return expandMacros(session, text);
+}
+
+QString CppPreprocessor::expandMacros(const Session &session, QString text) const
+{
     QStringList lines{text};
     PpTokenizer tokenizer(lines);
-    PpExpander expander([this](const QString& name) {
-        return getDefine(name);
+    PpExpander expander([this, &session](const QString& name) {
+        return getDefine(session, name);
     });
     QString out;
     expander.expandLine(tokenizer, out);
     return out;
 }
 
-QString CppPreprocessor::getNextPreprocessor()
+QString CppPreprocessor::getNextPreprocessor(Session &session)
 {
-    skipToPreprocessor(); // skip until # at start of line
-    if (mSession.index >= mSession.buffer.count())
+    skipToPreprocessor(session); // skip until # at start of line
+    if (session.index >= session.buffer.count())
         return ""; // we've gone past the final #preprocessor line. Yay
 
     // Calculate index to insert defines in in result file
-    mSession.preProcIndex = (mSession.result.count() - 1) + 1; // offset by one for #include rootfile
+    session.preProcIndex = (session.result.count() - 1) + 1; // offset by one for #include rootfile
 
     // Assemble whole line, convert newlines to space
-    QString result = mSession.buffer[mSession.index];
-    mSession.result.append("");// defines resolve into empty files, except #define and #include
+    QString result = session.buffer[session.index];
+    session.result.append("");// defines resolve into empty files, except #define and #include
     return result;
 }
 
-void CppPreprocessor::handleDefine(const QString &tokens)
+void CppPreprocessor::handleDefine(Session &session, const QString &tokens)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.handleDefineNs,
                                           preprocessorProfile.handleDefineCalls);
-    if (getCurrentBranch() == BranchResult::isTrue) {
+    if (getCurrentBranch(session) == BranchResult::isTrue) {
         QString name,args,value;
         getDefineParts(tokens, name, args, value);
-        PParsedFile current = mSession.includeStack.back();
+        PParsedFile current = session.includeStack.back();
         if (name == current->includeGuardToken)
             current->includeGuardDefined = true;
         // Add to the list
-        addDefineByParts(name, args, value, false);
-        mSession.result[mSession.preProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
+        addDefineByParts(&session, session.fileName, name, args, value, false);
+        session.result[session.preProcIndex] = "#define " + tokens; // add define to result file so the parser can handle it
     }
 }
 
-void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
+void CppPreprocessor::handleInclude(Session &session, const QString &tokens, bool fromNext)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.handleIncludeNs,
                                           preprocessorProfile.handleIncludeCalls);
-    if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
+    if (getCurrentBranch(session)!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
 
-    PParsedFile file = mSession.includeStack.back();
+    PParsedFile file = session.includeStack.back();
     QString fileName;
     // Get full header file name
     QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
@@ -894,7 +909,7 @@ void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
 
     QString s=tokens;
     if (!s.startsWith('<') && !s.startsWith('\"'))
-        s = expandMacros(s);
+        s = expandMacros(session, s);
 
     fileName = getHeaderFilename(
                 file->fileName,
@@ -905,39 +920,39 @@ void CppPreprocessor::handleInclude(const QString &tokens, bool fromNext)
     if (fileName.isEmpty())
         return;
 
-    PParsedFileInfo oldCurrentIncludes = mSession.currentFileInfo;
-    openInclude(fileName);
+    PParsedFileInfo oldCurrentIncludes = session.currentFileInfo;
+    openInclude(session, fileName);
 }
 
-void CppPreprocessor::handlePreprocessor(const QString& command, const QString& tokens)
+void CppPreprocessor::handlePreprocessor(Session &session, const QString& command, const QString& tokens)
 {
-    if (!mSession.includeStack.isEmpty()
-            && mSession.includeStack.back()->guardClosed)
-        mSession.includeStack.back()->contentAfterGuard = true;
-    std::function<void(const QString& tokens)> handler = mPreprocessorHandlers.value(command);
+    if (!session.includeStack.isEmpty()
+            && session.includeStack.back()->guardClosed)
+        session.includeStack.back()->contentAfterGuard = true;
+    PreprocessorHandler handler = mPreprocessorHandlers.value(command);
     if (handler) {
-        handler(tokens);
+        handler(session, tokens);
         if (!command.startsWith("include") && !command.startsWith("pragma")
                 && !command.startsWith("undef"))
-            mSession.fileJustOpenned = false;
+            session.fileJustOpenned = false;
     }
 }
 
-void CppPreprocessor::handleUndefine(const QString& tokens)
+void CppPreprocessor::handleUndefine(Session &session, const QString& tokens)
 {
-    if (getCurrentBranch() != BranchResult::isTrue)
+    if (getCurrentBranch(session) != BranchResult::isTrue)
         return;
     // Remove undef
     QString name = tokens.trimmed();
 
 //    //may be defined many times
 //    while (true) {
-    PDefine define = getDefine(name);
+    PDefine define = getDefine(session, name);
     if (define) {
         //remove the define from defines set
-        mSession.defines.remove(name);
-        PReplayRecord replayRecord = replayRecordForFile(mSession.fileName);
-        if (define->filename == mSession.fileName) {
+        session.defines.remove(name);
+        PReplayRecord replayRecord = replayRecordForFile(session, session.fileName);
+        if (define->filename == session.fileName) {
             if (replayRecord && replayRecord->defines())
                 replayRecord->defines()->remove(name);
         } else if (replayRecord) {
@@ -946,17 +961,17 @@ void CppPreprocessor::handleUndefine(const QString& tokens)
                 undefineMap->insert(name, define);
         }
     }
-    mSession.result[mSession.preProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
+    session.result[session.preProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
 
 }
 
-void CppPreprocessor::handleIf(const QString &tokens)
+void CppPreprocessor::handleIf(Session &session, const QString &tokens)
 {
-    if (getCurrentBranch()!=BranchResult::isTrue) {// we are already inside an if that is NOT being taken
-        setCurrentBranch(BranchResult::parentIsFalse);// so don't take this one either
+    if (getCurrentBranch(session)!=BranchResult::isTrue) {// we are already inside an if that is NOT being taken
+        setCurrentBranch(session, BranchResult::parentIsFalse);// so don't take this one either
     } else {
-        bool testResult = evaluateIf(tokens);
-        setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
+        bool testResult = evaluateIf(session, tokens);
+        setCurrentBranch(session, testResult?(BranchResult::isTrue):(BranchResult::isFalse));
     }
 }
 
@@ -967,107 +982,107 @@ QString CppPreprocessor::signatureOfDefine(const PDefine &define)
     return define->args + QStringLiteral("\x01") + define->value;
 }
 
-void CppPreprocessor::handleIfdef(const QString &tokens)
+void CppPreprocessor::handleIfdef(Session &session, const QString &tokens)
 {
-        if (getCurrentBranch()!=BranchResult::isTrue) {
-            setCurrentBranch(BranchResult::parentIsFalse);
+        if (getCurrentBranch(session)!=BranchResult::isTrue) {
+            setCurrentBranch(session, BranchResult::parentIsFalse);
         } else {
             QString name = tokens.trimmed();
-            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            setCurrentBranch(session,  getDefine(session, name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
 }
 
-void CppPreprocessor::handleIfndef(const QString &tokens)
+void CppPreprocessor::handleIfndef(Session &session, const QString &tokens)
 {
-    if (getCurrentBranch()!=BranchResult::isTrue) {
-        setCurrentBranch(BranchResult::parentIsFalse);
+    if (getCurrentBranch(session)!=BranchResult::isTrue) {
+        setCurrentBranch(session, BranchResult::parentIsFalse);
     } else {
         QString name = tokens.trimmed();
 
-        if (mSession.fileJustOpenned) {
-            mSession.includeStack.back()->guardBranchDepth = mSession.branchResults.count();
-            mSession.includeStack.back()->includeGuardToken = name;
+        if (session.fileJustOpenned) {
+            session.includeStack.back()->guardBranchDepth = session.branchResults.count();
+            session.includeStack.back()->includeGuardToken = name;
         }
-        setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+        setCurrentBranch(session,  getDefine(session, name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
     }
 }
 
-void CppPreprocessor::handleElif(const QString &tokens)
+void CppPreprocessor::handleElif(Session &session, const QString &tokens)
 {
-    BranchResult oldResult = getCurrentBranch(); // take either if or else
-    removeCurrentBranch();
+    BranchResult oldResult = getCurrentBranch(session); // take either if or else
+    removeCurrentBranch(session);
     BranchResult elseResult = calcElseBranchResult(oldResult);
     if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
-        bool testResult = evaluateIf(tokens);
-        setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
+        bool testResult = evaluateIf(session, tokens);
+        setCurrentBranch(session, testResult?(BranchResult::isTrue):(BranchResult::isFalse));
     } else {
-        setCurrentBranch(elseResult);
+        setCurrentBranch(session, elseResult);
     }
 }
 
-void CppPreprocessor::handleElifdef(const QString &tokens)
+void CppPreprocessor::handleElifdef(Session &session, const QString &tokens)
 {
     if (supportCPP23()) {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
+        BranchResult oldResult = getCurrentBranch(session); // take either if or else
+        removeCurrentBranch(session);
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
 
-            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            setCurrentBranch(session,  getDefine(session, name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
-            setCurrentBranch(elseResult);
+            setCurrentBranch(session, elseResult);
         }
     }
 }
 
-void CppPreprocessor::handleElifndef(const QString &tokens)
+void CppPreprocessor::handleElifndef(Session &session, const QString &tokens)
 {
     if (supportCPP23()) {
-        BranchResult oldResult = getCurrentBranch(); // take either if or else
-        removeCurrentBranch();
+        BranchResult oldResult = getCurrentBranch(session); // take either if or else
+        removeCurrentBranch(session);
         BranchResult elseResult = calcElseBranchResult(oldResult);
         if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             QString name = tokens.trimmed();
 
-            setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            setCurrentBranch(session,  getDefine(session, name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         } else {
-            setCurrentBranch(elseResult);
+            setCurrentBranch(session, elseResult);
         }
     }
 }
 
-void CppPreprocessor::handleElse(const QString &tokens)
+void CppPreprocessor::handleElse(Session &session, const QString &tokens)
 {
-    BranchResult oldResult = getCurrentBranch(); // take either if or else
-    removeCurrentBranch();
-    setCurrentBranch(calcElseBranchResult(oldResult));
+    BranchResult oldResult = getCurrentBranch(session); // take either if or else
+    removeCurrentBranch(session);
+    setCurrentBranch(session, calcElseBranchResult(oldResult));
 }
 
-void CppPreprocessor::handleEndif(const QString &tokens)
+void CppPreprocessor::handleEndif(Session &session, const QString &tokens)
 {
-    PParsedFile current = mSession.includeStack.back();
-    removeCurrentBranch();
+    PParsedFile current = session.includeStack.back();
+    removeCurrentBranch(session);
     if (current->guardBranchDepth >= 0
-            && mSession.branchResults.count() == current->guardBranchDepth
+            && session.branchResults.count() == current->guardBranchDepth
             && current->includeGuardDefined)
         current->guardClosed = true;
 }
 
-void CppPreprocessor::handleInclude(const QString &tokens)
+void CppPreprocessor::handleInclude(Session &session, const QString &tokens)
 {
-    handleInclude(tokens,false);
+    handleInclude(session, tokens,false);
 }
 
-void CppPreprocessor::handleIncludeNext(const QString &tokens)
+void CppPreprocessor::handleIncludeNext(Session &session, const QString &tokens)
 {
-    handleInclude(tokens,true);
+    handleInclude(session, tokens,true);
 }
 
-void CppPreprocessor::handlePragma(const QString &tokens)
+void CppPreprocessor::handlePragma(Session &session, const QString &tokens)
 {
-    if (tokens.trimmed()=="once" && mSession.currentFileInfo)
-        mSession.currentFileInfo->setIncludeProtected(true);
+    if (tokens.trimmed()=="once" && session.currentFileInfo)
+        session.currentFileInfo->setIncludeProtected(true);
 }
 
 QString CppPreprocessor::removeGCCAttributes(const QString &line)
@@ -1121,13 +1136,13 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
     }
 }
 
-void CppPreprocessor::openInclude(QString fileName)
+void CppPreprocessor::openInclude(Session &session, QString fileName)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.openIncludeNs,
                                           preprocessorProfile.openIncludeCalls);
     if (stopRequested())
         return;
-    if (mSession.includeStack.count() >= mMaxIncludeNestingDepth) {
+    if (session.includeStack.count() >= mMaxIncludeNestingDepth) {
 #ifdef REDPANDA_PARSER_TEST
         mSkipCounts[fileName]++;
 #endif
@@ -1143,7 +1158,7 @@ void CppPreprocessor::openInclude(QString fileName)
     }
 
     PParsedFile stackEntry;
-    for (const PParsedFile &parsedFile : mSession.includeStack) {
+    for (const PParsedFile &parsedFile : session.includeStack) {
         if (parsedFile->fileName == fileName) {
             stackEntry = parsedFile;
             break;
@@ -1153,14 +1168,14 @@ void CppPreprocessor::openInclude(QString fileName)
 
     bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
             || isSystemHeaderFile(fileName, mProjectIncludePaths);
-    bool childInside = !mRegistry.projectFiles.contains(fileName) && isSystemFile;
+    bool childInside = !mProjectFiles.contains(fileName) && isSystemFile;
     bool boundaryEntry = false;
     QString boundaryAncestor;
-    if (mSession.includeStack.isEmpty()) {
+    if (session.includeStack.isEmpty()) {
         boundaryEntry = childInside;
         boundaryAncestor = boundaryEntry ? fileName : QString();
     } else {
-        const PParsedFile &parent = mSession.includeStack.back();
+        const PParsedFile &parent = session.includeStack.back();
         bool parentInside = parent->boundaryEntry || !parent->boundaryAncestor.isEmpty();
         boundaryEntry = !parentInside && childInside;
         boundaryAncestor = boundaryEntry ? fileName : parent->boundaryAncestor;
@@ -1171,7 +1186,7 @@ void CppPreprocessor::openInclude(QString fileName)
 
     if (!inStack && hasReplayRecord(fileName)
             && hasChangedFiles(fileInfo->fileName(), fileInfo->includes())) {
-        invalidateFileAndDependents(fileName);
+        invalidateFileAndDependents(session, fileName);
         fileInfo = findFileInfo(fileName);
         if (!fileInfo) {
             fileInfo = std::make_shared<ParsedFileInfo>(fileName);
@@ -1180,27 +1195,27 @@ void CppPreprocessor::openInclude(QString fileName)
     }
 
     bool includeProtected = isIncludeProtected(fileName);
-    if (mSession.includeStack.count() > 0) {
+    if (session.includeStack.count() > 0) {
         PreprocessorProfileScope relationsScope(preprocessorProfile.includeRelationsNs,
                                                 preprocessorProfile.includeRelationsCalls);
-        for (PParsedFile &parsedFile : mSession.includeStack) {
+        for (PParsedFile &parsedFile : session.includeStack) {
             parsedFile->fileInfo->addInclude(fileName);
             for (const QString &includedFileName : fileInfo->includes())
                 parsedFile->fileInfo->addInclude(includedFileName);
         }
-        PParsedFile innerMostFile = mSession.includeStack.back();
+        PParsedFile innerMostFile = session.includeStack.back();
         innerMostFile->fileInfo->addDirectInclude(fileName);
-        innerMostFile->index = mSession.index;
-        innerMostFile->branches = mSession.branchResults.count();
+        innerMostFile->index = session.index;
+        innerMostFile->branches = session.branchResults.count();
     }
 
     bool insideActiveGuard = stackEntry
             && !stackEntry->includeGuardToken.isEmpty()
-            && mSession.branchResults.count() > stackEntry->guardBranchDepth
-            && getDefine(stackEntry->includeGuardToken);
+            && session.branchResults.count() > stackEntry->guardBranchDepth
+            && getDefine(session, stackEntry->includeGuardToken);
     // Recursive inclusion inside an active, defined guard is a no-op.
     // Unguarded cycles still re-enter and may produce different content.
-    if ((includeProtected && mSession.processed.contains(fileName))
+    if ((includeProtected && session.processed.contains(fileName))
             || insideActiveGuard) {
 #ifdef REDPANDA_PARSER_TEST
         mSkipCounts[fileName]++;
@@ -1208,18 +1223,18 @@ void CppPreprocessor::openInclude(QString fileName)
         return;
     }
 
-    bool repeatedUnprotected = mSession.processed.contains(fileName)
+    bool repeatedUnprotected = session.processed.contains(fileName)
             && !includeProtected;
     bool canReplay = boundaryEntry && !inStack && !repeatedUnprotected
             && hasReplayRecord(fileName);
     PReplayRecord replayRecord = findReplayRecord(fileName);
     if (canReplay) {
-        bool valid = mSession.allBoundaryEntriesReplayed
+        bool valid = session.allBoundaryEntriesReplayed
                 && replayRecord && replayRecord->hasReplayCondition()
-                && replayRecord->userMacros() == userMacroSnapshot()
-                && replayRecord->boundaryPrefix() == mSession.boundaryPrefix;
+                && replayRecord->userMacros() == userMacroSnapshot(session)
+                && replayRecord->boundaryPrefix() == session.boundaryPrefix;
         if (!valid) {
-            invalidateFileAndDependents(fileName);
+            invalidateFileAndDependents(session, fileName);
             fileInfo = findFileInfo(fileName);
             if (!fileInfo) {
                 fileInfo = std::make_shared<ParsedFileInfo>(fileName);
@@ -1229,8 +1244,8 @@ void CppPreprocessor::openInclude(QString fileName)
 #ifdef REDPANDA_PARSER_TEST
             mReplayCounts[fileName]++;
 #endif
-            addDefinesInFile(fileName);
-            mSession.boundaryPrefix.append(fileName);
+            addDefinesInFile(session, fileName);
+            session.boundaryPrefix.append(fileName);
             return;
         }
     }
@@ -1252,37 +1267,37 @@ void CppPreprocessor::openInclude(QString fileName)
     parsedFile->boundaryEntry = boundaryEntry;
     parsedFile->boundaryAncestor = boundaryAncestor;
     if (boundaryEntry)
-        parsedFile->userMacros = userMacroSnapshot();
-    parsedFile->boundaryPrefix = mSession.boundaryPrefix;
+        parsedFile->userMacros = userMacroSnapshot(session);
+    parsedFile->boundaryPrefix = session.boundaryPrefix;
 
-    mSession.currentFileInfo = fileInfo;
+    session.currentFileInfo = fileInfo;
     bool replayRoot = boundaryEntry || boundaryAncestor.isEmpty();
     if (replayRoot)
         mRegistry.replayRecords.insert(fileName, std::make_shared<ReplayRecord>());
     bool scanContent = (mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile);
     if (scanContent) {
-        if (mSession.scannedIncludeCount >= INCLUDE_SCAN_STOP_THRESHOLD) {
+        if (session.scannedIncludeCount >= INCLUDE_SCAN_STOP_THRESHOLD) {
             qWarning() << "Too many files scanned during preprocessing; stopping at"
-                       << mSession.scannedIncludeCount << fileName;
+                       << session.scannedIncludeCount << fileName;
             mStopPreprocessing = true;
-            mSession.result.clear();
+            session.result.clear();
             Q_ASSERT_X(false, "openInclude", "Too many files scanned during preprocessing");
             return;
         }
-        ++mSession.scannedIncludeCount;
-        if (mSession.scannedIncludeCount == INCLUDE_SCAN_WARNING_THRESHOLD) {
-            qWarning() << "Preprocessing has scanned" << mSession.scannedIncludeCount
+        ++session.scannedIncludeCount;
+        if (session.scannedIncludeCount == INCLUDE_SCAN_WARNING_THRESHOLD) {
+            qWarning() << "Preprocessing has scanned" << session.scannedIncludeCount
                        << "files; the latest file is" << fileName;
         }
 #ifdef REDPANDA_PARSER_TEST
         mScanCounts[fileName]++;
 #endif
     }
-    mSession.processed.insert(fileName);
-    mSession.boundaryAncestors[fileName].append(boundaryAncestor);
+    session.processed.insert(fileName);
+    session.boundaryAncestors[fileName].append(boundaryAncestor);
 
-    if (mSession.fileCache.contains(fileName)) {
-        parsedFile->buffer = mSession.fileCache.value(fileName);
+    if (session.fileCache.contains(fileName)) {
+        parsedFile->buffer = session.fileCache.value(fileName);
     } else if (scanContent) {
         QStringList bufferedText;
         if (mOnGetFileStream && mOnGetFileStream(fileName, bufferedText))
@@ -1297,34 +1312,34 @@ void CppPreprocessor::openInclude(QString fileName)
         combineLinesEndingWithBackslash(parsedFile->buffer);
         replaceCommentsBySpaceChar(parsedFile->buffer);
     }
-    mSession.includeStack.append(parsedFile);
+    session.includeStack.append(parsedFile);
 
-    mSession.index = parsedFile->index;
-    mSession.fileName = parsedFile->fileName;
-    mSession.buffer = parsedFile->buffer;
+    session.index = parsedFile->index;
+    session.fileName = parsedFile->fileName;
+    session.buffer = parsedFile->buffer;
 
     QString includeLine = "#include " + fileName + ":-1";
-    if (mSession.includeStack.count() > 1) {
-        mSession.result[mSession.preProcIndex] = includeLine;
-        mSession.index = -1;
+    if (session.includeStack.count() > 1) {
+        session.result[session.preProcIndex] = includeLine;
+        session.index = -1;
     } else {
-        mSession.result.append(includeLine);
+        session.result.append(includeLine);
     }
     if (boundaryEntry) {
-        mSession.allBoundaryEntriesReplayed = false;
-        mSession.boundaryPrefix.append(fileName);
+        session.allBoundaryEntriesReplayed = false;
+        session.boundaryPrefix.append(fileName);
     }
-    mSession.fileJustOpenned = true;
+    session.fileJustOpenned = true;
 }
 
 
-void CppPreprocessor::closeInclude()
+void CppPreprocessor::closeInclude(Session &session)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.closeIncludeNs,
                                           preprocessorProfile.closeIncludeCalls);
-    if (mSession.includeStack.isEmpty())
+    if (session.includeStack.isEmpty())
         return;
-    PParsedFile lastFile = mSession.includeStack.back();
+    PParsedFile lastFile = session.includeStack.back();
     if (lastFile->boundaryEntry) {
         PReplayRecord replayRecord = findReplayRecord(lastFile->fileName);
         Q_ASSERT(replayRecord);
@@ -1338,29 +1353,29 @@ void CppPreprocessor::closeInclude()
                 lastFile->fileInfo->includeProtected() || fullGuard);
     }
     if (!isIncludeProtected(lastFile->fileName))
-        mSession.fileCache.insert(lastFile->fileName, lastFile->buffer);
+        session.fileCache.insert(lastFile->fileName, lastFile->buffer);
     lastFile->fileInfo->setBranchVisibility(lastFile->branchVisibility);
-    mSession.includeStack.pop_back();
+    session.includeStack.pop_back();
 
-    if (mSession.includeStack.isEmpty())
+    if (session.includeStack.isEmpty())
         return;
-    PParsedFile parsedFile = mSession.includeStack.back();
+    PParsedFile parsedFile = session.includeStack.back();
 
     // Continue where we left off
-    mSession.index = parsedFile->index+1;
-    mSession.fileName = parsedFile->fileName;
+    session.index = parsedFile->index+1;
+    session.fileName = parsedFile->fileName;
     // Point to previous buffer and start past the include we walked into
-    mSession.buffer = parsedFile->buffer;
-    while (mSession.branchResults.count()>parsedFile->branches) {
-        mSession.branchResults.pop_back();
+    session.buffer = parsedFile->buffer;
+    while (session.branchResults.count()>parsedFile->branches) {
+        session.branchResults.pop_back();
     }
 
 
     // Start augmenting previous include list again
-    mSession.currentFileInfo = parsedFile->fileInfo;
+    session.currentFileInfo = parsedFile->fileInfo;
 
     // Update result file (we've left the previous file)
-    mSession.result.append(
+    session.result.append(
                 QString("#include %1:%2").arg(parsedFile->fileName)
                 .arg(parsedFile->index));
 }
@@ -1377,24 +1392,24 @@ CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult
     return BranchResult::isFalse;
 }
 
-void CppPreprocessor::addDefinesInFile(const QString &fileName)
+void CppPreprocessor::addDefinesInFile(Session &session, const QString &fileName)
 {
-    if (mSession.processed.contains(fileName))
+    if (session.processed.contains(fileName))
         return;
-    mSession.processed.insert(fileName);
+    session.processed.insert(fileName);
 
     PReplayRecord replayRecord = findReplayRecord(fileName);
     PDefineMap defineList = replayRecord ? replayRecord->defines() : PDefineMap();
     if (defineList) {
         foreach (const PDefine& define, defineList->values()) {
-            mSession.defines.insert(define->name,define);
+            session.defines.insert(define->name,define);
         }
     }
 
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
         foreach (const QString& file, fileInfo->includes()) {
-            addDefinesInFile(file);
+            addDefinesInFile(session, file);
         }
     }
 }
@@ -1648,16 +1663,16 @@ static bool isDirectiveLine(const QString& line)
     return false;
 }
 
-void CppPreprocessor::preprocessBuffer()
+void CppPreprocessor::preprocessBuffer(Session &session)
 {
-    while (mSession.includeStack.count() > 0) {
+    while (session.includeStack.count() > 0) {
         QString s;
         do {
             if (stopRequested()) {
-                mSession.buffer.clear();
+                session.buffer.clear();
                 return;
             }
-            s = getNextPreprocessor();
+            s = getNextPreprocessor(session);
             if (isDirectiveLine(s)) {
                 int pos = 0;
                 while (pos < s.length() && (s[pos] == ' ' || s[pos] == '\t'))
@@ -1674,60 +1689,67 @@ void CppPreprocessor::preprocessBuffer()
                     ++pos;
                 QString tokens = s.mid(pos);
                 if (!command.isEmpty()) {
-                    handlePreprocessor(command, tokens);
+                    handlePreprocessor(session, command, tokens);
                 }
             }
             // Step over
-            mSession.index++;
+            session.index++;
         } while (!s.isEmpty());
-        closeInclude();
+        closeInclude(session);
     }
 }
 
-void CppPreprocessor::skipToPreprocessor()
+void CppPreprocessor::skipToPreprocessor(Session &session)
 {
-    int bufferCount = mSession.buffer.count();
+    int bufferCount = session.buffer.count();
 // Increment until a line begins with a #
-    while ((mSession.index < bufferCount) && !isDirectiveLine(mSession.buffer[mSession.index])) {
-        if (mSession.includeStack.back()->guardClosed
-                && !mSession.buffer[mSession.index].trimmed().isEmpty())
-            mSession.includeStack.back()->contentAfterGuard = true;
-        if (getCurrentBranch()==BranchResult::isTrue) { // if not skipping, expand current macros
+    while ((session.index < bufferCount) && !isDirectiveLine(session.buffer[session.index])) {
+        if (session.includeStack.back()->guardClosed
+                && !session.buffer[session.index].trimmed().isEmpty())
+            session.includeStack.back()->contentAfterGuard = true;
+        if (getCurrentBranch(session)==BranchResult::isTrue) { // if not skipping, expand current macros
             QString expanded;
-            int consumed = expandLineWithEngine(mSession.buffer, mSession.index, expanded);
-            mSession.result.append(expanded);
+            int consumed = expandLineWithEngine(session, session.buffer, session.index, expanded);
+            session.result.append(expanded);
             // lines consumed by multi-line macro invocations become
             // empty lines to keep the result aligned with the source
             for (int i = 1; i < consumed; i++) {
-                mSession.result.append("");
+                session.result.append("");
             }
-            mSession.index += consumed;
+            session.index += consumed;
         } else { // If skipping due to a failed branch, clear line
-            mSession.result.append("");
-            mSession.index++;
+            session.result.append("");
+            session.index++;
         }
     }
 }
 
-int CppPreprocessor::expandLineWithEngine(const QStringList &buffer, int startLine, QString &out)
+int CppPreprocessor::expandLineWithEngine(Session &session, const QStringList &buffer, int startLine, QString &out)
 {
     PreprocessorProfileScope profileScope(preprocessorProfile.expandLineNs,
                                           preprocessorProfile.expandLineCalls);
     PpTokenizer tokenizer(buffer, startLine);
-    PpExpander expander([this](const QString& name) {
-        return getDefine(name);
+    PpExpander expander([this, &session](const QString& name) {
+        return getDefine(session, name);
     });
     return expander.expandLine(tokenizer, out);
 }
 
 bool CppPreprocessor::evaluateIf(const QString &line) const
 {
+    Session session;
+    session.defines = mHardDefines;
+    return evaluateIf(session, line);
+}
+
+bool CppPreprocessor::evaluateIf(const Session &session, const QString &line) const
+{
     PreprocessorProfileScope profileScope(preprocessorProfile.evaluateIfNs,
                                           preprocessorProfile.evaluateIfCalls);
     QElapsedTimer conditionTimer;
     if (preprocessorProfile.enabled)
         conditionTimer.start();
-    QVector<PpToken> tokens = expandConditionTokens(line);
+    QVector<PpToken> tokens = expandConditionTokens(session, line);
     qint64 expansionNs = 0;
     if (preprocessorProfile.enabled) {
         expansionNs = conditionTimer.nsecsElapsed();
@@ -1741,7 +1763,7 @@ bool CppPreprocessor::evaluateIf(const QString &line) const
     return valid && result != 0;
 }
 
-QVector<PpToken> CppPreprocessor::expandConditionTokens(const QString &line) const
+QVector<PpToken> CppPreprocessor::expandConditionTokens(const Session &session, const QString &line) const
 {
     // #if/#elif expressions are expanded by the same pp-token engine in
     // condition mode (defined/__has_include as operators, undefined
@@ -1749,30 +1771,30 @@ QVector<PpToken> CppPreprocessor::expandConditionTokens(const QString &line) con
     // environment-dependency check).
     QStringList lines{line};
     PpTokenizer tokenizer(lines);
-    PpExpander expander([this](const QString& name) {
-        return getDefine(name);
+    PpExpander expander([this, &session](const QString& name) {
+        return getDefine(session, name);
     });
     expander.setConditionMode(true,
-        [this](const QString& args) {
+        [this, &session](const QString& args) {
             QString header = args;
             if (!header.startsWith('<') && !header.startsWith('\"')) {
                 QStringList argLines{header};
                 PpTokenizer argTokenizer(argLines);
-                PpExpander argExpander([this](const QString& name) {
-                    return getDefine(name);
+                PpExpander argExpander([this, &session](const QString& name) {
+                    return getDefine(session, name);
                 });
                 argExpander.expandLine(argTokenizer, header);
             }
-            if (!mSession.currentFileInfo)
+            if (!session.currentFileInfo)
                 return false;
             QString fileName = getHeaderFilename(
-                    mSession.currentFileInfo->fileName(),
+                    session.currentFileInfo->fileName(),
                     header,
                     mIncludePathList,
                     mProjectIncludePathList);
             return !fileName.isEmpty();
         },
-        [this](const QString& name) {
+        [this, &session](const QString& name) {
 
         });
     QVector<PpToken> inputTokens;

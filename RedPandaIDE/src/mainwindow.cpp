@@ -2080,7 +2080,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
     //parse the project
     //  UpdateClassBrowsing;
 
-    scanActiveProject(true);
+    reparseActiveProject();
 
     mBookmarkModel->setIsForProject(true);
     mBookmarkModel->loadProjectBookmarks(
@@ -2135,15 +2135,15 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
     }
 
     if (mProject) {
-        scanActiveProject(true);
+        reparseActiveProject();
     }
     reparseNonProjectEditors();
 
 //    Editor *e = mEditorList->getEditor();
 //    if (mProject && !e) {
-//        scanActiveProject(true);
+//        reparseActiveProject();
 //    } else if (mProject && e && e->inProject()) {
-//        scanActiveProject(true);
+//        reparseActiveProject();
 //    } else if (e) {
 //        reparseNonProjectEditors();
 //    }
@@ -3591,25 +3591,17 @@ QAction *MainWindow::createGlobalAction(const QString &text, const QString &obje
     return action;
 }
 
-void MainWindow::scanActiveProject(bool parse)
+void MainWindow::reparseActiveProject()
 {
     if (!mProject)
         return;
     if (!pSettings->codeCompletion().enabled())
         return;
-    if (!mProject->cppParser()->enabled())
-        return;
 
-    //UpdateClassBrowsing;
-    if (parse) {
-        resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
-        mProject->resetParserProjectFiles();
-        Editor *editor = mEditorManager->getEditor();
-        if (editor && editor->inProject())
-            editor->reparse();
-    } else {
-        mProject->resetParserProjectFiles();
-    };
+    mProject->reconfigureParser();
+    Editor *editor = mEditorManager->getEditor();
+    if (editor && editor->inProject())
+        editor->reparse();
 }
 
 void MainWindow::onBookmarkContextMenu(const QPoint &pos)
@@ -6169,7 +6161,7 @@ void MainWindow::onCompilerSetChanged(int index)
             if (mCompilerSet->currentIndex() != index)
                 return;
             pSettings->compilerSets().refreshSet(index);
-            scanActiveProject(true);
+            reparseActiveProject();
         });
         return;
     }
@@ -7551,7 +7543,7 @@ void MainWindow::on_actionNew_Project_triggered()
                 ui->projectView->setCurrentIndex(index);
             }
         }
-        scanActiveProject(true);
+        reparseActiveProject();
         if (pSettings->editor().parseTodos())
             mTodoParser->parseFiles(mProject->unitFiles());
         if (pSettings->ui().showProject())
@@ -8071,7 +8063,7 @@ void MainWindow::reparseNonProjectEditors()
             Editor* e=(*mEditorManager)[i];
             if (!e->inProject()) {
                 if (!pSettings->codeCompletion().shareParser()) {
-                    resetCppParser(e->parser());
+                    reconfigureCppParser(e->parser());
                 }
             }
         }
@@ -8302,7 +8294,7 @@ void MainWindow::onProjectUnitAdded(const QString &filename)
 
 void MainWindow::onProjectUnitRemoved(const QString &filename)
 {
-    mProject->cppParser()->invalidateFile(filename);
+    mProject->cppParser()->invalidateFileAndDependents(filename);
     mProject->cppParser()->removeProjectFile(filename);
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(filename);
@@ -8313,7 +8305,7 @@ void MainWindow::onProjectUnitRemoved(const QString &filename)
 
 void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString &newFilename)
 {
-    mProject->cppParser()->invalidateFile(oldFilename);
+    mProject->cppParser()->invalidateFileAndDependents(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
     mProject->cppParser()->addProjectFile(newFilename,true);
     if (pSettings->editor().parseTodos()) {
@@ -10972,13 +10964,13 @@ void MainWindow::on_actionReparse_Code_triggered()
     Editor * e = mEditorManager->getEditor();
     if (!e) {
         if (mProject && mProject->cppParser()) {
-            scanActiveProject(true);
+            reparseActiveProject();
         }
     } else {
         if (mProject && e->inProject())
-            scanActiveProject(true);
+            reparseActiveProject();
         else if (e->parser()){
-            resetCppParser(e->parser());
+            reconfigureCppParser(e->parser());
             e->reparse();
         }
     }

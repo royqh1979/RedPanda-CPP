@@ -78,7 +78,6 @@ std::shared_ptr<Project> Project::load(const QString &filename, EditorManager *e
                                                                parent);
     project->open();
     project->mModified = false;
-    resetCppParser(project->mParser, project->mOptions.compilerSet);
     return project;
 }
 
@@ -102,7 +101,6 @@ std::shared_ptr<Project> Project::create(
     project->mParser->setEnabled(false);
     if (!project->assignTemplate(pTemplate,useCpp))
         return std::shared_ptr<Project>();
-    resetCppParser(project->mParser, project->mOptions.compilerSet);
 
     project->mModified = true;
     ini.SaveFile(project->mFilename.toLocal8Bit());
@@ -601,10 +599,9 @@ bool Project::removeFolder(PProjectModelNode node)
     return true;
 }
 
-void Project::resetParserProjectFiles()
+void Project::reconfigureParser()
 {
-    mParser->clearProjectFiles();
-    mParser->clearProjectIncludePaths();
+    ::reconfigureCppParser(mParser, mOptions.compilerSet);
     foreach (const PProjectUnit& unit, mUnits) {
         if (isCFile(unit->fileName())
                 || isHFile(unit->fileName()))
@@ -710,7 +707,7 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
     }
 
     if (mParser)
-        mParser->invalidateFile(unit->fileName());
+        mParser->invalidateFileAndDependents(unit->fileName());
     Editor *editor=unitEditor(unit);
     copyFile(unit->fileName(),newFileName,true);
     if (editor) {

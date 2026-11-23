@@ -21,12 +21,12 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 
-void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
+void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
 {
     if (!parser)
         return;
     // Configure parser
-    parser->resetParser();
+    parser->resetForReuse();
     parser->setEnabled(true);
 
     // Set options depending on the current compiler set
@@ -38,7 +38,6 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     if (compilerSet && compilerSet->compilerType()==CompilerType::SDCC)
         parser->setLanguage(ParserLanguage::SDCC);
 #endif
-    parser->clearIncludePaths();
     bool isCpp = parser->language()==ParserLanguage::CPlusPlus;
     if (compilerSet) {
         if (isCpp) {

@@ -44,6 +44,7 @@
 ### Parser / C++ 语义
 
 - `parser/cppparser-design.md` — CppParser、Tokenizer、类型推导与 IDE 查询。
+- `parser/parser-state-lifecycle-design.md` — Configuration、Session、Registry 生命周期及清理接口命名。
 - `parser/parser-concurrency-review.md` — Parser 并发约定。
 - `parser/shutdown-lifecycle-design.md` — 应用退出、Close All 与单 Editor 关闭的 Parser 生命周期。
 - `parser/cpptemplate-evaluation-design.md` — 有限模板实例化。

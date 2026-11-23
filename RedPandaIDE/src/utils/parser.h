@@ -19,6 +19,6 @@
 #include <memory>
 
 class CppParser;
-void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
+void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 
 #endif // UTILS_PARSER_H

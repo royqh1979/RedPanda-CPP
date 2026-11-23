@@ -254,7 +254,7 @@ public:
     void rebuildNodes();
     bool removeUnit(PProjectUnit& unit, bool doClose, bool removeFile = false);
     bool removeFolder(PProjectModelNode node);
-    void resetParserProjectFiles();
+    void reconfigureParser();
     void saveAll(); // save [Project] and  all [UnitX]
     void saveLayout(); // save all [UnitX]
     void saveOptions();

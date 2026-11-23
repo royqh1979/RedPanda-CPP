@@ -288,7 +288,7 @@
 
 ### F9 Parser reset 的完整清理与重建
 
-- 操作：Parser 已解析 root 和系统头后调用 resetParser，再按原配置重建并解析。
+- 操作：Parser 已解析 root 和系统头后调用 resetForReuse，再按原配置重建并解析。
 - 预期：StatementMap、Registry 文件记录、scanned 状态、namespace 和项目文件集合均清空；重新配置后 root 与系统头重新扫描，符号正确恢复。
 - 判定依据：reset 是编译器/参数变化和 IDE 自动清空时的统一入口，不能只清 Statement 而留下可供 replay 的旧 Registry。
 - 测试：`test_reset_parser_clears_registry_and_statements`。

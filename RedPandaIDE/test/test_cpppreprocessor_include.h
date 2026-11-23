@@ -3,8 +3,7 @@
 #include <QObject>
 #include <QStringList>
 #include <memory>
-
-class CppPreprocessor;
+#include "src/parser/cpppreprocessor.h"
 
 class TestCppPreprocessorInclude: public QObject
 {
@@ -89,12 +88,11 @@ private:
     // Absolute path of resources/preprocessor/<name>
     static QString scenarioPath(const QString& name);
     // Result lines with the scenario dir replaced by "<DIR>"
-    static QStringList normalizedResult(CppPreprocessor& p, const QString& scenarioDir);
+    static QStringList normalizedResult(const CppPreprocessor::Session &session, const QString& scenarioDir);
     static QStringList readGolden(const QString& fileName);
-    // Preprocess <dir>/<mainFile> in the given include-once mode and
-    // return the normalized result lines.
-    static QStringList runScenario(CppPreprocessor& p, const QString& dir,
-                                   const QString& mainFile);
+    // Preprocess <dir>/<mainFile> and return the normalized result lines.
+    static QStringList runScenario(CppPreprocessor& p, CppPreprocessor::Session &session,
+                                   const QString& dir, const QString& mainFile);
 };
 
 #endif // TEST_CPPPREPROCESSOR_INCLUDE_H

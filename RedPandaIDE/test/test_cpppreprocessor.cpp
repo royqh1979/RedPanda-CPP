@@ -33,9 +33,10 @@ void TestCppPreprocessor::test_replace_comments_with_space_char()
 void TestCppPreprocessor::test_macro_replace_1()
 {
     CppPreprocessor preprocessor;
+    CppPreprocessor::Session preprocessorSession;
     QFileInfo info("resources/preprocessor-macros-1.cpp");
-    preprocessor.preprocess(info.absoluteFilePath());
-    QStringList text1 = filterIncludes(preprocessor.result());
+    preprocessor.preprocess(preprocessorSession, info.absoluteFilePath());
+    QStringList text1 = filterIncludes(preprocessorSession.result);
     QStringList text2 = readFileToLines("resources/preprocessor-macros-1-result.cpp");
     QVERIFY(!text1.isEmpty());
     QVERIFY(!text2.isEmpty());
@@ -86,9 +87,10 @@ void TestCppPreprocessor::test_macro_replace_5()
 void TestCppPreprocessor::test_macro_replace_6()
 {
     CppPreprocessor preprocessor;
+    CppPreprocessor::Session preprocessorSession;
     QFileInfo info("resources/preprocessor-macros-2.cpp");
-    preprocessor.preprocess(info.absoluteFilePath());
-    QStringList text1 = filterIncludes(preprocessor.result());
+    preprocessor.preprocess(preprocessorSession, info.absoluteFilePath());
+    QStringList text1 = filterIncludes(preprocessorSession.result);
     QStringList text2 = readFileToLines("resources/preprocessor-macros-2-result.cpp");
     QVERIFY(!text1.isEmpty());
     QVERIFY(!text2.isEmpty());
@@ -98,9 +100,10 @@ void TestCppPreprocessor::test_macro_replace_6()
 void TestCppPreprocessor::test_macro_replace_7()
 {
     CppPreprocessor preprocessor;
+    CppPreprocessor::Session preprocessorSession;
     QFileInfo info("resources/preprocessor-macros-3.cpp");
-    preprocessor.preprocess(info.absoluteFilePath());
-    QStringList text1 = filterIncludes(preprocessor.result());
+    preprocessor.preprocess(preprocessorSession, info.absoluteFilePath());
+    QStringList text1 = filterIncludes(preprocessorSession.result);
     QStringList text2 = readFileToLines("resources/preprocessor-macros-3-result.cpp");
     QVERIFY(!text1.isEmpty());
     QVERIFY(!text2.isEmpty());
@@ -110,9 +113,10 @@ void TestCppPreprocessor::test_macro_replace_7()
 void TestCppPreprocessor::test_macro_replace_8()
 {
     CppPreprocessor preprocessor;
+    CppPreprocessor::Session preprocessorSession;
     QFileInfo info("resources/preprocessor-macros-4.cpp");
-    preprocessor.preprocess(info.absoluteFilePath());
-    QStringList text1 = filterIncludes(preprocessor.result());
+    preprocessor.preprocess(preprocessorSession, info.absoluteFilePath());
+    QStringList text1 = filterIncludes(preprocessorSession.result);
     QStringList text2 = readFileToLines("resources/preprocessor-macros-4-result.cpp");
     QVERIFY(!text1.isEmpty());
     QVERIFY(!text2.isEmpty());
@@ -227,7 +231,7 @@ void TestCppPreprocessor::test_evaluate_constant_expression_2()
 void TestCppPreprocessor::test_compare_cpp_version()
 {
     CppPreprocessor preprocessor;
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 199711L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), false);
@@ -237,7 +241,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201103L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -247,7 +251,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201402L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -257,7 +261,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201703L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -268,7 +272,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202002L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -278,7 +282,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202302L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -288,7 +292,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202400L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -304,7 +308,7 @@ void TestCppPreprocessor::test_cpp_version_value()
 {
     CppPreprocessor preprocessor;
     for (int version : {199711, 201103, 201402, 201703, 202002, 202302, 202400}) {
-        preprocessor.clear();
+        preprocessor.resetForReuse();
         QCOMPARE(preprocessor.cppVersion(), CppVersion::Cpp17);
         preprocessor.addHardDefineByLine(QString("#define __cplusplus %1L").arg(version));
         QCOMPARE(preprocessor.cppVersion(), version);
@@ -321,14 +325,14 @@ QStringList TestCppPreprocessor::filterIncludes(const QStringList &text)
     return result;
 }
 
-QStringList TestCppPreprocessor::preprocessContent(CppPreprocessor &p, const QStringList &lines)
+QStringList TestCppPreprocessor::preprocessContent(CppPreprocessor &p, CppPreprocessor::Session &session, const QStringList &lines)
 {
     p.setOnGetFileStream([&lines](const QString&, QStringList& out){
         out = lines;
         return true;
     });
-    p.preprocess("/virtual/main.cpp");
-    return p.result();
+    p.preprocess(session, "/virtual/main.cpp");
+    return session.result;
 }
 
 void TestCppPreprocessor::test_combine_backslash_trailing_space()
@@ -371,19 +375,21 @@ void TestCppPreprocessor::test_backslash_in_directive_name()
     // Line splicing happens before directive parsing, so even the directive
     // name may be split across lines.
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {"#def\\", "ine X 1", "X"}),
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {"#def\\", "ine X 1", "X"}),
              QStringList({
                  "#include /virtual/main.cpp:-1",
                  "#define X 1",
                  "",
                  "1"}));
-    QCOMPARE(p.getDefine("X")->value, "1");
+    QCOMPARE(p.getDefine(pSession, "X")->value, "1");
 }
 
 void TestCppPreprocessor::test_backslash_in_string()
 {
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {"const char* s = \"ab\\", "c\";"}),
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {"const char* s = \"ab\\", "c\";"}),
              QStringList({
                  "#include /virtual/main.cpp:-1",
                  "const char* s = \"abc\";",
@@ -395,8 +401,9 @@ void TestCppPreprocessor::test_backslash_result_line_alignment()
     // Spliced-away lines become empty lines so that result lines stay
     // aligned with the physical source lines.
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     QStringList src{"int a;\\", "int b;", "int c;"};
-    QStringList result = preprocessContent(p, src);
+    QStringList result = preprocessContent(p, pSession, src);
     QCOMPARE(result, QStringList({
                  "#include /virtual/main.cpp:-1",
                  "int a;int b;",
@@ -539,8 +546,9 @@ void TestCppPreprocessor::test_raw_string_pipeline_canary()
     // stripped, and expandMacros (which knows strings but not comments)
     // then expanded macro names inside the surviving comment.
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define X 1");
-    QCOMPARE(preprocessContent(p, {
+    QCOMPARE(preprocessContent(p, pSession, {
                  "const char* s = R\"(raw)\"; // X",
                  "int a = X;"}),
              QStringList({
@@ -555,8 +563,9 @@ void TestCppPreprocessor::test_raw_string_macro_not_expanded()
     // delimited raw strings with embedded quotes (which once fooled the
     // regular-string tracking in expandMacros).
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define X 1");
-    QCOMPARE(preprocessContent(p, {
+    QCOMPARE(preprocessContent(p, pSession, {
                  "const char* s = R\"delim(a \"X\" b)delim\";"}),
              QStringList({
                  "#include /virtual/main.cpp:-1",
@@ -728,7 +737,8 @@ void TestCppPreprocessor::test_if_undefined_identifier()
 void TestCppPreprocessor::test_nested_branches()
 {
     CppPreprocessor p;
-    QStringList result = preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QStringList result = preprocessContent(p, pSession, {
         "#define A 1",        // 1
         "#if A",              // 2
         "int l3;",            // 3
@@ -778,7 +788,8 @@ void TestCppPreprocessor::test_nested_branches()
 void TestCppPreprocessor::test_define_in_false_branch()
 {
     CppPreprocessor p;
-    QStringList result = preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QStringList result = preprocessContent(p, pSession, {
         "#if 0",
         "#define X 1",
         "#endif",
@@ -797,7 +808,7 @@ void TestCppPreprocessor::test_define_in_false_branch()
                  "",
                  "int no;",
                  ""}));
-    QVERIFY(!p.getDefine("X"));
+    QVERIFY(!p.getDefine(pSession, "X"));
 }
 
 void TestCppPreprocessor::test_elif_chain()
@@ -805,7 +816,8 @@ void TestCppPreprocessor::test_elif_chain()
     // Once a branch has been taken, later #elif conditions are not
     // evaluated at all.
     CppPreprocessor p;
-    preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    preprocessContent(p, pSession, {
         "#define A 1",
         "#if A == 1",
         "#define WIN 1",
@@ -816,10 +828,10 @@ void TestCppPreprocessor::test_elif_chain()
         "#else",
         "#define LOSE4 1",
         "#endif"});
-    QVERIFY(p.getDefine("WIN"));
-    QVERIFY(!p.getDefine("LOSE2"));
-    QVERIFY(!p.getDefine("LOSE3"));
-    QVERIFY(!p.getDefine("LOSE4"));
+    QVERIFY(p.getDefine(pSession, "WIN"));
+    QVERIFY(!p.getDefine(pSession, "LOSE2"));
+    QVERIFY(!p.getDefine(pSession, "LOSE3"));
+    QVERIFY(!p.getDefine(pSession, "LOSE4"));
 }
 
 void TestCppPreprocessor::test_multiline_macro_call_in_true_branch()
@@ -828,7 +840,8 @@ void TestCppPreprocessor::test_multiline_macro_call_in_true_branch()
     // lines; the consumed lines become empty lines in the result to keep
     // the line alignment.
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#define F(x) x+1",
                  "int a = F(",
                  "2);",
@@ -846,7 +859,8 @@ void TestCppPreprocessor::test_multiline_macro_call_in_false_branch()
     // In a false branch no macro expansion happens, so the multi-line
     // call does not disturb anything either.
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#if 0",
                  "int a = F(",
                  "2);",
@@ -867,7 +881,8 @@ void TestCppPreprocessor::test_unbalanced_directives()
     // unmatched #endif is a no-op, and a stray #else at top level makes
     // the following lines invisible.
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {
                  "int a;",
                  "#endif",
                  "int b;",
@@ -917,8 +932,9 @@ void TestCppPreprocessor::test_char_constant_in_if()
 void TestCppPreprocessor::test_elifdef_elifndef_supported()
 {
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define __cplusplus 202302");
-    QCOMPARE(preprocessContent(p, {
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#ifdef CPU",
                  "int a;",
                  "#elifdef GPU",
@@ -949,9 +965,10 @@ void TestCppPreprocessor::test_elifdef_cpp23_detection()
     // suffix (202302L); the C++23 detection must handle it (it once ran
     // QString::toLong on the whole value and never detected C++23).
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define __cplusplus 202302L");
     QCOMPARE(p.evaluateIf("__cplusplus >= 202302L"), true);
-    QCOMPARE(preprocessContent(p, {
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#ifdef CPU",
                  "int a;",
                  "#elifdef GPU",
@@ -983,8 +1000,9 @@ void TestCppPreprocessor::test_elifdef_elifndef_unsupported()
     // branch stack is left untouched, so the enclosing #if branch stays
     // in effect and a following #else matches that #if instead.
     CppPreprocessor p;
+    CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define __cplusplus 202002L");
-    QCOMPARE(preprocessContent(p, {
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#ifdef CPU",
                  "int a;",
                  "#elifdef GPU",
@@ -1011,7 +1029,8 @@ void TestCppPreprocessor::test_elifdef_elifndef_unsupported()
 void TestCppPreprocessor::test_undef_local()
 {
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {
                  "#define X 1",
                  "#undef X",
                  "int after;"}),
@@ -1020,7 +1039,7 @@ void TestCppPreprocessor::test_undef_local()
                  "#define X 1",
                  "#undef X",
                  "int after;"}));
-    QVERIFY(!p.getDefine("X"));
+    QVERIFY(!p.getDefine(pSession, "X"));
 }
 
 void TestCppPreprocessor::test_leading_space_directive()
@@ -1029,7 +1048,8 @@ void TestCppPreprocessor::test_leading_space_directive()
     // directives, not ordinary text. They were once passed through
     // macro expansion as plain text and the directive never happened.
     CppPreprocessor p;
-    QCOMPARE(preprocessContent(p, {
+    CppPreprocessor::Session pSession;
+    QCOMPARE(preprocessContent(p, pSession, {
                  "  #define X 1",
                  "\t#if X",
                  "int a;",
@@ -1042,7 +1062,7 @@ void TestCppPreprocessor::test_leading_space_directive()
                  "int a;",
                  "",
                  "int after;"}));
-    QVERIFY(p.getDefine("X"));
+    QVERIFY(p.getDefine(pSession, "X"));
 }
 
 void TestCppPreprocessor::test_conditional1_resource()
@@ -1057,9 +1077,10 @@ void TestCppPreprocessor::test_conditional1_resource()
     QString absPath = info.absoluteFilePath();
     auto run = [&](const QString& cplusplusDefine, const QString& goldenName) {
         CppPreprocessor p;
+        CppPreprocessor::Session pSession;
         p.addHardDefineByLine(cplusplusDefine);
-        p.preprocess(absPath);
-        QStringList result = p.result();
+        p.preprocess(pSession, absPath);
+        QStringList result = pSession.result;
         for (QString& line : result)
             line.replace(absPath, "<PATH>");
         QCOMPARE(result, readFileToLines(goldenName));

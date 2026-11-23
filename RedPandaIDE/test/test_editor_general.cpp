@@ -388,7 +388,7 @@ void TestEditorGeneral::test_export_semantic_highlight()
 
 void TestEditorGeneral::test_completion_after_member_operator()
 {
-    initParser();
+    initializeParserGlobals();
     mEditor = std::make_shared<Editor>();
     mEditor->setEditorSettings(mEditorSettings.get());
     mEditor->setColorManager(mColorManager.get());

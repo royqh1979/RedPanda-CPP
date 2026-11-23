@@ -13,12 +13,12 @@
 ## 待分析：解析入口与结束状态
 
 - `parseFile()` 在入口锁之外读取 `mEnabled`。需要确认该读取应移入现有入口锁，还是由调用方提供更强的线程约定。
-- `parseFile()` 只在短临界区持锁，实际解析期间不持锁。不能为消除数据竞争简单改为全程持锁，否则 `resetParser()` 无法及时设置停止状态，public 查询也不能在解析中快速返回。操作级不变量是：`mParsing == false` 时不存在其他正在执行的分析操作，再次置为 true 前不应启动新分析。需要单独判断 bool 和计数的内存同步，不能把该问题误述为两个分析 writer 并发修改 StatementMap。
+- `parseFile()` 只在短临界区持锁，实际解析期间不持锁。不能为消除数据竞争简单改为全程持锁，否则 `resetForReuse()` 无法及时设置停止状态，public 查询也不能在解析中快速返回。操作级不变量是：`mParsing == false` 时不存在其他正在执行的分析操作，再次置为 true 前不应启动新分析。需要单独判断 bool 和计数的内存同步，不能把该问题误述为两个分析 writer 并发修改 StatementMap。
 - `retrievePendingParseFileCommand()` 位于工作线程的命令边界，现有锁不能仅按 private 方法名称机械删除。
 
-## 待分析：resetParser
+## 待分析：resetForReuse
 
-`resetParser()` 需要等待当前解析停止，再清理状态。锁必须能介入正在执行的解析，不能变成全程互斥。finally 中恢复 `mParsing` 和停止标志时是否加锁、锁覆盖哪些字段，应单独审查；不能把锁随意扩大到整个等待和清理过程。
+`resetForReuse()` 需要等待当前解析停止，再清理状态。锁必须能介入正在执行的解析，不能变成全程互斥。finally 中恢复 `mParsing` 和停止标志时是否加锁、锁覆盖哪些字段，应单独审查；不能把锁随意扩大到整个等待和清理过程。
 
 ## 待分析：mParsing 标志的读写
 
@@ -29,7 +29,7 @@
 以下接口需要逐项确认线程约定、是否允许在解析中调用，以及返回值是否要求空结果，不能只按 public/private 名称批量加锁：
 
 - include path、project files、filesToScan 的读写；
-- `enabled()` / `setEnabled()`，尤其禁用时会调用 `resetParser()` 的路径；
+- `enabled()` / `setEnabled()`，尤其禁用时会调用 `resetForReuse()` 的路径；
 - `parsing()`、`hasReplayRecord()`、`isFileParsedInContext()`、`isProjectHeaderFile()` 等状态查询；
 - language、sharedByFiles、serialId 和 onGetFileStream 的读写。
 

@@ -316,7 +316,7 @@ private:
             const QString &objectName,
             const QString &groupName,
             QKeySequence shortcut=QKeySequence());
-    void scanActiveProject(bool parse=false);
+    void reparseActiveProject();
     void showSearchReplacePanel(bool show);
     PSearchResults addSymbolReferenceResults(const SymbolReferenceResults &references);
     void clearRenamePreview();
