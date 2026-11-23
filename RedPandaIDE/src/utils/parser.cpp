@@ -38,7 +38,6 @@ void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetInde
     if (compilerSet && compilerSet->compilerType()==CompilerType::SDCC)
         parser->setLanguage(ParserLanguage::SDCC);
 #endif
-    parser->clearCompilerIncludePaths();
     bool isCpp = parser->language()==ParserLanguage::CPlusPlus;
     if (compilerSet) {
         if (isCpp) {

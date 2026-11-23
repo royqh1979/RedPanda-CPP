@@ -106,14 +106,6 @@ public:
     void dumpIncludesListTo(const QString& fileName) const;
     void addIncludePath(const QString& fileName);
     void addProjectIncludePath(const QString& fileName);
-    void clearCompilerIncludePaths() {
-        mIncludePaths.clear();
-        mIncludePathList.clear();
-    }
-    void clearProjectIncludePaths() {
-        mProjectIncludePaths.clear();
-        mProjectIncludePathList.clear();
-    }
     void removeReplayRecord(const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
     void invalidateFileAndDependents(const QString &fileName);
@@ -174,7 +166,6 @@ public:
     void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
     void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
     void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
-    void clearProjectFiles() { mProjectFiles.clear(); }
     QString boundaryAncestor(const QString &fileName, int occurrence) const;
     const QHash<QString,QStringList> &boundaryAncestors() const { return mSession.boundaryAncestors; }
 

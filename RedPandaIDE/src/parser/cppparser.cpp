@@ -112,25 +112,6 @@ void CppParser::addProjectIncludePath(const QString &value)
     mPreprocessor->addProjectIncludePath(value);
 }
 
-void CppParser::clearCompilerIncludePaths()
-{
-    QMutexLocker locker(&mMutex);
-    mPreprocessor->clearCompilerIncludePaths();
-}
-
-void CppParser::clearProjectIncludePaths()
-{
-    QMutexLocker locker(&mMutex);
-    mPreprocessor->clearProjectIncludePaths();
-}
-
-void CppParser::clearProjectFiles()
-{
-    QMutexLocker locker(&mMutex);
-    mProjectFiles.clear();
-    mPreprocessor->clearProjectFiles();
-}
-
 void CppParser::internalParse(const QString &fileName)
 {
     if (fileName.isEmpty() || shouldStopParsing())

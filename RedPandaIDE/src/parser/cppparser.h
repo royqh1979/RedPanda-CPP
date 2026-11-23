@@ -53,9 +53,6 @@ public:
     void addIncludePath(const QString& value);
     void removeProjectFile(const QString& value);
     void addProjectIncludePath(const QString& value);
-    void clearCompilerIncludePaths();
-    void clearProjectIncludePaths();
-    void clearProjectFiles();
     QList<PStatement> getListOfFunctions(const QString& fileName, const QString& phrase, int line) const;
     PStatement findScopeStatement(const QString& filename, int line) const;
     PParsedFileInfo findFileInfo(const QString &filename) const;
