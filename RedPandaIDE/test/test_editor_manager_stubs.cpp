@@ -26,7 +26,7 @@ std::shared_ptr<BreakpointModel> Debugger::breakpointModel()
     return {};
 }
 
-void resetCppParser(std::shared_ptr<CppParser>, int) {}
+void reconfigureCppParser(std::shared_ptr<CppParser>, int) {}
 
 SettingsPersistor &stubPersistor()
 {

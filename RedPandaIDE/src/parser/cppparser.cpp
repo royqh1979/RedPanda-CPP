@@ -42,7 +42,7 @@ CppParser::CppParser()
 {
     updateSerialId();
     mPreprocessor->setFileInvalidationHandler(
-                [this](const QString &fileName) { internalInvalidateFile(fileName); });
+                [this](const QString &fileName) { invalidateSingleFile(fileName); });
     mPreprocessor->setStopRequestedHandler([this] { return shouldStopParsing(); });
 }
 
@@ -53,7 +53,7 @@ CppParser::~CppParser()
         mPreprocessor.release();
         return;
     }
-    resetParser();
+    resetForReuse();
 }
 
 void CppParser::prepareForApplicationExit()
@@ -72,7 +72,7 @@ bool CppParser::shouldStopParsing() const
 }
 
 #ifdef REDPANDA_PARSER_TEST
-void CppParser::resetApplicationExitForTest()
+void CppParser::resetApplicationExitFlagForTest()
 {
     sApplicationExiting.store(false);
 }
@@ -103,7 +103,7 @@ void CppParser::removeProjectFile(const QString &value)
     QMutexLocker locker(&mMutex);
     mProjectFiles.remove(value);
     mPreprocessor->removeProjectFile(value);
-    internalInvalidateFile(value);
+    invalidateSingleFile(value);
 }
 
 void CppParser::addProjectIncludePath(const QString &value)
@@ -112,10 +112,10 @@ void CppParser::addProjectIncludePath(const QString &value)
     mPreprocessor->addProjectIncludePath(value);
 }
 
-void CppParser::clearIncludePaths()
+void CppParser::clearCompilerIncludePaths()
 {
     QMutexLocker locker(&mMutex);
-    mPreprocessor->clearIncludePaths();
+    mPreprocessor->clearCompilerIncludePaths();
 }
 
 void CppParser::clearProjectIncludePaths()
@@ -242,21 +242,21 @@ void CppParser::internalParse(const QString &fileName)
     for (int i = 0; i < qMin(10, sortedTimes.count()); ++i)
         qWarning() << "PARSE_FILE_TIMING" << sortedTimes[i].first << sortedTimes[i].second;
     stepTimer.start();
-    mPreprocessor->clearTempResults();
-    qint64 clearTempResultsMs = stepTimer.restart();
+    mPreprocessor->clearTransientSessionState();
+    qint64 clearTransientSessionStateMs = stepTimer.restart();
     qWarning() << "PARSE_TIMING" << fileName
                << "preprocess" << preprocessMs
                << "tokenize" << tokenizeMs
                << "parseDeclarations" << parseDeclarationsMs
                << "buildStatements" << buildStatementsMs
-               << "clearTempResults" << clearTempResultsMs
+               << "clearTransientSessionState" << clearTransientSessionStateMs
                << "declarations" << timer.restart();
 }
 
-void CppParser::clearParseResults()
+void CppParser::clearAnalysisResults()
 {
     mStatementList->clear();
-    mPreprocessor->clearParseResults();
+    mPreprocessor->clearAnalysisResults();
     internalParseHardDefines();
     mFilesScannedCount = 0;
     mFilesToScanCount = 0;
@@ -266,7 +266,7 @@ void CppParser::clearParseResults()
 #endif
 }
 
-void CppParser::internalInvalidateFile(const QString &fileName)
+void CppParser::invalidateSingleFile(const QString &fileName)
 {
     if (fileName.isEmpty())
         return;
@@ -312,7 +312,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
 void CppParser::internalInvalidateFiles(const QSet<QString> &files)
 {
     for (const QString &file : files)
-        internalInvalidateFile(file);
+        invalidateSingleFile(file);
 }
 
 QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
@@ -322,7 +322,7 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
     return mPreprocessor->calculateAffectedFiles(fileName);
 }
 
-void CppParser::invalidateFile(const QString &fileName)
+void CppParser::invalidateFileAndDependents(const QString &fileName)
 {
     if (!mEnabled)
         return;
@@ -354,7 +354,7 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
         mPreprocessor->preprocess(file);
         if (shouldStopParsing())
             return {};
-        mPreprocessor->clearTempResults();
+        mPreprocessor->clearTransientSessionState();
     }
 
     QSet<QString> remaining = files;
@@ -424,7 +424,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
     }
     auto action = finally([&, this] {
         if (mStopParsing.load() && !sApplicationExiting.load())
-            clearParseResults();
+            clearAnalysisResults();
         QMutexLocker locker(&mMutex);
         mParsing = false;
         emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
@@ -451,8 +451,8 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
                 internalParse(file);
         }
     } else {
-        internalInvalidateFile(fileName);
-        internalInvalidateFile(contextFilename);
+        invalidateSingleFile(fileName);
+        invalidateSingleFile(contextFilename);
         mFilesToScanCount = 2;
         mFilesScannedCount = 0;
         ++mFilesScannedCount;
@@ -1030,7 +1030,7 @@ int CppParser::cppVersion() const
     return mPreprocessor->cppVersion();
 }
 
-void CppParser::resetParser()
+void CppParser::resetForReuse()
 {
     stopParsing();
     while (true) {
@@ -1059,7 +1059,7 @@ void CppParser::resetParser()
     mFilesToScanCount = 0;
     mStatementList->clear();
     mProjectFiles.clear();
-    mPreprocessor->clear();
+    mPreprocessor->resetForReuse();
 }
 
 void CppParser::unFreeze()
@@ -1346,7 +1346,7 @@ void CppParser::setEnabled(bool newEnabled)
     if (mEnabled != newEnabled) {
         mEnabled = newEnabled;
         if (!mEnabled)
-            resetParser();
+            resetForReuse();
     }
 }
 
@@ -1421,10 +1421,6 @@ void CppParser::setSharedByFiles(bool newSharedByFiles)
 void CppParser::updateSerialId()
 {
     mSerialId = QString("%1:%2").arg(mParserId).arg(++mSerialCount);
-}
-
-void CppParser::internalClear()
-{
 }
 
 void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject,

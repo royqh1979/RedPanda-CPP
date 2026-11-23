@@ -432,7 +432,7 @@ void TestCppExpressionExtractor::test_completion_trailing_member_operator()
         {"pointer->*", {"pointer"}, "->*"},
         {"f(a()).", {"f", "(", "a", "(", ")", ")"}, "."}
     };
-    initParser();
+    initializeParserGlobals();
     mEditor->setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
     for (const CompletionCase &test : cases) {
         mEditor->document()->setText(test.source);

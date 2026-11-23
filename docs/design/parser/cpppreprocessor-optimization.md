@@ -18,7 +18,8 @@ pp-token 宏展开器不在本次重写范围内。
 ## 2. 术语与生命周期
 
 - **Session**：一次 `preprocess()` 的临时状态，包括 include 栈、当前行游标、分支栈、当前文件、本轮有序跨边界前缀和文件内容缓存。每轮从空状态开始。
-- **Registry**：跨 preprocess 轮次保留的数据，包括文件记录、include 闭包、replay 记录和路径配置。
+- **Registry**：跨 preprocess 轮次保留的派生分析结果，包括文件记录、include 闭包、replay 记录和延迟失效集合。
+- **Configuration**：调用方提供的项目上下文和输入配置，包括项目文件、include 路径、hard defines、编译器类型、语言版本和扫描选项；不属于解析产生的 Registry。
 - **边界外文件**：当前 TU 根文件和项目文件。被编辑器作为根打开的文件始终属于边界外。
 - **边界内文件**：编译器 include 路径中的文件，以及通过 include 路径找到但不属于项目的文件。非项目文件位于项目 include 路径中时仍属于边界内。
 - **跨边界头文件**：由边界外文件直接或经边界外文件链包含进入的边界内文件。直接作为根打开的系统文件也构成一次跨边界进入。
@@ -65,10 +66,11 @@ Registry 只保存以下跨轮状态：
 
 - `fileInfos`：实际文件名到 ParsedFileInfo 的映射；
 - `replayRecords`：replay 根文件名到 ReplayRecord 的映射；
-- `projectFiles`：项目文件集合；
 - `pendingInvalidations`：include 栈重入期间的延迟失效集合。
 
 replayRecords 的 key 就是当前有效的 replay 根集合，不再维护同义的 scannedFiles。文件元数据也如上所述并入 FileInfo，不保留独立的 fileMetadata 映射。
+
+Project files、include 路径、hard defines、编译器类型、语言版本和扫描选项属于 Configuration，与 Registry 并列保存。清理 Registry 不得隐式清空这些输入配置；完整 reset 清 project files、include paths 和 hard defines，并重置编译器类型与 C++ 版本，保留扫描选项、include 最大嵌套深度和回调。
 
 ### 3.4 Statement 位置与归属
 

@@ -76,10 +76,10 @@ public:
     CppPreprocessor(const CppPreprocessor&)=delete;
     CppPreprocessor& operator=(const CppPreprocessor&)=delete;
 
-    void clear();
+    void resetForReuse();
 
-    void clearTempResults();
-    void clearParseResults();
+    void clearTransientSessionState();
+    void clearAnalysisResults();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
     void addHardDefineByLine(const QString& line);
     void setScanOptions(bool parseSystem, bool parseLocal) {
@@ -106,7 +106,7 @@ public:
     void dumpIncludesListTo(const QString& fileName) const;
     void addIncludePath(const QString& fileName);
     void addProjectIncludePath(const QString& fileName);
-    void clearIncludePaths() {
+    void clearCompilerIncludePaths() {
         mIncludePaths.clear();
         mIncludePathList.clear();
     }
@@ -116,7 +116,7 @@ public:
     }
     void removeReplayRecord(const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
-    void invalidateFile(const QString &fileName) { invalidateFileAndDependents(fileName); }
+    void invalidateFileAndDependents(const QString &fileName);
 
     PDefine getDefine(const QString& name) const{
         return mSession.defines.value(name,PDefine());
@@ -172,9 +172,9 @@ public:
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
     void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
-    void addProjectFile(const QString &fileName) { mRegistry.projectFiles.insert(fileName); }
-    void removeProjectFile(const QString &fileName) { mRegistry.projectFiles.remove(fileName); }
-    void clearProjectFiles() { mRegistry.projectFiles.clear(); }
+    void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
+    void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
+    void clearProjectFiles() { mProjectFiles.clear(); }
     QString boundaryAncestor(const QString &fileName, int occurrence) const;
     const QHash<QString,QStringList> &boundaryAncestors() const { return mSession.boundaryAncestors; }
 
@@ -286,7 +286,6 @@ private:
     bool hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const;
     bool isIncludeProtected(const QString &fileName) const;
     PReplayRecord replayRecordForFile(const QString &fileName) const;
-    void invalidateFileAndDependents(const QString &fileName);
 
 
     /*
@@ -330,7 +329,7 @@ private:
         bool allBoundaryEntriesReplayed = true;
         QHash<QString, QStringList> boundaryAncestors;
 
-        void clear() {
+        void clearTransientState() {
             fileName.clear();
             buffer.clear();
             result.clear();
@@ -350,13 +349,11 @@ private:
     struct Registry {
         QHash<QString, PParsedFileInfo> fileInfos;
         QHash<QString, PReplayRecord> replayRecords;
-        QSet<QString> projectFiles;
         QSet<QString> pendingInvalidations;
 
-        void clear() {
+        void clearAnalysisResults() {
             fileInfos.clear();
             replayRecords.clear();
-            projectFiles.clear();
             pendingInvalidations.clear();
         }
     };
@@ -367,6 +364,7 @@ private:
     //option data for the parser
     //{ List of current project's include path }
     DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
+    QSet<QString> mProjectFiles;
     QSet<QString> mProjectIncludePaths;
     //we also need include paths in order (for #include_next)
     QList<QString> mIncludePathList;

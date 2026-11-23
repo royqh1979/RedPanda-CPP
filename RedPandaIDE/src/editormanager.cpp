@@ -591,7 +591,7 @@ PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppPar
                     std::bind(
                         &EditorManager::getContentFromOpenedEditor,this,
                         std::placeholders::_1, std::placeholders::_2));
-        resetCppParser(parser);
+        reconfigureCppParser(parser);
         parser->setEnabled(true);
         sharedParsers.insert(language,parser);
     }
@@ -601,7 +601,7 @@ PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppPar
 void EditorManager::resetSharedParsers(QHash<ParserLanguage, std::weak_ptr<CppParser> > &sharedParsers)
 {
     foreach(std::weak_ptr<CppParser> parser, sharedParsers) {
-        resetCppParser(parser.lock());
+        reconfigureCppParser(parser.lock());
     }
 }
 
@@ -647,7 +647,7 @@ PCppParser EditorManager::createParserForEditor(Editor *editor)
             parser->setLanguage(editor->calcParserLanguage());
             parser->setOnGetFileStream(std::bind(&EditorManager::getContentFromOpenedEditor,
                                                  this, std::placeholders::_1, std::placeholders::_2));
-            resetCppParser(parser);
+            reconfigureCppParser(parser);
             parser->setEnabled(true);
             return parser;
         }

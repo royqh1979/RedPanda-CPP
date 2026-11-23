@@ -464,10 +464,11 @@ CppPreprocessor::CppPreprocessor()
     mParseSystem = true;
 }
 
-void CppPreprocessor::clear()
+void CppPreprocessor::resetForReuse()
 {
-    clearTempResults();
-    mRegistry.clear();
+    clearTransientSessionState();
+    mRegistry.clearAnalysisResults();
+    mProjectFiles.clear();
     mHardDefines.clear();
     mSession.defines.clear();
     mProjectIncludePaths.clear();
@@ -478,17 +479,15 @@ void CppPreprocessor::clear()
     mCompilerType = CppCompilerType::GCC;
 }
 
-void CppPreprocessor::clearTempResults()
+void CppPreprocessor::clearTransientSessionState()
 {
-    mSession.clear();
+    mSession.clearTransientState();
 }
 
-void CppPreprocessor::clearParseResults()
+void CppPreprocessor::clearAnalysisResults()
 {
-    clearTempResults();
-    mRegistry.fileInfos.clear();
-    mRegistry.replayRecords.clear();
-    mRegistry.pendingInvalidations.clear();
+    clearTransientSessionState();
+    mRegistry.clearAnalysisResults();
 }
 
 QString CppPreprocessor::boundaryAncestor(const QString &fileName, int occurrence) const
@@ -708,7 +707,7 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
 void CppPreprocessor::preprocess(const QString &fileName)
 {
     mStopPreprocessing = false;
-    clearTempResults();
+    clearTransientSessionState();
     if (stopRequested())
         return;
     QSet<QString> pendingInvalidations = mRegistry.pendingInvalidations;
@@ -1153,7 +1152,7 @@ void CppPreprocessor::openInclude(QString fileName)
 
     bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
             || isSystemHeaderFile(fileName, mProjectIncludePaths);
-    bool childInside = !mRegistry.projectFiles.contains(fileName) && isSystemFile;
+    bool childInside = !mProjectFiles.contains(fileName) && isSystemFile;
     bool boundaryEntry = false;
     QString boundaryAncestor;
     if (mSession.includeStack.isEmpty()) {

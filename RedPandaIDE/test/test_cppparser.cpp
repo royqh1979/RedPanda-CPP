@@ -1483,7 +1483,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     QCOMPARE(statement->declarations.value(declaration).boundaryAncestor, declaration);
     QCOMPARE(statement->definition.boundaryAncestor, definition);
 
-    mParser->invalidateFile(definition);
+    mParser->invalidateFileAndDependents(definition);
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(!statementHasDefinition(statement));
@@ -1493,7 +1493,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
 
-    mParser->invalidateFile(declaration);
+    mParser->invalidateFileAndDependents(declaration);
     QVERIFY(!mParser->findStatement("N::C::method"));
 
     CppParser::parseFileBlocking(mParser, main, true, "");
@@ -1566,7 +1566,7 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
     QCOMPARE(doubleDefinition->definition.boundaryAncestor, definition);
     QCOMPARE(doubleDefinition->definition.fileName, definition);
 
-    mParser->invalidateFile(definition);
+    mParser->invalidateFileAndDependents(definition);
     QVERIFY(!statementHasDefinition(doubleDefinition));
     QVERIFY(!statementHasDefinition(intDeclaration));
     QCOMPARE(overloadedFunctions().count(), 2);
@@ -1635,7 +1635,7 @@ void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
     QCOMPARE(mParser->findNamespace("std", true)->count(), 1);
     QVERIFY(mParser->findStatement("std::inlineValue"));
     QCOMPARE(mParser->findNamespace("std::__cxx11")->count(), 1);
-    mParser->invalidateFile("main.cpp");
+    mParser->invalidateFileAndDependents("main.cpp");
     QVERIFY(mParser->findNamespace("std")->isEmpty());
     QVERIFY(mParser->findNamespace("std", true)->isEmpty());
     QVERIFY(mParser->findNamespace("std::__cxx11")->isEmpty());
@@ -1657,7 +1657,7 @@ void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
     QVERIFY(mParser->findStatement("outer::regular::value"));
     QVERIFY(mParser->findStatement("outer::regular::reopened"));
     QVERIFY(!mParser->findStatement("outer::value"));
-    mParser->invalidateFile("main.cpp");
+    mParser->invalidateFileAndDependents("main.cpp");
     QVERIFY(mParser->findNamespace("outer", true)->isEmpty());
     QVERIFY(mParser->findNamespace("outer::regular", true)->isEmpty());
 }
@@ -1725,7 +1725,7 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
     QVERIFY(mParser->findStatement("N::Deep::fromA"));
     QVERIFY(mParser->findStatement("N::Deep::fromB"));
 
-    mParser->invalidateFile("a.cpp");
+    mParser->invalidateFileAndDependents("a.cpp");
     QVERIFY(!mParser->findStatement("N::Deep::fromA"));
     QVERIFY(mParser->findStatement("N::Deep::fromB"));
     QCOMPARE(mParser->findStatement("N"), n);
@@ -1735,7 +1735,7 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
     QCOMPARE(namespaceDeep->declarations.value("b.cpp").fileName, "b.cpp");
     QCOMPARE(namespaceDeep->declarations.value("b.cpp").range.start.line, 0);
 
-    mParser->invalidateFile("b.cpp");
+    mParser->invalidateFileAndDependents("b.cpp");
     QVERIFY(!mParser->findStatement("N"));
     QVERIFY(!mParser->findStatement("N::Deep"));
 }
@@ -1781,7 +1781,7 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
     QVERIFY(mParser->findStatement("N::visible"));
     QVERIFY(mParser->findStatement("N::plain"));
 
-    mParser->invalidateFile("inline.cpp");
+    mParser->invalidateFileAndDependents("inline.cpp");
     QVERIFY(!mParser->findStatement("N::visible"));
     QVERIFY(mParser->findStatement("N::V::plain"));
     QCOMPARE(mParser->findStatement("N::V"), v);
@@ -1899,7 +1899,7 @@ void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
         QVERIFY(entered->tryAcquire(1, 5000));
         CppParser::prepareForApplicationExit();
         auto restoreExitState = finally([] {
-            CppParser::resetApplicationExitForTest();
+            CppParser::resetApplicationExitFlagForTest();
         });
         if (stopLocally)
             mParser->stopParsing();
@@ -1946,7 +1946,7 @@ void TestCppParser::test_application_exit_destructor_abandons_resources()
     int statementCount = mParser->statementList().count();
     bool hasFileInfo = static_cast<bool>(mParser->findFileInfo("text.cpp"));
     mParser.reset();
-    CppParser::resetApplicationExitForTest();
+    CppParser::resetApplicationExitFlagForTest();
 
     QCOMPARE(statementCount, 1);
     QVERIFY(hasFileInfo);

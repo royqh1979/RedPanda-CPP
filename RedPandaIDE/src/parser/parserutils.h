@@ -598,7 +598,7 @@ extern QSet<QString> MemberOperators;
 extern QSet<QString> IOManipulators;
 extern QSet<QString> AutoTypes;
 
-void initParser();
+void initializeParserGlobals();
 
 QString getHeaderFilename(const QString& relativeTo, const QString& line,
                        const QStringList& includePaths, const QStringList& projectIncludePaths);

@@ -53,7 +53,7 @@ public:
     void addIncludePath(const QString& value);
     void removeProjectFile(const QString& value);
     void addProjectIncludePath(const QString& value);
-    void clearIncludePaths();
+    void clearCompilerIncludePaths();
     void clearProjectIncludePaths();
     void clearProjectFiles();
     QList<PStatement> getListOfFunctions(const QString& fileName, const QString& phrase, int line) const;
@@ -98,15 +98,15 @@ public:
     QSet<QString> getFileUsings(const QString& filename) const;
     QString getHeaderFileName(const QString& relativeTo, const QString& headerName,
                               bool fromNext = false) const;
-    void invalidateFile(const QString& fileName);
+    void invalidateFileAndDependents(const QString& fileName);
 #ifdef REDPANDA_PARSER_TEST
-    void invalidateFileRecordForTest(const QString &fileName) { internalInvalidateFile(fileName); }
+    void invalidateSingleFileForTest(const QString &fileName) { invalidateSingleFile(fileName); }
     CppPreprocessor::EventCounts preprocessorEventCountsForTest(const QString &fileName) const {
         return mPreprocessor->eventCounts(fileName);
     }
     const QStringList &preprocessedForTest() const { return mPreprocessedForTest; }
     const CppTokenizer::TokenList &tokenizerTokensForTest() const { return mTokenizerTokensForTest; }
-    static void resetApplicationExitForTest();
+    static void resetApplicationExitFlagForTest();
 #endif
     bool isLineVisible(const QString& fileName, int line) const;
     bool isIncludeLine(const QString &line) const;
@@ -119,7 +119,7 @@ public:
     int cppVersion() const;
     static void prepareForApplicationExit();
     void stopParsing();
-    void resetParser();
+    void resetForReuse();
     void unFreeze();
     bool hasReplayRecord(const QString& fileName) const;
     bool isFileParsedInContext(const QString &fileName, const QString &contextFileName) const;
@@ -167,13 +167,12 @@ private:
     void internalParse(const QString& fileName);
     void internalParseHardDefines();
     bool shouldStopParsing() const;
-    void clearParseResults();
+    void clearAnalysisResults();
     CppEvaluationOptions evaluationOptions() const;
-    void internalInvalidateFile(const QString& fileName);
+    void invalidateSingleFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
     QStringList sortFilesByIncludeRelations(const QSet<QString>& files);
-    void internalClear();
 
     PStatement doFindStatementOf(const QString& fileName, const QString& phrase, int line) const;
     PStatement doFindStatementOf(const QString& fileName, const QString& phrase,

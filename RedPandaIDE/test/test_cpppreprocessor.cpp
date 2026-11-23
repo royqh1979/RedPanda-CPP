@@ -227,7 +227,7 @@ void TestCppPreprocessor::test_evaluate_constant_expression_2()
 void TestCppPreprocessor::test_compare_cpp_version()
 {
     CppPreprocessor preprocessor;
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 199711L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), false);
@@ -237,7 +237,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201103L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -247,7 +247,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201402L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -257,7 +257,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 201703L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -268,7 +268,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202002L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -278,7 +278,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), false);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202302L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -288,7 +288,7 @@ void TestCppPreprocessor::test_compare_cpp_version()
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202002L"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus > 202302L"), false);
 
-    preprocessor.clear();
+    preprocessor.resetForReuse();
     preprocessor.addHardDefineByLine("#define __cplusplus 202400L");
     QCOMPARE(preprocessor.evaluateIf("defined(__cplusplus)"), true);
     QCOMPARE(preprocessor.evaluateIf("__cplusplus >= 201103L"), true);
@@ -304,7 +304,7 @@ void TestCppPreprocessor::test_cpp_version_value()
 {
     CppPreprocessor preprocessor;
     for (int version : {199711, 201103, 201402, 201703, 202002, 202302, 202400}) {
-        preprocessor.clear();
+        preprocessor.resetForReuse();
         QCOMPARE(preprocessor.cppVersion(), CppVersion::Cpp17);
         preprocessor.addHardDefineByLine(QString("#define __cplusplus %1L").arg(version));
         QCOMPARE(preprocessor.cppVersion(), version);

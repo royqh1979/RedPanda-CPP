@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QVector<int>>("QVector<int>");
     qRegisterMetaType<QHash<int,QString>>("QHash<int,QString>");
 
-    initParser();
+    initializeParserGlobals();
 
     try {
 

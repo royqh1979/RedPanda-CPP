@@ -3602,7 +3602,7 @@ void MainWindow::scanActiveProject(bool parse)
 
     //UpdateClassBrowsing;
     if (parse) {
-        resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
+        reconfigureCppParser(mProject->cppParser(), mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
         Editor *editor = mEditorManager->getEditor();
         if (editor && editor->inProject())
@@ -8071,7 +8071,7 @@ void MainWindow::reparseNonProjectEditors()
             Editor* e=(*mEditorManager)[i];
             if (!e->inProject()) {
                 if (!pSettings->codeCompletion().shareParser()) {
-                    resetCppParser(e->parser());
+                    reconfigureCppParser(e->parser());
                 }
             }
         }
@@ -8302,7 +8302,7 @@ void MainWindow::onProjectUnitAdded(const QString &filename)
 
 void MainWindow::onProjectUnitRemoved(const QString &filename)
 {
-    mProject->cppParser()->invalidateFile(filename);
+    mProject->cppParser()->invalidateFileAndDependents(filename);
     mProject->cppParser()->removeProjectFile(filename);
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(filename);
@@ -8313,7 +8313,7 @@ void MainWindow::onProjectUnitRemoved(const QString &filename)
 
 void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString &newFilename)
 {
-    mProject->cppParser()->invalidateFile(oldFilename);
+    mProject->cppParser()->invalidateFileAndDependents(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
     mProject->cppParser()->addProjectFile(newFilename,true);
     if (pSettings->editor().parseTodos()) {
@@ -10978,7 +10978,7 @@ void MainWindow::on_actionReparse_Code_triggered()
         if (mProject && e->inProject())
             scanActiveProject(true);
         else if (e->parser()){
-            resetCppParser(e->parser());
+            reconfigureCppParser(e->parser());
             e->reparse();
         }
     }

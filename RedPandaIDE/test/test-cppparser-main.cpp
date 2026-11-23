@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     argc = qtArgs.length();
     argv = qtArgs.data();
 
-    initParser();
+    initializeParserGlobals();
     runTestSuite<TestCppPreprocessor>(suite, argc, argv, status);
     runTestSuite<TestCppPreprocessorInclude>(suite, argc, argv, status);
     runTestSuite<TestCppTokenizer>(suite, argc, argv, status);

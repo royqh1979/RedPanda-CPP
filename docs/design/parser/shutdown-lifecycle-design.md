@@ -32,7 +32,7 @@
 
 ### 关闭单个 Editor
 
-`Editor::setCppParser(nullptr)` 保持现有行为：解除关联前调用旧 Parser 的 `invalidateFile()`。
+`Editor::setCppParser(nullptr)` 保持现有行为：解除关联前调用旧 Parser 的 `invalidateFileAndDependents()`。
 
 这适用于共享 Parser 仍有其它 Editor 使用的情况。非共享 Parser 虽会随 Editor 析构，但保留同一路径不会改变正确性。
 
@@ -43,7 +43,7 @@
 1. 按左右面板顺序逐一完成保存确认；
 2. 任一取消或保存失败，立即停止，不关闭剩余 Editor；
 3. 保存全部完成后，逐一关闭 Editor；
-4. 不调用 `resetCppParser()`，也不额外遍历共享 Parser 表执行 reset。
+4. 不调用 `reconfigureCppParser()`，也不额外遍历共享 Parser 表执行 reset。
 
 EditorManager 的 weak_ptr 不影响析构。ClassBrowser 改为 weak_ptr 后，最后一个 Editor 关闭时，如果没有后台任务或局部操作仍在使用 Parser，引用计数归零，Parser 立即执行普通析构和 reset。
 
@@ -68,9 +68,9 @@ Close All 先完整执行批量保存，再进入关闭循环。这样 reset、i
 
 ## 应用退出设计
 
-### 为什么不能只跳过 resetParser
+### 为什么不能只跳过 resetForReuse
 
-CppParser 的 StatementModel 和 CppPreprocessor 原本是直接成员。即使析构函数不调用 `resetParser()`，直接成员仍会自动析构，statement map、fileInfo、replay 等容器仍会逐项释放。
+CppParser 的 StatementModel 和 CppPreprocessor 原本是直接成员。即使析构函数不调用 `resetForReuse()`，直接成员仍会自动析构，statement map、fileInfo、replay 等容器仍会逐项释放。
 
 因此，“析构时不清理大型资源”必须改变资源所有权，不能只增加一个跳过 reset 的布尔值。
 
@@ -80,7 +80,7 @@ CppParser 使用两个 `std::unique_ptr` 分别持有 StatementModel 和 CppPrep
 
 普通析构：
 
-1. 保持现有 `resetParser()`；
+1. 保持现有 `resetForReuse()`；
 2. 正常释放 StatementModel 和 CppPreprocessor。
 
 应用退出析构：
@@ -96,13 +96,13 @@ CppParser 使用两个 `std::unique_ptr` 分别持有 StatementModel 和 CppPrep
 CppParser 有两个独立的原子标志：
 
 - 进程级应用退出标志：由 `prepareForApplicationExit()` 设置，同时控制解析停止和析构时的资源放弃策略；
-- 实例级停止当前解析标志：由 `resetParser()` 设置，只要求当前 Parser 尽快结束正在进行的解析。
+- 实例级停止当前解析标志：由 `resetForReuse()` 设置，只要求当前 Parser 尽快结束正在进行的解析。
 
 预处理、分词、声明解析和多文件扫描都通过同一停止谓词检查这两个标志；任一为真即停止后续工作，不再开始下一个文件或解析阶段。后台预处理和分词通过停止回调读取 Parser 状态，不反向依赖 CppParser，也不另设一套生命周期状态。
 
 两种停止路径的资源语义不同：
 
-- 仅实例级停止为真：本次结果不完整，不能保留或发布。Parser 在 `mParsing=false` 和 `parseFinished` 之前清空语句、fileInfo、replay 和临时解析结果；include 路径、hard defines、编译器类型、语言版本和项目文件清单等配置保持不变。随后 `resetParser()` 再执行其原有的完整重置。
+- 仅实例级停止为真：本次结果不完整，不能保留或发布。Parser 在 `mParsing=false` 和 `parseFinished` 之前清空语句、fileInfo、replay 和临时解析结果；include 路径、hard defines、编译器类型、语言版本和项目文件清单等配置保持不变。随后 `resetForReuse()` 再执行其原有的完整重置。
 - 应用退出标志为真：不清理半成品，也不继续后续解析；最终析构时直接放弃 StatementModel 和 CppPreprocessor 的所有权，由操作系统回收。
 - 两个标志同时为真：按应用退出处理，不执行普通中止清理。
 

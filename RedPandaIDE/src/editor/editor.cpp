@@ -375,7 +375,7 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
-        mParser->invalidateFile(mFilename);
+        mParser->invalidateFileAndDependents(mFilename);
     }
 
     if (mEditorSettings->autoFormatWhenSaved()) {
@@ -440,7 +440,7 @@ void Editor::rename(const QString &newName)
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
-        mParser->invalidateFile(oldName);
+        mParser->invalidateFileAndDependents(oldName);
     }
 
     mFilename = newName;
@@ -2124,7 +2124,7 @@ void Editor::setCppParser(PCppParser parser)
                 &CppParser::parseFinished,
                 this,
                 &Editor::onParseFinished);
-        mParser->invalidateFile(mFilename);
+        mParser->invalidateFileAndDependents(mFilename);
     }
     mParser = parser;
     if (mParser) {

@@ -105,7 +105,7 @@ struct TokenizerProfileScope {
 
 CppTokenizer::CppTokenizer() = default;
 
-void CppTokenizer::clear()
+void CppTokenizer::resetTokenizationState()
 {
     mBufferLines.clear();
     mBuffer.clear();
@@ -131,7 +131,7 @@ void CppTokenizer::relocateTokens(const QString &fileName, const SourcePosition 
 
 void CppTokenizer::setTokens(const TokenList &tokens)
 {
-    clear();
+    resetTokenizationState();
     for (const Token &source : tokens) {
         addToken(source.text, source.kind, source.position);
         mTokenList.last().fileName = source.fileName;
@@ -158,7 +158,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         tokenizerProfile.reset();
         qunsetenv("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER");
     }
-    clear();
+    resetTokenizationState();
     mBufferLines = buffer;
     mBuffer = buffer.join('\n');
     traceTokenization(mBuffer);

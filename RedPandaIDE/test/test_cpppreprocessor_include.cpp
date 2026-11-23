@@ -619,7 +619,7 @@ void TestCppPreprocessorInclude::test_clear_registry()
     QVERIFY(p.findFileInfo(header));
     QVERIFY(p.getDefine("MACRO_RESULT"));
 
-    p.clear();
+    p.resetForReuse();
     QVERIFY(!p.hasReplayRecord(header));
     QVERIFY(!p.findFileInfo(header));
     QVERIFY(!p.getDefine("MACRO_RESULT"));
@@ -1024,7 +1024,7 @@ void TestCppPreprocessorInclude::test_scanned_prefix_entry_forces_lazy_suffix_re
     p.addIncludePath(includeDir);
     p.preprocess(root);
 
-    p.invalidateFile(first);
+    p.invalidateFileAndDependents(first);
     QCOMPARE(p.eventCounts(first).invalidate, 1);
     QCOMPARE(p.eventCounts(second).invalidate, 0);
     QVERIFY(p.hasReplayRecord(second));
@@ -1232,7 +1232,7 @@ void TestCppPreprocessorInclude::test_hard_define_change_resets_parser()
     p.preprocess(dir + "/macro_none.cpp");
     QVERIFY(p.result().contains("int macro_result = 1;"));
 
-    p.clear();
+    p.resetForReuse();
     p.addIncludePath(includeDir);
     p.addProjectFile(dir + "/macro_none.cpp");
     p.addHardDefineByLine("#define MODE 2");
@@ -1283,7 +1283,7 @@ void TestCppPreprocessorInclude::test_indirect_user_header_macro_change_forces_r
     QVERIFY(p.result().contains("int result = 1;"));
 
     QVERIFY(writeFile(provider, {"#define MODE 2"}));
-    p.invalidateFile(provider);
+    p.invalidateFileAndDependents(provider);
     p.preprocess(main);
     QVERIFY(p.result().contains("int result = 2;"));
     QCOMPARE(p.eventCounts(config).scan, 2);
@@ -1369,7 +1369,7 @@ void TestCppPreprocessorInclude::test_editor_change_invalidates_without_disk_cha
     QVERIFY(p.result().contains("int callback_v1;"));
 
     version = 2;
-    p.invalidateFile(header);
+    p.invalidateFileAndDependents(header);
     p.preprocess(main);
     QVERIFY(p.result().contains("int callback_v2;"));
     QCOMPARE(p.eventCounts(header).scan, 2);
@@ -1427,7 +1427,7 @@ void TestCppPreprocessorInclude::test_active_include_stack_is_not_invalidated_mi
             return false;
         if (!triggered) {
             triggered = true;
-            p.invalidateFile(main);
+            p.invalidateFileAndDependents(main);
         }
         out = QStringList{"int child_value;"};
         return true;

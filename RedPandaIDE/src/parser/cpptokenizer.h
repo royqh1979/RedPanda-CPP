@@ -53,7 +53,7 @@ public:
     CppTokenizer(const CppTokenizer&) = delete;
     CppTokenizer& operator=(const CppTokenizer&) = delete;
 
-    void clear();
+    void resetTokenizationState();
     void tokenize(const QStringList &buffer);
     void setTokens(const TokenList &tokens);
     static TokenKind numberTokenKind(const QString &text);

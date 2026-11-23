@@ -46,7 +46,7 @@ QSet<QString> AutoTypes;
 Q_GLOBAL_STATIC(QSet<QString>,CppHeaderExts)
 Q_GLOBAL_STATIC(QSet<QString>,CppSourceExts)
 
-void initParser()
+void initializeParserGlobals()
 {
     CppHeaderExts->insert("h");
     CppHeaderExts->insert("hpp");
