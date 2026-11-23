@@ -68,6 +68,7 @@ enum class ScrollStyle {
 
 enum class CodeBlockKind {
     Code,
+    Preprocessor,
     Comment
 };
 

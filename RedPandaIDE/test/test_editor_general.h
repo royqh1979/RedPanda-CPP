@@ -19,6 +19,7 @@ private slots:
     void test_export_files();
     void test_export_semantic_highlight();
     void test_completion_after_member_operator();
+    void test_completion_of_cplusplus_macro_after_ifdef();
     void test_semantic_export_profile();
 };
 

@@ -472,19 +472,19 @@ void CppSyntaxer::procDirective()
                 || directive == QStringView(u"ifndef")) {
             mRange.blockLevel++;
             mRange.blockStarted=1;
-            mRange.blockEvents.append({-1, true});
+            mRange.blockEvents.append({-1, true, CodeBlockKind::Preprocessor});
         } else if (directive == QStringView(u"else")
                    || directive == QStringView(u"elif")
                    || directive == QStringView(u"elifdef")
                    || directive == QStringView(u"elifndef")) {
             mRange.blockStarted=1;
             mRange.blockEnded=1;
-            mRange.blockEvents.append({-1, false});
-            mRange.blockEvents.append({-1, true});
+            mRange.blockEvents.append({0, false, CodeBlockKind::Preprocessor});
+            mRange.blockEvents.append({-1, true, CodeBlockKind::Preprocessor});
         } else if (directive == QStringView(u"endif")) {
             mRange.blockLevel--;
             mRange.blockEnded=1;
-            mRange.blockEvents.append({-1, false});
+            mRange.blockEvents.append({-1, false, CodeBlockKind::Preprocessor});
         }
     }
 }

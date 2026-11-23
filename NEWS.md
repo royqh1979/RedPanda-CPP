@@ -100,6 +100,8 @@ Red Panda C++ Version 3.6
   - fix: Use normal symbol colors for collapsed fold placeholders, allow the caret at the placeholder end, and remove collapsed-line underlines.
   - fix: Restore rainbow colors for brackets, indentation, and indent guides.
   - fix: Preserve preprocessor fold boundaries on lines containing block comments, and expand the fold when editing at its closing directive.
+  - fix: Keep #elif/#else branch delimiters visible when folding preprocessor branches.
+  - fix: Offer predefined macros such as __cplusplus after #ifdef/#ifndef/#undef.
   - fix: Preserve text following a fold's closing brace and expand affected folded blocks independently in each view before editing them.
   - enhancement: Support folding multi-line C/C++ block and Doxygen comments.
   - enhancement: Support the function-local predefined identifier __func__ in completion, highlighting, type evaluation, and parser hints.

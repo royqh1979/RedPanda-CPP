@@ -52,6 +52,7 @@ private slots:
     void test_fold_edit_inside_expands_and_undo();
     void test_preprocessor_fold_edit_inside_expands();
     void test_nested_preprocessor_fold_boundary();
+    void test_preprocessor_branch_boundaries_remain_visible();
     void test_fold_virtual_close_backspace();
     void test_fold_edit_outside_and_suffix_transitions();
     void test_fold_edit_shared_document_views();

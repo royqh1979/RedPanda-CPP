@@ -848,6 +848,36 @@ void TestQSyneditDisplay::test_nested_preprocessor_fold_boundary()
     QVERIFY(!block->collapsed);
 }
 
+void TestQSyneditDisplay::test_preprocessor_branch_boundaries_remain_visible()
+{
+    mEdit->loadContent({
+        "#if defined(A)", "int a;",
+        "#elif defined(B)", "int b;",
+        "#else", "int c;",
+        "#endif"
+    });
+    PCodeBlock block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 2);
+    mEdit->collapse(block);
+    QVERIFY(mEdit->mRowIndex.isHidden(1));
+    QVERIFY(!mEdit->mRowIndex.isHidden(2));
+
+    block = mEdit->foldStartAtLine(2);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 4);
+    mEdit->collapse(block);
+    QVERIFY(mEdit->mRowIndex.isHidden(3));
+    QVERIFY(!mEdit->mRowIndex.isHidden(4));
+
+    block = mEdit->foldStartAtLine(4);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 6);
+    mEdit->collapse(block);
+    QVERIFY(mEdit->mRowIndex.isHidden(5));
+    QVERIFY(mEdit->mRowIndex.isHidden(6));
+}
+
 void TestQSyneditDisplay::test_fold_virtual_close_backspace()
 {
     mEdit->loadContent(makeFoldableLines());

@@ -48,7 +48,11 @@ public:
     int fromCh = -1;
     int toCh = -1;
     CodeBlockKind kind;
-    int endDelimiterLength() const { return kind == CodeBlockKind::Comment ? 2 : 1; }
+    int endDelimiterLength() const {
+        if (kind == CodeBlockKind::Comment)
+            return 2;
+        return kind == CodeBlockKind::Preprocessor ? 0 : 1;
+    }
     bool hadEndLineSuffix = false;
     QVector<PCodeBlock> subBlocks; // Sub fold ranges
     bool collapsed; // Is collapsed?

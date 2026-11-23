@@ -439,6 +439,37 @@ void TestEditorGeneral::test_completion_after_member_operator()
     mEditor->setCodeCompletionSettings(nullptr);
 }
 
+void TestEditorGeneral::test_completion_of_cplusplus_macro_after_ifdef()
+{
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->addHardDefineByLine("#define __cplusplus 201703L");
+    parser->parseHardDefines();
+    mEditor->setFilename("main.cpp");
+    mEditor->setFileType(FileType::CppSource, false);
+    mEditor->loadContent("#ifdef _");
+    mEditor->setCaretPos({mEditor->lineText(0).length(), 0});
+    mEditor->setCppParser(parser);
+    CodeCompletionSettings completionSettings(mSettingsPersistor.get());
+    completionSettings.setEnabled(true);
+    completionSettings.setShowCompletionWhileInput(true);
+    completionSettings.setMinCharRequired(1);
+    mEditor->setCodeCompletionSettings(&completionSettings);
+    mEditor->mCodeCompletionEnabled = true;
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setShowEditorCaretFunc([] {});
+    mEditor->setCompletionPopup(&popup);
+
+    QKeyEvent event(QEvent::KeyPress, Qt::Key_Underscore, Qt::NoModifier, "_");
+    mEditor->keyPressEvent(&event);
+
+    QCOMPARE(mEditor->lineText(0), QString("#ifdef __"));
+    QVERIFY(popup.isVisible());
+    QVERIFY(popup.selectedStatement());
+    QCOMPARE(popup.selectedStatement()->command, QString("__cplusplus"));
+    mEditor->setCompletionPopup(nullptr);
+    mEditor->setCodeCompletionSettings(nullptr);
+}
+
 void TestEditorGeneral::test_semantic_export_profile()
 {
     if (!qEnvironmentVariableIsSet("REDPANDA_EXPORT_PROFILE"))

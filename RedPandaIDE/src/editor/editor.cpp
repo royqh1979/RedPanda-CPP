@@ -782,7 +782,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     QString lastWord;
                     lastWord = getPreviousWordAtPositionForSuggestion(ws, tokenType);
                     if (mParser && (tokenType == QSynedit::TokenType::Keyword
-                                    || tokenType == QSynedit::TokenType::Identifier)) {
+                                    || tokenType == QSynedit::TokenType::Identifier
+                                    || tokenType == QSynedit::TokenType::Preprocessor)) {
                         if (CppTypeQualifiers.contains(lastWord)) {
                             processCommand(QSynedit::EditCommand::Input,ch);
                             showCompletion(lastWord,false, CodeCompletionType::Types);

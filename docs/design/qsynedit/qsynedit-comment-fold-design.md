@@ -20,7 +20,8 @@
 
 在共享类型定义中增加 `CodeBlockKind`，至少区分：
 
-- `Code`：现有花括号和预处理范围；
+- `Code`：花括号范围；
+- `Preprocessor`：预处理行范围及分支边界；
 - `Comment`：`/* ... */` 及其 Doxygen 形式。
 
 `BlockDelimiterEvent` 在现有 `ch/started` 外携带 `kind`，默认值为 `Code`，既有花括号事件不需要机械改写。事件相等比较必须包含 `kind`。
@@ -78,9 +79,9 @@ C/C++ 不支持嵌套块注释，因此注释内部的 `/*` 不再产生 Open；
 
 - Comment 且结束行隐藏：`...*/`；
 - Comment 且结束行因后缀可见：`...`；
-- Code：继续调用现有 Syntaxer 路径，保持 `...}` 和预处理行为。
+- Code 和 Preprocessor：继续调用现有 Syntaxer 路径，分别保持 `...}` 和预处理行为。
 
-Comment 占位符使用 `commentAttribute()`，Code 占位符使用 `symbolAttribute()`；原子光标单位、行宽、鼠标定位和编辑展开继续复用现有公共路径，不为注释另建一套显示或编辑算法。
+Comment 占位符使用 `commentAttribute()`，Code 和 Preprocessor 占位符使用 `symbolAttribute()`；原子光标单位、行宽、鼠标定位和编辑展开继续复用现有公共路径，不为注释另建一套显示或编辑算法。
 
 ## 8. 编辑与增量重扫
 
