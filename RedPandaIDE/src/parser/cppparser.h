@@ -201,6 +201,11 @@ private:
     void updateSerialId();
 
 private:
+    struct Session {
+        int filesScannedCount = 0;
+        int filesToScanCount = 0;
+    };
+
     int mParserId;
     ParserLanguage mLanguage;
     int mSerialCount;
@@ -213,8 +218,7 @@ private:
     mutable std::unique_ptr<StatementModel> mStatementList;
     std::unique_ptr<CppPreprocessor> mPreprocessor;
     QSet<QString> mProjectFiles;
-    int mFilesScannedCount;
-    int mFilesToScanCount;
+    Session mSession;
     int mLockCount;
     bool mParsing;
     std::atomic_bool mStopParsing;

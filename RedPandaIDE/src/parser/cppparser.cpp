@@ -37,7 +37,6 @@ CppParser::CppParser()
       mIsSystemHeader(false),
       mStatementList(std::make_unique<StatementModel>()),
       mPreprocessor(std::make_unique<CppPreprocessor>()),
-      mFilesScannedCount(0), mFilesToScanCount(0),
       mLockCount(0), mParsing(false), mStopParsing(false)
 {
     updateSerialId();
@@ -239,8 +238,8 @@ void CppParser::clearAnalysisResults()
     mStatementList->clear();
     mPreprocessor->clearAnalysisResults();
     internalParseHardDefines();
-    mFilesScannedCount = 0;
-    mFilesToScanCount = 0;
+    mSession.filesScannedCount = 0;
+    mSession.filesToScanCount = 0;
 #ifdef REDPANDA_PARSER_TEST
     mPreprocessedForTest.clear();
     mTokenizerTokensForTest.clear();
@@ -408,7 +407,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
             clearAnalysisResults();
         QMutexLocker locker(&mMutex);
         mParsing = false;
-        emit parseFinished(mFilesScannedCount, updateView ? 1 : 0);
+        emit parseFinished(mSession.filesScannedCount, updateView ? 1 : 0);
     });
     if (onlyIfNotParsed && mPreprocessor->hasReplayRecord(fileName))
         return false;
@@ -421,23 +420,23 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         if (shouldStopParsing())
             return true;
         internalInvalidateFiles(filesToReparse);
-        mFilesToScanCount = files.count();
-        mFilesScannedCount = 0;
+        mSession.filesToScanCount = files.count();
+        mSession.filesScannedCount = 0;
         for (const QString &file : files) {
             if (shouldStopParsing())
                 break;
-            ++mFilesScannedCount;
-            emit progress(file, mFilesToScanCount, mFilesScannedCount);
+            ++mSession.filesScannedCount;
+            emit progress(file, mSession.filesToScanCount, mSession.filesScannedCount);
             if (!mPreprocessor->hasReplayRecord(file))
                 internalParse(file);
         }
     } else {
         invalidateSingleFile(fileName);
         invalidateSingleFile(contextFilename);
-        mFilesToScanCount = 2;
-        mFilesScannedCount = 0;
-        ++mFilesScannedCount;
-        emit progress(fileName, mFilesToScanCount, mFilesScannedCount);
+        mSession.filesToScanCount = 2;
+        mSession.filesScannedCount = 0;
+        ++mSession.filesScannedCount;
+        emit progress(fileName, mSession.filesToScanCount, mSession.filesScannedCount);
         internalParse(contextFilename);
         if (!shouldStopParsing() && fileName != contextFilename
                 && !mPreprocessor->includesFile(contextFilename, fileName))
@@ -1036,8 +1035,8 @@ void CppParser::resetForReuse()
     emit onBusy();
     mUniqId = 0;
     mIsSystemHeader = false;
-    mFilesScannedCount = 0;
-    mFilesToScanCount = 0;
+    mSession.filesScannedCount = 0;
+    mSession.filesToScanCount = 0;
     mStatementList->clear();
     mProjectFiles.clear();
     mPreprocessor->resetForReuse();
