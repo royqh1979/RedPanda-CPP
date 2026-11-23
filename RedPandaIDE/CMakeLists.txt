@@ -424,6 +424,7 @@ target_moc_classes(test-widgets
     src/widgets/codecompletionpopup
     src/widgets/coloredit
     src/widgets/customdisablediconengine
+    src/widgets/linenumbertexteditor
     src/widgets/qpatchedcombobox
     src/widgets/functiontooltipwidget
     src/widgets/headercompletionpopup

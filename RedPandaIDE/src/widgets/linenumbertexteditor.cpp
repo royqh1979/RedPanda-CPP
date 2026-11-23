@@ -87,12 +87,14 @@ void LineNumberTextEditor::clearFormat()
     cursor.select(QTextCursor::Document);
     cursor.setCharFormat(QTextCharFormat());
     cursor.clearSelection();
+    clearHighlightedLine();
 }
 
 void LineNumberTextEditor::clearAll()
 {
     clear();
     clearStartFormat();
+    clearHighlightedLine();
 }
 
 void LineNumberTextEditor::highlightLine(int line, QColor highlightColor)
@@ -103,17 +105,41 @@ void LineNumberTextEditor::highlightLine(int line, QColor highlightColor)
     QTextCursor cur(block);
     if (cur.isNull())
         return;
+    highlightLineNumber(line, highlightColor);
     QTextCharFormat oldFormat = cur.charFormat();
     QTextCharFormat format = QTextCharFormat(cur.charFormat());
     cur.select(QTextCursor::LineUnderCursor);
+    format.setForeground(highlightColor);
     format.setUnderlineColor(highlightColor);
     format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-    format.setTextOutline(highlightColor);
+    format.clearProperty(QTextFormat::TextOutline);
     cur.setCharFormat(format);
     cur.clearSelection();
     cur.setCharFormat(oldFormat);
     setTextCursor(cur);
     moveCursor(QTextCursor::MoveOperation::StartOfLine);
+}
+
+void LineNumberTextEditor::highlightLineNumber(int line, const QColor &highlightColor)
+{
+    QTextBlock block = document()->findBlockByLineNumber(line);
+    if (!block.isValid())
+        return;
+    mHighlightedLine = line;
+    mHighlightedLineColor = highlightColor;
+    lineNumberArea->update();
+}
+
+void LineNumberTextEditor::clearLineNumberHighlight()
+{
+    clearHighlightedLine();
+}
+
+void LineNumberTextEditor::clearHighlightedLine()
+{
+    mHighlightedLine = -1;
+    mHighlightedLineColor = QColor();
+    lineNumberArea->update();
 }
 
 void LineNumberTextEditor::locateLine(int line)
@@ -193,6 +219,8 @@ void LineNumberTextEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
             QString number = QString::number(blockNumber + 1);
             if (!isEnabled())
                 painter.setPen(palette().color(QPalette::Disabled,QPalette::ButtonText));
+            else if (mHighlightedLine == blockNumber)
+                painter.setPen(mHighlightedLineColor);
             else if (textCursor().blockNumber()==blockNumber)
                 painter.setPen(mLineNumberAreaCurrentLine);
             else

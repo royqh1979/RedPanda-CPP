@@ -38,6 +38,7 @@
 #include "src/utils.h"
 #include "src/widgets/classbrowser.h"
 #include "src/widgets/codecompletionpopup.h"
+#include "src/widgets/linenumbertexteditor.h"
 #include "src/widgets/functiontooltipwidget.h"
 #include "src/widgets/searchresultview.h"
 #include <qsynedit/formatter/cppformatter.h>
@@ -1776,4 +1777,42 @@ void TestWidgets::test_find_in_files_options_persistence()
         QVERIFY(!settings.findInFilesWholeWord());
         QVERIFY(!settings.findInFilesUseRegex());
     }
+}
+
+void TestWidgets::test_line_number_text_editor_mismatch_format()
+{
+    LineNumberTextEditor editor;
+    editor.setPlainText("first\nsecond\nthird");
+    QColor errorColor(180, 20, 30);
+    editor.highlightLine(1, errorColor);
+
+    QTextCursor cursor(editor.document()->findBlockByLineNumber(1));
+    cursor.select(QTextCursor::LineUnderCursor);
+    QTextCharFormat format = cursor.charFormat();
+    QCOMPARE(format.foreground().color(), errorColor);
+    QCOMPARE(format.underlineColor(), errorColor);
+    QCOMPARE(format.underlineStyle(), QTextCharFormat::WaveUnderline);
+    QVERIFY(!format.hasProperty(QTextFormat::TextOutline));
+    QCOMPARE(editor.mHighlightedLine, 1);
+    QCOMPARE(editor.mHighlightedLineColor, errorColor);
+
+    QTextCursor otherCursor(editor.document()->findBlockByLineNumber(0));
+    otherCursor.select(QTextCursor::LineUnderCursor);
+    QVERIFY(otherCursor.charFormat().underlineStyle() != QTextCharFormat::WaveUnderline);
+
+    editor.clearFormat();
+    QCOMPARE(editor.mHighlightedLine, -1);
+    cursor.select(QTextCursor::LineUnderCursor);
+    QCOMPARE(cursor.charFormat().underlineStyle(), QTextCharFormat::NoUnderline);
+
+    editor.highlightLineNumber(0, errorColor);
+    QCOMPARE(editor.mHighlightedLine, 0);
+    editor.clearLineNumberHighlight();
+    QCOMPARE(editor.mHighlightedLine, -1);
+    QVERIFY(!editor.toPlainText().isEmpty());
+
+    editor.highlightLineNumber(0, errorColor);
+    editor.clearAll();
+    QCOMPARE(editor.mHighlightedLine, -1);
+    QVERIFY(editor.toPlainText().isEmpty());
 }
