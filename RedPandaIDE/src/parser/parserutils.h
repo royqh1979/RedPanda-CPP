@@ -244,6 +244,7 @@ struct Statement : AbstractStatement {
     QString requiresClause;
     NoexceptKind noexceptKind = NoexceptKind::None;
     QString noexceptExpression;
+    QString trailingReturnType;
     TypeInfo templatePattern;
     QVector<TemplateParameterInfo> templateParameters;
     QVector<QString> inheritedDefaultArgumentTexts;

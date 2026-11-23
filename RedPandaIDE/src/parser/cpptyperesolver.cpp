@@ -431,12 +431,43 @@ bool isInvocable(const PStatement &statement)
         return false;
     switch (statement->kind) {
     case StatementKind::Function:
+    case StatementKind::Constructor:
     case StatementKind::OverloadedOperator:
     case StatementKind::LiteralOperator:
         return true;
     default:
         return false;
     }
+}
+
+TypeInfo invocableReturnType(const PStatement &statement)
+{
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    if (!normal)
+        return {};
+    if (statement->kind == StatementKind::Constructor) {
+        PStatement parent = statement->parentScope.lock();
+        if (!parent)
+            return {};
+        TypeInfo result;
+        result.qualifiedName = parent->fullName;
+        result.declaration = parent;
+        return result;
+    }
+    TypeInfo result = normal->typeInfo;
+    if (result.qualifiedName == "auto" && !normal->trailingReturnType.isEmpty()) {
+        result.qualifiedName = normal->trailingReturnType;
+        result.qualifiedNameText = normal->trailingReturnType;
+        result.declaration.reset();
+    }
+    return result;
+}
+
+PStatement invocableReturnContext(const PStatement &statement)
+{
+    auto normal = std::dynamic_pointer_cast<Statement>(statement);
+    return normal && !normal->trailingReturnType.isEmpty()
+            ? statement : statement->parentScope.lock();
 }
 
 struct ResolutionGuard {
@@ -761,64 +792,104 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
         QSet<QString> visited;
         QList<MemberResolution> candidates = memberCandidates(receiver, memberName,
                                                               visited, evaluation);
-        for (int templateRank = 0; templateRank < 2; ++templateRank) {
-            struct MatchedCandidate {
-                PStatement statement;
-                PTemplateBindingFrame bindings;
-                int score;
-            };
-            QVector<MatchedCandidate> matches;
-            for (const MemberResolution &member : candidates) {
-                int candidateRank = std::dynamic_pointer_cast<Statement>(member.statement)->templateParameters.isEmpty() ? 0 : 1;
-                if (candidateRank != templateRank || !isInvocable(member.statement))
+        struct MatchedCandidate {
+            PStatement statement;
+            PTemplateBindingFrame bindings;
+            int score;
+        };
+        QVector<MatchedCandidate> matches;
+        for (const MemberResolution &member : candidates) {
+            if (!isInvocable(member.statement))
+                continue;
+            ClassInstance owner = member.owner;
+            PStatement declaration = member.statement->parentScope.lock();
+            if (declaration && declaration != owner.declaration) {
+                owner.declaration = declaration;
+                owner.type.declaration = declaration;
+                owner.type.qualifiedName = declaration->fullName;
+                owner.bindings = declarationBindings(declaration, owner.type,
+                                                     owner.bindings->parent, evaluation);
+                if (!owner.bindings->complete)
                     continue;
-                ClassInstance owner = member.owner;
-                PStatement declaration = member.statement->parentScope.lock();
-                if (declaration && declaration != owner.declaration) {
-                    owner.declaration = declaration;
-                    owner.type.declaration = declaration;
-                    owner.type.qualifiedName = declaration->fullName;
-                    owner.bindings = declarationBindings(declaration, owner.type,
-                                                         owner.bindings->parent, evaluation);
-                    if (!owner.bindings->complete)
-                        continue;
-                }
-                int score = 0;
-                PTemplateBindingFrame currentBindings = matchFunctionCandidate(
-                            member.statement, arguments, {}, evaluation, owner.bindings, &score, false);
-                if (currentBindings)
-                    matches.append({member.statement, currentBindings, score});
             }
-            std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
-                return left.score > right.score;
-            });
-            int first = 0;
-            while (first < matches.count()) {
-                int last = first + 1;
-                while (last < matches.count() && matches[last].score == matches[first].score)
-                    ++last;
-                MemberEvalResult result;
-                bool tied = false;
-                for (int i = first; i < last; ++i) {
-                    const MatchedCandidate &match = matches[i];
-                    ClassInstance resultInstance = resolveTypeInstance(
-                                std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
-                                match.bindings, match.statement->parentScope.lock(), evaluation);
-                    if (resultInstance.type.qualifiedName.isEmpty())
+            int score = 0;
+            PTemplateBindingFrame currentBindings = matchFunctionCandidate(
+                        member.statement, arguments, {}, evaluation, owner.bindings, &score, false);
+            if (currentBindings)
+                matches.append({member.statement, currentBindings, score});
+        }
+        auto equivalentDeclaration = [&](const MatchedCandidate &left, const MatchedCandidate &right) {
+            if (left.statement == right.statement)
+                return true;
+            if (left.statement->command != right.statement->command)
+                return false;
+            auto leftNormal = std::dynamic_pointer_cast<Statement>(left.statement);
+            auto rightNormal = std::dynamic_pointer_cast<Statement>(right.statement);
+            const StatementProperties qualifiers = StatementProperty::Const | StatementProperty::Volatile
+                    | StatementProperty::LvalueReference | StatementProperty::RvalueReference;
+            if (leftNormal->normalizedArgs.contains('@') || rightNormal->normalizedArgs.contains('@')
+                    || (left.statement->properties & qualifiers) != (right.statement->properties & qualifiers)
+                    || leftNormal->parameters.count() != rightNormal->parameters.count()) {
+                return false;
+            }
+            for (int i = 0; i < leftNormal->parameters.count(); ++i) {
+                const PTypeInfo &leftType = leftNormal->parameters[i].type;
+                const PTypeInfo &rightType = rightNormal->parameters[i].type;
+                if (!leftType || !rightType)
+                    return leftType == rightType;
+                TypeInfo resolvedLeft = resolveType(*leftType, left.bindings,
+                                                    left.statement->parentScope.lock(), evaluation);
+                TypeInfo resolvedRight = resolveType(*rightType, right.bindings,
+                                                     right.statement->parentScope.lock(), evaluation);
+                if (resolvedLeft.qualifiedName.isEmpty()
+                        || resolvedLeft.toString() != resolvedRight.toString()) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        int previousScore = std::numeric_limits<int>::max();
+        while (true) {
+            int currentScore = std::numeric_limits<int>::min();
+            for (const MatchedCandidate &match : matches) {
+                if (match.score < previousScore && match.score > currentScore)
+                    currentScore = match.score;
+            }
+            if (currentScore == std::numeric_limits<int>::min())
+                break;
+            previousScore = currentScore;
+            MemberEvalResult result;
+            const MatchedCandidate *resultMatch = nullptr;
+            bool tied = false;
+            for (const MatchedCandidate &match : matches) {
+                if (match.score != currentScore)
+                    continue;
+                ClassInstance resultInstance = resolveTypeInstance(
+                            invocableReturnType(match.statement), match.bindings,
+                            invocableReturnContext(match.statement), evaluation);
+                if (resultInstance.type.qualifiedName.isEmpty())
+                    continue;
+                if (result.statement) {
+                    if (equivalentDeclaration(*resultMatch, match)) {
+                        if (!statementHasDefinition(result.statement)
+                                && statementHasDefinition(match.statement)) {
+                            result = {match.statement, resultInstance.type, resultInstance,
+                                      {match.statement, match.bindings}};
+                            resultMatch = &match;
+                        }
                         continue;
-                    if (result.statement) {
-                        tied = true;
-                    } else {
-                        result = {match.statement, resultInstance.type, resultInstance,
-                                  {match.statement, match.bindings}};
                     }
+                    tied = true;
+                } else {
+                    result = {match.statement, resultInstance.type, resultInstance,
+                              {match.statement, match.bindings}};
+                    resultMatch = &match;
                 }
-                if (tied)
-                    break;
-                if (result.statement)
-                    return result;
-                first = last;
             }
+            if (tied)
+                return {};
+            if (result.statement)
+                return result;
         }
         return {};
     }
@@ -1166,23 +1237,32 @@ TypeInfo CppTypeResolver::invokeFunction(
         if (currentBindings)
             matches.append({candidate, currentBindings, candidateEvaluation, score});
     }
-    std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
-        return left.score > right.score;
-    });
-    int first = 0;
-    while (first < matches.count()) {
-        int last = first + 1;
-        while (last < matches.count() && matches[last].score == matches[first].score)
-            ++last;
+    int previousScore = std::numeric_limits<int>::max();
+    while (true) {
+        int currentScore = std::numeric_limits<int>::min();
+        for (const MatchedCandidate &match : matches) {
+            if (match.score < previousScore && match.score > currentScore)
+                currentScore = match.score;
+        }
+        if (currentScore == std::numeric_limits<int>::min())
+            break;
+        previousScore = currentScore;
         PStatement result;
         ClassInstance instance;
         PTemplateBindingFrame resultBindings;
         bool tied = false;
-        for (int i = first; i < last; ++i) {
-            MatchedCandidate &match = matches[i];
-            ClassInstance current = resolveTypeInstance(
-                        std::dynamic_pointer_cast<Statement>(match.statement)->typeInfo,
-                        match.bindings, match.statement->parentScope.lock(), match.evaluation);
+        for (MatchedCandidate &match : matches) {
+            if (match.score != currentScore)
+                continue;
+            TypeInfo returnType = invocableReturnType(match.statement);
+            ClassInstance current;
+            if (match.statement->kind == StatementKind::Constructor) {
+                current = {returnType, returnType.declaration.lock(), match.bindings};
+            } else {
+                current = resolveTypeInstance(
+                            returnType, match.bindings, invocableReturnContext(match.statement),
+                            match.evaluation);
+            }
             if (current.type.qualifiedName.isEmpty())
                 continue;
             if (result) {
@@ -1202,7 +1282,6 @@ TypeInfo CppTypeResolver::invokeFunction(
                 *invocation = {result, resultBindings};
             return instance.type;
         }
-        first = last;
     }
     if (resultInstance)
         *resultInstance = {};
@@ -1369,16 +1448,19 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
         ++frame->revision;
         frame->values.insert(parameter.name, argument);
     }
-    QVector<TypeInfo> resolvedParameters;
-    resolvedParameters.reserve(count);
+    QVector<ArgumentConversion> conversions;
+    conversions.reserve(count);
     for (int i = 0; i < count; ++i) {
         TypeInfo resolvedParameter;
-        if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type
-                && !compatibleArgument(*std::dynamic_pointer_cast<Statement>(function)->parameters[i].type, arguments[i], frame,
-                                       function->parentScope.lock(), evaluation, resolvedParameter)) {
-            return {};
+        ArgumentConversion conversion = ArgumentConversion::Exact;
+        if (std::dynamic_pointer_cast<Statement>(function)->parameters[i].type) {
+            conversion = classifyArgumentConversion(
+                    *std::dynamic_pointer_cast<Statement>(function)->parameters[i].type,
+                    arguments[i], frame, function->parentScope.lock(), evaluation, resolvedParameter);
+            if (conversion == ArgumentConversion::NoMatch)
+                return {};
         }
-        resolvedParameters.append(resolvedParameter);
+        conversions.append(conversion);
     }
     ConstraintSatisfaction satisfaction = constraintsSatisfied(
             function, frame, function->parentScope.lock(), evaluation);
@@ -1388,16 +1470,24 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
         int score = 0;
         for (int i = 0; i < count; ++i) {
             const TypeInfo &formal = *std::dynamic_pointer_cast<Statement>(function)->parameters[i].type;
-            const TypeInfo &resolvedFormal = resolvedParameters[i];
             const TypeInfo &actual = arguments[i];
             if (!templateParameters.contains(formal.qualifiedName))
                 ++score;
-            if (formal.toString() == actual.toString()
-                    || resolvedFormal.toString() == actual.toString()) {
-                score += 4;
-            } else if (formal.qualifiedName == actual.qualifiedName
-                       || resolvedFormal.qualifiedName == actual.qualifiedName) {
+            switch (conversions[i]) {
+            case ArgumentConversion::Exact:
+                score += 16;
+                break;
+            case ArgumentConversion::Promotion:
+                score += 12;
+                break;
+            case ArgumentConversion::Conversion:
+                score += 8;
+                break;
+            case ArgumentConversion::UserDefined:
                 score += 2;
+                break;
+            case ArgumentConversion::NoMatch:
+                break;
             }
             TypeDerivationKind referenceKind = TypeDerivationKind::Pointer;
             if (!formal.derivations.isEmpty()
@@ -1430,10 +1520,27 @@ bool CppTypeResolver::compatibleArgument(
         const PTemplateBindingFrame &bindings, const PStatement &context,
         EvaluationContext &evaluation, TypeInfo &resolvedParameter) const
 {
+    return classifyArgumentConversion(parameter, argument, bindings, context, evaluation,
+                                      resolvedParameter) != ArgumentConversion::NoMatch;
+}
+
+CppTypeResolver::ArgumentConversion CppTypeResolver::classifyArgumentConversion(
+        const TypeInfo &parameter, const TypeInfo &argument,
+        const PTemplateBindingFrame &bindings, const PStatement &context,
+        EvaluationContext &evaluation, TypeInfo &resolvedParameter) const
+{
     ResolveOriginScope originScope("compatibleArgument");
     ClassInstance formalInstance = resolveTypeInstance(parameter, bindings, context, evaluation);
     const TypeInfo &formal = formalInstance.type;
     resolvedParameter = formal;
+    auto withoutReferences = [](TypeInfo type) {
+        while (!type.derivations.isEmpty()
+               && (type.derivations.first().kind == TypeDerivationKind::LvalueReference
+                   || type.derivations.first().kind == TypeDerivationKind::RvalueReference)) {
+            type.derivations.removeFirst();
+        }
+        return type;
+    };
     auto pointerLike = [](const TypeInfo &type) {
         for (const TypeDerivation &derivation : type.derivations) {
             if (derivation.kind == TypeDerivationKind::Pointer
@@ -1443,15 +1550,37 @@ bool CppTypeResolver::compatibleArgument(
         }
         return false;
     };
-    if (!pointerLike(formal) && !pointerLike(argument)
-            && formalInstance.declaration
+    if (formal.toString() == argument.toString())
+        return ArgumentConversion::Exact;
+    TypeInfo formalValue = withoutReferences(formal);
+    TypeInfo argumentValue = withoutReferences(argument);
+    if (formalValue.qualifiedName.isEmpty() || argumentValue.qualifiedName.isEmpty())
+        return ArgumentConversion::Conversion;
+
+    TypeInfo formalArithmetic = canonicalArithmeticType(formalValue);
+    TypeInfo argumentArithmetic = canonicalArithmeticType(argumentValue);
+    if (!formalArithmetic.qualifiedName.isEmpty()
+            && !argumentArithmetic.qualifiedName.isEmpty()) {
+        if (formalArithmetic.qualifiedName == argumentArithmetic.qualifiedName)
+            return ArgumentConversion::Exact;
+        TypeInfo promoted = promotedArithmeticType(argumentValue);
+        if (promoted.qualifiedName == formalArithmetic.qualifiedName)
+            return ArgumentConversion::Promotion;
+        return ArgumentConversion::Conversion;
+    }
+
+    PStatement argumentDeclaration = argumentValue.declaration.lock();
+    if (!argumentDeclaration)
+        argumentDeclaration = findDeclaration(argumentValue.qualifiedName, context, true);
+    const bool formalPointer = pointerLike(formalValue);
+    const bool argumentPointer = pointerLike(argumentValue);
+    if (!formalPointer && !argumentPointer && formalInstance.declaration
             && formalInstance.declaration->kind == StatementKind::Class) {
-        PStatement argumentDeclaration = argument.declaration.lock();
-        if (!argumentDeclaration)
-            argumentDeclaration = findDeclaration(argument.qualifiedName, context, true);
-        if (argumentDeclaration != formalInstance.declaration) {
-            if (!argumentDeclaration || argumentDeclaration->kind != StatementKind::Class)
-                return false;
+        if (argumentDeclaration == formalInstance.declaration
+                && formalValue.toString() == argumentValue.toString()) {
+            return ArgumentConversion::Exact;
+        }
+        if (argumentDeclaration && argumentDeclaration->kind == StatementKind::Class) {
             QSet<const AbstractStatement *> visited;
             QStack<PStatement> pending;
             pending.push(argumentDeclaration);
@@ -1460,7 +1589,7 @@ bool CppTypeResolver::compatibleArgument(
                 if (!current || visited.contains(current.get()))
                     continue;
                 if (current == formalInstance.declaration)
-                    return true;
+                    return ArgumentConversion::Conversion;
                 visited.insert(current.get());
                 for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(current)->baseClasses) {
                     StatementAccessibility inheritance;
@@ -1468,48 +1597,65 @@ bool CppTypeResolver::compatibleArgument(
                         pending.push(base);
                 }
             }
-            return false;
         }
     }
-    if (pointerLike(formal) == pointerLike(argument))
-        return true;
-    if (!pointerLike(argument))
-        return false;
-    if (!formalInstance.declaration)
-        return false;
-    for (const std::weak_ptr<AbstractStatement> &weak : std::dynamic_pointer_cast<Statement>(formalInstance.declaration)->children) {
-        PStatement constructor = weak.lock();
-        if (!constructor || constructor->kind != StatementKind::Constructor
-                || std::dynamic_pointer_cast<Statement>(constructor)->parameters.isEmpty()
-                || std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit)
-                || !std::dynamic_pointer_cast<Statement>(constructor)->parameters.first().type) {
-            continue;
-        }
-        bool defaultsMatch = true;
-        for (int i = 1; i < std::dynamic_pointer_cast<Statement>(constructor)->parameters.count(); ++i) {
-            if (std::dynamic_pointer_cast<Statement>(constructor)->parameters[i].defaultArgumentText.isEmpty()) {
-                defaultsMatch = false;
-                break;
+    if (formalPointer && argumentPointer)
+        return formalValue.toString() == argumentValue.toString()
+                ? ArgumentConversion::Exact : ArgumentConversion::Conversion;
+    if (formalPointer && argumentValue.qualifiedName == "std::nullptr_t")
+        return ArgumentConversion::Conversion;
+    if (formalValue.qualifiedName == argumentValue.qualifiedName
+            && formalValue.derivations.count() == argumentValue.derivations.count()) {
+        return ArgumentConversion::Exact;
+    }
+    if (!formalInstance.declaration && !argumentDeclaration
+            && formalValue.derivations.isEmpty() && argumentValue.derivations.isEmpty()) {
+        return ArgumentConversion::Conversion;
+    }
+    if (!evaluation.allowUserDefinedConversions)
+        return ArgumentConversion::NoMatch;
+
+    if (!formalPointer && formalInstance.declaration
+            && formalInstance.declaration->kind == StatementKind::Class) {
+        for (const std::weak_ptr<AbstractStatement> &weak
+             : std::dynamic_pointer_cast<Statement>(formalInstance.declaration)->children.values(
+                 formalInstance.declaration->command)) {
+            PStatement constructor = weak.lock();
+            if (!constructor || constructor->kind != StatementKind::Constructor
+                    || std::dynamic_pointer_cast<Statement>(constructor)->declSpecifierProperties.testFlag(
+                        DeclSpecifierProperty::Explicit)) {
+                continue;
+            }
+            EvaluationContext candidateEvaluation = evaluation;
+            candidateEvaluation.allowUserDefinedConversions = false;
+            if (matchFunctionCandidate(constructor, {argument}, {}, candidateEvaluation,
+                                       formalInstance.bindings, nullptr, false)) {
+                return ArgumentConversion::UserDefined;
             }
         }
-        if (!defaultsMatch)
-            continue;
-        const TypeInfo &constructorParameter = *std::dynamic_pointer_cast<Statement>(constructor)->parameters.first().type;
-        if (pointerLike(constructorParameter))
-            return true;
-        PStatement parameterDeclaration = constructorParameter.declaration.lock();
-        if (!parameterDeclaration) {
-            parameterDeclaration = findDeclaration(constructorParameter.qualifiedName,
-                                                   constructor->parentScope.lock(), true);
-        }
-        if (parameterDeclaration && parameterDeclaration->kind == StatementKind::Class)
-            continue;
-        TypeInfo constructorFormal = resolveType(constructorParameter, formalInstance.bindings,
-                                                 constructor->parentScope.lock(), evaluation);
-        if (pointerLike(constructorFormal) == pointerLike(argument))
-            return true;
     }
-    return false;
+
+    if (argumentDeclaration && argumentDeclaration->kind == StatementKind::Class) {
+        for (const PStatement &member : membersOf(argumentDeclaration)) {
+            auto conversion = std::dynamic_pointer_cast<Statement>(member);
+            if (!conversion || member->kind != StatementKind::OverloadedOperator
+                    || !member->command.startsWith("operator ")
+                    || conversion->declSpecifierProperties.testFlag(DeclSpecifierProperty::Explicit)) {
+                continue;
+            }
+            EvaluationContext candidateEvaluation = evaluation;
+            candidateEvaluation.allowUserDefinedConversions = false;
+            if (!matchFunctionCandidate(member, {}, {}, candidateEvaluation, {}, nullptr, false))
+                continue;
+            TypeInfo converted;
+            if (classifyArgumentConversion(formal, conversion->typeInfo, bindings, context,
+                                           candidateEvaluation, converted)
+                    != ArgumentConversion::NoMatch) {
+                return ArgumentConversion::UserDefined;
+            }
+        }
+    }
+    return ArgumentConversion::NoMatch;
 }
 
 QList<PStatement> CppTypeResolver::membersOf(const PStatement &scope) const

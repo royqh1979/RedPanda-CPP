@@ -1513,6 +1513,10 @@ void CppDeclarationParser::applyTrailingReturn(TypeDerivation &function)
     TypeInfo trailing;
     if (!parseTypeName(trailing))
         return;
+    if (mCursor.currentText() == "{") {
+        function.trailingReturnType = trailing.toString();
+        return;
+    }
     DeclaratorInfo abstractDeclarator;
     if (!parseDeclarator(abstractDeclarator)) {
         mCursor.restore(start);

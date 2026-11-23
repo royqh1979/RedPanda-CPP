@@ -1462,7 +1462,7 @@ void TestWidgets::test_function_tip_filters_and_ranks_overloads()
     QVERIFY(line >= 0);
     editor.setCaretPos({content[line].lastIndexOf(',') + 1, line});
     QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
-    QCOMPARE(tooltip.tipCount(), 3);
+    QCOMPARE(tooltip.tipCount(), 1);
     QVERIFY(label->text().contains("Pair"));
     QCOMPARE(tooltip.paramIndex(), 1);
 

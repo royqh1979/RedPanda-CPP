@@ -513,7 +513,7 @@ void TestCppParser::test_member_overload_resolution()
     };
     EvalResult conversion = evaluate({"object", ".", "convert", "(", "\"x\"", ")"});
     QVERIFY(conversion.isValid());
-    QCOMPARE(conversion.type.qualifiedName, "int");
+    QCOMPARE(conversion.type.qualifiedName, "long");
     EvalResult value = evaluate({"object", ".", "value", "(", ")"});
     QVERIFY(value.isValid());
     QCOMPARE(value.type.qualifiedName, "int");
@@ -523,6 +523,85 @@ void TestCppParser::test_member_overload_resolution()
     QVERIFY(!evaluate({"object", ".", "explicitOnly", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "ambiguous", "(", "\"x\"", ")"}).isValid());
     QVERIFY(!evaluate({"object", ".", "rvalueOnly", "(", ")"}).isValid());
+}
+
+void TestCppParser::test_conversion_overload_resolution()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Implicit { Implicit(int); };",
+            "struct Explicit { explicit Explicit(int); };",
+            "struct Twice { Twice(Implicit); };",
+            "struct IntConversion { operator int() const; };",
+            "struct ExplicitConversion { explicit operator double() const; };",
+            "struct NoConversion {};",
+            "short shortValue;",
+            "float floatValue;",
+            "IntConversion convertible;",
+            "ExplicitConversion explicitConvertible;",
+            "NoConversion noConversion;",
+            "int promoted(int);",
+            "long promoted(long);",
+            "double floatPromoted(double);",
+            "long floatPromoted(int);",
+            "int implicitOnly(Implicit);",
+            "int explicitOnly(Explicit);",
+            "int twiceOnly(Twice);",
+            "int conversionOperator(int);",
+            "int explicitConversionOperator(double);",
+            "int standardOverUser(double);",
+            "long standardOverUser(Implicit);",
+            "void test() {}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    PStatement scope = mParser->findScopeStatement("text.cpp", 22);
+    QVERIFY(scope);
+    PStatement shortStatement = mParser->findStatementOf("text.cpp", "shortValue", 22);
+    QVERIFY(shortStatement);
+    QCOMPARE(shortStatement->command, "shortValue");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(shortStatement)->typeInfo.qualifiedName, "short");
+    auto evaluate = [&](const QString &name, const QString &argument) {
+        QStringList expression{name, "(", argument, ")"};
+        return mParser->evalExpression("text.cpp", expression, scope);
+    };
+
+    QCOMPARE(evaluate("promoted", "shortValue").type.qualifiedName, "int");
+    QCOMPARE(evaluate("floatPromoted", "floatValue").type.qualifiedName, "double");
+    QVERIFY(evaluate("implicitOnly", "1").isValid());
+    QVERIFY(!evaluate("explicitOnly", "1").isValid());
+    QVERIFY(!evaluate("twiceOnly", "1").isValid());
+    QCOMPARE(evaluate("conversionOperator", "convertible").type.qualifiedName, "int");
+    QVERIFY(!evaluate("conversionOperator", "noConversion").isValid());
+    QVERIFY(!evaluate("explicitConversionOperator", "explicitConvertible").isValid());
+    QCOMPARE(evaluate("standardOverUser", "1").type.qualifiedName, "int");
+}
+
+void TestCppParser::test_trailing_return_member_template()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Tree { template<typename T> int _M_find_tr(const T&); };",
+            "struct Map {",
+            "    Tree _M_t;",
+            "    template<typename K> auto find(const K& x) -> decltype(_M_t._M_find_tr(x)) { return _M_t._M_find_tr(x); }",
+            "};",
+            "Map mapping;",
+            "void test() {}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    PStatement scope = mParser->findScopeStatement("text.cpp", 6);
+    QVERIFY(scope);
+    QStringList expression{"mapping", ".", "find", "(", "\"x\"", ")"};
+    EvalResult result = mParser->evalExpression("text.cpp", expression, scope);
+    QVERIFY(result.isValid());
+    QCOMPARE(result.type.qualifiedName, "int");
+    QVERIFY(result.invocation.statement);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(result.invocation.statement)->trailingReturnType.contains(
+        "_M_find_tr"));
 }
 
 void TestCppParser::test_find_statement_of_overload_resolution()

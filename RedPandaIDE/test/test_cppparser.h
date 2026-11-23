@@ -25,6 +25,8 @@ private slots:
     void test_forward_declaration_prefers_definition_for_eval();
     void test_base_member_return_uses_declaration_bindings();
     void test_member_overload_resolution();
+    void test_conversion_overload_resolution();
+    void test_trailing_return_member_template();
     void test_find_statement_of_overload_resolution();
     void test_find_statement_of_template_specialization();
     void test_expression_identifier_trace();

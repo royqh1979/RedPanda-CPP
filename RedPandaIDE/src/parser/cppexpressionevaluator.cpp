@@ -82,45 +82,9 @@ bool hasPointer(const TypeInfo &type)
     return false;
 }
 
-int arithmeticRank(const QString &name)
-{
-    if (name == "long double")
-        return 120;
-    if (name == "double")
-        return 110;
-    if (name == "float")
-        return 100;
-    if (name == "long long" || name == "unsigned long long")
-        return 90;
-    if (name == "long" || name == "unsigned long")
-        return 80;
-    if (name == "int" || name == "unsigned int" || name == "unsigned")
-        return 70;
-    return 10;
-}
-
-TypeInfo usualArithmeticType(const TypeInfo &left, const TypeInfo &right)
-{
-    const TypeInfo *selected = arithmeticRank(left.qualifiedName) >= arithmeticRank(right.qualifiedName)
-            ? &left : &right;
-    QString name = selected->qualifiedName;
-    if (arithmeticRank(left.qualifiedName) == arithmeticRank(right.qualifiedName)) {
-        if (left.qualifiedName.startsWith("unsigned"))
-            name = left.qualifiedName;
-        else if (right.qualifiedName.startsWith("unsigned"))
-            name = right.qualifiedName;
-    }
-    return primitiveType(name == "unsigned" ? "unsigned int" : name);
-}
-
 bool isArithmeticType(const TypeInfo &type)
 {
-    static const QSet<QString> names{
-        "bool", "char", "wchar_t", "char8_t", "char16_t", "char32_t", "short",
-        "unsigned short", "int", "unsigned int", "unsigned", "long", "unsigned long",
-        "long long", "unsigned long long", "float", "double", "long double"
-    };
-    return type.derivations.isEmpty() && names.contains(type.qualifiedName);
+    return arithmeticCategory(type) != ArithmeticCategory::None;
 }
 
 TypeInfo integerLiteralType(const QString &literal)
@@ -507,7 +471,35 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
         }
         if (operation == "(") {
             if (result.kind == EvalStatementKind::Type) {
-                index = skipBalanced(tokens, index);
+                QVector<TypeInfo> arguments;
+                if (!evaluateArguments(tokens, index, context, arguments, evaluation))
+                    return {};
+                PStatement classStatement = result.type.declaration.lock();
+                PStatement constructor;
+                if (classStatement && classStatement->kind == StatementKind::Class) {
+                    for (const std::weak_ptr<AbstractStatement> &weak
+                         : std::dynamic_pointer_cast<Statement>(classStatement)->children.values(
+                             classStatement->command)) {
+                        PStatement candidate = weak.lock();
+                        if (candidate && candidate->kind == StatementKind::Constructor) {
+                            constructor = candidate;
+                            break;
+                        }
+                    }
+                }
+                if (constructor) {
+                    const TypeInfo constructedType = result.type;
+                    TypeInfo selected = mResolver.invokeFunction(
+                                constructor, arguments, {}, evaluation, nullptr, mBindings,
+                                &result.invocation);
+                    if (selected.qualifiedName.isEmpty())
+                        return {};
+                    result.type = constructedType;
+                } else {
+                    if (!arguments.isEmpty())
+                        return {};
+                    result.instance = mResolver.resolveInstance(result.type, {}, {}, evaluation);
+                }
             } else if (result.kind == EvalStatementKind::Function) {
                 QVector<TypeInfo> arguments;
                 if (!evaluateArguments(tokens, index, context, arguments, evaluation))

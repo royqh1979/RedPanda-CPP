@@ -61,7 +61,9 @@ void TestTypeOperationRegistry::test_callable_tuple_and_view_operations()
                 "  template<typename T, typename U> struct pair {};\n"
                 "  template<typename... T> struct tuple {};\n"
                 "  template<typename T> struct array {};\n"
-                "  struct Functor { string operator()(int); };\n"
+                "  struct Functor { string operator()(int); long operator()(double); template<typename T> int operator()(T); };\n"
+                "  struct NumericFunctor { string operator()(int); long operator()(double); };\n"
+                "  struct SingleFunctor { string operator()(int); };\n"
                 "  namespace ranges {\n"
                 "    struct filter_fn {};\n"
                 "    struct transform_fn {};\n"
@@ -101,7 +103,15 @@ void TestTypeOperationRegistry::test_callable_tuple_and_view_operations()
     QCOMPARE(operations.invokeResult(functor, {integer}, &evaluation, &invocation).toString(),
              "std::string");
     QVERIFY(invocation.statement);
-    QCOMPARE(operations.callableResult(functor, &evaluation).toString(), "std::string");
+    QCOMPARE(operations.invokeResult(functor, {type("double")}, &evaluation).toString(), "long");
+    QCOMPARE(operations.invokeResult(functor, {type("short")}, &evaluation).toString(), "int");
+    TypeInfo numericFunctor = type("std::NumericFunctor");
+    QCOMPARE(operations.invokeResult(numericFunctor, {type("short")}, &evaluation).toString(),
+             "std::string");
+    QCOMPARE(operations.invokeResult(numericFunctor, {type("double")}, &evaluation).toString(),
+             "long");
+    QCOMPARE(operations.callableResult(type("std::SingleFunctor"), &evaluation).toString(),
+             "std::string");
     TypeInfo function = integer;
     function.derivations.append(TypeDerivation::function());
     QCOMPARE(operations.callableResult(function, &evaluation).toString(), "int");

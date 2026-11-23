@@ -500,6 +500,8 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
         existingStatement->noexceptKind = candidateStatement->noexceptKind;
         existingStatement->noexceptExpression = candidateStatement->noexceptExpression;
     }
+    if (!candidateStatement->trailingReturnType.isEmpty())
+        existingStatement->trailingReturnType = candidateStatement->trailingReturnType;
     if (!candidateStatement->baseClasses.isEmpty())
         existingStatement->baseClasses = candidateStatement->baseClasses;
 
@@ -859,6 +861,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         normalStatement->requiresClause = function.requiresClause;
         normalStatement->noexceptKind = function.noexceptKind;
         normalStatement->noexceptExpression = function.noexceptExpression;
+        normalStatement->trailingReturnType = function.trailingReturnType;
         std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations.removeFirst();
         std::dynamic_pointer_cast<Statement>(statement)->parameters = function.parameters;
         std::dynamic_pointer_cast<Statement>(statement)->args = renderParameters(function, true);

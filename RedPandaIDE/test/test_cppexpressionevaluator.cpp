@@ -364,6 +364,74 @@ void TestCppExpressionEvaluator::test_expression_evaluator_preserves_constructor
     QCOMPARE(result.baseStatement, constructorStatement);
 }
 
+void TestCppExpressionEvaluator::test_expression_evaluator_resolves_constructor_calls()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Foo { Foo(); Foo(int); explicit Foo(double); };\n"
+                "struct Empty {};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/constructor_calls.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        return evaluator.evaluate(tokenizer);
+    };
+
+    EvalResult integer = evaluate("Foo(1)");
+    QVERIFY(integer.isValid());
+    QCOMPARE(integer.type.qualifiedName, "Foo");
+    QVERIFY(integer.invocation.statement);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(integer.invocation.statement)->normalizedArgs,
+             "(int)");
+    EvalResult floating = evaluate("Foo(1.0)");
+    QVERIFY(floating.isValid());
+    QVERIFY(floating.invocation.statement);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(floating.invocation.statement)->normalizedArgs,
+             "(double)");
+    QVERIFY(evaluate("Foo()").isValid());
+    QVERIFY(evaluate("Empty()").isValid());
+    QVERIFY(!evaluate("Foo(\"x\")").isValid());
+}
+
+void TestCppExpressionEvaluator::test_expression_evaluator_numeric_conversions()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "short shortValue;\n"
+                "char charValue;\n"
+                "long longValue;\n"
+                "unsigned int unsignedIntValue;\n"
+                "unsigned long unsignedLongValue;\n"
+                "long long longLongValue;\n"
+                "bool flag;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/numeric_conversions.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        return evaluator.evaluate(tokenizer);
+    };
+
+    QCOMPARE(evaluate("shortValue + charValue").type.qualifiedName, "int");
+    QCOMPARE(evaluate("flag ? shortValue : charValue").type.qualifiedName, "int");
+    QCOMPARE(evaluate("longValue + unsignedIntValue").type.qualifiedName, "unsigned long");
+    QCOMPARE(evaluate("longLongValue + unsignedLongValue").type.qualifiedName, "long long");
+}
 
 void TestCppExpressionEvaluator::test_expression_evaluator_forbids_model_changes_outside_parse()
 {

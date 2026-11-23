@@ -188,6 +188,7 @@ public:
         int operationCount = 0;
         bool resolutionFailed = false;
         bool allowModelChanges = false;
+        bool allowUserDefinedConversions = true;
         ExpressionEvalTrace *identifierTrace = nullptr;
     };
     using ClassInstance = ::ClassInstance;
@@ -252,6 +253,13 @@ private:
         NoMatch,
         Unknown
     };
+    enum class ArgumentConversion {
+        NoMatch,
+        Exact,
+        Promotion,
+        Conversion,
+        UserDefined
+    };
     struct MemberEntry {
         PStatement statement;
         StatementAccessibility accessibility;
@@ -284,6 +292,10 @@ private:
     bool compatibleArgument(const TypeInfo &parameter, const TypeInfo &argument,
                             const PTemplateBindingFrame &bindings, const PStatement &context,
                             EvaluationContext &evaluation, TypeInfo &resolvedParameter) const;
+    ArgumentConversion classifyArgumentConversion(
+            const TypeInfo &parameter, const TypeInfo &argument,
+            const PTemplateBindingFrame &bindings, const PStatement &context,
+            EvaluationContext &evaluation, TypeInfo &resolvedParameter) const;
     TypeInfo resolveType(const TypeInfo &type, const PTemplateBindingFrame &bindings,
                          const PStatement &context, EvaluationContext &evaluation) const;
     ClassInstance resolveTypeInstance(const TypeInfo &type, const PTemplateBindingFrame &bindings,

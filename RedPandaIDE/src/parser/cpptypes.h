@@ -169,6 +169,17 @@ struct TypeInfo {
     QString toString() const;
 };
 
+enum class ArithmeticCategory {
+    None,
+    Integral,
+    Floating
+};
+
+ArithmeticCategory arithmeticCategory(const TypeInfo &type);
+TypeInfo canonicalArithmeticType(const TypeInfo &type);
+TypeInfo promotedArithmeticType(const TypeInfo &type);
+TypeInfo usualArithmeticType(const TypeInfo &left, const TypeInfo &right);
+
 enum class DeclaratorDefinitionKind {
     None,
     Defaulted,

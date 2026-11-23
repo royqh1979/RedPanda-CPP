@@ -16,6 +16,7 @@
  */
 #include "cpptypes.h"
 
+#include <QHash>
 #include <QStringList>
 
 namespace {
@@ -144,6 +145,142 @@ QString ParameterInfo::toString(bool includeName) const
     if (!type)
         return includeName ? name : QString();
     return renderType(*type, includeName ? name : QString());
+}
+
+namespace {
+struct ArithmeticInfo {
+    ArithmeticCategory category = ArithmeticCategory::None;
+    QString name;
+    int rank = 0;
+    int bits = 0;
+    bool isUnsigned = false;
+};
+
+QString canonicalArithmeticName(const QString &name)
+{
+    static const QHash<QString, QString> aliases{
+        {"signed", "int"}, {"signed int", "int"}, {"unsigned", "unsigned int"},
+        {"short int", "short"}, {"signed short", "short"}, {"signed short int", "short"},
+        {"unsigned short int", "unsigned short"}, {"short unsigned", "unsigned short"},
+        {"short unsigned int", "unsigned short"},
+        {"long int", "long"}, {"signed long", "long"}, {"signed long int", "long"},
+        {"unsigned long int", "unsigned long"}, {"long unsigned", "unsigned long"},
+        {"long unsigned int", "unsigned long"},
+        {"long long int", "long long"}, {"signed long long", "long long"},
+        {"signed long long int", "long long"},
+        {"unsigned long long int", "unsigned long long"},
+        {"long long unsigned", "unsigned long long"},
+        {"long long unsigned int", "unsigned long long"}
+    };
+    const QString simplified = name.simplified();
+    return aliases.value(simplified, simplified);
+}
+
+ArithmeticInfo arithmeticInfo(const TypeInfo &type)
+{
+    if (!type.derivations.isEmpty())
+        return {};
+    ArithmeticInfo result;
+    result.name = canonicalArithmeticName(type.qualifiedName);
+    result.isUnsigned = result.name.startsWith("unsigned ") || result.name == "char8_t"
+            || result.name == "char16_t" || result.name == "char32_t";
+    if (result.name == "long double" || result.name == "double" || result.name == "float") {
+        result.category = ArithmeticCategory::Floating;
+        result.rank = result.name == "long double" ? 90 : result.name == "double" ? 80 : 70;
+        return result;
+    }
+    static const QHash<QString, int> ranks{
+        {"bool", 10}, {"char", 20}, {"signed char", 20}, {"unsigned char", 20},
+        {"wchar_t", 20}, {"char8_t", 20}, {"char16_t", 20}, {"char32_t", 20},
+        {"short", 30}, {"unsigned short", 30}, {"int", 40}, {"unsigned int", 40},
+        {"long", 50}, {"unsigned long", 50}, {"long long", 60}, {"unsigned long long", 60}
+    };
+    if (!ranks.contains(result.name))
+        return {};
+    result.category = ArithmeticCategory::Integral;
+    result.rank = ranks[result.name];
+    if (result.rank <= 20)
+        result.bits = result.name == "char32_t" ? 32 : result.name == "wchar_t" ? 16 : 8;
+    else if (result.rank == 30)
+        result.bits = 16;
+    else if (result.rank == 40)
+        result.bits = 32;
+    else if (result.rank == 50) {
+#ifdef Q_OS_WIN
+        result.bits = 32;
+#else
+        result.bits = sizeof(long) * 8;
+#endif
+    } else {
+        result.bits = 64;
+    }
+    return result;
+}
+
+TypeInfo arithmeticType(const QString &name)
+{
+    TypeInfo result;
+    result.qualifiedName = name;
+    return result;
+}
+
+QString unsignedArithmeticName(const QString &name)
+{
+    if (name.startsWith("unsigned "))
+        return name;
+    return "unsigned " + name;
+}
+}
+
+ArithmeticCategory arithmeticCategory(const TypeInfo &type)
+{
+    return arithmeticInfo(type).category;
+}
+
+TypeInfo canonicalArithmeticType(const TypeInfo &type)
+{
+    ArithmeticInfo info = arithmeticInfo(type);
+    return info.category == ArithmeticCategory::None ? TypeInfo() : arithmeticType(info.name);
+}
+
+TypeInfo promotedArithmeticType(const TypeInfo &type)
+{
+    ArithmeticInfo info = arithmeticInfo(type);
+    if (info.category == ArithmeticCategory::None)
+        return {};
+    if (info.category == ArithmeticCategory::Floating)
+        return arithmeticType(info.name == "float" ? "double" : info.name);
+    if (info.name == "char32_t")
+        return arithmeticType("unsigned int");
+    return arithmeticType(info.rank < 40 ? "int" : info.name);
+}
+
+TypeInfo usualArithmeticType(const TypeInfo &left, const TypeInfo &right)
+{
+    ArithmeticInfo leftInfo = arithmeticInfo(left);
+    ArithmeticInfo rightInfo = arithmeticInfo(right);
+    if (leftInfo.category == ArithmeticCategory::None || rightInfo.category == ArithmeticCategory::None)
+        return {};
+    if (leftInfo.category == ArithmeticCategory::Floating
+            || rightInfo.category == ArithmeticCategory::Floating) {
+        const ArithmeticInfo &selected = leftInfo.rank >= rightInfo.rank ? leftInfo : rightInfo;
+        return arithmeticType(selected.name);
+    }
+    TypeInfo leftPromoted = promotedArithmeticType(left);
+    TypeInfo rightPromoted = promotedArithmeticType(right);
+    leftInfo = arithmeticInfo(leftPromoted);
+    rightInfo = arithmeticInfo(rightPromoted);
+    if (leftInfo.name == rightInfo.name)
+        return arithmeticType(leftInfo.name);
+    if (leftInfo.rank == rightInfo.rank)
+        return arithmeticType(leftInfo.isUnsigned ? leftInfo.name : rightInfo.name);
+    const ArithmeticInfo &higher = leftInfo.rank > rightInfo.rank ? leftInfo : rightInfo;
+    const ArithmeticInfo &lower = leftInfo.rank > rightInfo.rank ? rightInfo : leftInfo;
+    if (higher.isUnsigned)
+        return arithmeticType(higher.name);
+    if (lower.isUnsigned && higher.bits <= lower.bits)
+        return arithmeticType(unsignedArithmeticName(higher.name));
+    return arithmeticType(higher.name);
 }
 
 TypeDerivation TypeDerivation::pointer(TypeQualifiers qualifiers)

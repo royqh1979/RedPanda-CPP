@@ -12,6 +12,8 @@ private slots:
     void test_expression_evaluator_builds_range_adaptor_pipelines();
     void test_function_template_argument_deduction_for_algorithms();
     void test_expression_evaluator_preserves_constructor_statement();
+    void test_expression_evaluator_resolves_constructor_calls();
+    void test_expression_evaluator_numeric_conversions();
     void test_expression_evaluator_forbids_model_changes_outside_parse();
     void test_declval_preserves_type_and_outer_template_bindings();
     void test_declval_with_direct_decltype_return();
