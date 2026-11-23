@@ -58,6 +58,7 @@ public:
             preparedBatchLines.append(line);
             for (PaintHighlightToken &token : tokens) {
                 preparedTexts.append(token.text);
+                preparedTokenColors.insert(token.text, token.foreground);
                 if (token.tokenType == TokenType::Identifier)
                     token.foreground = identifierColor;
                 if (token.text == "...}" || token.text == "..."
@@ -72,11 +73,43 @@ public:
 
     QVector<int> preparedBatchLines;
     QStringList preparedTexts;
+    QHash<QString, QColor> preparedTokenColors;
     QColor identifierColor{17, 83, 161};
     bool foldPlaceholderSeen = false;
     TokenType foldPlaceholderType = TokenType::Default;
     QColor foldPlaceholderColor;
 };
+
+static void configureRainbowEditor(QSynEdit &editor)
+{
+    editor.setSyntaxer(std::make_shared<CppSyntaxer>());
+    QFont font;
+    font.setFamily(defaultMonoFont());
+    font.setStyleStrategy(QFont::NoAntialias);
+    editor.setFont(font);
+    editor.resize(320, 100);
+    EditorOptions options = editor.getOptions();
+    options.setFlag(EditorOption::ShowRainbowColor, true);
+    editor.setOptions(options);
+
+    PTokenAttribute attrs[4];
+    for (int i = 0; i < 4; ++i) {
+        attrs[i] = std::make_shared<TokenAttribute>(QString("rainbow%1").arg(i));
+        attrs[i]->setForeground(QColor(20 + i, 80 + i, 140 + i));
+    }
+    editor.setRainbowAttrs(attrs[0], attrs[1], attrs[2], attrs[3]);
+}
+
+static bool imageHasColor(const QImage &image, const QColor &color)
+{
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            if (image.pixelColor(x, y) == color)
+                return true;
+        }
+    }
+    return false;
+}
 
 void TestQSyneditDisplay::initTestCase()
 {
@@ -3503,6 +3536,43 @@ void TestQSyneditDisplay::test_wordwrap_boundary_token_painting()
 
     opts.setFlag(QSynedit::EditorOption::WordWrap, false);
     mEdit->setOptions(opts);
+}
+
+void TestQSyneditDisplay::test_rainbow_brace_colors()
+{
+    PaintPreparationEdit preparedEditor;
+    configureRainbowEditor(preparedEditor);
+    preparedEditor.loadContent("f()");
+    preparedEditor.startParseLine(preparedEditor.mSyntaxer.get(), 0);
+    QCOMPARE(preparedEditor.mSyntaxer->getTokenType(), TokenType::Identifier);
+    QImage preparedImage(preparedEditor.viewport()->size(), QImage::Format_ARGB32);
+    preparedEditor.viewport()->render(&preparedImage);
+    QCOMPARE(preparedEditor.preparedTokenColors.value("("),
+             preparedEditor.rainbowAttr1()->foreground());
+    QCOMPARE(preparedEditor.preparedTokenColors.value(")"),
+             preparedEditor.rainbowAttr1()->foreground());
+
+    QSynEdit editor;
+    configureRainbowEditor(editor);
+    editor.loadContent("f()");
+    QImage image(editor.viewport()->size(), QImage::Format_ARGB32);
+    editor.viewport()->render(&image);
+    QVERIFY(imageHasColor(image, editor.rainbowAttr1()->foreground()));
+}
+
+void TestQSyneditDisplay::test_rainbow_indent_guides()
+{
+    QSynEdit editor;
+    configureRainbowEditor(editor);
+    editor.codeFolding().indentGuides = true;
+    editor.codeFolding().rainbowIndentGuides = true;
+    editor.codeFolding().rainbowIndents = false;
+    editor.codeFolding().fillIndents = false;
+    editor.loadContent("    value");
+
+    QImage image(editor.viewport()->size(), QImage::Format_ARGB32);
+    editor.viewport()->render(&image);
+    QVERIFY(imageHasColor(image, editor.rainbowAttr1()->foreground()));
 }
 
 void TestQSyneditDisplay::test_batched_highlight_preparation()

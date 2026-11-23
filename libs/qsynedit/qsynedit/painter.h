@@ -152,8 +152,8 @@ private:
             );
 
     void paintFoldAttributes();
-    void getRainbowColorAttr(int level, PTokenAttribute &attr);
-    void getBraceColorAttr(int level, PTokenAttribute &attr);
+    void getRainbowColorAttr(int level, PTokenAttribute &attr, TokenType tokenType);
+    void getBraceColorAttr(int level, PTokenAttribute &attr, TokenType tokenType);
     void paintLines();
     // resolve a display row through the row index without wrapping;
     // otherwise walk from the anchor to realize each crossed layout

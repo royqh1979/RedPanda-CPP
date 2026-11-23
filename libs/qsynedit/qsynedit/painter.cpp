@@ -889,17 +889,18 @@ PaintHighlightTokenList QSynEditPainter::prepareHighlightTokens(
             continue;
         }
         PTokenAttribute attr = syntaxer->getTokenAttribute();
+        TokenType tokenType = syntaxer->getTokenType();
         if (token == "[" || token == "(" || token == "{") {
             PSyntaxState rangeState = syntaxer->getState();
             getBraceColorAttr(rangeState->bracketLevel + rangeState->braceLevel
-                              + rangeState->parenthesisLevel, attr);
+                              + rangeState->parenthesisLevel, attr, tokenType);
         } else if (token == "]" || token == ")" || token == "}") {
             PSyntaxState rangeState = syntaxer->getState();
             getBraceColorAttr(rangeState->bracketLevel + rangeState->braceLevel
-                              + rangeState->parenthesisLevel + 1, attr);
+                              + rangeState->parenthesisLevel + 1, attr, tokenType);
         }
         result.append(makeHighlightToken(ctx, tokenStartChar, token, attr,
-                                         syntaxer->getTokenType()));
+                                         tokenType));
         syntaxer->next();
     }
     {
@@ -1064,15 +1065,15 @@ void QSynEditPainter::paintFoldAttributes()
                 indentLevel++ ;
                 if (mEdit->mCodeFolding.rainbowIndentGuides) {
                     PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                    getRainbowColorAttr(indentLevel,attr);
+                    getRainbowColorAttr(indentLevel, attr, TokenType::Symbol);
                     paintColor = attr->foreground();
                 }
                 if (mEdit->mCodeFolding.rainbowIndents) {
                     PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                    getRainbowColorAttr(indentLevel,attr);
+                    getRainbowColorAttr(indentLevel, attr, TokenType::Symbol);
                     gradientStart=attr->foreground();
                     attr = mEdit->mSyntaxer->symbolAttribute();
-                    getBraceColorAttr(indentLevel+1,attr);
+                    getBraceColorAttr(indentLevel+1, attr, TokenType::Symbol);
                     gradientStart=attr->foreground();
                 }
                 if (mEdit->mCodeFolding.fillIndents) {
@@ -1105,9 +1106,9 @@ void QSynEditPainter::paintFoldAttributes()
 
 }
 
-void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
+void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr, TokenType tokenType)
 {
-    if (mEdit->mSyntaxer->getTokenType() != TokenType::Symbol)
+    if (tokenType != TokenType::Symbol)
         return;
     PTokenAttribute oldAttr = attr;
     switch(level % 4) {
@@ -1128,11 +1129,11 @@ void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
         attr = oldAttr;
 }
 
-void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
+void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr, TokenType tokenType)
 {
     if (!mEdit->mOptions.testFlag(EditorOption::ShowRainbowColor))
         return;
-    return getRainbowColorAttr(level, attr);
+    return getRainbowColorAttr(level, attr, tokenType);
 }
 
 void QSynEditPainter::paintLines()
@@ -1363,19 +1364,20 @@ void QSynEditPainter::paintLines()
                 }
                 tokenStartChar = mEdit->mSyntaxer->getTokenPos();
                 attr = mEdit->mSyntaxer->getTokenAttribute();
+                TokenType tokenType = mEdit->mSyntaxer->getTokenType();
                 if (token == "[" || token == "(" || token == "{") {
                     PSyntaxState rangeState = mEdit->mSyntaxer->getState();
                     getBraceColorAttr(rangeState->bracketLevel
                                       + rangeState->braceLevel
-                                      + rangeState->parenthesisLevel, attr);
+                                      + rangeState->parenthesisLevel, attr, tokenType);
                 } else if (token == "]" || token == ")" || token == "}") {
                     PSyntaxState rangeState = mEdit->mSyntaxer->getState();
                     getBraceColorAttr(rangeState->bracketLevel
                                       + rangeState->braceLevel
-                                      + rangeState->parenthesisLevel + 1, attr);
+                                      + rangeState->parenthesisLevel + 1, attr, tokenType);
                 }
                 highlightToken = makeHighlightToken(ctx, tokenStartChar, token, attr,
-                                                    mEdit->mSyntaxer->getTokenType());
+                                                    tokenType);
             }
             int tokenEndChar = tokenStartChar + token.length();
             attr = highlightToken.attr;
