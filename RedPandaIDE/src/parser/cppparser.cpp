@@ -488,6 +488,17 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName,
     return result;
 }
 
+QList<PStatement> CppParser::matchFunctionOverloads(
+        const QList<PStatement> &candidates, const QVector<TypeInfo> &arguments,
+        int minimumArgumentCount) const
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return {};
+    CppTypeResolver resolver(*mStatementList, nullptr, evaluationOptions());
+    return resolver.rankFunctionCandidates(candidates, arguments, minimumArgumentCount);
+}
+
 PStatement CppParser::findScopeStatement(const QString &filename, int line) const
 {
     QMutexLocker locker(&mMutex);
@@ -789,6 +800,24 @@ EvalResult CppParser::evalExpression(const QString &fileName,
             entry.statement = visibleStatement(fileName, entry.statement);
     }
     return result;
+}
+
+bool CppParser::evalArgumentList(
+        const QString &fileName, const QString &argumentListText,
+        const PStatement &currentScope, QVector<TypeInfo> &arguments) const
+{
+    QMutexLocker locker(&mMutex);
+    Q_UNUSED(fileName);
+    arguments.clear();
+    if (mParsing)
+        return false;
+    CppTokenizer tokenizer;
+    tokenizer.tokenize(argumentListText.split('\n'));
+    CppTypeResolver::EvaluationContext evaluation;
+    CppTypeResolver resolver(*mStatementList, &evaluation, evaluationOptions());
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(*mStatementList, resolver, operations);
+    return evaluator.evaluateArgumentList(tokenizer, currentScope, arguments, &evaluation);
 }
 
 EvalResult CppParser::doEvalExpression(const QString &fileName, QStringList &expression,

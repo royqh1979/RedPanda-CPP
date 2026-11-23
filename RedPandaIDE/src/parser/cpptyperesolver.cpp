@@ -785,7 +785,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                 }
                 int score = 0;
                 PTemplateBindingFrame currentBindings = matchFunctionCandidate(
-                            member.statement, arguments, {}, evaluation, owner.bindings, &score);
+                            member.statement, arguments, {}, evaluation, owner.bindings, &score, false);
                 if (currentBindings)
                     matches.append({member.statement, currentBindings, score});
             }
@@ -1084,7 +1084,8 @@ ConstraintSatisfaction CppTypeResolver::evaluateConstructible(
         candidateEvaluation.aliases.clear();
         candidateEvaluation.resolvingTypes.clear();
         candidateEvaluation.resolvingConstraints.clear();
-        if (matchFunctionCandidate(constructor, arguments, {}, candidateEvaluation, {}, nullptr))
+        if (matchFunctionCandidate(constructor, arguments, {}, candidateEvaluation, {}, nullptr,
+                                   false))
             return ConstraintSatisfaction::Satisfied;
     }
     return ConstraintSatisfaction::Unsatisfied;
@@ -1161,7 +1162,7 @@ TypeInfo CppTypeResolver::invokeFunction(
         candidateEvaluation.resolvingConstraints.clear();
         int score = 0;
         PTemplateBindingFrame currentBindings = matchFunctionCandidate(
-                    candidate, arguments, explicitArguments, candidateEvaluation, outerBindings, &score);
+                    candidate, arguments, explicitArguments, candidateEvaluation, outerBindings, &score, false);
         if (currentBindings)
             matches.append({candidate, currentBindings, candidateEvaluation, score});
     }
@@ -1208,6 +1209,67 @@ TypeInfo CppTypeResolver::invokeFunction(
     return {};
 }
 
+static bool functionAcceptsArgumentCount(
+        const PStatement &function, int argumentCount, bool allowPartialArguments)
+{
+    auto normal = std::dynamic_pointer_cast<Statement>(function);
+    if (!normal)
+        return false;
+    const int parameterCount = normal->parameters.count();
+    bool parameterPack = false;
+    for (const TemplateParameterInfo &parameter : normal->templateParameters)
+        parameterPack |= parameter.parameterPack;
+    const int parametersEnd = normal->normalizedArgs.lastIndexOf(')');
+    const bool variadic = parametersEnd > 0
+            && normal->normalizedArgs.left(parametersEnd).trimmed().endsWith("...");
+    int requiredCount = parameterCount;
+    while (requiredCount > 0
+           && !normal->parameters[requiredCount - 1].defaultArgumentText.isEmpty()) {
+        --requiredCount;
+    }
+    if (parameterPack)
+        requiredCount = qMin(requiredCount, parameterCount - 1);
+    if (allowPartialArguments)
+        return argumentCount <= parameterCount || parameterPack || variadic;
+    return argumentCount >= requiredCount
+            && (argumentCount <= parameterCount || parameterPack || variadic);
+}
+
+QList<PStatement> CppTypeResolver::rankFunctionCandidates(
+        const QList<PStatement> &candidates, const QVector<TypeInfo> &arguments,
+        int minimumArgumentCount, EvaluationContext *evaluationContext) const
+{
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    struct MatchedCandidate {
+        PStatement statement;
+        int score;
+    };
+    QVector<MatchedCandidate> matches;
+    for (const PStatement &candidate : candidates) {
+        if (!functionAcceptsArgumentCount(candidate, minimumArgumentCount, true))
+            continue;
+        EvaluationContext candidateEvaluation = evaluation;
+        candidateEvaluation.operationCount = 0;
+        candidateEvaluation.resolutionFailed = false;
+        candidateEvaluation.aliases.clear();
+        candidateEvaluation.resolvingTypes.clear();
+        candidateEvaluation.resolvingConstraints.clear();
+        int score = 0;
+        PTemplateBindingFrame bindings = matchFunctionCandidate(
+                    candidate, arguments, {}, candidateEvaluation, {}, &score, true);
+        if (bindings)
+            matches.append({candidate, score});
+    }
+    std::stable_sort(matches.begin(), matches.end(), [](const auto &left, const auto &right) {
+        return left.score > right.score;
+    });
+    QList<PStatement> result;
+    for (const MatchedCandidate &match : matches)
+        result.append(match.statement);
+    return result;
+}
+
 QList<PStatement> CppTypeResolver::functionCandidates(const PStatement &function) const
 {
     QList<PStatement> result;
@@ -1245,19 +1307,14 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
         const PStatement &function, const QVector<TypeInfo> &arguments,
         const QVector<TemplateArgument> &explicitArguments,
         EvaluationContext &evaluation, const PTemplateBindingFrame &outerBindings,
-        int *matchScore) const
+        int *matchScore, bool allowPartialArguments) const
 {
     if (!function)
         return {};
     traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
     ResolveOriginScope originScope("matchFunctionCandidate");
-    bool parameterPack = false;
-    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
-        parameterPack |= parameter.parameterPack;
-    if ((!parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() != arguments.count())
-            || (parameterPack && std::dynamic_pointer_cast<Statement>(function)->parameters.count() - 1 > arguments.count())) {
+    if (!functionAcceptsArgumentCount(function, arguments.count(), allowPartialArguments))
         return {};
-    }
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;

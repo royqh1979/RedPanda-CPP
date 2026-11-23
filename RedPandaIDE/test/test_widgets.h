@@ -76,6 +76,7 @@ private slots:
     void test_goto_definition_prefers_current_file();
     void test_ctrl_hover_uses_pointing_hand_cursor();
     void test_function_tip_class();
+    void test_function_tip_filters_and_ranks_overloads();
     void test_rename_class_and_constructor();
     void test_rename_from_constructor();
     void test_editor_color_scheme_demo_parser_is_self_contained();

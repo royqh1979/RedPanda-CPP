@@ -30,6 +30,9 @@ public:
     EvalResult evaluate(const CppTokenizer &tokenizer, const PStatement &context = {},
                         CppTypeResolver::EvaluationContext *evaluation = nullptr,
                         ExpressionEvalTrace *trace = nullptr) const;
+    bool evaluateArgumentList(const CppTokenizer &tokenizer, const PStatement &context,
+                              QVector<TypeInfo> &arguments,
+                              CppTypeResolver::EvaluationContext *evaluation = nullptr) const;
 
 private:
     friend class TestCppExpressionEvaluator;

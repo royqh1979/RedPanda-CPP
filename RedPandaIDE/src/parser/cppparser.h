@@ -54,6 +54,9 @@ public:
     void removeProjectFile(const QString& value);
     void addProjectIncludePath(const QString& value);
     QList<PStatement> getListOfFunctions(const QString& fileName, const QString& phrase, int line) const;
+    QList<PStatement> matchFunctionOverloads(
+            const QList<PStatement> &candidates, const QVector<TypeInfo> &arguments,
+            int minimumArgumentCount) const;
     PStatement findScopeStatement(const QString& filename, int line) const;
     PParsedFileInfo findFileInfo(const QString &filename) const;
     PReplayRecord findReplayRecord(const QString &filename) const;
@@ -84,6 +87,8 @@ public:
     EvalResult evalExpression(const QString &fileName, const CppTokenizer::TokenList &expression,
                               const PStatement &currentScope,
                               ExpressionEvalTrace *trace = nullptr) const;
+    bool evalArgumentList(const QString &fileName, const QString &argumentListText,
+                          const PStatement &currentScope, QVector<TypeInfo> &arguments) const;
     PStatement findTypeDefinitionOf(const QString& fileName, const QString& typeName,
                                     const PStatement& currentClass) const;
     PStatement findTypeDef(const PStatement& statement, const QString& fileName) const;

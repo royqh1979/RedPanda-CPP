@@ -998,6 +998,22 @@ bool CppExpressionEvaluator::readTemplateArguments(
     return false;
 }
 
+bool CppExpressionEvaluator::evaluateArgumentList(
+        const CppTokenizer &tokenizer, const PStatement &context, QVector<TypeInfo> &arguments,
+        CppTypeResolver::EvaluationContext *evaluationContext) const
+{
+    CppTypeResolver::EvaluationContext localEvaluation;
+    CppTypeResolver::EvaluationContext &evaluation = evaluationContext
+            ? *evaluationContext : localEvaluation;
+    arguments.clear();
+    int index = 0;
+    const bool result = evaluateArguments(tokenizer.tokens(), index, context, arguments, &evaluation)
+            && index == tokenizer.tokenCount();
+    if (!result)
+        arguments.clear();
+    return result;
+}
+
 bool CppExpressionEvaluator::evaluateArguments(
         const TokenList &tokens, int &index, const PStatement &context,
         QVector<TypeInfo> &arguments, CppTypeResolver::EvaluationContext *evaluation) const

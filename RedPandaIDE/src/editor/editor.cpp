@@ -3868,6 +3868,7 @@ void Editor::updateFunctionTip(bool showTip)
     int currentLine = caret.line;
     int currentChar = caret.ch;
     CharPos functionNamePos{-1,-1};
+    CharPos functionStartPos{-1,-1};
     bool foundFunctionStart = false;
     int parenthesisLevel = 0;
     int braceLevel = 0;
@@ -3878,7 +3879,7 @@ void Editor::updateFunctionTip(bool showTip)
         return;
 
     QChar ch= charAt(prevNonSpaceChar(caret));
-    if (ch!='(' && ch!=',')
+    if (ch!='(' && ch!=',' && !functionTooltipVisible())
         return;
 
     QSynedit::PTokenAttribute attr;
@@ -3943,6 +3944,7 @@ void Editor::updateFunctionTip(bool showTip)
                     if (tokens[i]=="(") {
                         // found start of function
                         foundFunctionStart = true;
+                        functionStartPos = {positions[i], currentLine};
                         if (i>0) {
                             functionNamePos.line = currentLine;
                             functionNamePos.ch = positions[i-1];
@@ -4035,16 +4037,44 @@ void Editor::updateFunctionTip(bool showTip)
     if (!functionExpression.isEmpty())
         s = functionExpression.join("");
 
-    // Don't bother scanning the database when there's no identifier to scan for
+    auto textBetween = [this](const CharPos &start, const CharPos &end) {
+        QStringList result;
+        for (int line = start.line; line <= end.line; ++line) {
+            const QString text = lineText(line);
+            const int from = line == start.line ? start.ch : 0;
+            const int to = line == end.line ? end.ch : text.length();
+            result.append(text.mid(from, to - from));
+        }
+        return result.join('\n');
+    };
+    QVector<TypeInfo> argumentTypes;
+    bool argumentsEvaluated = false;
+    const QString argumentsText = textBetween(
+                {functionStartPos.ch + 1, functionStartPos.line}, caret);
+    if (!argumentsText.trimmed().isEmpty()) {
+        const bool nextArgument = ch == ',';
+        const QString argumentList = "(" + argumentsText + (nextArgument ? "0)" : ")");
+        PStatement currentScope = mParser->findScopeStatement(mFilename, functionNamePos.line);
+        argumentsEvaluated = mParser->evalArgumentList(
+                    mFilename, argumentList, currentScope, argumentTypes);
+        if (argumentsEvaluated && !argumentTypes.isEmpty()) {
+            if (nextArgument)
+                argumentTypes.removeLast();
+            paramsCount = argumentTypes.count() + (nextArgument ? 1 : 0);
+            currentParamPos = paramsCount - 1;
+        } else {
+            argumentsEvaluated = false;
+        }
+    }
 
-    // Only do the cumbersome list filling when showing a new tooltip...
-    if (s != mFunctionTooltip->functionFullName()
-            && !mParser->parsing()) {
+    if (!mParser->parsing()) {
         mFunctionTooltip->clearTips();
-        QList<PStatement> statements=mParser->getListOfFunctions(mFilename,
-                                                                  s,
-                                                                  functionNamePos.line);
-//      qDebug()<<"finding function list:"<<s<<" - "<<statements.length();
+        QList<PStatement> statements = mParser->getListOfFunctions(
+                    mFilename, s, functionNamePos.line);
+        if (argumentsEvaluated) {
+            statements = mParser->matchFunctionOverloads(
+                        statements, argumentTypes, paramsCount);
+        }
         foreach (const PStatement statement, statements) {
             mFunctionTooltip->addTip(
                         statement->command,

@@ -232,6 +232,9 @@ public:
                             ClassInstance *resultInstance = nullptr,
                             const PTemplateBindingFrame &outerBindings = {},
                             CallResolution *invocation = nullptr) const;
+    QList<PStatement> rankFunctionCandidates(
+            const QList<PStatement> &candidates, const QVector<TypeInfo> &arguments,
+            int minimumArgumentCount, EvaluationContext *evaluation = nullptr) const;
     QList<PStatement> membersOf(const PStatement &scope) const;
     QList<PStatement> resolveMembersOfClass(const PStatement &classStatement,
                                             const PStatement &accessScope) const;
@@ -270,7 +273,7 @@ private:
             const PStatement &function, const QVector<TypeInfo> &arguments,
             const QVector<TemplateArgument> &explicitArguments,
             EvaluationContext &evaluation, const PTemplateBindingFrame &outerBindings,
-            int *matchScore) const;
+            int *matchScore, bool allowPartialArguments) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
                                              EvaluationContext &evaluation,

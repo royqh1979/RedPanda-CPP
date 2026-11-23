@@ -1776,11 +1776,11 @@ void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()
     PStatement identity = resolver.findStatement("identity");
     int score = 0;
     CppTypeResolver::PTemplateBindingFrame functionBindings = resolver.matchFunctionCandidate(
-                identity, {integer}, {}, evaluation, {}, &score);
+                identity, {integer}, {}, evaluation, {}, &score, false);
     QVERIFY(functionBindings);
     QCOMPARE(functionBindings->values["T"].type->toString(), "int");
     QVERIFY(score > 0);
-    QVERIFY(!resolver.matchFunctionCandidate(identity, {}, {}, evaluation, {}, nullptr));
+    QVERIFY(!resolver.matchFunctionCandidate(identity, {}, {}, evaluation, {}, nullptr, false));
 
     TypeInfo resolvedParameter;
     QVERIFY(resolver.compatibleArgument(integer, integer, {}, {}, evaluation, resolvedParameter));
@@ -1846,6 +1846,66 @@ void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()
                                     TemplateArgument::fromConstant("2"), {}, typeBindings,
                                     {}, evaluation),
              CppTypeResolver::SpecializationMatch::Unknown);
+}
+
+void TestCppTypeResolver::test_type_resolver_ranks_partial_function_candidates()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct First {};\n"
+                "void select(First first, int value);\n"
+                "void select(const char *text, int value);\n"
+                "void select(int first, int value);\n"
+                "void select(double first, double value);\n"
+                "void select(First first);\n"
+                "void defaulted(int value = 0);\n"
+                "void variadic(int count, ...);\n"
+                "struct Logger { void log(int count, ...) const; };\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/resolver_partial_candidates.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    auto type = [&](const QString &text) {
+        DeclarationInfo declaration;
+        if (!parseDeclarationText(text + " value;", declaration))
+            return TypeInfo();
+        TypeInfo result = declaration.specifiers.type;
+        if (!declaration.declarators.isEmpty())
+            result.derivations += declaration.declarators.first().derivations;
+        return resolver.resolve(result);
+    };
+
+    PStatement select = resolver.findStatement("select");
+    QList<PStatement> candidates = resolver.functionCandidates(select);
+    QCOMPARE(candidates.count(), 5);
+    QList<PStatement> matches = resolver.rankFunctionCandidates(
+                candidates, {type("const char*")}, 2);
+    QCOMPARE(matches.count(), 1);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(matches.first())->normalizedArgs.contains("char"));
+
+    matches = resolver.rankFunctionCandidates(candidates, {type("int")}, 2);
+    QCOMPARE(matches.count(), 2);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(matches.first())->normalizedArgs, "(int,int)");
+    QVERIFY(std::dynamic_pointer_cast<Statement>(matches.last())->normalizedArgs.contains("double"));
+
+    matches = resolver.rankFunctionCandidates(candidates, {}, 2);
+    QCOMPARE(matches.count(), 4);
+
+    PStatement defaulted = resolver.findStatement("defaulted");
+    auto defaultedNormal = std::dynamic_pointer_cast<Statement>(defaulted);
+    QCOMPARE(defaultedNormal->args, "(int value = 0)");
+    QCOMPARE(defaultedNormal->normalizedArgs, "(int)");
+    QCOMPARE(resolver.invokeFunction(defaulted, {}).qualifiedName, "void");
+    PStatement variadic = resolver.findStatement("variadic");
+    QCOMPARE(resolver.invokeFunction(
+                 variadic, {type("int"), type("int"), type("double")}).qualifiedName, "void");
+    PStatement memberVariadic = resolver.findStatement("Logger::log");
+    QVERIFY(memberVariadic);
+    QCOMPARE(resolver.invokeFunction(
+                 memberVariadic, {type("int"), type("double")}).qualifiedName, "void");
 }
 
 void TestCppTypeResolver::test_type_resolver_internal_type_and_lookup_interfaces()

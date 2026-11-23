@@ -107,8 +107,12 @@ bool isDeductionGuide(const DeclarationInfo &declaration, const DeclaratorInfo &
 QString renderParameters(const TypeDerivation &function, bool includeNames)
 {
     QStringList parameters;
-    for (const ParameterInfo &parameter : function.parameters)
-        parameters.append(parameter.toString(includeNames));
+    for (const ParameterInfo &parameter : function.parameters) {
+        QString text = parameter.toString(includeNames);
+        if (includeNames && !parameter.defaultArgumentText.isEmpty())
+            text += " = " + parameter.defaultArgumentText;
+        parameters.append(text);
+    }
     if (function.functionProperties.testFlag(FunctionProperty::Variadic))
         parameters.append("...");
     QString result = "(" + parameters.join(",") + ")";

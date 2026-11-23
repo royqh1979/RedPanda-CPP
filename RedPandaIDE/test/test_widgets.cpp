@@ -1371,6 +1371,108 @@ void TestWidgets::test_function_tip_class()
     QVERIFY(!hint.contains("constructor"));
 }
 
+void TestWidgets::test_function_tip_filters_and_ranks_overloads()
+{
+    const QString fileName = "/tmp/function_tip_overloads.cpp";
+    const QStringList content{
+        "struct First {};",
+        "template<typename T, typename U> struct Pair {};",
+        "template<typename T> T make();",
+        "void select(First first, int value);",
+        "void select(Pair<int, int> pair, int value);",
+        "void select(const char *text, int value);",
+        "void select(int first, int value = 42);",
+        "void select(double first, double value);",
+        "void select(First first);",
+        "const char *text;",
+        "int number;",
+        "void test() {",
+        "    select(text, 0);",
+        "    select(number, 0);",
+        "    select(make<Pair<int, int>>(), 0);",
+        "    select(unknown, 0);",
+        "}"
+    };
+    PCppParser parser = std::make_shared<CppParser>();
+    parser->setOnGetFileStream([&content](const QString &, QStringList &buffer) {
+        buffer = content;
+        return true;
+    });
+    parser->addProjectFile(fileName, false);
+    CppParser::parseFileBlocking(parser, fileName, false, "");
+
+    PStatement scope = parser->findScopeStatement(fileName, 12);
+    QVector<TypeInfo> evaluatedArguments;
+    QVERIFY(parser->evalArgumentList(fileName, "()", scope, evaluatedArguments));
+    QVERIFY(evaluatedArguments.isEmpty());
+    QVERIFY(parser->evalArgumentList(
+                fileName, "(make<Pair<int, int>>(), 0)", scope, evaluatedArguments));
+    QCOMPARE(evaluatedArguments.count(), 2);
+    QCOMPARE(evaluatedArguments[0].qualifiedName, "Pair");
+    QCOMPARE(evaluatedArguments[0].templateArguments.count(), 2);
+    QCOMPARE(evaluatedArguments[1].qualifiedName, "int");
+    QVERIFY(!parser->evalArgumentList(fileName, "(unknown, 0)", scope, evaluatedArguments));
+    QVERIFY(evaluatedArguments.isEmpty());
+
+    Editor editor;
+    editor.setEditorSettings(&pSettings->editor());
+    editor.setColorManager(mColorManager.get());
+    editor.setFilename(fileName);
+    editor.setSyntaxer(std::make_shared<QSynedit::CppSyntaxer>());
+    editor.setFormatter(std::make_shared<QSynedit::CppFormatter>());
+    editor.applySettings();
+    editor.setFileType(FileType::CppSource);
+    editor.loadContent(content);
+    editor.setCppParser(parser);
+    FunctionTooltipWidget tooltip;
+    editor.setFunctionTooltip(&tooltip);
+    QLabel *label = tooltip.findChild<QLabel *>();
+    QVERIFY(label);
+
+    int line = content.indexOf("    select(text, 0);");
+    QVERIFY(line >= 0);
+    editor.setCaretPos({content[line].indexOf('(') + 1, line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 6);
+
+    tooltip.show();
+    editor.setCaretPos({content[line].indexOf(','), line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 1);
+    QVERIFY(label->text().contains("const char"));
+    QCOMPARE(tooltip.paramIndex(), 0);
+
+    editor.setCaretPos({content[line].indexOf(',') + 1, line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 1);
+    QVERIFY(label->text().contains("const char"));
+
+    line = content.indexOf("    select(number, 0);");
+    QVERIFY(line >= 0);
+    editor.setCaretPos({content[line].indexOf(',') + 1, line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 2);
+    QVERIFY(label->text().contains("int"));
+    QVERIFY(label->text().contains("value = 42"));
+    QVERIFY(!label->text().contains("double"));
+    tooltip.nextTip();
+    QVERIFY(label->text().contains("double"));
+
+    line = content.indexOf("    select(make<Pair<int, int>>(), 0);");
+    QVERIFY(line >= 0);
+    editor.setCaretPos({content[line].lastIndexOf(',') + 1, line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 3);
+    QVERIFY(label->text().contains("Pair"));
+    QCOMPARE(tooltip.paramIndex(), 1);
+
+    line = content.indexOf("    select(unknown, 0);");
+    QVERIFY(line >= 0);
+    editor.setCaretPos({content[line].indexOf(',') + 1, line});
+    QVERIFY(QMetaObject::invokeMethod(&editor, "onFunctionTipsTimer", Qt::DirectConnection));
+    QCOMPARE(tooltip.tipCount(), 6);
+}
+
 void TestWidgets::test_rename_class_and_constructor()
 {
     Editor editor;
