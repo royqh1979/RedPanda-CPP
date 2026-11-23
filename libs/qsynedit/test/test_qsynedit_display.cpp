@@ -794,6 +794,60 @@ void TestQSyneditDisplay::test_fold_edit_inside_expands_and_undo()
     QVERIFY(!mEdit->isCollapsed(0, 6));
 }
 
+void TestQSyneditDisplay::test_preprocessor_fold_edit_inside_expands()
+{
+    mEdit->loadContent({"#ifdef FEATURE", "int value;", "#endif"});
+    QVERIFY(mEdit->collapse(0, 2));
+    mEdit->setCaretPos(CharPos{0, 2});
+    QTest::keyClick(mEdit.get(), Qt::Key_Return);
+
+    QCOMPARE(mEdit->content(), QStringList({
+        "#ifdef FEATURE", "int value;", "", "#endif"
+    }));
+    PCodeBlock block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QVERIFY(!block->collapsed);
+    QVERIFY(!mEdit->mRowIndex.isHidden(2));
+}
+
+void TestQSyneditDisplay::test_nested_preprocessor_fold_boundary()
+{
+    mEdit->loadContent({
+        "#if defined(OUTER)",
+        "#if defined(INNER)",
+        "#else",
+        "#endif",
+        "#endif"
+    });
+    PCodeBlock block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 4);
+    QVERIFY(mEdit->collapse(0, 4));
+
+    mEdit->loadContent({
+        "#if defined(OUTER)",
+        "#if defined(INNER) /* comment */",
+        "#endif",
+        "#endif"
+    });
+    block = mEdit->foldStartAtLine(0);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 3);
+
+    QByteArray encoding;
+    mEdit->loadFromFile("resources/miniaudio.h", ENCODING_AUTO_DETECT, encoding);
+    block = mEdit->foldStartAtLine(3860);
+    QVERIFY(block);
+    QCOMPARE(block->toLine, 3880);
+    QVERIFY(mEdit->collapse(3860, 3880));
+    mEdit->setCaretPos(CharPos{0, 3880});
+    QTest::keyClick(mEdit.get(), Qt::Key_Return);
+    QCOMPARE(mEdit->lineText(3881), QString("#endif"));
+    block = mEdit->foldStartAtLine(3860);
+    QVERIFY(block);
+    QVERIFY(!block->collapsed);
+}
+
 void TestQSyneditDisplay::test_fold_virtual_close_backspace()
 {
     mEdit->loadContent(makeFoldableLines());
