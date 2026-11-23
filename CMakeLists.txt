@@ -285,7 +285,7 @@ if (OVERRIDE_MALLOC)
     link_libraries(${OVERRIDE_MALLOC})
 endif()
 
-set(test_environment "QT_QPA_PLATFORM=offscreen")
+set(test_environment "QT_QPA_PLATFORM=offscreen" "LC_ALL=C")
 if(WIN32 AND EXISTS "$ENV{WINDIR}/Fonts")
     list(APPEND test_environment "QT_QPA_FONTDIR=$ENV{WINDIR}/Fonts")
 endif()
