@@ -2,8 +2,7 @@
 #define TEST_CPPPREPROCESSOR_H
 #include <QObject>
 #include <memory>
-
-class CppPreprocessor;
+#include "src/parser/cpppreprocessor.h"
 
 class TestCppPreprocessor: public QObject
 {
@@ -84,7 +83,8 @@ private:
     static QStringList filterIncludes(const QStringList& text);
     // Run the full preprocess pipeline over in-memory content
     // (line splicing + comment removal + directive handling + macro expansion).
-    static QStringList preprocessContent(CppPreprocessor& p, const QStringList& lines);
+    static QStringList preprocessContent(CppPreprocessor& p, CppPreprocessor::Session &session,
+                                         const QStringList& lines);
 };
 
 #endif

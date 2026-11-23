@@ -118,25 +118,26 @@ void CppParser::internalParse(const QString &fileName)
     QElapsedTimer timer;
     timer.start();
     mPreprocessor->setScanOptions(true, true);
-    mPreprocessor->preprocess(fileName);
+    CppPreprocessor::Session session;
+    mPreprocessor->preprocess(session, fileName);
     qint64 preprocessMs = timer.restart();
     if (shouldStopParsing())
         return;
 
     CppTokenizer tokenizer;
     tokenizer.setStopRequestedHandler([this] { return shouldStopParsing(); });
-    tokenizer.tokenize(mPreprocessor->result());
+    tokenizer.tokenize(session.result);
     qint64 tokenizeMs = timer.restart();
     if (shouldStopParsing())
         return;
 #ifdef REDPANDA_PARSER_TEST
-    mPreprocessedForTest = mPreprocessor->result();
+    mPreprocessedForTest = session.result;
     mTokenizerTokensForTest = tokenizer.tokens();
 #endif
     CppTokenCursor cursor(tokenizer);
     CppStatementBuilder builder(*mStatementList,
                                 evaluationOptions());
-    const QHash<QString, QStringList> &ancestors = mPreprocessor->boundaryAncestors();
+    const QHash<QString, QStringList> &ancestors = session.boundaryAncestors;
     qint64 parseDeclarationsMs = 0;
     qint64 buildStatementsMs = 0;
     QElapsedTimer stepTimer;
@@ -221,15 +222,11 @@ void CppParser::internalParse(const QString &fileName)
     });
     for (int i = 0; i < qMin(10, sortedTimes.count()); ++i)
         qWarning() << "PARSE_FILE_TIMING" << sortedTimes[i].first << sortedTimes[i].second;
-    stepTimer.start();
-    mPreprocessor->clearTransientSessionState();
-    qint64 clearTransientSessionStateMs = stepTimer.restart();
     qWarning() << "PARSE_TIMING" << fileName
                << "preprocess" << preprocessMs
                << "tokenize" << tokenizeMs
                << "parseDeclarations" << parseDeclarationsMs
                << "buildStatements" << buildStatementsMs
-               << "clearTransientSessionState" << clearTransientSessionStateMs
                << "declarations" << timer.restart();
 }
 
@@ -238,8 +235,6 @@ void CppParser::clearAnalysisResults()
     mStatementList->clear();
     mPreprocessor->clearAnalysisResults();
     internalParseHardDefines();
-    mSession.filesScannedCount = 0;
-    mSession.filesToScanCount = 0;
 #ifdef REDPANDA_PARSER_TEST
     mPreprocessedForTest.clear();
     mTokenizerTokensForTest.clear();
@@ -331,10 +326,10 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
         if (mPreprocessor->hasReplayRecord(file))
             continue;
         mPreprocessor->setScanOptions(false, true);
-        mPreprocessor->preprocess(file);
+        CppPreprocessor::Session session;
+        mPreprocessor->preprocess(session, file);
         if (shouldStopParsing())
             return {};
-        mPreprocessor->clearTransientSessionState();
     }
 
     QSet<QString> remaining = files;
@@ -380,6 +375,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
 {
     if (!mEnabled || sApplicationExiting.load())
         return false;
+    Session session;
     {
         {
             QMutexLocker locker(&mMutex);
@@ -407,7 +403,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
             clearAnalysisResults();
         QMutexLocker locker(&mMutex);
         mParsing = false;
-        emit parseFinished(mSession.filesScannedCount, updateView ? 1 : 0);
+        emit parseFinished(session.filesScannedCount, updateView ? 1 : 0);
     });
     if (onlyIfNotParsed && mPreprocessor->hasReplayRecord(fileName))
         return false;
@@ -420,23 +416,23 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         if (shouldStopParsing())
             return true;
         internalInvalidateFiles(filesToReparse);
-        mSession.filesToScanCount = files.count();
-        mSession.filesScannedCount = 0;
+        session.filesToScanCount = files.count();
+        session.filesScannedCount = 0;
         for (const QString &file : files) {
             if (shouldStopParsing())
                 break;
-            ++mSession.filesScannedCount;
-            emit progress(file, mSession.filesToScanCount, mSession.filesScannedCount);
+            ++session.filesScannedCount;
+            emit progress(file, session.filesToScanCount, session.filesScannedCount);
             if (!mPreprocessor->hasReplayRecord(file))
                 internalParse(file);
         }
     } else {
         invalidateSingleFile(fileName);
         invalidateSingleFile(contextFilename);
-        mSession.filesToScanCount = 2;
-        mSession.filesScannedCount = 0;
-        ++mSession.filesScannedCount;
-        emit progress(fileName, mSession.filesToScanCount, mSession.filesScannedCount);
+        session.filesToScanCount = 2;
+        session.filesScannedCount = 0;
+        ++session.filesScannedCount;
+        emit progress(fileName, session.filesToScanCount, session.filesScannedCount);
         internalParse(contextFilename);
         if (!shouldStopParsing() && fileName != contextFilename
                 && !mPreprocessor->includesFile(contextFilename, fileName))
@@ -1035,8 +1031,6 @@ void CppParser::resetForReuse()
     emit onBusy();
     mUniqId = 0;
     mIsSystemHeader = false;
-    mSession.filesScannedCount = 0;
-    mSession.filesToScanCount = 0;
     mStatementList->clear();
     mProjectFiles.clear();
     mPreprocessor->resetForReuse();

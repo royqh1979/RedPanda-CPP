@@ -24,9 +24,11 @@ Project files 决定文件的项目归属和 Statement 属性，属于 Configura
 
 ### 2.2 Session
 
-Session 是一次 `preprocess()` 的工作状态，包括 include 栈、当前文件、输入输出缓冲区、分支栈、本轮 processed 集合、有序跨边界前缀和文件内容缓存。
+Session 是一次 parse/preprocess 调用私有的数据，包括 include 栈、当前文件、输入输出缓冲区、分支栈、本轮 processed 集合、有序跨边界前缀、文件内容缓存、当前 defines 和扫描进度。
 
-当前 `Session` 同时保存 defines。`clearTransientSessionState()` 只清临时工作状态，保留当前 defines；不能用含义过宽的 `clearSession()` 暗示整个 Session 对象都被清空。是否应在其它清理操作中清空当前 defines 是独立的行为问题，不在本轮修改。
+CppParser 和 CppPreprocessor 不再持有 Session 成员。调用方在栈上创建 Session，并通过 `preprocess(session, fileName)` 等接口传递；preprocess 开始时对 Session 值初始化，因此同一栈对象可以重复使用而不需要显式清理。result、defines 和 boundary 信息在调用结束后仍由调用方读取，生命周期到调用方作用域结束。
+
+锁、解析/预处理停止标志、冻结计数、待处理解析命令和串行版本属于对象控制状态，不属于 Session。跨调用测试诊断缓冲和匿名类型 ID 生成器也不属于单次 Session。
 
 ### 2.3 Registry
 
@@ -38,7 +40,7 @@ Registry 只保存跨 preprocess 轮次保留的派生分析结果：
 
 Project files 和路径配置不属于 Registry。StatementModel 是 Parser 层的语句注册中心，与 Preprocessor Registry 并列，不并入 Preprocessor。
 
-CppParser 同样按三类理解：`mLanguage`、启用/共享策略和 project files 属于 Configuration；解析进度、停止标志、待处理解析命令和锁状态属于 Session/运行状态；StatementModel 属于分析结果。`mSerialId` 用于请求版本控制，`mUniqId` 用于分析结果生命周期内的匿名符号命名，不并入 Preprocessor Registry。
+CppParser 的 `mLanguage`、启用/共享策略和 project files 属于 Configuration；StatementModel 属于分析结果。`mUniqId` 用于分析结果生命周期内的匿名符号命名，不并入 Preprocessor Registry。
 
 ## 3. 命名规则
 
@@ -55,30 +57,26 @@ CppParser 同样按三类理解：`mLanguage`、启用/共享策略和 project f
 | 接口 | 契约 |
 | --- | --- |
 | `CppTokenizer::resetTokenizationState()` | 清输入、tokens、游标、配对和文件边界，保留停止回调 |
-| `CppPreprocessor::clearTransientSessionState()` | 清本轮临时 Session，保留 defines、Registry 和 Configuration |
-| `CppPreprocessor::clearAnalysisResults()` | 清临时 Session 和 Registry，保留 defines 与 Configuration |
-| `CppPreprocessor::resetForReuse()` | 清分析结果、当前 defines、project files、include paths 和 hard defines，重置 GCC/C++17，保留扫描选项、include 最大嵌套深度和回调 |
-| `CppParser::clearAnalysisResults()` | 清 StatementModel 和 Preprocessor 分析结果，再恢复 hard-define statements |
+| `CppPreprocessor::preprocess(Session &, fileName)` | 值初始化调用方栈上 Session，完成本轮预处理并写入 result、defines 和 boundary 输出 |
+| `CppPreprocessor::clearAnalysisResults()` | 只清 Registry，保留 Configuration，不影响调用方持有的 Session |
+| `CppPreprocessor::resetForReuse()` | 清 Registry、project files、include paths 和 hard defines，重置 GCC/C++17，保留扫描选项、include 最大嵌套深度和回调 |
+| `CppParser::clearAnalysisResults()` | 清 StatementModel 和 Preprocessor Registry，再恢复 hard-define statements |
 | `CppParser::resetForReuse()` | 停止并等待当前解析，再清分析结果、project files 及上述 Preprocessor 配置 |
 
-`clearAnalysisResults()` 的后置条件不是所有容器均为空：
-
-- CppPreprocessor 保留当前 defines 和 Configuration；
-- CppParser 恢复配置生成的 hard-define statements，因此 StatementModel 可以非空。
+`clearAnalysisResults()` 的后置条件不是所有容器均为空：CppParser 会恢复配置生成的 hard-define statements，因此 StatementModel 可以非空。调用方 Session 不属于 Preprocessor 对象，不由这些清理接口处理。
 
 内部组合关系：
 
 ```cpp
 void CppPreprocessor::clearAnalysisResults()
 {
-    clearTransientSessionState();
     mRegistry.clearAnalysisResults();
 }
 ```
 
-`resetForReuse()` 复用 `clearAnalysisResults()`，再清当前 defines、project files、include paths 和 hard defines，并重置 GCC/C++17；扫描选项、include 最大嵌套深度和回调保持。`Registry` 只提供分析结果清理，不再提供包含 project files 的笼统 `clear()`。
+`resetForReuse()` 复用 `clearAnalysisResults()`，再清 project files、include paths 和 hard defines，并重置 GCC/C++17；扫描选项、include 最大嵌套深度和回调保持。`Registry` 只提供分析结果清理，不再提供包含 project files 的笼统 `clear()`。
 
-三个公共清理层级不能合并：Parser 在正常解析结束和 include 关系预扫描后需要只清临时 Session；中止解析时需要清全部分析结果但保留配置；完整重置还需要清 project files、include paths 和 hard defines，并重置编译器类型与 C++ 版本。不使用 `clear(ClearScope)` 或布尔参数掩盖这些差别。
+原“临时 Session 清理”层级已经取消：正常解析结束和 include 关系预扫描后，栈上 Session 由调用方作用域自动释放；重复调用时通过值初始化刷新。中止解析时清全部分析结果但保留配置，完整重置再清配置，不使用 `clear(ClearScope)` 或布尔参数。
 
 ## 5. 相关接口
 
@@ -89,16 +87,16 @@ void CppPreprocessor::clearAnalysisResults()
 - `clearCompilerIncludePaths()` 在当前调用链中没有独立作用；删除 reconfigure 中的冗余调用，若没有其它调用方则一并删除该公开清理接口。
 - `resetApplicationExitFlagForTest()` 只恢复测试中的应用退出标志。
 
-以下保持原名：`clearEventCounts()`、`removeFileInfo()`、`removeReplayRecord()`。`StatementModel::clear()` 和 `CppScopes::clear()` 是单一容器操作，也保持 Qt 容器风格。`clearProjectFiles()` 和 `clearProjectIncludePaths()` 是否保留由第 7 节的调用点整合结果决定。
+以下保持原名：`clearEventCounts()`、`removeFileInfo()`、`removeReplayRecord()`。`StatementModel::clear()` 和 `CppScopes::clear()` 是单一容器操作，也保持 Qt 容器风格。编译器和项目 include/path 的独立公开清理接口已由统一 reset 取代。
 
 ## 6. 测试契约
 
-改名前先补或确认以下测试，迁移后不得通过修改预期来接受行为变化：
+相关操作必须保持以下契约，不得通过修改预期来接受行为变化：
 
 1. Tokenizer 同一实例连续使用时，不残留前次输入、tokens、配对或文件边界。
-2. 临时 Session 清理后，当前 defines、fileInfo/replay、project files、include paths、编译器类型和 C++ 版本保持。
+2. 同一栈上 Session 重复 preprocess 时自动刷新 result、defines 和文件缓存，无需显式清理；Registry 与 Configuration 保持。
 3. Preprocessor 分析结果清理后，fileInfo/replay 被删除，project files 和编译器配置保持。
-4. Preprocessor 完整重置后，项目文件、include、defines 和 replay 被清空，并恢复 C++17/GCC。
+4. Preprocessor 完整重置后，项目文件、include、hard defines 和 replay 被清空，并恢复 C++17/GCC。
 5. Parser 分析结果清理后，普通文件 statements 消失，hard-define statements 恢复。
 6. Parser 完整重置仍先停止并等待解析结束；现有关闭、退出和并发测试不变。
 7. 级联失效继续覆盖声明、定义、static/extern、namespace 和多 TU 场景；单文件内部入口不被误当成级联入口。

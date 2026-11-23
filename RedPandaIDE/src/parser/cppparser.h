@@ -218,7 +218,6 @@ private:
     mutable std::unique_ptr<StatementModel> mStatementList;
     std::unique_ptr<CppPreprocessor> mPreprocessor;
     QSet<QString> mProjectFiles;
-    Session mSession;
     int mLockCount;
     bool mParsing;
     std::atomic_bool mStopParsing;
