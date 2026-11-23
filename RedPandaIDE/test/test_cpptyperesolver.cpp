@@ -1670,7 +1670,7 @@ void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
 
     QSet<QString> candidateVisited;
     QList<CppTypeResolver::MemberResolution> candidates = resolver.memberCandidates(
-                instance, "action", candidateVisited, evaluation, true);
+                instance, "action", candidateVisited, evaluation);
     QCOMPARE(candidates.count(), 1);
     QCOMPARE(candidates.first().statement->parentScope.lock(), derived);
     candidateVisited.clear();

@@ -284,8 +284,7 @@ private:
             int *matchScore, bool allowPartialArguments) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
-                                             EvaluationContext &evaluation,
-                                             bool stopAtDirectMember = false) const;
+                                             EvaluationContext &evaluation) const;
     MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
                                    bool call, const QVector<TypeInfo> &arguments,
                                    EvaluationContext &evaluation) const;

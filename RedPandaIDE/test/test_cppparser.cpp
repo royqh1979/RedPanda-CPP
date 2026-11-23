@@ -475,6 +475,28 @@ void TestCppParser::test_base_member_return_uses_declaration_bindings()
     QCOMPARE(result.statement->command, "find");
 }
 
+void TestCppParser::test_derived_member_hides_base_overloads()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct Base { int value(int); long value(double); };",
+            "struct Derived : Base { short value(int); };",
+            "Derived object;",
+            "void test() {}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    PStatement scope = mParser->findScopeStatement("text.cpp", 3);
+    QVERIFY(scope);
+    QStringList expression{"object", ".", "value", "(", "1.0", ")"};
+    EvalResult result = mParser->evalExpression("text.cpp", expression, scope);
+    QVERIFY(result.isValid());
+    QCOMPARE(result.type.qualifiedName, "short");
+    QVERIFY(result.invocation.statement);
+    QCOMPARE(result.invocation.statement->parentScope.lock()->fullName, "Derived");
+}
+
 void TestCppParser::test_member_overload_resolution()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {

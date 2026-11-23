@@ -3180,13 +3180,13 @@ CppTypeResolver::MemberResolution CppTypeResolver::findMember(
         EvaluationContext &evaluation) const
 {
     const QList<MemberResolution> candidates = memberCandidates(instance, name, visited,
-                                                                evaluation, true);
+                                                                evaluation);
     return candidates.isEmpty() ? MemberResolution{} : candidates.first();
 }
 
 QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         const ClassInstance &instance, const QString &name, QSet<QString> &visited,
-        EvaluationContext &evaluation, bool stopAtDirectMember) const
+        EvaluationContext &evaluation) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberLookupNs,
                                       resolverProfile.memberLookupCalls, "memberCandidates");
@@ -3233,7 +3233,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
     }
     if (result.isEmpty())
         result = constFallback;
-    if (stopAtDirectMember && !result.isEmpty())
+    if (!result.isEmpty())
         return result;
 
     QSet<QString> signatures;
