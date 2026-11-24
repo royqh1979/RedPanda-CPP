@@ -562,7 +562,7 @@ private:
     std::atomic<int> mUpdateCount;
     // bumped on the first recordChange of each batch; atomic for the same
     // reason as mUpdateCount
-    std::atomic<int> mContentVersion{0};
+    std::atomic<int> mContentVersion{1};
     DocumentChangeSet mPendingChanges;
     bool mChangeCoalescingBlocked = false;
     bool mFullContentReplacement = false;

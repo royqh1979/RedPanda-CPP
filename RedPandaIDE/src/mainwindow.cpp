@@ -127,7 +127,8 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
 static CppRefactor::ContentProvider openedEditorContentProvider(MainWindow *mainWindow)
 {
     return [mainWindow](const QString &fileName, QStringList &buffer) {
-        return mainWindow->editorManager()->getContentFromOpenedEditor(fileName, buffer);
+        int version;
+        return mainWindow->editorManager()->getContentFromOpenedEditor(fileName, buffer, version);
     };
 }
 

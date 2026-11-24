@@ -2705,7 +2705,7 @@ void TestEditorSymbolCompletion::test_doxygen_header_editing_areas()
         "};"
     };
     PCppParser parser = std::make_shared<CppParser>();
-    parser->setOnGetFileStream([initial](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([initial](const QString &, QStringList &buffer, int &) {
         buffer = initial;
         return true;
     });

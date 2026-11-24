@@ -268,3 +268,22 @@ void TestEditorManagerAutoSave::test_save_error_signal()
     QCOMPARE(errors.first().at(1).toString(), expectedFilename);
     QVERIFY(!errors.first().at(2).toString().isEmpty());
 }
+
+
+void TestEditorManagerAutoSave::test_opened_editor_content_version()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString filename = tmp.filePath("version.cpp");
+    Editor *editor = addEditor(filename, "int value;", &mLeftTabs);
+    QVERIFY(editor);
+    int initial = mManager->getVersionOfOpenedEditor(filename);
+    QCOMPARE(initial, editor->document()->contentVersion());
+    QVERIFY(initial > 0);
+    QCOMPARE(mManager->getVersionOfOpenedEditor(tmp.filePath("missing.cpp")), 0);
+
+    replaceContent(editor, "int changed;");
+    QCOMPARE(mManager->getVersionOfOpenedEditor(filename),
+             editor->document()->contentVersion());
+    QVERIFY(mManager->getVersionOfOpenedEditor(filename) > initial);
+}

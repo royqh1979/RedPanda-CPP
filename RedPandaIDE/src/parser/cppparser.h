@@ -59,7 +59,6 @@ public:
             int minimumArgumentCount) const;
     PStatement findScopeStatement(const QString& filename, int line) const;
     PParsedFileInfo findFileInfo(const QString &filename) const;
-    PReplayRecord findReplayRecord(const QString &filename) const;
     QString findFirstTemplateParamOf(const QString& fileName, const QString& phrase,
                                      const PStatement& currentScope) const;
     QString findTemplateParamOf(const QString& fileName, const QString& phrase, int index,
@@ -102,6 +101,7 @@ public:
                               bool fromNext = false) const;
     void invalidateFileAndDependents(const QString& fileName);
 #ifdef REDPANDA_PARSER_TEST
+    PReplayRecord findReplayRecord(const QString &filename) const;
     void invalidateSingleFileForTest(const QString &fileName) { invalidateSingleFile(fileName); }
     CppPreprocessor::EventCounts preprocessorEventCountsForTest(const QString &fileName) const {
         return mPreprocessor->eventCounts(fileName);
@@ -129,6 +129,7 @@ public:
     bool enabled() const;
     void setEnabled(bool newEnabled);
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream);
+    void setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion);
     int parserId() const;
     const QString &serialId() const;
     const QSet<QString>& includePaths();
@@ -175,6 +176,7 @@ private:
     void clearAnalysisResults();
     CppEvaluationOptions evaluationOptions() const;
     void invalidateSingleFile(const QString& fileName);
+    void invalidateOutsideBoundaryFiles(const QString &fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
     QStringList sortFilesByIncludeRelations(const QSet<QString>& files);

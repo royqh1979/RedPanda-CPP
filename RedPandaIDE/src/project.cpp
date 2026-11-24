@@ -62,7 +62,10 @@ Project::Project(const QString &filename, const QString &name,
     mParser->setOnGetFileStream(
                 std::bind(
                     &EditorManager::getContentFromOpenedEditor,mEditorManager,
-                    std::placeholders::_1, std::placeholders::_2));
+                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    mParser->setOnGetFileVersion(
+                std::bind(&EditorManager::getVersionOfOpenedEditor,
+                          mEditorManager, std::placeholders::_1));
     mFileSystemWatcher->addPath(directory());
 }
 

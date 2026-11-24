@@ -22,6 +22,7 @@ private slots:
     void test_timer_and_disabled_states();
     void test_can_auto_save_false();
     void test_save_error_signal();
+    void test_opened_editor_content_version();
 
 private:
     Editor *addEditor(const QString &filename, const QString &initial,

@@ -42,9 +42,15 @@ SearchResultModel *MainWindow::searchResultModel()
     return nullptr;
 }
 
-bool EditorManager::getContentFromOpenedEditor(const QString &, QStringList &) const
+bool EditorManager::getContentFromOpenedEditor(const QString &, QStringList &, int &version) const
 {
+    version = 0;
     return false;
+}
+
+int EditorManager::getVersionOfOpenedEditor(const QString &) const
+{
+    return 0;
 }
 
 Editor *EditorManager::getOpenedEditor(const QString &) const

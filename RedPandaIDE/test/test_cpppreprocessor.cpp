@@ -342,7 +342,7 @@ QStringList TestCppPreprocessor::filterIncludes(const QStringList &text)
 
 QStringList TestCppPreprocessor::preprocessContent(CppPreprocessor &p, CppPreprocessor::Session &session, const QStringList &lines)
 {
-    p.setOnGetFileStream([&lines](const QString&, QStringList& out){
+    p.setOnGetFileStream([&lines](const QString&, QStringList& out, int &){
         out = lines;
         return true;
     });

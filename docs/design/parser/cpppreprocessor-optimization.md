@@ -118,7 +118,10 @@ namespace 的每次出现都登记为 declaration occurrence，剩余 occurrence
 
 ### 4.3 Replay 与重扫
 
-- Replay 恢复该记录的 define/undef 和 include 关系，不重新读取或扫描系统子树。
+- Replay 恢复该记录的 define/undef 和 include 关系，不重新读取或扫描系统子树。恢复时先插入聚合 `defines`，再按聚合 `undefines` 从 Session 的宏表中删除对应名称；只恢复 define 会把本轮已被头文件取消的宏错误地带到后续边界入口。这里的 define/undef 都是该子树对进入环境的最终聚合影响，不是按时间排序的宏操作日志。
+- 同一个宏在 ReplayRecord 中只能保留一种最终状态：记录新 define 时删除同名 undef，记录新 undef 时删除同名 define。因此 replay 应用两个映射时不存在顺序歧义，也不需要通过 Define 指针身份或额外操作日志推断最后一次操作。
+- `undefines` 只表示“该子树使这些先前存在的宏不再定义”，供 replay 恢复最终宏表。replay 校验失败后直接失效并重扫，不在旧 Session 中逆向恢复 define/undef，也不保留对应的恢复接口。
+- 后续边界入口必须使用完成 define 和 undef 恢复后的 Session 计算用户宏快照。若前一边界 replay 后的宏表与全量扫描一致，后续记录应继续按自身条件校验，不得因漏恢复 undef 而形成级联重扫。
 - 有效记录的 Statement 保留在 StatementMap 中，replay 直接复用，不重复创建。Statement 需要重建即说明记录已失效，必须走重扫。
 - 重扫前必须清除该记录上一轮产物；不能等到扫描后清理，也不能与 Parser 中其它失效合并成一次模糊的全局删除。
 - 同一文件在同一 include 栈中重复出现时，两次包含的宏环境和传递闭包可能不同。不能仅按文件名复用当前栈记录。

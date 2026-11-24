@@ -1272,6 +1272,8 @@ void TestDocument::test_content_version()
 {
     // the content version is bumped once per batch that changes content;
     // background wrap-layout workers use it to abort stale computations
+    Document initialDocument;
+    QCOMPARE(initialDocument.contentVersion(), 1);
     int v0 = mDoc->contentVersion();
     mDoc->setText("line0\nline1\nline2\nline3");
     QCOMPARE(mDoc->contentVersion(), v0 + 1);

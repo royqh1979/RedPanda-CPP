@@ -863,7 +863,8 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                                         if (mFileCache.contains(filename))
                                             contents = mFileCache.value(filename);
                                         else {
-                                            if (!pMainWindow->editorManager()->getContentFromOpenedEditor(filename,contents))
+                                            int version;
+                                            if (!pMainWindow->editorManager()->getContentFromOpenedEditor(filename, contents, version))
                                                 contents = readFileToLines(filename);
                                             mFileCache[filename]=contents;
                                         }

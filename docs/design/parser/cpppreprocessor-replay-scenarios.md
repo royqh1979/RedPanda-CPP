@@ -105,6 +105,20 @@
 - 判定依据：宏校验失败使 H 的旧扫描记录整体失效，Statement 与 define/undef 都是该记录产物，必须在重扫前同步清理。
 - 测试：`test_root_switch_with_macro_change_removes_stale_statements`。
 
+### M9 replay 恢复 undef 后再校验后续边界
+
+- 操作：根文件先定义 TEMP，边界头 A 取消 TEMP，后续边界头 B 根据 TEMP 是否存在声明不同符号；同一 TU 连续解析两次。
+- 预期：A replay 后 TEMP 与全量扫描一样保持未定义；B 的进入宏校验成功并 replay，不出现旧分支 Statement，Statement 总数稳定，A/B 均不重新扫描。
+- 判定依据：ReplayRecord 的 undefines 与 defines 都是子树最终宏效果。漏掉 undef 会使 B 的进入环境失真，既可能导致错误分支，也会触发无意义的级联失效。
+- 测试：`test_replay_applies_undefines_before_following_boundary`。
+
+### M10 undef 后重定义只保留最终 define
+
+- 操作：边界头 A 先定义 TEMP，在内部头中取消 TEMP，随后重新将其定义为 8；后续边界头 B 根据 TEMP 的值声明不同符号；同一 TU 连续解析两次。
+- 预期：A 的 ReplayRecord 只保留最终 define，不再保留同名 undef；A/B 均 replay 成功，B 得到 TEMP=8 的分支，Statement 身份和总数稳定。
+- 判定依据：define 和 undef 映射记录最终宏效果，同名记录必须互斥；否则 replay 可能把已经重定义的宏再次取消。
+- 测试：`test_replay_redefine_after_undef_replaces_undef_record`。
+
 ## 3. 有序跨边界前缀
 
 ### P1 相同顺序且 replay 生效

@@ -28,7 +28,8 @@
 #include "cpptypes.h"
 #include "cppscopes.h"
 
-using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
+using GetFileStreamFunc = std::function<bool (const QString&, QStringList&, int &)>;
+using GetFileVersionFunc = std::function<int (const QString&)>;
 
 enum class ParserLanguage {
     None,
@@ -520,6 +521,8 @@ public:
 
     const QDateTime &lastModified() const { return mLastModified; }
     qint64 fileSize() const { return mFileSize; }
+    int contentVersion() const { return mContentVersion; }
+    void setContentVersion(int contentVersion) { mContentVersion = contentVersion; }
     void setFileMetadata(const QDateTime &lastModified, qint64 fileSize) {
         mLastModified = lastModified;
         mFileSize = fileSize;
@@ -537,6 +540,7 @@ private:
     QMap<int,bool> mBranches;
     QDateTime mLastModified;
     qint64 mFileSize = -1;
+    int mContentVersion = 0;
     bool mIncludeProtected = false;
 };
 

@@ -40,6 +40,7 @@ public:
 
     bool parseDeclaration(DeclarationInfo &result);
     bool parseSimpleDeclaration(DeclarationInfo &result);
+    void parseExpression(DeclarationInfo &result, const QSet<QString> &delimiters);
     bool parseTemplatePrefix(DeclarationInfo &result);
     bool parseDeclSpecifierSeq(DeclSpecifierInfo &result);
     bool parseDeclarator(DeclaratorInfo &result);

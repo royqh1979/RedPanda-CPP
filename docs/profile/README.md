@@ -33,6 +33,7 @@
 - `parser/std-function-eval-baseline.md` — `std::function` 调用与赋值的求值基线、热点和复现方法。
 - `parser/bits-stdcpp-parse-baseline.md` — GCC 15.3 `bits/stdc++.h` 完整解析基线、阶段成本与头文件热点。
 - `parser/parse-time-declaration-merge.md` — Parse 阶段声明/定义合并的 9 次对照、Statement 变化与测量脚本。
+- `parser/replay-undef-invalidation-result.md` — Replay undef 恢复、重复失效清理热点及真实 IDE 复测结果。
 
 ## 4. 试题集
 

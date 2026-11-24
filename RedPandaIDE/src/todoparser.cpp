@@ -140,8 +140,9 @@ void TodoThread::doParseFile(const QString &filename)
     if (!syntaxer || syntaxer->language() == QSynedit::ProgrammingLanguage::Textfile)
         return;
     QStringList lines;
+    int version;
     if (!pMainWindow || !pMainWindow->editorManager()
-            || !pMainWindow->editorManager()->getContentFromOpenedEditor(filename,lines)) {
+            || !pMainWindow->editorManager()->getContentFromOpenedEditor(filename, lines, version)) {
         lines = readFileToLines(filename);
     }
     syntaxer->resetState();

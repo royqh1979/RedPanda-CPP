@@ -262,7 +262,8 @@ enum class DeclarationKind {
     Alias,
     Using,
     Block,
-    Label
+    Label,
+    Expression
 };
 
 enum class UsingDeclarationKind {
@@ -310,6 +311,7 @@ struct DeclarationInfo {
     SourcePosition rangeExpressionPosition;
     QStringList baseClasses;
     QVector<EnumeratorInfo> enumerators;
+    QVector<std::shared_ptr<LambdaInfo>> expressionLambdas;
     QVector<DeclarationInfo> children;
 };
 

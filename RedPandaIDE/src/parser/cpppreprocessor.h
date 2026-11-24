@@ -132,7 +132,6 @@ public:
     void addIncludePath(const QString& fileName);
     void addProjectIncludePath(const QString& fileName);
     void removeReplayRecord(const QString& filename);
-    void removeReplayRecord(Session &session, const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
     void invalidateFileAndDependents(const QString &fileName);
     void invalidateFileAndDependents(Session &session, const QString &fileName);
@@ -149,10 +148,6 @@ public:
 
     PParsedFileInfo findFileInfo(const QString& fileName) const {
         return mRegistry.fileInfos.value(fileName);
-    }
-
-    PReplayRecord findReplayRecord(const QString &fileName) const {
-        return mRegistry.replayRecords.value(fileName);
     }
 
     void removeFileInfo(const QString& fileName) {
@@ -187,12 +182,16 @@ public:
 
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
+    void setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion) { mOnGetFileVersion = newOnGetFileVersion; }
     void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
     void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
     void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
     QString boundaryAncestor(const Session &session, const QString &fileName, int occurrence) const;
 
 #ifdef REDPANDA_PARSER_TEST
+    PReplayRecord replayRecordForTest(const QString &fileName) const {
+        return findReplayRecord(fileName);
+    }
     struct EventCounts {
         int scan = 0;
         int replay = 0;
@@ -209,6 +208,7 @@ public:
     bool evaluateIf(const QString& line) const;
 
 private:
+    friend class CppParser;
 
     bool supportCPP23() const;
     bool stopRequested() const {
@@ -284,14 +284,11 @@ private:
     void addDefineByParts(Session *session, const QString &fileName, const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
     void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getHardDefine(const QString& name){
-        return mHardDefines.value(name,PDefine());
-    };
-    void invalidDefinesInFile(Session &session, const QString& fileName);
     static QString signatureOfDefine(const PDefine& define);
     QHash<QString,QString> userMacroSnapshot(const Session &session) const;
     bool hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const;
     bool isIncludeProtected(const QString &fileName) const;
+    PReplayRecord findReplayRecord(const QString &fileName) const;
     PReplayRecord replayRecordForFile(const Session &session, const QString &fileName) const;
 
 
@@ -355,6 +352,7 @@ private:
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
+    GetFileVersionFunc mOnGetFileVersion;
     FileInvalidationHandler mFileInvalidationHandler;
     StopRequestedHandler mStopRequestedHandler;
 

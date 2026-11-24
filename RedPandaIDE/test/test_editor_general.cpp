@@ -72,7 +72,7 @@ void TestEditorGeneral::test_syntax_check_target_editor()
     auto entered = std::make_shared<QSemaphore>();
     auto release = std::make_shared<QSemaphore>();
     auto blockFirstRead = std::make_shared<std::atomic_bool>(true);
-    parsingParser->setOnGetFileStream([=](const QString &, QStringList &) {
+    parsingParser->setOnGetFileStream([=](const QString &, QStringList &, int &) {
         if (blockFirstRead->exchange(false)) {
             entered->release();
             release->acquire();
@@ -96,7 +96,7 @@ void TestEditorGeneral::test_hard_define_statement_visibility_and_hint()
     PCppParser parser = std::make_shared<CppParser>();
     parser->addHardDefineByLine("#define __cplusplus 201703L");
     parser->parseHardDefines();
-    parser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value = __cplusplus;"};
         return true;
     });
@@ -114,7 +114,7 @@ void TestEditorGeneral::test_hard_define_statement_visibility_and_hint()
 void TestEditorGeneral::test_predefined_func_hint()
 {
     PCppParser parser = std::make_shared<CppParser>();
-    parser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"void alpha() {", "}", "void declarationOnly();"};
         return true;
     });
@@ -139,7 +139,7 @@ void TestEditorGeneral::test_hide_stops_parsing_and_allows_reparse_after_show()
     auto entered = std::make_shared<QSemaphore>();
     auto release = std::make_shared<QSemaphore>();
     auto readCount = std::make_shared<std::atomic_int>(0);
-    parser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([=](const QString &, QStringList &buffer, int &) {
         if (readCount->fetch_add(1) == 0) {
             entered->release();
             release->acquire();
@@ -335,7 +335,7 @@ void TestEditorGeneral::test_export_semantic_highlight()
         "int read() { return entry.value + getValue(); }"
     };
     PCppParser parser = std::make_shared<CppParser>();
-    parser->setOnGetFileStream([lines](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([lines](const QString &, QStringList &buffer, int &) {
         buffer = lines;
         return true;
     });
@@ -407,7 +407,7 @@ void TestEditorGeneral::test_completion_after_member_operator()
     QStringList editorLines = parsedLines;
     editorLines[4] = "void f() { std:";
     PCppParser parser = std::make_shared<CppParser>();
-    parser->setOnGetFileStream([parsedLines](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([parsedLines](const QString &, QStringList &buffer, int &) {
         buffer = parsedLines;
         return true;
     });
@@ -597,4 +597,39 @@ void TestEditorGeneral::test_semantic_export_profile()
                                  .arg(rtfSize)
                                  .arg(rtfNs / 1000000.0 / repeat, 0, 'f', 3);
     }
+}
+
+
+void TestEditorGeneral::test_load_file_skips_force_reparse()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString filename = tmp.filePath("main.cpp");
+    QFile file(filename);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write("int value;");
+    file.close();
+
+    CodeCompletionSettings completionSettings(mSettingsPersistor.get());
+    completionSettings.setEnabled(true);
+    mEditor->setCodeCompletionSettings(&completionSettings);
+    mEditor->applySettings();
+    mEditor->setFilename(filename);
+    mEditor->setContextFile("", false);
+    PCppParser parser = std::make_shared<CppParser>();
+    auto readCount = std::make_shared<std::atomic_int>(0);
+    parser->setOnGetFileStream([readCount](const QString &, QStringList &, int &) {
+        ++*readCount;
+        return false;
+    });
+    mEditor->setCppParser(parser);
+
+    mEditor->loadFile(filename, false);
+    QCoreApplication::processEvents();
+    QCOMPARE(readCount->load(), 0);
+
+    mEditor->reparseIfNeeded();
+    QTRY_COMPARE(readCount->load(), 1);
+    QTRY_VERIFY(!parser->parsing());
+    QVERIFY(parser->findStatement("value"));
 }
