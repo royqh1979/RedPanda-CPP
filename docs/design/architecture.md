@@ -51,6 +51,7 @@
 - `parser/cpppreprocessor-optimization.md` — 预处理 replay、Session/Registry 与缓存。
 - `parser/cpppreprocessor-replay-scenarios.md` — replay 场景和测试清单。
 - `parser/cpp17-support-plan.md` — C++17 支持计划。
+- `parser/cpp-public-api-baseline.md` — C/C++ 公开接口独立基准、可选验证与 eval profile。
 - `parser/cppnamespace-entity-using-design.md` — namespace、InlineAliasStatement 与 StatementFactory。
 - `parser/cppnamespace-transparency-design.md` — namespace transparency。
 - `parser/parser-rewrite-handoff.md` — Parser 重写交接说明。

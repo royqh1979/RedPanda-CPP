@@ -1005,6 +1005,23 @@ QString CppDeclarationParser::parseOperatorName()
     else {
         appendToken(result, mCursor.currentText());
         mCursor.advance();
+        if ((result == "operator new" || result == "operator delete")
+                && mCursor.currentText() == "[") {
+            result += readBalancedToken("[", "]");
+        }
+        if (result == "operator new" || result == "operator delete")
+            return result;
+        while (!mCursor.atEnd()) {
+            if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
+                    && mCursor.currentText() != "::" && mCursor.currentText() != "*"
+                    && mCursor.currentText() != "&" && mCursor.currentText() != "&&") {
+                break;
+            }
+            appendToken(result, mCursor.currentText());
+            mCursor.advance();
+            if (mCursor.currentText() == "<")
+                result += readBalancedToken("<", ">", true, true);
+        }
     }
     return result;
 }
@@ -1548,7 +1565,7 @@ bool CppDeclarationParser::isBuiltinType(const QString &text) const
     static const QSet<QString> types{
         "auto", "void", "bool", "char", "wchar_t", "char8_t", "char16_t",
         "char32_t", "short", "int", "long", "signed", "unsigned", "float",
-        "double"
+        "double", "_Complex"
     };
     return types.contains(text);
 }

@@ -643,17 +643,6 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
             kind = declaratorKind(declaration, declarator, context);
         }
 
-        if (declarator.definitionKind == DeclaratorDefinitionKind::Deleted) {
-            PStatement deleted = createStatement(declaration, declarator, context, kind);
-            PStatement existing = doFindDeclarationToMerge(deleted, context);
-            if (existing && !statementHasDefinition(existing)) {
-                if (context.fileInfo)
-                    context.fileInfo->removeStatement(existing);
-                mModel.deleteStatement(existing);
-            }
-            continue;
-        }
-
         StatementBuildContext declarationContext = context;
         if (isFunction(declarator) && !declarator.qualifier.isEmpty()) {
             QString qualifiedClassName = declarator.qualifier;
@@ -946,7 +935,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
             || kind == StatementKind::Namespace || kind == StatementKind::EnumType
             || kind == StatementKind::EnumClassType;
     if (hasBodyDefinition && !declaration.bodyRange.isValid()
-            && declarator.definitionKind == DeclaratorDefinitionKind::None)
+            && declarator.definitionKind != DeclaratorDefinitionKind::Defaulted)
         declarationOnly = true;
     if (!declarationOnly) {
         statement->definition = StatementOccurrence{

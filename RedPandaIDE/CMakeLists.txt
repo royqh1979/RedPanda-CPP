@@ -713,6 +713,7 @@ target_moc_classes(test-cppparser
     test/test_cppparserinvalidation
     test/test_cppparsertyntax
     test/test_cppparserstandardlibrary
+    test/test_cppparserpublicapibaseline
     test/test_cpppreprocessor
     test/test_cpppreprocessor_include
     test/test_cpptokenizer
@@ -772,6 +773,19 @@ if(REDPANDA_PARSER_STDLIB_TEST)
         REDPANDA_PARSER_STDLIB_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/resources/stdlib")
     target_compile_definitions(test-editor PRIVATE
         REDPANDA_PARSER_STDLIB_TEST
+        REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}"
+        REDPANDA_PARSER_STDLIB_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/resources/stdlib")
+endif()
+
+option(REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST
+    "Enable independent C/C++ public API baseline and eval profile" OFF)
+if(REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST)
+    if(NOT EXISTS "${REDPANDA_PARSER_STDLIB_MINGW_ROOT}/bin/g++.exe")
+        message(FATAL_ERROR
+            "REDPANDA_PARSER_STDLIB_MINGW_ROOT must point to a MinGW installation")
+    endif()
+    target_compile_definitions(test-cppparser PRIVATE
+        REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST
         REDPANDA_PARSER_STDLIB_MINGW_ROOT="${REDPANDA_PARSER_STDLIB_MINGW_ROOT}"
         REDPANDA_PARSER_STDLIB_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/resources/stdlib")
 endif()

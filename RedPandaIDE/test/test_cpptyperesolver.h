@@ -14,6 +14,7 @@ private slots:
     void test_type_resolution_cache_respects_bindings_and_switches();
     void test_type_resolver_resolves_multisegment_aliases();
     void test_type_resolver_binds_dependent_base_members();
+    void test_type_resolver_expands_base_aliases_and_specializations();
     void test_type_resolver_reference_collapsing_and_cycles();
     void test_type_resolver_selects_specializations_and_rebind();
     void test_type_resolver_ignores_recursive_nonmatching_specialization();

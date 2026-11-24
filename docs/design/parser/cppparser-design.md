@@ -94,13 +94,13 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
 
-普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definition occurrence 并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 不生成新 Statement；若匹配的已有声明仍为 declaration-only，则移除该声明，已有定义及其它重载不受影响。没有有效源码位置的 hard define 不参与跳转。
+普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definition occurrence 并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 声明保留为 declaration-only Statement，用于名称查找和展示，但不作为可用重载候选，也不提供 definition 跳转。没有有效源码位置的 hard define 不参与跳转。
 
 Label 和 Preprocessor 在表达式名称解析中使用各自独立的结果类别，只提供 Statement 供 goto 等声明导航，不伪装成变量、函数或类型，也不提供表达式类型。gotoDefinition 只接受 HasDefinition 且定义位置有效的 Statement，不得回退到 declaration。gotoDeclaration 优先使用当前文件中的 declaration，其次使用其它 declaration；没有 declaration 时才回退到 definition。
 
 创建层同时把 Statement 写入实际源码文件的 ParsedFileInfo。class、namespace 和函数只以 bodyRange 建立代码作用域，父节点按父 Statement 的身份关联；声明范围仍覆盖完整声明。不同 include 文件的位置和作用域分别写入各自的 ParsedFileInfo，不跨文件比较 SourcePosition。`struct S {} value;` 中类体只属于 S 的定义，不会被当作变量 value 的函数定义。
 
-internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
+internalParse 在声明分析前统一收集预处理输出中的 `#define`，再逐个转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。宏是否登记不再取决于外层 namespace/class/function 的声明分发路径。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
 
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 

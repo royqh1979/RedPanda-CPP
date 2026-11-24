@@ -167,6 +167,9 @@ private:
                    bool onlyIfNotParsed = false, bool updateView = true);
     PParseFileCommand retrievePendingParseFileCommand();
     void internalParse(const QString& fileName);
+    void collectPreprocessorStatements(
+            const CppTokenizer &tokenizer,
+            const QHash<QString, QStringList> &boundaryAncestors);
     void internalParseHardDefines();
     bool shouldStopParsing() const;
     void clearAnalysisResults();

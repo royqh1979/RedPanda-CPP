@@ -4,6 +4,7 @@
 #include "test_cppparserinvalidation.h"
 #include "test_cppparsertyntax.h"
 #include "test_cppparserstandardlibrary.h"
+#include "test_cppparserpublicapibaseline.h"
 #include "test_cpppreprocessor.h"
 #include "test_cpppreprocessor_include.h"
 #include "test_cpptokenizer.h"
@@ -71,6 +72,9 @@ int main(int argc, char *argv[])
     runTestSuite<TestCppParserSyntax>(suite, argc, argv, status);
 #ifdef REDPANDA_PARSER_STDLIB_TEST
     runTestSuite<TestCppParserStandardLibrary>(suite, argc, argv, status);
+#endif
+#ifdef REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST
+    runTestSuite<TestCppParserPublicApiBaseline>(suite, argc, argv, status);
 #endif
 
     return status;

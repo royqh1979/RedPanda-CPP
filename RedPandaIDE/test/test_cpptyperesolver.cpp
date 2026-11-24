@@ -1641,6 +1641,43 @@ void TestCppTypeResolver::test_type_resolver_resolves_alias_to_clang_type_builti
     }
 }
 
+void TestCppTypeResolver::test_type_resolver_expands_base_aliases_and_specializations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct __new_allocator { void allocate(); };\n"
+                "  template<typename T> using __allocator_base = __new_allocator<T>;\n"
+                "  template<typename T> struct allocator : __allocator_base<T> {};\n"
+                "  template<typename T> struct __shared_ptr_access {};\n"
+                "  template<typename T> struct __shared_ptr_access<T, true> { void operator[](); };\n"
+                "  template<typename T> struct shared_ptr : __shared_ptr_access<T> {};\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/base_aliases.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    PStatement allocator = resolver.findStatement("std::allocator");
+    QVERIFY(allocator);
+    StatementAccessibility inheritance;
+    PStatement base = resolver.baseClass(allocator, "__allocator_base<T>", inheritance);
+    QVERIFY(base);
+    QCOMPARE(base->fullName, QString("std::__new_allocator"));
+    QList<PStatement> members = resolver.resolveMembersOfClass(allocator, {});
+    QVERIFY(!members.isEmpty());
+    QCOMPARE(members.first()->command, QString("allocate"));
+
+    PStatement shared = resolver.findStatement("std::shared_ptr");
+    QVERIFY(shared);
+    members = resolver.resolveMembersOfClass(shared, {});
+    QCOMPARE(members.count(), 1);
+    QCOMPARE(members.first()->command, QString("operator[]"));
+}
+
 void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
 {
     QVector<DeclarationInfo> declarations;
@@ -1747,7 +1784,14 @@ void TestCppTypeResolver::test_type_resolver_matches_function_specialization_pac
                 "  Function& self();\n"
                 "  Function& operator=(const Function&);\n"
                 "  Function& operator=(Function&&);\n"
-                "};\n", declarations));
+                "  R operator()(Args...);\n"
+                "  template<typename T, typename U = double> T* target();\n"
+                "};\n"
+                "template<typename R, typename... Args>\n"
+                "R Function<R(Args...)>::operator()(Args...) {}\n"
+                "template<typename R, typename... Args>\n"
+                "template<typename T, typename U>\n"
+                "T* Function<R(Args...)>::target() { return nullptr; }\n", declarations));
     StatementModel model;
     CppStatementBuilder builder(model);
     StatementBuildContext context;
@@ -1768,6 +1812,18 @@ void TestCppTypeResolver::test_type_resolver_matches_function_specialization_pac
     QCOMPARE(assignment.type.toString(), "Function<int (double, char)> &");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(assignment.statement)->normalizedArgs,
              "(const Function &)");
+
+    DeclarationInfo empty;
+    QVERIFY(parseDeclarationText("Function<void()> empty;", empty));
+    QCOMPARE(resolver.invokeResult(empty.specifiers.type, "operator()").toString(), "void");
+
+    DeclarationInfo explicitArgument;
+    QVERIFY(parseDeclarationText("int explicitValue;", explicitArgument));
+    CppTypeResolver::EvaluationContext evaluation;
+    MemberEvalResult target = resolver.invokeMember(
+                instance, "target", {}, {TemplateArgument::fromType(explicitArgument.specifiers.type)},
+                &evaluation);
+    QCOMPARE(target.type.toString(), "int *");
 }
 
 void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()

@@ -588,7 +588,7 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
 
     static const QSet<QString> builtinTypes{
         "auto", "void", "bool", "char", "wchar_t", "char8_t", "char16_t", "char32_t",
-        "short", "int", "long", "signed", "unsigned", "float", "double"
+        "short", "int", "long", "signed", "unsigned", "float", "double", "_Complex"
     };
     if (builtinTypes.contains(initial.text)) {
         EvalResult result;

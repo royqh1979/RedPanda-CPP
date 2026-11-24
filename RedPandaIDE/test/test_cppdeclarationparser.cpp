@@ -338,6 +338,34 @@ void TestCppDeclarationParser::test_parse_parameter_pack()
     QCOMPARE(function.parameters.first().toString(), QString("Args... args"));
 }
 
+void TestCppDeclarationParser::test_parse_c_complex_declarations()
+{
+    const QVector<QPair<QString, QString>> cases{
+        {"float _Complex cacosf(float _Complex value);", "float _Complex"},
+        {"double _Complex cacos(double _Complex value);", "double _Complex"},
+        {"long double _Complex cacosl(long double _Complex value);", "long double _Complex"}
+    };
+    for (const auto &test : cases) {
+        DeclarationInfo declaration;
+        QVERIFY2(parseDeclarationText(test.first, declaration), qPrintable(test.first));
+        QCOMPARE(declaration.specifiers.type.qualifiedName, test.second);
+        QCOMPARE(declaration.declarators.count(), 1);
+        QCOMPARE(declaration.declarators.first().derivations.count(), 1);
+        const TypeDerivation &function = declaration.declarators.first().derivations.first();
+        QCOMPARE(function.parameters.count(), 1);
+        QCOMPARE(function.parameters.first().type->qualifiedName, test.second);
+
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        StatementBuildContext context;
+        context.fileName = "/tmp/complex.c";
+        builder.build(declaration, context);
+        PStatement statement = findStatement(model.childrenStatements(), declaration.declarators.first().name);
+        QVERIFY(statement);
+        QCOMPARE(statement->kind, StatementKind::Function);
+    }
+}
+
 void TestCppDeclarationParser::test_parse_operator_declaration()
 {
     DeclarationInfo declaration;
@@ -349,6 +377,21 @@ void TestCppDeclarationParser::test_parse_operator_declaration()
     QCOMPARE(function.kind, TypeDerivationKind::Function);
     QCOMPARE(function.parameters.count(), 1);
     QVERIFY(function.qualifiers.testFlag(TypeQualifier::Const));
+
+    QVERIFY(parseDeclarationText("void* operator new[](unsigned long size);", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator new[]");
+    QCOMPARE(declaration.declarators[0].derivations.count(), 2);
+    QCOMPARE(declaration.declarators[0].derivations.first().kind,
+             TypeDerivationKind::Function);
+    QVERIFY(parseDeclarationText("void operator delete[](void* pointer);", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator delete[]");
+    QCOMPARE(declaration.declarators[0].derivations.count(), 1);
+    QCOMPARE(declaration.declarators[0].derivations.first().kind,
+             TypeDerivationKind::Function);
+    QVERIFY(parseDeclarationText("operator const filesystem::path&() const;", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator const filesystem::path&");
+    QVERIFY(parseDeclarationText("operator std::string&();", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator std::string&");
 }
 
 void TestCppDeclarationParser::test_parse_member_pointer_declaration()

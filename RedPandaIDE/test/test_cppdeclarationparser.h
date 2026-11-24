@@ -24,6 +24,7 @@ private slots:
     void test_parse_template_type_arguments();
     void test_parse_function_type_template_arguments();
     void test_parse_parameter_pack();
+    void test_parse_c_complex_declarations();
     void test_parse_operator_declaration();
     void test_parse_member_pointer_declaration();
     void test_parse_function_template();

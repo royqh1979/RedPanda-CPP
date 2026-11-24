@@ -50,6 +50,8 @@ public:
     void setConditionMode(bool on,
                           const HasIncludeFunc& hasInclude = HasIncludeFunc(),
                           const ConditionRefSink& refSink = ConditionRefSink());
+    void setCompilerType(CppCompilerType compilerType) { mCompilerType = compilerType; }
+    void setHasIncludeNext(const HasIncludeFunc &hasIncludeNext) { mHasIncludeNext = hasIncludeNext; }
 
     // Expand one logical line from the input. Returns the number of
     // physical lines consumed (>= 1; extra lines were consumed by
@@ -61,6 +63,7 @@ public:
     QVector<PpToken> expandTokens(const QVector<PpToken>& tokens);
 
     static QString tokensToString(const QVector<PpToken>& tokens);
+    static bool supportsConditionBuiltin(CppCompilerType compilerType, const QString &name);
 
 private:
     struct Frame {
@@ -96,8 +99,9 @@ private:
     PpToken mergeTokens(const PpToken& first, const PpToken& second);
     QString stringize(const QVector<PpToken>& tokens) const;
     void handleDefined(QVector<PpToken>& out, const QString& whitespace);
-    void handleHasInclude(QVector<PpToken>& out, const QString& whitespace);
+    void handleHasInclude(QVector<PpToken>& out, const QString& whitespace, bool includeNext);
     void handleHasBuiltin(QVector<PpToken>& out, const QString& whitespace);
+    void handleZeroConditionFunction(QVector<PpToken>& out, const QString& whitespace);
 
 private:
     DefineLookup mLookup;
@@ -105,7 +109,10 @@ private:
     int mPopFloor = 0; // nextToken never pops frames below this level
     PpTokenizer* mInput = nullptr;
     bool mConditionMode = false;
+    bool mConditionArgumentExpansion = false;
+    CppCompilerType mCompilerType = CppCompilerType::GCC;
     HasIncludeFunc mHasInclude;
+    HasIncludeFunc mHasIncludeNext;
     ConditionRefSink mRefSink;
 };
 

@@ -291,7 +291,8 @@ bool isBuiltinTypeName(const QString &name)
         "unsigned int", "long", "long int", "signed long", "signed long int", "unsigned long",
         "unsigned long int", "long long", "long long int", "signed long long",
         "signed long long int", "unsigned long long", "unsigned long long int", "float",
-        "double", "long double"
+        "double", "long double", "float _Complex", "double _Complex", "long double _Complex",
+        "_Complex float", "_Complex double", "_Complex long double"
     };
     return names.contains(name.simplified());
 }
@@ -1404,6 +1405,10 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
 {
     if (!function)
         return {};
+    if (std::dynamic_pointer_cast<Statement>(function)->definitionKind
+            == DeclaratorDefinitionKind::Deleted) {
+        return {};
+    }
     traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
     ResolveOriginScope originScope("matchFunctionCandidate");
     if (!functionAcceptsArgumentCount(function, arguments.count(), allowPartialArguments))
@@ -1765,7 +1770,27 @@ PStatement CppTypeResolver::baseClass(const PStatement &scope, const QString &ba
     int templateStart = baseName.indexOf('<');
     if (templateStart >= 0)
         baseName.truncate(templateStart);
-    return findDeclaration(baseName, scope->parentScope.lock(), true);
+    PStatement declaration = findDeclaration(baseName, scope->parentScope.lock(), true);
+    for (int depth = 0; declaration && depth < 8; ++depth) {
+        if (declaration->kind == StatementKind::InlineAlias) {
+            PStatement target = std::dynamic_pointer_cast<InlineAliasStatement>(declaration)->target.lock();
+            if (target) {
+                declaration = target;
+                continue;
+            }
+        }
+        if (declaration->kind != StatementKind::Alias
+                && declaration->kind != StatementKind::Typedef) {
+            break;
+        }
+        auto normal = std::dynamic_pointer_cast<Statement>(declaration);
+        QString targetName = normal->typeInfo.qualifiedName.isEmpty()
+                ? normal->value : normal->typeInfo.qualifiedName;
+        if (targetName.isEmpty())
+            break;
+        declaration = findDeclaration(targetName, declaration->parentScope.lock(), true);
+    }
+    return declaration;
 }
 
 StatementAccessibility CppTypeResolver::applyInheritance(
@@ -1815,17 +1840,50 @@ void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
         return;
     for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(scope)->baseClasses) {
         StatementAccessibility inheritance;
-        PStatement base = baseClass(scope, baseSpecifier, inheritance);
-        if (!base)
-            continue;
-        MemberEntryList baseMembers;
-        appendMembers(base, true, visited, baseMembers);
-        for (MemberEntry entry : baseMembers) {
-            if (signatures.contains(signature(entry.statement)))
-                continue;
-            entry.accessibility = applyInheritance(entry.accessibility, inheritance);
-            signatures.insert(signature(entry.statement));
-            result.append(entry);
+        QList<PStatement> bases;
+        if (PStatement base = baseClass(scope, baseSpecifier, inheritance))
+            bases.append(base);
+        QString baseName = baseSpecifier.trimmed();
+        for (const QString &modifier : {QString("public"), QString("protected"),
+                                       QString("private"), QString("virtual")}) {
+            if (baseName.startsWith(modifier + ' '))
+                baseName = baseName.mid(modifier.length()).trimmed();
+        }
+        int templateStart = baseName.indexOf('<');
+        if (templateStart >= 0)
+            baseName.truncate(templateStart);
+        const StatementMap &siblings = mModel.childrenStatements(scope->parentScope.lock());
+        for (auto it = siblings.lowerBound(baseName + "<");
+             it != siblings.end() && it.key().startsWith(baseName + "<"); ++it) {
+            PStatement candidate = it.value().lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias)
+                candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
+            if (candidate && candidate->kind == StatementKind::Class
+                    && !bases.contains(candidate)) {
+                bases.append(candidate);
+            }
+        }
+        for (const PStatement &base : bases) {
+            MemberEntryList baseMembers;
+            appendMembers(base, true, visited, baseMembers);
+            for (MemberEntry entry : baseMembers) {
+                if (signatures.contains(signature(entry.statement)))
+                    continue;
+                entry.accessibility = applyInheritance(entry.accessibility, inheritance);
+                signatures.insert(signature(entry.statement));
+                result.append(entry);
+            }
+        }
+    }
+    if (scope->kind == StatementKind::Class) {
+        const StatementMap &siblings = mModel.childrenStatements(scope->parentScope.lock());
+        for (auto it = siblings.lowerBound(scope->command + "<");
+             it != siblings.end() && it.key().startsWith(scope->command + "<"); ++it) {
+            PStatement candidate = it.value().lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias)
+                candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
+            if (candidate && candidate->kind == StatementKind::Class && candidate != scope)
+                appendMembers(candidate, inherited, visited, result);
         }
     }
 }

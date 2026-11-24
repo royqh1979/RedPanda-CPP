@@ -135,11 +135,26 @@ void TestCppPreprocessor::test_replace_macros_in_constant_expression_1()
     QVERIFY(!preprocessor.evaluateIf("__cplusplus > 201703L"));
     QVERIFY(preprocessor.evaluateIf("defined(__cplusplus)"));
     QVERIFY(preprocessor.evaluateIf("defined __cplusplus"));
+    QVERIFY(preprocessor.evaluateIf("defined(__has_builtin)"));
+    QVERIFY(preprocessor.evaluateIf("defined(__has_include)"));
+    QVERIFY(!preprocessor.evaluateIf("defined(__has_feature)"));
+    QVERIFY(!preprocessor.evaluateIf("defined(__building_module)"));
     QVERIFY(!preprocessor.evaluateIf("defined(__cplus)"));
     QVERIFY(!preprocessor.evaluateIf("defined __cplus"));
     QVERIFY(!preprocessor.evaluateIf("__has_builtin(__builtin_is_constant_evaluated)"));
     QVERIFY(!preprocessor.evaluateIf("__has_builtin(__is_trivially_destructible)"));
+    QVERIFY(preprocessor.evaluateIf("__has_builtin(__is_aggregate)"));
+    QVERIFY(preprocessor.evaluateIf("__has_builtin(__has_unique_object_representations)"));
+    QVERIFY(preprocessor.evaluateIf("__has_builtin(__builtin_launder)"));
+    CppPreprocessor wrapped;
+    wrapped.addHardDefineByLine("#define __GNUC__ 15");
+    wrapped.addHardDefineByLine("#define _GLIBCXX_HAS_BUILTIN(B) __has_builtin(B)");
+    QVERIFY(wrapped.evaluateIf("_GLIBCXX_HAS_BUILTIN(__is_aggregate)"));
     preprocessor.addHardDefineByLine("#define __clang__ 1");
+    QVERIFY(preprocessor.evaluateIf("defined(__has_feature)"));
+    QVERIFY(preprocessor.evaluateIf("defined(__building_module)"));
+    QVERIFY(preprocessor.evaluateIf(
+                "!defined(offsetof) || (__has_feature(modules) && !__building_module(_Builtin_stddef))"));
     QVERIFY(preprocessor.evaluateIf("__has_builtin(__is_trivially_destructible)"));
     QVERIFY(preprocessor.evaluateIf("__has_builtin(__add_lvalue_reference)"));
     QVERIFY(!preprocessor.evaluateIf("__has_builtin(__unknown_builtin)"));

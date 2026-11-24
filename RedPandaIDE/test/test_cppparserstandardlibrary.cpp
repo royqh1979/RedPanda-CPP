@@ -177,8 +177,12 @@ void TestCppParserStandardLibrary::test_standard_library_function_eval()
     qWarning() << "STDLIB_FUNCTION_EVAL" << expression << timer.nsecsElapsed()
                << result.isValid() << result.type.toString();
     QVERIFY(result.isValid());
-    if (!expectedType.isEmpty())
-        QCOMPARE(result.type.toString(), expectedType);
+    if (!expectedType.isEmpty()) {
+        QString actualType = result.type.toString();
+        actualType.remove("::__1");
+        actualType.remove("::__cxx11");
+        QCOMPARE(actualType, expectedType);
+    }
 }
 
 void TestCppParserStandardLibrary::test_standard_library_string()
@@ -1256,6 +1260,165 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
         } else
             QCOMPARE(result.type.qualifiedName, QString::fromLatin1(test.expectedType));
         ++line;
+    }
+}
+
+void TestCppParserStandardLibrary::test_standard_library_type_traits_builtins()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <type_traits>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    QVERIFY(mParser->findStatement("std::is_aggregate"));
+    QVERIFY(mParser->findStatement("std::is_aggregate_v"));
+    QVERIFY(mParser->findStatement("std::has_unique_object_representations"));
+    QVERIFY(mParser->findStatement("std::has_unique_object_representations_v"));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_atomic_macros()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <atomic>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    QVERIFY(mParser->findStatement("ATOMIC_VAR_INIT"));
+    QVERIFY(mParser->findStatement("ATOMIC_FLAG_INIT"));
+    QVERIFY(mParser->findStatement("std::atomic_flag"));
+    QVERIFY(mParser->findStatement("std::atomic_flag::operator="));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_c_headers()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <cstdio>", "#include <cwctype>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    QVERIFY(mParser->findStatement("BUFSIZ"));
+    QVERIFY(mParser->findStatement("std::iswalnum"));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_filesystem()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <filesystem>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    QVERIFY(mParser->findStatement("std::filesystem::path"));
+    QVERIFY(mParser->findStatement("std::filesystem::path::operator=="));
+    QVERIFY(mParser->findStatement("std::filesystem::directory_entry"));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_conversion_declarations()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <functional>", "#include <string>", "#include <cstdlib>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    if (mParser->compilerType() == CppCompilerType::Clang) {
+        QVERIFY(mParser->findStatement("std::__1::reference_wrapper::operator type&"));
+        QVERIFY(mParser->findStatement("std::__1::basic_string::operator __self_view"));
+    } else {
+        QVERIFY(mParser->findStatement("std::reference_wrapper::operator _Tp&"));
+        QVERIFY(mParser->findStatement("std::__cxx11::basic_string::operator __sv_type"));
+    }
+    QVERIFY(mParser->findStatement("std::div_t"));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_execution()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <execution>", "#include <mutex>", "#include <strstream>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    auto hasMember = [](const QList<PStatement> &members, const QString &command) {
+        for (const PStatement &member : members) {
+            if (member->command == command)
+                return true;
+        }
+        return false;
+    };
+    if (mParser->findStatement("std::execution::sequenced_policy")) {
+        QVERIFY(mParser->findStatement("std::execution::seq"));
+        QVERIFY(mParser->findStatement("std::execution::par"));
+        QVERIFY(mParser->findStatement("std::is_execution_policy"));
+    } else {
+        qWarning() << "Standard library implementation gap: execution policies are unavailable";
+    }
+    for (const QString &name : {"std::timed_mutex", "std::recursive_timed_mutex"}) {
+        PStatement scope = mParser->findStatement(name);
+        QVERIFY2(scope, qPrintable(name));
+        const QList<PStatement> members = mParser->resolveMembersOfClass(scope, scope);
+        if (hasMember(members, "native_handle_type")) {
+            QVERIFY2(hasMember(members, "native_handle"), qPrintable(name + "::native_handle"));
+        } else {
+            qWarning() << "Standard library implementation gap:" << name + "::native_handle";
+        }
+    }
+    PStatement strstreambuf = mParser->findStatement("std::strstreambuf");
+    QVERIFY(strstreambuf);
+    QVERIFY(hasMember(mParser->resolveMembersOfClass(strstreambuf, strstreambuf), "setbuf"));
+}
+
+void TestCppParserStandardLibrary::test_standard_library_inherited_members()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <memory>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    QHash<QString, QStringList> expectedMembers{
+        {"std::shared_ptr", {"operator[]"}},
+        {"std::owner_less", {"operator()"}},
+        {"std::allocator", {"allocate", "max_size"}}
+    };
+    if (mParser->compilerType() != CppCompilerType::Clang) {
+        expectedMembers.insert("std::__new_allocator", {"allocate", "max_size"});
+        expectedMembers.insert("std::__allocator_base", {"allocate", "max_size"});
+    }
+    for (auto it = expectedMembers.constBegin(); it != expectedMembers.constEnd(); ++it) {
+        PStatement scope = mParser->findStatement(it.key());
+        QVERIFY2(scope, qPrintable(it.key()));
+        PStatement target = mParser->findAliasedStatement(scope);
+        if (target)
+            scope = target;
+        const QList<PStatement> members = mParser->resolveMembersOfClass(scope, {});
+        for (const QString &command : it.value()) {
+            bool found = false;
+            for (const PStatement &member : members) {
+                if (member->command == command) {
+                    found = true;
+                    break;
+                }
+            }
+            QVERIFY2(found, qPrintable(it.key() + "::" + command));
+        }
     }
 }
 

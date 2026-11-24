@@ -36,7 +36,10 @@ void TestCppParserSyntax::test_cppreference_function_syntax()
     for (const char *name : {"f0", "f1", "fp03", "fp11", "main", "f2"}) {
         QVERIFY2(mParser->findStatement(QString::fromLatin1(name)), name);
     }
-    QVERIFY(!mParser->findStatement("bar"));
+    PStatement deleted = mParser->findStatement("bar");
+    QVERIFY(deleted);
+    QVERIFY(!statementHasDefinition(deleted));
+    QVERIFY(!deleted->declarations.isEmpty());
     QCOMPARE(mParser->findStatement("f0")->kind, StatementKind::Function);
     QCOMPARE(mParser->findStatement("fp03")->kind, StatementKind::Function);
     QCOMPARE(mParser->findStatement("fp11")->kind, StatementKind::Function);
