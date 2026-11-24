@@ -14,6 +14,7 @@ private slots:
     void test_type_resolution_cache_respects_bindings_and_switches();
     void test_type_resolver_resolves_multisegment_aliases();
     void test_type_resolver_binds_dependent_base_members();
+    void test_type_resolver_expands_base_aliases_and_specializations();
     void test_type_resolver_reference_collapsing_and_cycles();
     void test_type_resolver_selects_specializations_and_rebind();
     void test_type_resolver_ignores_recursive_nonmatching_specialization();
@@ -22,6 +23,7 @@ private slots:
     void test_type_resolver_evaluates_specialized_static_const_member_default_argument();
     void test_type_resolver_matches_nested_class_specialization_default_argument();
     void test_type_resolver_matches_injected_specialization_default_argument();
+    void test_type_resolver_matches_function_specialization_packs();
     void test_type_resolver_selects_specializations_across_reopened_namespaces();
     void test_type_resolver_computes_bounded_traits();
     void test_type_operations_resolve_container_and_iterator_chain();
@@ -34,6 +36,7 @@ private slots:
     void test_namespace_delete_does_not_reinsert_transparent_descendants();
     void test_qualified_lookup_respects_lexical_and_local_scopes();
     void test_inherited_member_enumeration_and_access();
+    void test_const_member_with_nonmember_candidates();
     void test_type_resolver_evaluates_nothrow_invocable_for_functors();
     void test_type_resolver_matches_explicit_specialization_through_alias();
     void test_type_resolver_evaluates_constructible_traits();

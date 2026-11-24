@@ -161,11 +161,21 @@ int PpExpander::processToken(const PpToken &token,
             return 0;
         }
         if (token.text == QLatin1String("__has_include")) {
-            handleHasInclude(out, token.whitespaceBefore);
+            handleHasInclude(out, token.whitespaceBefore, false);
+            return 0;
+        }
+        if (token.text == QLatin1String("__has_include_next")) {
+            handleHasInclude(out, token.whitespaceBefore, true);
             return 0;
         }
         if (token.text == QLatin1String("__has_builtin")) {
             handleHasBuiltin(out, token.whitespaceBefore);
+            return 0;
+        }
+        if ((token.text == QLatin1String("__has_feature")
+                || token.text == QLatin1String("__building_module"))
+                && supportsConditionBuiltin(mCompilerType, token.text)) {
+            handleZeroConditionFunction(out, token.whitespaceBefore);
             return 0;
         }
         // C++ alternative tokens (iso646 keywords)
@@ -232,7 +242,7 @@ int PpExpander::processToken(const PpToken &token,
         mFrames.append(Frame{peeked, 0, QString()});
         return 0;
     }
-    if (mConditionMode && !define) {
+    if (mConditionMode && !mConditionArgumentExpansion && !define) {
         // undefined identifiers in a condition evaluate to 0
         // (and true/false to 1/0)
         PpToken t = token;
@@ -418,7 +428,10 @@ QVector<PpToken> PpExpander::substitute(const PDefine &define,
                 if (!entry.pasteBefore) {
                     // arguments not adjacent to ## are expanded before
                     // substitution (ISO 6.10.3.1)
+                    bool previousArgumentExpansion = mConditionArgumentExpansion;
+                    mConditionArgumentExpansion = true;
                     argTokens = expandTokens(argTokens);
+                    mConditionArgumentExpansion = previousArgumentExpansion;
                     if (!argTokens.isEmpty()) {
                         // the body's spacing at the parameter position
                         // overrides the call-site whitespace (trim)
@@ -496,6 +509,19 @@ QString PpExpander::stringize(const QVector<PpToken> &tokens) const
     return result;
 }
 
+bool PpExpander::supportsConditionBuiltin(CppCompilerType compilerType, const QString &name)
+{
+    const bool clang = compilerType == CppCompilerType::Clang;
+    const bool gcc = compilerType == CppCompilerType::GCC;
+    if (name == QLatin1String("__has_builtin") || name == QLatin1String("__has_include")
+            || name == QLatin1String("__has_include_next")) {
+        return clang || gcc;
+    }
+    if (name == QLatin1String("__has_feature") || name == QLatin1String("__building_module"))
+        return clang;
+    return false;
+}
+
 void PpExpander::handleDefined(QVector<PpToken> &out, const QString &whitespace)
 {
     // defined(X) or defined X in a #if expression
@@ -521,12 +547,12 @@ void PpExpander::handleDefined(QVector<PpToken> &out, const QString &whitespace)
     } else {
         if (mRefSink)
             mRefSink(name);
-        result.text = mLookup(name) ? "1" : "0";
+        result.text = supportsConditionBuiltin(mCompilerType, name) || mLookup(name) ? "1" : "0";
     }
     out.append(result);
 }
 
-void PpExpander::handleHasInclude(QVector<PpToken> &out, const QString &whitespace)
+void PpExpander::handleHasInclude(QVector<PpToken> &out, const QString &whitespace, bool includeNext)
 {
     // __has_include(<header>) or __has_include("header")
     PpToken next = nextToken();
@@ -558,8 +584,9 @@ void PpExpander::handleHasInclude(QVector<PpToken> &out, const QString &whitespa
         }
         args.append(token);
     }
-    if (ok && mHasInclude
-            && mHasInclude(tokensToString(args).trimmed())) {
+    const HasIncludeFunc &hasInclude = includeNext ? mHasIncludeNext : mHasInclude;
+    if (ok && hasInclude
+            && hasInclude(tokensToString(args).trimmed())) {
         result.text = "1";
     }
     out.append(result);
@@ -596,14 +623,49 @@ void PpExpander::handleHasBuiltin(QVector<PpToken> &out, const QString &whitespa
         }
         args.append(token);
     }
-    static const QSet<QString> supported{
+    static const QSet<QString> clangSupported{
         "__is_array", "__is_trivially_destructible", "__is_trivially_constructible",
         "__is_trivially_assignable", "__is_trivially_copyable",
         "__add_lvalue_reference", "__add_rvalue_reference", "__add_pointer",
-        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t"
+        "__remove_extent", "__remove_reference_t", "__remove_cv", "__remove_cv_t",
+        "__is_aggregate", "__has_unique_object_representations", "__builtin_launder"
+    };
+    static const QSet<QString> gccSupported{
+        "__is_aggregate", "__has_unique_object_representations", "__builtin_launder"
     };
     QString name = tokensToString(args).trimmed();
-    if (ok && mLookup("__clang__") && supported.contains(name))
+    if (ok && ((mCompilerType == CppCompilerType::Clang && clangSupported.contains(name))
+               || (mCompilerType == CppCompilerType::GCC
+                   && gccSupported.contains(name)))) {
         result.text = "1";
+    }
+    out.append(result);
+}
+
+
+void PpExpander::handleZeroConditionFunction(QVector<PpToken> &out, const QString &whitespace)
+{
+    PpToken next = nextToken();
+    PpToken result;
+    result.kind = PpTokenKind::Number;
+    result.text = "0";
+    result.whitespaceBefore = whitespace;
+    if (!(next.kind == PpTokenKind::Punct && next.text == "(")) {
+        out.append(result);
+        return;
+    }
+    int depth = 1;
+    while (depth > 0) {
+        PpToken token = nextToken();
+        if (token.kind == PpTokenKind::EndOfInput)
+            break;
+        if (token.kind == PpTokenKind::Punct) {
+            if (token.text == "(") {
+                ++depth;
+            } else if (token.text == ")") {
+                --depth;
+            }
+        }
+    }
     out.append(result);
 }

@@ -1180,7 +1180,10 @@ void TestWidgets::test_goto_statement_definitions()
     mParser->addProjectFile(mMainFile, false);
     CppParser::parseFileBlocking(mParser, mMainFile, false, "");
 
-    QVERIFY(!mParser->findStatement("deleted"));
+    PStatement deleted = mParser->findStatement("deleted");
+    QVERIFY(deleted);
+    QVERIFY(!statementHasDefinition(deleted));
+    QVERIFY(!deleted->declarations.isEmpty());
     for (const char *name : {"global", "IntAlias", "DoubleAlias", "red", "Short",
                              "Defaulted::Defaulted"}) {
         PStatement statement = mParser->findStatement(QString::fromLatin1(name));

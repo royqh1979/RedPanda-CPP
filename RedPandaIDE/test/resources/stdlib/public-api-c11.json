@@ -1,0 +1,41 @@
+{
+  "source": "cppreference-doc",
+  "release": "20250209",
+  "source_url": "https://github.com/PeterFeicht/cppreference-doc/releases/tag/v20250209",
+  "headers": [
+    "assert.h",
+    "complex.h",
+    "ctype.h",
+    "errno.h",
+    "fenv.h",
+    "float.h",
+    "inttypes.h",
+    "iso646.h",
+    "limits.h",
+    "locale.h",
+    "math.h",
+    "setjmp.h",
+    "signal.h",
+    "stdalign.h",
+    "stdarg.h",
+    "stdbool.h",
+    "stddef.h",
+    "stdint.h",
+    "stdio.h",
+    "stdlib.h",
+    "string.h",
+    "tgmath.h",
+    "time.h",
+    "uchar.h",
+    "wchar.h",
+    "wctype.h"
+  ],
+  "entry_count": 833,
+  "kinds": {
+    "class": 3,
+    "const": 317,
+    "function": 475,
+    "typedef": 38
+  },
+  "scope": "Public declaration names; overload signatures are not distinguished"
+}

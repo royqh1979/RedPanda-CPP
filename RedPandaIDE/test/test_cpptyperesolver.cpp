@@ -233,7 +233,10 @@ void TestCppTypeResolver::test_type_resolver_binds_dependent_base_members()
                 "  using reference = T&;\n"
                 "  reference get();\n"
                 "};\n"
-                "template<typename T> struct Derived : Base<T> {};\n"
+                "template<typename T> struct Derived : Base<T> {\n"
+                "  using Base<T>::get;\n"
+                "  using Base<T>::reference;\n"
+                "};\n"
                 "template<typename T> struct StdAlloc { using value_type = T; };\n"
                 "template<typename A> struct Traits { using value_type = typename A::value_type; };\n"
                 "template<typename A, typename = typename A::value_type> struct Alloc : Traits<A> {\n"
@@ -1122,6 +1125,30 @@ void TestCppTypeResolver::test_inherited_member_enumeration_and_access()
     QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);
 }
 
+void TestCppTypeResolver::test_const_member_with_nonmember_candidates()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Iterator {\n"
+                "  Iterator operator+(int) const;\n"
+                "  friend Iterator operator+(int, Iterator) { return {}; }\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/const_member_with_nonmember.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo iterator;
+    QVERIFY(parseDeclarationText("Iterator value;", iterator));
+    DeclarationInfo argument;
+    QVERIFY(parseDeclarationText("int value;", argument));
+    QCOMPARE(resolver.invokeMember(iterator.specifiers.type, "operator+",
+                                   {argument.specifiers.type}).type.toString(), "Iterator");
+}
+
 void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_functors()
 {
     QVector<DeclarationInfo> declarations;
@@ -1641,6 +1668,43 @@ void TestCppTypeResolver::test_type_resolver_resolves_alias_to_clang_type_builti
     }
 }
 
+void TestCppTypeResolver::test_type_resolver_expands_base_aliases_and_specializations()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "namespace std {\n"
+                "  template<typename T> struct __new_allocator { void allocate(); };\n"
+                "  template<typename T> using __allocator_base = __new_allocator<T>;\n"
+                "  template<typename T> struct allocator : __allocator_base<T> {};\n"
+                "  template<typename T> struct __shared_ptr_access {};\n"
+                "  template<typename T> struct __shared_ptr_access<T, true> { void operator[](); };\n"
+                "  template<typename T> struct shared_ptr : __shared_ptr_access<T> {};\n"
+                "}\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/base_aliases.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    PStatement allocator = resolver.findStatement("std::allocator");
+    QVERIFY(allocator);
+    StatementAccessibility inheritance;
+    PStatement base = resolver.baseClass(allocator, "__allocator_base<T>", inheritance);
+    QVERIFY(base);
+    QCOMPARE(base->fullName, QString("std::__new_allocator"));
+    QList<PStatement> members = resolver.resolveMembersOfClass(allocator, {});
+    QVERIFY(!members.isEmpty());
+    QCOMPARE(members.first()->command, QString("allocate"));
+
+    PStatement shared = resolver.findStatement("std::shared_ptr");
+    QVERIFY(shared);
+    members = resolver.resolveMembersOfClass(shared, {});
+    QCOMPARE(members.count(), 1);
+    QCOMPARE(members.first()->command, QString("operator[]"));
+}
+
 void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
 {
     QVector<DeclarationInfo> declarations;
@@ -1695,11 +1759,11 @@ void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
 
     QSet<QString> candidateVisited;
     QList<CppTypeResolver::MemberResolution> candidates = resolver.memberCandidates(
-                instance, "action", candidateVisited, evaluation);
+                instance, "action", candidateVisited, evaluation, true);
     QCOMPARE(candidates.count(), 1);
     QCOMPARE(candidates.first().statement->parentScope.lock(), derived);
     candidateVisited.clear();
-    candidates = resolver.memberCandidates(instance, "publicValue", candidateVisited, evaluation);
+    candidates = resolver.memberCandidates(instance, "publicValue", candidateVisited, evaluation, false);
     QCOMPARE(candidates.count(), 1);
     QCOMPARE(candidates.first().statement->parentScope.lock(), base);
     QCOMPARE(resolver.findMember(instance, "publicValue", evaluation).statement,
@@ -1720,9 +1784,9 @@ void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
     QCOMPARE(resolver.invokeResult(instance, "action", &evaluation).statement, action);
     QCOMPARE(resolver.invokeMember(derivedType, "action", {}, &evaluation).statement, action);
     QCOMPARE(resolver.invokeMember(instance, "action", {}, &evaluation).statement, action);
-    QCOMPARE(resolver.resolveMember(instance, "publicValue", false, {}, evaluation).statement,
+    QCOMPARE(resolver.resolveMember(instance, "publicValue", false, {}, {}, evaluation).statement,
              publicValue);
-    QCOMPARE(resolver.resolveMember(instance, "action", true, {}, evaluation).statement, action);
+    QCOMPARE(resolver.resolveMember(instance, "action", true, {}, {}, evaluation).statement, action);
 
     QList<PStatement> members = resolver.membersOf(derived);
     QVERIFY(members.contains(action) && members.contains(publicValue));
@@ -1735,6 +1799,66 @@ void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
     QVERIFY(derivedAccess.contains(resolver.findMemberDeclaration(base, "protectedValue")));
     QVERIFY(!derivedAccess.contains(resolver.findMemberDeclaration(base, "privateValue")));
     QVERIFY(resolver.resolveMembersOfClass({}, {}).isEmpty());
+}
+
+void TestCppTypeResolver::test_type_resolver_matches_function_specialization_packs()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<typename Signature> struct Function;\n"
+                "template<typename R, typename... Args>\n"
+                "struct Function<R(Args...)> {\n"
+                "  Function& self();\n"
+                "  Function& operator=(const Function&);\n"
+                "  Function& operator=(Function&&);\n"
+                "  using value_type = R;\n"
+                "  R operator()(Args...);\n"
+                "  void erase(const R&);\n"
+                "  template<typename T, typename U = double> T* target();\n"
+                "};\n"
+                "template<typename R, typename... Args>\n"
+                "R Function<R(Args...)>::operator()(Args...) {}\n"
+                "template<typename R, typename... Args>\n"
+                "void Function<R(Args...)>::erase(const value_type&) {}\n"
+                "template<typename R, typename... Args>\n"
+                "template<typename T, typename U>\n"
+                "T* Function<R(Args...)>::target() { return nullptr; }\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/function_specialization_packs.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo variable;
+    QVERIFY(parseDeclarationText("Function<int(double, char)> value;", variable));
+    TypeInfo type = resolver.resolve(variable.specifiers.type);
+    QCOMPARE(type.toString(), "Function<int (double, char)>");
+    QCOMPARE(resolver.invokeResult(type, "self").toString(), "Function<int (double, char)> &");
+    CppTypeResolver::ClassInstance instance = resolver.resolveInstance(type);
+    TypeInfo argument = type;
+    argument.valueCategory = ReferenceQualifier::Lvalue;
+    MemberEvalResult assignment = resolver.invokeMember(instance, "operator=", {argument});
+    QCOMPARE(assignment.type.toString(), "Function<int (double, char)> &");
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(assignment.statement)->normalizedArgs,
+             "(const Function &)");
+
+    DeclarationInfo empty;
+    QVERIFY(parseDeclarationText("Function<void()> empty;", empty));
+    QCOMPARE(resolver.invokeResult(empty.specifiers.type, "operator()").toString(), "void");
+    DeclarationInfo valueArgument;
+    QVERIFY(parseDeclarationText("int value;", valueArgument));
+    QCOMPARE(resolver.invokeMember(instance, "erase", {valueArgument.specifiers.type}).type.toString(),
+             "void");
+
+    DeclarationInfo explicitArgument;
+    QVERIFY(parseDeclarationText("int explicitValue;", explicitArgument));
+    CppTypeResolver::EvaluationContext evaluation;
+    MemberEvalResult target = resolver.invokeMember(
+                instance, "target", {}, {TemplateArgument::fromType(explicitArgument.specifiers.type)},
+                &evaluation);
+    QCOMPARE(target.type.toString(), "int *");
 }
 
 void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()
@@ -1854,22 +1978,26 @@ void TestCppTypeResolver::test_type_resolver_internal_binding_interfaces()
     CppTypeResolver::ClassInstance selected = resolver.selectSpecialization(primary, evaluation);
     QCOMPARE(selected.declaration, findStatement(model.childrenStatements(), "Box<T*>"));
     TemplateBindings matchedBindings;
+    QHash<QString, QVector<TemplateArgument>> matchedPacks;
     QCOMPARE(resolver.matchSpecialization(selected.declaration, pointerBox.templateArguments,
-                                          {}, matchedBindings, evaluation),
+                                          {}, matchedBindings, matchedPacks, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     QCOMPARE(matchedBindings["T"].type->toString(), "int");
     TemplateBindings typeBindings;
-    QCOMPARE(resolver.matchType(type("T*"), integerPointer, {"T"}, typeBindings, {}, evaluation),
+    QHash<QString, QVector<TemplateArgument>> typePacks;
+    QCOMPARE(resolver.matchType(type("T*"), integerPointer, {"T"}, typeBindings, typePacks,
+                                {}, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
-    QCOMPARE(resolver.matchType(type("T*"), type("double"), {"T"}, typeBindings, {}, evaluation),
+    QCOMPARE(resolver.matchType(type("T*"), type("double"), {"T"}, typeBindings, typePacks,
+                                {}, evaluation),
              CppTypeResolver::SpecializationMatch::NoMatch);
     TemplateArgument pointerPattern = TemplateArgument::fromType(type("T*"));
     QCOMPARE(resolver.matchArgument(pointerPattern, TemplateArgument::fromType(integerPointer),
-                                    {"T"}, typeBindings, {}, evaluation),
+                                    {"T"}, typeBindings, typePacks, {}, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     QCOMPARE(resolver.matchArgument(TemplateArgument::fromConstant("1+1"),
                                     TemplateArgument::fromConstant("2"), {}, typeBindings,
-                                    {}, evaluation),
+                                    typePacks, {}, evaluation),
              CppTypeResolver::SpecializationMatch::Unknown);
 }
 
@@ -2183,19 +2311,20 @@ void TestCppTypeResolver::test_type_resolver_matches_alias_patterns_structurally
     QCOMPARE(expanded.templateArguments.count(), 1);
     QCOMPARE(evaluation.operationCount, 0);
     TemplateBindings bindings;
-    QCOMPARE(resolver.matchType(pattern, actual, {"Types"}, bindings, stdScope, evaluation),
+    QHash<QString, QVector<TemplateArgument>> packs;
+    QCOMPARE(resolver.matchType(pattern, actual, {"Types"}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::NoMatch);
     QCOMPARE(evaluation.operationCount, 0);
 
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
-                                actual, {}, bindings, stdScope, evaluation),
+                                actual, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::NoMatch);
     TypeInfo integer = resolver.parseTypeText("int", evaluation);
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Identity<int>", evaluation),
-                                integer, {}, bindings, stdScope, evaluation),
+                                integer, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Int", evaluation),
-                                integer, {}, bindings, stdScope, evaluation),
+                                integer, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     TypeInfo firstPattern = resolver.parseTypeText("std::First<char>", evaluation);
     TypeInfo expandedFirst = resolver.expandTypePattern(firstPattern, stdScope, visited, evaluation);
@@ -2204,15 +2333,15 @@ void TestCppTypeResolver::test_type_resolver_matches_alias_patterns_structurally
     QCOMPARE(resolver.matchType(firstPattern,
                                 resolver.resolve(resolver.parseTypeText(
                                         "std::Pair<char, int>", evaluation)),
-                                {}, bindings, stdScope, evaluation),
+                                {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<true, int>", evaluation),
-                                integer, {}, bindings, stdScope, evaluation),
+                                integer, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Match);
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Conditional<false, int>", evaluation),
-                                integer, {}, bindings, stdScope, evaluation),
+                                integer, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Unknown);
     QCOMPARE(resolver.matchType(resolver.parseTypeText("std::Cycle<int>", evaluation),
-                                integer, {}, bindings, stdScope, evaluation),
+                                integer, {}, bindings, packs, stdScope, evaluation),
              CppTypeResolver::SpecializationMatch::Unknown);
 }

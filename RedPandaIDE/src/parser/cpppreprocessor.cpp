@@ -838,6 +838,7 @@ QString CppPreprocessor::expandMacros(const Session &session, QString text) cons
     PpExpander expander([this, &session](const QString& name) {
         return getDefine(session, name);
     });
+    expander.setCompilerType(mCompilerType);
     QString out;
     expander.expandLine(tokenizer, out);
     return out;
@@ -988,7 +989,9 @@ void CppPreprocessor::handleIfdef(Session &session, const QString &tokens)
             setCurrentBranch(session, BranchResult::parentIsFalse);
         } else {
             QString name = tokens.trimmed();
-            setCurrentBranch(session,  getDefine(session, name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+            bool defined = getDefine(session, name)
+                    || PpExpander::supportsConditionBuiltin(mCompilerType, name);
+            setCurrentBranch(session,  defined?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
 }
 
@@ -1003,7 +1006,9 @@ void CppPreprocessor::handleIfndef(Session &session, const QString &tokens)
             session.includeStack.back()->guardBranchDepth = session.branchResults.count();
             session.includeStack.back()->includeGuardToken = name;
         }
-        setCurrentBranch(session,  getDefine(session, name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
+        bool defined = getDefine(session, name)
+                || PpExpander::supportsConditionBuiltin(mCompilerType, name);
+        setCurrentBranch(session,  !defined?(BranchResult::isTrue):(BranchResult::isFalse) );
     }
 }
 
@@ -1732,6 +1737,7 @@ int CppPreprocessor::expandLineWithEngine(Session &session, const QStringList &b
     PpExpander expander([this, &session](const QString& name) {
         return getDefine(session, name);
     });
+    expander.setCompilerType(mCompilerType);
     return expander.expandLine(tokenizer, out);
 }
 
@@ -1774,6 +1780,33 @@ QVector<PpToken> CppPreprocessor::expandConditionTokens(const Session &session, 
     PpExpander expander([this, &session](const QString& name) {
         return getDefine(session, name);
     });
+    expander.setCompilerType(mCompilerType);
+    expander.setHasIncludeNext([this, &session](const QString &args) {
+        QString header = args;
+        if (!header.startsWith('<') && !header.startsWith('\"')) {
+            QStringList argLines{header};
+            PpTokenizer argTokenizer(argLines);
+            PpExpander argExpander([this, &session](const QString& name) {
+                return getDefine(session, name);
+            });
+            argExpander.setCompilerType(mCompilerType);
+            argExpander.expandLine(argTokenizer, header);
+        }
+        if (!session.currentFileInfo)
+            return false;
+        QString currentDir = excludeTrailingPathDelimiter(
+                    extractFileDir(session.currentFileInfo->fileName()));
+        QStringList includes = mIncludePathList;
+        QStringList projectIncludes = mProjectIncludePathList;
+        if (mIncludePaths.contains(currentDir)) {
+            includes = mIncludePathList.mid(mIncludePathList.indexOf(currentDir) + 1);
+        } else if (mProjectIncludePaths.contains(currentDir)) {
+            projectIncludes = mProjectIncludePathList.mid(
+                        mProjectIncludePathList.indexOf(currentDir) + 1);
+        }
+        return !getHeaderFilename(session.currentFileInfo->fileName(), header,
+                                  includes, projectIncludes).isEmpty();
+    });
     expander.setConditionMode(true,
         [this, &session](const QString& args) {
             QString header = args;
@@ -1783,6 +1816,7 @@ QVector<PpToken> CppPreprocessor::expandConditionTokens(const Session &session, 
                 PpExpander argExpander([this, &session](const QString& name) {
                     return getDefine(session, name);
                 });
+                argExpander.setCompilerType(mCompilerType);
                 argExpander.expandLine(argTokenizer, header);
             }
             if (!session.currentFileInfo)

@@ -144,7 +144,14 @@ QString ParameterInfo::toString(bool includeName) const
 {
     if (!type)
         return includeName ? name : QString();
-    return renderType(*type, includeName ? name : QString());
+    if (!parameterPack)
+        return renderType(*type, includeName ? name : QString());
+    QString result = renderType(*type, QString());
+    if (includeName && !name.isEmpty())
+        result += "... " + name;
+    else
+        result += "...";
+    return result;
 }
 
 namespace {

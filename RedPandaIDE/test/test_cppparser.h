@@ -34,7 +34,10 @@ private slots:
     void test_parse_vars();
     void test_struct();
     void test_resolve_members_of_class_access_scope();
+    void test_deleted_function_statements();
     void test_preprocessor_statements();
+    void test_scoped_preprocessor_statements();
+    void test_preprocessor_condition_with_unknown_special_macros();
     void test_label_statements();
     void test_hard_define_statements();
     void test_predefined_func_variable();

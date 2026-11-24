@@ -138,6 +138,7 @@ void CppParser::internalParse(const QString &fileName)
     CppStatementBuilder builder(*mStatementList,
                                 evaluationOptions());
     const QHash<QString, QStringList> &ancestors = session.boundaryAncestors;
+    collectPreprocessorStatements(tokenizer, ancestors);
     qint64 parseDeclarationsMs = 0;
     qint64 buildStatementsMs = 0;
     QElapsedTimer stepTimer;
@@ -161,31 +162,6 @@ void CppParser::internalParse(const QString &fileName)
             continue;
         }
         if (token.kind == CppTokenizer::TokenKind::Preprocessor) {
-            if (token.text.startsWith("#define ")) {
-                QString name, args, value;
-                mPreprocessor->getDefineParts(token.text.mid(7).trimmed(), name, args, value);
-                if (!name.isEmpty()) {
-                    auto statement = StatementFactory::createPreprocessor(PStatement(), name, name);
-                    std::dynamic_pointer_cast<Statement>(statement)->args = args;
-                    std::dynamic_pointer_cast<Statement>(statement)->value = value;
-                    statement->definition = StatementOccurrence{
-                        currentFile,
-                        SourceRange{token.position,
-                                    SourcePosition{token.position.ch + token.text.length() - 1,
-                                                   token.position.line}},
-                        currentAncestor, {}};
-                    setStatementHasDefinition(statement, true);
-                    statement->properties.setFlag(StatementProperty::InProject,
-                                                  mProjectFiles.contains(currentFile));
-                    statement->properties.setFlag(StatementProperty::InSystemHeader,
-                        !currentAncestor.isEmpty()
-                                || ::isSystemHeaderFile(currentFile, mPreprocessor->includePaths()));
-                    mStatementList->add(statement);
-                    PParsedFileInfo fileInfo = mPreprocessor->findFileInfo(currentFile);
-                    if (fileInfo)
-                        fileInfo->addStatement(statement);
-                }
-            }
             cursor.advance();
             continue;
         }
@@ -228,6 +204,53 @@ void CppParser::internalParse(const QString &fileName)
                << "parseDeclarations" << parseDeclarationsMs
                << "buildStatements" << buildStatementsMs
                << "declarations" << timer.restart();
+}
+
+void CppParser::collectPreprocessorStatements(
+        const CppTokenizer &tokenizer,
+        const QHash<QString, QStringList> &boundaryAncestors)
+{
+    QHash<QString, int> occurrences;
+    QString currentFile;
+    QString currentAncestor;
+    for (const CppTokenizer::Token &token : tokenizer.tokens()) {
+        if (shouldStopParsing())
+            return;
+        if (token.kind == CppTokenizer::TokenKind::FileBoundary) {
+            currentFile = token.fileName;
+            int occurrence = occurrences.value(currentFile, 0);
+            occurrences[currentFile] = occurrence + 1;
+            currentAncestor = boundaryAncestors.value(currentFile).value(occurrence);
+            continue;
+        }
+        if (token.kind != CppTokenizer::TokenKind::Preprocessor
+                || !token.text.startsWith("#define ")) {
+            continue;
+        }
+        QString name, args, value;
+        mPreprocessor->getDefineParts(token.text.mid(7).trimmed(), name, args, value);
+        if (name.isEmpty())
+            continue;
+        auto statement = StatementFactory::createPreprocessor(PStatement(), name, name);
+        std::dynamic_pointer_cast<Statement>(statement)->args = args;
+        std::dynamic_pointer_cast<Statement>(statement)->value = value;
+        statement->definition = StatementOccurrence{
+            currentFile,
+            SourceRange{token.position,
+                        SourcePosition{token.position.ch + token.text.length() - 1,
+                                       token.position.line}},
+            currentAncestor, {}};
+        setStatementHasDefinition(statement, true);
+        statement->properties.setFlag(StatementProperty::InProject,
+                                      mProjectFiles.contains(currentFile));
+        statement->properties.setFlag(StatementProperty::InSystemHeader,
+            !currentAncestor.isEmpty()
+                    || ::isSystemHeaderFile(currentFile, mPreprocessor->includePaths()));
+        mStatementList->add(statement);
+        PParsedFileInfo fileInfo = mPreprocessor->findFileInfo(currentFile);
+        if (fileInfo)
+            fileInfo->addStatement(statement);
+    }
 }
 
 void CppParser::clearAnalysisResults()

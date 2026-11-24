@@ -29,6 +29,167 @@ const DeclarationInfo *findTopLevelDeclaration(const QVector<DeclarationInfo> &d
     }
     return nullptr;
 }
+
+TemplateParameterInfo templateParameter(const QString &name, TemplateParameterKind kind)
+{
+    TemplateParameterInfo result;
+    result.name = name;
+    result.kind = kind;
+    return result;
+}
+
+class MinimalTemplateAnalyzer
+{
+public:
+    void enterTemplate(const QVector<TemplateParameterInfo> &parameters)
+    {
+        for (const TemplateParameterInfo &parameter : parameters) {
+            QString prefix;
+            switch (parameter.kind) {
+            case TemplateParameterKind::Type:
+                prefix = "@T";
+                break;
+            case TemplateParameterKind::NonType:
+                prefix = "@N";
+                break;
+            case TemplateParameterKind::TemplateTemplate:
+                prefix = "@TT";
+                break;
+            }
+            mEntries.append({parameter.name, prefix + QString::number(mEntries.count())});
+        }
+    }
+
+    void leaveTemplate(int parameterCount)
+    {
+        mEntries.remove(mEntries.count() - parameterCount, parameterCount);
+    }
+
+    int checkpoint() const
+    {
+        return mEntries.count();
+    }
+
+    void restore(int checkpoint)
+    {
+        mEntries.remove(checkpoint, mEntries.count() - checkpoint);
+    }
+
+    QString encodedName(const QString &original) const
+    {
+        for (int i = mEntries.count() - 1; i >= 0; --i) {
+            if (mEntries[i].original == original)
+                return mEntries[i].encoded;
+        }
+        return original;
+    }
+
+    QString normalize(const QString &text) const
+    {
+        CppTokenizer tokenizer;
+        tokenizer.tokenize({text});
+        const auto isMemberAccess = [](const QString &tokenText) {
+            return tokenText == "." || tokenText == "->" || tokenText == "::";
+        };
+        QStringList result;
+        const auto &tokens = tokenizer.tokens();
+        for (int i = 0; i < tokens.count(); ++i) {
+            const CppTokenizer::Token &token = tokens[i];
+            if (token.kind != CppTokenizer::TokenKind::Identifier) {
+                result.append(token.text);
+                continue;
+            }
+            const QString encoded = encodedName(token.text);
+            if (encoded == token.text || i == 0) {
+                result.append(encoded);
+                continue;
+            }
+            const QString &previous = tokens[i - 1].text;
+            bool preserve = isMemberAccess(previous) || previous == "~";
+            bool uncertain = previous == "operator";
+            if (previous == "template") {
+                if (i >= 2 && (isMemberAccess(tokens[i - 2].text) || tokens[i - 2].text == "~"))
+                    preserve = true;
+                else
+                    uncertain = true;
+            }
+            if (uncertain) {
+                qWarning().noquote() << QString(
+                        "Cannot normalize template parameter '%1' at %2:%3 in '%4' (previous token '%5')")
+                        .arg(token.text).arg(token.position.line).arg(token.position.ch)
+                        .arg(text, previous);
+                result.append(token.text);
+            } else {
+                result.append(preserve ? token.text : encoded);
+            }
+        }
+        return result.join(" ");
+    }
+
+private:
+    struct Entry {
+        QString original;
+        QString encoded;
+    };
+    QVector<Entry> mEntries;
+};
+}
+
+void TestCppDeclarationParser::test_template_parameter_alpha_encoding()
+{
+    MinimalTemplateAnalyzer analyzer;
+    analyzer.enterTemplate({
+        templateParameter("T", TemplateParameterKind::Type),
+        templateParameter("N", TemplateParameterKind::NonType),
+        templateParameter("TT", TemplateParameterKind::TemplateTemplate)
+    });
+    QCOMPARE(analyzer.encodedName("T"), "@T0");
+    QCOMPARE(analyzer.encodedName("N"), "@N1");
+    QCOMPARE(analyzer.encodedName("TT"), "@TT2");
+    QCOMPARE(analyzer.normalize("T TT<T> N"), "@T0 @TT2 < @T0 > @N1");
+
+    analyzer.enterTemplate({templateParameter("U", TemplateParameterKind::Type)});
+    const QString normalized = analyzer.normalize("T U TT<U> N");
+    QCOMPARE(normalized, "@T0 @T3 @TT2 < @T3 > @N1");
+    analyzer.leaveTemplate(1);
+    QCOMPARE(analyzer.encodedName("U"), "U");
+
+    MinimalTemplateAnalyzer renamed;
+    renamed.enterTemplate({
+        templateParameter("X", TemplateParameterKind::Type),
+        templateParameter("M", TemplateParameterKind::NonType),
+        templateParameter("UU", TemplateParameterKind::TemplateTemplate)
+    });
+    renamed.enterTemplate({templateParameter("V", TemplateParameterKind::Type)});
+    QCOMPARE(renamed.normalize("X V UU<V> M"), normalized);
+
+    analyzer.enterTemplate({templateParameter("T", TemplateParameterKind::Type)});
+    QCOMPARE(analyzer.encodedName("T"), "@T3");
+    analyzer.leaveTemplate(1);
+    QCOMPARE(analyzer.encodedName("T"), "@T0");
+
+    int checkpoint = analyzer.checkpoint();
+    analyzer.enterTemplate({templateParameter("V", TemplateParameterKind::Type)});
+    analyzer.restore(checkpoint);
+    QCOMPARE(analyzer.encodedName("V"), "V");
+    QCOMPARE(analyzer.encodedName("T"), "@T0");
+
+    QCOMPARE(analyzer.normalize("typename T::type Object::T object.T object->T"),
+             "typename @T0 :: type Object :: T object . T object -> T");
+    QCOMPARE(analyzer.normalize("N + 1 T::~T"), "@N1 + 1 @T0 :: ~ T");
+    QCOMPARE(analyzer.normalize("T * (&)[N]"), "@T0 * ( & ) [ @N1 ]");
+
+    MinimalTemplateAnalyzer pack;
+    pack.enterTemplate({templateParameter("Args", TemplateParameterKind::Type)});
+    QCOMPARE(pack.normalize("Args..."), "@T0 ...");
+
+    analyzer.enterTemplate({templateParameter("U", TemplateParameterKind::Type)});
+    QCOMPARE(analyzer.normalize("object.template T<U>"), "object . template T < @T3 >");
+    analyzer.leaveTemplate(1);
+
+    QTest::ignoreMessage(QtWarningMsg,
+            "Cannot normalize template parameter 'T' at 0:9 in 'template T' (previous token 'template')");
+    QCOMPARE(analyzer.normalize("template T"), "template T");
 }
 
 void TestCppDeclarationParser::test_type_template_arguments()
@@ -303,6 +464,69 @@ void TestCppDeclarationParser::test_parse_template_type_arguments()
     QCOMPARE(resolvedMultiline.templateArguments[0].type->toString(), "std::vector<int>");
 }
 
+void TestCppDeclarationParser::test_parse_function_type_template_arguments()
+{
+    const QVector<QPair<QString, QString>> cases{
+        {"std::function<void()> empty;", "void ()"},
+        {"std::function<int(int)> identity;", "int (int)"},
+        {"std::function<void(std::string)> func;", "void (std::string)"}
+    };
+    for (const auto &test : cases) {
+        DeclarationInfo declaration;
+        QVERIFY2(parseDeclarationText(test.first, declaration), qPrintable(test.first));
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        StatementBuildContext context;
+        context.fileName = "/tmp/function-types.cpp";
+        builder.build(declaration, context);
+        CppTypeResolver resolver(model);
+        TypeInfo resolved = resolver.resolve(declaration.specifiers.type);
+        QVERIFY(resolved.templateArguments.count() == 1);
+        const TemplateArgument &argument = resolved.templateArguments[0];
+        QVERIFY(argument.type);
+        QCOMPARE(argument.type->toString(), test.second);
+    }
+}
+
+void TestCppDeclarationParser::test_parse_parameter_pack()
+{
+    DeclarationInfo declaration;
+    QVERIFY(parseDeclarationText("template<typename... Args> void f(Args... args);", declaration));
+    QVERIFY(declaration.declarators[0].derivations.count() == 1);
+    const TypeDerivation &function = declaration.declarators[0].derivations.first();
+    QVERIFY(function.parameters.count() == 1);
+    QVERIFY(function.parameters.first().parameterPack);
+    QCOMPARE(function.parameters.first().toString(), QString("Args... args"));
+}
+
+void TestCppDeclarationParser::test_parse_c_complex_declarations()
+{
+    const QVector<QPair<QString, QString>> cases{
+        {"float _Complex cacosf(float _Complex value);", "float _Complex"},
+        {"double _Complex cacos(double _Complex value);", "double _Complex"},
+        {"long double _Complex cacosl(long double _Complex value);", "long double _Complex"}
+    };
+    for (const auto &test : cases) {
+        DeclarationInfo declaration;
+        QVERIFY2(parseDeclarationText(test.first, declaration), qPrintable(test.first));
+        QCOMPARE(declaration.specifiers.type.qualifiedName, test.second);
+        QCOMPARE(declaration.declarators.count(), 1);
+        QCOMPARE(declaration.declarators.first().derivations.count(), 1);
+        const TypeDerivation &function = declaration.declarators.first().derivations.first();
+        QCOMPARE(function.parameters.count(), 1);
+        QCOMPARE(function.parameters.first().type->qualifiedName, test.second);
+
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        StatementBuildContext context;
+        context.fileName = "/tmp/complex.c";
+        builder.build(declaration, context);
+        PStatement statement = findStatement(model.childrenStatements(), declaration.declarators.first().name);
+        QVERIFY(statement);
+        QCOMPARE(statement->kind, StatementKind::Function);
+    }
+}
+
 void TestCppDeclarationParser::test_parse_operator_declaration()
 {
     DeclarationInfo declaration;
@@ -314,6 +538,21 @@ void TestCppDeclarationParser::test_parse_operator_declaration()
     QCOMPARE(function.kind, TypeDerivationKind::Function);
     QCOMPARE(function.parameters.count(), 1);
     QVERIFY(function.qualifiers.testFlag(TypeQualifier::Const));
+
+    QVERIFY(parseDeclarationText("void* operator new[](unsigned long size);", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator new[]");
+    QCOMPARE(declaration.declarators[0].derivations.count(), 2);
+    QCOMPARE(declaration.declarators[0].derivations.first().kind,
+             TypeDerivationKind::Function);
+    QVERIFY(parseDeclarationText("void operator delete[](void* pointer);", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator delete[]");
+    QCOMPARE(declaration.declarators[0].derivations.count(), 1);
+    QCOMPARE(declaration.declarators[0].derivations.first().kind,
+             TypeDerivationKind::Function);
+    QVERIFY(parseDeclarationText("operator const filesystem::path&() const;", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator const filesystem::path&");
+    QVERIFY(parseDeclarationText("operator std::string&();", declaration));
+    QCOMPARE(declaration.declarators[0].name, "operator std::string&");
 }
 
 void TestCppDeclarationParser::test_parse_member_pointer_declaration()
@@ -340,6 +579,42 @@ void TestCppDeclarationParser::test_parse_function_template()
     QCOMPARE(declaration.templateParameters[0].kind, TemplateParameterKind::Type);
     QCOMPARE(declaration.declarators[0].name, "identity");
     QCOMPARE(declaration.declarators[0].derivations[0].parameters[0].name, "value");
+}
+
+void TestCppDeclarationParser::test_parse_template_parameter_normalization()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "template<class T, int N, template<class> class TT>\n"
+                "struct A {\n"
+                "  template<class U> void f(T, U, TT<U>, int(&)[N], Object::X);\n"
+                "  void g(T T);\n"
+                "  void h(T value = T{});\n"
+                "};\n"
+                "template<class X, int M, template<class> class UU>\n"
+                "template<class V>\n"
+                "void A<X, M, UU>::f(X, V, UU<V>, int(&)[M], Object::X) {}\n"
+                "template<class X, int M, template<class> class UU>\n"
+                "void A<X, M, UU>::g(X X) {}\n"
+                "template<class X, int M, template<class> class UU>\n"
+                "void A<X, M, UU>::h(X value) {}\n", declarations));
+    QCOMPARE(declarations.count(), 4);
+    const DeclarationInfo &classDeclaration = declarations[0];
+    QCOMPARE(classDeclaration.children.count(), 3);
+    auto normalizedArgs = [](const DeclarationInfo &declaration) {
+        return declaration.declarators.first().derivations.first().normalizedArgs;
+    };
+    for (int i = 0; i < 3; ++i)
+        QCOMPARE(normalizedArgs(classDeclaration.children[i]), normalizedArgs(declarations[i + 1]));
+    QCOMPARE(normalizedArgs(classDeclaration.children[1]), "(@T0)");
+    QCOMPARE(normalizedArgs(classDeclaration.children[2]), "(@T0)");
+    const auto &parameters = classDeclaration.children[0].declarators.first().derivations.first().parameters;
+    QCOMPARE(parameters.count(), 5);
+    QCOMPARE(parameters[0].type->qualifiedName, "T");
+    QCOMPARE(parameters[1].type->qualifiedName, "U");
+    QVERIFY(parameters[2].normalizedText.isEmpty());
+    QCOMPARE(classDeclaration.children[1].declarators.first().derivations.first().parameters[0].name,
+             "T");
 }
 
 void TestCppDeclarationParser::test_parse_template_parameter_kinds()

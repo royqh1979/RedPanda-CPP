@@ -43,6 +43,7 @@ public:
     bool parseTemplatePrefix(DeclarationInfo &result);
     bool parseDeclSpecifierSeq(DeclSpecifierInfo &result);
     bool parseDeclarator(DeclaratorInfo &result);
+    bool parseFunctionSuffix(TypeDerivation &function);
     bool parseParameter(ParameterInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
     bool parseTemplatePattern(DeclaratorInfo &result, const CppTokenCursor::Checkpoint &nameStart,
@@ -51,6 +52,9 @@ public:
     void setCppVersion(int cppVersion) { mCppVersion = cppVersion; }
     void setCurrentClassName(const QString &className);
     QString currentClassName() const { return mClassName; }
+    int templateParameterCheckpoint() const { return mTemplateParameters.count(); }
+    void appendTemplateParameters(const QVector<TemplateParameterInfo> &parameters);
+    void restoreTemplateParameters(int checkpoint);
 
 private:
     bool parseTypeName(TypeInfo &result);
@@ -63,6 +67,11 @@ private:
     QString readSourceText(const CppTokenizer::Token &startToken,
                            const CppTokenizer::Token &endToken) const;
     QString readConsumedText(const CppTokenCursor::Checkpoint &start);
+    QString normalizeParameterText(const CppTokenCursor::Checkpoint &start,
+                                   const CppTokenCursor::Checkpoint &end,
+                                   const SourcePosition &namePosition,
+                                   bool &changed);
+    QString normalizedTemplateParameter(const QString &name) const;
     void skipBalancedToken();
     bool parseLambda(LambdaInfo &result);
     QString readUntilDelimiter(const QSet<QString> &delimiters, DeclaratorInfo *declarator);
@@ -75,8 +84,14 @@ private:
     bool isBuiltinType(const QString &text) const;
     bool isDeclarationDelimiter(const QString &text) const;
 
+    struct TemplateParameterEntry {
+        QString original;
+        QString encoded;
+    };
+
     CppTokenCursor &mCursor;
     QString mClassName;
+    QVector<TemplateParameterEntry> mTemplateParameters;
     int mCppVersion = CppVersion::Cpp17;
 };
 

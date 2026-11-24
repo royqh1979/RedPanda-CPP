@@ -159,6 +159,7 @@ void initializeParserGlobals()
     CppKeywords.insert("char16_t",KeywordType::None);
     CppKeywords.insert("char32_t",KeywordType::None);
     CppKeywords.insert("double",KeywordType::None);
+    CppKeywords.insert("_Complex",KeywordType::None);
     CppKeywords.insert("float",KeywordType::None);
     CppKeywords.insert("int",KeywordType::None);
     CppKeywords.insert("long",KeywordType::None);
@@ -206,6 +207,7 @@ void initializeParserGlobals()
     CppTypeKeywords.insert("char16_t");
     CppTypeKeywords.insert("char32_t");
     CppTypeKeywords.insert("double");
+    CppTypeKeywords.insert("_Complex");
     CppTypeKeywords.insert("float");
     CppTypeKeywords.insert("int");
     CppTypeKeywords.insert("long");

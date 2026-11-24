@@ -425,13 +425,23 @@ EvalResult CppExpressionEvaluator::evaluatePostfixTail(
             }
             int memberIndex = index;
             QString memberName = tokens[index++].text;
+            QVector<TemplateArgument> explicitArguments;
+            if (index < tokens.count() && tokens[index].text == "<") {
+                int templateStart = index;
+                if (!readTemplateArguments(tokens, index, explicitArguments)
+                        || index >= tokens.count() || tokens[index].text != "(") {
+                    index = templateStart;
+                    explicitArguments.clear();
+                }
+            }
             bool call = index < tokens.count() && tokens[index].text == "(";
             QVector<TypeInfo> arguments;
             bool argumentsValid = !call || evaluateArguments(tokens, index, context, arguments, evaluation);
             if (!argumentsValid)
                 return {};
             MemberEvalResult member = call
-                    ? mResolver.invokeMember(receiver, memberName, arguments, evaluation)
+                    ? mResolver.invokeMember(receiver, memberName, arguments, explicitArguments,
+                                             evaluation)
                     : mResolver.memberAccess(receiver, memberName, evaluation);
             result.statement = member.statement;
             result.type = member.type;
@@ -578,7 +588,7 @@ EvalResult CppExpressionEvaluator::evaluatePrimary(
 
     static const QSet<QString> builtinTypes{
         "auto", "void", "bool", "char", "wchar_t", "char8_t", "char16_t", "char32_t",
-        "short", "int", "long", "signed", "unsigned", "float", "double"
+        "short", "int", "long", "signed", "unsigned", "float", "double", "_Complex"
     };
     if (builtinTypes.contains(initial.text)) {
         EvalResult result;
@@ -1018,10 +1028,15 @@ bool CppExpressionEvaluator::evaluateArguments(
         return true;
     }
     while (index < tokens.count()) {
-        EvalResult argument = evaluateBinary(tokens, index, context, 2, evaluation);
-        if (!argument.isValid())
-            return false;
-        arguments.append(argument.type);
+        if (tokens[index].text == "{" && tokens[index].matchIndex == index + 1) {
+            index += 2;
+            arguments.append(TypeInfo{});
+        } else {
+            EvalResult argument = evaluateBinary(tokens, index, context, 2, evaluation);
+            if (!argument.isValid())
+                return false;
+            arguments.append(argument.type);
+        }
         if (index < tokens.count() && tokens[index].text == ",") {
             ++index;
             continue;
@@ -1040,8 +1055,9 @@ EvalResult CppExpressionEvaluator::applyBinary(
         CppTypeResolver::EvaluationContext *evaluation) const
 {
     EvalResult result = left;
-    MemberEvalResult overloaded = mResolver.invokeResult(
-                memberReceiver(left, false, evaluation), "operator" + operatorName, evaluation);
+    MemberEvalResult overloaded = mResolver.invokeMember(
+                memberReceiver(left, false, evaluation), "operator" + operatorName, {right.type},
+                evaluation);
     if (!overloaded.type.qualifiedName.isEmpty()) {
         result.statement = overloaded.statement;
         result.type = overloaded.type;

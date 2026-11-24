@@ -291,7 +291,8 @@ bool isBuiltinTypeName(const QString &name)
         "unsigned int", "long", "long int", "signed long", "signed long int", "unsigned long",
         "unsigned long int", "long long", "long long int", "signed long long",
         "signed long long int", "unsigned long long", "unsigned long long int", "float",
-        "double", "long double"
+        "double", "long double", "float _Complex", "double _Complex", "long double _Complex",
+        "_Complex float", "_Complex double", "_Complex long double"
     };
     return names.contains(name.simplified());
 }
@@ -737,7 +738,7 @@ MemberEvalResult CppTypeResolver::invokeResult(const ClassInstance &receiver,
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
     ResolveOriginScope originScope("invokeResult");
-    MemberResolution member = findMember(receiver, memberName, evaluation);
+    MemberResolution member = findMemberForInvocation(receiver, memberName, evaluation);
     if (!isInvocable(member.statement))
         return {};
     ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
@@ -760,7 +761,7 @@ MemberEvalResult CppTypeResolver::memberAccess(
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    return resolveMember(receiver, memberName, false, {}, evaluation);
+    return resolveMember(receiver, memberName, false, {}, {}, evaluation);
 }
 
 MemberEvalResult CppTypeResolver::invokeMember(
@@ -779,19 +780,30 @@ MemberEvalResult CppTypeResolver::invokeMember(
 {
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
-    return resolveMember(receiver, memberName, true, arguments, evaluation);
+    return resolveMember(receiver, memberName, true, arguments, {}, evaluation);
+}
+
+MemberEvalResult CppTypeResolver::invokeMember(
+        const ClassInstance &receiver, const QString &memberName, const QVector<TypeInfo> &arguments,
+        const QVector<TemplateArgument> &explicitArguments,
+        EvaluationContext *evaluationContext) const
+{
+    EvaluationContext localEvaluation;
+    EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
+    return resolveMember(receiver, memberName, true, arguments, explicitArguments, evaluation);
 }
 
 MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
                                                 const QString &memberName, bool call,
                                                 const QVector<TypeInfo> &arguments,
+                                                const QVector<TemplateArgument> &explicitArguments,
                                                 EvaluationContext &evaluation) const
 {
     ResolveOriginScope originScope("resolveMember");
     if (call) {
         QSet<QString> visited;
         QList<MemberResolution> candidates = memberCandidates(receiver, memberName,
-                                                              visited, evaluation);
+                                                              visited, evaluation, call);
         struct MatchedCandidate {
             PStatement statement;
             PTemplateBindingFrame bindings;
@@ -814,7 +826,8 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
             }
             int score = 0;
             PTemplateBindingFrame currentBindings = matchFunctionCandidate(
-                        member.statement, arguments, {}, evaluation, owner.bindings, &score, false);
+                        member.statement, arguments, explicitArguments, evaluation, owner.bindings,
+                        &score, false);
             if (currentBindings)
                 matches.append({member.statement, currentBindings, score});
         }
@@ -827,8 +840,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
             auto rightNormal = std::dynamic_pointer_cast<Statement>(right.statement);
             const StatementProperties qualifiers = StatementProperty::Const | StatementProperty::Volatile
                     | StatementProperty::LvalueReference | StatementProperty::RvalueReference;
-            if (leftNormal->normalizedArgs.contains('@') || rightNormal->normalizedArgs.contains('@')
-                    || (left.statement->properties & qualifiers) != (right.statement->properties & qualifiers)
+            if ((left.statement->properties & qualifiers) != (right.statement->properties & qualifiers)
                     || leftNormal->parameters.count() != rightNormal->parameters.count()) {
                 return false;
             }
@@ -1298,6 +1310,8 @@ static bool functionAcceptsArgumentCount(
     bool parameterPack = false;
     for (const TemplateParameterInfo &parameter : normal->templateParameters)
         parameterPack |= parameter.parameterPack;
+    for (const ParameterInfo &parameter : normal->parameters)
+        parameterPack |= parameter.parameterPack;
     const int parametersEnd = normal->normalizedArgs.lastIndexOf(')');
     const bool variadic = parametersEnd > 0
             && normal->normalizedArgs.left(parametersEnd).trimmed().endsWith("...");
@@ -1390,6 +1404,10 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
 {
     if (!function)
         return {};
+    if (std::dynamic_pointer_cast<Statement>(function)->definitionKind
+            == DeclaratorDefinitionKind::Deleted) {
+        return {};
+    }
     traceEvent(resolverProfile.functionTrace, function->fullName + std::dynamic_pointer_cast<Statement>(function)->normalizedArgs);
     ResolveOriginScope originScope("matchFunctionCandidate");
     if (!functionAcceptsArgumentCount(function, arguments.count(), allowPartialArguments))
@@ -1397,13 +1415,21 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;
+    auto normal = std::dynamic_pointer_cast<Statement>(function);
     QSet<QString> templateParameters;
-    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
+    for (const TemplateParameterInfo &parameter : normal->templateParameters)
         templateParameters.insert(parameter.name);
 
-    int explicitCount = qMin(explicitArguments.count(), std::dynamic_pointer_cast<Statement>(function)->templateParameters.count());
+    int totalParameterCount = normal->templateParameters.count();
+    int functionParameterCount = normal->functionTemplateParameterCount;
+    if (functionParameterCount < 0 || functionParameterCount > totalParameterCount)
+        functionParameterCount = totalParameterCount;
+    int firstFunctionParameter = totalParameterCount - functionParameterCount;
+    if (explicitArguments.count() > functionParameterCount)
+        return {};
+    int explicitCount = explicitArguments.count();
     for (int i = 0; i < explicitCount; ++i) {
-        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
+        const TemplateParameterInfo &parameter = normal->templateParameters[firstFunctionParameter + i];
         const TemplateArgument &argument = explicitArguments[i];
         if (parameter.kind == TemplateParameterKind::Type) {
             if (argument.kind != TemplateArgumentKind::Type || !argument.type)
@@ -1434,8 +1460,8 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
             ++frame->revision;
         }
     }
-    for (int i = explicitCount; i < std::dynamic_pointer_cast<Statement>(function)->templateParameters.count(); ++i) {
-        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
+    for (int i = firstFunctionParameter + explicitCount; i < totalParameterCount; ++i) {
+        const TemplateParameterInfo &parameter = normal->templateParameters[i];
         if (frame->values.contains(parameter.name))
             continue;
         QString defaultText = parameter.defaultArgumentText;
@@ -1588,7 +1614,7 @@ CppTypeResolver::ArgumentConversion CppTypeResolver::classifyArgumentConversion(
                 PStatement current = pending.pop();
                 if (!current || visited.contains(current.get()))
                     continue;
-                if (current == formalInstance.declaration)
+                if (current == formalInstance.declaration && current != argumentDeclaration)
                     return ArgumentConversion::Conversion;
                 visited.insert(current.get());
                 for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(current)->baseClasses) {
@@ -1751,7 +1777,27 @@ PStatement CppTypeResolver::baseClass(const PStatement &scope, const QString &ba
     int templateStart = baseName.indexOf('<');
     if (templateStart >= 0)
         baseName.truncate(templateStart);
-    return findDeclaration(baseName, scope->parentScope.lock(), true);
+    PStatement declaration = findDeclaration(baseName, scope->parentScope.lock(), true);
+    for (int depth = 0; declaration && depth < 8; ++depth) {
+        if (declaration->kind == StatementKind::InlineAlias) {
+            PStatement target = std::dynamic_pointer_cast<InlineAliasStatement>(declaration)->target.lock();
+            if (target) {
+                declaration = target;
+                continue;
+            }
+        }
+        if (declaration->kind != StatementKind::Alias
+                && declaration->kind != StatementKind::Typedef) {
+            break;
+        }
+        auto normal = std::dynamic_pointer_cast<Statement>(declaration);
+        QString targetName = normal->typeInfo.qualifiedName.isEmpty()
+                ? normal->value : normal->typeInfo.qualifiedName;
+        if (targetName.isEmpty())
+            break;
+        declaration = findDeclaration(targetName, declaration->parentScope.lock(), true);
+    }
+    return declaration;
 }
 
 StatementAccessibility CppTypeResolver::applyInheritance(
@@ -1801,17 +1847,50 @@ void CppTypeResolver::appendMembers(const PStatement &scope, bool inherited,
         return;
     for (const QString &baseSpecifier : std::dynamic_pointer_cast<Statement>(scope)->baseClasses) {
         StatementAccessibility inheritance;
-        PStatement base = baseClass(scope, baseSpecifier, inheritance);
-        if (!base)
-            continue;
-        MemberEntryList baseMembers;
-        appendMembers(base, true, visited, baseMembers);
-        for (MemberEntry entry : baseMembers) {
-            if (signatures.contains(signature(entry.statement)))
-                continue;
-            entry.accessibility = applyInheritance(entry.accessibility, inheritance);
-            signatures.insert(signature(entry.statement));
-            result.append(entry);
+        QList<PStatement> bases;
+        if (PStatement base = baseClass(scope, baseSpecifier, inheritance))
+            bases.append(base);
+        QString baseName = baseSpecifier.trimmed();
+        for (const QString &modifier : {QString("public"), QString("protected"),
+                                       QString("private"), QString("virtual")}) {
+            if (baseName.startsWith(modifier + ' '))
+                baseName = baseName.mid(modifier.length()).trimmed();
+        }
+        int templateStart = baseName.indexOf('<');
+        if (templateStart >= 0)
+            baseName.truncate(templateStart);
+        const StatementMap &siblings = mModel.childrenStatements(scope->parentScope.lock());
+        for (auto it = siblings.lowerBound(baseName + "<");
+             it != siblings.end() && it.key().startsWith(baseName + "<"); ++it) {
+            PStatement candidate = it.value().lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias)
+                candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
+            if (candidate && candidate->kind == StatementKind::Class
+                    && !bases.contains(candidate)) {
+                bases.append(candidate);
+            }
+        }
+        for (const PStatement &base : bases) {
+            MemberEntryList baseMembers;
+            appendMembers(base, true, visited, baseMembers);
+            for (MemberEntry entry : baseMembers) {
+                if (signatures.contains(signature(entry.statement)))
+                    continue;
+                entry.accessibility = applyInheritance(entry.accessibility, inheritance);
+                signatures.insert(signature(entry.statement));
+                result.append(entry);
+            }
+        }
+    }
+    if (scope->kind == StatementKind::Class) {
+        const StatementMap &siblings = mModel.childrenStatements(scope->parentScope.lock());
+        for (auto it = siblings.lowerBound(scope->command + "<");
+             it != siblings.end() && it.key().startsWith(scope->command + "<"); ++it) {
+            PStatement candidate = it.value().lock();
+            if (candidate && candidate->kind == StatementKind::InlineAlias)
+                candidate = std::dynamic_pointer_cast<InlineAliasStatement>(candidate)->target.lock();
+            if (candidate && candidate->kind == StatementKind::Class && candidate != scope)
+                appendMembers(candidate, inherited, visited, result);
         }
     }
 }
@@ -1927,6 +2006,39 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         return result;
     };
 
+    TypeInfo resolvedType = type;
+    for (TypeDerivation &derivation : resolvedType.derivations) {
+        QVector<ParameterInfo> resolvedParameters;
+        for (const ParameterInfo &parameter : derivation.parameters) {
+            if (!parameter.type) {
+                resolvedParameters.append(parameter);
+                continue;
+            }
+            const QVector<TemplateArgument> *pack = parameter.parameterPack
+                    ? findParameterPack(bindings, parameter.type->qualifiedName) : nullptr;
+            if (pack) {
+                for (const TemplateArgument &argument : *pack) {
+                    if (argument.kind != TemplateArgumentKind::Type || !argument.type)
+                        return {};
+                    ParameterInfo expanded = parameter;
+                    expanded.type = std::make_shared<TypeInfo>(resolveType(
+                            *argument.type, bindings, context, evaluation));
+                    expanded.parameterPack = false;
+                    expanded.name.clear();
+                    expanded.defaultArgumentText.clear();
+                    resolvedParameters.append(expanded);
+                }
+                continue;
+            }
+            ParameterInfo resolved = parameter;
+            TypeInfo parameterType = resolveType(*parameter.type, bindings, context, evaluation);
+            if (!parameterType.qualifiedName.isEmpty())
+                resolved.type = std::make_shared<TypeInfo>(parameterType);
+            resolvedParameters.append(resolved);
+        }
+        derivation.parameters = resolvedParameters;
+    }
+
     const QString decltypePrefix = "decltype(";
     if (text.startsWith(decltypePrefix) && text.endsWith(")")) {
         CppTokenizer tokenizer;
@@ -1983,7 +2095,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
                || segments.isEmpty()) {
         return {};
     }
-    TypeInfo reference = type;
+    TypeInfo reference = resolvedType;
     if (segments.count() == 1 && segments.first().arguments.isEmpty()) {
         QString name = segments.first().name;
         PTemplateBindingFrame bindingFrame = bindings;
@@ -2030,13 +2142,8 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveTypeInstance(
         segments.last().arguments = type.templateArguments;
         segments.last().hasTemplateArguments = true;
     }
-    for (TypeDerivation derivation : type.derivations) {
-        for (ParameterInfo &parameter : derivation.parameters) {
-            if (parameter.type)
-                resolveType(*parameter.type, bindings, context, evaluation);
-        }
-    }
-    return cacheResult(resolveSegments(type, segments, globallyQualified, bindings, context, evaluation));
+    return cacheResult(resolveSegments(resolvedType, segments, globallyQualified, bindings, context,
+                                       evaluation));
 }
 
 CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
@@ -2220,6 +2327,24 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
         }
 
         if (declaration->kind == StatementKind::Class) {
+            if (!segment.hasTemplateArguments) {
+                for (PStatement scope = context; scope; scope = scope->parentScope.lock()) {
+                    if (scope->kind != StatementKind::Class)
+                        continue;
+                    PStatement primary = scope;
+                    if (std::dynamic_pointer_cast<Statement>(scope)->templateKind
+                            != TemplateDeclarationKind::Primary) {
+                        primary = findDeclaration(scope->command.section('<', 0, 0),
+                                                  scope->parentScope.lock(), true);
+                    }
+                    if (scope == declaration || primary == declaration) {
+                        declaration = scope;
+                        instance.declaration = scope;
+                        instance.qualifiedName = scope->fullName;
+                        break;
+                    }
+                }
+            }
             if (!segment.hasTemplateArguments && !std::dynamic_pointer_cast<Statement>(declaration)->templateParameters.isEmpty()) {
                 PStatement scope = context;
                 while (scope && scope != declaration)
@@ -2259,6 +2384,17 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
                     }
                 }
             }
+            if (std::dynamic_pointer_cast<Statement>(declaration)->templateKind
+                    != TemplateDeclarationKind::Primary) {
+                PStatement primary = findDeclaration(
+                            declaration->command.section('<', 0, 0),
+                            declaration->parentScope.lock(), true);
+                if (primary) {
+                    declaration = primary;
+                    instance.declaration = primary;
+                    instance.qualifiedName = primary->fullName;
+                }
+            }
             environment = declarationBindings(declaration, instance, environment, evaluation);
             ClassInstance selected = selectSpecialization({instance, declaration, environment},
                                                           evaluation);
@@ -2292,7 +2428,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             QSet<QString> visited;
             QList<MemberResolution> candidates = memberCandidates(
                     {instance, declaration, environment}, segments[index + 1].name,
-                    visited, evaluation);
+                    visited, evaluation, false);
             if (!candidates.isEmpty())
                 member = candidates.first();
         } else if (declaration->kind == StatementKind::Namespace) {
@@ -2589,6 +2725,13 @@ TypeInfo CppTypeResolver::parseTypeText(const QString &text, EvaluationContext &
     DeclSpecifierInfo specifiers;
     if (!parser.parseDeclSpecifierSeq(specifiers))
         return {};
+    if (cursor.currentText() == "(") {
+        TypeDerivation function;
+        if (parser.parseFunctionSuffix(function) && cursor.atEnd()) {
+            specifiers.type.derivations.append(function);
+            return specifiers.type;
+        }
+    }
     DeclaratorInfo declarator;
     if (!parser.parseDeclarator(declarator) || !cursor.atEnd())
         return {};
@@ -2701,9 +2844,11 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
                 continue;
             }
             TemplateBindings bindings;
+            QHash<QString, QVector<TemplateArgument>> packs;
             EvaluationContext candidateEvaluation = evaluation;
             SpecializationMatch match = matchSpecialization(candidate, result.type.templateArguments,
-                                                            parent, bindings, candidateEvaluation);
+                                                            parent, bindings, packs,
+                                                            candidateEvaluation);
             evaluation.operationCount = candidateEvaluation.operationCount;
             if (candidateEvaluation.resolutionFailed && match != SpecializationMatch::NoMatch)
                 match = SpecializationMatch::Unknown;
@@ -2727,6 +2872,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
                 auto selectedBindings = std::make_shared<TemplateBindingFrame>();
                 selectedBindings->owner = candidate.get();
                 selectedBindings->values = bindings;
+                selectedBindings->parameterPacks = packs;
                 selectedBindings->parent = primary.bindings->parent;
                 result.declaration = candidate;
                 result.bindings = selectedBindings;
@@ -2747,7 +2893,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::selectSpecialization(
 CppTypeResolver::SpecializationMatch CppTypeResolver::matchSpecialization(
         const PStatement &specialization, const QVector<TemplateArgument> &arguments,
         const PStatement &context, TemplateBindings &bindings,
-        EvaluationContext &evaluation) const
+        QHash<QString, QVector<TemplateArgument>> &packs, EvaluationContext &evaluation) const
 {
     traceEvent(resolverProfile.specializationAttemptTrace, specialization->command);
     TypeInfo pattern = std::dynamic_pointer_cast<Statement>(specialization)->templatePattern;
@@ -2762,7 +2908,7 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchSpecialization(
     SpecializationMatch combined = SpecializationMatch::Match;
     for (int i = 0; i < arguments.count(); ++i) {
         SpecializationMatch match = matchArgument(pattern.templateArguments[i], arguments[i],
-                                                  parameters, bindings, context, evaluation);
+                                                  parameters, bindings, packs, context, evaluation);
         if (match == SpecializationMatch::NoMatch)
             return match;
         if (match == SpecializationMatch::Unknown)
@@ -2774,6 +2920,7 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchSpecialization(
 CppTypeResolver::SpecializationMatch CppTypeResolver::matchArgument(
         const TemplateArgument &pattern, const TemplateArgument &actual,
         const QSet<QString> &parameters, TemplateBindings &bindings,
+        QHash<QString, QVector<TemplateArgument>> &packs,
         const PStatement &context, EvaluationContext &evaluation) const
 {
     QString patternText = pattern.constantExpression.trimmed();
@@ -2804,7 +2951,7 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchArgument(
     if (resolvedPattern.kind == TemplateArgumentKind::Type
             && actual.kind == TemplateArgumentKind::Type
             && resolvedPattern.type && actual.type) {
-        return matchType(*resolvedPattern.type, *actual.type, parameters, bindings, context,
+        return matchType(*resolvedPattern.type, *actual.type, parameters, bindings, packs, context,
                          evaluation);
     }
     if (actual.kind != TemplateArgumentKind::NonType || patternText.isEmpty())
@@ -3033,7 +3180,8 @@ TypeInfo CppTypeResolver::expandTypePattern(
 
 CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
         const TypeInfo &pattern, const TypeInfo &actual, const QSet<QString> &parameters,
-        TemplateBindings &bindings, const PStatement &context, EvaluationContext &evaluation) const
+        TemplateBindings &bindings, QHash<QString, QVector<TemplateArgument>> &packs,
+        const PStatement &context, EvaluationContext &evaluation) const
 {
     TypeInfo formal = pattern;
     TypeInfo real = actual;
@@ -3060,6 +3208,52 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
                 && !formalDerivation.text.isEmpty() && !realDerivation.text.isEmpty()
                 && formalDerivation.text != realDerivation.text) {
             return SpecializationMatch::Unknown;
+        }
+        if (formalDerivation.kind == TypeDerivationKind::Function) {
+            int formalIndex = 0;
+            int realIndex = 0;
+            while (formalIndex < formalDerivation.parameters.count()) {
+                const ParameterInfo &formalParameter = formalDerivation.parameters[formalIndex];
+                if (formalParameter.parameterPack && formalParameter.type
+                        && parameters.contains(formalParameter.type->qualifiedName)) {
+                    QVector<TemplateArgument> captured;
+                    for (; realIndex < realDerivation.parameters.count(); ++realIndex) {
+                        if (!realDerivation.parameters[realIndex].type)
+                            return SpecializationMatch::Unknown;
+                        captured.append(TemplateArgument::fromType(
+                                *realDerivation.parameters[realIndex].type));
+                    }
+                    auto existing = packs.constFind(formalParameter.type->qualifiedName);
+                    if (existing != packs.constEnd()) {
+                        if (existing->count() != captured.count())
+                            return SpecializationMatch::NoMatch;
+                        for (int i = 0; i < captured.count(); ++i) {
+                            if (existing->at(i).toString() != captured[i].toString())
+                                return SpecializationMatch::NoMatch;
+                        }
+                    } else {
+                        packs.insert(formalParameter.type->qualifiedName, captured);
+                    }
+                    ++formalIndex;
+                    break;
+                }
+                if (realIndex >= realDerivation.parameters.count())
+                    return SpecializationMatch::NoMatch;
+                const ParameterInfo &realParameter = realDerivation.parameters[realIndex];
+                if (!formalParameter.type || !realParameter.type)
+                    return SpecializationMatch::Unknown;
+                SpecializationMatch match = matchType(*formalParameter.type, *realParameter.type,
+                                                      parameters, bindings, packs, context,
+                                                      evaluation);
+                if (match != SpecializationMatch::Match)
+                    return match;
+                ++formalIndex;
+                ++realIndex;
+            }
+            if (formalIndex != formalDerivation.parameters.count()
+                    || realIndex != realDerivation.parameters.count()) {
+                return SpecializationMatch::NoMatch;
+            }
         }
     }
     if (parameters.contains(formal.qualifiedName)) {
@@ -3159,7 +3353,7 @@ CppTypeResolver::SpecializationMatch CppTypeResolver::matchType(
     for (int i = 0; i < formal.templateArguments.count(); ++i) {
         SpecializationMatch match = matchArgument(formal.templateArguments[i],
                                                   real.templateArguments[i], parameters,
-                                                  bindings, context, evaluation);
+                                                  bindings, packs, context, evaluation);
         if (match == SpecializationMatch::NoMatch)
             return match;
         if (match == SpecializationMatch::Unknown)
@@ -3180,13 +3374,22 @@ CppTypeResolver::MemberResolution CppTypeResolver::findMember(
         EvaluationContext &evaluation) const
 {
     const QList<MemberResolution> candidates = memberCandidates(instance, name, visited,
-                                                                evaluation);
+                                                                evaluation, false);
+    return candidates.isEmpty() ? MemberResolution{} : candidates.first();
+}
+
+CppTypeResolver::MemberResolution CppTypeResolver::findMemberForInvocation(
+        const ClassInstance &instance, const QString &name, EvaluationContext &evaluation) const
+{
+    QSet<QString> visited;
+    const QList<MemberResolution> candidates = memberCandidates(instance, name, visited,
+                                                                evaluation, true);
     return candidates.isEmpty() ? MemberResolution{} : candidates.first();
 }
 
 QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         const ClassInstance &instance, const QString &name, QSet<QString> &visited,
-        EvaluationContext &evaluation) const
+        EvaluationContext &evaluation, bool forInvocation) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberLookupNs,
                                       resolverProfile.memberLookupCalls, "memberCandidates");
@@ -3207,11 +3410,41 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         return result;
     visited.insert(instanceKey);
     const auto candidates = std::dynamic_pointer_cast<Statement>(instance.declaration)->children.values(name);
+    auto isNonConstMember = [](const PStatement &statement) {
+        if ((statement->kind != StatementKind::Function
+             && statement->kind != StatementKind::OverloadedOperator)
+                || statementIsStatic(statement)
+                || statement->properties.testFlag(StatementProperty::Const)) {
+            return false;
+        }
+        return !std::dynamic_pointer_cast<Statement>(statement)->declSpecifierProperties.testFlag(
+                DeclSpecifierProperty::Friend);
+    };
     QList<MemberResolution> constFallback;
+    bool hasNonConstMember = false;
     for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
         PStatement candidate = weak.lock();
         if (!candidate)
             continue;
+        if (forInvocation && candidate->kind == StatementKind::Alias) {
+            const QString &target = std::dynamic_pointer_cast<Statement>(candidate)->value;
+            int separator = target.lastIndexOf("::");
+            if (separator > 0) {
+                TypeInfo ownerType = parseTypeText(target.left(separator), evaluation);
+                ClassInstance owner = resolveTypeInstance(ownerType, instance.bindings,
+                                                          candidate->parentScope.lock(), evaluation);
+                const QList<MemberResolution> aliasedMembers = memberCandidates(
+                            owner, target.mid(separator + 2), visited, evaluation, forInvocation);
+                if (!aliasedMembers.isEmpty()) {
+                    for (MemberResolution member : aliasedMembers) {
+                        member.accessibility = candidate->accessibility;
+                        result.append(member);
+                        hasNonConstMember |= isNonConstMember(member.statement);
+                    }
+                    continue;
+                }
+            }
+        }
         bool qualifiedMember = (candidate->kind == StatementKind::Function
                                 || candidate->kind == StatementKind::OverloadedOperator)
                 && !statementIsStatic(candidate);
@@ -3229,10 +3462,11 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
             constFallback.append({candidate, instance, candidate->accessibility});
         } else {
             result.append({candidate, instance, candidate->accessibility});
+            hasNonConstMember |= isNonConstMember(candidate);
         }
     }
-    if (result.isEmpty())
-        result = constFallback;
+    if (!hasNonConstMember)
+        result += constFallback;
     if (!result.isEmpty())
         return result;
 
@@ -3260,7 +3494,8 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
             continue;
         ClassInstance base = resolveTypeInstance(baseType, instance.bindings,
                                            instance.declaration->parentScope.lock(), evaluation);
-        const QList<MemberResolution> baseMembers = memberCandidates(base, name, visited, evaluation);
+        const QList<MemberResolution> baseMembers = memberCandidates(
+                    base, name, visited, evaluation, forInvocation);
         for (MemberResolution member : baseMembers) {
             QString signature = member.statement->command + std::dynamic_pointer_cast<Statement>(member.statement)->normalizedArgs;
             if (signatures.contains(signature))
@@ -3871,8 +4106,9 @@ QString CppTypeResolver::evaluateConstantValue(
             continue;
         }
         TemplateBindings captured;
+        QHash<QString, QVector<TemplateArgument>> packs;
         SpecializationMatch match = matchSpecialization(candidate, variableType.templateArguments,
-                                                        context, captured, evaluation);
+                                                        context, captured, packs, evaluation);
         if (match == SpecializationMatch::NoMatch)
             continue;
         if (match == SpecializationMatch::Unknown) {

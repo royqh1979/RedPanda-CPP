@@ -1095,12 +1095,43 @@ void TestCppParser::test_resolve_members_of_class_access_scope()
              QSet<QString>({"action", "publicValue", "protectedValue"}));
 }
 
+void TestCppParser::test_deleted_function_statements()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "struct atomic_flag {",
+            "    atomic_flag() noexcept = default;",
+            "    ~atomic_flag() noexcept = default;",
+            "    atomic_flag(const atomic_flag&) = delete;",
+            "    atomic_flag& operator=(const atomic_flag&) = delete;",
+            "    atomic_flag& operator=(const atomic_flag&) volatile = delete;",
+            "};"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "deleted.cpp", false, "");
+
+    PStatement atomicFlag = mParser->findStatement("atomic_flag");
+    QVERIFY(atomicFlag);
+    PStatement assignment = std::dynamic_pointer_cast<Statement>(atomicFlag)->children.value(
+                "operator=").lock();
+    QVERIFY(assignment);
+    QCOMPARE(assignment->kind, StatementKind::OverloadedOperator);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(assignment)->definitionKind,
+             DeclaratorDefinitionKind::Deleted);
+    QVERIFY(!statementHasDefinition(assignment));
+    QVERIFY(!assignment->declarations.isEmpty());
+}
+
 void TestCppParser::test_preprocessor_statements()
 {
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
         buffer = QStringList{
+            "template<typename T> inline T killDependency(T value) { T result(value); return result; }",
             "#define OBJECT_MACRO 7",
             "#define FUNCTION_MACRO(x) ((x)+1)",
+            "#define ATOMIC_VAR_INIT(_VI) { _VI }",
+            "#define ATOMIC_FLAG_INIT { 0 }",
             "int value;"
         };
         return true;
@@ -1113,7 +1144,7 @@ void TestCppParser::test_preprocessor_statements()
     QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->args, "");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(object)->value, "7");
     QCOMPARE(object->definition.fileName, "macros.cpp");
-    QCOMPARE(object->definition.range.start.line, 0);
+    QCOMPARE(object->definition.range.start.line, 1);
     QVERIFY(statementHasDefinition(object));
 
     PStatement function = mParser->findStatement("FUNCTION_MACRO");
@@ -1122,8 +1153,64 @@ void TestCppParser::test_preprocessor_statements()
     QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->args, "(x)");
     QCOMPARE(std::dynamic_pointer_cast<Statement>(function)->value, "((x)+1)");
     QCOMPARE(function->definition.fileName, "macros.cpp");
-    QCOMPARE(function->definition.range.start.line, 1);
+    QCOMPARE(function->definition.range.start.line, 2);
     QVERIFY(statementHasDefinition(function));
+
+    PStatement atomicVar = mParser->findStatement("ATOMIC_VAR_INIT");
+    QVERIFY(atomicVar);
+    QCOMPARE(atomicVar->kind, StatementKind::Preprocessor);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(atomicVar)->value, "{ _VI }");
+    PStatement atomicFlag = mParser->findStatement("ATOMIC_FLAG_INIT");
+    QVERIFY(atomicFlag);
+    QCOMPARE(atomicFlag->kind, StatementKind::Preprocessor);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(atomicFlag)->value, "{ 0 }");
+}
+
+void TestCppParser::test_scoped_preprocessor_statements()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "namespace N {",
+            "#define NAMESPACE_MACRO 1",
+            "}",
+            "class C {",
+            "#define CLASS_MACRO 2",
+            "};",
+            "void f() {",
+            "#define FUNCTION_BODY_MACRO 3",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "scoped_macros.cpp", false, "");
+
+    for (const QString &name : {"NAMESPACE_MACRO", "CLASS_MACRO", "FUNCTION_BODY_MACRO"}) {
+        PStatement statement = mParser->findStatement(name);
+        QVERIFY2(statement, qPrintable(name));
+        QCOMPARE(statement->kind, StatementKind::Preprocessor);
+        QCOMPARE(statement->fullName, name);
+    }
+}
+
+void TestCppParser::test_preprocessor_condition_with_unknown_special_macros()
+{
+    mParser->addHardDefineByLine("#define __clang__ 1");
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        buffer = QStringList{
+            "#if !defined(offsetof) || \\",
+            "    (__has_feature(modules) && !__building_module(_Builtin_stddef))",
+            "#define offsetof(t, d) __builtin_offsetof(t, d)",
+            "#endif"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "offsetof.h", false, "");
+
+    PStatement statement = mParser->findStatement("offsetof");
+    QVERIFY(statement);
+    QCOMPARE(statement->kind, StatementKind::Preprocessor);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(statement)->value,
+             "__builtin_offsetof(t, d)");
 }
 
 void TestCppParser::test_label_statements()

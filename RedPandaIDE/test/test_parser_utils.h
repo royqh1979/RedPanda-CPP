@@ -17,17 +17,21 @@
 #ifndef TEST_PARSER_UTILS_H
 #define TEST_PARSER_UTILS_H
 
-#ifdef REDPANDA_PARSER_STDLIB_TEST
+#if defined(REDPANDA_PARSER_STDLIB_TEST) || defined(REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST)
 #include <QDir>
 #include <QProcess>
 #include <QTemporaryFile>
 #include "src/parser/cppparser.h"
 
-inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bitsStdcpp)
+inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bitsStdcpp,
+                                           ParserLanguage language = ParserLanguage::CPlusPlus)
 {
+    bool isC = language == ParserLanguage::C;
+    parser->setLanguage(language);
     QString root = QStringLiteral(REDPANDA_PARSER_STDLIB_MINGW_ROOT);
-    QString compiler = root + "/bin/g++.exe";
-    QTemporaryFile source(QDir::temp().filePath("redpanda-stdlib-XXXXXX.cpp"));
+    QString compiler = root + (isC ? "/bin/gcc.exe" : "/bin/g++.exe");
+    QTemporaryFile source(QDir::temp().filePath(
+                              isC ? "redpanda-stdlib-XXXXXX.c" : "redpanda-stdlib-XXXXXX.cpp"));
     if (!source.open()) {
         qWarning() << "Cannot create a temporary source for compiler defines";
         return false;
@@ -37,7 +41,7 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
 
     QString standard = qEnvironmentVariable("REDPANDA_PARSER_TEST_CXX_STANDARD");
     if (standard.isEmpty())
-        standard = "c++17";
+        standard = isC ? "c11" : "c++17";
 
     QProcess process;
     process.start(compiler, {"-std=" + standard, "-dM", "-E", source.fileName()});
@@ -52,7 +56,7 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
     for (const QString &define : defines)
         parser->addHardDefineByLine(define);
 
-    process.start(compiler, {"-xc++", "-E", "-v", source.fileName()});
+    process.start(compiler, {isC ? "-xc" : "-xc++", "-E", "-v", source.fileName()});
     if (!process.waitForStarted() || !process.waitForFinished(30000)
             || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
         qWarning() << "Cannot obtain compiler include paths:" << process.errorString()
@@ -77,6 +81,8 @@ inline bool configureStandardLibraryParser(const PCppParser &parser, QString &bi
             parser->addIncludePath(includePath);
         }
     }
+    if (isC)
+        return true;
     for (const QString &includePath : includePaths) {
         QString candidate = includePath + "/bits/stdc++.h";
         if (QFileInfo::exists(candidate)) {

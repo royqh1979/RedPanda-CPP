@@ -77,7 +77,7 @@ derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueR
 
 - Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
 - Array 保存维度文本，迁移期不要求值。
-- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/normalizedArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
+- Function 保存已经解析的 ParameterInfo 列表和声明解析时按模板形参位置生成的 `normalizedArgs`；StatementBuilder 根据结构化信息生成兼容用 `args` 并复制规范签名，避免函数定义后再用 `scanMethodArgs()` 或对签名重新 Tokenize。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
 - Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
 
 trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。
@@ -94,13 +94,13 @@ CppStatementBuilder 是两者之间唯一的创建层。Parser 每得到一个�
 
 转换不是一对一复制。例如 `int a, *p, f(double value), (*pf)(char);` 只产生一个 DeclarationInfo，但会创建 a、p、f、pf 四个 Statement，并为 f 的参数 value 另建 Parameter Statement。class/namespace 的 children 递归转换为 Statement 作用域树，枚举值也分别创建 Statement。Statement 额外记录 parentScope、fullName、声明与定义文件、跨边界祖先及各类 weak 索引关系。
 
-普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definition occurrence 并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 不生成新 Statement；若匹配的已有声明仍为 declaration-only，则移除该声明，已有定义及其它重载不受影响。没有有效源码位置的 hard define 不参与跳转。
+普通变量、typedef/using 别名、枚举值、参数和标签的声明位置同时就是定义位置，必须填写 definition occurrence 并设置 HasDefinition。extern 变量、无函数体函数以及类/枚举前置声明保持 declaration-only；有函数体或 `=default` 的函数具有 definition。`=delete` 声明保留为 declaration-only Statement，用于名称查找和展示，但不作为可用重载候选，也不提供 definition 跳转。没有有效源码位置的 hard define 不参与跳转。
 
 Label 和 Preprocessor 在表达式名称解析中使用各自独立的结果类别，只提供 Statement 供 goto 等声明导航，不伪装成变量、函数或类型，也不提供表达式类型。gotoDefinition 只接受 HasDefinition 且定义位置有效的 Statement，不得回退到 declaration。gotoDeclaration 优先使用当前文件中的 declaration，其次使用其它 declaration；没有 declaration 时才回退到 definition。
 
 创建层同时把 Statement 写入实际源码文件的 ParsedFileInfo。class、namespace 和函数只以 bodyRange 建立代码作用域，父节点按父 Statement 的身份关联；声明范围仍覆盖完整声明。不同 include 文件的位置和作用域分别写入各自的 ParsedFileInfo，不跨文件比较 SourcePosition。`struct S {} value;` 中类体只属于 S 的定义，不会被当作变量 value 的函数定义。
 
-internalParse 遍历预处理输出 token，遇到 `#define` 时将其单独转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
+internalParse 在声明分析前统一收集预处理输出中的 `#define`，再逐个转换为 Preprocessor Statement，记录名称、参数、值、实际文件、token 位置和跨边界祖先，使普通补全与 Macros 补全共享同一失效清理模型。宏是否登记不再取决于外层 namespace/class/function 的声明分发路径。Macro Statement 不是从 ParsedFileInfo::defines() 生成的；Define 只有名称、参数、值和文件等数据，没有行列位置，预处理输出 token 才是声明位置的来源。编译器 hard defines 由 parseHardDefines 转换为同类 Statement，没有源码文件或位置，也参与普通补全与 Macros 补全。函数或 Block 内的用户标签使用独立的 DeclarationKind::Label 和 StatementKind::Label；case/default 标签及三元表达式中的冒号不生成 Label Statement。
 
 声明说明符由独立的 DeclSpecifierInfo 记录。`static`、`extern`、`register`、`thread_local`、`mutable` 等存储类别使用 bit flags。Statement 持久保留必要的声明 flags，`type()` 在生成兼容文本时将其与 TypeInfo 组合；static 继续映射 StatementProperty::Static，extern 继续影响声明/定义判定，register 等即使不参与补全语义也不能在兼容输出中丢失。
 
@@ -324,7 +324,7 @@ CppParser 的正确性承诺以当前主文件为单位：每次解析后，当�
 
 self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时，当前 scope 从自身总耗时中扣除；出栈顺序必须匹配。不能用全局累计的嵌套耗时相减，否则不同调用链交叠时会产生无效负值。
 
-优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
+优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；`std::function` 专项可类似使用 `REDPANDA_STDLIB_FUNCTION_CASE` 并按表达式文本过滤；不设置时运行全部用例。
 
 GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1027 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 

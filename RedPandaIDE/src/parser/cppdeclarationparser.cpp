@@ -208,6 +208,42 @@ CppDeclarationParser::CppDeclarationParser(CppTokenCursor &cursor)
 {
 }
 
+void CppDeclarationParser::appendTemplateParameters(const QVector<TemplateParameterInfo> &parameters)
+{
+    for (const TemplateParameterInfo &parameter : parameters) {
+        QString prefix;
+        switch (parameter.kind) {
+        case TemplateParameterKind::Type:
+            prefix = "@T";
+            break;
+        case TemplateParameterKind::NonType:
+            prefix = "@N";
+            break;
+        case TemplateParameterKind::TemplateTemplate:
+            prefix = "@TT";
+            break;
+        }
+        mTemplateParameters.append({parameter.name, prefix + QString::number(mTemplateParameters.count())});
+    }
+}
+
+void CppDeclarationParser::restoreTemplateParameters(int checkpoint)
+{
+    Q_ASSERT(checkpoint >= 0 && checkpoint <= mTemplateParameters.count());
+    if (checkpoint < 0 || checkpoint > mTemplateParameters.count())
+        return;
+    mTemplateParameters.remove(checkpoint, mTemplateParameters.count() - checkpoint);
+}
+
+QString CppDeclarationParser::normalizedTemplateParameter(const QString &name) const
+{
+    for (int i = mTemplateParameters.count() - 1; i >= 0; --i) {
+        if (mTemplateParameters[i].original == name)
+            return mTemplateParameters[i].encoded;
+    }
+    return QString();
+}
+
 bool CppDeclarationParser::parseDeclaration(DeclarationInfo &result)
 {
     result = DeclarationInfo();
@@ -224,6 +260,13 @@ bool CppDeclarationParser::parseSimpleDeclaration(DeclarationInfo &result)
     ++declarationProfile.simpleCalls;
     qint64 templateTextTokensAtStart = declarationProfile.templateTextTokens;
 #endif
+    int checkpoint = templateParameterCheckpoint();
+    appendTemplateParameters(result.templateParameters);
+    struct TemplateParameterScope {
+        CppDeclarationParser *parser;
+        int checkpoint;
+        ~TemplateParameterScope() { parser->restoreTemplateParameters(checkpoint); }
+    } templateParameterScope{this, checkpoint};
     CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     if (isNonDeclarationStartKeyword(mCursor.currentText())) {
 #ifdef REDPANDA_PARSER_DECLARATION_PROFILE
@@ -674,7 +717,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
         }
     }
 
-    mCursor.consume("...");
+    result.parameterPack = mCursor.consume("...");
     if (mCursor.consume("(")) {
         if (!parseDeclarator(result)) {
             mCursor.restore(start);
@@ -686,12 +729,15 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
         }
     } else if (!mCursor.atEnd()) {
         if (mCursor.currentText() == "operator") {
+            result.namePosition = mCursor.current().position;
             result.name = parseOperatorName();
         } else if (mCursor.consume("~")) {
+            result.namePosition = mCursor.current().position;
             result.name = "~" + parseQualifiedNameText();
         } else if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier
                    || isBuiltinType(mCursor.currentText())) {
             CppTokenCursor::Checkpoint nameStart = mCursor.checkpoint();
+            result.namePosition = mCursor.current().position;
             QString qualified = parseQualifiedNameText();
             CppTokenCursor::Checkpoint nameEnd = mCursor.checkpoint();
             int last = -1;
@@ -739,66 +785,9 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
             continue;
         }
         if (mCursor.currentText() == "(") {
-            CppTokenCursor::Checkpoint suffixStart = mCursor.checkpoint();
-            TypeDerivation function = TypeDerivation::function();
-            mCursor.advance();
-            bool valid = true;
-            if (!mCursor.consume(")")) {
-                while (!mCursor.atEnd()) {
-                    if (mCursor.consume("...")) {
-                        function.functionProperties.setFlag(FunctionProperty::Variadic);
-                    } else {
-                        ParameterInfo parameter;
-                        if (!parseParameter(parameter)) {
-                            valid = false;
-                            break;
-                        }
-                        function.parameters.append(parameter);
-                    }
-                    if (mCursor.consume("=")) {
-                        CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-                        skipExpression({",", ")"}, nullptr);
-                        function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
-                    }
-                    if (mCursor.consume(")"))
-                        break;
-                    if (!mCursor.consume(",")) {
-                        valid = false;
-                        break;
-                    }
-                }
-            }
-            if (!valid) {
-                mCursor.restore(suffixStart);
+            TypeDerivation function;
+            if (!parseFunctionSuffix(function))
                 break;
-            }
-
-            while (!mCursor.atEnd()) {
-                if (mCursor.consume("const"))
-                    function.qualifiers.setFlag(TypeQualifier::Const);
-                else if (mCursor.consume("volatile"))
-                    function.qualifiers.setFlag(TypeQualifier::Volatile);
-                else if (mCursor.consume("&&"))
-                    function.refQualifier = ReferenceQualifier::Rvalue;
-                else if (mCursor.consume("&"))
-                    function.refQualifier = ReferenceQualifier::Lvalue;
-                else if (mCursor.consume("noexcept")) {
-                    readNoexcept(function.noexceptKind, function.noexceptExpression);
-                } else if (mCursor.consume("override")) {
-                    function.functionProperties.setFlag(FunctionProperty::Override);
-                } else if (mCursor.consume("final")) {
-                } else {
-                    break;
-                }
-            }
-            if (mCursor.consume("->"))
-                applyTrailingReturn(function);
-            if (mCursor.consume("requires")) {
-                CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
-                skipRequiresClause();
-                if (mCppVersion >= CppVersion::Cpp20)
-                    function.requiresClause = readConsumedText(requiresStart);
-            }
             result.derivations.append(function);
             continue;
         }
@@ -818,10 +807,93 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
     return true;
 }
 
+bool CppDeclarationParser::parseFunctionSuffix(TypeDerivation &function)
+{
+    CppTokenCursor::Checkpoint suffixStart = mCursor.checkpoint();
+    function = TypeDerivation::function();
+    mCursor.advance();
+    bool valid = true;
+    if (!mCursor.consume(")")) {
+        while (!mCursor.atEnd()) {
+            if (mCursor.consume("...")) {
+                function.functionProperties.setFlag(FunctionProperty::Variadic);
+            } else {
+                ParameterInfo parameter;
+                if (!parseParameter(parameter)) {
+                    valid = false;
+                    break;
+                }
+                function.parameters.append(parameter);
+            }
+            if (mCursor.consume("=")) {
+                CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
+                skipExpression({",", ")"}, nullptr);
+                function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
+            }
+            if (mCursor.consume(")"))
+                break;
+            if (!mCursor.consume(",")) {
+                valid = false;
+                break;
+            }
+        }
+    }
+    if (!valid) {
+        mCursor.restore(suffixStart);
+        return false;
+    }
+
+    while (!mCursor.atEnd()) {
+        if (mCursor.consume("const"))
+            function.qualifiers.setFlag(TypeQualifier::Const);
+        else if (mCursor.consume("volatile"))
+            function.qualifiers.setFlag(TypeQualifier::Volatile);
+        else if (mCursor.consume("&&"))
+            function.refQualifier = ReferenceQualifier::Rvalue;
+        else if (mCursor.consume("&"))
+            function.refQualifier = ReferenceQualifier::Lvalue;
+        else if (mCursor.consume("noexcept")) {
+            readNoexcept(function.noexceptKind, function.noexceptExpression);
+        } else if (mCursor.consume("override")) {
+            function.functionProperties.setFlag(FunctionProperty::Override);
+        } else if (mCursor.consume("final")) {
+        } else {
+            break;
+        }
+    }
+    if (mCursor.consume("->"))
+        applyTrailingReturn(function);
+    if (mCursor.consume("requires")) {
+        CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
+        skipRequiresClause();
+        if (mCppVersion >= CppVersion::Cpp20)
+            function.requiresClause = readConsumedText(requiresStart);
+    }
+    QStringList parameters;
+    for (ParameterInfo &parameter : function.parameters) {
+        parameters.append(parameter.normalizationChanged
+                          ? parameter.normalizedText : parameter.toString(false));
+        parameter.normalizedText.clear();
+    }
+    if (function.functionProperties.testFlag(FunctionProperty::Variadic))
+        parameters.append("...");
+    function.normalizedArgs = "(" + parameters.join(",") + ")";
+    if (function.qualifiers.testFlag(TypeQualifier::Const))
+        function.normalizedArgs += " const";
+    if (function.qualifiers.testFlag(TypeQualifier::Volatile))
+        function.normalizedArgs += " volatile";
+    if (function.refQualifier == ReferenceQualifier::Lvalue)
+        function.normalizedArgs += " &";
+    else if (function.refQualifier == ReferenceQualifier::Rvalue)
+        function.normalizedArgs += " &&";
+    return true;
+}
+
 bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 {
     DeclarationProfileScope profileScope(declarationProfile.parameterMs,
                                          declarationProfile.parameterSelfNs);
+    CppTokenCursor::Checkpoint start = mCursor.checkpoint();
     SourcePosition position = mCursor.current().position;
     DeclSpecifierInfo specifiers;
     if (!parseDeclSpecifierSeq(specifiers))
@@ -830,9 +902,12 @@ bool CppDeclarationParser::parseParameter(ParameterInfo &result)
     if (!parseDeclarator(declarator))
         return false;
     result = ParameterInfo();
+    result.normalizedText = normalizeParameterText(start, mCursor.checkpoint(), declarator.namePosition,
+                                                   result.normalizationChanged);
     result.type = std::make_shared<TypeInfo>(specifiers.type);
     appendTypeDerivation(*result.type, declarator);
     result.name = declarator.name;
+    result.parameterPack = declarator.parameterPack;
     result.position = position;
     return true;
 }
@@ -924,6 +999,14 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
         CppDeclarationParser parser(cursor);
         DeclSpecifierInfo specifiers;
         if (parser.parseDeclSpecifierSeq(specifiers)) {
+            if (cursor.currentText() == "(") {
+                TypeDerivation function;
+                if (parser.parseFunctionSuffix(function) && cursor.atEnd()) {
+                    specifiers.type.derivations.append(function);
+                    result.templateArguments.append(TemplateArgument::fromType(specifiers.type));
+                    return;
+                }
+            }
             DeclaratorInfo declarator;
             if (parser.parseDeclarator(declarator) && cursor.atEnd()) {
                 TypeInfo type = specifiers.type;
@@ -988,6 +1071,23 @@ QString CppDeclarationParser::parseOperatorName()
     else {
         appendToken(result, mCursor.currentText());
         mCursor.advance();
+        if ((result == "operator new" || result == "operator delete")
+                && mCursor.currentText() == "[") {
+            result += readBalancedToken("[", "]");
+        }
+        if (result == "operator new" || result == "operator delete")
+            return result;
+        while (!mCursor.atEnd()) {
+            if (mCursor.current().kind != CppTokenizer::TokenKind::Identifier
+                    && mCursor.currentText() != "::" && mCursor.currentText() != "*"
+                    && mCursor.currentText() != "&" && mCursor.currentText() != "&&") {
+                break;
+            }
+            appendToken(result, mCursor.currentText());
+            mCursor.advance();
+            if (mCursor.currentText() == "<")
+                result += readBalancedToken("<", ">", true, true);
+        }
     }
     return result;
 }
@@ -1032,6 +1132,70 @@ QString CppDeclarationParser::parseQualifiedNameText()
         else
             break;
     }
+    return result;
+}
+
+QString CppDeclarationParser::normalizeParameterText(const CppTokenCursor::Checkpoint &start,
+                                                      const CppTokenCursor::Checkpoint &end,
+                                                      const SourcePosition &namePosition,
+                                                      bool &changed)
+{
+    changed = false;
+    QString result;
+    auto isMemberAccess = [](const QString &text) {
+        return text == "." || text == "->" || text == "::";
+    };
+    mCursor.restore(start);
+    bool first = true;
+    while (mCursor.index() < end.index
+           || (mCursor.index() == end.index && mCursor.greaterConsumed() < end.greaterConsumed)) {
+        if (mCursor.current().position == namePosition) {
+            mCursor.advance();
+            first = false;
+            continue;
+        }
+        QString text = mCursor.currentText();
+        if (text == ">" || text == ">>") {
+            appendToken(result, ">");
+            mCursor.consumeGreater();
+            first = false;
+            continue;
+        }
+        if (mCursor.current().kind == CppTokenizer::TokenKind::Identifier) {
+            QString encoded = normalizedTemplateParameter(text);
+            if (!encoded.isEmpty()) {
+                bool preserve = false;
+                bool uncertain = false;
+                if (!first) {
+                    QString previous = mCursor.peek(-1).text;
+                    preserve = isMemberAccess(previous) || previous == "~";
+                    uncertain = previous == "operator";
+                    if (previous == "template") {
+                        QString previousPrevious = mCursor.peek(-2).text;
+                        if (isMemberAccess(previousPrevious) || previousPrevious == "~")
+                            preserve = true;
+                        else
+                            uncertain = true;
+                    }
+                    if (uncertain) {
+                        qWarning().noquote() << QString(
+                                "Cannot normalize template parameter '%1' in %2 at %3:%4 (previous token '%5')")
+                                .arg(text, mCursor.current().fileName)
+                                .arg(mCursor.current().position.line).arg(mCursor.current().position.ch)
+                                .arg(previous);
+                    }
+                }
+                if (!uncertain && !preserve) {
+                    text = encoded;
+                    changed = true;
+                }
+            }
+        }
+        appendToken(result, text);
+        mCursor.advance();
+        first = false;
+    }
+    mCursor.restore(end);
     return result;
 }
 
@@ -1531,7 +1695,7 @@ bool CppDeclarationParser::isBuiltinType(const QString &text) const
     static const QSet<QString> types{
         "auto", "void", "bool", "char", "wchar_t", "char8_t", "char16_t",
         "char32_t", "short", "int", "long", "signed", "unsigned", "float",
-        "double"
+        "double", "_Complex"
     };
     return types.contains(text);
 }

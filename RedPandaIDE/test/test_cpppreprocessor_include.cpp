@@ -388,12 +388,15 @@ void TestCppPreprocessorInclude::test_include_next()
     CppPreprocessor::Session pSession;
     p.addIncludePath(dir + "/dirA");
     p.addIncludePath(dir + "/dirB");
-    QCOMPARE(runScenario(p, pSession, dir, "main.cpp"), QStringList({
+    const QStringList actual = runScenario(p, pSession, dir, "main.cpp");
+    QCOMPARE(actual, QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "#include <DIR>/dirA/x.h:-1",
+                 "",
                  "#include <DIR>/dirB/x.h:-1",
                  "int x_b;",
-                 "#include <DIR>/dirA/x.h:0",
+                 "#include <DIR>/dirA/x.h:1",
+                 "",
                  "int x_a;",
                  "#include <DIR>/main.cpp:0",
                  "int after;"}));

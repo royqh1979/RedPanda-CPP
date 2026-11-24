@@ -224,6 +224,10 @@ public:
     MemberEvalResult invokeMember(const ClassInstance &receiver, const QString &memberName,
                                   const QVector<TypeInfo> &arguments = {},
                                   EvaluationContext *evaluation = nullptr) const;
+    MemberEvalResult invokeMember(const ClassInstance &receiver, const QString &memberName,
+                                  const QVector<TypeInfo> &arguments,
+                                  const QVector<TemplateArgument> &explicitArguments,
+                                  EvaluationContext *evaluation) const;
     ConstraintSatisfaction evaluateNoexceptExpression(
             const QString &expression, const PStatement &context = {},
             const PTemplateBindingFrame &bindings = {}, EvaluationContext *evaluation = nullptr) const;
@@ -284,9 +288,10 @@ private:
             int *matchScore, bool allowPartialArguments) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
-                                             EvaluationContext &evaluation) const;
+                                             EvaluationContext &evaluation, bool forInvocation) const;
     MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
                                    bool call, const QVector<TypeInfo> &arguments,
+                                   const QVector<TemplateArgument> &explicitArguments,
                                    EvaluationContext &evaluation) const;
     bool compatibleArgument(const TypeInfo &parameter, const TypeInfo &argument,
                             const PTemplateBindingFrame &bindings, const PStatement &context,
@@ -361,13 +366,16 @@ private:
                                             const QVector<TemplateArgument> &arguments,
                                             const PStatement &context,
                                             TemplateBindings &bindings,
+                                            QHash<QString, QVector<TemplateArgument>> &packs,
                                             EvaluationContext &evaluation) const;
     SpecializationMatch matchType(const TypeInfo &pattern, const TypeInfo &actual,
                                   const QSet<QString> &parameters, TemplateBindings &bindings,
+                                  QHash<QString, QVector<TemplateArgument>> &packs,
                                   const PStatement &context, EvaluationContext &evaluation) const;
     SpecializationMatch matchArgument(const TemplateArgument &pattern,
                                       const TemplateArgument &actual,
                                       const QSet<QString> &parameters, TemplateBindings &bindings,
+                                      QHash<QString, QVector<TemplateArgument>> &packs,
                                       const PStatement &context, EvaluationContext &evaluation) const;
     TypeInfo expandTypePattern(const TypeInfo &type, const PStatement &context,
                                QSet<const AbstractStatement *> &visited,
@@ -379,6 +387,8 @@ private:
                                 EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,
                                 QSet<QString> &visited, EvaluationContext &evaluation) const;
+    MemberResolution findMemberForInvocation(const ClassInstance &instance, const QString &name,
+                                             EvaluationContext &evaluation) const;
     void applyReference(TypeInfo &target, const TypeInfo &reference) const;
     PStatement findDeclaration(const QString &qualifiedName, const PStatement &context,
                                bool typesOnly = false) const;

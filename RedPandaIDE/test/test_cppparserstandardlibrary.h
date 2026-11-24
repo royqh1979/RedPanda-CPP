@@ -11,6 +11,8 @@ private slots:
     void init() { init_parser(); }
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_abort_alias();
+    void test_standard_library_function_eval_data();
+    void test_standard_library_function_eval();
     void test_standard_library_string();
     void test_standard_library_header_context();
     void test_standard_library_nested_include_guard_visibility();
@@ -25,6 +27,13 @@ private slots:
     void test_standard_library_container_eval_profile();
     void test_standard_library_algorithm_eval_profile();
     void test_standard_library_nothrow_invocable();
+    void test_standard_library_type_traits_builtins();
+    void test_standard_library_atomic_macros();
+    void test_standard_library_c_headers();
+    void test_standard_library_filesystem();
+    void test_standard_library_conversion_declarations();
+    void test_standard_library_execution();
+    void test_standard_library_inherited_members();
     void test_standard_library_libcxx_hash_requirements();
     void test_standard_library_libcxx_copy_constructible();
     void test_standard_library_libcxx_invocable();
