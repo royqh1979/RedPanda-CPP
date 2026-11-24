@@ -1,4 +1,5 @@
 #include <QTest>
+#include <atomic>
 #include <QSemaphore>
 #include <QTemporaryDir>
 #include <qt_utils/utils.h>
@@ -7,7 +8,7 @@
 
 void TestCppParser::test_parse_var()
 {
-    mParser->setOnGetFileStream([](const QString& filename, QStringList& buffer){
+    mParser->setOnGetFileStream([](const QString& filename, QStringList& buffer, int &){
         buffer=QStringList({
                                "int xxx=10;"
                            });
@@ -24,7 +25,7 @@ void TestCppParser::test_parse_var()
 
 void TestCppParser::test_global_variable_reference_scope()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "int ttt;",
             "",
@@ -155,7 +156,7 @@ void TestCppParser::test_include_inline_function_call()
 
 void TestCppParser::test_local_extern_variable_uses_external_statement()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int external;", "void f(){extern int external; external=1;}"};
         return true;
     });
@@ -173,7 +174,7 @@ void TestCppParser::test_local_extern_variable_uses_external_statement()
 
 void TestCppParser::test_static_extern_variable_definitions()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "int global=1;",
             "static int internal=2;",
@@ -234,7 +235,7 @@ void TestCppParser::test_static_extern_variable_definitions()
 
 void TestCppParser::test_static_extern_function_definitions()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "void global() {}",
             "static void internal() {}",
@@ -277,7 +278,7 @@ void TestCppParser::test_static_extern_function_definitions()
 
 void TestCppParser::test_extern_variable_declaration_definition_order()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "extern int first;",
             "int first=1;",
@@ -309,7 +310,7 @@ void TestCppParser::test_extern_variable_declaration_definition_order()
 
 void TestCppParser::test_extern_function_declaration_definition_order()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "extern void first();",
             "void first() {}",
@@ -334,7 +335,7 @@ void TestCppParser::test_extern_function_declaration_definition_order()
 
 void TestCppParser::test_unresolved_member_function_reference()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<class T> using Result = typename T::type;",
             "struct C {",
@@ -359,7 +360,7 @@ void TestCppParser::test_unresolved_member_function_reference()
 
 void TestCppParser::test_nested_template_member_definition()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename T> struct C {",
             "    template<typename U> C<T>& f(U);",
@@ -385,7 +386,7 @@ void TestCppParser::test_nested_template_member_definition()
 
 void TestCppParser::test_extern_template_class_declaration()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename T> struct C {};",
             "extern template class C<int>;",
@@ -408,7 +409,7 @@ void TestCppParser::test_extern_template_class_declaration()
 
 void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "class C;",
             "class C {",
@@ -446,7 +447,7 @@ void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
 
 void TestCppParser::test_base_member_return_uses_declaration_bindings()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<class K, class V> struct Pair { using type = V; };",
             "template<class K, class V> struct Base {",
@@ -477,7 +478,7 @@ void TestCppParser::test_base_member_return_uses_declaration_bindings()
 
 void TestCppParser::test_derived_member_hides_base_overloads()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Base { int value(int); long value(double); };",
             "struct Derived : Base { short value(int); };",
@@ -499,7 +500,7 @@ void TestCppParser::test_derived_member_hides_base_overloads()
 
 void TestCppParser::test_member_overload_resolution()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Implicit { Implicit(const char *); };",
             "struct Explicit { explicit Explicit(const char *); };",
@@ -549,7 +550,7 @@ void TestCppParser::test_member_overload_resolution()
 
 void TestCppParser::test_conversion_overload_resolution()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Implicit { Implicit(int); };",
             "struct Explicit { explicit Explicit(int); };",
@@ -602,7 +603,7 @@ void TestCppParser::test_conversion_overload_resolution()
 
 void TestCppParser::test_trailing_return_member_template()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Tree { template<typename T> int _M_find_tr(const T&); };",
             "struct Map {",
@@ -628,7 +629,7 @@ void TestCppParser::test_trailing_return_member_template()
 
 void TestCppParser::test_find_statement_of_overload_resolution()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "void f(int);",
             "void f(double);",
@@ -659,7 +660,7 @@ void TestCppParser::test_find_statement_of_overload_resolution()
 
 void TestCppParser::test_find_statement_of_template_specialization()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<class T> struct Foo {int primary;};",
             "template<class T> struct Foo<T*> {int partial;};",
@@ -693,7 +694,7 @@ void TestCppParser::test_find_statement_of_template_specialization()
 
 void TestCppParser::test_expression_identifier_trace()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Object { int value; int get(); };",
             "Object object;",
@@ -1055,7 +1056,7 @@ void TestCppParser::test_struct()
 
 void TestCppParser::test_resolve_members_of_class_access_scope()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "class Base {",
             "public: int publicValue;",
@@ -1097,7 +1098,7 @@ void TestCppParser::test_resolve_members_of_class_access_scope()
 
 void TestCppParser::test_deleted_function_statements()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct atomic_flag {",
             "    atomic_flag() noexcept = default;",
@@ -1125,7 +1126,7 @@ void TestCppParser::test_deleted_function_statements()
 
 void TestCppParser::test_preprocessor_statements()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename T> inline T killDependency(T value) { T result(value); return result; }",
             "#define OBJECT_MACRO 7",
@@ -1168,7 +1169,7 @@ void TestCppParser::test_preprocessor_statements()
 
 void TestCppParser::test_scoped_preprocessor_statements()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace N {",
             "#define NAMESPACE_MACRO 1",
@@ -1195,7 +1196,7 @@ void TestCppParser::test_scoped_preprocessor_statements()
 void TestCppParser::test_preprocessor_condition_with_unknown_special_macros()
 {
     mParser->addHardDefineByLine("#define __clang__ 1");
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "#if !defined(offsetof) || \\",
             "    (__has_feature(modules) && !__building_module(_Builtin_stddef))",
@@ -1215,7 +1216,7 @@ void TestCppParser::test_preprocessor_condition_with_unknown_special_macros()
 
 void TestCppParser::test_label_statements()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "void f() { retry: ; }",
             "void g() { bool flag = true; flag ? retry : retry; "
@@ -1259,7 +1260,7 @@ void TestCppParser::test_hard_define_statements()
 
 void TestCppParser::test_predefined_func_variable()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "void alpha() {}",
             "struct C { void beta() {} };",
@@ -1312,7 +1313,7 @@ void TestCppParser::test_structured_bindings()
 
 void TestCppParser::test_find_statement_of_inline_namespace()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace std {",
             "  inline namespace __cxx11 {",
@@ -1368,7 +1369,7 @@ void TestCppParser::test_find_statement_of_inline_namespace()
 
 void TestCppParser::test_nested_namespace_scope_parentage()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace A {",
             "namespace B {",
@@ -1401,7 +1402,7 @@ void TestCppParser::test_nested_namespace_scope_parentage()
 
 void TestCppParser::test_variable_template_specialization_name()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace Detail { struct Identity {}; }",
             "template<typename A, typename B> struct is_same;",
@@ -1434,7 +1435,7 @@ void TestCppParser::test_variable_template_specialization_name()
 
 void TestCppParser::test_member_alias_template_specialization()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace std {",
             "    template<bool> struct __conditional {",
@@ -1460,7 +1461,7 @@ void TestCppParser::test_member_alias_template_specialization()
 
 void TestCppParser::test_unknown_non_type_default_preserves_alias_resolution()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename...> struct And {};",
             "template<bool> struct BoolConstant {};",
@@ -1482,7 +1483,7 @@ void TestCppParser::test_unknown_non_type_default_preserves_alias_resolution()
 
 void TestCppParser::test_using_declaration_function_overload_set()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Result {};",
             "namespace std { template<typename T> Result remove(T, T); }",
@@ -1502,7 +1503,7 @@ void TestCppParser::test_using_declaration_function_overload_set()
 
 void TestCppParser::test_overload_rejects_unrelated_class_specialization()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace std {",
             "    template<typename T> struct iterator {};",
@@ -1534,7 +1535,7 @@ void TestCppParser::test_overload_rejects_unrelated_class_specialization()
 
 void TestCppParser::test_empty_template_argument_list()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename...> using __void_t = void;"
         };
@@ -1552,7 +1553,7 @@ void TestCppParser::test_empty_template_argument_list()
 
 void TestCppParser::test_const_template_parameter_substitution()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename T> struct Pair {};",
             "template<typename T> struct Map { using value_type = Pair<const T>; };"
@@ -1575,7 +1576,7 @@ void TestCppParser::test_const_template_parameter_substitution()
 
 void TestCppParser::test_auto_reference_collapsing()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct Value {};",
             "Value &get();",
@@ -1597,7 +1598,7 @@ void TestCppParser::test_auto_reference_collapsing()
 
 void TestCppParser::test_void_t_detection_failure()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "template<typename...> using __void_t = void;",
             "template<typename T, typename = __void_t<>> struct Traits { };",
@@ -1626,7 +1627,7 @@ void TestCppParser::test_standard_type_traits_require_cpp11()
         init_parser();
         const QString fileName = QString("text-%1.cpp").arg(cppVersion);
         mParser->addHardDefineByLine(QString("#define __cplusplus %1L").arg(cppVersion));
-        mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+        mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
             buffer = QStringList{
                 "namespace std { template<typename T> struct add_lvalue_reference {}; }",
                 "struct Value {};"
@@ -1790,7 +1791,7 @@ void TestCppParser::test_statement_declaration_navigation_selection()
 
 void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"void f() {", "  { int value; }", "  { int value; }", "}"};
         return true;
     });
@@ -1813,7 +1814,7 @@ void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()
 
 void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"namespace std { int value; }",
                              "namespace std { inline namespace __cxx11 { int inlineValue; } }"};
         return true;
@@ -1831,7 +1832,7 @@ void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
 
 void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"namespace outer { namespace regular { } }",
                              "namespace outer::regular { inline namespace abi { int value; } }",
                              "namespace outer::regular { int reopened; }"};
@@ -1852,7 +1853,7 @@ void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
 
 void TestCppParser::test_reopened_namespaces_share_unique_entity()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace A::B { int first; }",
             "namespace A { namespace B { int second; } }",
@@ -1889,7 +1890,7 @@ void TestCppParser::test_reopened_namespaces_share_unique_entity()
 
 void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
 {
-    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer, int &) {
         if (fileName == "a.cpp")
             buffer = QStringList{"namespace N::Deep { int fromA; }"};
         else if (fileName == "b.cpp")
@@ -1930,7 +1931,7 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
 
 void TestCppParser::test_anonymous_namespaces_remain_distinct()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace { int first; }",
             "namespace { int second; }"
@@ -1951,7 +1952,7 @@ void TestCppParser::test_anonymous_namespaces_remain_distinct()
 
 void TestCppParser::test_inline_namespace_occurrence_invalidation()
 {
-    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &fileName, QStringList &buffer, int &) {
         if (fileName == "plain.cpp")
             buffer = QStringList{"namespace N { namespace V { int plain; } }"};
         else if (fileName == "inline.cpp")
@@ -1988,7 +1989,7 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
 
 void TestCppParser::test_inline_namespace_overloads()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace N { inline namespace V {",
             "  void f(int);",
@@ -2031,7 +2032,7 @@ void TestCppParser::test_stop_parsing_clears_results_before_finish()
     auto entered = std::make_shared<QSemaphore>();
     auto release = std::make_shared<QSemaphore>();
     auto blockFirstRead = std::make_shared<std::atomic_bool>(true);
-    mParser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([=](const QString &, QStringList &buffer, int &) {
         if (blockFirstRead->exchange(false)) {
             entered->release();
             release->acquire();
@@ -2067,7 +2068,7 @@ void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
         auto entered = std::make_shared<QSemaphore>();
         auto release = std::make_shared<QSemaphore>();
         auto blockFirstRead = std::make_shared<std::atomic_bool>(true);
-        mParser->setOnGetFileStream([=](const QString &, QStringList &buffer) {
+        mParser->setOnGetFileStream([=](const QString &, QStringList &buffer, int &) {
             if (blockFirstRead->exchange(false)) {
                 entered->release();
                 release->acquire();
@@ -2104,7 +2105,7 @@ void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
 
 void TestCppParser::test_normal_destructor_releases_resources()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value;"};
         return true;
     });
@@ -2122,7 +2123,7 @@ void TestCppParser::test_normal_destructor_releases_resources()
 
 void TestCppParser::test_application_exit_destructor_abandons_resources()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value;"};
         return true;
     });
@@ -2140,4 +2141,133 @@ void TestCppParser::test_application_exit_destructor_abandons_resources()
     QVERIFY(hasFileInfo);
     QVERIFY(!statement.expired());
     QVERIFY(!fileInfo.expired());
+}
+
+
+void TestCppParser::test_nonforce_parse_checks_root_and_changes()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"int first;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    PStatement first = mParser->findStatement("first");
+    QVERIFY(first);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
+
+    CppParser::parseFileBlocking(mParser, main, false, "", true);
+    QCOMPARE(mParser->findStatement("first"), first);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 2);
+
+    QVERIFY(writeLines(main, {"int second;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "", true);
+    QVERIFY(mParser->findStatement("second"));
+    QVERIFY(!mParser->findStatement("first"));
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 3);
+}
+
+void TestCppParser::test_context_file_info_controls_header_coverage()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QString header = tmp.filePath("header.h");
+    QVERIFY(writeLines(header, {"int header_value;"}));
+    QVERIFY(mParser->isFileParsedInContext(header, main));
+
+    QVERIFY(writeLines(main, {"int context_value;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(!mParser->isFileParsedInContext(header, main));
+
+    QVERIFY(writeLines(main, {"#include \"header.h\"", "int context_value;"}));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->isFileParsedInContext(header, main));
+}
+
+void TestCppParser::test_queued_nonforce_parse_skips_completed_root()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"int value;"}));
+    auto entered = std::make_shared<QSemaphore>();
+    auto release = std::make_shared<QSemaphore>();
+    auto readCount = std::make_shared<std::atomic_int>(0);
+    mParser->setOnGetFileStream([=](const QString &, QStringList &, int &) {
+        if (readCount->fetch_add(1) == 0) {
+            entered->release();
+            release->acquire();
+        }
+        return false;
+    });
+
+    CppParser::parseFileNonBlocking(mParser, main, false, "");
+    QVERIFY(entered->tryAcquire(1, 5000));
+    CppParser::parseFileNonBlocking(mParser, main, false, "", true);
+    release->release();
+    QTRY_VERIFY(!mParser->parsing());
+    QCOMPARE(readCount->load(), 1);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
+    QVERIFY(mParser->findStatement("value"));
+}
+
+
+void TestCppParser::test_nonforce_project_parse_checks_all_files()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QString header = tmp.filePath("header.h");
+    QVERIFY(writeLines(main, {"#include \"header.h\"", "int main_value;"}));
+    QVERIFY(writeLines(header, {"int before;"}));
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement before = mParser->findStatement("before");
+    QVERIFY(before);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
+
+    CppParser::parseFileBlocking(mParser, main, true, "", true);
+    QCOMPARE(mParser->findStatement("before"), before);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
+
+    QVERIFY(writeLines(header, {"int after;"}));
+    CppParser::parseFileBlocking(mParser, main, true, "", true);
+    QVERIFY(mParser->findStatement("after"));
+    QVERIFY(!mParser->findStatement("before"));
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 2);
+}
+
+
+void TestCppParser::test_nonforce_parse_uses_content_versions()
+{
+    auto content = std::make_shared<QStringList>(QStringList{"int first;"});
+    auto version = std::make_shared<int>(1);
+    mParser->setOnGetFileStream([content, version](const QString &, QStringList &buffer,
+                                int &streamVersion) {
+        buffer = *content;
+        streamVersion = *version;
+        return true;
+    });
+    mParser->setOnGetFileVersion([version](const QString &) {
+        return *version;
+    });
+    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "");
+    PStatement first = mParser->findStatement("first");
+    QVERIFY(first);
+    QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 1);
+
+    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "", true);
+    QCOMPARE(mParser->findStatement("first"), first);
+    QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 1);
+
+    *content = QStringList{"int second;"};
+    ++*version;
+    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "", true);
+    QVERIFY(mParser->findStatement("second"));
+    QVERIFY(!mParser->findStatement("first"));
+    QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 2);
 }

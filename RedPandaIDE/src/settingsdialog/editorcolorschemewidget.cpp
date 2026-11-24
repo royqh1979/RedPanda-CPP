@@ -84,10 +84,11 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
     PCppParser parser = std::make_shared<CppParser>();
     parser->setSharedByFiles(false);
     parser->setLanguage(ui->editDemo->calcParserLanguage());
-    parser->setOnGetFileStream([this](const QString& filename, QStringList& buffer){
+    parser->setOnGetFileStream([this](const QString& filename, QStringList& buffer, int &version){
         if (filename != ui->editDemo->filename())
             return false;
         buffer = ui->editDemo->content();
+        version = ui->editDemo->document()->contentVersion();
         return true;
     });
     parser->setEnabled(true);

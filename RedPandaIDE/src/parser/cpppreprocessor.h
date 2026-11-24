@@ -150,10 +150,6 @@ public:
         return mRegistry.fileInfos.value(fileName);
     }
 
-    PReplayRecord findReplayRecord(const QString &fileName) const {
-        return mRegistry.replayRecords.value(fileName);
-    }
-
     void removeFileInfo(const QString& fileName) {
         mRegistry.fileInfos.remove(fileName);
     }
@@ -186,12 +182,16 @@ public:
 
     const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
     void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
+    void setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion) { mOnGetFileVersion = newOnGetFileVersion; }
     void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
     void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
     void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
     QString boundaryAncestor(const Session &session, const QString &fileName, int occurrence) const;
 
 #ifdef REDPANDA_PARSER_TEST
+    PReplayRecord replayRecordForTest(const QString &fileName) const {
+        return findReplayRecord(fileName);
+    }
     struct EventCounts {
         int scan = 0;
         int replay = 0;
@@ -208,6 +208,7 @@ public:
     bool evaluateIf(const QString& line) const;
 
 private:
+    friend class CppParser;
 
     bool supportCPP23() const;
     bool stopRequested() const {
@@ -287,6 +288,7 @@ private:
     QHash<QString,QString> userMacroSnapshot(const Session &session) const;
     bool hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const;
     bool isIncludeProtected(const QString &fileName) const;
+    PReplayRecord findReplayRecord(const QString &fileName) const;
     PReplayRecord replayRecordForFile(const Session &session, const QString &fileName) const;
 
 
@@ -350,6 +352,7 @@ private:
     int mMaxIncludeNestingDepth = DEFAULT_MAX_INCLUDE_NESTING_DEPTH;
 
     GetFileStreamFunc mOnGetFileStream;
+    GetFileVersionFunc mOnGetFileVersion;
     FileInvalidationHandler mFileInvalidationHandler;
     StopRequestedHandler mStopRequestedHandler;
 

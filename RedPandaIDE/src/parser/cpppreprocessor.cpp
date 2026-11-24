@@ -508,7 +508,15 @@ bool CppPreprocessor::hasChangedFiles(const QString &fileName, const QSet<QStrin
     files.insert(fileName);
     for (const QString &fileName : files) {
         PParsedFileInfo fileInfo = findFileInfo(fileName);
-        if (!fileInfo || fileInfo->fileSize() < 0)
+        if (!fileInfo)
+            continue;
+        int currentVersion = mOnGetFileVersion ? mOnGetFileVersion(fileName) : 0;
+        if (currentVersion > 0 && fileInfo->contentVersion() > 0) {
+            if (currentVersion != fileInfo->contentVersion())
+                return true;
+            continue;
+        }
+        if (fileInfo->fileSize() < 0)
             continue;
         QFileInfo diskInfo(fileName);
         if (!diskInfo.exists() || diskInfo.lastModified() != fileInfo->lastModified()
@@ -516,6 +524,11 @@ bool CppPreprocessor::hasChangedFiles(const QString &fileName, const QSet<QStrin
             return true;
     }
     return false;
+}
+
+PReplayRecord CppPreprocessor::findReplayRecord(const QString &fileName) const
+{
+    return mRegistry.replayRecords.value(fileName);
 }
 
 bool CppPreprocessor::isIncludeProtected(const QString &fileName) const
@@ -1275,14 +1288,17 @@ void CppPreprocessor::openInclude(Session &session, QString fileName)
         parsedFile->buffer = session.fileCache.value(fileName);
     } else if (scanContent) {
         QStringList bufferedText;
-        if (mOnGetFileStream && mOnGetFileStream(fileName, bufferedText))
+        int contentVersion = 0;
+        if (mOnGetFileStream && mOnGetFileStream(fileName, bufferedText, contentVersion)) {
             parsedFile->buffer = bufferedText;
-        else {
+            fileInfo->setContentVersion(contentVersion);
+        } else {
             PreprocessorProfileScope readScope(preprocessorProfile.readFileNs,
                                                preprocessorProfile.readFileCalls);
             parsedFile->buffer = readFileToLines(fileName);
             QFileInfo diskInfo(fileName);
             fileInfo->setFileMetadata(diskInfo.lastModified(), diskInfo.size());
+            fileInfo->setContentVersion(0);
         }
         combineLinesEndingWithBackslash(parsedFile->buffer);
         replaceCommentsBySpaceChar(parsedFile->buffer);

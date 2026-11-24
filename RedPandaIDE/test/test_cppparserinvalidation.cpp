@@ -299,7 +299,7 @@ void TestCppParserInvalidation::test_static_function_definition_invalidation_doe
 
 void TestCppParserInvalidation::test_last_variable_occurrence_invalidation_removes_statement()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value;"};
         return true;
     });

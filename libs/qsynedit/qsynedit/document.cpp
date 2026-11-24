@@ -52,6 +52,7 @@ Document::Document(QObject *parent):
     ensureHasLine();
     // a fresh document is born self-consistent: states are never null
     reparseAll();
+    mContentVersion.store(1);
 }
 
 PUndoList Document::undoList() const

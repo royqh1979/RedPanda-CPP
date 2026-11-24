@@ -115,8 +115,9 @@ ProjectOptions &Project::options()
     return options;
 }
 
-bool EditorManager::getContentFromOpenedEditor(const QString &, QStringList &) const
+bool EditorManager::getContentFromOpenedEditor(const QString &, QStringList &, int &version) const
 {
+    version = 0;
     return false;
 }
 
@@ -266,7 +267,7 @@ void TestWidgets::init()
         "switch (flag) { case true: break; default: break; } }"
     };
     mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
     });
@@ -356,7 +357,7 @@ void TestWidgets::test_code_completion_inline_namespaces()
         "}"
     };
     mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
     });
@@ -529,7 +530,7 @@ void TestWidgets::test_class_browser_standard_library_header_context()
     PParsedFileInfo fileInfo = mParser->findFileInfo(basicStringTcc);
     QVERIFY(fileInfo);
     QVERIFY(!fileInfo->statements().isEmpty());
-    QVERIFY(!mParser->findReplayRecord(basicStringTcc));
+    QVERIFY(!mParser->hasReplayRecord(basicStringTcc));
     ClassBrowserModel model;
     model.setParser(mParser);
     model.setCurrentFile(basicStringTcc);
@@ -777,7 +778,7 @@ void TestWidgets::test_code_completion_operator_overloads_are_excluded()
 
 void TestWidgets::test_class_browser_reopened_namespace_single_node()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace N { int first; }",
             "namespace N { int second; }"
@@ -801,7 +802,7 @@ void TestWidgets::test_class_browser_current_file_limits_reopened_namespace()
 {
     const QString contextFile = "context.cpp";
     const QString currentFile = "current.tcc";
-    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer) {
+    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer, int &) {
         if (fileName == contextFile)
             buffer = QStringList{"namespace N { int other; }"};
         else
@@ -823,7 +824,7 @@ void TestWidgets::test_class_browser_current_file_out_of_line_member()
 {
     const QString contextFile = "context.h";
     const QString currentFile = "current.cpp";
-    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer) {
+    mParser->setOnGetFileStream([contextFile](const QString &fileName, QStringList &buffer, int &) {
         if (fileName == contextFile) {
             buffer = QStringList{
                 "class A {",
@@ -850,7 +851,7 @@ void TestWidgets::test_class_browser_current_file_out_of_line_member()
 
 void TestWidgets::test_class_browser_inline_namespace_aliases()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace N { inline namespace V {",
             "  struct C { int member; };",
@@ -964,7 +965,7 @@ void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
         "int oldGlobal;",
         "}"
     };
-    mParser->setOnGetFileStream([&content](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([&content](const QString &, QStringList &buffer, int &) {
         buffer = content;
         return true;
     });
@@ -1173,7 +1174,7 @@ void TestWidgets::test_goto_statement_definitions()
         "int useDeleted() { return deleted(); }"
     };
     mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
     });
@@ -1397,7 +1398,7 @@ void TestWidgets::test_function_tip_filters_and_ranks_overloads()
         "}"
     };
     PCppParser parser = std::make_shared<CppParser>();
-    parser->setOnGetFileStream([&content](const QString &, QStringList &buffer) {
+    parser->setOnGetFileStream([&content](const QString &, QStringList &buffer, int &) {
         buffer = content;
         return true;
     });
@@ -1566,7 +1567,7 @@ void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
 
 void TestWidgets::test_class_browser_current_file_change_clears_immediately()
 {
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"struct A { int member; };"};
         return true;
     });
@@ -1601,7 +1602,7 @@ void TestWidgets::test_class_browser_does_not_own_parser()
 void TestWidgets::test_class_browser_anonymous_typedef_type()
 {
     const QString fileName = "anonymous_typedef.cpp";
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"typedef struct { int xxx; } Test;"};
         return true;
     });
@@ -1630,7 +1631,7 @@ void TestWidgets::test_class_browser_anonymous_typedef_type()
 void TestWidgets::test_class_browser_anonymous_type_sorting()
 {
     const QString fileName = "anonymous_sorting.cpp";
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "struct ZNamed {};",
             "struct { int first; } firstValue;",
@@ -1699,7 +1700,7 @@ void TestWidgets::test_class_browser_anonymous_type_sorting()
 void TestWidgets::test_class_browser_macros_sort_first()
 {
     const QString fileName = "macro_sorting.cpp";
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "namespace N {}",
             "#define VALUE 1",
@@ -1731,7 +1732,7 @@ void TestWidgets::test_class_browser_macros_sort_first()
 void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
 {
     const QString fileName = "anonymous_lookup.cpp";
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "typedef struct { int xxx; } Test;",
             "struct { int yyy; } value;",
@@ -1786,7 +1787,7 @@ void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
 void TestWidgets::test_unscoped_enum_completion_and_class_browser()
 {
     const QString fileName = "enum_completion.cpp";
-    mParser->setOnGetFileStream([](const QString &, QStringList &buffer) {
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{
             "enum Color { red, green, blue };",
             "enum class Scoped { value };",

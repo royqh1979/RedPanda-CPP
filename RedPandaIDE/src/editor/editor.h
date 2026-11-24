@@ -60,7 +60,7 @@ class Editor;
 
 using GetSharedParserrFunc = std::function<PCppParser (ParserLanguage)>;
 using GetOpennedEditorFunc = std::function<Editor *(const QString &)>;
-using GetFileStreamFunc = std::function<bool (const QString&, QStringList&)>;
+using GetFileStreamFunc = std::function<bool (const QString&, QStringList&, int &)>;
 using CanShowEvalTipFunc = std::function<bool ()>;
 using RequestEvalTipFunc = std::function<bool (Editor *, const QString &)>;
 using EvalTipReadyCallback = std::function<void (Editor *)>;

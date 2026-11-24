@@ -83,7 +83,8 @@ public:
 
     Editor* getOpenedEditor(const QString &filename) const;
 
-    bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer) const;
+    bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer, int &version) const;
+    int getVersionOfOpenedEditor(const QString &filename) const;
 
     void getVisibleEditors(Editor*& left, Editor*& right) const;
     void updateLayout();

@@ -1655,6 +1655,7 @@ void QSynEdit::loadFromFile(const QString& filename, const QByteArray& encoding,
     beginEditing();
     resetEditState();
     mDocument->loadFromFile(filename, encoding, realEncoding);
+    setStatusChanged(StatusChange::FileLoaded);
     endEditing();
 }
 

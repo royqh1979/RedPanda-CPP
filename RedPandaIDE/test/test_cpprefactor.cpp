@@ -34,7 +34,7 @@ void TestCppRefactor::init()
     mFiles.clear();
     mProject.reset();
     mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &fileName, QStringList &buffer) {
+    mParser->setOnGetFileStream([this](const QString &fileName, QStringList &buffer, int &) {
         if (!mFiles.contains(fileName))
             return false;
         buffer = mFiles.value(fileName);

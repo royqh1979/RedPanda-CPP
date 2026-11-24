@@ -106,6 +106,7 @@ enum StatusChange {
     Custom3  = 0x2000,
     Custom4  = 0x4000,
     Custom5  = 0x8000,
+    FileLoaded = 0x10000,
 };
 
 

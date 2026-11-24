@@ -428,9 +428,13 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         mParsing = false;
         emit parseFinished(session.filesScannedCount, updateView ? 1 : 0);
     });
-    if (onlyIfNotParsed && mPreprocessor->hasReplayRecord(fileName))
-        return false;
-
+    auto unchanged = [this](const QString &fileToCheck) {
+        if (fileToCheck.isEmpty())
+            return true;
+        PParsedFileInfo info = mPreprocessor->findFileInfo(fileToCheck);
+        return info && !mPreprocessor->hasChangedFiles(
+                    info->fileName(), info->includes());
+    };
     if (inProject) {
         QSet<QString> filesToReparse = calculateFilesToBeReparsed(fileName);
         if (shouldStopParsing())
@@ -438,6 +442,17 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         QStringList files = sortFilesByIncludeRelations(filesToReparse);
         if (shouldStopParsing())
             return true;
+        if (onlyIfNotParsed) {
+            bool allUnchanged = true;
+            for (const QString &file : files) {
+                if (!unchanged(file)) {
+                    allUnchanged = false;
+                    break;
+                }
+            }
+            if (allUnchanged)
+                return false;
+        }
         internalInvalidateFiles(filesToReparse);
         session.filesToScanCount = files.count();
         session.filesScannedCount = 0;
@@ -450,6 +465,8 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
                 internalParse(file);
         }
     } else {
+        if (onlyIfNotParsed && unchanged(fileName) && unchanged(contextFilename))
+            return false;
         invalidateSingleFile(fileName);
         invalidateSingleFile(contextFilename);
         session.filesToScanCount = 2;
@@ -539,6 +556,7 @@ PParsedFileInfo CppParser::findFileInfo(const QString &filename) const
     return mPreprocessor->findFileInfo(filename);
 }
 
+#ifdef REDPANDA_PARSER_TEST
 PReplayRecord CppParser::findReplayRecord(const QString &filename) const
 {
     QMutexLocker locker(&mMutex);
@@ -546,6 +564,7 @@ PReplayRecord CppParser::findReplayRecord(const QString &filename) const
         return nullptr;
     return mPreprocessor->findReplayRecord(filename);
 }
+#endif
 
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase,
                                             const PStatement &currentScope) const
@@ -1104,11 +1123,13 @@ bool CppParser::hasReplayRecord(const QString &fileName) const
 bool CppParser::isFileParsedInContext(const QString &fileName, const QString &contextFileName) const
 {
     QMutexLocker locker(&mMutex);
-    if (mParsing || contextFileName.isEmpty()
-            || !mPreprocessor->hasReplayRecord(contextFileName))
+    if (mParsing || contextFileName.isEmpty())
         return false;
+    PParsedFileInfo contextInfo = mPreprocessor->findFileInfo(contextFileName);
+    if (!contextInfo)
+        return true;
     return fileName == contextFileName
-            || mPreprocessor->includesFile(contextFileName, fileName);
+            || contextInfo->includes().contains(fileName);
 }
 
 
@@ -1379,6 +1400,11 @@ void CppParser::setEnabled(bool newEnabled)
 void CppParser::setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream)
 {
     mPreprocessor->setOnGetFileStream(newOnGetFileStream);
+}
+
+void CppParser::setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion)
+{
+    mPreprocessor->setOnGetFileVersion(newOnGetFileVersion);
 }
 
 int CppParser::parserId() const

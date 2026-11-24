@@ -1757,14 +1757,15 @@ Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const CharPos &pos)
 
 void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 {
-    if ((!changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
-            && !changes.testFlag(QSynedit::StatusChange::InsertMode)
-            && (lineCount()!=mLineCount)
-            && (lineCount()!=0) && ((mLineCount>0) || (lineCount()>1)))
-            ||
-        (mCurrentLineModified
-            && !changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
-            && changes.testFlag(QSynedit::StatusChange::CaretY))) {
+    if (!changes.testFlag(QSynedit::StatusChange::FileLoaded)
+            && ((!changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
+                 && !changes.testFlag(QSynedit::StatusChange::InsertMode)
+                 && (lineCount()!=mLineCount)
+                 && (lineCount()!=0) && ((mLineCount>0) || (lineCount()>1)))
+                ||
+            (mCurrentLineModified
+                && !changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
+                && changes.testFlag(QSynedit::StatusChange::CaretY)))) {
         mCurrentLineModified = false;
         reparse();
         if (mEditorSettings->syntaxCheckWhenLineChanged())
@@ -2848,9 +2849,12 @@ void Editor::reparse()
 
 void Editor::reparseIfNeeded()
 {
-    if (needReparse()) {
-        reparse();
-    }
+    if (!mInited || !mCodeCompletionEnabled || !mParser)
+        return;
+    Q_ASSERT(syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP);
+    if (!mParser->enabled() || !needReparse())
+        return;
+    CppParser::parseFileNonBlocking(mParser, mFilename, inProject(), mContextFile, true);
 }
 
 void Editor::reparseTodo()

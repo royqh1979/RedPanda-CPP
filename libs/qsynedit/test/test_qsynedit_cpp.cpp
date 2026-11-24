@@ -908,7 +908,9 @@ void TestQSyneditCpp::test_load_file()
     QCOMPARE(mLineMovedFroms, QList<int>{});
     QCOMPARE(mReparseStarts, QList<int>({0}));
     QCOMPARE(mReparseCounts, QList<int>({77}));
-    QCOMPARE(mStatusChanges, QList<int>{ StatusChange::ModifyChanged | StatusChange::CaretY});
+    QCOMPARE(mStatusChanges,
+             QList<int>{StatusChange::ModifyChanged | StatusChange::CaretY
+                        | StatusChange::FileLoaded});
     QVERIFY(!mEdit->canUndo());
     QVERIFY(!mEdit->canRedo());
     QVERIFY(!mEdit->modified());
