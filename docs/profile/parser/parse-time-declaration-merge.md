@@ -54,9 +54,15 @@ Statement 数量：
 
 真实标准库场景覆盖 GCC、Clang 的 `std::function`、容器、算法和公开接口基准。Eval 逐场景数据只用于检查回归，不作为本方案扩大实现范围或重写重载解析的理由。
 
+## Member Alias 展开复测
+
+初版 qualified member Alias 展开在全容器场景触发 Clang 47 次、GCC 21 次，其中大量 `size_type`、`rebind` 等类型 Alias 返回空成员列表，属于不必要的递归类型解析。改为只在函数调用路径展开后，Clang 降为 0 次、GCC 降为 1 次。未引入 Alias 专用缓存。
+
+`optional.value` 的端到端耗时没有显著下降，因此该修改只证明消除了不必要的 Alias 工作，不宣称解决全部 Eval 成本。`using Base<T>::get` 与 `using Base<T>::reference` 均保留最小测试。
+
 ## 最终验证
 
 - GCC、Clang 完整 `test-cppparser` 均通过；双方 C++17/C11 声明查找缺失均为 0。
-- Release 全量构建及 7 个 CTest Suite 全部通过，总耗时 54.15 秒。
-- Debug 全量构建及 7 个 CTest Suite 全部通过，总耗时 254.67 秒。
+- Release 全量构建及 7 个 CTest Suite 全部通过，总耗时 57.68 秒。
+- Debug 全量构建及 7 个 CTest Suite 全部通过，总耗时 132.59 秒。
 - 公开接口基准开关在 Release/Debug 默认配置中均为 `OFF`。

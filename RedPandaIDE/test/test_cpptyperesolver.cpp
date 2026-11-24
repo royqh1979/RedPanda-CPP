@@ -233,7 +233,10 @@ void TestCppTypeResolver::test_type_resolver_binds_dependent_base_members()
                 "  using reference = T&;\n"
                 "  reference get();\n"
                 "};\n"
-                "template<typename T> struct Derived : Base<T> { using Base<T>::get; };\n"
+                "template<typename T> struct Derived : Base<T> {\n"
+                "  using Base<T>::get;\n"
+                "  using Base<T>::reference;\n"
+                "};\n"
                 "template<typename T> struct StdAlloc { using value_type = T; };\n"
                 "template<typename A> struct Traits { using value_type = typename A::value_type; };\n"
                 "template<typename A, typename = typename A::value_type> struct Alloc : Traits<A> {\n"
@@ -1756,11 +1759,11 @@ void TestCppTypeResolver::test_type_resolver_internal_member_interfaces()
 
     QSet<QString> candidateVisited;
     QList<CppTypeResolver::MemberResolution> candidates = resolver.memberCandidates(
-                instance, "action", candidateVisited, evaluation);
+                instance, "action", candidateVisited, evaluation, true);
     QCOMPARE(candidates.count(), 1);
     QCOMPARE(candidates.first().statement->parentScope.lock(), derived);
     candidateVisited.clear();
-    candidates = resolver.memberCandidates(instance, "publicValue", candidateVisited, evaluation);
+    candidates = resolver.memberCandidates(instance, "publicValue", candidateVisited, evaluation, false);
     QCOMPARE(candidates.count(), 1);
     QCOMPARE(candidates.first().statement->parentScope.lock(), base);
     QCOMPARE(resolver.findMember(instance, "publicValue", evaluation).statement,

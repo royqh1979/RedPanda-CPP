@@ -40,3 +40,12 @@ python RedPandaIDE/test/resources/stdlib/compare_parse_baseline.py \
 ```
 
 第一个参数是基线日志，第二个是候选日志；每次运行测试时追加写入同一文件即可。测量场景和结果见 `docs/profile/parser/parse-time-declaration-merge.md`。
+
+`analyze_resolver_trace.py` 用于分析 `REDPANDA_PARSER_TRACE=1` 生成的 Resolver 日志，统计各操作的 cache hit/miss、重复的 `resolveType` 文本和上下文、绑定帧及候选声明，只依赖 Python 标准库：
+
+```sh
+python RedPandaIDE/test/resources/stdlib/analyze_resolver_trace.py \
+  R:/hotspot-trace-gcc-unordered.log R:/hotspot-trace-gcc-map.log --top 15
+```
+
+`--top` 控制每类输出的条目数。它用于区分相同语义键的重复解析与不同绑定环境下的必要解析，不把短类型名的重复直接当成缓存问题。

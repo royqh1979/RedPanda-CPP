@@ -288,7 +288,7 @@ private:
             int *matchScore, bool allowPartialArguments) const;
     QList<MemberResolution> memberCandidates(const ClassInstance &instance, const QString &name,
                                              QSet<QString> &visited,
-                                             EvaluationContext &evaluation) const;
+                                             EvaluationContext &evaluation, bool forInvocation) const;
     MemberEvalResult resolveMember(const ClassInstance &receiver, const QString &memberName,
                                    bool call, const QVector<TypeInfo> &arguments,
                                    const QVector<TemplateArgument> &explicitArguments,
@@ -387,6 +387,8 @@ private:
                                 EvaluationContext &evaluation) const;
     MemberResolution findMember(const ClassInstance &instance, const QString &name,
                                 QSet<QString> &visited, EvaluationContext &evaluation) const;
+    MemberResolution findMemberForInvocation(const ClassInstance &instance, const QString &name,
+                                             EvaluationContext &evaluation) const;
     void applyReference(TypeInfo &target, const TypeInfo &reference) const;
     PStatement findDeclaration(const QString &qualifiedName, const PStatement &context,
                                bool typesOnly = false) const;

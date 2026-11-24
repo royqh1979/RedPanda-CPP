@@ -60,7 +60,7 @@ Statement 继续保存完整 `templateParameters`，另存函数自身形参数�
 
 `const T&` 与 `const value_type&` 等 alias 差异无法在 Parse 阶段可靠合并，仍由 Eval 在模板替换后比较参数类型。`@` 编号不再使该保护提前失败；这层处理不等同于把全部语义合并移回 Eval。
 
-`using Base<T>::member` 形成的 qualified member Alias 在 Eval 中展开：先解析 Alias 左侧的基类类型，再复用基类成员查找和绑定，全部重载采用 using 声明处的可访问性。未限定的类型 Alias 不走该路径。非 const 成员优先于 const 成员，但 friend 非成员候选不再抑制 const 成员；这避免 friend 参数不匹配时错误丢失合法的 const 成员运算符。
+`using Base<T>::member` 形成的 qualified member Alias 只在函数调用路径展开：先解析 Alias 左侧的基类类型，再复用基类成员查找和绑定，全部重载采用 using 声明处的可访问性。普通类型查找保留原 Alias，避免对 `size_type`、`rebind` 等类型 Alias 做无效递归展开。非 const 成员优先于 const 成员，但 friend 非成员候选不再抑制 const 成员；这避免 friend 参数不匹配时错误丢失合法的 const 成员运算符。
 
 ## KISS 与范围审核
 

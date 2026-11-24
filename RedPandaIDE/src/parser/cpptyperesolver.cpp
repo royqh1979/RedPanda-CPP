@@ -738,7 +738,7 @@ MemberEvalResult CppTypeResolver::invokeResult(const ClassInstance &receiver,
     EvaluationContext localEvaluation;
     EvaluationContext &evaluation = evaluationContext ? *evaluationContext : localEvaluation;
     ResolveOriginScope originScope("invokeResult");
-    MemberResolution member = findMember(receiver, memberName, evaluation);
+    MemberResolution member = findMemberForInvocation(receiver, memberName, evaluation);
     if (!isInvocable(member.statement))
         return {};
     ClassInstance result = resolveTypeInstance(std::dynamic_pointer_cast<Statement>(member.statement)->typeInfo, member.owner.bindings,
@@ -803,7 +803,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
     if (call) {
         QSet<QString> visited;
         QList<MemberResolution> candidates = memberCandidates(receiver, memberName,
-                                                              visited, evaluation);
+                                                              visited, evaluation, call);
         struct MatchedCandidate {
             PStatement statement;
             PTemplateBindingFrame bindings;
@@ -2428,7 +2428,7 @@ CppTypeResolver::ClassInstance CppTypeResolver::resolveSegments(
             QSet<QString> visited;
             QList<MemberResolution> candidates = memberCandidates(
                     {instance, declaration, environment}, segments[index + 1].name,
-                    visited, evaluation);
+                    visited, evaluation, false);
             if (!candidates.isEmpty())
                 member = candidates.first();
         } else if (declaration->kind == StatementKind::Namespace) {
@@ -3374,13 +3374,22 @@ CppTypeResolver::MemberResolution CppTypeResolver::findMember(
         EvaluationContext &evaluation) const
 {
     const QList<MemberResolution> candidates = memberCandidates(instance, name, visited,
-                                                                evaluation);
+                                                                evaluation, false);
+    return candidates.isEmpty() ? MemberResolution{} : candidates.first();
+}
+
+CppTypeResolver::MemberResolution CppTypeResolver::findMemberForInvocation(
+        const ClassInstance &instance, const QString &name, EvaluationContext &evaluation) const
+{
+    QSet<QString> visited;
+    const QList<MemberResolution> candidates = memberCandidates(instance, name, visited,
+                                                                evaluation, true);
     return candidates.isEmpty() ? MemberResolution{} : candidates.first();
 }
 
 QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         const ClassInstance &instance, const QString &name, QSet<QString> &visited,
-        EvaluationContext &evaluation) const
+        EvaluationContext &evaluation, bool forInvocation) const
 {
     ResolverProfileScope profileScope(resolverProfile.memberLookupNs,
                                       resolverProfile.memberLookupCalls, "memberCandidates");
@@ -3417,7 +3426,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         PStatement candidate = weak.lock();
         if (!candidate)
             continue;
-        if (candidate->kind == StatementKind::Alias) {
+        if (forInvocation && candidate->kind == StatementKind::Alias) {
             const QString &target = std::dynamic_pointer_cast<Statement>(candidate)->value;
             int separator = target.lastIndexOf("::");
             if (separator > 0) {
@@ -3425,7 +3434,7 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
                 ClassInstance owner = resolveTypeInstance(ownerType, instance.bindings,
                                                           candidate->parentScope.lock(), evaluation);
                 const QList<MemberResolution> aliasedMembers = memberCandidates(
-                            owner, target.mid(separator + 2), visited, evaluation);
+                            owner, target.mid(separator + 2), visited, evaluation, forInvocation);
                 if (!aliasedMembers.isEmpty()) {
                     for (MemberResolution member : aliasedMembers) {
                         member.accessibility = candidate->accessibility;
@@ -3485,7 +3494,8 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
             continue;
         ClassInstance base = resolveTypeInstance(baseType, instance.bindings,
                                            instance.declaration->parentScope.lock(), evaluation);
-        const QList<MemberResolution> baseMembers = memberCandidates(base, name, visited, evaluation);
+        const QList<MemberResolution> baseMembers = memberCandidates(
+                    base, name, visited, evaluation, forInvocation);
         for (MemberResolution member : baseMembers) {
             QString signature = member.statement->command + std::dynamic_pointer_cast<Statement>(member.statement)->normalizedArgs;
             if (signatures.contains(signature))
