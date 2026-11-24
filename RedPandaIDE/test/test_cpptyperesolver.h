@@ -22,6 +22,7 @@ private slots:
     void test_type_resolver_evaluates_specialized_static_const_member_default_argument();
     void test_type_resolver_matches_nested_class_specialization_default_argument();
     void test_type_resolver_matches_injected_specialization_default_argument();
+    void test_type_resolver_matches_function_specialization_packs();
     void test_type_resolver_selects_specializations_across_reopened_namespaces();
     void test_type_resolver_computes_bounded_traits();
     void test_type_operations_resolve_container_and_iterator_chain();

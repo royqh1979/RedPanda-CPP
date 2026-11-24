@@ -303,6 +303,41 @@ void TestCppDeclarationParser::test_parse_template_type_arguments()
     QCOMPARE(resolvedMultiline.templateArguments[0].type->toString(), "std::vector<int>");
 }
 
+void TestCppDeclarationParser::test_parse_function_type_template_arguments()
+{
+    const QVector<QPair<QString, QString>> cases{
+        {"std::function<void()> empty;", "void ()"},
+        {"std::function<int(int)> identity;", "int (int)"},
+        {"std::function<void(std::string)> func;", "void (std::string)"}
+    };
+    for (const auto &test : cases) {
+        DeclarationInfo declaration;
+        QVERIFY2(parseDeclarationText(test.first, declaration), qPrintable(test.first));
+        StatementModel model;
+        CppStatementBuilder builder(model);
+        StatementBuildContext context;
+        context.fileName = "/tmp/function-types.cpp";
+        builder.build(declaration, context);
+        CppTypeResolver resolver(model);
+        TypeInfo resolved = resolver.resolve(declaration.specifiers.type);
+        QVERIFY(resolved.templateArguments.count() == 1);
+        const TemplateArgument &argument = resolved.templateArguments[0];
+        QVERIFY(argument.type);
+        QCOMPARE(argument.type->toString(), test.second);
+    }
+}
+
+void TestCppDeclarationParser::test_parse_parameter_pack()
+{
+    DeclarationInfo declaration;
+    QVERIFY(parseDeclarationText("template<typename... Args> void f(Args... args);", declaration));
+    QVERIFY(declaration.declarators[0].derivations.count() == 1);
+    const TypeDerivation &function = declaration.declarators[0].derivations.first();
+    QVERIFY(function.parameters.count() == 1);
+    QVERIFY(function.parameters.first().parameterPack);
+    QCOMPARE(function.parameters.first().toString(), QString("Args... args"));
+}
+
 void TestCppDeclarationParser::test_parse_operator_declaration()
 {
     DeclarationInfo declaration;

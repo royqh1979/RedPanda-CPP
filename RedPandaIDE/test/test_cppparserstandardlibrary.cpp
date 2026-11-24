@@ -106,6 +106,73 @@ void TestCppParserStandardLibrary::test_standard_library_abort_alias()
         QVERIFY(target != alias);
 }
 
+void TestCppParserStandardLibrary::test_standard_library_function_eval_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QString>("expectedType");
+    QTest::newRow("empty-variable") << "empty" << "std::function<void ()>";
+    QTest::newRow("identity-variable") << "identity" << "std::function<int (int)>";
+    QTest::newRow("empty-call") << "empty()" << "void";
+    QTest::newRow("lambda-call") << "identity(1)" << "int";
+    QTest::newRow("function-pointer-call") << "functionPointer(1)" << "int";
+    QTest::newRow("const-ref-lambda-call") << "reader(1)" << "int";
+    QTest::newRow("class-argument-call") << "func(std::string())" << "void";
+    QTest::newRow("class-argument-braced-call") << "func({})" << "void";
+    QTest::newRow("target") << "identity.target<int(*)(int)>()" << "int *(*)(int)";
+    QTest::newRow("target-type") << "identity.target_type()" << "const std::type_info &";
+    QTest::newRow("swap") << "identity.swap(functionPointer)" << "void";
+    QTest::newRow("assignment") << "identity = functionPointer" << "std::function<int (int)> &";
+    QTest::newRow("bool-conversion") << "static_cast<bool>(identity)" << "bool";
+}
+
+void TestCppParserStandardLibrary::test_standard_library_function_eval()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, expectedType);
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {
+        "#include <functional>",
+        "#include <string>",
+        "int freeFunction(int value) { return value; }",
+        "int main() {",
+        "    std::function<void()> empty;",
+        "    std::function<int(int)> identity = [](int value) { return value; };",
+        "    std::function<int(int)> functionPointer = freeFunction;",
+        "    std::function<int(const int&)> reader = [](const int &value) { return value; };",
+        "    std::function<void(std::string)> func = [](std::string) {};",
+        "    empty();",
+        "    identity(1);",
+        "    functionPointer(1);",
+        "    reader(1);",
+        "    func(std::string());",
+        "    func({});",
+        "    identity.target<int(*)(int)>();",
+        "    identity.target_type();",
+        "    identity.swap(functionPointer);",
+        "    identity = functionPointer;",
+        "    bool valid = static_cast<bool>(identity);",
+        "}"
+    }));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+    PStatement scope = mParser->findScopeStatement(main, 10);
+    QVERIFY(scope);
+
+    CppTokenizer tokenizer;
+    tokenizer.tokenize({expression});
+    QElapsedTimer timer;
+    timer.start();
+    EvalResult result = mParser->evalExpression(main, tokenizer.tokens(), scope);
+    qWarning() << "STDLIB_FUNCTION_EVAL" << expression << timer.nsecsElapsed()
+               << result.isValid() << result.type.toString();
+    QVERIFY(result.isValid());
+    if (!expectedType.isEmpty())
+        QCOMPARE(result.type.toString(), expectedType);
+}
+
 void TestCppParserStandardLibrary::test_standard_library_string()
 {
     QTemporaryDir tmp;

@@ -674,7 +674,7 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
         }
     }
 
-    mCursor.consume("...");
+    result.parameterPack = mCursor.consume("...");
     if (mCursor.consume("(")) {
         if (!parseDeclarator(result)) {
             mCursor.restore(start);
@@ -739,66 +739,9 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
             continue;
         }
         if (mCursor.currentText() == "(") {
-            CppTokenCursor::Checkpoint suffixStart = mCursor.checkpoint();
-            TypeDerivation function = TypeDerivation::function();
-            mCursor.advance();
-            bool valid = true;
-            if (!mCursor.consume(")")) {
-                while (!mCursor.atEnd()) {
-                    if (mCursor.consume("...")) {
-                        function.functionProperties.setFlag(FunctionProperty::Variadic);
-                    } else {
-                        ParameterInfo parameter;
-                        if (!parseParameter(parameter)) {
-                            valid = false;
-                            break;
-                        }
-                        function.parameters.append(parameter);
-                    }
-                    if (mCursor.consume("=")) {
-                        CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
-                        skipExpression({",", ")"}, nullptr);
-                        function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
-                    }
-                    if (mCursor.consume(")"))
-                        break;
-                    if (!mCursor.consume(",")) {
-                        valid = false;
-                        break;
-                    }
-                }
-            }
-            if (!valid) {
-                mCursor.restore(suffixStart);
+            TypeDerivation function;
+            if (!parseFunctionSuffix(function))
                 break;
-            }
-
-            while (!mCursor.atEnd()) {
-                if (mCursor.consume("const"))
-                    function.qualifiers.setFlag(TypeQualifier::Const);
-                else if (mCursor.consume("volatile"))
-                    function.qualifiers.setFlag(TypeQualifier::Volatile);
-                else if (mCursor.consume("&&"))
-                    function.refQualifier = ReferenceQualifier::Rvalue;
-                else if (mCursor.consume("&"))
-                    function.refQualifier = ReferenceQualifier::Lvalue;
-                else if (mCursor.consume("noexcept")) {
-                    readNoexcept(function.noexceptKind, function.noexceptExpression);
-                } else if (mCursor.consume("override")) {
-                    function.functionProperties.setFlag(FunctionProperty::Override);
-                } else if (mCursor.consume("final")) {
-                } else {
-                    break;
-                }
-            }
-            if (mCursor.consume("->"))
-                applyTrailingReturn(function);
-            if (mCursor.consume("requires")) {
-                CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
-                skipRequiresClause();
-                if (mCppVersion >= CppVersion::Cpp20)
-                    function.requiresClause = readConsumedText(requiresStart);
-            }
             result.derivations.append(function);
             continue;
         }
@@ -818,6 +761,71 @@ bool CppDeclarationParser::parseDeclarator(DeclaratorInfo &result)
     return true;
 }
 
+bool CppDeclarationParser::parseFunctionSuffix(TypeDerivation &function)
+{
+    CppTokenCursor::Checkpoint suffixStart = mCursor.checkpoint();
+    function = TypeDerivation::function();
+    mCursor.advance();
+    bool valid = true;
+    if (!mCursor.consume(")")) {
+        while (!mCursor.atEnd()) {
+            if (mCursor.consume("...")) {
+                function.functionProperties.setFlag(FunctionProperty::Variadic);
+            } else {
+                ParameterInfo parameter;
+                if (!parseParameter(parameter)) {
+                    valid = false;
+                    break;
+                }
+                function.parameters.append(parameter);
+            }
+            if (mCursor.consume("=")) {
+                CppTokenCursor::Checkpoint defaultStart = mCursor.checkpoint();
+                skipExpression({",", ")"}, nullptr);
+                function.parameters.last().defaultArgumentText = readConsumedText(defaultStart);
+            }
+            if (mCursor.consume(")"))
+                break;
+            if (!mCursor.consume(",")) {
+                valid = false;
+                break;
+            }
+        }
+    }
+    if (!valid) {
+        mCursor.restore(suffixStart);
+        return false;
+    }
+
+    while (!mCursor.atEnd()) {
+        if (mCursor.consume("const"))
+            function.qualifiers.setFlag(TypeQualifier::Const);
+        else if (mCursor.consume("volatile"))
+            function.qualifiers.setFlag(TypeQualifier::Volatile);
+        else if (mCursor.consume("&&"))
+            function.refQualifier = ReferenceQualifier::Rvalue;
+        else if (mCursor.consume("&"))
+            function.refQualifier = ReferenceQualifier::Lvalue;
+        else if (mCursor.consume("noexcept")) {
+            readNoexcept(function.noexceptKind, function.noexceptExpression);
+        } else if (mCursor.consume("override")) {
+            function.functionProperties.setFlag(FunctionProperty::Override);
+        } else if (mCursor.consume("final")) {
+        } else {
+            break;
+        }
+    }
+    if (mCursor.consume("->"))
+        applyTrailingReturn(function);
+    if (mCursor.consume("requires")) {
+        CppTokenCursor::Checkpoint requiresStart = mCursor.checkpoint();
+        skipRequiresClause();
+        if (mCppVersion >= CppVersion::Cpp20)
+            function.requiresClause = readConsumedText(requiresStart);
+    }
+    return true;
+}
+
 bool CppDeclarationParser::parseParameter(ParameterInfo &result)
 {
     DeclarationProfileScope profileScope(declarationProfile.parameterMs,
@@ -833,6 +841,7 @@ bool CppDeclarationParser::parseParameter(ParameterInfo &result)
     result.type = std::make_shared<TypeInfo>(specifiers.type);
     appendTypeDerivation(*result.type, declarator);
     result.name = declarator.name;
+    result.parameterPack = declarator.parameterPack;
     result.position = position;
     return true;
 }
@@ -924,6 +933,14 @@ bool CppDeclarationParser::parseTemplateArguments(TypeInfo &result)
         CppDeclarationParser parser(cursor);
         DeclSpecifierInfo specifiers;
         if (parser.parseDeclSpecifierSeq(specifiers)) {
+            if (cursor.currentText() == "(") {
+                TypeDerivation function;
+                if (parser.parseFunctionSuffix(function) && cursor.atEnd()) {
+                    specifiers.type.derivations.append(function);
+                    result.templateArguments.append(TemplateArgument::fromType(specifiers.type));
+                    return;
+                }
+            }
             DeclaratorInfo declarator;
             if (parser.parseDeclarator(declarator) && cursor.atEnd()) {
                 TypeInfo type = specifiers.type;

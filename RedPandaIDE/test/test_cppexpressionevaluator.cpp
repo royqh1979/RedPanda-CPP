@@ -41,6 +41,8 @@ void TestCppExpressionEvaluator::test_function_template_explicit_arguments()
                 "  template<typename T, typename... Args>\n"
                 "  void make_unique(Args&&...) = delete;\n"
                 "}\n"
+                "struct Converter { template<typename T> T convert(); };\n"
+                "Converter converter;\n"
                 "auto shared = std::make_shared<std::string>();\n"
                 "auto unique = std::make_unique<std::string>();\n", declarations, CppVersion::Cpp20));
     StatementModel model;
@@ -83,6 +85,7 @@ void TestCppExpressionEvaluator::test_function_template_explicit_arguments()
              "std::shared_ptr<std::string>");
     QCOMPARE(evaluate("std::make_shared<std::string>()").type.toString(),
              "std::shared_ptr<std::string>");
+    QCOMPARE(evaluate("converter.convert<std::string>()").type.toString(), "std::string");
     QCOMPARE(evaluate("std::select<std::string>()").type.toString(), "int");
     DeclarationInfo arrayVariable;
     QVERIFY(parseDeclarationText("std::string value[];", arrayVariable));
@@ -682,6 +685,14 @@ void TestCppExpressionEvaluator::test_evaluator_internal_token_parsing()
     arguments.clear();
     QVERIFY(evaluator.evaluateArguments(emptyArguments.tokens(), index, {}, arguments, &evaluation));
     QVERIFY(arguments.isEmpty());
+    CppTokenizer bracedArguments;
+    bracedArguments.tokenize({"({})"});
+    index = 0;
+    arguments.clear();
+    QVERIFY(evaluator.evaluateArguments(bracedArguments.tokens(), index, {}, arguments, &evaluation));
+    QCOMPARE(index, bracedArguments.tokenCount());
+    QCOMPARE(arguments.count(), 1);
+    QVERIFY(arguments.first().qualifiedName.isEmpty());
     CppTokenizer malformedArguments;
     malformedArguments.tokenize({"(1"});
     index = 0;
@@ -813,6 +824,7 @@ void TestCppExpressionEvaluator::test_evaluator_internal_type_operations()
                 "  int& operator*();\n"
                 "  Foo& operator++();\n"
                 "  int operator+(int);\n"
+                "  template<typename T> T operator=(T value);\n"
                 "};\n"
                 "Foo foo;\n"
                 "Foo* pointer;\n"
@@ -860,6 +872,7 @@ void TestCppExpressionEvaluator::test_evaluator_internal_type_operations()
     QCOMPARE(evaluator.applyBinary(integer, floating, ",", &evaluation).type.qualifiedName,
              "double");
     QCOMPARE(evaluator.applyBinary(foo, integer, "+", &evaluation).type.qualifiedName, "int");
+    QCOMPARE(evaluator.applyBinary(foo, integer, "=", &evaluation).type.qualifiedName, "int");
     EvalResult memberPointer = integer;
     memberPointer.type.derivations.prepend(TypeDerivation::memberPointer("Foo"));
     QCOMPARE(evaluator.applyBinary(foo, memberPointer, ".*", &evaluation).type.qualifiedName,

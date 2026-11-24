@@ -43,6 +43,7 @@ public:
     bool parseTemplatePrefix(DeclarationInfo &result);
     bool parseDeclSpecifierSeq(DeclSpecifierInfo &result);
     bool parseDeclarator(DeclaratorInfo &result);
+    bool parseFunctionSuffix(TypeDerivation &function);
     bool parseParameter(ParameterInfo &result);
     bool parseTemplateArguments(TypeInfo &result);
     bool parseTemplatePattern(DeclaratorInfo &result, const CppTokenCursor::Checkpoint &nameStart,

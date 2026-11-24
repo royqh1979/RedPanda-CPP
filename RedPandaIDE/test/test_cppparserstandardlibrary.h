@@ -11,6 +11,8 @@ private slots:
     void init() { init_parser(); }
     void test_bits_stdcpp_not_rescanned_on_stable_reparse();
     void test_standard_library_abort_alias();
+    void test_standard_library_function_eval_data();
+    void test_standard_library_function_eval();
     void test_standard_library_string();
     void test_standard_library_header_context();
     void test_standard_library_nested_include_guard_visibility();

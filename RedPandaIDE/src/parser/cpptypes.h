@@ -102,6 +102,7 @@ struct ParameterInfo {
     QString name;
     SourcePosition position;
     QString defaultArgumentText;
+    bool parameterPack = false;
 
     QString toString(bool includeName = true) const;
 };
@@ -190,6 +191,7 @@ struct DeclaratorInfo {
     QString name;
     QString qualifier;
     bool globallyQualified = false;
+    bool parameterPack = false;
     SourcePosition position;
     QVector<TypeDerivation> derivations;
     QString initializerText;
