@@ -129,6 +129,9 @@ void TestCppParserStandardLibrary::test_standard_library_function_eval()
 {
     QFETCH(QString, expression);
     QFETCH(QString, expectedType);
+    const QByteArray caseFilter = qgetenv("REDPANDA_STDLIB_FUNCTION_CASE");
+    if (!caseFilter.isEmpty() && caseFilter != expression)
+        QSKIP("Filtered by REDPANDA_STDLIB_FUNCTION_CASE");
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
@@ -163,6 +166,11 @@ void TestCppParserStandardLibrary::test_standard_library_function_eval()
 
     CppTokenizer tokenizer;
     tokenizer.tokenize({expression});
+    if (qEnvironmentVariableIsSet("REDPANDA_PARSER_PROFILE")
+            || qEnvironmentVariableIsSet("REDPANDA_PARSER_TRACE")) {
+        qputenv("REDPANDA_PARSER_PROFILE_RESET_TOKENIZER", "1");
+        qputenv("REDPANDA_PARSER_PROFILE_RESET_RESOLVER", "1");
+    }
     QElapsedTimer timer;
     timer.start();
     EvalResult result = mParser->evalExpression(main, tokenizer.tokens(), scope);

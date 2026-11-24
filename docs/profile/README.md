@@ -28,12 +28,17 @@
 - `qsynedit/qsynedit-bulk-fold-delete-result.md` — 折叠块批量删除优化。
 - `qsynedit/qsynedit-reparse-loop-result.md` — 重解析内循环优化。
 
-## 3. 试题集
+## 3. C++ Parser
+
+- `parser/std-function-eval-baseline.md` — `std::function` 调用与赋值的求值基线、热点和复现方法。
+- `parser/bits-stdcpp-parse-baseline.md` — GCC 15.3 `bits/stdc++.h` 完整解析基线、阶段成本与头文件热点。
+
+## 4. 试题集
 
 - `problems/problemset-validator-baseline.md` — 大期望输出文件比对基线、场景和运行方法。
 - `problems/problemset-validator-result.md` — 无分配逐行比对的优化结果与限制。
 
-## 4. 关联文档
+## 5. 关联文档
 
 - 总体设计：`../design/architecture.md`。
 - QSynEdit 设计：`../design/qsynedit/qsynedit-design.md`。

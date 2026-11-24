@@ -324,7 +324,7 @@ CppParser 的正确性承诺以当前主文件为单位：每次解析后，当�
 
 self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时，当前 scope 从自身总耗时中扣除；出栈顺序必须匹配。不能用全局累计的嵌套耗时相减，否则不同调用链交叠时会产生无效负值。
 
-优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；不设置时运行全部用例。
+优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；`std::function` 专项可类似使用 `REDPANDA_STDLIB_FUNCTION_CASE` 并按表达式文本过滤；不设置时运行全部用例。
 
 GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1027 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
 
