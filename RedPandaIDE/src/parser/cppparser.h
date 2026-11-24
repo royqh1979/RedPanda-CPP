@@ -176,6 +176,7 @@ private:
     void clearAnalysisResults();
     CppEvaluationOptions evaluationOptions() const;
     void invalidateSingleFile(const QString& fileName);
+    void invalidateOutsideBoundaryFiles(const QString &fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
     QStringList sortFilesByIncludeRelations(const QSet<QString>& files);

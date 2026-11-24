@@ -33,6 +33,7 @@ private slots:
     void test_auto_invalidation_preserves_definition_after_declaration_change();
     void test_replay_applies_undefines_before_following_boundary();
     void test_replay_redefine_after_undef_replaces_undef_record();
+    void test_user_header_reparse_does_not_duplicate_statements();
 };
 
 

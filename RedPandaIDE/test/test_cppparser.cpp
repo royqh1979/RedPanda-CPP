@@ -2271,3 +2271,91 @@ void TestCppParser::test_nonforce_parse_uses_content_versions()
     QVERIFY(!mParser->findStatement("first"));
     QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 2);
 }
+
+
+void TestCppParser::test_lambda_function_argument_scope()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
+        buffer = QStringList{
+            "struct Ui { void panel(); };",
+            "struct Stack { int next(); };",
+            "struct Window { void run(void (*)(Ui &)); };",
+            "void test() {",
+            "    Window win;",
+            "    win.run([&](Ui &ui) {",
+            "        ui.panel();",
+            "        Stack col;",
+            "        col.next();",
+            "    });",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+
+    PStatement ui = mParser->findStatementOf("main.cpp", "ui", 6);
+    QVERIFY(ui);
+    QCOMPARE(ui->kind, StatementKind::Parameter);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(ui)->typeInfo.toString(), QString("Ui &"));
+    QVERIFY(statementHasDefinition(ui));
+    QCOMPARE(ui->definition.range.start.line, 5);
+
+    PStatement col = mParser->findStatementOf("main.cpp", "col", 8);
+    QVERIFY(col);
+    QCOMPARE(col->kind, StatementKind::Variable);
+    QCOMPARE(col->scope, StatementScope::Local);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(col)->typeInfo.toString(), QString("Stack"));
+    QVERIFY(statementHasDefinition(col));
+    QCOMPARE(col->definition.range.start.line, 7);
+
+    PStatement scope = mParser->findScopeStatement("main.cpp", 6);
+    QVERIFY(scope);
+    QCOMPARE(scope->kind, StatementKind::OverloadedOperator);
+    QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"ui", ".", "panel"}, 6));
+    QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"col", ".", "next"}, 8));
+}
+
+
+void TestCppParser::test_nested_lambda_function_argument_scope()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
+        buffer = QStringList{
+            "struct Ui { void panel(); };",
+            "struct Stack { int next(); };",
+            "struct Window { void run(void (*)(Ui &)); };",
+            "void test() {",
+            "    Window win;",
+            "    win.run([&](Ui &outer) {",
+            "        win.run([&](Ui &inner) {",
+            "            outer.panel();",
+            "            inner.panel();",
+            "            Stack col;",
+            "            col.next();",
+            "        });",
+            "    });",
+            "}"
+        };
+        return true;
+    });
+    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+
+    PStatement outer = mParser->findStatementOf("main.cpp", "outer", 7);
+    QVERIFY(outer);
+    QCOMPARE(outer->kind, StatementKind::Parameter);
+    QCOMPARE(outer->definition.range.start.line, 5);
+
+    PStatement inner = mParser->findStatementOf("main.cpp", "inner", 8);
+    QVERIFY(inner);
+    QCOMPARE(inner->kind, StatementKind::Parameter);
+    QCOMPARE(inner->definition.range.start.line, 6);
+    QVERIFY(inner != outer);
+
+    PStatement col = mParser->findStatementOf("main.cpp", "col", 11);
+    QVERIFY(col);
+    QCOMPARE(col->kind, StatementKind::Variable);
+    QCOMPARE(col->scope, StatementScope::Local);
+    QCOMPARE(col->definition.range.start.line, 9);
+    QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"outer", ".", "panel"}, 7));
+    QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"inner", ".", "panel"}, 8));
+    QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"col", ".", "next"}, 11));
+}

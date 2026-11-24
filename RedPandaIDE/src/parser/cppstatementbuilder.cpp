@@ -571,6 +571,10 @@ QList<std::weak_ptr<AbstractStatement>> CppStatementBuilder::build(
         const DeclarationInfo &declaration, const StatementBuildContext &context)
 {
     QList<std::weak_ptr<AbstractStatement>> result;
+    if (declaration.kind == DeclarationKind::Expression) {
+        buildLambdas(declaration.expressionLambdas, context);
+        return result;
+    }
     if (declaration.kind == DeclarationKind::Label) {
         for (const DeclaratorInfo &declarator : declaration.declarators) {
             PStatement statement = createStatement(declaration, declarator, context,
@@ -908,7 +912,7 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         }
     }
 
-    buildLambdas(declarator, context);
+    buildLambdas(declarator.lambdas, context);
 
     if (declaration.specifiers.type.qualifiedName == "auto"
             && !declaration.structuredBinding
@@ -1248,10 +1252,10 @@ PStatement CppStatementBuilder::createBlock(const DeclarationInfo &declaration,
     return statement;
 }
 
-void CppStatementBuilder::buildLambdas(const DeclaratorInfo &declarator,
+void CppStatementBuilder::buildLambdas(const QVector<std::shared_ptr<LambdaInfo>> &lambdas,
                                        const StatementBuildContext &context)
 {
-    for (const std::shared_ptr<LambdaInfo> &info : declarator.lambdas) {
+    for (const std::shared_ptr<LambdaInfo> &info : lambdas) {
         if (!info || !info->body)
             continue;
         QString name = QString("__lambda_%1_%2_%3")

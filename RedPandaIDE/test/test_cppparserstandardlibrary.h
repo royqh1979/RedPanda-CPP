@@ -39,6 +39,7 @@ private slots:
     void test_standard_library_libcxx_invocable();
     void test_standard_library_parse_baseline();
     void test_standard_library_public_api_complete();
+    void test_aino_replay_and_lambda_navigation();
 };
 #endif
 

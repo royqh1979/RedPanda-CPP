@@ -1377,6 +1377,13 @@ QString CppDeclarationParser::readUntilDelimiter(const QSet<QString> &delimiters
     return readConsumedText(start);
 }
 
+void CppDeclarationParser::parseExpression(DeclarationInfo &result, const QSet<QString> &delimiters)
+{
+    DeclaratorInfo expression;
+    skipExpression(delimiters, &expression);
+    result.expressionLambdas = expression.lambdas;
+}
+
 void CppDeclarationParser::skipBalancedToken()
 {
     mCursor.skipToMatch();
@@ -1514,6 +1521,13 @@ void CppDeclarationParser::skipExpression(const QSet<QString> &delimiters,
                 declarator->lambdas.append(lambda);
                 continue;
             }
+        }
+        if (mCursor.currentText() == "(" && mCursor.current().matchIndex > mCursor.index()) {
+            mCursor.advance();
+            skipExpression({")"}, declarator);
+            if (mCursor.currentText() == ")")
+                mCursor.advance();
+            continue;
         }
         if (mCursor.current().matchIndex > mCursor.index()) {
             skipBalancedToken();

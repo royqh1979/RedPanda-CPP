@@ -69,7 +69,8 @@ private:
                      const StatementBuildContext &context) const;
     TypeInfo deduceAutoType(TypeInfo initializerType, const DeclaratorInfo &declarator,
                             const DeclSpecifierInfo &specifiers) const;
-    void buildLambdas(const DeclaratorInfo &declarator, const StatementBuildContext &context);
+    void buildLambdas(const QVector<std::shared_ptr<LambdaInfo>> &lambdas,
+                      const StatementBuildContext &context);
     void buildChildren(const DeclarationInfo &declaration,
                        const StatementBuildContext &context,
                        const PStatement &parent);

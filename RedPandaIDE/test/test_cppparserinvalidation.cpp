@@ -860,3 +860,22 @@ void TestCppParserInvalidation::test_replay_redefine_after_undef_replaces_undef_
     QCOMPARE(mParser->preprocessorEventCountsForTest(b).scan, 1);
     QVERIFY(mParser->preprocessorEventCountsForTest(b).replay > 0);
 }
+
+
+void TestCppParserInvalidation::test_user_header_reparse_does_not_duplicate_statements()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString header = tmp.filePath("user.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(header, {"int user_value;"}));
+    QVERIFY(writeLines(main, {"#include \"user.h\"", "int root_value;"}));
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("user_value"));
+    int statementCount = mParser->statementList().count();
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QVERIFY(mParser->findStatement("user_value"));
+    QCOMPARE(mParser->statementList().count(), statementCount);
+}

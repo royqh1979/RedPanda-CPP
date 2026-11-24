@@ -1662,6 +1662,29 @@ void TestCppParserStandardLibrary::test_standard_library_public_api_complete()
     qWarning() << "STDLIB_TEST_TIMING destruction" << testTimer.restart();
 }
 
+void TestCppParserStandardLibrary::test_aino_replay_and_lambda_navigation()
+{
+    QString main = QFileInfo("resources/aino/untitled1.cpp").absoluteFilePath();
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    int statementCount = mParser->statementList().count();
+    PStatement ui = mParser->findStatementOf(main, "ui", 13);
+    QVERIFY(ui);
+    QCOMPARE(ui->kind, StatementKind::Parameter);
+    PStatement col = mParser->findStatementOf(main, "col", 16);
+    QVERIFY(col);
+    QCOMPARE(col->kind, StatementKind::Variable);
+    QCOMPARE(col->scope, StatementScope::Local);
 
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QCOMPARE(mParser->statementList().count(), statementCount);
+    QCOMPARE(mParser->findStatementOf(main, "ui", 13)->kind, StatementKind::Parameter);
+    QCOMPARE(mParser->findStatementOf(main, "col", 16)->kind, StatementKind::Variable);
+    QString windowsHeader = mParser->getHeaderFileName(main, "<windows.h>");
+    QVERIFY(!windowsHeader.isEmpty());
+    QCOMPARE(mParser->preprocessorEventCountsForTest(windowsHeader).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(windowsHeader).replay > 0);
+}
 
 #endif

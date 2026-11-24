@@ -591,7 +591,9 @@ bool CppSyntaxParser::parseBlock(DeclarationInfo &result)
             continue;
         }
         mCursor.restore(checkpoint);
-        skipDeclaration();
+        child.kind = DeclarationKind::Expression;
+        mDeclarationParser.parseExpression(child, {";", "}"});
+        result.children.append(child);
         mCursor.consume(";");
     }
     if (closeIndex >= 0) {

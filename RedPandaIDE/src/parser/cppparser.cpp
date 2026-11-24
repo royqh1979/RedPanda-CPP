@@ -313,6 +313,20 @@ void CppParser::internalInvalidateFiles(const QSet<QString> &files)
         invalidateSingleFile(file);
 }
 
+void CppParser::invalidateOutsideBoundaryFiles(const QString &fileName)
+{
+    if (fileName.isEmpty())
+        return;
+    QSet<QString> files{fileName};
+    PParsedFileInfo info = mPreprocessor->findFileInfo(fileName);
+    if (info)
+        files += info->includes();
+    for (const QString &file : files) {
+        if (mProjectFiles.contains(file) || !isSystemHeaderFile(file))
+            invalidateSingleFile(file);
+    }
+}
+
 QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
 {
     if (fileName.isEmpty())
@@ -467,8 +481,8 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
     } else {
         if (onlyIfNotParsed && unchanged(fileName) && unchanged(contextFilename))
             return false;
-        invalidateSingleFile(fileName);
-        invalidateSingleFile(contextFilename);
+        invalidateOutsideBoundaryFiles(fileName);
+        invalidateOutsideBoundaryFiles(contextFilename);
         session.filesToScanCount = 2;
         session.filesScannedCount = 0;
         ++session.filesScannedCount;
