@@ -545,6 +545,13 @@ PStatement CppStatementBuilder::mergeDeclaration(const PStatement &candidate,
             merged[i].type = existingStatement->templateParameters[i].type;
     }
     existingStatement->templateParameters = merged;
+    if (existingStatement->functionTemplateParameterCount < 0)
+        existingStatement->functionTemplateParameterCount = candidateStatement->functionTemplateParameterCount;
+    else if (candidateStatement->functionTemplateParameterCount >= 0) {
+        existingStatement->functionTemplateParameterCount = qMin(
+                    existingStatement->functionTemplateParameterCount,
+                    candidateStatement->functionTemplateParameterCount);
+    }
     existingStatement->inheritedDefaultArgumentTexts = inherited;
     if (!candidateStatement->templateRequiresClause.isEmpty())
         existingStatement->templateRequiresClause = candidateStatement->templateRequiresClause;
@@ -840,6 +847,18 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         normalStatement->templatePattern = declarator.templatePattern;
     }
     normalStatement->templateParameters = declaration.templateParameters;
+    int outerTemplateParameterCount = 0;
+    if (!declarator.qualifier.isEmpty()) {
+        for (PStatement scope = context.parentScope;
+             scope && scope->kind != StatementKind::Namespace; scope = scope->parentScope.lock()) {
+            auto normalScope = std::dynamic_pointer_cast<Statement>(scope);
+            if (!normalScope)
+                break;
+            outerTemplateParameterCount += normalScope->templateParameters.count();
+        }
+    }
+    normalStatement->functionTemplateParameterCount = qMax(
+                0, declaration.templateParameters.count() - outerTemplateParameterCount);
     normalStatement->declSpecifierProperties = declaration.specifiers.properties;
     normalStatement->definitionKind = declarator.definitionKind;
     normalStatement->baseClasses = declaration.baseClasses;
@@ -854,8 +873,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
         std::dynamic_pointer_cast<Statement>(statement)->typeInfo.derivations.removeFirst();
         std::dynamic_pointer_cast<Statement>(statement)->parameters = function.parameters;
         std::dynamic_pointer_cast<Statement>(statement)->args = renderParameters(function, true);
-        std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs = renderNormalizedParameters(function,
-                                                               declaration.templateParameters);
+        std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs = function.normalizedArgs.isEmpty()
+                ? renderNormalizedParameters(function, declaration.templateParameters)
+                : function.normalizedArgs;
         statement->properties.setFlag(StatementProperty::Override,
                                       function.functionProperties.testFlag(FunctionProperty::Override));
         statement->properties.setFlag(StatementProperty::Const,
@@ -878,7 +898,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                         && !derivation.functionProperties.testFlag(FunctionProperty::Variadic);
                 std::dynamic_pointer_cast<Statement>(statement)->args += empty ? "( )" : renderParameters(derivation, true);
                 std::dynamic_pointer_cast<Statement>(statement)->normalizedArgs += empty
-                        ? "( )" : renderNormalizedParameters(derivation, declaration.templateParameters);
+                        ? "( )" : derivation.normalizedArgs.isEmpty()
+                          ? renderNormalizedParameters(derivation, declaration.templateParameters)
+                          : derivation.normalizedArgs;
                 statement->properties.setFlag(StatementProperty::FunctionPointer);
             } else if (derivation.kind == TypeDerivationKind::Array) {
                 std::dynamic_pointer_cast<Statement>(statement)->args += derivation.text;

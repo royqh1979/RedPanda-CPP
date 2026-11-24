@@ -7,6 +7,7 @@ class TestCppDeclarationParser : public CppParserComponentTestCase
 {
     Q_OBJECT
 private slots:
+    void test_template_parameter_alpha_encoding();
     void test_type_template_arguments();
     void test_array_declarator_order();
     void test_function_pointer_declarator();
@@ -28,6 +29,7 @@ private slots:
     void test_parse_operator_declaration();
     void test_parse_member_pointer_declaration();
     void test_parse_function_template();
+    void test_parse_template_parameter_normalization();
     void test_parse_template_parameter_kinds();
     void test_parse_template_specializations();
     void test_syntax_class_declarations();

@@ -36,6 +36,7 @@ private slots:
     void test_namespace_delete_does_not_reinsert_transparent_descendants();
     void test_qualified_lookup_respects_lexical_and_local_scopes();
     void test_inherited_member_enumeration_and_access();
+    void test_const_member_with_nonmember_candidates();
     void test_type_resolver_evaluates_nothrow_invocable_for_functors();
     void test_type_resolver_matches_explicit_specialization_through_alias();
     void test_type_resolver_evaluates_constructible_traits();

@@ -840,8 +840,7 @@ MemberEvalResult CppTypeResolver::resolveMember(const ClassInstance &receiver,
             auto rightNormal = std::dynamic_pointer_cast<Statement>(right.statement);
             const StatementProperties qualifiers = StatementProperty::Const | StatementProperty::Volatile
                     | StatementProperty::LvalueReference | StatementProperty::RvalueReference;
-            if (leftNormal->normalizedArgs.contains('@') || rightNormal->normalizedArgs.contains('@')
-                    || (left.statement->properties & qualifiers) != (right.statement->properties & qualifiers)
+            if ((left.statement->properties & qualifiers) != (right.statement->properties & qualifiers)
                     || leftNormal->parameters.count() != rightNormal->parameters.count()) {
                 return false;
             }
@@ -1416,13 +1415,21 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
     auto frame = std::make_shared<TemplateBindingFrame>();
     frame->owner = function.get();
     frame->parent = outerBindings;
+    auto normal = std::dynamic_pointer_cast<Statement>(function);
     QSet<QString> templateParameters;
-    for (const TemplateParameterInfo &parameter : std::dynamic_pointer_cast<Statement>(function)->templateParameters)
+    for (const TemplateParameterInfo &parameter : normal->templateParameters)
         templateParameters.insert(parameter.name);
 
-    int explicitCount = qMin(explicitArguments.count(), std::dynamic_pointer_cast<Statement>(function)->templateParameters.count());
+    int totalParameterCount = normal->templateParameters.count();
+    int functionParameterCount = normal->functionTemplateParameterCount;
+    if (functionParameterCount < 0 || functionParameterCount > totalParameterCount)
+        functionParameterCount = totalParameterCount;
+    int firstFunctionParameter = totalParameterCount - functionParameterCount;
+    if (explicitArguments.count() > functionParameterCount)
+        return {};
+    int explicitCount = explicitArguments.count();
     for (int i = 0; i < explicitCount; ++i) {
-        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
+        const TemplateParameterInfo &parameter = normal->templateParameters[firstFunctionParameter + i];
         const TemplateArgument &argument = explicitArguments[i];
         if (parameter.kind == TemplateParameterKind::Type) {
             if (argument.kind != TemplateArgumentKind::Type || !argument.type)
@@ -1453,8 +1460,8 @@ PTemplateBindingFrame CppTypeResolver::matchFunctionCandidate(
             ++frame->revision;
         }
     }
-    for (int i = explicitCount; i < std::dynamic_pointer_cast<Statement>(function)->templateParameters.count(); ++i) {
-        const TemplateParameterInfo &parameter = std::dynamic_pointer_cast<Statement>(function)->templateParameters[i];
+    for (int i = firstFunctionParameter + explicitCount; i < totalParameterCount; ++i) {
+        const TemplateParameterInfo &parameter = normal->templateParameters[i];
         if (frame->values.contains(parameter.name))
             continue;
         QString defaultText = parameter.defaultArgumentText;
@@ -3394,11 +3401,41 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
         return result;
     visited.insert(instanceKey);
     const auto candidates = std::dynamic_pointer_cast<Statement>(instance.declaration)->children.values(name);
+    auto isNonConstMember = [](const PStatement &statement) {
+        if ((statement->kind != StatementKind::Function
+             && statement->kind != StatementKind::OverloadedOperator)
+                || statementIsStatic(statement)
+                || statement->properties.testFlag(StatementProperty::Const)) {
+            return false;
+        }
+        return !std::dynamic_pointer_cast<Statement>(statement)->declSpecifierProperties.testFlag(
+                DeclSpecifierProperty::Friend);
+    };
     QList<MemberResolution> constFallback;
+    bool hasNonConstMember = false;
     for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
         PStatement candidate = weak.lock();
         if (!candidate)
             continue;
+        if (candidate->kind == StatementKind::Alias) {
+            const QString &target = std::dynamic_pointer_cast<Statement>(candidate)->value;
+            int separator = target.lastIndexOf("::");
+            if (separator > 0) {
+                TypeInfo ownerType = parseTypeText(target.left(separator), evaluation);
+                ClassInstance owner = resolveTypeInstance(ownerType, instance.bindings,
+                                                          candidate->parentScope.lock(), evaluation);
+                const QList<MemberResolution> aliasedMembers = memberCandidates(
+                            owner, target.mid(separator + 2), visited, evaluation);
+                if (!aliasedMembers.isEmpty()) {
+                    for (MemberResolution member : aliasedMembers) {
+                        member.accessibility = candidate->accessibility;
+                        result.append(member);
+                        hasNonConstMember |= isNonConstMember(member.statement);
+                    }
+                    continue;
+                }
+            }
+        }
         bool qualifiedMember = (candidate->kind == StatementKind::Function
                                 || candidate->kind == StatementKind::OverloadedOperator)
                 && !statementIsStatic(candidate);
@@ -3416,10 +3453,11 @@ QList<CppTypeResolver::MemberResolution> CppTypeResolver::memberCandidates(
             constFallback.append({candidate, instance, candidate->accessibility});
         } else {
             result.append({candidate, instance, candidate->accessibility});
+            hasNonConstMember |= isNonConstMember(candidate);
         }
     }
-    if (result.isEmpty())
-        result = constFallback;
+    if (!hasNonConstMember)
+        result += constFallback;
     if (!result.isEmpty())
         return result;
 

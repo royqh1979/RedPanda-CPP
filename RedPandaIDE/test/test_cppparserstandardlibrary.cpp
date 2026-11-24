@@ -1617,6 +1617,7 @@ void TestCppParserStandardLibrary::test_standard_library_parse_baseline()
     timer.start();
     CppParser::parseFileBlocking(mParser, main, true, "");
     qWarning() << "STDLIB_TEST_TIMING completeParseMs" << timer.elapsed();
+    qWarning() << "STDLIB_TEST_STATEMENTS" << mParser->statementList().count();
     QVERIFY(mParser->findStatement("std::vector"));
     QVERIFY(mParser->findStatement("std::basic_string::append"));
     PStatement variable = mParser->findStatementOf(main, "lst", 4);

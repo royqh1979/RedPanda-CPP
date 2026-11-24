@@ -247,6 +247,7 @@ struct Statement : AbstractStatement {
     QString trailingReturnType;
     TypeInfo templatePattern;
     QVector<TemplateParameterInfo> templateParameters;
+    int functionTemplateParameterCount = -1;
     QVector<QString> inheritedDefaultArgumentTexts;
     DeclSpecifierProperties declSpecifierProperties;
     ClassKey classKey = ClassKey::Class;

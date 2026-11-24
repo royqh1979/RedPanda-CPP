@@ -77,7 +77,7 @@ derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueR
 
 - Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
 - Array 保存维度文本，迁移期不要求值。
-- Function 保存已经解析的 ParameterInfo 列表，并根据它生成迁移期兼容用的 `args/normalizedArgs`，避免函数定义后再用 `scanMethodArgs()` 二次解析。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
+- Function 保存已经解析的 ParameterInfo 列表和声明解析时按模板形参位置生成的 `normalizedArgs`；StatementBuilder 根据结构化信息生成兼容用 `args` 并复制规范签名，避免函数定义后再用 `scanMethodArgs()` 或对签名重新 Tokenize。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
 - Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
 
 trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。

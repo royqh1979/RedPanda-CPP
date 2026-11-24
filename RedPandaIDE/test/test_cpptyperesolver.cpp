@@ -233,7 +233,7 @@ void TestCppTypeResolver::test_type_resolver_binds_dependent_base_members()
                 "  using reference = T&;\n"
                 "  reference get();\n"
                 "};\n"
-                "template<typename T> struct Derived : Base<T> {};\n"
+                "template<typename T> struct Derived : Base<T> { using Base<T>::get; };\n"
                 "template<typename T> struct StdAlloc { using value_type = T; };\n"
                 "template<typename A> struct Traits { using value_type = typename A::value_type; };\n"
                 "template<typename A, typename = typename A::value_type> struct Alloc : Traits<A> {\n"
@@ -1122,6 +1122,30 @@ void TestCppTypeResolver::test_inherited_member_enumeration_and_access()
     QCOMPARE(basePrivateValue->accessibility, StatementAccessibility::Private);
 }
 
+void TestCppTypeResolver::test_const_member_with_nonmember_candidates()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "struct Iterator {\n"
+                "  Iterator operator+(int) const;\n"
+                "  friend Iterator operator+(int, Iterator) { return {}; }\n"
+                "};\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/const_member_with_nonmember.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    DeclarationInfo iterator;
+    QVERIFY(parseDeclarationText("Iterator value;", iterator));
+    DeclarationInfo argument;
+    QVERIFY(parseDeclarationText("int value;", argument));
+    QCOMPARE(resolver.invokeMember(iterator.specifiers.type, "operator+",
+                                   {argument.specifiers.type}).type.toString(), "Iterator");
+}
+
 void TestCppTypeResolver::test_type_resolver_evaluates_nothrow_invocable_for_functors()
 {
     QVector<DeclarationInfo> declarations;
@@ -1784,11 +1808,15 @@ void TestCppTypeResolver::test_type_resolver_matches_function_specialization_pac
                 "  Function& self();\n"
                 "  Function& operator=(const Function&);\n"
                 "  Function& operator=(Function&&);\n"
+                "  using value_type = R;\n"
                 "  R operator()(Args...);\n"
+                "  void erase(const R&);\n"
                 "  template<typename T, typename U = double> T* target();\n"
                 "};\n"
                 "template<typename R, typename... Args>\n"
                 "R Function<R(Args...)>::operator()(Args...) {}\n"
+                "template<typename R, typename... Args>\n"
+                "void Function<R(Args...)>::erase(const value_type&) {}\n"
                 "template<typename R, typename... Args>\n"
                 "template<typename T, typename U>\n"
                 "T* Function<R(Args...)>::target() { return nullptr; }\n", declarations));
@@ -1816,6 +1844,10 @@ void TestCppTypeResolver::test_type_resolver_matches_function_specialization_pac
     DeclarationInfo empty;
     QVERIFY(parseDeclarationText("Function<void()> empty;", empty));
     QCOMPARE(resolver.invokeResult(empty.specifiers.type, "operator()").toString(), "void");
+    DeclarationInfo valueArgument;
+    QVERIFY(parseDeclarationText("int value;", valueArgument));
+    QCOMPARE(resolver.invokeMember(instance, "erase", {valueArgument.specifiers.type}).type.toString(),
+             "void");
 
     DeclarationInfo explicitArgument;
     QVERIFY(parseDeclarationText("int explicitValue;", explicitArgument));

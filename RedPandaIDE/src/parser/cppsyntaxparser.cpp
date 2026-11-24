@@ -188,6 +188,13 @@ bool CppSyntaxParser::parseClass(DeclarationInfo &result)
     int closeIndex = matchedScopeClose(mCursor);
     mCursor.advance();
 
+    int checkpoint = mDeclarationParser.templateParameterCheckpoint();
+    mDeclarationParser.appendTemplateParameters(result.templateParameters);
+    struct TemplateParameterScope {
+        CppDeclarationParser *parser;
+        int checkpoint;
+        ~TemplateParameterScope() { parser->restoreTemplateParameters(checkpoint); }
+    } templateParameterScope{&mDeclarationParser, checkpoint};
     QString previousClassName = mDeclarationParser.currentClassName();
     mDeclarationParser.setCurrentClassName(declarator.name);
     DeclarationAccessibility accessibility = result.classKey == ClassKey::Class

@@ -32,6 +32,8 @@ Red Panda C++ Version 3.6
   - fix: Resolve std::function calls and assignments without hanging or losing function-signature template bindings.
   - fix: Preserve deleted declarations and conversion-operator target types, and resolve inherited members through aliases and template specializations.
   - fix: Handle compiler-specific preprocessor builtins and C _Complex declarations correctly.
+  - fix: Merge template declarations and definitions using positional parameter normalization, and bind member-template arguments correctly.
+  - fix: Resolve using-declared base members and const member operators alongside nonmember overloads.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Avoid full-document pending-layout scans when scheduling editor layout work.
   - enhancement: Move non-urgent multi-line layout work off the UI thread during bulk edits.

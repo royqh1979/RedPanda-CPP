@@ -102,6 +102,8 @@ struct ParameterInfo {
     QString name;
     SourcePosition position;
     QString defaultArgumentText;
+    QString normalizedText;
+    bool normalizationChanged = false;
     bool parameterPack = false;
 
     QString toString(bool includeName = true) const;
@@ -148,6 +150,7 @@ struct TypeDerivation {
     QString noexceptExpression;
     QString trailingReturnType;
     QString requiresClause;
+    QString normalizedArgs;
 
     static TypeDerivation pointer(TypeQualifiers qualifiers = TypeQualifier::None);
     static TypeDerivation lvalueReference();
@@ -193,6 +196,7 @@ struct DeclaratorInfo {
     bool globallyQualified = false;
     bool parameterPack = false;
     SourcePosition position;
+    SourcePosition namePosition;
     QVector<TypeDerivation> derivations;
     QString initializerText;
     SourcePosition initializerPosition;
