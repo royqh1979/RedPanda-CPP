@@ -840,6 +840,31 @@ void TestCppTypeResolver::test_reopened_namespace_lookup_checks_all_declarations
 }
 
 
+void TestCppTypeResolver::test_namespace_using_lookup_prefers_declared_function()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "void abort();\n"
+                "namespace std { using ::abort; }\n"
+                "using std::abort;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+
+    PStatement stdAlias = resolver.findStatement("std::abort");
+    QVERIFY(stdAlias);
+    QCOMPARE(stdAlias->kind, StatementKind::Alias);
+    PStatement target = resolver.findStatement(
+                std::dynamic_pointer_cast<Statement>(stdAlias)->value,
+                stdAlias->parentScope.lock());
+    QVERIFY(target);
+    QCOMPARE(target->kind, StatementKind::Function);
+}
+
 void TestCppTypeResolver::test_reopened_nested_namespace_lookup_checks_all_branches()
 {
     for (bool reverseOrder : {false, true}) {

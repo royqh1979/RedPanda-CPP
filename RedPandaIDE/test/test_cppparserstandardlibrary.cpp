@@ -86,6 +86,26 @@ void TestCppParserStandardLibrary::test_bits_stdcpp_not_rescanned_on_stable_repa
     QCOMPARE(mParser->statementList().count(), statementCount);
 }
 
+void TestCppParserStandardLibrary::test_standard_library_abort_alias()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
+    CppParser::parseFileBlocking(mParser, main, true, "");
+
+    PStatement alias = mParser->findStatement("std::abort");
+    QVERIFY(alias);
+    PStatement target = mParser->findAliasedStatement(alias);
+    QVERIFY(target);
+    QCOMPARE(target->kind, StatementKind::Function);
+    QCOMPARE(target->command, QString("abort"));
+    if (alias->kind == StatementKind::Alias)
+        QVERIFY(target != alias);
+}
+
 void TestCppParserStandardLibrary::test_standard_library_string()
 {
     QTemporaryDir tmp;

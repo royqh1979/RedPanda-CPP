@@ -28,6 +28,7 @@ Red Panda C++ Version 3.6
   - fix: Avoid treating type-less function calls as declarations while preserving constructors and deduction guides.
   - enhancement: Improve editor painting and semantic highlighting performance, and keep identifier colors stable until background parsing completes.
   - fix: Show code completion immediately after namespace and member access operators, before typing the next identifier.
+  - fix: Resolve standard C function aliases to their real declarations, preventing completion confirmation from hanging on symbols such as std::abort.
   - enhancement: Avoid full-document layout recalculation for single-line edits and update horizontal scrolling only when the maximum line width is valid.
   - enhancement: Avoid full-document pending-layout scans when scheduling editor layout work.
   - enhancement: Move non-urgent multi-line layout work off the UI thread during bulk edits.

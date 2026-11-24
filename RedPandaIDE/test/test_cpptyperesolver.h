@@ -28,6 +28,7 @@ private slots:
     void test_type_operations_resolve_standard_range_views();
     void test_inline_namespace_member_lookup();
     void test_reopened_namespace_lookup_checks_all_declarations();
+    void test_namespace_using_lookup_prefers_declared_function();
     void test_reopened_nested_namespace_lookup_checks_all_branches();
     void test_namespace_lookup_transparency_and_scope_boundaries();
     void test_namespace_delete_does_not_reinsert_transparent_descendants();

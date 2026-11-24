@@ -13,6 +13,9 @@
 #include "src/settings/codecompletionsettings.h"
 #include "src/settings/editorsettings.h"
 #include "test_editor_general.h"
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+#include "test_parser_utils.h"
+#endif
 
 void TestEditorGeneral::test_syntax_check_target_editor()
 {
@@ -469,6 +472,72 @@ void TestEditorGeneral::test_completion_of_cplusplus_macro_after_ifdef()
     mEditor->setCompletionPopup(nullptr);
     mEditor->setCodeCompletionSettings(nullptr);
 }
+
+#ifdef REDPANDA_PARSER_STDLIB_TEST
+void TestEditorGeneral::test_completion_confirm_abort_from_standard_library()
+{
+    QTemporaryDir temporaryDir;
+    QVERIFY(temporaryDir.isValid());
+    QString filename = temporaryDir.filePath("main.cpp");
+    QStringList lines{
+        "#include <bits/stdc++.h>",
+        "",
+        "int main() {",
+        "    std::unordered_map<std::"
+    };
+    QFile file(filename);
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    QCOMPARE(file.write(lines.join('\n').toUtf8()), qint64(lines.join('\n').toUtf8().size()));
+    file.close();
+
+    PCppParser parser = std::make_shared<CppParser>();
+    QString bitsStdcpp;
+    QVERIFY(configureStandardLibraryParser(parser, bitsStdcpp));
+    CppParser::parseFileBlocking(parser, filename, true, "");
+
+    mEditor->setFilename(filename);
+    mEditor->setFileType(FileType::CppSource, false);
+    mEditor->loadContent(lines);
+    mEditor->setCaretPos({mEditor->lineText(3).length(), 3});
+    mEditor->setCppParser(parser);
+    CodeCompletionSettings completionSettings(mSettingsPersistor.get());
+    completionSettings.load();
+    completionSettings.setEnabled(true);
+    completionSettings.setRecordUsage(false);
+    completionSettings.setAppendFunc(true);
+    completionSettings.setHideSymbolsStartsWithUnderLine(false);
+    completionSettings.setHideSymbolsStartsWithTwoUnderLine(false);
+    mEditor->setCodeCompletionSettings(&completionSettings);
+    mEditor->mCodeCompletionEnabled = true;
+    CodeCompletionPopup popup(mColorManager.get(), nullptr);
+    popup.setShowEditorCaretFunc([] {});
+    mEditor->setCompletionPopup(&popup);
+
+    popup.setKeypressedCallback([this](QKeyEvent *event) {
+        return mEditor->onCompletionKeyPressed(event);
+    });
+    popup.setParser(parser);
+    popup.setCurrentScope(parser->findScopeStatement(filename, 3));
+    popup.prepareSearch("", {"std"}, "::", {}, filename, 3,
+                        CodeCompletionType::Normal, {});
+    popup.search("", false, mEditorSettings->colorScheme());
+    QListView *view = popup.findChild<QListView *>();
+    QVERIFY(view);
+    QVERIFY(popup.isVisible());
+    QTest::keyClick(view, 'a');
+    QTest::keyClick(view, 'b');
+    QVERIFY(popup.selectedStatement());
+    QCOMPARE(popup.selectedStatement()->command, QString("abort"));
+
+    QTest::keyClick(view, Qt::Key_Return);
+
+    QCOMPARE(mEditor->lineText(3), QString("    std::unordered_map<std::abort()"));
+    QCOMPARE(mEditor->caretPos(), (QSynedit::CharPos{mEditor->lineText(3).length(), 3}));
+    QVERIFY(!popup.isVisible());
+    mEditor->setCompletionPopup(nullptr);
+    mEditor->setCodeCompletionSettings(nullptr);
+}
+#endif
 
 void TestEditorGeneral::test_semantic_export_profile()
 {

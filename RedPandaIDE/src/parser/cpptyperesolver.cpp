@@ -3355,6 +3355,7 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
     if (parts.isEmpty())
         return nullptr;
     const auto candidates = mModel.childrenStatements(scope).values(parts.first());
+    PStatement aliasResult;
     for (const std::weak_ptr<AbstractStatement> &weak : candidates) {
         PStatement candidate = weak.lock();
         if (!candidate || (typesOnly && !isTypeDeclaration(candidate)))
@@ -3364,10 +3365,15 @@ PStatement CppTypeResolver::findInNamespaceScope(const PStatement &scope,
                 auto alias = std::dynamic_pointer_cast<InlineAliasStatement>(candidate);
             candidate = alias->target.lock();
             }
-        if (PStatement result = findDeclarationRemainder(candidate, parts, typesOnly))
+        PStatement result = findDeclarationRemainder(candidate, parts, typesOnly);
+        if (!result)
+            continue;
+        if (result->kind != StatementKind::Alias)
             return result;
+        if (!aliasResult)
+            aliasResult = result;
     }
-    return nullptr;
+    return aliasResult;
 }
 
 PStatement CppTypeResolver::findDeclarationRemainder(const PStatement &statement,
