@@ -795,3 +795,68 @@ void TestCppParserInvalidation::test_auto_invalidation_preserves_definition_afte
     QCOMPARE(mParser->preprocessorEventCountsForTest(definition).scan, 2);
     QCOMPARE(mParser->preprocessorEventCountsForTest(definition).replay, 0);
 }
+
+
+void TestCppParserInvalidation::test_replay_applies_undefines_before_following_boundary()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString a = tmp.filePath("a.h");
+    QString b = tmp.filePath("b.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(a, {"#pragma once", "#undef TEMP", "int a_value;"}));
+    QVERIFY(writeLines(b, {"#pragma once", "#ifdef TEMP", "int stale_value;",
+                           "#else", "int fresh_value;", "#endif"}));
+    QVERIFY(writeLines(main, {"#define TEMP 1", "#include \"a.h\"", "#include \"b.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    PStatement fresh = mParser->findStatement("fresh_value");
+    QVERIFY(fresh);
+    QVERIFY(!mParser->findStatement("stale_value"));
+    int statementCount = mParser->statementList().count();
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QCOMPARE(mParser->findStatement("fresh_value"), fresh);
+    QVERIFY(!mParser->findStatement("stale_value"));
+    QCOMPARE(mParser->statementList().count(), statementCount);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(a).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(a).replay > 0);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(b).replay > 0);
+}
+
+
+void TestCppParserInvalidation::test_replay_redefine_after_undef_replaces_undef_record()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString inner = tmp.filePath("inner.h");
+    QString a = tmp.filePath("a.h");
+    QString b = tmp.filePath("b.h");
+    QString main = tmp.filePath("main.cpp");
+    QVERIFY(writeLines(inner, {"#undef TEMP"}));
+    QVERIFY(writeLines(a, {"#pragma once", "#define TEMP 8", "#include \"inner.h\"",
+                           "#define TEMP 8", "int a_value;"}));
+    QVERIFY(writeLines(b, {"#pragma once", "#if TEMP == 8", "int fresh_value;",
+                           "#else", "int stale_value;", "#endif"}));
+    QVERIFY(writeLines(main, {"#include \"a.h\"", "#include \"b.h\""}));
+
+    mParser->addIncludePath(tmp.path());
+    mParser->addProjectFile(main, true);
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    PStatement fresh = mParser->findStatement("fresh_value");
+    QVERIFY(fresh);
+    QVERIFY(!mParser->findStatement("stale_value"));
+    int statementCount = mParser->statementList().count();
+
+    CppParser::parseFileBlocking(mParser, main, false, "");
+    QCOMPARE(mParser->findStatement("fresh_value"), fresh);
+    QVERIFY(!mParser->findStatement("stale_value"));
+    QCOMPARE(mParser->statementList().count(), statementCount);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(a).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(a).replay > 0);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).scan, 1);
+    QVERIFY(mParser->preprocessorEventCountsForTest(b).replay > 0);
+}

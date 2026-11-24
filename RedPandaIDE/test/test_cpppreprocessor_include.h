@@ -41,8 +41,8 @@ private slots:
     void test_reprocess_same_instance();
     void test_clear_registry();
     void test_reprocess_after_remove_replay_record();
-    void test_hard_define_restore();
-    void test_undef_restore();
+    void test_hard_define_invalidation_rescans();
+    void test_undef_invalidation_rescans();
     void test_on_get_file_stream();
     void test_unfiltered_file_stream_callback_exhausts_depth_cap();
     void test_session_file_cache_reuse_and_clear();

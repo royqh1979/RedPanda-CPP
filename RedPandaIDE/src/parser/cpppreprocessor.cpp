@@ -573,7 +573,7 @@ void CppPreprocessor::invalidateFileAndDependents(Session &session, const QStrin
         if (mFileInvalidationHandler)
             mFileInvalidationHandler(affectedFile);
         else
-            removeReplayRecord(session, affectedFile);
+            removeReplayRecord(affectedFile);
     }
 }
 
@@ -633,8 +633,10 @@ void CppPreprocessor::addDefineByParts(Session *session, const QString &fileName
         }
     } else {
         PReplayRecord replayRecord = replayRecordForFile(*session, fileName);
-        if (replayRecord)
+        if (replayRecord) {
             replayRecord->defines()->insert(define->name,define);
+            replayRecord->undefines()->remove(name);
+        }
         session->defines.insert(name,define);
     }
 }
@@ -724,37 +726,11 @@ void CppPreprocessor::preprocess(Session &session, const QString &fileName)
     if (oldRootInfo && hasChangedFiles(oldRootInfo->fileName(), oldRootInfo->includes()))
         invalidateFileAndDependents(session, fileName);
     else
-        removeReplayRecord(session, fileName);
+        removeReplayRecord(fileName);
     openInclude(session, fileName);
     preprocessBuffer(session);
     if (preprocessorProfile.enabled)
         qWarning() << "PREPROCESSOR_PROTECTION scannedIncludes" << session.scannedIncludeCount;
-}
-
-void CppPreprocessor::invalidDefinesInFile(Session &session, const QString &fileName)
-{
-    PReplayRecord replayRecord = findReplayRecord(fileName);
-    if (!replayRecord)
-        return;
-    PDefineMap defineMap = replayRecord->defines();
-    if (defineMap) {
-        for (const PDefine &define : *defineMap) {
-            const PDefine &current = session.defines.value(define->name);
-            if (current == define) {
-                session.defines.remove(define->name);
-                PDefine hardDefine = mHardDefines.value(define->name);
-                if (hardDefine)
-                    session.defines.insert(define->name, hardDefine);
-            }
-        }
-        defineMap->clear();
-    }
-    PDefineMap undefineMap = replayRecord->undefines();
-    if (undefineMap) {
-        for (const PDefine &define : *undefineMap)
-            session.defines.insert(define->name, define);
-        undefineMap->clear();
-    }
 }
 
 void CppPreprocessor::dumpDefinesTo(const Session &session, const QString &fileName) const
@@ -816,12 +792,6 @@ void CppPreprocessor::removeReplayRecord(const QString &filename)
         mInvalidateCounts[filename]++;
 #endif
     mRegistry.replayRecords.remove(filename);
-}
-
-void CppPreprocessor::removeReplayRecord(Session &session, const QString &filename)
-{
-    invalidDefinesInFile(session, filename);
-    removeReplayRecord(filename);
 }
 
 QString CppPreprocessor::expandMacros(QString text) const
@@ -953,13 +923,13 @@ void CppPreprocessor::handleUndefine(Session &session, const QString& tokens)
         //remove the define from defines set
         session.defines.remove(name);
         PReplayRecord replayRecord = replayRecordForFile(session, session.fileName);
-        if (define->filename == session.fileName) {
-            if (replayRecord && replayRecord->defines())
-                replayRecord->defines()->remove(name);
-        } else if (replayRecord) {
-            PDefineMap undefineMap = replayRecord->undefines();
-            if (!undefineMap->contains(name))
-                undefineMap->insert(name, define);
+        if (replayRecord) {
+            replayRecord->defines()->remove(name);
+            if (define->filename != session.fileName) {
+                PDefineMap undefineMap = replayRecord->undefines();
+                if (!undefineMap->contains(name))
+                    undefineMap->insert(name, define);
+            }
         }
     }
     session.result[session.preProcIndex] = "#undef " + name; // add define to result file so the parser can handle it
@@ -1408,6 +1378,12 @@ void CppPreprocessor::addDefinesInFile(Session &session, const QString &fileName
     if (defineList) {
         foreach (const PDefine& define, defineList->values()) {
             session.defines.insert(define->name,define);
+        }
+    }
+    PDefineMap undefineList = replayRecord ? replayRecord->undefines() : PDefineMap();
+    if (undefineList) {
+        foreach (const PDefine& define, undefineList->values()) {
+            session.defines.remove(define->name);
         }
     }
 

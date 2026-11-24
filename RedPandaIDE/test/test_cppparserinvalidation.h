@@ -31,6 +31,8 @@ private slots:
     void test_bits_stdcpp_not_rescanned_when_switching_roots();
     void test_reset_parser_clears_registry_and_statements();
     void test_auto_invalidation_preserves_definition_after_declaration_change();
+    void test_replay_applies_undefines_before_following_boundary();
+    void test_replay_redefine_after_undef_replaces_undef_record();
 };
 
 

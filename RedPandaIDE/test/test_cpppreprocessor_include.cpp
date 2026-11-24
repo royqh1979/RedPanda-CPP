@@ -677,43 +677,41 @@ void TestCppPreprocessorInclude::test_reprocess_after_remove_replay_record()
     p.addIncludePath(dir);
     p.addProjectFile(dir + "/main.cpp");
     QStringList first = runScenario(p, pSession, dir, "main.cpp");
-    p.removeReplayRecord(pSession, dir + "/main.cpp");
+    p.removeReplayRecord(dir + "/main.cpp");
     QCOMPARE(runScenario(p, pSession, dir, "main.cpp"), QStringList({
                  "#include <DIR>/main.cpp:-1",
                  "",
                  "int main() { return foo(); }"}));
     // Invalidating the included header as well forces a full re-scan
     // and reproduces the original result.
-    p.removeReplayRecord(pSession, dir + "/main.cpp");
-    p.removeReplayRecord(pSession, dir + "/a.h");
+    p.removeReplayRecord(dir + "/main.cpp");
+    p.removeReplayRecord(dir + "/a.h");
     QCOMPARE(runScenario(p, pSession, dir, "main.cpp"), first);
 }
 
-void TestCppPreprocessorInclude::test_hard_define_restore()
+void TestCppPreprocessorInclude::test_hard_define_invalidation_rescans()
 {
-    // A file define shadowing a hard define is removed on invalidation
-    // and the hard define is restored.
     QString dir = scenarioPath("replay");
     CppPreprocessor p;
     CppPreprocessor::Session pSession;
     p.addHardDefineByLine("#define UNG_V 0");
     p.preprocess(pSession, dir + "/a3.cpp");
     QCOMPARE(p.getDefine(pSession, "UNG_V")->value, "1");
-    p.removeReplayRecord(pSession, dir + "/ung.h");
-    QCOMPARE(p.getDefine(pSession, "UNG_V")->value, "0");
+    p.removeReplayRecord(dir + "/ung.h");
+    p.preprocess(pSession, dir + "/a3.cpp");
+    QCOMPARE(p.getDefine(pSession, "UNG_V")->value, "1");
 }
 
-void TestCppPreprocessorInclude::test_undef_restore()
+void TestCppPreprocessorInclude::test_undef_invalidation_rescans()
 {
-    // An external #undef (of a macro defined in another file) is
-    // recorded per file; invalidating that file restores the define.
     QString dir = scenarioPath("undef_external");
     CppPreprocessor p;
     CppPreprocessor::Session pSession;
     p.preprocess(pSession, dir + "/main.cpp");
     QVERIFY(!p.getDefine(pSession, "X"));
-    p.removeReplayRecord(pSession, dir + "/main.cpp");
-    QCOMPARE(p.getDefine(pSession, "X")->value, "1");
+    p.removeReplayRecord(dir + "/main.cpp");
+    p.preprocess(pSession, dir + "/main.cpp");
+    QVERIFY(!p.getDefine(pSession, "X"));
 }
 
 void TestCppPreprocessorInclude::test_on_get_file_stream()
@@ -1190,7 +1188,7 @@ void TestCppPreprocessorInclude::test_file_info_and_replay_record_partition()
     QVERIFY(rootReplay->hasReplayCondition());
     QVERIFY(rootReplay->userMacros().contains("USER_MODE"));
     QVERIFY(rootReplay->boundaryPrefix().isEmpty());
-    QVERIFY(rootReplay->defines()->contains("ROOT_VALUE"));
+    QVERIFY(!rootReplay->defines()->contains("ROOT_VALUE"));
     QVERIFY(rootReplay->defines()->contains("INNER_VALUE"));
     QVERIFY(rootReplay->undefines()->contains("ROOT_VALUE"));
 
@@ -1199,6 +1197,7 @@ void TestCppPreprocessorInclude::test_file_info_and_replay_record_partition()
     QCOMPARE(p.eventCounts(root).replay, 1);
     QCOMPARE(p.eventCounts(inner).scan, 1);
     QCOMPARE(p.expandMacros(pSession,"INNER_VALUE"), QString("2"));
+    QVERIFY(!p.getDefine(pSession, "ROOT_VALUE"));
 }
 
 void TestCppPreprocessorInclude::test_nonproject_include_path_file_is_inside_boundary()

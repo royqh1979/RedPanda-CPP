@@ -132,7 +132,6 @@ public:
     void addIncludePath(const QString& fileName);
     void addProjectIncludePath(const QString& fileName);
     void removeReplayRecord(const QString& filename);
-    void removeReplayRecord(Session &session, const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
     void invalidateFileAndDependents(const QString &fileName);
     void invalidateFileAndDependents(Session &session, const QString &fileName);
@@ -284,10 +283,6 @@ private:
     void addDefineByParts(Session *session, const QString &fileName, const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
     void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getHardDefine(const QString& name){
-        return mHardDefines.value(name,PDefine());
-    };
-    void invalidDefinesInFile(Session &session, const QString& fileName);
     static QString signatureOfDefine(const PDefine& define);
     QHash<QString,QString> userMacroSnapshot(const Session &session) const;
     bool hasChangedFiles(const QString &fileName, const QSet<QString> &includes) const;
