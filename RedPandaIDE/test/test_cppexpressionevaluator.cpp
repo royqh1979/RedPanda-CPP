@@ -584,6 +584,36 @@ void TestCppExpressionEvaluator::test_noexcept_evaluates_selected_calls()
     QCOMPARE(evaluate("missing()"), ConstraintSatisfaction::Unknown);
 }
 
+void TestCppExpressionEvaluator::test_expression_evaluator_qualified_lookup()
+{
+    QVector<DeclarationInfo> declarations;
+    QVERIFY(parseSyntaxText(
+                "void abort();\n"
+                "namespace std { int value; using ::abort; }\n"
+                "using std::abort;\n", declarations));
+    StatementModel model;
+    CppStatementBuilder builder(model);
+    StatementBuildContext context;
+    context.fileName = "/tmp/main.cpp";
+    for (const DeclarationInfo &declaration : declarations)
+        builder.build(declaration, context);
+    CppTypeResolver resolver(model);
+    TypeOperationRegistry operations(resolver);
+    CppExpressionEvaluator evaluator(model, resolver, operations);
+    auto evaluate = [&](const QString &text) {
+        CppTokenizer expression;
+        expression.tokenize({text});
+        return evaluator.evaluate(expression);
+    };
+
+    EvalResult variable = evaluate("std::value");
+    QVERIFY(variable.isValid());
+    QCOMPARE(variable.type.toString(), "int");
+    EvalResult function = evaluate("std::abort");
+    QVERIFY(function.isValid());
+    QCOMPARE(function.kind, EvalStatementKind::Function);
+}
+
 void TestCppExpressionEvaluator::test_evaluator_internal_lookup_and_results()
 {
     QVector<DeclarationInfo> declarations;
