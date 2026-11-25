@@ -554,7 +554,8 @@ QSet<QString> CppPreprocessor::calculateAffectedFiles(const QString &fileName) c
     for (auto it = mRegistry.replayRecords.constBegin();
             it != mRegistry.replayRecords.constEnd(); ++it) {
         PParsedFileInfo rootInfo = findFileInfo(it.key());
-        if (rootInfo && rootInfo->including(fileName))
+        if ((rootInfo && rootInfo->including(fileName))
+                || it.value()->boundaryPrefix().contains(fileName))
             affected.insert(it.key());
     }
     return affected;

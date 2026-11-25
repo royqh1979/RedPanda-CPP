@@ -11,7 +11,7 @@ private slots:
     void test_shared_boundary_statement_invalidation();
     void test_shared_boundary_statement_invalidation_only();
     void test_invalidation_preserves_earlier_boundary_record();
-    void test_removed_boundary_include_remains_inactive_cached_record();
+    void test_removed_boundary_include_invalidates_prefix_dependent_record();
     void test_repeated_template_include_preserves_each_context();
     void test_shared_template_statement_ownership();
     void test_statement_ownership_declaration_definition_invalidation();

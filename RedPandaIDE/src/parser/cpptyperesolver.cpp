@@ -3541,7 +3541,7 @@ PStatement CppTypeResolver::findDeclaration(const QString &qualifiedName,
         name.remove(0, 2);
         initialContext.reset();
     }
-    const QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    const QStringList parts = splitQualifiedName(name);
     if (parts.isEmpty())
         return nullptr;
     bool cacheEnabled = mEvaluation && !mEvaluation->allowModelChanges

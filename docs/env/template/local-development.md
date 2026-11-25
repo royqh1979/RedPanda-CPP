@@ -45,6 +45,7 @@ Debug 配置将 `CMAKE_BUILD_TYPE` 改为 `Debug`，并使用对应的 Debug Qt 
 
 - `QSYNEDIT_BUILD_PROFILE_TESTS=ON`：编译 QSynEdit profiling 用例，默认 OFF。
 - `REDPANDA_PARSER_STDLIB_TEST=ON`：启用标准库 Parser 验收，需设置 `REDPANDA_PARSER_STDLIB_MINGW_ROOT`。
+- 直接运行标准库测试或 profile 时设置 `LC_ALL=C`，确保编译器输出英文 include 路径标记；CTest 由 CMake 自动设置。
 - `REDPANDA_PARSER_DECLARATION_PROFILE=ON`：启用声明级细分计时，默认 OFF。
 - 其它选项以根目录 `CMakeLists.txt` 和 `BUILD.md` 为准。
 

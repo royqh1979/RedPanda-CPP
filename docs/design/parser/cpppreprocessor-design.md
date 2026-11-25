@@ -141,18 +141,20 @@ namespace 的每次出现都登记为 declaration occurrence，剩余 occurrence
 
 生产环境中 Preprocessor 必须隶属于 Parser，不能脱离 Parser 独立使用。Preprocessor 因 stamp 或 replay 条件自动失效记录时，必须在删除 Registry 记录前通知所属 Parser，由 Parser 使用与显式编辑失效相同的清理入口。只有直接测试 Preprocessor 的单元测试可以不安装失效处理器，此时仅清理 Preprocessor 自身的宏和文件记录。不能在 Preprocessor 中另写一套 Statement 删除规则，也不能等 Registry 记录删除后再让 Parser 推测失效范围。
 
-文件 A 变化时，立即失效集合统一按失效前的 include 闭包计算：
+文件 A 变化时，立即失效集合统一按失效前的内容依赖和顺序依赖计算：
 
 ```text
-D = {A} ∪ {文件 f | A ∈ f 的 include 闭包}
+D = {A}
+    ∪ {Replay R | A ∈ R 的 FileInfo include 闭包}
+    ∪ {Replay R | A ∈ R 的 boundaryPrefix}
 只立即失效 D。
 ```
 
-D 中记录的传递 include 闭包已覆盖直接和间接包含者，无需递归扫描 directIncludes，也不提前失效后续跨界记录。重扫 D 中任一跨界记录后，本轮已生效前缀不再全部来自 replay，因此后续记录即使路径前缀和用户宏相同，也会在各自入口处失效并重扫。这与提前删除有序后缀等价，但保留前序及无关记录，并避免立即计算和删除整个后缀。
+include 闭包覆盖直接和间接内容包含者；boundaryPrefix 覆盖生效顺序依赖，即使对应记录并不包含 A，也不能继续复用。每条 ReplayRecord 保存完整有序前缀，因此一次遍历现有记录即可覆盖所有后缀，无需递归扫描 directIncludes、增加索引或执行迭代求闭包。位于 A 之前且不依赖 A 的记录必须保留。
 
-共享内部头的后续边界记录按同一规则惰性重扫，不需要转移 Statement 所有权。重扫某条记录前必须删除其旧 Statement 和 define/undef，避免与尚未处理到的其它旧记录混杂。
+共享内部头的后续边界记录也按上述规则立即失效，不需要转移 Statement 所有权。重扫某条记录前必须删除其旧 Statement 和 define/undef，避免与其它旧记录混杂。`allBoundaryEntriesReplayed` 仍用于阻止本轮前序实际重扫后的旧记录直接 replay，尤其覆盖前序文件本轮首次建立记录、没有旧记录可失效的情况；它不是省略立即级联失效的理由。
 
-若后续记录在新一轮中根本没有被包含，不做全局 orphan GC：它仍是可供其它 TU 校验复用的 Registry 缓存，但不属于当前 TU 的生效集合。当前 TU 的新 include 闭包必须使其旧 Statement 在该 TU 的上下文查找中不可见；以后只有在用户宏、前缀及前缀全部 replay 等条件重新满足时才能复用。
+不做全局 orphan GC。因内容或前缀依赖而失效的记录不能作为其它 TU 的旧缓存继续 replay；与失效文件无关的旧缓存仍可保留，但不属于当前 TU 的生效集合。当前 TU 的新 include 闭包必须使不再包含的旧 Statement 在该 TU 的上下文查找中不可见。
 
 扫描中的当前栈记录不得立即失效，但失效请求必须保留到扫描结束后执行，不能丢弃。失效操作不得只清 define 而留下 statement，也不得只清 statement 而留下 define。
 

@@ -423,6 +423,91 @@ void initializeParserGlobals()
 
 }
 
+QStringList splitQualifiedName(const QString &name)
+{
+    QStringList result;
+    int partStart = 0;
+    int parenthesisDepth = 0;
+    int bracketDepth = 0;
+    int braceDepth = 0;
+    int templateDepth = 0;
+    QChar quote;
+    bool escaped = false;
+
+    auto isNameChar = [](QChar ch) {
+        return ch == '_' || ch.isLetterOrNumber();
+    };
+    auto finishPart = [&](int end) {
+        QString part = name.mid(partStart, end - partStart).trimmed();
+        if (!part.isEmpty())
+            result.append(part);
+    };
+
+    for (int i = 0; i < name.length(); ++i) {
+        const QChar ch = name[i];
+        if (!quote.isNull()) {
+            if (escaped)
+                escaped = false;
+            else if (ch == '\\')
+                escaped = true;
+            else if (ch == quote)
+                quote = QChar();
+            continue;
+        }
+        if (ch == '\'' || ch == '"') {
+            quote = ch;
+            continue;
+        }
+        if (ch == ':' && i + 1 < name.length() && name[i + 1] == ':'
+                && parenthesisDepth == 0 && bracketDepth == 0
+                && braceDepth == 0 && templateDepth == 0) {
+            finishPart(i);
+            ++i;
+            partStart = i + 1;
+            continue;
+        }
+        switch (ch.unicode()) {
+        case '(':
+            ++parenthesisDepth;
+            continue;
+        case ')':
+            parenthesisDepth = qMax(0, parenthesisDepth - 1);
+            continue;
+        case '[':
+            ++bracketDepth;
+            continue;
+        case ']':
+            bracketDepth = qMax(0, bracketDepth - 1);
+            continue;
+        case '{':
+            ++braceDepth;
+            continue;
+        case '}':
+            braceDepth = qMax(0, braceDepth - 1);
+            continue;
+        default:
+            break;
+        }
+        if (ch == '<') {
+            int previous = i - 1;
+            while (previous >= 0 && name[previous].isSpace())
+                --previous;
+            bool followsOperator = false;
+            if (previous >= 7) {
+                int start = previous - 7;
+                followsOperator = QStringView(name).mid(start, 8) == QLatin1String("operator")
+                        && (start == 0 || !isNameChar(name[start - 1]));
+            }
+            if (previous >= 0 && !followsOperator && name[previous] != '<')
+                ++templateDepth;
+        } else if (ch == '>' && templateDepth > 0) {
+            --templateDepth;
+        }
+    }
+    finishPart(name.length());
+    return result;
+}
+
 QString getHeaderFilename(const QString &relativeTo, const QString &line,
                           const QStringList& includePaths) {
     QString result = "";

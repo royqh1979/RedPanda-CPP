@@ -170,26 +170,26 @@
 - 预期：A 失效并重扫，B replay。
 - 测试：`test_invalidation_preserves_earlier_boundary_record`。
 
-### P7 前序重扫使后续记录惰性失效
+### P7 前序失效使后续记录立即失效
 
 - 操作：main.cpp 先包含 A、再包含 B；失效 A 后、重扫前检查 B，然后重扫 main。
-- 判定依据：失效 A 只需同时失效其包含者，不必提前删除 B。重扫 A 后，本轮前缀虽然仍与 B 记录的路径序列相同，但其中的 A 不是 replay，不能证明本轮系统状态与 B 原记录相同，因此 B 必须在自身入口处失效并重扫。
-- 预期：失效 A 后 B 的记录仍有效且 invalidate 计数不增加；重扫时 A、B 均扫描，B 的 invalidate 计数此时才增加，结果与全量扫描一致。
-- 测试：`test_scanned_prefix_entry_forces_lazy_suffix_rescan`。
+- 判定依据：B 的 boundaryPrefix 包含 A，其宏环境和有序生效前提已不可靠。即使 B 的 include 闭包不包含 A，也必须在失效 A 时同步失效，不能等到 B 的入口才清理。
+- 预期：失效 A 后 B 的 ReplayRecord 已删除且 invalidate 计数增加；重扫时 A、B 均扫描，结果与全量扫描一致。
+- 测试：`test_invalidated_prefix_entry_invalidates_suffix_record`。
 
 ### P7a 声明头变化后的定义保留
 
 - 操作：main.cpp 依次包含声明头 A 和定义头 B，随后修改 A 并重扫。
-- 判定依据：与 P7 相同，A 已扫描而非 replay，后续 B 必须重扫，不能因 A、B 路径序列未变而 replay。Statement 的声明部分随 A 更新，定义部分在 B 重扫后继续合并到同一实体，不能因声明失效而丢失定义。
+- 判定依据：与 P7 相同，B 因 boundaryPrefix 包含 A 而立即失效并重扫。Statement 的声明部分随 A 更新，定义部分在 B 重扫后继续合并到同一实体，不能因声明失效而丢失定义。
 - 预期：A、B 均扫描两次，B 的 replay 为 0；声明/定义范围及 ancestor 分别保留，函数仍有定义。
 - 测试：`test_auto_invalidation_preserves_definition_after_declaration_change`。
 
-### P8 后续记录未再次包含
+### P8 后续记录移除后不得跨 TU 复用旧前缀
 
 - 操作：首轮 main.cpp 包含 A、B；随后 A 和 main 改变，main 不再包含 B。重扫 main 后，另一 TU 再按 A、B 的相同顺序包含。
-- 判定依据：B 未在 main 的新一轮中生效，但其记录可能是其它 TU 的有效缓存，不能做全局 orphan GC。main 的新 include 闭包必须使旧 B 符号在该 TU 中不可见；另一 TU 中 A、B 均 replay 成功时，B 的宏环境和有序前缀重新得到完整校验，可以复用旧记录。
-- 预期：main 中不能解析到 B 的符号；另一 TU 中 A、B 都 replay，B 不提前失效，符号可见且与全量扫描一致。
-- 测试：`test_removed_boundary_include_remains_inactive_cached_record`。
+- 判定依据：B 的 boundaryPrefix 包含 A，失效 A 时必须同步失效 B，不能把 B 当作其它 TU 仍可复用的独立缓存。main 的新 include 闭包必须使旧 B 符号在该 TU 中不可见；另一 TU 可以 replay 已由 main 重建的 A，但必须重扫 B。
+- 预期：失效 A 后 B 的 ReplayRecord、FileInfo 和旧 Statement 立即清理；main 中不能解析到 B 的符号；另一 TU 中 A replay、B 重扫，最终符号可见且与全量扫描一致。
+- 测试：`test_removed_boundary_include_invalidates_prefix_dependent_record`。
 
 ## 4. Include 保护与跳过
 
@@ -343,15 +343,15 @@
 
 - 初始状态：main.cpp 包含 A.h、B.h；A、B 均包含受 `#pragma once` 保护的内部头 inner.h。
 - 操作：失效 A，然后重扫 main.cpp。
-- 正确性依据：失效阶段只移除 A 及其包含者 main。重扫 A 使本轮已生效前缀不再全部来自 replay，因此 B 在自身入口处失效并重扫；inner 随 B 在新 Session 中重新生效，不依赖 A 留下的 Statement。
-- 预期：失效 A 时 B 的记录保留；重扫后 A、B 和 inner 的符号均恢复且不重复。
+- 正确性依据：失效阶段移除 A 及其包含者 main；B 的 boundaryPrefix 包含 A，因此也立即失效。重扫时 B 在新 Session 中重新进入 inner，不依赖 A 留下的 Statement。
+- 预期：失效 A 时 B 的记录同步删除；重扫后 A、B 和 inner 的符号均恢复且不重复。
 - 测试：`test_shared_boundary_statement_invalidation_only`。
 
 ### S1b 修改后移除共享 include 并重扫
 
 - 初始状态：与 S1a 相同。
 - 操作：修改 A，使其不再包含 inner.h，然后失效 A 并重扫 main.cpp；main 和 B 的内容不变。
-- 正确性依据：失效计算使用修改前的闭包，因此失效阶段移除 A 和 main，但不必立即移除 B。A 重扫不再产生 inner；由于 A 已重扫，B 不能 replay，而是在入口处清除旧产物并重扫，从而在新 Session 中进入 inner 并生成正确 Statement。无需保留或转移 A 的旧 Statement。
+- 正确性依据：失效计算使用修改前的闭包和前缀，因此失效阶段移除 A、main 及顺序依赖 A 的 B。A 重扫不再产生 inner；B 重扫时在新 Session 中进入 inner 并生成正确 Statement。无需保留或转移 A 的旧 Statement。
 - 预期：A 的新内容生效，B 重扫后恢复 inner，inner 的公开符号存在且 StatementMap 不重复。
 - 测试：`test_shared_boundary_statement_invalidation`。
 

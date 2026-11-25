@@ -26,7 +26,7 @@ QString normalizedStatementName(QString name)
     if (name.contains("operator"))
         name.replace("filesystem::path", "path");
     QStringList result;
-    const QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    const QStringList parts = splitQualifiedName(name);
     for (const QString &part : parts) {
         QString normalized = part;
         int templateStart = normalized.indexOf('<');
@@ -247,7 +247,7 @@ void TestCppParserPublicApiBaseline::verifyAndProfile(const QString &stem)
     evalTimer.start();
     for (const ApiEntry &entry : entries) {
         QStringList expression;
-        const QStringList parts = entry.name.split("::", Qt::SkipEmptyParts);
+        const QStringList parts = splitQualifiedName(entry.name);
         for (const QString &part : parts) {
             if (!expression.isEmpty())
                 expression.append("::");

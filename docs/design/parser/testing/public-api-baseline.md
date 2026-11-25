@@ -42,3 +42,14 @@
 5. 输出 eval 数量、成功率、总耗时、平均耗时及最慢项。性能输出不作为默认 CTest 的耗时阈值。
 
 资源由 `test-resources` 依赖复制。默认配置不编译该 Suite，因此日常 Release/Debug 回归不增加标准库解析成本。
+
+## 运行环境
+
+直接运行任何标准库 Parser 测试或 profile 时必须设置 `LC_ALL=C`。测试通过编译器 `-E -v` 输出中的英文标记 `#include <...> search starts here:` 和 `End of search list.` 提取 include 路径；本地化输出会导致测试在 parse 前失败。CTest 已由 CMake 统一设置该环境变量，手工运行时需要显式设置：
+
+```sh
+LC_ALL=C QT_FORCE_STDERR_LOGGING=1 ./test-cppparser \
+  --suite=TestCppParserStandardLibrary test_standard_library_parse_baseline
+```
+
+该要求同时适用于 `REDPANDA_PARSER_STDLIB_TEST` 和 `REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST` 的 Suite。
