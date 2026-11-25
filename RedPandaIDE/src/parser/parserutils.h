@@ -605,6 +605,7 @@ extern QSet<QString> IOManipulators;
 extern QSet<QString> AutoTypes;
 
 void initializeParserGlobals();
+QStringList splitQualifiedName(const QString &name);
 
 QString getHeaderFilename(const QString& relativeTo, const QString& line,
                        const QStringList& includePaths);

@@ -20,6 +20,7 @@ Red Panda C++ Version 3.6
   - enhancement: Avoid duplicate full parses when opening files and use editor content versions to skip unchanged conditional reparsing.
   - fix: Build scopes for function-argument and nested lambdas, and invalidate user-header statements correctly on reparse.
   - fix: Reuse parsed lambda statements during type evaluation without duplicating model entries.
+  - fix: Preserve nested scope operators in template arguments and decltype expressions during declaration lookup.
   - enhancement: Locate the symbol under the caret in the current file's class browser from the editor context menu or a configurable shortcut.
   - enhancement: Hide generated names of anonymous types in the class browser and place them before named types of the same kind by definition line.
   - enhancement: Sort macros before other symbol kinds in the class browser.
@@ -66,6 +67,7 @@ Red Panda C++ Version 3.6
   - fix: Environment-sensitive headers are re-scanned at each include point, and headers changed on disk are re-scanned, instead of replaying stale defines.
   - fix: Preprocessor no longer crashes when parsing headers like <bits/stdc++.h> (a replay-cache invalidation could drop a header's recorded file info when it was already transitively included, and over-eager environment-sensitivity rescanning duplicated parser statements).
   - enhancement: Replay preprocessor define/undef results correctly and avoid cascading header invalidation and expensive statement cleanup on stable reparses.
+  - fix: Immediately invalidate replay records whose ordered boundary prefix contains a changed header.
   - change: Remove the "Included files only parse once" option (proved useless).
   - enhancement: Include cycles now behave like real compilers (unguarded files are re-entered and re-scanned, bounded by a nesting depth of 200).
   - fix: Undoing a multi-line paste or selection replacement with auto-indent preserves existing text and uses valid caret positions.

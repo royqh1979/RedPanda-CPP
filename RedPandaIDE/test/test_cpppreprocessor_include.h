@@ -60,7 +60,7 @@ private slots:
     void test_user_macro_change_forces_rescan();
     void test_replayed_entries_extend_prefix();
     void test_include_order_change_forces_rescan();
-    void test_scanned_prefix_entry_forces_lazy_suffix_rescan();
+    void test_invalidated_prefix_entry_invalidates_suffix_record();
     void test_guarded_noop_then_first_boundary_entry();
     void test_user_to_user_include_has_no_boundary_record();
     void test_system_subtree_belongs_to_boundary_ancestor();

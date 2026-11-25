@@ -1066,7 +1066,7 @@ void TestCppPreprocessorInclude::test_include_order_change_forces_rescan()
     }
 }
 
-void TestCppPreprocessorInclude::test_scanned_prefix_entry_forces_lazy_suffix_rescan()
+void TestCppPreprocessorInclude::test_invalidated_prefix_entry_invalidates_suffix_record()
 {
     QString dir = scenarioPath("boundary_replay");
     QString includeDir = dir + "/include";
@@ -1080,8 +1080,8 @@ void TestCppPreprocessorInclude::test_scanned_prefix_entry_forces_lazy_suffix_re
 
     p.invalidateFileAndDependents(pSession, first);
     QCOMPARE(p.eventCounts(first).invalidate, 1);
-    QCOMPARE(p.eventCounts(second).invalidate, 0);
-    QVERIFY(p.hasReplayRecord(second));
+    QCOMPARE(p.eventCounts(second).invalidate, 1);
+    QVERIFY(!p.hasReplayRecord(second));
 
     p.preprocess(pSession, root);
     QCOMPARE(p.eventCounts(first).scan, 2);

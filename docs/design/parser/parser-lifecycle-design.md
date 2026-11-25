@@ -66,9 +66,19 @@ reconfigureCppParser
   → 连接所需信号
 ```
 
-`Project::reconfigureParser()` 随后应用 project files 和 project include paths。通用配置入口不了解 Project；项目文件配置不放入 Registry。
+`Project::reconfigureParser()` 随后应用 project files，并把项目 include 目录并入 Parser 的统一有序 include paths，保持项目目录先于编译器目录。通用配置入口不了解 Project；项目文件配置不放入 Registry。
 
 `reparseActiveProject()` 固定执行 Project 配置重建并重解析当前 Editor，不遍历所有项目 TU。`resetParserProjectFiles()` 和独立的 include 清理接口不属于该流程。
+
+### 按需重解析与多 TU 缓存
+
+`parseFile(file, context)` 是强制和按需重解析的统一入口，不再保留 force/non-force 两套语义。只有请求的 file/context 与当前生效组合相同、当前 root/context 及其 include 闭包的 FileInfo 完整，并且闭包内编辑器版本或磁盘 mtime/size 均未变化时才能跳过。切换 TU 时即使目标 FileInfo 仍存在，也不能据此直接跳过。
+
+内存内容通过成对配置的文件读取和版本回调提供；读取回调同时返回内容与本次版本，版本回调用于不读取全文的变化检查。可变化的内存内容必须提供真实递增版本，纯磁盘文件使用 mtime/size。Replay 失效和 parse 跳过复用同一文件变化判断，但 `hasChangedFiles()` 不承担 FileInfo 完整性语义。
+
+实际重扫只清理本次 file/context 的旧边界外闭包和当前闭包的旧 Statement，不为防重复而清空其它 TU。先 preprocess context；file 与 context 不同且未被 context 包含时，再单独 preprocess file。本轮新建的 FileInfo/ReplayRecord 必须保留，occurrence 判重只防完全重复，不替代旧结果清理。
+
+不同 TU 的根文件、namespace occurrences 和与当前 TU 无关的用户文件可以继续缓存。带文件上下文的查询按实际文件及 include 闭包判断可见性；项目 Refactor 逐 TU 重解析和查询，不依赖 Parser 同时持有完整项目符号表。
 
 ## 3. Parser 所有权
 

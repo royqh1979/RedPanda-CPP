@@ -90,7 +90,7 @@ void TestCppParserInvalidation::test_invalidation_preserves_earlier_boundary_rec
     QCOMPARE(mParser->findStatement("plain_b"), before);
 }
 
-void TestCppParserInvalidation::test_removed_boundary_include_remains_inactive_cached_record()
+void TestCppParserInvalidation::test_removed_boundary_include_invalidates_prefix_dependent_record()
 {
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
@@ -112,17 +112,22 @@ void TestCppParserInvalidation::test_removed_boundary_include_remains_inactive_c
     QVERIFY(writeLines(a, {"int a_v2;"}));
     QVERIFY(writeLines(main, {"#include \"a.h\""}));
     mParser->invalidateFileAndDependents(a);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).invalidate, 1);
+    QVERIFY(!mParser->hasReplayRecord(b));
+    QVERIFY(!mParser->findFileInfo(b));
+    QVERIFY(!mParser->findStatement("cached_b"));
+
     CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(mParser->findStatementOf(main, "a_v2", 0));
     QVERIFY(!mParser->findStatementOf(main, "cached_b", 0));
-    QCOMPARE(mParser->preprocessorEventCountsForTest(b).invalidate, 0);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).invalidate, 1);
 
     CppParser::parseFileBlocking(mParser, other, "");
     QVERIFY(mParser->findStatementOf(other, "cached_b", 0));
     QCOMPARE(mParser->preprocessorEventCountsForTest(a).scan, 2);
     QVERIFY(mParser->preprocessorEventCountsForTest(a).replay > 0);
-    QCOMPARE(mParser->preprocessorEventCountsForTest(b).scan, 1);
-    QVERIFY(mParser->preprocessorEventCountsForTest(b).replay > 0);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).scan, 2);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(b).replay, 0);
 }
 
 void TestCppParserInvalidation::test_repeated_template_include_preserves_each_context()

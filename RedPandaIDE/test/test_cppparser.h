@@ -78,6 +78,8 @@ private slots:
     void test_nested_lambda_function_argument_scope();
     void test_lambda_evaluation_reuses_parse_statement();
     void test_parallel_lambda_arguments();
+    void test_qualified_name_lookup_preserves_template_scope();
+    void test_qualified_name_splitter();
 };
 
 

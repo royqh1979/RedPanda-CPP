@@ -74,10 +74,11 @@
 
 ## 方案与历史材料
 
-- `proposals/parser-reparse-unification.md`：当前统一重解析、多 TU 和 include paths 的方案及审核记录；不属于已确认的现状实现。
 - `proposals/cpp17-support-plan.md`：按能力分层扩展 C++17 的后续计划，不代表所有列举能力已经实现。
+- `history/parser-reparse-unification-2026-11-25.md`：统一重解析、多 TU 和 include paths 的已实施方案及审核记录。
+- `history/implementation-review-2026-11-25.md`：D01–D12 已解决的设计/实现一致性审查。
 - `history/cppparser-rewrite-design.md`：声明级递归下降重写前的方案比较、现状问题与历史实施记录。
 - `history/parse-time-declaration-merge.md`：Parse 阶段声明/定义合并实验及验收过程。
 - `history/parser-rewrite-handoff.md`：Parser 重写阶段交接与历史性能记录。
 
-proposal 和历史材料不得覆盖核心文档中已经核实的现状；新方案被接受并实施后，再合并到对应核心文档。
+proposal 和历史材料不得覆盖核心文档中已经核实的现状；新方案被接受并实施后，先把规则合并到对应核心文档，再以完成日期归档方案和实施记录。

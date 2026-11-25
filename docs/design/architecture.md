@@ -50,7 +50,7 @@
 - `parser/cpptype-evaluation-design.md` — 类型推导、模板绑定与表达式求值。
 - `parser/statement-design.md` — Statement 类系、所有权、occurrence、失效、namespace 与可见性。
 - `parser/parser-lifecycle-design.md` — 状态分类、并发、所有权、Editor 关闭和应用退出。
-- `parser/implementation-review.md` — 已核实的文档/实现不一致及待讨论项。
+- `parser/implementation-review.md` — 当前未解决的文档/实现不一致及历史审查索引。
 - `parser/testing/syntax-coverage.md` — 语法支持状态、限制与测试证据。
 - `parser/testing/replay-scenarios.md` — Replay 与失效场景清单。
 - `parser/testing/public-api-baseline.md` — C/C++ 公开接口独立基准与 eval profile。

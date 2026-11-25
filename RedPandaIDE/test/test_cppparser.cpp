@@ -2426,3 +2426,41 @@ void TestCppParser::test_parallel_lambda_arguments()
     QVERIFY(result);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(result)->typeInfo.qualifiedName, "int");
 }
+
+void TestCppParser::test_qualified_name_lookup_preserves_template_scope()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
+        buffer = QStringList{
+            "namespace N {",
+            "struct Inner {};",
+            "template<typename T> struct Box {};",
+            "template<> struct Box<N::Inner> {};",
+            "}"
+        };
+        return true;
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
+
+    QVERIFY(mParser->findStatement("N::Box"));
+    PStatement specialization = mParser->findStatement("N::Box<N::Inner>");
+    QVERIFY(specialization);
+    QVERIFY(statementHasDefinition(specialization));
+    QCOMPARE(specialization->definition.fileName, "main.cpp");
+}
+
+void TestCppParser::test_qualified_name_splitter()
+{
+    QCOMPARE(splitQualifiedName("N::value"), QStringList({"N", "value"}));
+    QCOMPARE(splitQualifiedName("N::Box<N::Inner>"),
+             QStringList({"N", "Box<N::Inner>"}));
+    QCOMPARE(splitQualifiedName("N::Box<std::pair<A::B, C::D>>"),
+             QStringList({"N", "Box<std::pair<A::B, C::D>>"}));
+    QCOMPARE(splitQualifiedName("N::Box<decltype(N::make())>"),
+             QStringList({"N", "Box<decltype(N::make())>"}));
+    QCOMPARE(splitQualifiedName("N::operator<<"),
+             QStringList({"N", "operator<<"}));
+    QCOMPARE(splitQualifiedName("N::operator()"),
+             QStringList({"N", "operator()"}));
+    QCOMPARE(splitQualifiedName("N::operator\"\"_test"),
+             QStringList({"N", "operator\"\"_test"}));
+}

@@ -9,9 +9,11 @@
 - 正式基线为连续三次完整解析；`completeParseMs` 不包含测试初始化和清理。
 
 ```sh
-./test-cppparser --suite=TestCppParserStandardLibrary \
-  test_standard_library_parse_baseline
+LC_ALL=C QT_FORCE_STDERR_LOGGING=1 ./test-cppparser \
+  --suite=TestCppParserStandardLibrary test_standard_library_parse_baseline
 ```
+
+直接运行时必须设置 `LC_ALL=C`，确保编译器以英文输出 include 搜索路径标记；否则测试可能在 parse 前因无法提取路径而失败。
 
 另设 `REDPANDA_PARSER_PROFILE=1` 采集一次详细调用结构。详细插桩会明显放大 tokenize 等阶段耗时，不能与正式基线直接比较。
 

@@ -426,7 +426,7 @@ QList<PStatement> CppStatementBuilder::doFindStatements(const QString &qualified
     QString name = qualifiedName;
     if (name.startsWith("::"))
         name.remove(0, 2);
-    const QStringList parts = name.split("::", Qt::SkipEmptyParts);
+    const QStringList parts = splitQualifiedName(name);
     if (parts.isEmpty())
         return {};
 

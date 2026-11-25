@@ -1,5 +1,7 @@
 # Parser 按需重解析与多 TU 设计
 
+> 实施完成：2026-11-25。现行规则已合并到核心设计文档；本文保留方案比较和审核过程。
+
 ## 1. 目标与边界
 
 Editor 只提出“保证当前文件分析结果可用且未过期”的请求。是否跳过、失效和扫描由 Parser 在执行请求时统一判断，不由调用方选择 force/non-force，也不由项目身份选择另一套扫描算法。
@@ -227,15 +229,13 @@ Statement 清理复用现有失效实现。唯一需要拆分的是 Statement �
 
 `removeProjectFile()` 自身会删除单文件结果，因此不能在它之后才尝试读取旧 FileInfo。
 
-### 11.2 Replay 失效级联的方向与旧闭包生命周期（规则已澄清，生命周期待讨论）
+### 11.2 Replay 失效级联的方向与旧闭包生命周期（已修复）
 
 Replay 失效不按普通 include 包含者笼统级联，而是按两类真实依赖计算：
 
 - 内容依赖：可 replay 记录的 FileInfo include 闭包包含失效文件，说明其缓存子树不再可靠；
 - 顺序依赖：记录的 boundaryPrefix 包含失效文件，说明其生效前的宏环境和有序前提不再可靠。
 
-第二类可以没有 include 关系。现有 `calculateAffectedFiles()` 只检查 include 闭包，不能完整表达上述规则。本提案同时保留相关场景审核结论；方案实施后再同步核心设计文档。
+第二类可以没有 include 关系。原 `calculateAffectedFiles()` 只检查 include 闭包，与上述规则不符；现已同时检查 boundaryPrefix，并保留前序及无关记录。相关场景和 Statement 清理由 Parser invalidation 测试覆盖。
 
-仍需讨论的是 FileInfo 生命周期：如果内容级联删除了非当前 root A 的 FileInfo，而 A 的其它旧 include U 仍保留，A 尚未重扫就关闭时，如何避免 U 成为孤儿。
-
-该问题只针对 Replay 自动级联，不改变“关闭 H 时只清理 H 自身及其被包含闭包，不主动失效包含 H 的 root”的已确认方向。
+生命周期复审后，顺序依赖的后续记录会同步失效，只剩与失效文件无关的前序缓存可能继续保留。Registry 允许这种跨 TU 缓存且不做全局 orphan GC，因此不再需要额外的 root 所有权追踪。该规则不改变“关闭 H 时只清理 H 自身及其被包含闭包，不主动失效包含 H 的 root”的已确认方向。
