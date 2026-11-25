@@ -19,6 +19,7 @@ Red Panda C++ Version 3.6
   - enhancement: Stop obsolete parsing when editors are hidden, and parse only the final active file after batch editor changes.
   - enhancement: Avoid duplicate full parses when opening files and use editor content versions to skip unchanged conditional reparsing.
   - fix: Build scopes for function-argument and nested lambdas, and invalidate user-header statements correctly on reparse.
+  - fix: Reuse parsed lambda statements during type evaluation without duplicating model entries.
   - enhancement: Locate the symbol under the caret in the current file's class browser from the editor context menu or a configurable shortcut.
   - enhancement: Hide generated names of anonymous types in the class browser and place them before named types of the same kind by definition line.
   - enhancement: Sort macros before other symbol kinds in the class browser.

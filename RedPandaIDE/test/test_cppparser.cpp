@@ -2395,3 +2395,34 @@ void TestCppParser::test_lambda_evaluation_reuses_parse_statement()
     QCOMPARE(evaluated.type.qualifiedName, "int");
     QCOMPARE(mParser->statementList().count(), statementCount);
 }
+
+void TestCppParser::test_parallel_lambda_arguments()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
+        buffer = QStringList{
+            "template<typename F, typename G> int run(F first, G second) {",
+            "    return first() + second();",
+            "}",
+            "void test() {",
+            "    auto result = run([]() { return 1; }, []() { return 2; });",
+            "}"
+        };
+        return true;
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
+
+    QVector<PStatement> lambdas;
+    for (const PStatement &statement : mParser->statementList().statements()) {
+        if (statement->kind == StatementKind::Lambda)
+            lambdas.append(statement);
+    }
+    QCOMPARE(lambdas.count(), 2);
+    QVERIFY(lambdas.first()->command != lambdas.last()->command);
+    QCOMPARE(lambdas.first()->definition.range.start.line, 4);
+    QCOMPARE(lambdas.last()->definition.range.start.line, 4);
+    QVERIFY(lambdas.first()->definition.range.start.ch
+            != lambdas.last()->definition.range.start.ch);
+    PStatement result = mParser->findStatementOf("main.cpp", "result", 4);
+    QVERIFY(result);
+    QCOMPARE(std::dynamic_pointer_cast<Statement>(result)->typeInfo.qualifiedName, "int");
+}
