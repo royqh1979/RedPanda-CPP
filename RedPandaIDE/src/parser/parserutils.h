@@ -607,7 +607,7 @@ extern QSet<QString> AutoTypes;
 void initializeParserGlobals();
 
 QString getHeaderFilename(const QString& relativeTo, const QString& line,
-                       const QStringList& includePaths, const QStringList& projectIncludePaths);
+                       const QStringList& includePaths);
 
 QString getLocalHeaderFilename(const QString& relativeTo, const QString& fileName);
 

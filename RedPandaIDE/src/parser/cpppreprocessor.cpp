@@ -469,9 +469,7 @@ void CppPreprocessor::resetForReuse()
     mRegistry.clearAnalysisResults();
     mProjectFiles.clear();
     mHardDefines.clear();
-    mProjectIncludePaths.clear();
     mIncludePathList.clear();
-    mProjectIncludePathList.clear();
     mIncludePaths.clear();
     mCppVersion = CppVersion::Cpp17;
     mCompilerType = CppCompilerType::GCC;
@@ -560,17 +558,6 @@ QSet<QString> CppPreprocessor::calculateAffectedFiles(const QString &fileName) c
             affected.insert(it.key());
     }
     return affected;
-}
-
-void CppPreprocessor::invalidateFileAndDependents(const QString &fileName)
-{
-    QSet<QString> affected = calculateAffectedFiles(fileName);
-    for (const QString &affectedFile : affected) {
-        if (mFileInvalidationHandler)
-            mFileInvalidationHandler(affectedFile);
-        else
-            removeReplayRecord(affectedFile);
-    }
 }
 
 void CppPreprocessor::invalidateFileAndDependents(Session &session, const QString &fileName)
@@ -746,55 +733,11 @@ void CppPreprocessor::preprocess(Session &session, const QString &fileName)
         qWarning() << "PREPROCESSOR_PROTECTION scannedIncludes" << session.scannedIncludeCount;
 }
 
-void CppPreprocessor::dumpDefinesTo(const Session &session, const QString &fileName) const
-{
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        for (const PDefine& define:session.defines) {
-            stream<<QString("%1 %2 %3 %4\n")
-                    .arg(define->name,define->args,define->value)
-                    .arg(define->hardCoded)<<Qt::endl;
-        }
-    }
-}
-
-void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
-{
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        for (auto it = mRegistry.replayRecords.constBegin();
-                it != mRegistry.replayRecords.constEnd(); ++it) {
-            PParsedFileInfo fileInfo = findFileInfo(it.key());
-            if (!fileInfo)
-                continue;
-            stream<<fileInfo->fileName()<<" : "<<Qt::endl;
-            stream<<"\t**direct-includes:**"<<Qt::endl;
-            foreach (const QString& s,fileInfo->directIncludes()) {
-                stream<<"\t--"+s<<Qt::endl;
-            }
-            stream<<"\t**includes:**"<<Qt::endl;
-            foreach (const QString& s,fileInfo->includes()) {
-                stream<<"\t--"+s<<Qt::endl;
-            }
-        }
-    }
-}
-
 void CppPreprocessor::addIncludePath(const QString &fileName)
 {
     if (!mIncludePaths.contains(fileName)) {
         mIncludePaths.insert(fileName);
         mIncludePathList.append(fileName);
-    }
-}
-
-void CppPreprocessor::addProjectIncludePath(const QString &fileName)
-{
-    if (!mProjectIncludePaths.contains(fileName)) {
-        mProjectIncludePaths.insert(fileName);
-        mProjectIncludePathList.append(fileName);
     }
 }
 
@@ -868,38 +811,19 @@ void CppPreprocessor::handleInclude(Session &session, const QString &tokens, boo
     PParsedFile file = session.includeStack.back();
     QString fileName;
     // Get full header file name
-    QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
-    QStringList includes;
-    QStringList projectIncludes;
-    if (fromNext && mIncludePaths.contains(currentDir)) {
-        int i = mIncludePathList.indexOf(currentDir);
-        includes = mIncludePathList.mid(i+1);
-        // foreach(const QString& s, mIncludePathList) {
-        //     if (found) {
-        //         includes.append(s);
-        //         continue;
-        //     } else if (s == currentDir)
-        //         found = true;
-        // }
-        projectIncludes = mProjectIncludePathList;
-    } else if (fromNext && mProjectIncludePaths.contains(currentDir)) {
-        includes = mIncludePathList;
-        int i = mProjectIncludePathList.indexOf(currentDir);
-        projectIncludes = mProjectIncludePathList.mid(i+1);
-    } else {
-        includes = mIncludePathList;
-        projectIncludes = mProjectIncludePathList;
+    QStringList includes = mIncludePathList;
+    if (fromNext) {
+        QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
+        int index = includes.indexOf(currentDir);
+        if (index >= 0)
+            includes = includes.mid(index + 1);
     }
 
     QString s=tokens;
     if (!s.startsWith('<') && !s.startsWith('\"'))
         s = expandMacros(session, s);
 
-    fileName = getHeaderFilename(
-                file->fileName,
-                s,
-                includes,
-                projectIncludes);
+    fileName = getHeaderFilename(file->fileName, s, includes);
 
     if (fileName.isEmpty())
         return;
@@ -1154,8 +1078,7 @@ void CppPreprocessor::openInclude(Session &session, QString fileName)
     }
     bool inStack = stackEntry != nullptr;
 
-    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths)
-            || isSystemHeaderFile(fileName, mProjectIncludePaths);
+    bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
     bool childInside = !mProjectFiles.contains(fileName) && isSystemFile;
     bool boundaryEntry = false;
     QString boundaryAncestor;
@@ -1427,89 +1350,6 @@ void CppPreprocessor::combineLinesEndingWithBackslash(QStringList &text)
         }
         i--;
     }
-}
-
-QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
-{
-    int i=0;
-    PDefineArgToken  token = std::make_shared<DefineArgToken>();
-    token->type = DefineArgTokenType::Other;
-    QList<PDefineArgToken> tokens;
-    bool skipSpaces=false;
-    while (i<value.length()) {
-        QChar ch = value[i];
-        if (isSpaceChar(ch)) {
-            if (token->type==DefineArgTokenType::Other) {
-                token->value = " ";
-                token->type = DefineArgTokenType::Space;
-            } else if (token->type!=DefineArgTokenType::Space) {
-                tokens.append(token);
-                token = std::make_shared<DefineArgToken>();
-                token->value = " ";
-                token->type = DefineArgTokenType::Space;
-            }
-            i++;
-        } else if (ch=='#') {
-            bool isDSharp = (i+1<value.length()) && (value[i+1]=='#');
-            if (token->type==DefineArgTokenType::Space) {
-                if (!isDSharp) {
-                    // keep whitespace before '#' (stringize)
-                    tokens.append(token);
-                }
-                // whitespace before '##' is dropped (pasting ignores it)
-                token = std::make_shared<DefineArgToken>();
-            } else if (token->type!=DefineArgTokenType::Other) {
-                tokens.append(token);
-                token = std::make_shared<DefineArgToken>();
-            }
-            if (isDSharp) {
-                i+=2;
-                token->value = "##";
-                token->type = DefineArgTokenType::DSharp;
-            } else {
-                i++;
-                token->value = "#";
-                token->type = DefineArgTokenType::Sharp;
-            }
-            skipSpaces=true;
-            tokens.append(token);
-            token = std::make_shared<DefineArgToken>();
-            token->value = "";
-            token->type = DefineArgTokenType::Other;
-        } else if (isWordChar(ch)) {
-            if (token->type==DefineArgTokenType::Other) {
-                token->value = ch ;
-                token->type = DefineArgTokenType::Identifier;
-            } else if (token->type==DefineArgTokenType::Identifier) {
-                token->value+=ch;
-            } else if (skipSpaces && token->type==DefineArgTokenType::Space) {
-                //dont use space;
-                token->value = ch ;
-                token->type = DefineArgTokenType::Identifier;
-            } else {
-                tokens.append(token);
-                token = std::make_shared<DefineArgToken>();
-                token->value = ch ;
-                token->type = DefineArgTokenType::Identifier;
-            }
-            skipSpaces=false;
-            i++;
-        } else {
-            if (skipSpaces && token->type==DefineArgTokenType::Space) {
-                //dont use space;
-            } else if (token->type!=DefineArgTokenType::Other) {
-                tokens.append(token);
-                token = std::make_shared<DefineArgToken>();
-            }
-            skipSpaces=false;
-            token->value = ch ;
-            token->type = DefineArgTokenType::Symbol;
-            i++;
-        }
-    }
-    if(token->type!=DefineArgTokenType::Other)
-        tokens.append(token);
-    return tokens;
 }
 
 void CppPreprocessor::replaceCommentsBySpaceChar(QStringList &text)
@@ -1786,18 +1626,14 @@ QVector<PpToken> CppPreprocessor::expandConditionTokens(const Session &session, 
         }
         if (!session.currentFileInfo)
             return false;
+        QStringList includes = mIncludePathList;
         QString currentDir = excludeTrailingPathDelimiter(
                     extractFileDir(session.currentFileInfo->fileName()));
-        QStringList includes = mIncludePathList;
-        QStringList projectIncludes = mProjectIncludePathList;
-        if (mIncludePaths.contains(currentDir)) {
-            includes = mIncludePathList.mid(mIncludePathList.indexOf(currentDir) + 1);
-        } else if (mProjectIncludePaths.contains(currentDir)) {
-            projectIncludes = mProjectIncludePathList.mid(
-                        mProjectIncludePathList.indexOf(currentDir) + 1);
-        }
+        int index = includes.indexOf(currentDir);
+        if (index >= 0)
+            includes = includes.mid(index + 1);
         return !getHeaderFilename(session.currentFileInfo->fileName(), header,
-                                  includes, projectIncludes).isEmpty();
+                                  includes).isEmpty();
     });
     expander.setConditionMode(true,
         [this, &session](const QString& args) {
@@ -1814,10 +1650,7 @@ QVector<PpToken> CppPreprocessor::expandConditionTokens(const Session &session, 
             if (!session.currentFileInfo)
                 return false;
             QString fileName = getHeaderFilename(
-                    session.currentFileInfo->fileName(),
-                    header,
-                    mIncludePathList,
-                    mProjectIncludePathList);
+                    session.currentFileInfo->fileName(), header, mIncludePathList);
             return !fileName.isEmpty();
         },
         [this, &session](const QString& name) {

@@ -24,7 +24,7 @@ private slots:
     void test_completion_confirm_abort_from_standard_library();
 #endif
     void test_semantic_export_profile();
-    void test_load_file_skips_force_reparse();
+    void test_load_file_skips_duplicate_reparse();
 };
 
 #endif // TEST_EDITOR_GENERAL_H

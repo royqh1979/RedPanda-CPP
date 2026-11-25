@@ -424,7 +424,7 @@ void initializeParserGlobals()
 }
 
 QString getHeaderFilename(const QString &relativeTo, const QString &line,
-                          const QStringList& includePaths, const QStringList& projectIncludePaths) {
+                          const QStringList& includePaths) {
     QString result = "";
 
     // Handle <>
@@ -433,11 +433,7 @@ QString getHeaderFilename(const QString &relativeTo, const QString &line,
         int closeTokenPos = line.indexOf('>',openTokenPos+1);
         if (closeTokenPos >=0) {
             QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
-            //project settings is preferred
-            result = getSystemHeaderFilename(fileName, projectIncludePaths);
-            if (result.isEmpty()) {
-                result = getSystemHeaderFilename(fileName, includePaths);
-            }
+            result = getSystemHeaderFilename(fileName, includePaths);
         }
     } else {
         // Try ""
@@ -447,13 +443,8 @@ QString getHeaderFilename(const QString &relativeTo, const QString &line,
             if (closeTokenPos >= 0) {
                 QString fileName = line.mid(openTokenPos + 1, closeTokenPos - openTokenPos - 1);
                 result = getLocalHeaderFilename(relativeTo, fileName);
-                //project settings is preferred
-                if (result.isEmpty()) {
-                    result = getSystemHeaderFilename(fileName, projectIncludePaths);
-                }
-                if (result.isEmpty()) {
+                if (result.isEmpty())
                     result = getSystemHeaderFilename(fileName, includePaths);
-                }
             }
         }
     }

@@ -219,7 +219,7 @@ void TestCppParserPublicApiBaseline::verifyAndProfile(const QString &stem)
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(
                 mParser, bitsStdcpp, isC ? ParserLanguage::C : ParserLanguage::CPlusPlus));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QStringList lookupMissing;
     QStringList implementationGaps;

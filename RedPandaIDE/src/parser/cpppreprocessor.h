@@ -18,22 +18,7 @@
 #define CPPPREPROCESSOR_H
 
 #include <QObject>
-#include <QTextStream>
 #include "parserutils.h"
-
-enum class DefineArgTokenType{
-    Symbol,
-    Identifier,
-    Space,
-    Sharp,
-    DSharp,
-    Other
-};
-struct DefineArgToken {
-    QString value;
-    DefineArgTokenType type;
-};
-using PDefineArgToken = std::shared_ptr<DefineArgToken>;
 
 struct ParsedFile {
     int index; // 0-based for programming convenience
@@ -69,6 +54,73 @@ class CppPreprocessor
     };
 public:
 
+    using FileInvalidationHandler = std::function<void(const QString&)>;
+    using StopRequestedHandler = std::function<bool()>;
+
+    explicit CppPreprocessor();
+    CppPreprocessor(const CppPreprocessor&)=delete;
+    CppPreprocessor& operator=(const CppPreprocessor&)=delete;
+
+    void resetForReuse();
+    void clearAnalysisResults();
+    void addHardDefineByLine(const QString& line);
+    void setScanOptions(bool parseSystem, bool parseLocal) {
+        mParseSystem = parseSystem;
+        mParseLocal=parseLocal;
+    }
+    void setStopRequestedHandler(const StopRequestedHandler &handler) {
+        mStopRequestedHandler = handler;
+    }
+
+    // Safety net for unconditional include cycles (a user error): real
+    // compilers recurse until a nesting limit and then error out; we
+    // skip the include at this depth instead. Depth-bounded intentional
+    // patterns (Boost-style iteration) terminate by branch evaluation
+    // and never reach it.
+    static constexpr int DEFAULT_MAX_INCLUDE_NESTING_DEPTH = 200;
+    static constexpr qint64 INCLUDE_SCAN_WARNING_THRESHOLD = 1000;
+    static constexpr qint64 INCLUDE_SCAN_STOP_THRESHOLD = 10000;
+    void setMaxIncludeNestingDepth(int depth) { mMaxIncludeNestingDepth = depth; }
+
+    void addIncludePath(const QString& fileName);
+    int cppVersion() const { return mCppVersion; }
+    CppCompilerType compilerType() const { return mCompilerType; }
+    const QSet<QString>& includePaths() const {
+        return mIncludePaths;
+    }
+    const DefineMap &hardDefines() const { return mHardDefines; }
+    const QList<QString> &includePathList() const { return mIncludePathList; }
+    void setOnGetFileStream(const GetFileStreamFunc &stream, const GetFileVersionFunc &version) {
+        mOnGetFileStream = stream;
+        mOnGetFileVersion = version;
+    }
+    void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
+    void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
+    void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
+
+#ifdef REDPANDA_PARSER_TEST
+    PReplayRecord replayRecordForTest(const QString &fileName) const {
+        return findReplayRecord(fileName);
+    }
+    struct EventCounts {
+        int scan = 0;
+        int replay = 0;
+        int skip = 0;
+        int invalidate = 0;
+    };
+    EventCounts eventCounts(const QString &fileName) const;
+    void clearEventCounts();
+#endif
+
+    static void combineLinesEndingWithBackslash(QStringList& text);
+    static void replaceCommentsBySpaceChar(QStringList& text);
+    bool evaluateIf(const QString& line) const;
+
+private:
+    friend class CppParser;
+    friend class TestCppPreprocessor;
+    friend class TestCppPreprocessorInclude;
+
     enum class BranchResult {
         isTrue,
         isFalse_but_trued,
@@ -95,120 +147,30 @@ public:
         QHash<QString, QStringList> boundaryAncestors;
     };
 
-    using FileInvalidationHandler = std::function<void(const QString&)>;
-    using StopRequestedHandler = std::function<bool()>;
-
-    explicit CppPreprocessor();
-    CppPreprocessor(const CppPreprocessor&)=delete;
-    CppPreprocessor& operator=(const CppPreprocessor&)=delete;
-
-    void resetForReuse();
-
-    void clearAnalysisResults();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
-    void addHardDefineByLine(const QString& line);
-    void setScanOptions(bool parseSystem, bool parseLocal) {
-        mParseSystem = parseSystem;
-        mParseLocal=parseLocal;
-    }
     void preprocess(Session &session, const QString& fileName);
-    void setStopRequestedHandler(const StopRequestedHandler &handler) {
-        mStopRequestedHandler = handler;
-    }
-
-    // Safety net for unconditional include cycles (a user error): real
-    // compilers recurse until a nesting limit and then error out; we
-    // skip the include at this depth instead. Depth-bounded intentional
-    // patterns (Boost-style iteration) terminate by branch evaluation
-    // and never reach it.
-    static constexpr int DEFAULT_MAX_INCLUDE_NESTING_DEPTH = 200;
-    static constexpr qint64 INCLUDE_SCAN_WARNING_THRESHOLD = 1000;
-    static constexpr qint64 INCLUDE_SCAN_STOP_THRESHOLD = 10000;
-    int maxIncludeNestingDepth() const { return mMaxIncludeNestingDepth; }
-    void setMaxIncludeNestingDepth(int depth) { mMaxIncludeNestingDepth = depth; }
-
-    void dumpDefinesTo(const Session &session, const QString& fileName) const;
-    void dumpIncludesListTo(const QString& fileName) const;
-    void addIncludePath(const QString& fileName);
-    void addProjectIncludePath(const QString& fileName);
     void removeReplayRecord(const QString& filename);
     QSet<QString> calculateAffectedFiles(const QString &fileName) const;
-    void invalidateFileAndDependents(const QString &fileName);
     void invalidateFileAndDependents(Session &session, const QString &fileName);
-
     static PDefine getDefine(const Session &session, const QString& name) {
         return session.defines.value(name,PDefine());
     }
-
-    int cppVersion() const { return mCppVersion; }
-    CppCompilerType compilerType() const { return mCompilerType; }
-
     QString expandMacros(QString text) const;
     QString expandMacros(const Session &session, QString text) const;
-
     PParsedFileInfo findFileInfo(const QString& fileName) const {
         return mRegistry.fileInfos.value(fileName);
     }
-
     void removeFileInfo(const QString& fileName) {
         mRegistry.fileInfos.remove(fileName);
     }
-
     bool hasReplayRecord(const QString& fileName) const {
         return mRegistry.replayRecords.contains(fileName);
     }
-
     bool includesFile(const QString &contextFileName, const QString &fileName) const {
         PParsedFileInfo contextInfo = findFileInfo(contextFileName);
         return contextInfo && contextInfo->includes().contains(fileName);
     }
-
-    const QSet<QString>& includePaths() const {
-        return mIncludePaths;
-    }
-
-    QSet<QString> replayRootFiles() const {
-        const QStringList files = mRegistry.replayRecords.keys();
-        return QSet<QString>(files.begin(), files.end());
-    }
-
-    const QSet<QString> &projectIncludePaths() const {
-        return mProjectIncludePaths;
-    }
-
-    const DefineMap &hardDefines() const { return mHardDefines; }
-
-    const QList<QString> &includePathList() const { return mIncludePathList; }
-
-    const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
-    void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
-    void setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion) { mOnGetFileVersion = newOnGetFileVersion; }
-    void setFileInvalidationHandler(const FileInvalidationHandler &handler) { mFileInvalidationHandler = handler; }
-    void addProjectFile(const QString &fileName) { mProjectFiles.insert(fileName); }
-    void removeProjectFile(const QString &fileName) { mProjectFiles.remove(fileName); }
     QString boundaryAncestor(const Session &session, const QString &fileName, int occurrence) const;
-
-#ifdef REDPANDA_PARSER_TEST
-    PReplayRecord replayRecordForTest(const QString &fileName) const {
-        return findReplayRecord(fileName);
-    }
-    struct EventCounts {
-        int scan = 0;
-        int replay = 0;
-        int skip = 0;
-        int invalidate = 0;
-    };
-    EventCounts eventCounts(const QString &fileName) const;
-    void clearEventCounts();
-#endif
-
-    static QList<PDefineArgToken> tokenizeValue(const QString& value);
-    static void combineLinesEndingWithBackslash(QStringList& text);
-    static void replaceCommentsBySpaceChar(QStringList& text);
-    bool evaluateIf(const QString& line) const;
-
-private:
-    friend class CppParser;
 
     bool supportCPP23() const;
     bool stopRequested() const {
@@ -330,14 +292,10 @@ private:
     Registry mRegistry;
 
     //option data for the parser
-    //{ List of current project's include path }
     DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
     QSet<QString> mProjectFiles;
-    QSet<QString> mProjectIncludePaths;
-    //we also need include paths in order (for #include_next)
+    // Ordered include paths are required by #include_next.
     QList<QString> mIncludePathList;
-    QList<QString> mProjectIncludePathList;
-    //{ List of current compiler set's include path}
     QSet<QString> mIncludePaths;
 
     using PreprocessorHandler = std::function<void(Session&, const QString&)>;

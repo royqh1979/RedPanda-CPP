@@ -220,9 +220,6 @@ void HeaderCompletionPopup::getCompletionFor(const QString &phrase)
             addFilesInPath(path, HeaderCompletionListItemType::ProjectHeader);
         }
 
-        for (const QString& path: mParser->projectIncludePaths()) {
-            addFilesInPath(path, HeaderCompletionListItemType::SystemHeader);
-        }
     } else {
         QString current = phrase.mid(0,idx);
         if (mSearchLocal) {
@@ -233,9 +230,6 @@ void HeaderCompletionPopup::getCompletionFor(const QString &phrase)
             addFilesInSubDir(path,current, HeaderCompletionListItemType::ProjectHeader);
         }
 
-        for (const QString& path: mParser->projectIncludePaths()) {
-            addFilesInSubDir(path,current, HeaderCompletionListItemType::SystemHeader);
-        }
     }
 }
 

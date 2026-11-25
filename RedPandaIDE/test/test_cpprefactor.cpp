@@ -32,14 +32,33 @@ void TestCppRefactor::init()
 {
     mMainFile = QDir::current().absoluteFilePath("tmp/refactor.cpp");
     mFiles.clear();
+    mVersionedContents.clear();
+    mContentVersions.clear();
     mProject.reset();
     mParser = std::make_shared<CppParser>();
-    mParser->setOnGetFileStream([this](const QString &fileName, QStringList &buffer, int &) {
+    mParser->setOnGetFileStream([this](const QString &fileName, QStringList &buffer,
+                                      int &streamVersion) {
         if (!mFiles.contains(fileName))
             return false;
         buffer = mFiles.value(fileName);
+        streamVersion = contentVersion(fileName);
         return true;
+    }, [this](const QString &fileName) {
+        return contentVersion(fileName);
     });
+}
+
+int TestCppRefactor::contentVersion(const QString &fileName)
+{
+    QStringList content = mFiles.value(fileName);
+    if (!mVersionedContents.contains(fileName)) {
+        mVersionedContents.insert(fileName, content);
+        mContentVersions.insert(fileName, 1);
+    } else if (mVersionedContents.value(fileName) != content) {
+        mVersionedContents[fileName] = content;
+        ++mContentVersions[fileName];
+    }
+    return mContentVersions.value(fileName);
 }
 
 std::shared_ptr<Editor> TestCppRefactor::makeEditor(const QString &fileName)
@@ -70,7 +89,7 @@ void TestCppRefactor::setProjectFiles(const QStringList &fileNames)
         output.write(mFiles.value(fileName).join('\n').toUtf8());
         output.close();
         mProject->addUnit(fileName, mProject->rootNode());
-        mParser->addProjectFile(fileName, true);
+        mParser->addProjectFile(fileName);
     }
 }
 
@@ -84,8 +103,8 @@ void TestCppRefactor::test_find_occurrences_current_file()
         "const char *s=\"value\";",
         "value=other;",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     SymbolReferenceResults results;
@@ -108,8 +127,8 @@ void TestCppRefactor::test_find_occurrences_excludes_inactive_preprocessor_lines
         "#endif",
         "int read(){return value;}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     SymbolReferenceResults results;
@@ -126,8 +145,8 @@ void TestCppRefactor::test_find_occurrences_same_line_distinct_declarations()
         "int first; int second;",
         "int use(){return first+second;}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     SymbolReferenceResults firstResults;
@@ -146,7 +165,7 @@ void TestCppRefactor::test_find_occurrences_project_unsaved_content()
     mFiles[header] = QStringList{"int value;"};
     mFiles[mMainFile] = QStringList{"#include \"refactor.h\"", "int use(){return value;}"};
     setProjectFiles({mMainFile, header});
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     editor->loadContent(QStringList{"#include \"refactor.h\"", "int use(){return value+1;}"});
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
@@ -193,7 +212,7 @@ void TestCppRefactor::test_find_occurrences_project_shared_occurrences()
     };
     mMainFile = a;
     setProjectFiles({header, a, b});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     auto editor = makeEditor(a);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -237,7 +256,7 @@ void TestCppRefactor::test_find_occurrences_project_repeated_external_declaratio
     mFiles[definition] = QStringList{"void f() {}"};
     mMainFile = a;
     setProjectFiles({a, b, definition});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     auto editor = makeEditor(a);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -273,7 +292,7 @@ void TestCppRefactor::test_find_occurrences_project_overloads_and_scopes()
     };
     mMainFile = a;
     setProjectFiles({header, a, b});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     auto editor = makeEditor(a);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -298,7 +317,7 @@ void TestCppRefactor::test_find_occurrences_project_kind_and_linkage()
     mFiles[b] = mFiles[a];
     mMainFile = a;
     setProjectFiles({a, b});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     auto editor = makeEditor(a);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -323,7 +342,7 @@ void TestCppRefactor::test_find_occurrences_project_kind_and_linkage()
     mFiles[b] = QStringList{"class item {};"};
     mMainFile = a;
     setProjectFiles({a, b});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     editor = makeEditor(a);
     CppRefactor kindRefactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -355,7 +374,7 @@ void TestCppRefactor::test_find_occurrences_project_local_extern_and_const()
     };
     mMainFile = a;
     setProjectFiles({a, b});
-    CppParser::parseFileBlocking(mParser, a, true, "");
+    CppParser::parseFileBlocking(mParser, a, "");
     auto editor = makeEditor(a);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -396,8 +415,8 @@ void TestCppRefactor::test_same_name_isolation_across_scopes()
         "void f(){int value; value=1;}",
         "void g(){int value; value=2;}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
 
@@ -440,7 +459,7 @@ void TestCppRefactor::test_rename_rejects_project_external_declaration()
     QVERIFY(output.open(QIODevice::WriteOnly | QIODevice::Truncate));
     output.write("extern int value;\n");
     output.close();
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -466,7 +485,7 @@ void TestCppRefactor::test_rename_rejects_project_external_reference()
     QVERIFY(output.open(QIODevice::WriteOnly | QIODevice::Truncate));
     output.write("inline void use(){f();}\n");
     output.close();
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -488,7 +507,7 @@ void TestCppRefactor::test_rename_same_class_defined_in_multiple_tus()
     mFiles[mMainFile] = QStringList{"class Foo {};", "Foo value;"};
     mFiles[other] = QStringList{"class Foo {};", "Foo other;"};
     setProjectFiles({mMainFile, other});
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor(mProject, [this](const QString &fileName, QStringList &buffer) {
         if (!mFiles.contains(fileName))
@@ -514,7 +533,7 @@ void TestCppRefactor::test_rename_project_open_editor_undo_and_stale()
         "#include \"open_rename.h\"", "void f() {}", "void a(){f();}"};
     mFiles[other] = QStringList{"#include \"open_rename.h\"", "void b(){f();}"};
     setProjectFiles({header, mMainFile, other});
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     auto otherEditor = makeEditor(other);
     otherEditor->loadContent(QStringList{
@@ -556,7 +575,7 @@ void TestCppRefactor::test_rename_project_open_editor_undo_and_stale()
 
     mFiles[mMainFile] = editor->content();
     mFiles[header] = QStringList{"void renamed();"};
-    CppParser::parseFileBlocking(mParser, mMainFile, true, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     QCOMPARE(refactor.prepareRename(editor.get(), {5, 1}, "final", std::nullopt, results),
              RenameResult::Success);
     otherEditor->loadContent(QStringList{"// changed"});
@@ -578,8 +597,8 @@ void TestCppRefactor::test_rename_class_constructor_destructor()
         "Foo::~Foo() {}",
         "Foo value;",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {6, 0}, "Bar"), RenameResult::Success);
@@ -597,8 +616,8 @@ void TestCppRefactor::test_rename_overload_subset()
         "void f(double) {}",
         "void call(){f(1);f(1.0);}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QVector<PStatement> overloads = refactor.overloadsOf(editor.get(), {5, 0});
@@ -630,8 +649,8 @@ void TestCppRefactor::test_rename_overload_name_conflict_uses_signature()
         "void g(double) {}",
         "void call(){f(1);g(1.0);}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {5, 0}, "g"), RenameResult::Success);
@@ -642,7 +661,7 @@ void TestCppRefactor::test_rename_overload_name_conflict_uses_signature()
 
     mFiles[mMainFile] = QStringList{"void f(int) {}", "void g(int) {}"};
     editor->loadContent(mFiles.value(mMainFile));
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     QCOMPARE(refactor.renameSymbol(editor.get(), {5, 0}, "g"),
              RenameResult::NameConflict);
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
@@ -654,8 +673,8 @@ void TestCppRefactor::test_rename_name_conflict_checks_all_targets()
         "struct Base {virtual void f(int) {}};",
         "struct Derived:Base {void f(int) override {} void g(int) {}};",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {26, 0}, "g"),
@@ -664,21 +683,21 @@ void TestCppRefactor::test_rename_name_conflict_checks_all_targets()
 
     mFiles[mMainFile] = QStringList{"class Foo {};", "class Bar {};"};
     editor->loadContent(mFiles.value(mMainFile));
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     QCOMPARE(refactor.renameSymbol(editor.get(), {6, 0}, "Bar"),
              RenameResult::NameConflict);
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
 
     mFiles[mMainFile] = QStringList{"class Foo {public: void Bar();};"};
     editor->loadContent(mFiles.value(mMainFile));
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     QCOMPARE(refactor.renameSymbol(editor.get(), {6, 0}, "Bar"),
              RenameResult::NameConflict);
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
 
     mFiles[mMainFile] = QStringList{"void f(){int value; int other; value=other;}"};
     editor->loadContent(mFiles.value(mMainFile));
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     QCOMPARE(refactor.renameSymbol(editor.get(), {13, 0}, "other"),
              RenameResult::NameConflict);
     QCOMPARE(editor->content(), mFiles.value(mMainFile));
@@ -690,8 +709,8 @@ void TestCppRefactor::test_rename_overrides_both_directions()
         "struct Base {virtual void f(int) {} virtual void f(double) {}};",
         "struct Derived:Base {void f(int) override {} void f(double) override {}};",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QVector<PStatement> selected;
@@ -713,8 +732,8 @@ void TestCppRefactor::test_rename_overrides_both_directions()
         "struct Base {virtual void f(int) {} virtual void f(double) {}};",
         "struct Derived:Base {void f(int) override {} void f(double) override {}};",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     editor = makeEditor(mMainFile);
     selected.clear();
     for (const PStatement &overload : refactor.overloadsOf(editor.get(), {26, 1})) {
@@ -741,8 +760,8 @@ void TestCppRefactor::test_rename_template_specializations()
         "Foo<int>::Foo() {}",
         "Foo<int>::~Foo() {}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {25, 0}, "Bar"), RenameResult::Success);
@@ -761,8 +780,8 @@ void TestCppRefactor::test_rename_partial_template_specialization()
         "template<class T> class Foo {};",
         "template<class T> class Foo<T*> {};",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {25, 0}, "Bar"),
@@ -778,8 +797,8 @@ void TestCppRefactor::test_rename_visibility_and_using_declaration()
         "struct Base {public:void f(int) {} protected:void f(double) {} private:void f(char) {}};",
         "struct Derived:Base {using Base::f;};",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {26, 0}, "g"), RenameResult::Success);
@@ -796,8 +815,8 @@ void TestCppRefactor::test_rename_namespace_alias_and_enum()
         "using N::E;",
         "E value=E::A;",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {10, 0}, "O"), RenameResult::Success);
@@ -816,8 +835,8 @@ void TestCppRefactor::test_rename_local_lambda_and_structured_binding()
         "Pair pair;",
         "void f(){auto [x,y]=pair; int value=1; auto l=[&value]{return value+x;};}",
     };
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {34, 3}, "local"), RenameResult::Success);
@@ -829,8 +848,8 @@ void TestCppRefactor::test_rename_local_lambda_and_structured_binding()
 void TestCppRefactor::test_rename_undefined_local_conflict_and_scope()
 {
     mFiles[mMainFile] = QStringList{"void f(){int existing; foo=existing;}"};
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameUndefinedLocalVariable(editor.get(), {23, 0}, "existing"),
@@ -852,10 +871,10 @@ void TestCppRefactor::test_rename_invalid_and_cross_file()
     QVERIFY(output.open(QIODevice::WriteOnly));
     output.write("class Bar {};\n");
     output.close();
-    mParser->addProjectFile(header, false);
-    CppParser::parseFileBlocking(mParser, header, false, "");
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(header);
+    CppParser::parseFileBlocking(mParser, header, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(nullptr, {0, 0}, "Other"), RenameResult::InvalidInput);
@@ -869,8 +888,8 @@ void TestCppRefactor::test_rename_invalid_and_cross_file()
 void TestCppRefactor::test_rename_prepare_apply_and_stale_content()
 {
     mFiles[mMainFile] = QStringList{"int value;", "int use(){return value;}"};
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     SymbolReferenceResults results;
@@ -893,8 +912,8 @@ void TestCppRefactor::test_rename_prepare_apply_and_stale_content()
 void TestCppRefactor::test_rename_undo_redo()
 {
     mFiles[mMainFile] = QStringList{"int value;", "int use(){return value;}"};
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     auto editor = makeEditor(mMainFile);
     CppRefactor refactor;
     QCOMPARE(refactor.renameSymbol(editor.get(), {4, 0}, "other"), RenameResult::Success);

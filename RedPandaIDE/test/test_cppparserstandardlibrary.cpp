@@ -71,15 +71,18 @@ void TestCppParserStandardLibrary::test_bits_stdcpp_not_rescanned_on_stable_repa
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
+    QString other = tmp.filePath("other.cpp");
     QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
+    QVERIFY(writeLines(other, {"// unrelated translation unit"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     QCOMPARE(mParser->preprocessorEventCountsForTest(bitsStdcpp).scan, 1);
     int statementCount = mParser->statementList().count();
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, other, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     CppPreprocessor::EventCounts counts = mParser->preprocessorEventCountsForTest(bitsStdcpp);
     QCOMPARE(counts.scan, 1);
     QVERIFY(counts.replay > 0);
@@ -94,7 +97,7 @@ void TestCppParserStandardLibrary::test_standard_library_abort_alias()
     QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement alias = mParser->findStatement("std::abort");
     QVERIFY(alias);
@@ -160,7 +163,7 @@ void TestCppParserStandardLibrary::test_standard_library_function_eval()
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement scope = mParser->findScopeStatement(main, 10);
     QVERIFY(scope);
 
@@ -196,7 +199,7 @@ void TestCppParserStandardLibrary::test_standard_library_string()
     if (mParser->compilerType() == CppCompilerType::Clang)
         QSKIP("This test requires the libstdc++ basic_string implementation");
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     int preprocessedReferences = 0;
     bool inlineCxx11Preprocessed = false;
     for (const QString &line : mParser->preprocessedForTest()) {
@@ -318,7 +321,7 @@ void TestCppParserStandardLibrary::test_standard_library_header_context()
     if (!QFileInfo::exists(stringFile) || !QFileInfo::exists(basicStringTcc))
         QSKIP("This test requires the libstdc++ basic_string.tcc layout");
 
-    CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
+    CppParser::parseFileBlocking(mParser, basicStringTcc, stringFile);
 
     QCOMPARE(mParser->preprocessorEventCountsForTest(basicStringTcc).scan, 1);
     QVERIFY(mParser->hasReplayRecord(stringFile));
@@ -338,7 +341,7 @@ void TestCppParserStandardLibrary::test_standard_library_nested_include_guard_vi
     QString main = tmp.filePath("main.cpp");
     QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PParsedFileInfo stringInfo = mParser->findFileInfo(stringFile);
     QVERIFY(stringInfo);
     QVERIFY(stringInfo->includeProtected());
@@ -347,9 +350,9 @@ void TestCppParserStandardLibrary::test_standard_library_nested_include_guard_vi
     QVERIFY(guardLine >= 0);
     QVERIFY(mParser->isLineVisible(stringFile, guardLine));
 
-    CppParser::parseFileBlocking(mParser, bitsStdcpp, false, main);
+    CppParser::parseFileBlocking(mParser, bitsStdcpp, main);
     QVERIFY(mParser->isLineVisible(stringFile, guardLine));
-    CppParser::parseFileBlocking(mParser, stringFile, false, main);
+    CppParser::parseFileBlocking(mParser, stringFile, main);
     QVERIFY(mParser->isLineVisible(stringFile, guardLine));
 }
 
@@ -364,7 +367,7 @@ void TestCppParserStandardLibrary::test_standard_library_direct_c_header_context
     QString main = tmp.filePath("main.cpp");
     QVERIFY(writeLines(main, {"#include <stdio.h>"}));
 
-    CppParser::parseFileBlocking(mParser, stdioFile, false, main);
+    CppParser::parseFileBlocking(mParser, stdioFile, main);
 
     QVERIFY(mParser->isFileParsedInContext(stdioFile, main));
     QCOMPARE(mParser->preprocessorEventCountsForTest(stdioFile).scan, 1);
@@ -459,7 +462,7 @@ void TestCppParserStandardLibrary::test_standard_library_header_guard_context_vi
     const QString main = tmp.filePath("main.cpp");
     QVERIFY(writeLines(main, {"#include " + include}));
 
-    CppParser::parseFileBlocking(mParser, headerFile, false, main);
+    CppParser::parseFileBlocking(mParser, headerFile, main);
 
     QVERIFY2(mParser->isFileParsedInContext(headerFile, main), headerName.constData());
     PParsedFileInfo info = mParser->findFileInfo(headerFile);
@@ -496,7 +499,7 @@ void TestCppParserStandardLibrary::test_standard_library_front_append()
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement append = mParser->findStatement("std::basic_string::append");
     QVERIFY(append);
@@ -536,7 +539,7 @@ void TestCppParserStandardLibrary::test_standard_library_vector_subscript()
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement scope = mParser->findScopeStatement(main, 5);
     QVERIFY(scope);
     QCOMPARE(scope->fullName, "main");
@@ -569,7 +572,7 @@ void TestCppParserStandardLibrary::test_standard_library_make_shared_default()
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
@@ -658,7 +661,7 @@ void TestCppParserStandardLibrary::test_standard_library_expression_chains()
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement stringSize = mParser->findStatement("std::basic_string::size");
     QVERIFY(stringSize);
@@ -770,7 +773,7 @@ void TestCppParserStandardLibrary::test_standard_library_trace_edge_cases()
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     auto check = [&](int line, QStringList expression, const QVector<int> &identifierIndexes) {
         PStatement scope = mParser->findScopeStatement(main, line);
@@ -859,7 +862,7 @@ void TestCppParserStandardLibrary::test_standard_library_container_eval_profile(
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement basicString = mParser->findStatement("std::basic_string");
     QVERIFY(basicString);
     struct Case {
@@ -1065,7 +1068,7 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
     }));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement scope = mParser->findScopeStatement(main, 3);
     QVERIFY(scope);
 
@@ -1271,7 +1274,7 @@ void TestCppParserStandardLibrary::test_standard_library_type_traits_builtins()
     QVERIFY(writeLines(main, {"#include <type_traits>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QVERIFY(mParser->findStatement("std::is_aggregate"));
     QVERIFY(mParser->findStatement("std::is_aggregate_v"));
@@ -1287,7 +1290,7 @@ void TestCppParserStandardLibrary::test_standard_library_atomic_macros()
     QVERIFY(writeLines(main, {"#include <atomic>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QVERIFY(mParser->findStatement("ATOMIC_VAR_INIT"));
     QVERIFY(mParser->findStatement("ATOMIC_FLAG_INIT"));
@@ -1303,7 +1306,7 @@ void TestCppParserStandardLibrary::test_standard_library_c_headers()
     QVERIFY(writeLines(main, {"#include <cstdio>", "#include <cwctype>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QVERIFY(mParser->findStatement("BUFSIZ"));
     QVERIFY(mParser->findStatement("std::iswalnum"));
@@ -1317,7 +1320,7 @@ void TestCppParserStandardLibrary::test_standard_library_filesystem()
     QVERIFY(writeLines(main, {"#include <filesystem>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QVERIFY(mParser->findStatement("std::filesystem::path"));
     QVERIFY(mParser->findStatement("std::filesystem::path::operator=="));
@@ -1332,7 +1335,7 @@ void TestCppParserStandardLibrary::test_standard_library_conversion_declarations
     QVERIFY(writeLines(main, {"#include <functional>", "#include <string>", "#include <cstdlib>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     if (mParser->compilerType() == CppCompilerType::Clang) {
         QVERIFY(mParser->findStatement("std::__1::reference_wrapper::operator type&"));
@@ -1352,7 +1355,7 @@ void TestCppParserStandardLibrary::test_standard_library_execution()
     QVERIFY(writeLines(main, {"#include <execution>", "#include <mutex>", "#include <strstream>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     auto hasMember = [](const QList<PStatement> &members, const QString &command) {
         for (const PStatement &member : members) {
@@ -1391,7 +1394,7 @@ void TestCppParserStandardLibrary::test_standard_library_inherited_members()
     QVERIFY(writeLines(main, {"#include <memory>"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QHash<QString, QStringList> expectedMembers{
         {"std::shared_ptr", {"operator[]"}},
@@ -1446,7 +1449,7 @@ void TestCppParserStandardLibrary::test_standard_library_libcxx_hash_requirement
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
     if (mParser->compilerType() != CppCompilerType::Clang)
         QSKIP("This test uses libc++ internal traits");
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement string = mParser->findStatement("std::basic_string");
     QVERIFY(string);
     QCOMPARE(mParser->findTypeDefinitionOf(main, "Direct", {}), string);
@@ -1484,7 +1487,7 @@ void TestCppParserStandardLibrary::test_standard_library_libcxx_copy_constructib
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
     if (mParser->compilerType() != CppCompilerType::Clang)
         QSKIP("This test uses libc++ internal traits");
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement string = mParser->findStatement("std::basic_string");
     QVERIFY(string);
     QCOMPARE(mParser->findTypeDefinitionOf(main, "DirectReference", {}), string);
@@ -1510,7 +1513,7 @@ void TestCppParserStandardLibrary::test_standard_library_libcxx_invocable()
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
     if (mParser->compilerType() != CppCompilerType::Clang)
         QSKIP("This test uses libc++ internal traits");
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     CppTypeResolver::EvaluationContext evaluation;
     CppTypeResolver resolver(mParser->statementList(), &evaluation,
@@ -1571,7 +1574,7 @@ void TestCppParserStandardLibrary::test_standard_library_nothrow_invocable()
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
     if (mParser->compilerType() == CppCompilerType::Clang)
         QSKIP("This test uses libstdc++ internal traits");
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(mParser->findStatement("std::__is_nothrow_invocable"));
     PStatement string = mParser->findStatement("std::basic_string");
     QVERIFY(string);
@@ -1615,7 +1618,7 @@ void TestCppParserStandardLibrary::test_standard_library_parse_baseline()
 
     QElapsedTimer timer;
     timer.start();
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     qWarning() << "STDLIB_TEST_TIMING completeParseMs" << timer.elapsed();
     qWarning() << "STDLIB_TEST_STATEMENTS" << mParser->statementList().count();
     QVERIFY(mParser->findStatement("std::vector"));
@@ -1630,13 +1633,15 @@ void TestCppParserStandardLibrary::test_standard_library_public_api_complete()
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
+    QString other = tmp.filePath("other.cpp");
     QVERIFY(writeLines(main, {"#include <bits/stdc++.h>"}));
+    QVERIFY(writeLines(other, {"// unrelated translation unit"}));
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
 
     QElapsedTimer testTimer;
     testTimer.start();
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     qWarning() << "STDLIB_TEST_TIMING firstParse" << testTimer.restart();
     for (const char *name : {
          "std::string", "std::vector", "std::map", "std::set",
@@ -1651,7 +1656,8 @@ void TestCppParserStandardLibrary::test_standard_library_public_api_complete()
     QVERIFY(firstStatements.count() > 100);
     int statementCount = mParser->statementList().count();
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, other, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     qWarning() << "STDLIB_TEST_TIMING secondParse" << testTimer.restart();
     QCOMPARE(standardLibraryStatementNames(mParser), firstStatements);
     qWarning() << "STDLIB_TEST_TIMING secondCollectAndCompare" << testTimer.restart();
@@ -1664,10 +1670,14 @@ void TestCppParserStandardLibrary::test_standard_library_public_api_complete()
 
 void TestCppParserStandardLibrary::test_aino_replay_and_lambda_navigation()
 {
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    QString other = tmp.filePath("other.cpp");
+    QVERIFY(writeLines(other, {"// unrelated translation unit"}));
     QString main = QFileInfo("resources/aino/untitled1.cpp").absoluteFilePath();
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     int statementCount = mParser->statementList().count();
     PStatement ui = mParser->findStatementOf(main, "ui", 13);
     QVERIFY(ui);
@@ -1677,7 +1687,8 @@ void TestCppParserStandardLibrary::test_aino_replay_and_lambda_navigation()
     QCOMPARE(col->kind, StatementKind::Variable);
     QCOMPARE(col->scope, StatementScope::Local);
 
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, other, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     QCOMPARE(mParser->statementList().count(), statementCount);
     QCOMPARE(mParser->findStatementOf(main, "ui", 13)->kind, StatementKind::Parameter);
     QCOMPARE(mParser->findStatementOf(main, "col", 16)->kind, StatementKind::Variable);

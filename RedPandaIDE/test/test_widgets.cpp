@@ -270,9 +270,9 @@ void TestWidgets::init()
     mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
-    });
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    }, [](const QString &) { return 1; });
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
 }
 
 void TestWidgets::test_code_completion_inherited_access()
@@ -360,9 +360,9 @@ void TestWidgets::test_code_completion_inline_namespaces()
     mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
-    });
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    }, [](const QString &) { return 1; });
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
     PStatement namespaceStatement = mParser->findStatement("std");
     QVERIFY(namespaceStatement);
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
@@ -386,8 +386,8 @@ void TestWidgets::test_code_completion_standard_library_string()
     QString bitsStdcpp;
     mParser = std::make_shared<CppParser>();
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
     QSet<QString> names = completionNames(popup, "std", main, CodeCompletionType::Normal,
@@ -414,8 +414,8 @@ void TestWidgets::test_code_completion_standard_library_vector_subscript()
     QString bitsStdcpp;
     mParser = std::make_shared<CppParser>();
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
 
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
@@ -456,8 +456,8 @@ void TestWidgets::test_code_completion_standard_library_make_shared()
     QString bitsStdcpp;
     mParser = std::make_shared<CppParser>();
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
 
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
@@ -481,8 +481,8 @@ void TestWidgets::test_goto_standard_library_string()
     QString bitsStdcpp;
     mParser = std::make_shared<CppParser>();
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement stringAlias = mParser->findStatementOf(main, {"std", "::", "string"}, 1);
     QVERIFY(stringAlias);
     QVERIFY(statementHasDefinition(stringAlias));
@@ -525,7 +525,7 @@ void TestWidgets::test_class_browser_standard_library_header_context()
     if (!QFileInfo::exists(stringFile) || !QFileInfo::exists(basicStringTcc))
         QSKIP("This test requires the libstdc++ basic_string.tcc layout");
 
-    CppParser::parseFileBlocking(mParser, basicStringTcc, false, stringFile);
+    CppParser::parseFileBlocking(mParser, basicStringTcc, stringFile);
 
     PParsedFileInfo fileInfo = mParser->findFileInfo(basicStringTcc);
     QVERIFY(fileInfo);
@@ -551,7 +551,7 @@ void TestWidgets::test_class_browser_standard_library_ostream_context()
     if (!QFileInfo::exists(ostreamTcc))
         QSKIP("This test requires the libstdc++ ostream.tcc layout");
 
-    CppParser::parseFileBlocking(mParser, ostreamTcc, false, bitsStdcpp);
+    CppParser::parseFileBlocking(mParser, ostreamTcc, bitsStdcpp);
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -573,7 +573,7 @@ void TestWidgets::test_class_browser_refresh_profile()
     QString fileName = QFileInfo(QString::fromUtf8(__FILE__)).dir().filePath(
                 "../../libs/qsynedit/test/resources/miniaudio.h");
     QVERIFY(QFileInfo::exists(fileName));
-    CppParser::parseFileBlocking(mParser, fileName, true, "");
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -625,8 +625,8 @@ void TestWidgets::test_standard_library_template_consumers()
     QString bitsStdcpp;
     mParser = std::make_shared<CppParser>();
     QVERIFY(configureStandardLibraryParser(mParser, bitsStdcpp));
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
 
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);
@@ -784,8 +784,8 @@ void TestWidgets::test_class_browser_reopened_namespace_single_node()
             "namespace N { int second; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -808,8 +808,8 @@ void TestWidgets::test_class_browser_current_file_limits_reopened_namespace()
         else
             buffer = QStringList{"namespace N { int current; }"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, currentFile, false, contextFile);
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, currentFile, contextFile);
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -837,8 +837,8 @@ void TestWidgets::test_class_browser_current_file_out_of_line_member()
             buffer = QStringList{"void A::f() {}"};
         }
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, currentFile, false, contextFile);
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, currentFile, contextFile);
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -859,8 +859,8 @@ void TestWidgets::test_class_browser_inline_namespace_aliases()
             "} }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "classbrowser.cpp", "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -913,8 +913,8 @@ void TestWidgets::test_class_browser_model_index_for_current_file_statement()
 
     mParser = std::make_shared<CppParser>();
     mParser->addIncludePath(tmp.path());
-    mParser->addProjectFile(sourceFile, false);
-    CppParser::parseFileBlocking(mParser, sourceFile, false, "");
+    mParser->addProjectFile(sourceFile);
+    CppParser::parseFileBlocking(mParser, sourceFile, "");
     ClassBrowserModel model;
     model.setParser(mParser);
     model.setCurrentFile(sourceFile);
@@ -965,11 +965,16 @@ void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
         "int oldGlobal;",
         "}"
     };
-    mParser->setOnGetFileStream([&content](const QString &, QStringList &buffer, int &) {
+    auto contentVersion = std::make_shared<int>(1);
+    mParser->setOnGetFileStream([&content, contentVersion](const QString &, QStringList &buffer,
+                                                           int &streamVersion) {
         buffer = content;
+        streamVersion = *contentVersion;
         return true;
+    }, [contentVersion](const QString &) {
+        return *contentVersion;
     });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -1006,7 +1011,7 @@ void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
         view.setEnabled(true);
     });
 
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    CppParser::parseFileBlocking(mParser, fileName, "");
     QCOMPARE(resetSpy.count(), 0);
     QModelIndex unchangedN = findNode(model, {}, "N");
     QModelIndex unchangedA = findNode(model, unchangedN, "A");
@@ -1025,7 +1030,8 @@ void TestWidgets::test_class_browser_incremental_refresh_preserves_view_state()
         "int newGlobal;",
         "}"
     };
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    ++*contentVersion;
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     QVERIFY(disabledDuringRefresh);
     QVERIFY(view.isEnabled());
@@ -1177,9 +1183,9 @@ void TestWidgets::test_goto_statement_definitions()
     mParser->setOnGetFileStream([this](const QString &, QStringList &buffer, int &) {
         buffer = mMainContent;
         return true;
-    });
-    mParser->addProjectFile(mMainFile, false);
-    CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+    }, [](const QString &) { return 1; });
+    mParser->addProjectFile(mMainFile);
+    CppParser::parseFileBlocking(mParser, mMainFile, "");
 
     PStatement deleted = mParser->findStatement("deleted");
     QVERIFY(deleted);
@@ -1296,8 +1302,8 @@ void TestWidgets::test_goto_definition_prefers_current_file()
         QVERIFY(writeLines(mMainFile, mMainContent));
         mParser = std::make_shared<CppParser>();
         mParser->addIncludePath(tmp.path());
-        mParser->addProjectFile(mMainFile, false);
-        CppParser::parseFileBlocking(mParser, mMainFile, false, "");
+        mParser->addProjectFile(mMainFile);
+        CppParser::parseFileBlocking(mParser, mMainFile, "");
 
         PStatement value = mParser->findStatementOf(mMainFile, "value", 2);
         QVERIFY(value);
@@ -1401,9 +1407,9 @@ void TestWidgets::test_function_tip_filters_and_ranks_overloads()
     parser->setOnGetFileStream([&content](const QString &, QStringList &buffer, int &) {
         buffer = content;
         return true;
-    });
-    parser->addProjectFile(fileName, false);
-    CppParser::parseFileBlocking(parser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    parser->addProjectFile(fileName);
+    CppParser::parseFileBlocking(parser, fileName, "");
 
     PStatement scope = parser->findScopeStatement(fileName, 12);
     QVector<TypeInfo> evaluatedArguments;
@@ -1557,10 +1563,9 @@ void TestWidgets::test_editor_color_scheme_demo_parser_is_self_contained()
     const PCppParser &parser = demo->parser();
     QVERIFY(parser);
     QVERIFY(parser->includePaths().isEmpty());
-    QVERIFY(parser->projectIncludePaths().isEmpty());
 
     parser->addIncludePath(tmp.path());
-    CppParser::parseFileBlocking(parser, demo->filename(), false, "");
+    CppParser::parseFileBlocking(parser, demo->filename(), "");
     QVERIFY(parser->findStatement("iostream_value"));
     QVERIFY(parser->findStatement("conio_value"));
 }
@@ -1570,8 +1575,8 @@ void TestWidgets::test_class_browser_current_file_change_clears_immediately()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"struct A { int member; };"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "first.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "first.cpp", "");
     ClassBrowserModel model;
     model.setParser(mParser);
     model.setCurrentFile("first.cpp");
@@ -1605,8 +1610,8 @@ void TestWidgets::test_class_browser_anonymous_typedef_type()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"typedef struct { int xxx; } Test;"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -1644,8 +1649,8 @@ void TestWidgets::test_class_browser_anonymous_type_sorting()
             "enum class NamedScopedEnum { scopedValue };"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     ClassBrowserModel model;
     model.setParser(mParser);
@@ -1707,8 +1712,8 @@ void TestWidgets::test_class_browser_macros_sort_first()
             "struct S {};"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     bool oldSortAlpha = pSettings->ui().classBrowserSortAlpha();
     bool oldSortType = pSettings->ui().classBrowserSortType();
@@ -1741,8 +1746,8 @@ void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
             "int use() { return test.xxx + value.yyy; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     PStatement alias = mParser->findStatement("Test");
     PStatement variable = mParser->findStatement("value");
@@ -1777,7 +1782,7 @@ void TestWidgets::test_anonymous_type_lookup_completion_and_eval()
     QCOMPARE(mParser->evalExpression(fileName, colorExpression, scope).type.declaration.lock(),
              enumType);
 
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    CppParser::parseFileBlocking(mParser, fileName, "");
     PStatement reparsedAlias = mParser->findStatement("Test");
     QVERIFY(reparsedAlias);
     QCOMPARE(std::dynamic_pointer_cast<Statement>(reparsedAlias)->typeInfo.qualifiedName,
@@ -1795,8 +1800,8 @@ void TestWidgets::test_unscoped_enum_completion_and_class_browser()
             "struct ZOrdered { int alpha; };"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, fileName, false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, fileName, "");
 
     CodeCompletionPopup popup(mColorManager.get(), nullptr);
     popup.setParser(mParser);

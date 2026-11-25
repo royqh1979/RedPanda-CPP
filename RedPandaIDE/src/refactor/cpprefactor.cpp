@@ -600,11 +600,11 @@ void CppRefactor::findOccurrencesInProject(
         translationUnits.append(editor->filename());
 
     auto restoreCurrentParse = finally([&parser, &editor] {
-        CppParser::parseFileBlocking(parser, editor->filename(), editor->inProject(),
-                                     editor->contextFile(), false, false);
+        CppParser::parseFileBlocking(parser, editor->filename(),
+                                     editor->contextFile(), false);
     });
     for (const QString &translationUnit : translationUnits) {
-        CppParser::parseFileBlocking(parser, translationUnit, true, "", false, false);
+        CppParser::parseFileBlocking(parser, translationUnit, "", false);
         if (!parser->freeze())
             continue;
         auto unfreeze = finally([&parser] {

@@ -39,7 +39,7 @@ void TestEditorGeneral::test_syntax_check_target_editor()
     QVERIFY(writeLines(actualFile, {"int value;"}));
 
     PCppParser parser = std::make_shared<CppParser>();
-    CppParser::parseFileBlocking(parser, actualFile, false, contextFile);
+    CppParser::parseFileBlocking(parser, actualFile, contextFile);
     QVERIFY(parser->isFileParsedInContext(actualFile, contextFile));
 
     auto contextEditor = std::make_shared<Editor>();
@@ -78,8 +78,8 @@ void TestEditorGeneral::test_syntax_check_target_editor()
             release->acquire();
         }
         return false;
-    });
-    CppParser::parseFileNonBlocking(parsingParser, actualFile, false, contextFile);
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileNonBlocking(parsingParser, actualFile, contextFile);
     entered->acquire();
     {
         auto releaseAction = finally([release] {
@@ -99,8 +99,8 @@ void TestEditorGeneral::test_hard_define_statement_visibility_and_hint()
     parser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value = __cplusplus;"};
         return true;
-    });
-    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(parser, "main.cpp", "");
     PStatement statement = parser->findStatementOf("main.cpp", QStringList{"__cplusplus"}, 0);
     QVERIFY(statement);
     QCOMPARE(statement->kind, StatementKind::Preprocessor);
@@ -117,8 +117,8 @@ void TestEditorGeneral::test_predefined_func_hint()
     parser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"void alpha() {", "}", "void declarationOnly();"};
         return true;
-    });
-    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(parser, "main.cpp", "");
     mEditor->setFilename("main.cpp");
     mEditor->setCppParser(parser);
     QString hint = mEditor->getParserHint({"__func__"}, {0, 1});
@@ -146,7 +146,7 @@ void TestEditorGeneral::test_hide_stops_parsing_and_allows_reparse_after_show()
         }
         buffer = QStringList{"int value;"};
         return true;
-    });
+    }, [](const QString &) { return 1; });
     mEditor->setCppParser(parser);
 
     mEditor->show();
@@ -338,8 +338,8 @@ void TestEditorGeneral::test_export_semantic_highlight()
     parser->setOnGetFileStream([lines](const QString &, QStringList &buffer, int &) {
         buffer = lines;
         return true;
-    });
-    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(parser, "main.cpp", "");
     mEditor->setFilename("main.cpp");
     mEditor->loadContent(lines);
     mEditor->setCppParser(parser);
@@ -410,8 +410,8 @@ void TestEditorGeneral::test_completion_after_member_operator()
     parser->setOnGetFileStream([parsedLines](const QString &, QStringList &buffer, int &) {
         buffer = parsedLines;
         return true;
-    });
-    CppParser::parseFileBlocking(parser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(parser, "main.cpp", "");
     mEditor->setFilename("main.cpp");
     mEditor->loadContent(editorLines);
     mEditor->setCaretPos({mEditor->lineText(4).length(), 4});
@@ -493,7 +493,7 @@ void TestEditorGeneral::test_completion_confirm_abort_from_standard_library()
     PCppParser parser = std::make_shared<CppParser>();
     QString bitsStdcpp;
     QVERIFY(configureStandardLibraryParser(parser, bitsStdcpp));
-    CppParser::parseFileBlocking(parser, filename, true, "");
+    CppParser::parseFileBlocking(parser, filename, "");
 
     mEditor->setFilename(filename);
     mEditor->setFileType(FileType::CppSource, false);
@@ -550,7 +550,7 @@ void TestEditorGeneral::test_semantic_export_profile()
     QString fileName = QFINDTESTDATA("../../libs/qsynedit/test/resources/miniaudio.h");
     QVERIFY(!fileName.isEmpty());
     PCppParser parser = std::make_shared<CppParser>();
-    CppParser::parseFileBlocking(parser, fileName, true, "");
+    CppParser::parseFileBlocking(parser, fileName, "");
     mEditor->setFilename(fileName);
     QByteArray encoding;
     mEditor->loadFromFile(fileName, ENCODING_AUTO_DETECT, encoding);
@@ -600,7 +600,7 @@ void TestEditorGeneral::test_semantic_export_profile()
 }
 
 
-void TestEditorGeneral::test_load_file_skips_force_reparse()
+void TestEditorGeneral::test_load_file_skips_duplicate_reparse()
 {
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
@@ -621,14 +621,14 @@ void TestEditorGeneral::test_load_file_skips_force_reparse()
     parser->setOnGetFileStream([readCount](const QString &, QStringList &, int &) {
         ++*readCount;
         return false;
-    });
+    }, [](const QString &) { return 1; });
     mEditor->setCppParser(parser);
 
     mEditor->loadFile(filename, false);
     QCoreApplication::processEvents();
     QCOMPARE(readCount->load(), 0);
 
-    mEditor->reparseIfNeeded();
+    mEditor->reparse();
     QTRY_COMPARE(readCount->load(), 1);
     QTRY_VERIFY(!parser->parsing());
     QVERIFY(parser->findStatement("value"));

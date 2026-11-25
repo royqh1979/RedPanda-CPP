@@ -174,8 +174,15 @@ void TestEditorDisplay::test_dnd_undo_restores_caret()
     mEditor->setOptions(options);
     mEditor->resize(600, 400);
 
-    int beginLine = 1145;
-    int endLine = 1147;
+    int beginLine = -1;
+    for (int line = originalContent.count() - 1; line >= 0; --line) {
+        if (originalContent[line].contains("disconnect(")) {
+            beginLine = line;
+            break;
+        }
+    }
+    QVERIFY(beginLine >= 0);
+    int endLine = beginLine + 2;
     QSynedit::CharPos begin{mEditor->lineText(beginLine).indexOf("disconnect"), beginLine};
     QSynedit::CharPos end{mEditor->lineText(endLine).indexOf('}') + 1, endLine};
     auto dragAndUndo = [&](int targetLine, int targetChar, int topLine,
@@ -184,7 +191,7 @@ void TestEditorDisplay::test_dnd_undo_restores_caret()
         QVERIFY(mEditor->selText().startsWith("disconnect"));
         QCOMPARE(mEditor->caretPos(), caret);
         QSynedit::CharPos caretBeforeDrag = mEditor->caretPos();
-        mEditor->setTopLineSegment(1133, 0);
+        mEditor->setTopLineSegment(beginLine - 12, 0);
         QSynedit::CharPos dragClick{begin.ch + 4, begin.line};
         QPoint clickPoint = mEditor->displayCoordToPixels(
                     mEditor->bufferToDisplayPos(dragClick)) + QPoint(2, 2);
@@ -225,16 +232,18 @@ void TestEditorDisplay::test_dnd_undo_restores_caret()
         QCoreApplication::sendEvent(mEditor->viewport(), &releaseEvent);
     };
 
-    int targetLine = 1139;
+    int targetLine = beginLine - 6;
     int targetChar = mEditor->lineText(targetLine).indexOf("pMainWindow")
             + QString("pMainWindow").length();
-    dragAndUndo(targetLine, targetChar, 1130, begin, end);
-    dragAndUndo(1122, mEditor->lineText(1122).indexOf("for"), 1116, begin, end);
+    dragAndUndo(targetLine, targetChar, beginLine - 15, begin, end);
+    dragAndUndo(beginLine - 23, mEditor->lineText(beginLine - 23).indexOf("for"),
+                beginLine - 29, begin, end);
 
-    QSynedit::CharPos semicolonEnd{mEditor->lineText(1146).indexOf(';') + 1, 1146};
-    targetLine = 1137;
+    QSynedit::CharPos semicolonEnd{mEditor->lineText(beginLine + 1).indexOf(';') + 1,
+                                   beginLine + 1};
+    targetLine = beginLine - 8;
     targetChar = mEditor->lineText(targetLine).indexOf("connect");
-    dragAndUndo(targetLine, targetChar, 1133, semicolonEnd, begin);
+    dragAndUndo(targetLine, targetChar, beginLine - 12, semicolonEnd, begin);
 }
 
 
@@ -578,7 +587,7 @@ void TestEditorDisplay::test_stl_paint_profile()
         QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
         QCOMPARE(file.write(scenario.lines.join('\n').toUtf8()), qint64(scenario.lines.join('\n').toUtf8().size()));
         file.close();
-        CppParser::parseFileBlocking(parser, fileName, true, "");
+        CppParser::parseFileBlocking(parser, fileName, "");
 
         mEditor->setFilename(fileName);
         mEditor->loadContent(scenario.lines);

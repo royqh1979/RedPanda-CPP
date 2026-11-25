@@ -1215,9 +1215,9 @@ void TestQSyneditDisplay::test_dnd_undo_restores_content_and_folds()
     };
     QStringList originalTree = foldTree(mEdit.get());
     auto selectTail = [&] {
-        int endLine = 1148;
+        int endLine = lines.count() - 1;
         mEdit->setCaretAndSelection(CharPos{mEdit->lineText(endLine).length(), endLine},
-                                    CharPos{4, 1146},
+                                    CharPos{4, endLine - 2},
                                     CharPos{mEdit->lineText(endLine).length(), endLine});
     };
     selectTail();
@@ -1235,13 +1235,13 @@ void TestQSyneditDisplay::test_dnd_undo_restores_content_and_folds()
         mEdit->dropEvent(&dropEvent);
     };
 
-    dragTo(1136, 8);
+    dragTo(lines.count() - 13, 8);
     QCOMPARE(mEdit->lineCount(), lines.count());
 
     mEdit->loadContent(lines);
     selectTail();
     CharPos caretBeforeDrag = mEdit->caretPos();
-    dragTo(1138, 4);
+    dragTo(lines.count() - 11, 4);
     mEdit->undo();
     QCOMPARE(mEdit->caretPos(), caretBeforeDrag);
     QCOMPARE(mEdit->content(), lines);
@@ -1249,7 +1249,7 @@ void TestQSyneditDisplay::test_dnd_undo_restores_content_and_folds()
     QCOMPARE(foldTree(mEdit.get()), originalTree);
 
     selectTail();
-    dragTo(1105, 0);
+    dragTo(lines.count() - 44, 0);
     QCOMPARE(mEdit->lineCount(), lines.count());
 }
 

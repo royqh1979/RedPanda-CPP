@@ -19,7 +19,7 @@ Configuration 是调用方提供的输入和项目上下文，不是解析产物
 
 Session 是一次 parse/preprocess 调用私有的数据，包括 include 栈、当前文件、输入输出缓冲区、分支栈、processed 集合、有序跨边界前缀、文件内容缓存、当前 defines 和扫描进度。
 
-CppParser 和 CppPreprocessor 不持有 Session 成员。调用方在栈上创建 Session，通过 `preprocess(session, fileName)` 等接口传递；preprocess 开始时值初始化，因此可以重复使用该栈对象而不需要显式清理。result、defines 和 boundary 输出在调用结束后仍可读取，生命周期到调用方作用域结束。
+CppParser 和 CppPreprocessor 不持有 Session 成员。内部执行链在栈上创建 Session，通过 `preprocess(session, fileName)` 等私有接口传递；preprocess 开始时值初始化，因此可以重复使用该栈对象而不需要显式清理。result、defines 和 boundary 输出在调用结束后仍可读取，生命周期到调用方作用域结束。Session 和 Registry 不提供公开访问入口；Preprocessor 组件测试通过 friend 使用内部接口，不为此增加生产公开 getter。
 
 锁、停止标志、冻结计数、pending parse command 和 serial id 属于对象控制状态，不属于 Session。测试诊断缓冲和匿名类型 ID 生成器也不属于 Session。
 
@@ -118,7 +118,7 @@ CppParser 有两个独立原子标志：
 
 仅实例级停止时，本次结果不完整，Parser 在 `mParsing=false` 和 `parseFinished` 之前清空分析结果并保留配置。应用退出标志为真时不清理半成品，最终按退出析构策略处理。
 
-Editor 隐藏时调用实例级停止接口，不等待后台线程结束；显示后调用 `reparseIfNeeded()`。若隐藏后很快重新显示，沿用 pending command 处理显示请求。
+Editor 隐藏时调用实例级停止接口，不等待后台线程结束；显示后调用 `reparse()`，由 Parser 判断是否能跳过。若隐藏后很快重新显示，沿用 pending command 处理显示请求。
 
 批量打开和关闭复用 EditorManager 的嵌套 `beginUpdate()` / `endUpdate()`：
 
@@ -131,7 +131,7 @@ Editor 隐藏时调用实例级停止接口，不等待后台线程结束；显�
 
 ### 单个 Editor
 
-`Editor::setCppParser(nullptr)` 在解除关联前调用旧 Parser 的 `invalidateFileAndDependents()`。共享 Parser 仍可服务其它 Editor；非共享 Parser 随后自然析构。
+`Editor::setCppParser(nullptr)` 在解除关联前调用旧 Parser 的 `invalidateFile()`。共享 Parser 仍可服务其它 Editor；非共享 Parser 随后自然析构。
 
 ### Close All
 

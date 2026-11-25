@@ -443,8 +443,8 @@ void TestCppPreprocessorInclude::test_include_order_quote()
     QString dir = scenarioPath("include_order");
     CppPreprocessor p;
     CppPreprocessor::Session pSession;
+    p.addIncludePath(dir + "/proj");
     p.addIncludePath(dir + "/sys");
-    p.addProjectIncludePath(dir + "/proj");
     QCOMPARE(runScenario(p, pSession, dir, "main_quote.cpp"), QStringList({
                  "#include <DIR>/main_quote.cpp:-1",
                  "#include <DIR>/shared.h:-1",
@@ -460,8 +460,8 @@ void TestCppPreprocessorInclude::test_include_order_angle()
     QString dir = scenarioPath("include_order");
     CppPreprocessor p;
     CppPreprocessor::Session pSession;
+    p.addIncludePath(dir + "/proj");
     p.addIncludePath(dir + "/sys");
-    p.addProjectIncludePath(dir + "/proj");
     QCOMPARE(runScenario(p, pSession, dir, "main_angle.cpp"), QStringList({
                  "#include <DIR>/main_angle.cpp:-1",
                  "#include <DIR>/proj/shared.h:-1",
@@ -726,7 +726,7 @@ void TestCppPreprocessorInclude::test_on_get_file_stream()
             return true;
         }
         return false;
-    });
+    }, [](const QString &) { return 1; });
     p.preprocess(pSession, dir + "/main.cpp");
     QCOMPARE(normalizedResult(pSession, dir), QStringList({
                  "#include <DIR>/main.cpp:-1",
@@ -756,7 +756,7 @@ void TestCppPreprocessorInclude::test_unfiltered_file_stream_callback_exhausts_d
     p.setOnGetFileStream([](const QString &, QStringList &out, int &) {
         out = QStringList{"#include <iostream>", "#include <conio.h>"};
         return true;
-    });
+    }, [](const QString &) { return 1; });
     p.preprocess(pSession, main);
 
     QCOMPARE(p.eventCounts(main).scan, 1);
@@ -787,7 +787,7 @@ void TestCppPreprocessorInclude::test_session_file_cache_reuse_and_clear()
         ++headerReads;
         out = QStringList{"int cached_value;"};
         return true;
-    });
+    }, [](const QString &) { return 1; });
     p.preprocess(pSession, main);
     QCOMPARE(headerReads, 1);
     QCOMPARE(pSession.result.count("int cached_value;"), 2);
@@ -1207,7 +1207,7 @@ void TestCppPreprocessorInclude::test_nonproject_include_path_file_is_inside_bou
     QString header = includeDir + "/plain_a.h";
     CppPreprocessor p;
     CppPreprocessor::Session pSession;
-    p.addProjectIncludePath(includeDir);
+    p.addIncludePath(includeDir);
     p.addProjectFile(dir + "/order_ab.cpp");
     p.preprocess(pSession, dir + "/order_ab.cpp");
     QCOMPARE(p.boundaryAncestor(pSession, header, 0), header);
@@ -1434,11 +1434,14 @@ void TestCppPreprocessorInclude::test_editor_change_invalidates_without_disk_cha
     CppPreprocessor::Session pSession;
     p.addIncludePath(tmp.path());
     p.addProjectFile(main);
-    p.setOnGetFileStream([&](const QString &name, QStringList &out, int &) {
+    p.setOnGetFileStream([&](const QString &name, QStringList &out, int &streamVersion) {
         if (name != header)
             return false;
         out = QStringList{QString("int callback_v%1;").arg(version)};
+        streamVersion = version;
         return true;
+    }, [&](const QString &name) {
+        return name == header ? version : 0;
     });
     p.preprocess(pSession, main);
     QVERIFY(pSession.result.contains("int callback_v1;"));
@@ -1510,7 +1513,7 @@ void TestCppPreprocessorInclude::test_active_include_stack_is_not_invalidated_mi
         }
         out = QStringList{"int child_value;"};
         return true;
-    });
+    }, [](const QString &) { return 1; });
     p.preprocess(pSession, main);
     QVERIFY(pSession.result.contains("int root_value;"));
     QVERIFY(pSession.result.contains("int child_value;"));

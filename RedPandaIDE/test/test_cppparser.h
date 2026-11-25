@@ -69,11 +69,11 @@ private slots:
     void test_application_exit_stops_parsing_without_cleanup();
     void test_normal_destructor_releases_resources();
     void test_application_exit_destructor_abandons_resources();
-    void test_nonforce_parse_checks_root_and_changes();
+    void test_parse_checks_root_and_changes();
     void test_context_file_info_controls_header_coverage();
-    void test_queued_nonforce_parse_skips_completed_root();
-    void test_nonforce_project_parse_checks_all_files();
-    void test_nonforce_parse_uses_content_versions();
+    void test_queued_parse_skips_completed_root();
+    void test_project_parse_checks_all_files();
+    void test_parse_uses_content_versions();
     void test_lambda_function_argument_scope();
     void test_nested_lambda_function_argument_scope();
 };

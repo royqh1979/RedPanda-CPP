@@ -345,7 +345,7 @@ QStringList TestCppPreprocessor::preprocessContent(CppPreprocessor &p, CppPrepro
     p.setOnGetFileStream([&lines](const QString&, QStringList& out, int &){
         out = lines;
         return true;
-    });
+    }, [](const QString &) { return 1; });
     p.preprocess(session, "/virtual/main.cpp");
     return session.result;
 }
@@ -678,8 +678,7 @@ void TestCppPreprocessor::test_empty_args()
 
 void TestCppPreprocessor::test_empty_varargs()
 {
-    // The space before '#' is kept (stringize); it was once swallowed
-    // by tokenizeValue. Variadic arguments may be empty.
+    // The space before '#' is kept (stringize). Variadic arguments may be empty.
     CppPreprocessor p;
     p.addHardDefineByLine("#define OUTER(...) WORD #__VA_ARGS__");
     QCOMPARE(p.expandMacros("OUTER()"), "WORD \"\"");

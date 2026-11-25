@@ -90,6 +90,10 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(ColorManager *colorManager, con
         buffer = ui->editDemo->content();
         version = ui->editDemo->document()->contentVersion();
         return true;
+    }, [this](const QString &filename) {
+        if (filename != ui->editDemo->filename())
+            return 0;
+        return ui->editDemo->document()->contentVersion();
     });
     parser->setEnabled(true);
     ui->editDemo->setCppParser(parser);
@@ -219,7 +223,7 @@ void EditorColorSchemeWidget::setCurrentSchemeModified()
 
 EditorColorSchemeWidget::~EditorColorSchemeWidget()
 {
-    ui->editDemo->parser()->setOnGetFileStream(nullptr);
+    ui->editDemo->parser()->setOnGetFileStream(nullptr, nullptr);
     delete ui;
     //mDefinesModel.clear();
 }

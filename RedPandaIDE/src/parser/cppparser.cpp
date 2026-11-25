@@ -83,9 +83,8 @@ void CppParser::addHardDefineByLine(const QString &line)
     mPreprocessor->addHardDefineByLine(line.trimmed());
 }
 
-void CppParser::addProjectFile(const QString &fileName, bool needScan)
+void CppParser::addProjectFile(const QString &fileName)
 {
-    Q_UNUSED(needScan);
     QMutexLocker locker(&mMutex);
     mProjectFiles.insert(fileName);
     mPreprocessor->addProjectFile(fileName);
@@ -103,12 +102,6 @@ void CppParser::removeProjectFile(const QString &value)
     mProjectFiles.remove(value);
     mPreprocessor->removeProjectFile(value);
     invalidateSingleFile(value);
-}
-
-void CppParser::addProjectIncludePath(const QString &value)
-{
-    QMutexLocker locker(&mMutex);
-    mPreprocessor->addProjectIncludePath(value);
 }
 
 void CppParser::internalParse(const QString &fileName)
@@ -130,6 +123,10 @@ void CppParser::internalParse(const QString &fileName)
     qint64 tokenizeMs = timer.restart();
     if (shouldStopParsing())
         return;
+
+    for (const QString &file : outsideBoundaryFiles(fileName))
+        removeStatementsInFile(file);
+
 #ifdef REDPANDA_PARSER_TEST
     mPreprocessedForTest = session.result;
     mTokenizerTokensForTest = tokenizer.tokens();
@@ -257,6 +254,8 @@ void CppParser::clearAnalysisResults()
 {
     mStatementList->clear();
     mPreprocessor->clearAnalysisResults();
+    mActiveFileName.clear();
+    mActiveContextFilename.clear();
     internalParseHardDefines();
 #ifdef REDPANDA_PARSER_TEST
     mPreprocessedForTest.clear();
@@ -264,7 +263,7 @@ void CppParser::clearAnalysisResults()
 #endif
 }
 
-void CppParser::invalidateSingleFile(const QString &fileName)
+void CppParser::removeStatementsInFile(const QString &fileName)
 {
     if (fileName.isEmpty())
         return;
@@ -303,6 +302,11 @@ void CppParser::invalidateSingleFile(const QString &fileName)
         if (statement->declarations.isEmpty() && !statementHasDefinition(statement))
             mStatementList->deleteStatement(statement);
     }
+}
+
+void CppParser::invalidateSingleFile(const QString &fileName)
+{
+    removeStatementsInFile(fileName);
     mPreprocessor->removeFileInfo(fileName);
     mPreprocessor->removeReplayRecord(fileName);
 }
@@ -313,25 +317,25 @@ void CppParser::internalInvalidateFiles(const QSet<QString> &files)
         invalidateSingleFile(file);
 }
 
-void CppParser::invalidateOutsideBoundaryFiles(const QString &fileName)
+QSet<QString> CppParser::outsideBoundaryFiles(const QString &fileName) const
 {
+    QSet<QString> result;
     if (fileName.isEmpty())
-        return;
+        return result;
     QSet<QString> files{fileName};
     PParsedFileInfo info = mPreprocessor->findFileInfo(fileName);
     if (info)
         files += info->includes();
     for (const QString &file : files) {
-        if (mProjectFiles.contains(file) || !isSystemHeaderFile(file))
-            invalidateSingleFile(file);
+        if (mProjectFiles.contains(file) || !::isSystemHeaderFile(file, mPreprocessor->includePaths()))
+            result.insert(file);
     }
+    return result;
 }
 
-QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
+void CppParser::invalidateOutsideBoundaryFiles(const QString &fileName)
 {
-    if (fileName.isEmpty())
-        return {};
-    return mPreprocessor->calculateAffectedFiles(fileName);
+    internalInvalidateFiles(outsideBoundaryFiles(fileName));
 }
 
 void CppParser::invalidateFileAndDependents(const QString &fileName)
@@ -345,70 +349,32 @@ void CppParser::invalidateFileAndDependents(const QString &fileName)
         updateSerialId();
         mParsing = true;
     }
-    QSet<QString> files = calculateFilesToBeReparsed(fileName);
-    internalInvalidateFiles(files);
+    internalInvalidateFiles(mPreprocessor->calculateAffectedFiles(fileName));
     {
         QMutexLocker locker(&mMutex);
         mParsing = false;
     }
 }
 
-QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
+void CppParser::invalidateFile(const QString &fileName)
 {
-    QStringList result;
-    QSet<QString> savedReplayRoots = mPreprocessor->replayRootFiles();
-    for (const QString &file : files) {
-        if (shouldStopParsing())
-            return {};
-        if (mPreprocessor->hasReplayRecord(file))
-            continue;
-        mPreprocessor->setScanOptions(false, true);
-        CppPreprocessor::Session session;
-        mPreprocessor->preprocess(session, file);
-        if (shouldStopParsing())
-            return {};
+    if (!mEnabled)
+        return;
+    {
+        QMutexLocker locker(&mMutex);
+        if (mParsing || mLockCount > 0)
+            return;
+        updateSerialId();
+        mParsing = true;
     }
-
-    QSet<QString> remaining = files;
-    while (!remaining.isEmpty()) {
-        if (shouldStopParsing())
-            return {};
-        bool found = false;
-        for (const QString &file : remaining) {
-            bool hasInclude = false;
-            PParsedFileInfo info = mPreprocessor->findFileInfo(file);
-            if (info) {
-                for (const QString &include : info->includes()) {
-                    if (remaining.contains(include)) {
-                        hasInclude = true;
-                        break;
-                    }
-                }
-            }
-            if (!hasInclude) {
-                result.push_front(file);
-                remaining.remove(file);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            for (const QString &file : remaining) {
-                result.push_front(file);
-                remaining.remove(file);
-            }
-        }
+    invalidateOutsideBoundaryFiles(fileName);
+    {
+        QMutexLocker locker(&mMutex);
+        mParsing = false;
     }
-    QSet<QString> newReplayRoots = mPreprocessor->replayRootFiles();
-    for (const QString &file : newReplayRoots) {
-        if (!savedReplayRoots.contains(file))
-            mPreprocessor->removeReplayRecord(file);
-    }
-    return result;
 }
 
-bool CppParser::parseFile(const QString &fileName, bool inProject,
-                          const QString &contextFilename, bool onlyIfNotParsed, bool updateView)
+bool CppParser::parseFile(const QString &fileName, const QString &contextFilename, bool updateView)
 {
     if (!mEnabled || sApplicationExiting.load())
         return false;
@@ -419,9 +385,7 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
             if (mParsing) {
                 mLastParseFileCommand = std::make_unique<ParseFileCommand>();
                 mLastParseFileCommand->fileName = fileName;
-                mLastParseFileCommand->inProject = inProject;
                 mLastParseFileCommand->contextFilename = contextFilename;
-                mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
                 mLastParseFileCommand->updateView = updateView;
                 return false;
             }
@@ -442,55 +406,34 @@ bool CppParser::parseFile(const QString &fileName, bool inProject,
         mParsing = false;
         emit parseFinished(session.filesScannedCount, updateView ? 1 : 0);
     });
-    auto unchanged = [this](const QString &fileToCheck) {
+    auto analysisResultValid = [this](const QString &fileToCheck) {
         if (fileToCheck.isEmpty())
             return true;
         PParsedFileInfo info = mPreprocessor->findFileInfo(fileToCheck);
-        return info && !mPreprocessor->hasChangedFiles(
-                    info->fileName(), info->includes());
-    };
-    if (inProject) {
-        QSet<QString> filesToReparse = calculateFilesToBeReparsed(fileName);
-        if (shouldStopParsing())
-            return true;
-        QStringList files = sortFilesByIncludeRelations(filesToReparse);
-        if (shouldStopParsing())
-            return true;
-        if (onlyIfNotParsed) {
-            bool allUnchanged = true;
-            for (const QString &file : files) {
-                if (!unchanged(file)) {
-                    allUnchanged = false;
-                    break;
-                }
-            }
-            if (allUnchanged)
+        if (!info)
+            return false;
+        for (const QString &includedFile : info->includes()) {
+            if (!mPreprocessor->findFileInfo(includedFile))
                 return false;
         }
-        internalInvalidateFiles(filesToReparse);
-        session.filesToScanCount = files.count();
-        session.filesScannedCount = 0;
-        for (const QString &file : files) {
-            if (shouldStopParsing())
-                break;
-            ++session.filesScannedCount;
-            emit progress(file, session.filesToScanCount, session.filesScannedCount);
-            if (!mPreprocessor->hasReplayRecord(file))
-                internalParse(file);
-        }
-    } else {
-        if (onlyIfNotParsed && unchanged(fileName) && unchanged(contextFilename))
-            return false;
-        invalidateOutsideBoundaryFiles(fileName);
-        invalidateOutsideBoundaryFiles(contextFilename);
-        session.filesToScanCount = 2;
-        session.filesScannedCount = 0;
-        ++session.filesScannedCount;
-        emit progress(fileName, session.filesToScanCount, session.filesScannedCount);
-        internalParse(contextFilename);
-        if (!shouldStopParsing() && fileName != contextFilename
-                && !mPreprocessor->includesFile(contextFilename, fileName))
-            internalParse(fileName);
+        return !mPreprocessor->hasChangedFiles(info->fileName(), info->includes());
+    };
+    if (mActiveFileName == fileName && mActiveContextFilename == contextFilename
+            && analysisResultValid(fileName) && analysisResultValid(contextFilename))
+        return false;
+
+    invalidateOutsideBoundaryFiles(fileName);
+    invalidateOutsideBoundaryFiles(contextFilename);
+    session.filesToScanCount = 2;
+    ++session.filesScannedCount;
+    emit progress(fileName, session.filesToScanCount, session.filesScannedCount);
+    internalParse(contextFilename);
+    if (!shouldStopParsing() && fileName != contextFilename
+            && !mPreprocessor->includesFile(contextFilename, fileName))
+        internalParse(fileName);
+    if (!shouldStopParsing()) {
+        mActiveFileName = fileName;
+        mActiveContextFilename = contextFilename;
     }
     return true;
 }
@@ -580,25 +523,6 @@ PReplayRecord CppParser::findReplayRecord(const QString &filename) const
 }
 #endif
 
-QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase,
-                                            const PStatement &currentScope) const
-{
-    Q_UNUSED(fileName);
-    TypeInfo type = CppTypeResolver(*mStatementList, nullptr,
-                        evaluationOptions()).resolve(parseTypeInfo(phrase), {}, currentScope);
-    return type.templateArguments.isEmpty() ? QString() : type.templateArguments.first().toString();
-}
-
-QString CppParser::findTemplateParamOf(const QString &fileName, const QString &phrase, int index,
-                                       const PStatement &currentScope) const
-{
-    Q_UNUSED(fileName);
-    TypeInfo type = CppTypeResolver(*mStatementList, nullptr,
-                        evaluationOptions()).resolve(parseTypeInfo(phrase), {}, currentScope);
-    return index >= 0 && index < type.templateArguments.count()
-            ? type.templateArguments[index].toString() : QString();
-}
-
 PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
 {
     QMutexLocker locker(&mMutex);
@@ -624,16 +548,6 @@ PStatement CppParser::findFunctionAt(const QString &fileName, int line) const
             return statement;
     }
     return {};
-}
-
-int CppParser::findLastOperator(const QString &phrase) const
-{
-    for (int i = phrase.length() - 2; i >= 0; --i) {
-        if ((phrase[i] == '-' && phrase[i + 1] == '>')
-                || (phrase[i] == ':' && phrase[i + 1] == ':'))
-            return i;
-    }
-    return phrase.lastIndexOf('.');
 }
 
 PStatementList CppParser::findNamespace(const QString &name, bool includeInline) const
@@ -953,19 +867,6 @@ bool CppParser::freeze(const QString &serialId)
     return true;
 }
 
-QStringList CppParser::getClassesList() const
-{
-    QMutexLocker locker(&mMutex);
-    if (mParsing)
-        return {};
-    QSet<QString> names;
-    for (const PStatement &statement : mStatementList->statements()) {
-        if (statement->kind == StatementKind::Class)
-            names.insert(statement->fullName);
-    }
-    return names.values();
-}
-
 QStringList CppParser::getFileDirectIncludes(const QString &filename) const
 {
     QMutexLocker locker(&mMutex);
@@ -991,31 +892,14 @@ QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &h
                                      bool fromNext) const
 {
     QMutexLocker locker(&mMutex);
-    QString currentDir = extractFileDir(relativeTo);
-    QStringList includes;
-    QStringList projectIncludes;
-    bool found = false;
-    if (fromNext && mPreprocessor->includePaths().contains(currentDir)) {
-        for (const QString &path : mPreprocessor->includePathList()) {
-            if (found)
-                includes.append(path);
-            else if (path == currentDir)
-                found = true;
-        }
-        projectIncludes = mPreprocessor->projectIncludePathList();
-    } else if (fromNext && mPreprocessor->projectIncludePaths().contains(currentDir)) {
-        includes = mPreprocessor->includePathList();
-        for (const QString &path : mPreprocessor->projectIncludePathList()) {
-            if (found)
-                includes.append(path);
-            else if (path == currentDir)
-                found = true;
-        }
-    } else {
-        includes = mPreprocessor->includePathList();
-        projectIncludes = mPreprocessor->projectIncludePathList();
+    QStringList includes = mPreprocessor->includePathList();
+    if (fromNext) {
+        QString currentDir = extractFileDir(relativeTo);
+        int index = includes.indexOf(currentDir);
+        if (index >= 0)
+            includes = includes.mid(index + 1);
     }
-    return ::getHeaderFilename(relativeTo, headerName, includes, projectIncludes);
+    return ::getHeaderFilename(relativeTo, headerName, includes);
 }
 
 bool CppParser::isLineVisible(const QString &fileName, int line) const
@@ -1118,6 +1002,8 @@ void CppParser::resetForReuse()
     mIsSystemHeader = false;
     mStatementList->clear();
     mProjectFiles.clear();
+    mActiveFileName.clear();
+    mActiveContextFilename.clear();
     mPreprocessor->resetForReuse();
 }
 
@@ -1411,34 +1297,14 @@ void CppParser::setEnabled(bool newEnabled)
     }
 }
 
-void CppParser::setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream)
+void CppParser::setOnGetFileStream(const GetFileStreamFunc &stream, const GetFileVersionFunc &version)
 {
-    mPreprocessor->setOnGetFileStream(newOnGetFileStream);
-}
-
-void CppParser::setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion)
-{
-    mPreprocessor->setOnGetFileVersion(newOnGetFileVersion);
-}
-
-int CppParser::parserId() const
-{
-    return mParserId;
-}
-
-const QString &CppParser::serialId() const
-{
-    return mSerialId;
+    mPreprocessor->setOnGetFileStream(stream, version);
 }
 
 const QSet<QString> &CppParser::includePaths()
 {
     return mPreprocessor->includePaths();
-}
-
-const QSet<QString> &CppParser::projectIncludePaths()
-{
-    return mPreprocessor->projectIncludePaths();
 }
 
 const StatementModel &CppParser::statementList() const
@@ -1454,11 +1320,6 @@ ParserLanguage CppParser::language() const
 void CppParser::setLanguage(ParserLanguage newLanguage)
 {
     mLanguage = newLanguage;
-}
-
-const QSet<QString> &CppParser::projectFiles() const
-{
-    return mProjectFiles;
 }
 
 QList<QString> CppParser::namespaces()
@@ -1489,9 +1350,8 @@ void CppParser::updateSerialId()
     mSerialId = QString("%1:%2").arg(mParserId).arg(++mSerialCount);
 }
 
-void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject,
-                                  const QString &contextFilename, bool onlyIfNotParsed,
-                                  bool updateView)
+void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName,
+                                  const QString &contextFilename, bool updateView)
 {
     if (!parser || !parser->enabled())
         return;
@@ -1501,25 +1361,24 @@ void CppParser::parseFileBlocking(PCppParser parser, const QString &fileName, bo
         if (app)
             app->processEvents();
     }
-    parser->parseFile(fileName, inProject, contextFilename, onlyIfNotParsed, updateView);
+    parser->parseFile(fileName, contextFilename, updateView);
 }
 
-void CppParser::parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inProject,
-                                     const QString &contextFilename, bool onlyIfNotParsed,
-                                     bool updateView)
+void CppParser::parseFileNonBlocking(PCppParser parser, const QString &fileName,
+                                     const QString &contextFilename, bool updateView)
 {
     if (!parser || !parser->enabled())
         return;
     CppFileParserThread *thread = new CppFileParserThread(
-                parser, fileName, inProject, contextFilename, onlyIfNotParsed, updateView);
+                parser, fileName, contextFilename, updateView);
     thread->start();
 }
 
-CppFileParserThread::CppFileParserThread(PCppParser parser, const QString &fileName, bool inProject,
-                                         const QString &contextFilename, bool onlyIfNotParsed,
-                                         bool updateView, QObject *parent)
-    : QThread(parent), mParser(parser), mFileName(fileName), mInProject(inProject),
-      mContextFilename(contextFilename), mOnlyIfNotParsed(onlyIfNotParsed), mUpdateView(updateView)
+CppFileParserThread::CppFileParserThread(PCppParser parser, const QString &fileName,
+                                         const QString &contextFilename, bool updateView,
+                                         QObject *parent)
+    : QThread(parent), mParser(parser), mFileName(fileName),
+      mContextFilename(contextFilename), mUpdateView(updateView)
 {
     connect(this, &QThread::finished, this, &QObject::deleteLater);
 }
@@ -1530,12 +1389,10 @@ void CppFileParserThread::run()
 {
     if (!mParser)
         return;
-    if (mParser->parseFile(mFileName, mInProject, mContextFilename,
-                           mOnlyIfNotParsed, mUpdateView)) {
+    if (mParser->parseFile(mFileName, mContextFilename, mUpdateView)) {
         CppParser::PParseFileCommand command;
         while ((command = mParser->retrievePendingParseFileCommand()) != nullptr) {
-            if (!mParser->parseFile(command->fileName, command->inProject,
-                                    command->contextFilename, command->onlyIfNotParsed,
+            if (!mParser->parseFile(command->fileName, command->contextFilename,
                                     command->updateView))
                 break;
         }

@@ -45,6 +45,7 @@ private slots:
 private:
     std::shared_ptr<Editor> makeEditor(const QString &fileName);
     void setProjectFiles(const QStringList &fileNames);
+    int contentVersion(const QString &fileName);
 
 private:
     std::unique_ptr<Settings> mSettings;
@@ -52,6 +53,8 @@ private:
     std::shared_ptr<IconsManager> mIconsManager;
     PCppParser mParser;
     QHash<QString, QStringList> mFiles;
+    QHash<QString, QStringList> mVersionedContents;
+    QHash<QString, int> mContentVersions;
     QString mMainFile;
     std::shared_ptr<Project> mProject;
 };

@@ -21,7 +21,8 @@
 #include "../settings.h"
 #include "../mainwindow.h"
 
-void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
+void reconfigureCppParser(std::shared_ptr<CppParser> parser,
+                          const QStringList &additionalIncludeDirs, int compilerSetIndex)
 {
     if (!parser)
         return;
@@ -39,6 +40,8 @@ void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetInde
         parser->setLanguage(ParserLanguage::SDCC);
 #endif
     bool isCpp = parser->language()==ParserLanguage::CPlusPlus;
+    for (const QString &path : additionalIncludeDirs)
+        parser->addIncludePath(path);
     if (compilerSet) {
         if (isCpp) {
             foreach  (const QString& file,compilerSet->CppIncludeDirs()) {

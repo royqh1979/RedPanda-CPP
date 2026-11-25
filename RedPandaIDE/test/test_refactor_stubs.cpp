@@ -101,6 +101,6 @@ void EditorManager::getVisibleEditors(Editor *&left, Editor *&right) const
     right = nullptr;
 }
 
-void reconfigureCppParser(std::shared_ptr<CppParser>, int)
+void reconfigureCppParser(std::shared_ptr<CppParser>, const QStringList &, int)
 {
 }

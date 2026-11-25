@@ -36,9 +36,7 @@ class CppParser : public QObject
 public:
     struct ParseFileCommand {
         QString fileName;
-        bool inProject;
         QString contextFilename;
-        bool onlyIfNotParsed;
         bool updateView;
     };
     using PParseFileCommand = std::unique_ptr<ParseFileCommand>;
@@ -49,22 +47,16 @@ public:
     ~CppParser();
 
     void addHardDefineByLine(const QString& line);
-    void addProjectFile(const QString &fileName, bool needScan);
+    void addProjectFile(const QString &fileName);
     void addIncludePath(const QString& value);
     void removeProjectFile(const QString& value);
-    void addProjectIncludePath(const QString& value);
     QList<PStatement> getListOfFunctions(const QString& fileName, const QString& phrase, int line) const;
     QList<PStatement> matchFunctionOverloads(
             const QList<PStatement> &candidates, const QVector<TypeInfo> &arguments,
             int minimumArgumentCount) const;
     PStatement findScopeStatement(const QString& filename, int line) const;
     PParsedFileInfo findFileInfo(const QString &filename) const;
-    QString findFirstTemplateParamOf(const QString& fileName, const QString& phrase,
-                                     const PStatement& currentScope) const;
-    QString findTemplateParamOf(const QString& fileName, const QString& phrase, int index,
-                                const PStatement& currentScope) const;
     PStatement findFunctionAt(const QString& fileName, int line) const;
-    int findLastOperator(const QString& phrase) const;
     PStatementList findNamespace(const QString& name, bool includeInline = false) const;
     PStatement findStatement(const QString& fullname) const;
     QList<PStatement> membersOfStatement(const PStatement &scopeStatement) const;
@@ -93,13 +85,13 @@ public:
     PStatement findTypeDef(const PStatement& statement, const QString& fileName) const;
     bool freeze();
     bool freeze(const QString& serialId);
-    QStringList getClassesList() const;
     QStringList getFileDirectIncludes(const QString& filename) const;
     QSet<QString> getIncludedFiles(const QString& filename) const;
     QSet<QString> getFileUsings(const QString& filename) const;
     QString getHeaderFileName(const QString& relativeTo, const QString& headerName,
                               bool fromNext = false) const;
     void invalidateFileAndDependents(const QString& fileName);
+    void invalidateFile(const QString &fileName);
 #ifdef REDPANDA_PARSER_TEST
     PReplayRecord findReplayRecord(const QString &filename) const;
     void invalidateSingleFileForTest(const QString &fileName) { invalidateSingleFile(fileName); }
@@ -108,8 +100,10 @@ public:
     }
     const QStringList &preprocessedForTest() const { return mPreprocessedForTest; }
     const CppTokenizer::TokenList &tokenizerTokensForTest() const { return mTokenizerTokensForTest; }
+    const QSet<QString> &projectFiles() const { return mProjectFiles; }
     static void resetApplicationExitFlagForTest();
 #endif
+    bool isFileParsedInContext(const QString &fileName, const QString &contextFileName) const;
     bool isLineVisible(const QString& fileName, int line) const;
     bool isIncludeLine(const QString &line) const;
     bool isIncludeNextLine(const QString &line) const;
@@ -124,20 +118,14 @@ public:
     void resetForReuse();
     void unFreeze();
     bool hasReplayRecord(const QString& fileName) const;
-    bool isFileParsedInContext(const QString &fileName, const QString &contextFileName) const;
     QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1) const;
     bool enabled() const;
     void setEnabled(bool newEnabled);
-    void setOnGetFileStream(const GetFileStreamFunc &newOnGetFileStream);
-    void setOnGetFileVersion(const GetFileVersionFunc &newOnGetFileVersion);
-    int parserId() const;
-    const QString &serialId() const;
+    void setOnGetFileStream(const GetFileStreamFunc &stream, const GetFileVersionFunc &version);
     const QSet<QString>& includePaths();
-    const QSet<QString>& projectIncludePaths();
     const StatementModel &statementList() const;
     ParserLanguage language() const;
     void setLanguage(ParserLanguage newLanguage);
-    const QSet<QString> &projectFiles() const;
     QList<QString> namespaces();
 
     static bool isIdentifier(const QString& token) {
@@ -150,12 +138,10 @@ public:
     bool sharedByFiles() const;
     void setSharedByFiles(bool newSharedByFiles);
 
-    static void parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject,
-                                  const QString &contextFilename, bool onlyIfNotParsed = false,
-                                  bool updateView = true);
-    static void parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inProject,
-                                     const QString &contextFilename, bool onlyIfNotParsed = false,
-                                     bool updateView = true);
+    static void parseFileBlocking(PCppParser parser, const QString &fileName,
+                                  const QString &contextFilename, bool updateView = true);
+    static void parseFileNonBlocking(PCppParser parser, const QString &fileName,
+                                     const QString &contextFilename, bool updateView = true);
 
 signals:
     void progress(const QString& fileName, int total, int current);
@@ -164,8 +150,7 @@ signals:
     void parseFinished(int total, int updateView);
 
 private:
-    bool parseFile(const QString& fileName, bool inProject, const QString& contextFilename,
-                   bool onlyIfNotParsed = false, bool updateView = true);
+    bool parseFile(const QString& fileName, const QString& contextFilename, bool updateView);
     PParseFileCommand retrievePendingParseFileCommand();
     void internalParse(const QString& fileName);
     void collectPreprocessorStatements(
@@ -176,10 +161,10 @@ private:
     void clearAnalysisResults();
     CppEvaluationOptions evaluationOptions() const;
     void invalidateSingleFile(const QString& fileName);
+    void removeStatementsInFile(const QString &fileName);
     void invalidateOutsideBoundaryFiles(const QString &fileName);
+    QSet<QString> outsideBoundaryFiles(const QString &fileName) const;
     void internalInvalidateFiles(const QSet<QString>& files);
-    QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
-    QStringList sortFilesByIncludeRelations(const QSet<QString>& files);
 
     PStatement doFindStatementOf(const QString& fileName, const QString& phrase, int line) const;
     PStatement doFindStatementOf(const QString& fileName, const QString& phrase,
@@ -228,6 +213,8 @@ private:
     mutable std::unique_ptr<StatementModel> mStatementList;
     std::unique_ptr<CppPreprocessor> mPreprocessor;
     QSet<QString> mProjectFiles;
+    QString mActiveFileName;
+    QString mActiveContextFilename;
     int mLockCount;
     bool mParsing;
     std::atomic_bool mStopParsing;
@@ -244,16 +231,14 @@ private:
 class CppFileParserThread : public QThread {
     Q_OBJECT
 public:
-    explicit CppFileParserThread(PCppParser parser, const QString &fileName, bool inProject,
-                                 const QString &contextFilename, bool onlyIfNotParsed = false,
-                                 bool updateView = true, QObject *parent = nullptr);
+    explicit CppFileParserThread(PCppParser parser, const QString &fileName,
+                                 const QString &contextFilename, bool updateView,
+                                 QObject *parent = nullptr);
     ~CppFileParserThread();
 private:
     PCppParser mParser;
     QString mFileName;
-    bool mInProject;
     QString mContextFilename;
-    bool mOnlyIfNotParsed;
     bool mUpdateView;
     int mId;
 protected:

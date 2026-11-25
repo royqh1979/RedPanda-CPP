@@ -62,8 +62,7 @@ Project::Project(const QString &filename, const QString &name,
     mParser->setOnGetFileStream(
                 std::bind(
                     &EditorManager::getContentFromOpenedEditor,mEditorManager,
-                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    mParser->setOnGetFileVersion(
+                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                 std::bind(&EditorManager::getVersionOfOpenedEditor,
                           mEditorManager, std::placeholders::_1));
     mFileSystemWatcher->addPath(directory());
@@ -604,14 +603,11 @@ bool Project::removeFolder(PProjectModelNode node)
 
 void Project::reconfigureParser()
 {
-    ::reconfigureCppParser(mParser, mOptions.compilerSet);
+    ::reconfigureCppParser(mParser, mOptions.includeDirs, mOptions.compilerSet);
     foreach (const PProjectUnit& unit, mUnits) {
         if (isCFile(unit->fileName())
                 || isHFile(unit->fileName()))
-            mParser->addProjectFile(unit->fileName(),true);
-    }
-    foreach (const QString& s, mOptions.includeDirs) {
-        mParser->addProjectIncludePath(s);
+            mParser->addProjectFile(unit->fileName());
     }
 }
 
@@ -704,20 +700,20 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
     if (newFileName.compare(unit->fileName(),PATH_SENSITIVITY)==0)
         return;
 
+    if (mParser)
+        mParser->invalidateFile(unit->fileName());
+
     if (mParser) {
         mParser->removeProjectFile(unit->fileName());
-        mParser->addProjectFile(newFileName,true);
+        mParser->addProjectFile(newFileName);
     }
-
-    if (mParser)
-        mParser->invalidateFileAndDependents(unit->fileName());
     Editor *editor=unitEditor(unit);
     copyFile(unit->fileName(),newFileName,true);
     if (editor) {
         editor->rename(newFileName);
     }
     if (mParser)
-        CppParser::parseFileNonBlocking(mParser,newFileName,true, editor->contextFile());
+        CppParser::parseFileNonBlocking(mParser,newFileName, editor->contextFile());
 
     internalRemoveUnit(unit,false,true);
 

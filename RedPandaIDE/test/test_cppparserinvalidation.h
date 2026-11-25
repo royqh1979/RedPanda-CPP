@@ -34,6 +34,10 @@ private slots:
     void test_replay_applies_undefines_before_following_boundary();
     void test_replay_redefine_after_undef_replaces_undef_record();
     void test_user_header_reparse_does_not_duplicate_statements();
+    void test_parse_switches_unchanged_translation_units();
+    void test_parse_restores_project_header_macro_context();
+    void test_project_header_switch_does_not_duplicate_statements();
+    void test_close_root_invalidates_its_old_include_closure();
 };
 
 

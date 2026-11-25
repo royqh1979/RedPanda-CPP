@@ -67,7 +67,7 @@ Editor* EditorManager::newEditor(const QString& filename, const QByteArray& enco
     e->setGetOpennedFunc(std::bind(&EditorManager::getOpenedEditor,this,std::placeholders::_1));
     e->setGetFileStreamCallBack(std::bind(
                                     &EditorManager::getContentFromOpenedEditor,this,
-                                    std::placeholders::_1, std::placeholders::_2));
+                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     e->setCanShowEvalTipFunc(std::bind(&EditorManager::debuggerReadyForEvalTip,this));
     e->setRequestEvalTipFunc(std::bind(&EditorManager::requestEvalTip,this,
                                        std::placeholders::_1, std::placeholders::_2));
@@ -376,18 +376,9 @@ void EditorManager::onEditorShown(Editor *e)
 {
     Q_ASSERT(e!=nullptr);
     if (e->parser() && !pMainWindow->isClosingAll()
-            && !pMainWindow->isQuitting()) {
-        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            if (pSettings->codeCompletion().clearWhenEditorHidden()
-                && pSettings->codeCompletion().shareParser()
-                && !e->inProject()) {
-                if (e->needReparse()) {
-                    resetCppParser(e->parser());
-                    e->reparse();
-                }
-            } else
-                e->reparseIfNeeded();
-        }
+            && !pMainWindow->isQuitting()
+            && !pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
+        e->reparse();
     }
     pMainWindow->debugger()->setIsForProject(e->inProject());
     pMainWindow->bookmarkModel()->setIsForProject(e->inProject());
@@ -584,7 +575,9 @@ PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppPar
         parser->setOnGetFileStream(
                     std::bind(
                         &EditorManager::getContentFromOpenedEditor,this,
-                        std::placeholders::_1, std::placeholders::_2));
+                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+                    std::bind(&EditorManager::getVersionOfOpenedEditor,
+                              this, std::placeholders::_1));
         resetCppParser(parser);
         parser->setEnabled(true);
         sharedParsers.insert(language,parser);
@@ -640,7 +633,10 @@ PCppParser EditorManager::createParserForEditor(Editor *editor)
             parser->setSharedByFiles(false);
             parser->setLanguage(editor->calcParserLanguage());
             parser->setOnGetFileStream(std::bind(&EditorManager::getContentFromOpenedEditor,
-                                                 this, std::placeholders::_1, std::placeholders::_2));
+                                                 this, std::placeholders::_1,
+                                                 std::placeholders::_2, std::placeholders::_3),
+                                       std::bind(&EditorManager::getVersionOfOpenedEditor,
+                                                 this, std::placeholders::_1));
             resetCppParser(parser);
             parser->setEnabled(true);
             return parser;
@@ -778,7 +774,7 @@ bool EditorManager::swapEditor(Editor *editor)
     }
     if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
         editor->setCppParser();
-        editor->reparseIfNeeded();
+        editor->reparse();
     }
     updateLayout();
     activeEditor(editor, true);
@@ -1043,8 +1039,10 @@ Editor* EditorManager::getOpenedEditor(const QString &filename) const
     return nullptr;
 }
 
-bool EditorManager::getContentFromOpenedEditor(const QString &filename, QStringList &buffer) const
+bool EditorManager::getContentFromOpenedEditor(const QString &filename, QStringList &buffer,
+                                               int &version) const
 {
+    version = 0;
     if(mMutex.tryLock(0)){
         auto action = finally([this](){
             mMutex.unlock();
@@ -1055,9 +1053,23 @@ bool EditorManager::getContentFromOpenedEditor(const QString &filename, QStringL
         if (!e)
             return false;
         buffer = e->content();
+        version = e->document()->contentVersion();
         return true;
     } else
         return false;
+}
+
+int EditorManager::getVersionOfOpenedEditor(const QString &filename) const
+{
+    if (!mMutex.tryLock(0))
+        return 0;
+    auto action = finally([this] {
+        mMutex.unlock();
+    });
+    if (pMainWindow->isQuitting())
+        return 0;
+    Editor *editor = getOpenedEditor(filename);
+    return editor ? editor->document()->contentVersion() : 0;
 }
 
 void EditorManager::getVisibleEditors(Editor *&left, Editor *&right) const

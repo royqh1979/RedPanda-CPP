@@ -17,8 +17,10 @@
 #ifndef UTILS_PARSER_H
 #define UTILS_PARSER_H
 #include <memory>
+#include <QStringList>
 
 class CppParser;
-void reconfigureCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
+void reconfigureCppParser(std::shared_ptr<CppParser> parser,
+                          const QStringList &additionalIncludeDirs, int compilerSetIndex=-1);
 
 #endif // UTILS_PARSER_H

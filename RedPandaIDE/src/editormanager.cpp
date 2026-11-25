@@ -385,11 +385,12 @@ void EditorManager::onBreakpointsCleared(const Editor *e)
 
 void EditorManager::reparseEditor(Editor *editor)
 {
-    if (!editor || mUpdateCount > 0 || pMainWindow->isClosingAll()
-            || pMainWindow->isQuitting() || pMainWindow->openingFiles()
-            || pMainWindow->openingProject())
+    if (!editor || mUpdateCount > 0)
         return;
-    editor->reparseIfNeeded();
+    if (pMainWindow && (pMainWindow->isClosingAll() || pMainWindow->isQuitting()
+                        || pMainWindow->openingFiles() || pMainWindow->openingProject()))
+        return;
+    editor->reparse();
 }
 
 void EditorManager::onEditorShown(Editor *e)
@@ -591,11 +592,10 @@ PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppPar
         parser->setOnGetFileStream(
                     std::bind(
                         &EditorManager::getContentFromOpenedEditor,this,
-                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-        parser->setOnGetFileVersion(
+                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
                     std::bind(&EditorManager::getVersionOfOpenedEditor,
                               this, std::placeholders::_1));
-        reconfigureCppParser(parser);
+        reconfigureCppParser(parser, {});
         parser->setEnabled(true);
         sharedParsers.insert(language,parser);
     }
@@ -605,7 +605,7 @@ PCppParser EditorManager::sharedParser(QHash<ParserLanguage,std::weak_ptr<CppPar
 void EditorManager::resetSharedParsers(QHash<ParserLanguage, std::weak_ptr<CppParser> > &sharedParsers)
 {
     foreach(std::weak_ptr<CppParser> parser, sharedParsers) {
-        reconfigureCppParser(parser.lock());
+        reconfigureCppParser(parser.lock(), {});
     }
 }
 
@@ -651,10 +651,10 @@ PCppParser EditorManager::createParserForEditor(Editor *editor)
             parser->setLanguage(editor->calcParserLanguage());
             parser->setOnGetFileStream(std::bind(&EditorManager::getContentFromOpenedEditor,
                                                  this, std::placeholders::_1,
-                                                 std::placeholders::_2, std::placeholders::_3));
-            parser->setOnGetFileVersion(std::bind(&EditorManager::getVersionOfOpenedEditor,
-                                                  this, std::placeholders::_1));
-            reconfigureCppParser(parser);
+                                                 std::placeholders::_2, std::placeholders::_3),
+                                       std::bind(&EditorManager::getVersionOfOpenedEditor,
+                                                 this, std::placeholders::_1));
+            reconfigureCppParser(parser, {});
             parser->setEnabled(true);
             return parser;
         }
@@ -801,7 +801,7 @@ bool EditorManager::swapEditor(Editor *editor)
     }
     if (!editor->inProject() && pSettings->codeCompletion().shareParser()) {
         editor->setCppParser();
-        editor->reparseIfNeeded();
+        editor->reparse();
     }
     updateLayout();
     activeEditor(editor, true);

@@ -2708,8 +2708,8 @@ void TestEditorSymbolCompletion::test_doxygen_header_editing_areas()
     parser->setOnGetFileStream([initial](const QString &, QStringList &buffer, int &) {
         buffer = initial;
         return true;
-    });
-    CppParser::parseFileBlocking(parser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(parser, "text.cpp", "");
     QVERIFY(parser->findFunctionAt("text.cpp", 2));
     mEditor->setFilename("text.cpp");
     mEditor->setCppParser(parser);

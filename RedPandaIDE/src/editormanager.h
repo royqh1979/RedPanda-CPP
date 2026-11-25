@@ -179,6 +179,7 @@ private slots:
     void onAutoSaveTimeout();
 private:
     friend class TestEditorManagerAutoSave;
+    friend class TestEditorManagerReparse;
     LayoutShowType mLayout;
     QTabWidget *mLeftPageWidget;
     QTabWidget *mRightPageWidget;

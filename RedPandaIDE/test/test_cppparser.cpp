@@ -13,8 +13,8 @@ void TestCppParser::test_parse_var()
                                "int xxx=10;"
                            });
            return true;
-                                });
-    CppParser::parseFileBlocking(mParser,"text.cpp",false,"");
+                                }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser,"text.cpp","");
     QCOMPARE(mParser->statementList().count(),1);
     PStatement statement = mParser->findStatement("xxx");
     QVERIFY(statement!=nullptr);
@@ -34,8 +34,8 @@ void TestCppParser::test_global_variable_reference_scope()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     QCOMPARE(mParser->statementList().count(), 3);
     QVERIFY(!mParser->findStatement("main::ttt"));
@@ -59,7 +59,7 @@ void TestCppParser::test_include_visibility()
     QString main = dir.filePath("main.cpp");
     QVERIFY(writeLines(header, {"class Bar {};"}));
     QVERIFY(writeLines(main, {"#include \"project.h\"", "Bar value;"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     QVERIFY(mParser->getIncludedFiles(main).contains(header));
     PStatement statement = mParser->findStatementOf(main, QStringList{"Bar"}, 1);
@@ -89,7 +89,7 @@ void TestCppParser::test_class_forward_declaration_merges_with_definition()
                 : QStringList{"#include \"define.h\"", "#include \"declare.h\"",
                               "#include \"declare_other.h\""};
         QVERIFY(writeLines(main, includes));
-        CppParser::parseFileBlocking(mParser, main, false, "");
+        CppParser::parseFileBlocking(mParser, main, "");
 
         QCOMPARE(mParser->statementList().childrenStatements().values("Foo").size(), 1);
         PStatement statement = mParser->findStatement("Foo");
@@ -108,7 +108,7 @@ void TestCppParser::test_include_global_variable_reference()
     QString main = dir.filePath("main.cpp");
     QVERIFY(writeLines(header, {"int shared;"}));
     QVERIFY(writeLines(main, {"#include \"project.h\"", "void f(){shared=1;}"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement statement = mParser->findStatementOf(main, QStringList{"shared"}, 1);
     QVERIFY(statement);
@@ -124,7 +124,7 @@ void TestCppParser::test_include_inline_function_call()
     QString main = dir.filePath("main.cpp");
     QVERIFY(writeLines(header, {"inline void inlineFunction() {}"}));
     QVERIFY(writeLines(main, {"#include \"project.h\"", "void f(){inlineFunction();}"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
 
     PStatement declaration = mParser->findStatement("inlineFunction");
     QVERIFY(declaration);
@@ -159,8 +159,8 @@ void TestCppParser::test_local_extern_variable_uses_external_statement()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int external;", "void f(){extern int external; external=1;}"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement external = mParser->findStatement("external");
     QVERIFY(external);
@@ -185,8 +185,8 @@ void TestCppParser::test_static_extern_variable_definitions()
             "extern int braceDefined{};",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement global = mParser->findStatement("global");
     QVERIFY(global && statementHasDefinition(global));
@@ -245,8 +245,8 @@ void TestCppParser::test_static_extern_function_definitions()
             "void caller(){extern void declaration();}",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement global = mParser->findStatement("global");
     QVERIFY(global && statementHasDefinition(global));
@@ -288,8 +288,8 @@ void TestCppParser::test_extern_variable_declaration_definition_order()
             "extern int repeated;",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     for (const QString &name : {QString("first"), QString("second")}) {
         PStatement statement = mParser->findStatement(name);
@@ -318,8 +318,8 @@ void TestCppParser::test_extern_function_declaration_definition_order()
             "extern void second();",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     for (const QString &name : {QString("first"), QString("second")}) {
         PStatement statement = mParser->findStatement(name);
@@ -347,8 +347,8 @@ void TestCppParser::test_unresolved_member_function_reference()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement reference = mParser->findStatementOf(
                 "text.cpp", QStringList{"c", ".", "append"}, 6);
@@ -372,8 +372,8 @@ void TestCppParser::test_nested_template_member_definition()
             "f(U) { return *this; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement function = mParser->findStatement("C::f");
     QVERIFY(function);
@@ -393,8 +393,8 @@ void TestCppParser::test_extern_template_class_declaration()
             "int after;"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement specialization = mParser->findStatement("C<int>");
     QVERIFY(specialization);
@@ -429,8 +429,8 @@ void TestCppParser::test_forward_declaration_prefers_definition_for_eval()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement reference = mParser->findStatementOf(
                 "text.cpp", QStringList{"c", ".", "value", "(", ")"}, 13);
@@ -462,8 +462,8 @@ void TestCppParser::test_base_member_return_uses_declaration_bindings()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement scope = mParser->findScopeStatement("text.cpp", 9);
     QVERIFY(scope);
@@ -486,8 +486,8 @@ void TestCppParser::test_derived_member_hides_base_overloads()
             "void test() {}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     PStatement scope = mParser->findScopeStatement("text.cpp", 3);
     QVERIFY(scope);
     QStringList expression{"object", ".", "value", "(", "1.0", ")"};
@@ -526,8 +526,8 @@ void TestCppParser::test_member_overload_resolution()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement scope = mParser->findScopeStatement("text.cpp", 15);
     QVERIFY(scope);
@@ -577,8 +577,8 @@ void TestCppParser::test_conversion_overload_resolution()
             "void test() {}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     PStatement scope = mParser->findScopeStatement("text.cpp", 22);
     QVERIFY(scope);
     PStatement shortStatement = mParser->findStatementOf("text.cpp", "shortValue", 22);
@@ -614,8 +614,8 @@ void TestCppParser::test_trailing_return_member_template()
             "void test() {}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     PStatement scope = mParser->findScopeStatement("text.cpp", 6);
     QVERIFY(scope);
     QStringList expression{"mapping", ".", "find", "(", "\"x\"", ")"};
@@ -638,8 +638,8 @@ void TestCppParser::test_find_statement_of_overload_resolution()
             "void call(){f(1);f(1.0);}",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement integer = mParser->findStatementOf(
                 "text.cpp", {"f", "(", "1", ")"}, 4);
@@ -670,8 +670,8 @@ void TestCppParser::test_find_statement_of_template_specialization()
             "Foo<int*> full;",
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     const QVector<QPair<QStringList, int>> cases{
         {{"Foo", "<", "char", ">"}, 0},
@@ -710,8 +710,8 @@ void TestCppParser::test_expression_identifier_trace()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement scope = mParser->findScopeStatement("text.cpp", 8);
     QVERIFY(scope);
@@ -753,10 +753,10 @@ void TestCppParser::test_expression_identifier_trace()
 
 void TestCppParser::test_parse_vars()
 {
-    mParser->setOnGetFileStream(nullptr);
+    mParser->setOnGetFileStream(nullptr, nullptr);
     QFileInfo file("resources/vars.cpp");
     QVERIFY(file.exists());
-    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
+    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),"");
     PStatement statement;
     statement = mParser->findStatement("a1");
     QVERIFY(statement!=nullptr);
@@ -1015,10 +1015,10 @@ void TestCppParser::test_parse_vars()
 
 void TestCppParser::test_struct()
 {
-    mParser->setOnGetFileStream(nullptr);
+    mParser->setOnGetFileStream(nullptr, nullptr);
     QFileInfo file("resources/struct.cpp");
     QVERIFY(file.exists());
-    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
+    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),"");
     PStatement statement;
     statement = mParser->findStatement("TTT");
     QVERIFY(statement!=nullptr);
@@ -1068,8 +1068,8 @@ void TestCppParser::test_resolve_members_of_class_access_scope()
             "struct ProtectedDerived : protected Base { void action(); };"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     PStatement base = mParser->findStatement("Base");
     PStatement derived = mParser->findStatement("Derived");
     PStatement publicDerived = mParser->findStatement("PublicDerived");
@@ -1109,8 +1109,8 @@ void TestCppParser::test_deleted_function_statements()
             "};"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "deleted.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "deleted.cpp", "");
 
     PStatement atomicFlag = mParser->findStatement("atomic_flag");
     QVERIFY(atomicFlag);
@@ -1136,8 +1136,8 @@ void TestCppParser::test_preprocessor_statements()
             "int value;"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "macros.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "macros.cpp", "");
 
     PStatement object = mParser->findStatement("OBJECT_MACRO");
     QVERIFY(object);
@@ -1182,8 +1182,8 @@ void TestCppParser::test_scoped_preprocessor_statements()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "scoped_macros.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "scoped_macros.cpp", "");
 
     for (const QString &name : {"NAMESPACE_MACRO", "CLASS_MACRO", "FUNCTION_BODY_MACRO"}) {
         PStatement statement = mParser->findStatement(name);
@@ -1204,8 +1204,8 @@ void TestCppParser::test_preprocessor_condition_with_unknown_special_macros()
             "#endif"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "offsetof.h", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "offsetof.h", "");
 
     PStatement statement = mParser->findStatement("offsetof");
     QVERIFY(statement);
@@ -1223,8 +1223,8 @@ void TestCppParser::test_label_statements()
             "switch (flag) { case true: break; default: break; } }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "labels.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "labels.cpp", "");
 
     PStatement function = mParser->findStatement("f");
     QVERIFY(function);
@@ -1267,8 +1267,8 @@ void TestCppParser::test_predefined_func_variable()
             "void declarationOnly();"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement alphaFunc = mParser->findStatementOf("text.cpp", QStringList{"__func__"}, 0);
     QVERIFY(alphaFunc);
@@ -1297,10 +1297,10 @@ void TestCppParser::test_predefined_func_variable()
 
 void TestCppParser::test_structured_bindings()
 {
-    mParser->setOnGetFileStream(nullptr);
+    mParser->setOnGetFileStream(nullptr, nullptr);
     QFileInfo file("resources/structured-bindings.cpp");
     QVERIFY(file.exists());
-    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),false,"");
+    CppParser::parseFileBlocking(mParser,file.absoluteFilePath(),"");
     for (const QString &name : QStringList{"a", "b", "c", "d", "e", "g"}) {
         PStatement statement = mParser->findStatement(name);
         QVERIFY(statement!=nullptr);
@@ -1330,8 +1330,8 @@ void TestCppParser::test_find_statement_of_inline_namespace()
             "namespace { int anonymousValue; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement stdNamespace = mParser->findStatementOf("text.cpp", QStringList{"std"}, 0);
     QVERIFY(stdNamespace);
@@ -1386,8 +1386,8 @@ void TestCppParser::test_nested_namespace_scope_parentage()
             "int global;"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     const QStringList expectedScopes{
         "A", "A::B", "A::B::C", "A::B::C::D", "A::B::C::D::X",
@@ -1415,8 +1415,8 @@ void TestCppParser::test_variable_template_specialization_name()
             "};"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     PStatement specialization;
     for (const PStatement &statement : mParser->statementList().statements()) {
         if (statement->fullName == "HashTable::is_key<Arg,key_type,Detail::Identity>")
@@ -1450,8 +1450,8 @@ void TestCppParser::test_member_alias_template_specialization()
             "struct Value {};"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement value = mParser->findStatement("Value");
     QVERIFY(value);
@@ -1473,8 +1473,8 @@ void TestCppParser::test_unknown_non_type_default_preserves_alias_resolution()
             "struct Value {};"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement value = mParser->findStatement("Value");
     QVERIFY(value);
@@ -1492,8 +1492,8 @@ void TestCppParser::test_using_declaration_function_overload_set()
             "auto value = std::remove(1, 2);"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     QStringList expression{"std", "::", "remove", "(", "1", ",", "2", ")"};
     EvalResult result = mParser->evalExpression("text.cpp", expression, {});
@@ -1517,8 +1517,8 @@ void TestCppParser::test_overload_rejects_unrelated_class_specialization()
             "auto dequeResult = std::copy(dequeIt, dequeIt, dequeIt);"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     for (const QString &name : {QString("it"), QString("dequeIt")}) {
         QStringList expression{"std", "::", "copy", "(", name, ",", name, ",", name, ")"};
@@ -1540,8 +1540,8 @@ void TestCppParser::test_empty_template_argument_list()
             "template<typename...> using __void_t = void;"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     CppTypeResolver resolver(mParser->statementList());
     TypeInfo type;
@@ -1559,8 +1559,8 @@ void TestCppParser::test_const_template_parameter_substitution()
             "template<typename T> struct Map { using value_type = Pair<const T>; };"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     CppTypeResolver resolver(mParser->statementList());
     TypeInfo type;
@@ -1584,8 +1584,8 @@ void TestCppParser::test_auto_reference_collapsing()
             "auto &&other = get();"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     for (const QString &name : {QString("value"), QString("other")}) {
         PStatement statement = mParser->findStatementOf("text.cpp", name, 3);
@@ -1605,8 +1605,8 @@ void TestCppParser::test_void_t_detection_failure()
             "template<typename T> struct Traits<T, __void_t<typename T::missing>> { using type = int; };"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     CppTypeResolver resolver(mParser->statementList());
     TypeInfo type;
@@ -1633,8 +1633,8 @@ void TestCppParser::test_standard_type_traits_require_cpp11()
                 "struct Value {};"
             };
             return true;
-        });
-        CppParser::parseFileBlocking(mParser, fileName, false, "");
+        }, [](const QString &) { return 1; });
+        CppParser::parseFileBlocking(mParser, fileName, "");
         return Result{
             mParser->findTypeDefinitionOf(
                         fileName, "std::add_lvalue_reference<Value>::type", {}),
@@ -1664,8 +1664,8 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     QVERIFY(writeLines(main, {"#include \"declare.h\"", "#include \"define.h\""}));
 
     mParser->addIncludePath(tmp.path());
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
@@ -1677,7 +1677,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     QVERIFY(statement);
     QVERIFY(!statementHasDefinition(statement));
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
@@ -1685,7 +1685,7 @@ void TestCppParser::test_member_declaration_definition_in_namespace()
     mParser->invalidateFileAndDependents(declaration);
     QVERIFY(!mParser->findStatement("N::C::method"));
 
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     statement = mParser->findStatement("N::C::method");
     QVERIFY(statement);
     QVERIFY(statementHasDefinition(statement));
@@ -1721,8 +1721,8 @@ void TestCppParser::test_overloaded_declaration_definition_merge()
                               "#include \"define.h\""}));
 
     mParser->addIncludePath(tmp.path());
-    mParser->addProjectFile(main, false);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatementList namespaces = mParser->findNamespace("N");
     QVERIFY(namespaces && namespaces->count() == 1);
     auto nameSpace = std::dynamic_pointer_cast<NamespaceStatement>(namespaces->first());
@@ -1794,8 +1794,8 @@ void TestCppParser::test_local_declarations_in_disjoint_blocks_remain_distinct()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"void f() {", "  { int value; }", "  { int value; }", "}"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
     PStatement function = mParser->findStatement("f");
     QVERIFY(function);
     QList<PStatement> variables;
@@ -1818,8 +1818,8 @@ void TestCppParser::test_namespace_index_inline_filter_and_invalidation()
         buffer = QStringList{"namespace std { int value; }",
                              "namespace std { inline namespace __cxx11 { int inlineValue; } }"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
     QCOMPARE(mParser->findNamespace("std")->count(), 1);
     QCOMPARE(mParser->findNamespace("std", true)->count(), 1);
     QVERIFY(mParser->findStatement("std::inlineValue"));
@@ -1837,8 +1837,8 @@ void TestCppParser::test_namespace_index_does_not_promote_inline_descendants()
                              "namespace outer::regular { inline namespace abi { int value; } }",
                              "namespace outer::regular { int reopened; }"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
     QCOMPARE(mParser->findNamespace("outer")->count(), 1);
     QCOMPARE(mParser->findNamespace("outer", true)->count(), 1);
     QCOMPARE(mParser->findNamespace("outer::regular")->count(), 1);
@@ -1860,8 +1860,8 @@ void TestCppParser::test_reopened_namespaces_share_unique_entity()
             "namespace A::B::C::D { int deep; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement a = mParser->findStatement("A");
     PStatement b = mParser->findStatement("A::B");
@@ -1898,9 +1898,9 @@ void TestCppParser::test_namespace_occurrence_invalidation_across_roots()
         else
             return false;
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "a.cpp", false, "");
-    CppParser::parseFileBlocking(mParser, "b.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "a.cpp", "");
+    CppParser::parseFileBlocking(mParser, "b.cpp", "");
 
     PStatement n = mParser->findStatement("N");
     PStatement deep = mParser->findStatement("N::Deep");
@@ -1937,8 +1937,8 @@ void TestCppParser::test_anonymous_namespaces_remain_distinct()
             "namespace { int second; }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     const auto anonymous = mParser->statementList().childrenStatements().values("");
     QCOMPARE(anonymous.count(), 2);
@@ -1960,9 +1960,9 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
         else
             return false;
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "plain.cpp", false, "");
-    CppParser::parseFileBlocking(mParser, "inline.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "plain.cpp", "");
+    CppParser::parseFileBlocking(mParser, "inline.cpp", "");
 
     PStatement v = mParser->findStatement("N::V");
     QVERIFY(v);
@@ -1980,7 +1980,7 @@ void TestCppParser::test_inline_namespace_occurrence_invalidation()
     QVERIFY(!namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
     QCOMPARE(mParser->findNamespace("N", true)->count(), 1);
 
-    CppParser::parseFileBlocking(mParser, "inline.cpp", false, "");
+    CppParser::parseFileBlocking(mParser, "inline.cpp", "");
     QCOMPARE(mParser->findStatement("N::V"), v);
     QCOMPARE(namespaceV->declarations.count(), 2);
     QVERIFY(namespaceV->declSpecifierProperties.testFlag(DeclSpecifierProperty::Inline));
@@ -1997,8 +1997,8 @@ void TestCppParser::test_inline_namespace_overloads()
             "} }"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
 
     PStatement n = mParser->findStatement("N");
     QVERIFY(n);
@@ -2020,7 +2020,7 @@ void TestCppParser::test_inline_namespace_overloads()
     }
     QCOMPARE(visibleOverloads, 2);
 
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     n = mParser->findStatement("N");
     QVERIFY(n);
     QCOMPARE(mParser->statementList().childrenStatements(n).values("f").count(), 2);
@@ -2039,7 +2039,7 @@ void TestCppParser::test_stop_parsing_clears_results_before_finish()
         }
         buffer = QStringList{"int value;"};
         return true;
-    });
+    }, [](const QString &) { return 1; });
     QObject context;
     int statementCountAtFinish = -1;
     bool hasFileInfoAtFinish = false;
@@ -2048,7 +2048,7 @@ void TestCppParser::test_stop_parsing_clears_results_before_finish()
         hasFileInfoAtFinish = static_cast<bool>(mParser->findFileInfo("text.cpp"));
     }, Qt::DirectConnection);
 
-    CppParser::parseFileNonBlocking(mParser, "text.cpp", false, "");
+    CppParser::parseFileNonBlocking(mParser, "text.cpp", "");
     QVERIFY(entered->tryAcquire(1, 5000));
     mParser->stopParsing();
     release->release();
@@ -2075,7 +2075,7 @@ void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
             }
             buffer = QStringList{"int value;"};
             return true;
-        });
+        }, [](const QString &) { return 1; });
         QObject context;
         int statementCountAtFinish = -1;
         PParsedFileInfo fileInfoAtFinish;
@@ -2084,7 +2084,7 @@ void TestCppParser::test_application_exit_stops_parsing_without_cleanup()
             fileInfoAtFinish = mParser->findFileInfo("text.cpp");
         }, Qt::DirectConnection);
 
-        CppParser::parseFileNonBlocking(mParser, "text.cpp", false, "");
+        CppParser::parseFileNonBlocking(mParser, "text.cpp", "");
         QVERIFY(entered->tryAcquire(1, 5000));
         CppParser::prepareForApplicationExit();
         auto restoreExitState = finally([] {
@@ -2108,8 +2108,8 @@ void TestCppParser::test_normal_destructor_releases_resources()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value;"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     std::weak_ptr<AbstractStatement> statement = mParser->findStatement("value");
     std::weak_ptr<ParsedFileInfo> fileInfo = mParser->findFileInfo("text.cpp");
     QVERIFY(!statement.expired());
@@ -2126,8 +2126,8 @@ void TestCppParser::test_application_exit_destructor_abandons_resources()
     mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
         buffer = QStringList{"int value;"};
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "text.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "text.cpp", "");
     std::weak_ptr<AbstractStatement> statement = mParser->findStatement("value");
     std::weak_ptr<ParsedFileInfo> fileInfo = mParser->findFileInfo("text.cpp");
 
@@ -2144,29 +2144,26 @@ void TestCppParser::test_application_exit_destructor_abandons_resources()
 }
 
 
-void TestCppParser::test_nonforce_parse_checks_root_and_changes()
+void TestCppParser::test_parse_checks_root_and_changes()
 {
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
     QString main = tmp.filePath("main.cpp");
     QVERIFY(writeLines(main, {"int first;"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement first = mParser->findStatement("first");
     QVERIFY(first);
     QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
 
-    CppParser::parseFileBlocking(mParser, main, false, "", true);
+    CppParser::parseFileBlocking(mParser, main, "");
     QCOMPARE(mParser->findStatement("first"), first);
     QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
 
-    CppParser::parseFileBlocking(mParser, main, false, "");
-    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 2);
-
     QVERIFY(writeLines(main, {"int second;"}));
-    CppParser::parseFileBlocking(mParser, main, false, "", true);
+    CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(mParser->findStatement("second"));
     QVERIFY(!mParser->findStatement("first"));
-    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 3);
+    QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 2);
 }
 
 void TestCppParser::test_context_file_info_controls_header_coverage()
@@ -2179,15 +2176,15 @@ void TestCppParser::test_context_file_info_controls_header_coverage()
     QVERIFY(mParser->isFileParsedInContext(header, main));
 
     QVERIFY(writeLines(main, {"int context_value;"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(!mParser->isFileParsedInContext(header, main));
 
     QVERIFY(writeLines(main, {"#include \"header.h\"", "int context_value;"}));
-    CppParser::parseFileBlocking(mParser, main, false, "");
+    CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(mParser->isFileParsedInContext(header, main));
 }
 
-void TestCppParser::test_queued_nonforce_parse_skips_completed_root()
+void TestCppParser::test_queued_parse_skips_completed_root()
 {
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
@@ -2202,11 +2199,11 @@ void TestCppParser::test_queued_nonforce_parse_skips_completed_root()
             release->acquire();
         }
         return false;
-    });
+    }, [](const QString &) { return 1; });
 
-    CppParser::parseFileNonBlocking(mParser, main, false, "");
+    CppParser::parseFileNonBlocking(mParser, main, "");
     QVERIFY(entered->tryAcquire(1, 5000));
-    CppParser::parseFileNonBlocking(mParser, main, false, "", true);
+    CppParser::parseFileNonBlocking(mParser, main, "");
     release->release();
     QTRY_VERIFY(!mParser->parsing());
     QCOMPARE(readCount->load(), 1);
@@ -2215,7 +2212,7 @@ void TestCppParser::test_queued_nonforce_parse_skips_completed_root()
 }
 
 
-void TestCppParser::test_nonforce_project_parse_checks_all_files()
+void TestCppParser::test_project_parse_checks_all_files()
 {
     QTemporaryDir tmp;
     QVERIFY(tmp.isValid());
@@ -2224,25 +2221,25 @@ void TestCppParser::test_nonforce_project_parse_checks_all_files()
     QVERIFY(writeLines(main, {"#include \"header.h\"", "int main_value;"}));
     QVERIFY(writeLines(header, {"int before;"}));
     mParser->addIncludePath(tmp.path());
-    mParser->addProjectFile(main, true);
-    CppParser::parseFileBlocking(mParser, main, true, "");
+    mParser->addProjectFile(main);
+    CppParser::parseFileBlocking(mParser, main, "");
     PStatement before = mParser->findStatement("before");
     QVERIFY(before);
     QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
 
-    CppParser::parseFileBlocking(mParser, main, true, "", true);
+    CppParser::parseFileBlocking(mParser, main, "");
     QCOMPARE(mParser->findStatement("before"), before);
     QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 1);
 
     QVERIFY(writeLines(header, {"int after;"}));
-    CppParser::parseFileBlocking(mParser, main, true, "", true);
+    CppParser::parseFileBlocking(mParser, main, "");
     QVERIFY(mParser->findStatement("after"));
     QVERIFY(!mParser->findStatement("before"));
     QCOMPARE(mParser->preprocessorEventCountsForTest(main).scan, 2);
 }
 
 
-void TestCppParser::test_nonforce_parse_uses_content_versions()
+void TestCppParser::test_parse_uses_content_versions()
 {
     auto content = std::make_shared<QStringList>(QStringList{"int first;"});
     auto version = std::make_shared<int>(1);
@@ -2251,22 +2248,21 @@ void TestCppParser::test_nonforce_parse_uses_content_versions()
         buffer = *content;
         streamVersion = *version;
         return true;
-    });
-    mParser->setOnGetFileVersion([version](const QString &) {
+    }, [version](const QString &) {
         return *version;
     });
-    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "");
+    CppParser::parseFileBlocking(mParser, "editor.cpp", "");
     PStatement first = mParser->findStatement("first");
     QVERIFY(first);
     QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 1);
 
-    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "", true);
+    CppParser::parseFileBlocking(mParser, "editor.cpp", "");
     QCOMPARE(mParser->findStatement("first"), first);
     QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 1);
 
     *content = QStringList{"int second;"};
     ++*version;
-    CppParser::parseFileBlocking(mParser, "editor.cpp", false, "", true);
+    CppParser::parseFileBlocking(mParser, "editor.cpp", "");
     QVERIFY(mParser->findStatement("second"));
     QVERIFY(!mParser->findStatement("first"));
     QCOMPARE(mParser->preprocessorEventCountsForTest("editor.cpp").scan, 2);
@@ -2290,8 +2286,8 @@ void TestCppParser::test_lambda_function_argument_scope()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
 
     PStatement ui = mParser->findStatementOf("main.cpp", "ui", 6);
     QVERIFY(ui);
@@ -2336,8 +2332,8 @@ void TestCppParser::test_nested_lambda_function_argument_scope()
             "}"
         };
         return true;
-    });
-    CppParser::parseFileBlocking(mParser, "main.cpp", false, "");
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
 
     PStatement outer = mParser->findStatementOf("main.cpp", "outer", 7);
     QVERIFY(outer);

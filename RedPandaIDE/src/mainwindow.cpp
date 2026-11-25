@@ -1973,7 +1973,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         if (activate) {
             mEditorManager->activeEditor(editor,true);
             if (!openingFiles() && !openingProject())
-                editor->reparseIfNeeded();
+                editor->reparse();
         }
         return editor;
     }
@@ -2004,7 +2004,7 @@ Editor* MainWindow::openFile(QString filename, bool activate, FileType fileType,
         if (activate) {
             mEditorManager->activeEditor(editor,true);
             if (!openingFiles() && !openingProject())
-                editor->reparseIfNeeded();
+                editor->reparse();
         } else {
             updateEditorActions();
         }
@@ -3801,10 +3801,10 @@ void MainWindow::loadLastOpens()
     }
     Editor *e = mEditorManager->getEditor(-1, mEditorManager->leftPageWidget());
     if (e)
-        e->reparseIfNeeded();
+        e->reparse();
     e = mEditorManager->getEditor(-1, mEditorManager->rightPageWidget());
     if (e)
-        e->reparseIfNeeded();
+        e->reparse();
     if (focusedEditor) {
         updateEditorActions(focusedEditor);
         updateForEncodingInfo(focusedEditor);
@@ -7599,7 +7599,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
         PProjectModelNode folderNode =  mProject->pointerToNode(node);
         foreach (const QString& filename, dialog.selectedFiles()) {
             PProjectUnit newUnit = mProject->addUnit(filename,folderNode);
-            mProject->cppParser()->addProjectFile(filename,true);
+            mProject->cppParser()->addProjectFile(filename);
 #ifdef ENABLE_VCS
             QString branch;
             if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
@@ -8064,7 +8064,7 @@ void MainWindow::reparseNonProjectEditors()
             Editor* e=(*mEditorManager)[i];
             if (!e->inProject()) {
                 if (!pSettings->codeCompletion().shareParser()) {
-                    reconfigureCppParser(e->parser());
+                    reconfigureCppParser(e->parser(), {});
                 }
             }
         }
@@ -8287,7 +8287,7 @@ void MainWindow::setupSlotsForProject()
 
 void MainWindow::onProjectUnitAdded(const QString &filename)
 {
-    mProject->cppParser()->addProjectFile(filename,true);
+    mProject->cppParser()->addProjectFile(filename);
     if (pSettings->editor().parseTodos()) {
         mTodoParser->parseFile(filename,true);
     }
@@ -8295,7 +8295,7 @@ void MainWindow::onProjectUnitAdded(const QString &filename)
 
 void MainWindow::onProjectUnitRemoved(const QString &filename)
 {
-    mProject->cppParser()->invalidateFileAndDependents(filename);
+    mProject->cppParser()->invalidateFile(filename);
     mProject->cppParser()->removeProjectFile(filename);
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(filename);
@@ -8306,9 +8306,9 @@ void MainWindow::onProjectUnitRemoved(const QString &filename)
 
 void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString &newFilename)
 {
-    mProject->cppParser()->invalidateFileAndDependents(oldFilename);
+    mProject->cppParser()->invalidateFile(oldFilename);
     mProject->cppParser()->removeProjectFile(oldFilename);
-    mProject->cppParser()->addProjectFile(newFilename,true);
+    mProject->cppParser()->addProjectFile(newFilename);
     if (pSettings->editor().parseTodos()) {
         mTodoModel->removeTodosForFile(oldFilename);
         mTodoParser->parseFile(newFilename,true);
@@ -8551,8 +8551,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
         return;
     if (editor->modified()) {
         CppParser::parseFileBlocking(editor->parser(), editor->filename(),
-                                     editor->inProject(), editor->contextFile(),
-                                     false, false);
+                                      editor->contextFile(),
+                                      false);
     }
     PStatement oldStatement = editor->parser()->findStatementOf(
                 editor->filename(), expression, oldCaret.line);
@@ -10974,7 +10974,7 @@ void MainWindow::on_actionReparse_Code_triggered()
         if (mProject && e->inProject())
             reparseActiveProject();
         else if (e->parser()){
-            reconfigureCppParser(e->parser());
+            reconfigureCppParser(e->parser(), {});
             e->reparse();
         }
     }

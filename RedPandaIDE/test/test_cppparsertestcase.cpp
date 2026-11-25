@@ -26,7 +26,7 @@ bool CppParserTestCase::writeLines(const QString &path, const QStringList &lines
 QString CppParserTestCase::parseSyntaxResource(const PCppParser &parser, const QString &fileName)
 {
     QString path = QFileInfo("resources/syntax/" + fileName).absoluteFilePath();
-    parser->setOnGetFileStream(nullptr);
-    CppParser::parseFileBlocking(parser, path, false, "");
+    parser->setOnGetFileStream(nullptr, nullptr);
+    CppParser::parseFileBlocking(parser, path, "");
     return path;
 }

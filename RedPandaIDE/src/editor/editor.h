@@ -203,7 +203,6 @@ public:
             const PStatement &statement, const QSynedit::CharPos &pos);
     QString getParserHint(const QStringList& expression, const QSynedit::CharPos& p);
     void reparse();
-    void reparseIfNeeded();
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
@@ -268,8 +267,6 @@ public:
     void setCanAutoSave(bool newCanAutoSave);
 
     quint64 lastFocusOutTime() const;
-
-    bool needReparse() const;
 
     FileType fileType() const;
     void setFileType(FileType newFileType, bool parse = true);

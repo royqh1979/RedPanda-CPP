@@ -32,6 +32,8 @@ Parser 在请求真正执行时判断，而不是只依赖入队时的 UI 状态
 
 `hasChangedFiles()` 只负责文件变化检查；其中缺失 FileInfo 时的跳过行为不承担“分析结果完整性”语义。Parser 的 `analysisResultValid` 统一封装 FileInfo 完整性和文件变化检查。
 
+内存内容提供者通过 `setOnGetFileStream(stream, version)` 同时配置读取和版本查询回调，不再存在单独配置版本或只配置读取的入口。读取回调同时返回内容与本次版本；版本回调用于在不读取全文的情况下检查变化。纯磁盘文件仍使用 mtime/size，可变化的内存内容必须提供真实递增版本。
+
 ## 3. 当前 TU 的扫描与旧 Statement 清理
 
 ### 原则

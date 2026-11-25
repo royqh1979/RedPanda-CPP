@@ -5,6 +5,7 @@
 #include "test_editor_display.h"
 #include "test_editor_general.h"
 #include "test_editor_auto_save.h"
+#include "test_editor_manager_reparse.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -53,6 +54,11 @@ int main(int argc, char *argv[]) {
     }
     {
         TestEditorManagerAutoSave tc;
+        if (suite == "all" || suite == tc.metaObject()->className())
+            status |= QTest::qExec(&tc, argc, argv);
+    }
+    {
+        TestEditorManagerReparse tc;
         if (suite == "all" || suite == tc.metaObject()->className())
             status |= QTest::qExec(&tc, argc, argv);
     }

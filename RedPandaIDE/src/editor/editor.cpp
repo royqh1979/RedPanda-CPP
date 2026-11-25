@@ -375,7 +375,7 @@ bool Editor::saveAs(const QString &name, bool doCheckSyntax){
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
-        mParser->invalidateFileAndDependents(mFilename);
+        mParser->invalidateFile(mFilename);
     }
 
     if (mEditorSettings->autoFormatWhenSaved()) {
@@ -440,7 +440,7 @@ void Editor::rename(const QString &newName)
 
     clearSyntaxIssues();
     if (mCodeCompletionEnabled && mParser && !inProject()) {
-        mParser->invalidateFileAndDependents(oldName);
+        mParser->invalidateFile(oldName);
     }
 
     mFilename = newName;
@@ -2126,7 +2126,7 @@ void Editor::setCppParser(PCppParser parser)
                 &CppParser::parseFinished,
                 this,
                 &Editor::onParseFinished);
-        mParser->invalidateFileAndDependents(mFilename);
+        mParser->invalidateFile(mFilename);
     }
     mParser = parser;
     if (mParser) {
@@ -2833,28 +2833,12 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 
 void Editor::reparse()
 {
-    if (!mInited)
-        return;
-    if (!mCodeCompletionEnabled)
-        return;
-    if (!mParser)
+    if (!mInited || !mCodeCompletionEnabled || !mParser)
         return;
     Q_ASSERT(syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP);
     if (!mParser->enabled())
         return;
-//    qDebug()<<"reparse "<<mFilename;
-    //mParser->setEnabled(mCodeCompletionSettings->enabled());
-    CppParser::parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
-}
-
-void Editor::reparseIfNeeded()
-{
-    if (!mInited || !mCodeCompletionEnabled || !mParser)
-        return;
-    Q_ASSERT(syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP);
-    if (!mParser->enabled() || !needReparse())
-        return;
-    CppParser::parseFileNonBlocking(mParser, mFilename, inProject(), mContextFile, true);
+    CppParser::parseFileNonBlocking(mParser, mFilename, mContextFile);
 }
 
 void Editor::reparseTodo()
@@ -4267,15 +4251,6 @@ void Editor::syncEncoding(const QByteArray &editorEncoding, const QByteArray &fi
 void Editor::openFileInContext(const QString &filename, const CharPos& caretPos)
 {
     emit openFileRequested(filename, getFileType(filename), QString(), caretPos);
-}
-
-bool Editor::needReparse() const
-{
-    if (!mParser)
-        return false;
-    if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty())
-        return !mParser->isFileParsedInContext(mFilename, mContextFile);
-    return !mParser->hasReplayRecord(mFilename);
 }
 
 PStatement Editor::resolveClassOrConstructorAt(const PStatement &statement, const CharPos &pos)
