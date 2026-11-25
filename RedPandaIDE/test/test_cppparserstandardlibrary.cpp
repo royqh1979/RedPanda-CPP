@@ -1082,7 +1082,7 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
         {"transform", "iterator"},
         {"count", "difference"},
         {"accumulate", "basic_string"},
-        {"for_each", "main::__lambda_"},
+        {"for_each", "main::__RED_PANDA_IDE__"},
         {"sort", "void"},
         {"lower_bound", "iterator"},
         {"min_element", "iterator"},
@@ -1127,7 +1127,7 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
         {"int.lower_bound", "iterator"},
         {"int.binary_search", "bool"},
         {"int.minmax_element", "pair"},
-        {"int.for_each", "main::__lambda_"},
+        {"int.for_each", "main::__RED_PANDA_IDE__"},
         {"int.generate", "void"},
         {"int.move", "iterator"},
         {"int.copy_n", "iterator"},
@@ -1235,8 +1235,10 @@ void TestCppParserStandardLibrary::test_standard_library_algorithm_eval_profile(
                    << timer.nsecsElapsed() - started << result.isValid() << result.type.toString();
         logEvalProfileCsv("STDLIB_ALGORITHM_EVAL_CSV", test.name, timer.nsecsElapsed() - started, result);
         QVERIFY2(result.isValid(), test.name);
-        if (test.expectedType == QStringLiteral("main::__lambda_"))
-            QVERIFY(result.type.qualifiedName.startsWith("main::__lambda_"));
+        if (test.expectedType == QStringLiteral("main::__RED_PANDA_IDE__")) {
+            QVERIFY(result.type.qualifiedName.startsWith("main::__RED_PANDA_IDE__"));
+            QVERIFY(result.type.qualifiedName.endsWith("_lambda"));
+        }
         else if (test.expectedType == QStringLiteral("iterator")) {
             PStatement declaration = result.type.declaration.lock();
             QString typeName = declaration ? declaration->command : result.type.qualifiedName;

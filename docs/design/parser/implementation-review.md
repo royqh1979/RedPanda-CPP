@@ -116,7 +116,7 @@
 
 根因已经定位：Builder 已按原位置创建 Lambda，但 Eval 使用规范化 initializer 重新 Tokenize，内部空格丢失，而 `relocateTokens()` 只增加 initializer 起始列。`find_if` Lambda 在 Builder/Eval 中分别为 `32:54` 与 `32:52`，`transform` 分别为 `34:70` 与 `34:67`，导致复用查找失败并再次创建。这不是 Lambda 未识别，而是 Parse/Eval 位置映射错误。
 
-**处理结论：**这是需要修复的集成缺陷，不是合法设计例外。Eval 不应增删 Statement，也不应修改签名、身份或 occurrence；`buildLambdas()` 应作为唯一持久 Lambda 创建入口。不能通过手工调整列偏移修补。当前分支只保留验证插桩，不改变行为。
+**处理结论：**已按“Builder 唯一创建、Eval 只复用”修复。Lambda 使用 Parser 内递增 ID 作为 command，含 Lambda 的 initializer 在声明期生成求值专用占位文本，不再通过规范化后的 `[` 位置识别身份。原始 initializer 文本和 occurrence 位置保留，Eval 的 Lambda/参数/operator() 创建回退已删除。`test_lambda_evaluation_reuses_parse_statement()` 覆盖位置漂移、同作用域多个 Lambda、类型复用及求值前后 Statement 数量不变。
 
 ## D11 通用声明查找仍直接用 `split("::")` 分段（设计方向已确认）
 

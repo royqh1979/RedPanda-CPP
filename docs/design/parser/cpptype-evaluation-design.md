@@ -300,7 +300,7 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 
 类型结果通过本次 EvalResult/TypeInfo/ClassInstance 返回，不回写已有 Statement 的持久 TypeInfo。声明构建期的 auto 类型和 Lambda 返回类型由 StatementBuilder 负责；Lambda Statement、operator() 和参数由 `buildLambdas()` 统一创建。补全匹配统计等明确的非语义 UI 状态只在对应 UI 流程更新，不属于 Eval 可修改的语义属性。
 
-当前 `allowModelChanges` 及 Eval 创建 Lambda 的路径属于已确认待清理的遗留通道，具体验证和位置映射缺陷见 `implementation-review.md` 的 D10，不将其实现为上述规则的例外。
+Eval 创建 Lambda 的路径已删除。`allowModelChanges` 仅表示构建期间模型仍在变化，用于禁用相关查询缓存，不授权 Eval 增删 Statement 或修改既有声明。Lambda 的位置映射缺陷及验证见 `implementation-review.md` 的 D10。
 
 代码分析阶段应当填写的声明事实由 Statement 保存，包括模板形参、默认实参原文、原始类型、
 基类，以及外层特化语法模式 `templatePattern`。模式直接由声明阶段已有 token 构造，不绑定实际实参、

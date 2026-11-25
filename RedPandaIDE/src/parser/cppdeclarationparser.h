@@ -18,10 +18,14 @@
 #define CPPDECLARATIONPARSER_H
 
 #include <QSet>
+#include <functional>
 #include "cpptokencursor.h"
 #include "cpptypes.h"
 
+using SyntheticNameGenerator = std::function<QString()>;
+
 struct LambdaInfo {
+    QString command;
     SourceRange range;
     QVector<ParameterInfo> parameters;
     TypeInfo returnType;
@@ -36,7 +40,8 @@ struct LambdaInfo {
 class CppDeclarationParser
 {
 public:
-    explicit CppDeclarationParser(CppTokenCursor &cursor);
+    explicit CppDeclarationParser(CppTokenCursor &cursor,
+                                  SyntheticNameGenerator syntheticNameGenerator = {});
 
     bool parseDeclaration(DeclarationInfo &result);
     bool parseSimpleDeclaration(DeclarationInfo &result);
@@ -76,7 +81,8 @@ private:
     void skipBalancedToken();
     bool parseLambda(LambdaInfo &result);
     QString readUntilDelimiter(const QSet<QString> &delimiters, DeclaratorInfo *declarator);
-    void skipExpression(const QSet<QString> &delimiters, DeclaratorInfo *declarator);
+    void skipExpression(const QSet<QString> &delimiters, DeclaratorInfo *declarator,
+                        bool collectEvaluationText);
     void skipTemplateRequiresClause();
     void skipRequiresClause();
     void skipTemplateDefaultArgument(bool nonType = false);
@@ -93,6 +99,8 @@ private:
     CppTokenCursor &mCursor;
     QString mClassName;
     QVector<TemplateParameterEntry> mTemplateParameters;
+    SyntheticNameGenerator mSyntheticNameGenerator;
+    int mSyntheticId = 0;
     int mCppVersion = CppVersion::Cpp17;
 };
 

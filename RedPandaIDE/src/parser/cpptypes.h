@@ -199,6 +199,7 @@ struct DeclaratorInfo {
     SourcePosition namePosition;
     QVector<TypeDerivation> derivations;
     QString initializerText;
+    QString initializerEvaluationText;
     SourcePosition initializerPosition;
     QVector<std::shared_ptr<LambdaInfo>> lambdas;
     DeclaratorDefinitionKind definitionKind = DeclaratorDefinitionKind::None;

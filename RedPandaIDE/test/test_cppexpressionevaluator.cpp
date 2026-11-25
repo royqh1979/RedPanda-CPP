@@ -829,16 +829,13 @@ void TestCppExpressionEvaluator::test_evaluator_internal_evaluation_stages()
     QCOMPARE(binary("1=2").type.qualifiedName, "int");
 
     CppTypeResolver::EvaluationContext lambdaEvaluation;
-    lambdaEvaluation.allowModelChanges = true;
     index = 0;
     auto lambdaTokens = tokens("[](int value) -> int { return value; }");
+    int statementCount = model.count();
     EvalResult lambda = evaluator.evaluateLambda(lambdaTokens, index, {}, &lambdaEvaluation);
-    QVERIFY(lambda.isValid());
-    QCOMPARE(lambda.type.declaration.lock()->kind, StatementKind::Lambda);
+    QVERIFY(!lambda.isValid());
     QCOMPARE(index, lambdaTokens.count());
-    index = 0;
-    EvalResult cached = evaluator.evaluateLambda(lambdaTokens, index, {}, &lambdaEvaluation);
-    QCOMPARE(cached.type.declaration.lock(), lambda.type.declaration.lock());
+    QCOMPARE(model.count(), statementCount);
     index = 0;
     auto invalidLambdaTokens = tokens("[");
     QVERIFY(!evaluator.evaluateLambda(invalidLambdaTokens, index, {}, &lambdaEvaluation).isValid());

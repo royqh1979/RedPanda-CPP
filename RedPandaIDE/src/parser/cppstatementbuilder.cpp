@@ -920,6 +920,9 @@ PStatement CppStatementBuilder::createStatement(const DeclarationInfo &declarati
                 || kind == StatementKind::LocalVariable)) {
         QString expression = declaration.rangeExpression.isEmpty()
                 ? declarator.initializerText : declaration.rangeExpression;
+        if (declaration.rangeExpression.isEmpty()
+                && !declarator.initializerEvaluationText.isEmpty())
+            expression = declarator.initializerEvaluationText;
         if (!expression.isEmpty()) {
             StatementBuilderProfileScope autoProfileScope(statementBuilderProfile.autoTypeNs);
             CppTokenizer tokenizer;
@@ -1258,13 +1261,10 @@ void CppStatementBuilder::buildLambdas(const QVector<std::shared_ptr<LambdaInfo>
     for (const std::shared_ptr<LambdaInfo> &info : lambdas) {
         if (!info || !info->body)
             continue;
-        QString name = QString("__lambda_%1_%2_%3")
-                .arg(qHash(context.fileName), 0, 16)
-                .arg(info->range.start.line).arg(info->range.start.ch);
         auto lambda = StatementFactory::createLambda(
-                    context.parentScope, name,
+                    context.parentScope, info->command,
                     context.parentScope && !context.parentScope->fullName.isEmpty()
-                    ? context.parentScope->fullName + "::" + name : name);
+                    ? context.parentScope->fullName + "::" + info->command : info->command);
         lambda->scope = context.scope;
         lambda->definition = StatementOccurrence{
             context.fileName, info->range, context.boundaryAncestor, {}};

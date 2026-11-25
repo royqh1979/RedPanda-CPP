@@ -2355,3 +2355,43 @@ void TestCppParser::test_nested_lambda_function_argument_scope()
     QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"inner", ".", "panel"}, 8));
     QVERIFY(mParser->findStatementOf("main.cpp", QStringList{"col", ".", "next"}, 11));
 }
+
+void TestCppParser::test_lambda_evaluation_reuses_parse_statement()
+{
+    mParser->setOnGetFileStream([](const QString &, QStringList &buffer, int &) {
+        buffer = QStringList{
+            "template<typename T> T identity(T value) { return value; }",
+            "void test() {",
+            "    auto result = identity(  [](const int &value) { return value; });",
+            "    auto other = identity(  [](const int &value) { return value + 1; });",
+            "    result(1);",
+            "}"
+        };
+        return true;
+    }, [](const QString &) { return 1; });
+    CppParser::parseFileBlocking(mParser, "main.cpp", "");
+
+    QVector<PStatement> lambdas;
+    for (const PStatement &statement : mParser->statementList().statements()) {
+        if (statement->kind == StatementKind::Lambda)
+            lambdas.append(statement);
+    }
+    QCOMPARE(lambdas.count(), 2);
+    QVERIFY(lambdas.first()->command != lambdas.last()->command);
+    PStatement result = mParser->findStatementOf("main.cpp", "result", 2);
+    QVERIFY(result);
+    PStatement resultType = std::dynamic_pointer_cast<Statement>(result)->typeInfo.declaration.lock();
+    QVERIFY(lambdas.contains(resultType));
+    PStatement other = mParser->findStatementOf("main.cpp", "other", 3);
+    QVERIFY(other);
+    QVERIFY(std::dynamic_pointer_cast<Statement>(other)->typeInfo.declaration.lock()
+            != resultType);
+
+    int statementCount = mParser->statementList().count();
+    PStatement scope = mParser->findScopeStatement("main.cpp", 4);
+    QVERIFY(scope);
+    QStringList expression{"result", "(", "1", ")"};
+    EvalResult evaluated = mParser->evalExpression("main.cpp", expression, scope);
+    QCOMPARE(evaluated.type.qualifiedName, "int");
+    QCOMPARE(mParser->statementList().count(), statementCount);
+}

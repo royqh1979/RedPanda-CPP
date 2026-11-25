@@ -198,7 +198,7 @@ rangeElement 统一计算 rangeValue/rangeReference：iota_view 使用数值类�
 
 函数对象调用的实参也按完整表达式求值，逗号只分隔实参。TypeOperationRegistry 将 filter/transform 调用转换为带实际回调 TypeInfo 的闭包；operator| 再把输入 range 与闭包合成为 filter_view/transform_view，join adaptor 直接合成为 join_view。显式非类型模板实参仅在 Registry 确认目标支持时消费，否则 `<` 仍按比较运算处理；views::elements<N> 因此可以合成为带 N 的 elements_view。管道类型可以传给 auto 和 range-for，最终成员访问继续使用同一表达式求值路径。
 
-初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移。lambda 是实际声明而非模板实例：声明解析直接在原 token 流中保存参数、body 的结构化 DeclarationInfo 和顶层 return 表达式 token，不重新拼接或切分 body；Builder 在 auto 变量类型推导前建立 Lambda Statement、operator()、参数、body 内 statement 和源码位置作用域。auto 求值按稳定名称复用该 Lambda Statement。显式 trailing return 优先；否则在 operator() 上下文对保留的 return token 复用完整求值器，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
+初始化表达式重新切分时使用 relocateTokens 应用原始文件、起始 line/ch 和首行列偏移。含 Lambda 的 initializer 另在声明期生成求值专用规范化文本，将整个 Lambda 替换为 `__RED_PANDA_IDE__<递增ID>_lambda` 占位符；原始 initializer 文本仍保留用于常量值和展示，不保存整段 TokenList。Lambda 与匿名类型共享 Parser 内的递增 ID 生成器，位置只记录在 occurrence 中，不参与身份命名。声明解析直接在原 token 流中保存参数、body 的结构化 DeclarationInfo 和顶层 return 表达式 token，不重新拼接或切分 body；Builder 在 auto 变量类型推导前建立 Lambda Statement、operator()、参数、body 内 statement 和源码位置作用域。Eval 只复用该 Statement，找不到时返回未知，不创建模型对象。显式 trailing return 优先；否则在 operator() 上下文对保留的 return token 复用完整求值器，无 return 时为 void。有限推导覆盖具名类型参数、参数成员调用和算术返回表达式，复杂控制流、多返回合并及 generic lambda 的 dependent 参数绑定仍属于后续能力。
 
 类型求值的各级缓存由 EvaluationContext::caches 独立控制，默认全部启用。完整类型结果只在模型不变时缓存成功解析；键包含类型、声明/context 指针以及逐帧指针和修订号，绑定链变化后旧结果自然失效。帧内 resolvedValues 作为模板参数快路径独立保留。对照 profile 可通过 REDPANDA_PARSER_DISABLE_CACHES 的逗号分隔列表关闭 all、type-text、type-name、type-pattern、binding-frame、resolved-value、specialization、declaration、member 或 resolved-type。
 

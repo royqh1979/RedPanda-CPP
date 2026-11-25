@@ -647,6 +647,7 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
         const TokenList &tokens, int &index, const PStatement &context,
         CppTypeResolver::EvaluationContext *evaluation) const
 {
+    Q_UNUSED(evaluation);
     if (index >= tokens.count() || tokens[index].text != "[")
         return {};
     const CppTokenizer::Token &startToken = tokens[index];
@@ -658,175 +659,35 @@ EvalResult CppExpressionEvaluator::evaluateLambda(
     QString fileName = startToken.fileName;
     if (fileName.isEmpty() && context)
         fileName = statementDeclarationForNavigation(context, QString()).fileName;
-    QString name = QString("__lambda_%1_%2_%3")
-            .arg(qHash(fileName), 0, 16).arg(startToken.position.line).arg(startToken.position.ch);
-    if (PStatement existing = findDirectStatement(context, name)) {
-        while (index < tokens.count() && tokens[index].text != "{")
+    PStatement existing;
+    for (const std::weak_ptr<AbstractStatement> &weak : mModel.childrenStatements(context)) {
+        PStatement statement = weak.lock();
+        if (statement && statement->kind == StatementKind::Lambda
+                && statementHasDefinition(statement)
+                && statement->definition.fileName == fileName
+                && statement->definition.range.start == startToken.position) {
+            existing = statement;
+            break;
+        }
+    }
+
+    while (index < tokens.count() && tokens[index].text != "{") {
+        if (tokens[index].matchIndex > index)
+            index = tokens[index].matchIndex + 1;
+        else
             ++index;
-        if (index < tokens.count()) {
-            int bodyEnd = tokens[index].matchIndex;
-            index = bodyEnd > index && bodyEnd < tokens.count() ? bodyEnd + 1 : tokens.count();
-        }
-        EvalResult cached;
-        cached.type.qualifiedName = existing->fullName;
-        cached.type.declaration = existing;
-        cached.baseStatement = existing;
-        cached.kind = EvalStatementKind::Variable;
-        return cached;
     }
-    bool allowModelChanges = !evaluation || evaluation->allowModelChanges;
-
-    auto lambda = StatementFactory::createLambda(
-                context, name, context && !context->fullName.isEmpty()
-                ? context->fullName + "::" + name : name);
-    lambda->scope = context && (context->kind == StatementKind::Function
-                                || context->kind == StatementKind::Block)
-            ? StatementScope::Local : StatementScope::Global;
-    QString boundaryAncestor = context
-            ? statementDeclarationForNavigation(context, fileName).boundaryAncestor : QString();
-    lambda->properties.setFlag(StatementProperty::DummyStatement);
-
-    auto call = StatementFactory::createOverloadedOperator(
-                lambda, "operator()", lambda->fullName + "::operator()");
-    call->scope = StatementScope::ClassLocal;
-    call->accessibility = StatementAccessibility::Public;
-    std::dynamic_pointer_cast<Statement>(call)->typeInfo.qualifiedName = "auto";
-    call->properties.setFlag(StatementProperty::OperatorOverloading);
-    call->properties.setFlag(StatementProperty::Const);
-    std::dynamic_pointer_cast<Statement>(call)->args = "() const";
-    std::dynamic_pointer_cast<Statement>(call)->normalizedArgs = "() const";
-
-    if (index < tokens.count() && tokens[index].text == "(") {
-        int parametersEnd = tokens[index].matchIndex;
-        if (parametersEnd <= index || parametersEnd >= tokens.count())
-            return {};
-        int parameterStart = index + 1;
-        int segmentStart = parameterStart;
-        int nested = 0;
-        auto addParameter = [&](int first, int last) {
-            if (first >= last)
-                return;
-            int nameIndex = -1;
-            for (int i = last - 1; i >= first; --i) {
-                if (tokens[i].kind == CppTokenizer::TokenKind::Identifier) {
-                    nameIndex = i;
-                    break;
-                }
-            }
-            if (nameIndex < 0)
-                return;
-            QString typeText;
-            for (int i = first; i < nameIndex; ++i)
-                appendExpressionToken(typeText, tokens[i].text);
-            auto parameter = StatementFactory::createParameter(
-                        call, tokens[nameIndex].text, call->fullName + "::" + tokens[nameIndex].text);
-            parameter->scope = StatementScope::Local;
-            if (allowModelChanges) {
-                mModel.addDeclaration(parameter, fileName,
-                                      SourceRange{tokens[nameIndex].position, tokens[nameIndex].position},
-                                      boundaryAncestor, {});
-            }
-            std::dynamic_pointer_cast<Statement>(parameter)->typeInfo = parseTypeText(typeText);
-            ParameterInfo parameterInfo;
-            parameterInfo.name = parameter->command;
-            parameterInfo.position = parameter->definition.range.start;
-            parameterInfo.type = std::make_shared<TypeInfo>(
-                        std::dynamic_pointer_cast<Statement>(parameter)->typeInfo);
-            std::dynamic_pointer_cast<Statement>(call)->parameters.append(parameterInfo);
-            if (allowModelChanges)
-                mModel.add(parameter);
-        };
-        for (int i = parameterStart; i <= parametersEnd; ++i) {
-            QString text = tokens[i].text;
-            if (text == "(" || text == "[" || text == "{")
-                ++nested;
-            else if (text == ")" || text == "]" || text == "}")
-                --nested;
-            if (i == parametersEnd || (text == "," && nested == 0)) {
-                addParameter(segmentStart, i);
-                segmentStart = i + 1;
-            }
-        }
-        index = parametersEnd + 1;
+    if (index < tokens.count()) {
+        int bodyEnd = tokens[index].matchIndex;
+        index = bodyEnd > index && bodyEnd < tokens.count() ? bodyEnd + 1 : tokens.count();
     }
-    if (index < tokens.count() && tokens[index].text == "mutable") {
-        call->properties.setFlag(StatementProperty::Const, false);
-        std::dynamic_pointer_cast<Statement>(call)->args = "()";
-        std::dynamic_pointer_cast<Statement>(call)->normalizedArgs = "()";
-        ++index;
-    }
-    if (index < tokens.count() && tokens[index].text == "noexcept") {
-        auto normalCall = std::dynamic_pointer_cast<Statement>(call);
-        normalCall->noexceptKind = NoexceptKind::Always;
-        ++index;
-        if (index < tokens.count() && tokens[index].text == "(") {
-            int close = tokens[index].matchIndex;
-            if (close <= index || close >= tokens.count())
-                return {};
-            normalCall->noexceptKind = NoexceptKind::Expression;
-            for (int i = index + 1; i < close; ++i)
-                appendExpressionToken(normalCall->noexceptExpression, tokens[i].text);
-            index = close + 1;
-        }
-    }
-
-    TypeInfo trailingReturn;
-    if (index < tokens.count() && tokens[index].text == "->") {
-        ++index;
-        QString returnText;
-        while (index < tokens.count() && tokens[index].text != "{") {
-            appendExpressionToken(returnText, tokens[index].text);
-            ++index;
-        }
-        trailingReturn = parseTypeText(returnText);
-    }
-    if (index >= tokens.count() || tokens[index].text != "{")
+    if (!existing)
         return {};
-    int bodyStart = index;
-    int bodyEnd = tokens[index].matchIndex;
-    if (bodyEnd <= bodyStart || bodyEnd >= tokens.count())
-        bodyEnd = tokens.count() - 1;
-
-    SourceRange lambdaRange{startToken.position, tokens[bodyEnd].position};
-    lambda->definition = StatementOccurrence{fileName, lambdaRange, boundaryAncestor, {}};
-    setStatementHasDefinition(lambda, true);
-    call->definition = StatementOccurrence{fileName, lambdaRange, boundaryAncestor, {}};
-    setStatementHasDefinition(call, true);
-    if (allowModelChanges) {
-        mModel.add(lambda);
-        mModel.add(call);
-    }
-
-    if (!trailingReturn.qualifiedName.isEmpty()) {
-        std::dynamic_pointer_cast<Statement>(call)->typeInfo = trailingReturn;
-    } else {
-        bool foundReturn = false;
-        int nested = 0;
-        for (int i = bodyStart + 1; i < bodyEnd; ++i) {
-            const QString &text = tokens[i].text;
-            if (text == "(" || text == "[" || text == "{")
-                ++nested;
-            else if (text == ")" || text == "]" || text == "}")
-                --nested;
-            if (text == "return" && nested == 0) {
-                foundReturn = true;
-                int returnIndex = i + 1;
-                EvalResult returned = evaluateBinary(tokens, returnIndex, call, 1, evaluation);
-                if (returned.isValid())
-                    std::dynamic_pointer_cast<Statement>(call)->typeInfo = returned.type;
-                break;
-            }
-        }
-        if (!foundReturn)
-            std::dynamic_pointer_cast<Statement>(call)->typeInfo = primitiveType("void");
-    }
-    index = bodyEnd + 1;
 
     EvalResult result;
-    result.type.qualifiedName = lambda->fullName;
-    result.type.declaration = lambda;
-    result.baseStatement = lambda;
-    result.statement = lambda;
+    result.type.qualifiedName = existing->fullName;
+    result.type.declaration = existing;
+    result.baseStatement = existing;
     result.kind = EvalStatementKind::Variable;
     return result;
 }
@@ -911,6 +772,11 @@ EvalResult CppExpressionEvaluator::createResult(
     case StatementKind::LiteralOperator:
         result.type = std::dynamic_pointer_cast<Statement>(statement)->typeInfo;
         result.kind = EvalStatementKind::Function;
+        break;
+    case StatementKind::Lambda:
+        result.type.qualifiedName = statement->fullName;
+        result.type.declaration = statement;
+        result.kind = EvalStatementKind::Variable;
         break;
     case StatementKind::Variable:
     case StatementKind::GlobalVariable:

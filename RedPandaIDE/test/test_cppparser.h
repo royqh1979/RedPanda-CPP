@@ -76,6 +76,7 @@ private slots:
     void test_parse_uses_content_versions();
     void test_lambda_function_argument_scope();
     void test_nested_lambda_function_argument_scope();
+    void test_lambda_evaluation_reuses_parse_statement();
 };
 
 

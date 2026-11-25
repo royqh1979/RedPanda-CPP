@@ -93,7 +93,8 @@ private:
 
 CppSyntaxParser::CppSyntaxParser(
         CppTokenCursor &cursor, AnonymousTypeNameGenerator anonymousTypeNameGenerator)
-    : mCursor(cursor), mDeclarationParser(cursor), mRootFileName(cursor.current().fileName),
+    : mCursor(cursor), mDeclarationParser(cursor, anonymousTypeNameGenerator),
+      mRootFileName(cursor.current().fileName),
       mAnonymousTypeNameGenerator(std::move(anonymousTypeNameGenerator)), mAnonymousTypeId(0)
 {
     if (!mAnonymousTypeNameGenerator) {
