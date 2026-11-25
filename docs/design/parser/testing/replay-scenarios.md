@@ -289,8 +289,8 @@
 ### F7 边界内共享头显式失效
 
 - 操作：跨边界头 A、B 共享 pragma 内部头 H；修改并显式失效 H 后重扫 main。
-- 预期：H 没有独立 Registry 记录，但失效通过 include 闭包到达 A、B 和 main；旧 Statement 删除，新 Statement 恢复且数量不增加。
-- 判定依据：内部头没有独立记录不等于没有依赖关系；其生命周期由所有包含它的跨边界祖先记录共同决定。
+- 预期：H 没有独立 ReplayRecord，但失效通过 include 闭包到达 A、B 和 main；旧 Statement 删除，新 Statement 恢复且数量不增加。
+- 判定依据：内部头仍有按实际文件保存的 ParsedFileInfo，只是没有独立 ReplayRecord；其生命周期由所有包含它的跨边界祖先记录共同决定。
 - 测试：`test_shared_internal_header_change_invalidates_boundary_ancestors`。
 
 ### F8 边界内磁盘变化同步清理 Statement
@@ -365,8 +365,8 @@
 ### S3 declaration/definition 合并后失效
 
 - 操作：声明位于跨边界头，定义位于用户文件；声明和定义分别记录自身的跨边界祖先，然后分别失效头和用户文件。
-- 预期：失效定义时保留有效声明并清除定义位置、定义侧祖先和 definition 标记；失效声明时，若定义仍有效，则将定义提升为声明位置并使用定义侧归属；两侧都失效才删除 Statement。namespace 缓存同步。
-- 判定依据：声明与定义可来自不同记录，分别失效才能保留仍有效的一侧并维护跳转位置。
+- 预期：失效定义时保留有效声明并清除定义位置、定义侧祖先和 definition 标记；失效声明时只删除对应 declarations，仍有效的 definition 保持为 definition，不提升或写入 declarations；两侧都失效才删除 Statement。namespace 缓存同步。
+- 判定依据：声明与定义可来自不同记录，分别失效才能保留仍有效的一侧并维护跳转位置。`statementDeclarationForNavigation()` 在没有 declaration 时可以回退到 definition，但这只是导航查询规则，不修改 occurrence 数据。
 - 测试：`test_statement_ownership_declaration_definition_invalidation`。
 
 ### S4 define 与 statement 同步失效
@@ -379,8 +379,8 @@
 ### S5 系统子树继承的所属记录
 
 - 操作：跨边界头包含内部 base.h，base 类位于 base.h，派生类位于跨边界头。
-- 预期：继承处理、别名解析和继承覆盖均通过 Statement 的跨边界祖先找到 Registry 记录；不得按实际内部文件路径索取独立 fileInfo。继承成员可见，失效时 handledInheritance 状态随所属记录清理。
-- 判定依据：边界内子树文件没有独立 Registry 记录，但其实际文件和跨边界祖先已经共同记录在 Statement 中；所属记录应由该祖先确定。
+- 预期：继承处理、别名解析和继承覆盖均通过 Statement 的跨边界祖先找到对应 ReplayRecord；不得按实际内部文件路径索取独立 ReplayRecord。继承成员可见，失效时 handledInheritance 状态随所属记录清理。
+- 判定依据：边界内子树文件仍有按实际文件保存的 ParsedFileInfo，但没有独立 ReplayRecord；Statement 同时记录实际文件和跨边界祖先，Replay 所属记录应由该祖先确定。
 - 测试：`test_system_subtree_inheritance_uses_boundary_record`。
 
 ### S6 标准库接口完整性
@@ -410,7 +410,7 @@
 
 - 操作：A、B 都只额外声明各自的 root 符号，并以相同宏环境包含 `bits/stdc++.h`；按 A→B→A→B→A 解析。
 - 预期：仅首轮扫描 `bits/stdc++.h`，之后每次切换都 replay；Statement 总数稳定，两个 root 各自符号正确保留。
-- 判定依据：root 自身的 Statement 失效不会失效其包含的系统记录；相同用户宏和空前缀满足 replay 条件，往返切换不构成重扫理由。本场景要求切换时保留并共享 Parser；IDE 默认启用“编辑器隐藏时自动清空 Parser”时，Registry 被清空，切回后重扫是该设置的正常结果。
+- 判定依据：root 自身的 Statement 失效不会失效其包含的系统记录；相同用户宏和空前缀满足 replay 条件，往返切换不构成重扫理由。本场景要求切换时保留并共享 Parser；Editor 隐藏只停止当前解析，不清空 Registry，显示后按需重解析。
 - 测试：`test_bits_stdcpp_not_rescanned_when_switching_roots`。使用仓库内的 `boundary_replay/include/bits/stdc++.h` 测试头，不依赖外部工具链。
 
 ### R2 缓存未命中必须可见

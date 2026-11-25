@@ -12,7 +12,7 @@
 
 测量环境：GCC 15.3、C++17、Release。每项测试在独立新进程中连续运行两次，采用第二次结果；CSV 保留纳秒原始值，不把单次时间当作稳定统计值。
 
-完整的逐场景数据见 [cpp17-stl-eval-profile.csv](cpp17-stl-eval-profile.csv)，字段为：
+完整的逐场景数据见 [cpp17-stl-eval-profile.csv](../../../cpp17-stl-eval-profile.csv)，字段为：
 
 - `suite`：容器访问或算法测试套件；
 - `scenario`：容器、元素类型和操作；

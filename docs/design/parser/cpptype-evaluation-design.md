@@ -43,7 +43,7 @@
 
 ### 保留真实名称与作用域
 
-`fullName` 保留实际完整路径，`parentScope` 保留真实嵌套关系。`std::__cxx11::basic_string` 不压缩为 `std::basic_string`。inline/匿名 namespace 的对外可见性由现有透明 namespace 索引和查找逻辑处理，不能通过改名实现。
+`fullName` 保留实际完整路径，`parentScope` 保留真实嵌套关系。`std::__cxx11::basic_string` 不压缩为 `std::basic_string`。inline/匿名 namespace 的对外可见性由 InlineAliasStatement 投影和查找逻辑处理，不能通过改名实现。
 
 STL 名称不得作为容器、智能指针或 iterator 返回类型的替代解析规则。现有 range/view 专用操作暂时保留，但不在本轮扩展或验收。
 
@@ -296,9 +296,11 @@ trait 与编译器内建分开组织。标准 trait 从 C++11 起启用，并按
 
 ### 持久声明与一次型求值数据
 
-代码分析阶段不填、只有 expression eval 才填的属性一律是一次型数据，不得回写到 Statement
-或其持有的持久 TypeInfo。这包括结构化模板实参、绑定帧、特化选择结果、基类绑定环境、
-候选筛选状态、递归检测和求值缓存。它们由一次求值的上下文持有，求值结束即释放。
+普通表达式求值不得向 StatementModel/StatementMap 增删 Statement，也不得修改 Statement 的签名、身份、父子关系或 occurrence。结构化模板实参、绑定帧、特化选择结果、基类绑定环境、候选筛选状态、递归检测和求值缓存均为一次型数据，由求值上下文持有，求值结束即释放。
+
+类型结果通过本次 EvalResult/TypeInfo/ClassInstance 返回，不回写已有 Statement 的持久 TypeInfo。声明构建期的 auto 类型和 Lambda 返回类型由 StatementBuilder 负责；Lambda Statement、operator() 和参数由 `buildLambdas()` 统一创建。补全匹配统计等明确的非语义 UI 状态只在对应 UI 流程更新，不属于 Eval 可修改的语义属性。
+
+当前 `allowModelChanges` 及 Eval 创建 Lambda 的路径属于已确认待清理的遗留通道，具体验证和位置映射缺陷见 `implementation-review.md` 的 D10，不将其实现为上述规则的例外。
 
 代码分析阶段应当填写的声明事实由 Statement 保存，包括模板形参、默认实参原文、原始类型、
 基类，以及外层特化语法模式 `templatePattern`。模式直接由声明阶段已有 token 构造，不绑定实际实参、
@@ -527,21 +529,11 @@ const 数量猜测。后续设计至少需要区分“声明结构相同、cv �
 `selectedSpecializations` 另以“主模板声明 + 完整实参 + 绑定帧”复用成功的选择结果；歧义和未知结果不缓存。
 语法模式、匹配尝试和成功选择是不同数据，profile 必须分别记录 attempt/hit，不能用命中隐藏重复匹配。
 
-### 声明期模式的范围与性能依据
+### 声明期模式的范围
 
-只保留外层模式是实测后的设计取舍。以下为 Direct Release 独立进程三次运行的中位数；parse 测试使用
-`#include <bits/stdc++.h>` 的完整解析，eval 测试使用 `unordered_map.find("key")->second`：
+当前只保留外层模式，不递归保存全部嵌套结构。外层结构已满足当前特化匹配需求；递归结构化增加的声明期成本没有相应的实际求值收益。是否扩大声明期工作必须同时比较 parse 成本、eval 收益和正确性，不能只看 entry 数。
 
-| 阶段 | GCC 15.3 parse | GCC 8.1 parse | eval |
-|---|---:|---:|---:|
-| 声明模式改造前 | 1208 ms | 859 ms | 8.55 ms |
-| 仅外层模式 | 1206 ms | 875 ms | 7.26 ms |
-| 递归嵌套模式 | 1210 ms | 881 ms | 7.22 ms |
-
-外层模式把 eval entry 从 193 降到 109，耗时约降低 15%，parse 成本可接受。递归模式进一步把 entry
-降到 78，但 eval 仅再改善约 0.5%，已处于测量噪声范围，同时 GCC 8.1 parse 又增加约 6 ms。因此递归
-嵌套结构化不纳入当前实现；entry 数不能代替真实收益，是否扩大声明期工作必须同时比较 parse 成本与
-eval 收益。
+测量场景和对照数据见 `docs/profile/parser/declaration-pattern-baseline.md`。
 
 别名模板不能特化，本轮也不为它们引入特化候选逻辑。
 

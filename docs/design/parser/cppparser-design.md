@@ -1,50 +1,10 @@
 # CppParser 设计
 
-## 重构目标
+## 总体目标与声明级解析
 
-`CppTokenizer` 只做纯 token 切分；所有"合并/解析"决策移到 `CppParser`。
+CppTokenizer 只负责纯 token 切分；语法合并和解析决策由 Parser 根据调用链中的上下文完成。采用声明级递归下降：token 流保持扁平，声明产生式显式传递当前语法位置，`<`、`[` 等符号不再由 Tokenizer 脱离上下文猜测。
 
-动机：tokenizer 目前没有语法上下文，只能用括号配平等启发式猜测 token 边界，猜错时 parser 没有纠正机会（它拿到的已经是合并好的字符串）。哪些字符构成一个"名字"是解析决策，应归 parser。
-
-## 方向决策（2026-11，Roy 批准）：方案 A —— 声明级递归下降
-
-讨论过的候选方向：
-
-- **完整 AST + visit**：否决。对 IDE 需求（声明级符号表、作用域、include 关系和有限的表达式类型推导）是过度设计，不需要完整表达式 AST 或运行时求值。且对 C++ 不成立——`T::x * p;` 这类上下文敏感语法决定了没有语义反馈就无法正确建树，所以 clang 也是 Parse 与 Sema 交织而非两阶段，"纯语法树"要么内嵌歧义要么仍靠启发式，问题只是搬家。成本（工程量、全量头文件 AST 的内存/性能、打字中残破代码的容错）均不可接受。
-- **CST/绿树（rust-analyzer/Roslyn 路线）**：现代 IDE 标准答案，但工程量与项目规模不匹配。
-- **换 libclang/clangd 或 tree-sitter**：前者等于重写整个 C++ 分析子系统；后者只有语法没有语义，符号层仍需自己写。
-- **方案 A：声明级递归下降（选定）**。token 流保持扁平，parser 侧按 C++ 声明文法组织成递归下降函数（`parseDeclaration`/`parseDeclSpecifierSeq`/`parseDeclarator`/`parseTemplateParameterList` 等，每个产生式一个函数）。
-
-**关键澄清**：A 不是"把平循环改成递归"本身。现状本就是混合体——`handleStatement` 平循环 + scope 显式栈为主体，`handleLambda`/`evaluateConstExpr` 已是递归孤岛。方案 A 的本质是**分发依据从"关键字模式猜测"改为"上下文随调用链下传"**：被调的产生式函数知道自己在什么语法位置，`<` 是否模板参数、`[` 是否 lambda capture 由它本地判定，不需要 tokenizer 或扁平分发器猜。scope 显式栈保留（它是 `fileInfo->scopes` 的构建器，不是解析控制的替代品；clang 的 Sema 同样如此）。
-
-**A 要消灭的现有痛点**：
-
-- tokenizer 启发式误合并后无法纠正（本文件"现状问题清单"各项）；
-- `handleStatement` 扁平巨链：任何嵌套层级的任何 token 汇集一处，靠 `checkForStructs` 等前瞻启发式猜构造；
-- `mIndex` 被各 handler 全局突变（与旧 preprocessor `handleBuffer` 同味，已在那里根治过一次）；
-- parser 改写 token 流的 hack（`cppparser.cpp:2930-2937` 把 `()` 改写成 `{}`/`;` 并回填 matchIndex）；
-- 平循环误判缺少文件和作用域边界，一次错判可能级联污染后续解析；产生式化后可以结束当前文件的错误路径，include 文件再返回包含者。
-
-**A 明确不变的**：显式 scope 栈；单遍、不建 AST、statement 直接提取；token 列表 + `matchIndex` 配对；除枚举等整数常量外不求表达式的运行值，只做有限的类型推导，其余表达式跳过。
-
-**已知的真实成本**：C++ 声明语法本身复杂（declarator 的指针/数组/函数嵌套），`parseDeclarator` 写对是真功夫；现有启发式分发经真实头文件多年捶打，重写必须达到同等覆盖率——故测试补全是硬门禁。
-
-**可参考的现存范本**：`handleLambda`（`cppparser.cpp:2987`）已是"保存现场→递归→恢复"模式，是全文件最干净的 handler，说明该方向在现有代码里顺手。
-
-## 现状问题清单
-
-`RedPandaIDE/src/parser/cpptokenizer.cpp` 中越权的解析决策：
-
-1. **`<...>` 模板参数合并**：`getWord()` 在非关键字标识符后遇到 `<` 时调用 `skipAngleBracketPair()`（cpptokenizer.cpp:684）做括号配平猜测，配平成功则把整段 `<...>` 合并进 token。`a<b>c` 这类表达式与模板参数无法区分，启发式猜错即错到底。
-2. **`[...]` 数组合并**：`getWord()` 把变量名后的 `[...]`（含多维，循环处理）合并进 token，并用 `simplifyArgs()` 做空白规整（cpptokenizer.cpp:527-541）。
-3. **`[...]` lambda capture 吞并**：token 起始处的单 `[` 走 `TokenType::LambdaCaptures` 分支，整段 `[...]` 被一个 token 吞掉并记入 `mLambdas`（cpptokenizer.cpp:302-313）。"`[` 是 lambda capture 还是数组下标"是解析决策。
-4. **`::` 限定名合并**：`getWord()` 循环合并 `A::B::C`（cpptokenizer.cpp:548-552）；case ':' 把 `::word` 前缀合并（cpptokenizer.cpp:262-273）。
-5. **`template<...>` 参数整体跳过**：`skipTemplateArgs()`（cpptokenizer.cpp:813），parser 拿不到模板形参列表的 token。
-6. `[[...]]` 和 GNU `__attribute__((...))` 属性整体跳过——纯词法决策，可保留在 tokenizer（不算越权）。属性参数中的括号和字符串必须正确配平，不能影响后续 inline namespace 等声明的起始位置。
-
-parser 侧对合并结果的依赖（重构的工作量主体）：420+ 处直接消费合并后 token 文本的字符串手术——`splitLastMember`、`removeTemplateParams`、`endsWith('>')`、`startsWith('[')`、`indexOf('<')`、`matchIndex` 导航等，集中在 `cppparser.cpp` 的 `handleVar`/`handleMethod`/`checkAndHandleMethodOrVar`/`handleStructs`/`handleInheritance` 等。
-
-## 实施设计
+不建立完整 AST/CST，不引入 libclang/tree-sitter，也不把表达式运行时求值纳入 Parser。保留单遍 Statement 提取、显式作用域构建、Token 配对信息和有限表达式类型推导。残破代码以当前文件/作用域恢复为主，不为追求完整语法树增加长期内存和复杂度。
 
 ### Token 模型
 
@@ -78,7 +38,7 @@ derivation 按从名称向外的顺序记录 Pointer、LvalueReference、RvalueR
 - Pointer 保存指针自身的 cv 限定；MemberPointer 还保存成员所属类。
 - Array 保存维度文本，迁移期不要求值。
 - Function 保存已经解析的 ParameterInfo 列表和声明解析时按模板形参位置生成的 `normalizedArgs`；StatementBuilder 根据结构化信息生成兼容用 `args` 并复制规范签名，避免函数定义后再用 `scanMethodArgs()` 或对签名重新 Tokenize。ParameterInfo 保存创建参数 Statement 所需的类型、名称、数组或函数指针兼容信息和行号，并以 `defaultArgumentText` 保存默认参数原文。默认原文只用于有限重载候选筛选和单参数构造转换，不参与通用常量求值，也不进入 `normalizedArgs`。
-- Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。当前 Statement 不保存异常说明，因此 `noexcept` 只需正确消费，不必在 derivation 中保留。
+- Function 的 const、volatile 和可变参数属性使用 bit flags；互斥的 `&`/`&&` 使用独立 ReferenceQualifier 枚举。声明解析还保存无规格、无条件 `noexcept` 和条件 `noexcept(expr)` 的类别与表达式原文；StatementBuilder 持久保存并在声明/定义合并时同步。表达式求值读取实际选中调用及其模板绑定；尚未覆盖的路径返回 Unknown，不猜测确定结果。
 
 trailing return type 保存在其左侧最近的 Function derivation 中，以规范化原文记录，不要求值，也不需要进一步解析其中的抽象 declarator。当基础类型为 auto 且存在 trailing return type 时，生成 Statement 类型时用后者替代 auto，再应用其它 derivations。没有 trailing return type 的 auto 函数不做函数体返回类型推导。
 
@@ -114,13 +74,13 @@ internalParse 在声明分析前统一收集预处理输出中的 `#define`，�
 
 成员函数模板的类外定义可以包含多层连续 `template<...>` 前缀；声明解析逐层消费并按外层到内层顺序累计模板形参，不能把剩余前缀交给普通 declarator。`extern template` 是显式实例化声明而不是模板声明前缀：保留 `extern` 属性并消费这两个 token 后，按后续 class 或函数声明正常分派。
 
-模板参数列表后和函数 declarator 后的 requires 子句在声明阶段只消费并保存原文，不求值；扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响。C++20 起的有限 lazy 约束求值见 `cpptemplate-evaluation-design.md`，不扩展完整 Concepts 或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
+模板参数列表后和函数 declarator 后的 requires 子句在声明阶段只消费并保存原文，不求值；扫描时区分声明起点、函数体 `{` 与嵌套 requires-expression 的 `{ ... }`，包括带参数列表的 requires-expression，确保别名、类、函数、构造函数的声明和后续成员不受约束子句影响。C++20 起的有限 lazy 约束求值见 `cpptype-evaluation-design.md`，不扩展完整 Concepts 或 dependent-name 语义。条件 `explicit(...)` 同样只跳过条件表达式并保留 Explicit 标志。
 
 模板参数试探不得越过当前表达式或语句。分号和 include 文件边界直接使试探失败；非负且小于当前索引的 matchIndex 表示遇到 `)`、`]`、`}` 等闭合符，也立即失败。`(`、`[`、`{` 等开括号则由 matchIndex 大于当前索引的配对分支跳过。这样，`if (value < limit)` 中的比较运算符不会导致 `<...>` 试探扫到后续无关声明。
 
 CppPreprocessor 从 hard define `__cplusplus` 保存去除整数后缀后的版本值，并通过 `cppVersion()` 提供查询；CppParser 的同名公共接口在锁内读取该值。测试依据 Parser 实际取得的版本选择对应标准库场景，不根据请求使用的 `-std=` 参数猜测实际预处理结果。
 
-前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace 索引和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
+前瞻和试探只移动 TokenCursor 并创建临时结构。Statement、作用域、namespace occurrences 和继承状态只在声明结构确定后提交；class/function 可在头部确定后创建自身 Statement，再进入正文。模板形参查找层使用作用域保护，失败和提前返回都必须弹出。
 
 函数体内先由 for、catch、if/while、普通 Block 等专用产生式处理对应语句，其余位置通过声明入口的关键字分类和有限前瞻区分声明与表达式，不建立表达式 AST。确认的解析错误可以结束当前文件的错误路径，但不因此终止整个 TU。跨文件配对记录诊断并跳到当前文件尾；include 文件随后返回包含者继续分析。文件内未配对结构不是致命错误，当前文件尾就是其虚拟匹配位置，仍按正常流程分析到文件尾。
 
@@ -149,38 +109,17 @@ CppPreprocessor 从 hard define `__cplusplus` 保存去除整数后缀后的版�
 
 诊断只辅助定位“文件合法但 Parser 不支持”的情况，不改变错误恢复、Statement 提交或失效清理规则。代码级不变量仍使用断言；日志不能代替断言或测试。
 
-### 直接迁移
-
-Token 流只保留纯切分形式，Parser 直接使用 TokenCursor 和声明产生式，不生成旧式合并 token，也不设置临时 token 兼容层。旧 handler 按声明类别逐批替换，避免复制旧启发式、维护两套索引或在最终删除前增加额外迁移工作。
-
-`command`/`fullName` 的存储格式初期保持不变：实例化名仍可包含 `<...>`，`fullName` 仍用 `::` 连接。Statement::type() 提供的文本兼容只属于对外输出，不影响 token 流。模板声明需要新增模板类别和形参绑定信息；StatementMap 容器替换和键冗余消除不在同一批次进行。
-
-不保留新旧两套生产解析路径。旧实现用于事先确定测试基线；新实现直接替换旧实现。对旧实现已经明确错误的行为，不以兼容性为理由保留。
-
 ### CppParser 生产接入
 
 CppParser 的唯一生产路径为 preprocess → CppTokenizer → CppSyntaxParser → CppStatementBuilder。FileBoundary token 在读取后保存新文件名，DeclarationInfo 也携带实际文件；递归创建子声明时使用 child 的文件，include 内容不登记到宿主的 ParsedFileInfo。旧 handler、token 改写和字符串类型手术不保留。
 
 同一实体的声明和定义合并到一个 Statement。所有 Statement 以 StatementOccurrence 集合保存多个 declarations；普通 Statement 的 definition 单独保存当前位置及 HasDefinition，不重复登记为 declaration occurrence。失效只移除对应 occurrence；definition 失效后保持为空，不得用 declaration 回填。只有 declarations 与 definition 均不存在时才删除普通 Statement。声明说明符合并及 namespace 重开的 inline 属性按剩余 occurrences 计算，参数不重复创建。变量统一使用 StatementKind::Variable，global/local/class-local 由 StatementScope 区分。typeInfo.toString 保留完整结构化类型，Statement::type() 生成旧 API 所需的存储类别、返回类型及数组/函数指针兼容文本。
 
-merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 查找最长 namespace 前缀，枚举索引中的全部重开及 inline/匿名关联节点，再沿 children 取得全部同名和重载候选，最后按 kind、normalizedArgs 和跨边界祖先筛选。候选不存在时直接返回空，不再线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
+merge 的候选查询使用独立的无锁 doFindXXX 实现。局部声明只枚举当前词法作用域的直接 children，不同 Block 的同名局部声明不合并。非局部声明按实际 fullName 沿 children 和 InlineAlias 查找候选，再按 kind、normalizedArgs、约束和跨边界祖先筛选。命名 namespace 已按 fullName 全局合并，不通过重开节点索引收集多个 namespace Statement。候选不存在时直接返回空，不线性扫描全量 Statement，也不使用单结果查询失败后的兜底。
 
-class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；`visibleStatement` 按 declaration/definition 的实际 `fileName` 是否等于当前文件或位于其 include 闭包判断，不以 `boundaryAncestor` 代替实际文件；hard define 等没有源码文件的 Statement 不受文件闭包限制。`statementDeclarationForNavigation` 优先选择实际文件等于 currentFile 的 declaration，其次选择以 currentFile 为 parse-root/失效归属的 declaration，再回退到任意 declaration，最后回退 definition。表达式名称解析与 merge 共用最长 namespace 前缀规则，直接通过 namespace 索引确定前缀并遍历全部同命名空间，不能逐层依赖 child 类型猜测前缀。查询目标本身就是 namespace 时，终止 Statement 的 fullName 必须与该前缀精确相等；索引中的 inline/匿名关联节点只能用于继续查成员，不能替代终止 namespace。inline namespace 保留实际 fullName，但限定名称查找递归穿透其成员，因而 std::__cxx11 中的类型也可通过 std 名称找到；该规则与 using namespace 的未限定名称查找分开处理。
+class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 以整个控制语句范围建立作用域，header 中的初始化、循环变量和异常参数均可查询。namespace scope 的父索引取该 Statement 自身的 parentScope，不能以 namespace 自身作为父节点；内层闭合后必须能沿父链返回外层。按精确行列查询使用 findScopeAt，按行兼容查询使用 findScopeAtLine，不能用最大列号模拟。findStatementOf 只返回当前 root 及其 include 闭包中可见的 Statement，已移除 include 的全局缓存不会泄漏到该 root；`visibleStatement` 按 declaration/definition 的实际 `fileName` 是否等于当前文件或位于其 include 闭包判断，不以 `boundaryAncestor` 代替实际文件；hard define 等没有源码文件的 Statement 不受文件闭包限制。`statementDeclarationForNavigation` 优先选择实际文件等于 currentFile 的 declaration，其次选择以 currentFile 为 parse-root/失效归属的 declaration，再回退到任意 declaration，最后回退 definition。表达式名称解析与 merge 都沿 children 和 InlineAlias 处理命名 namespace 与可见成员；命名 namespace 按实际 fullName 全局合并。查询目标本身就是 namespace 时，终止 Statement 必须是 fullName 精确相等的实际 NamespaceStatement。inline namespace 保留实际 fullName，通过 InlineAlias 使成员在直接父 namespace 中可见；该规则与 using namespace 的未限定名称查找分开处理。
 
-实施批次按消费边界划分：
-
-1. 以 cppreference 示例建立语法覆盖和现有缺口基线；
-2. 纯 Tokenizer、TokenCursor、文件边界检查和调试诊断；
-3. DeclSpecifierInfo、DeclaratorInfo、TypeInfo 及 Statement::type() 兼容接口；
-4. 模板参数解析、`<` 消歧和有限模板绑定；
-5. 变量、函数、类和模板声明的产生式化；
-6. EvalResult、通用类型操作及 container/iterator/algorithm/range 验收；
-7. StatementModel 唯一所有权和各类 weak 索引；
-8. 删除旧字符串手术和 token 改写 hack。
-
-每批都必须独立构建、通过完整测试并检查真实标准库解析。验收同时记录 StatementMap、作用域、声明/定义位置和继承结果，以及 token 数量、内存和耗时。
-
-## 设计结论（2026-11 讨论）
+## Statement 与查询设计
 
 ### StatementMap 结构
 
@@ -191,19 +130,19 @@ class/namespace/function 以 bodyRange 建立作用域；for/if/catch 等 Block 
 
 ### Statement 所有权
 
-StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、namespace 索引、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立。除各作用域的 command 索引外，StatementModel 还维护 namespace 专用的 fullName 多值索引：每个 namespace 登记到自身 fullName，inline/匿名 namespace 同时登记到直接父 namespace 的 fullName 下。该索引只服务多候选 namespace 查询，不扩展为通用 fullName 索引。
+StatementModel 是 Statement 的唯一所有权中心，在生产配置中保存全量 Statement 列表。全局索引、children、作用域索引和 ParsedFileInfo::statements 都只保存 weak_ptr；TypeInfo 的声明引用也遵守同一规则。namespace A::B::C 按真实嵌套关系建立。命名 namespace 按实际 fullName 全局合并，inline/匿名可见性通过 InlineAliasStatement 表达，不另维护 namespace 专用 fullName 索引。
 
-查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。新增、声明属性合并、失效删除和 clear 都必须同步维护索引；父 namespace 先删除时也要清理父键下的透明子节点关联。weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
+查询时将 weak 引用临时 lock 为 PStatement，保证本次操作期间对象存活。新增、声明属性合并、失效删除和 clear 都必须同步维护 children、occurrences 和 InlineAlias。weak_ptr 只避免所有权环，不能代替索引清理。Statement 的释放不再取决于哪个文件记录最后引用它。
 
 ### 重开 namespace 的限定名查找
 
-只有 namespace 会因重开而由多个 Statement 表示同一逻辑作用域。class/enum 的声明与定义应合并，函数重载不是同一作用域的重复节点，Block 只是局部作用域占位；它们不参与这种重名分支查找。namespace 不能声明在 class 内，因此 qualified name 的 namespace 分支只会出现在前部的 namespace 前缀中，进入 class/enum 等非 namespace 作用域后不再需要 namespace 回退。
+命名 namespace 重开只增加当前 occurrence，并把新成员加入同一个 NamespaceStatement。class/enum 的声明与定义也按各自规则合并；函数重载保留不同候选，Block 只是局部作用域占位。
 
-查找以显式栈实现 DFS，栈项只保存 namespace 作用域和当前名称段下标。它遍历当前名称段上的全部同名 namespace 和 inline/匿名透明分支；某个分支缺少后续名称时，回退并尝试同层其他重开声明，每一层都遵守同一规则。透明分支直接读取 namespace 索引，不再扫描全量 Statement 收集 inline flags，也不只看当前 Statement 自身 flags。找到首个非 namespace 候选后，namespace 前缀即告结束，余下部分沿用普通成员查找。词法作用域优先级保持不变：最近作用域存在首段名称时只遍历该层的重开 namespace，不与外层另一个同名 namespace 混合。public findNamespace 默认只返回实际 fullName 相同的节点，调用方可通过 includeInline 参数同时取得挂到父键下的 inline 节点。声明和成员查询在 EvaluationContext 中按作用域身份、完整名称和 typesOnly 复用命中与 miss；只允许模型不变的查询期使用，构建期禁用，避免旧 miss 泄漏到新增声明之后。
+名称查找从当前词法作用域开始，沿 children 和 InlineAlias 逐段处理。最近词法作用域的首段匹配优先，不与外层同名 namespace 混合。进入 class/enum 后沿用普通成员和基类查找。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。
 
-本批只修正普通、inline 和匿名 namespace 的重开查找，不扩展到 Block、函数/lambda 局部作用域、通用多义符号查找或 namespace alias 的新能力。函数、lambda 和 Block 不作为全局限定名的中间作用域，`f::local`、`block::inner` 等伪路径返回空，但其内部局部名称仍可从对应 scope 开始查找。class 与变量/函数同名虽然合法，但属于明确不支持的低价值消歧场景；此类代码的限定名查找结果不作保证，也不为它增加候选类型过滤或额外回退。
+声明和成员查询在 EvaluationContext 中按作用域身份、完整名称和 typesOnly 复用命中与 miss；只允许模型不变的查询期使用，构建期禁用，避免旧 miss 泄漏到新增声明之后。
 
-查找测试矩阵包括：顶层和第二、第三层重开 namespace；不同构建顺序；inline/匿名 namespace 的透明查找及重开分支；直接 `B` 与 inline 中另一个 `B` 都参与查找；inline 声明先于或后于成员定义，以及删除 inline 声明后不再透明；进入 class 后的普通成员查找；全局 `::`；最近词法作用域优先且不混入外层同名 namespace；局部变量 shadowing；函数、lambda 和 Block 的局部可见性与全局限定路径隔离。以上场景分别由 `test_reopened_namespace_lookup_checks_all_declarations`、`test_reopened_nested_namespace_lookup_checks_all_branches`、`test_namespace_lookup_transparency_and_scope_boundaries`、`test_qualified_lookup_respects_lexical_and_local_scopes` 和 `test_template_forward_declaration_with_default_arguments` 固化。
+测试覆盖顶层和嵌套重开、不同构建顺序、inline/匿名投影、late inline、部分失效、全局 `::`、最近词法作用域优先、局部 shadowing 和函数/Block 的局部边界。同一 fullName 的对象身份及各来源 occurrence 都必须验证。
 
 ### 继承成员查找
 
@@ -239,7 +178,7 @@ using 不创建作用域。using namespace/using enum 记录到当前 Statement 
 
 声明上下文遇到 `<` 时须先解析前面的名字并查它是不是模板。parse 路径本就有大量精确名字查询，模板判定新增同类查询，per-scope 容器换 hash 因此从优化升级为设计支撑。跳过函数体时无需配平 `<>`；声明初始化器和默认参数的边界扫描需要识别标识符后的可配平模板实参区域，避免把模板实参中的逗号误当作 declarator 或参数分隔符。无法配平时按普通运算符处理，查不到模板声明时回退到结构配平。
 
-Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。特化实参保留在 Statement 的 `command/fullName` 完整特化名中，不另设重复字段；eval 需要匹配时从该名称现场解析，不与声明形参混用。默认模板实参只保存原文，不在声明阶段实例化；约束表达式只正确消费。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。模板求值的严格边界、本轮必要特性及 STL 依据见 `cpptemplate-evaluation-design.md`。
+Statement 需要区分非模板、主模板、部分特化和全特化，并保存模板形参名称、类别及 parameter-pack 标记，供模板绑定使用。特化实参保留在 Statement 的 `command/fullName` 完整特化名中，不另设重复字段；eval 需要匹配时从该名称现场解析，不与声明形参混用。默认模板实参只保存原文，不在声明阶段实例化；约束表达式只正确消费。类型和模板模板参数的默认实参按 `<...>` 层级读取，内层 `>`/`>>` 逐层消费，外层逗号和闭合符留给参数列表；非类型默认值仍按表达式处理，不把比较运算符 `<` 当作模板起点。`()[]{}` 在各默认值中均保持配平，覆盖嵌套模板、连续默认值、比较表达式和带逗号函数调用。模板求值的严格边界、本轮必要特性及 STL 依据见 `cpptype-evaluation-design.md`。
 
 类型推导采用有限通用模板绑定优先：将形参名称绑定到实际 TypeInfo 或常量表达式，在类成员、别名、嵌套类型和简单函数模板返回值中做替换。模板声明内部使用 Session 级模板形参查找层，避免形参泄漏到声明之外。先用自定义 `Box<std::string>` 等类型验证通用性，再接入 STL，不能把 STL 名称识别冒充通用实现。
 
@@ -316,6 +255,20 @@ CppParser 的正确性承诺以当前主文件为单位：每次解析后，当�
 
 重载选择结果保存在 `EvalResult::invocation.statement`；需要导航到实际调用目标时必须优先使用该结果，而不是最初的同名候选。普通类模板的显式实参应进入既有特化选择路径，并区分主模板、偏特化和显式特化。
 
+### 普通表达式中的 Lambda
+
+函数体普通表达式不建立完整 AST，但需要保留其中 lambda 的导航作用域。例如 `win.run([&](Ui &ui) { Stack col; });` 中的形参和函数体局部声明不能只随表达式一起跳过。
+
+- `DeclarationKind::Expression` 区分表达式语句，不是新的 StatementKind，也不进入名称索引。
+- `DeclarationInfo::expressionLambdas` 保存表达式扫描发现的 LambdaInfo。
+- 表达式扫描复用 skipExpression() 和 parseLambda()，以分号及当前 Block 的闭合符为边界，并递归处理嵌套 lambda。
+- CppStatementBuilder 遇到 Expression 时只构建 lambda，不创建表达式 Statement。
+- 初始化 declarator 与普通表达式共用 buildLambdas()，Lambda Statement、operator()、参数、bodyRange 和作用域查询不另建第二套逻辑。
+
+该建模只承担 lambda 作用域和导航，不保存普通表达式文本，不提前求值调用接收者，也不扩展为通用控制头表达式建模。
+
+测试同时覆盖函数实参 lambda、嵌套 lambda、形参类型、局部声明和成员导航；真实 Aino 场景只随标准库专项开关运行。
+
 ## 性能测量
 
 设置 `REDPANDA_PARSER_PROFILE=1` 后，`EVAL_PROFILE` 记录每次表达式求值耗时，`RESOLVER_PROFILE` 汇总类型解析、限定名分段、类实例建立、特化选择、成员/声明查找、声明绑定、模板实参结构化和类型键文本生成的次数和耗时。Resolver 各阶段会嵌套调用，汇总值均为包含子调用的耗时，不能直接相加当作总时间。标准库测试中的 `STDLIB_TEST_TIMING` 用于单独测量指定查询，`STDLIB_CONTAINER_EVAL` 记录各容器表达式求值耗时。
@@ -326,66 +279,13 @@ self-time 由显式 scope 栈计算：每层只累计直接子 scope 的耗时�
 
 优化前后的正式对比必须直接运行 Release 可执行文件并关闭详细 profile，不能在 gdb 下计时。测量标准库表达式时保留完整 parse，但以 parse 完成后的单次查询耗时作为 eval 基线，避免用端到端总耗时替代求值成本。需要单独分析某个容器表达式时，可用 `REDPANDA_STDLIB_CONTAINER_CASE=unordered_map.find_second` 这样的用例名过滤 `test_standard_library_container_eval_profile`；`std::function` 专项可类似使用 `REDPANDA_STDLIB_FUNCTION_CASE` 并按表达式文本过滤；不设置时运行全部用例。
 
-GCC 15.3、C++17、`bits/stdc++.h` 的无插桩第二次完整解析基线为 **1027 ms**。为 Tokenizer/TokenCursor 的字面量匹配消除临时 QString 前，同一基线为 1171 ms；详细插桩的声明解析由约 336 ms 降至 271 ms。
+正式性能基线和优化结果统一由 `docs/profile/README.md` 索引，核心设计文档不复制逐轮数字。测量方法保持不变：Release 直接运行、关闭详细 profile、区分 inclusive/self-time，并同时检查 Statement 和求值正确性。
 
-提交 `20925702` 在 GCC 15.3、C++17 Release 下的 `test_standard_library_parse_baseline` 三次完整解析耗时分别为 **985、928、930 ms**，中位数 **930 ms**；预处理、Tokenize、声明解析和 Statement 构建的中位数分别为 **301、100、245、88 ms**。该基线取 `completeParseMs`，不使用包含测试初始化和清理的进程总耗时，也不与缓存 replay 混用。
+## 语法覆盖测试
 
-同一提交在 GCC 15.3 Release 下的三次单点 eval 合并基线为：容器 117/117 次有效（39 个场景），中位数、平均值、P90、最大值分别为 **0.368、0.415、0.745、1.354 ms**；算法 285/285 次有效（95 个场景），分别为 **0.649、0.629、0.907、1.538 ms**。按每个场景的三次中位数计，较慢项包括 `unordered_map.find_second` **1.331 ms**、`unordered_set.find` **1.157 ms** 和 `unordered_multiset.find` **1.106 ms**。
+语法分类、支持状态、限制和测试证据统一维护在 `testing/syntax-coverage.md`。测试资源位于 `RedPandaIDE/test/resources/syntax/`，默认测试不依赖外部标准库文件。
 
-同一提交在 Clang 23.1.5 + libc++、C++17 Release 下的完整解析三次耗时分别为 **777、727、712 ms**，中位数 **727 ms**；预处理、Tokenize、声明解析和 Statement 构建的中位数分别为 **297、84、66、99 ms**。容器 117/117 次有效，中位数、平均值、P90、最大值分别为 **0.178、0.436、1.206、2.755 ms**；算法 285/285 次有效，分别为 **0.438、0.523、0.972、1.878 ms**。按每个场景的三次中位数计，较慢项包括 `deque.insert` **1.807 ms**、`optional.arrow` **1.629 ms**、`optional.value` **1.479 ms**、`unordered_map.find_second` **1.421 ms** 和 `deque.erase` **1.301 ms**。这组数据作为后续 libc++ 正确性扩展和性能优化的对照，不与 libstdc++ 的内部实现名称或调用次数直接类比。
-
-加入 declval、实际调用异常规格及普通函数对象的 nothrow-invocable 求值后，GCC 15.3 的三次容器/算法合并中位数为 **0.361/0.658 ms**，与上述 0.368/0.649 ms 基线相当。由于无序容器现在完成了更多真实求值，`unordered_map.find_second` 的每场景中位数为 **1.513 ms**，高于基线中的 1.331 ms；这属于新增语义工作的成本，后续优化不得删除必要解析来缩短耗时。
-
-补齐 constructible、invocable_r、逻辑 trait 和 libc++ hash 链后，三次逐场景中位数汇总为：GCC 容器/算法 **0.383/0.703 ms**，libc++ **0.177/0.471 ms**，117/117 与 285/285 次求值均有效。GCC `unordered_map.find_second` 为 **1.552 ms**；libc++ 同项为 **3.062 ms**，`deque.insert` 为 **1.939 ms**。无序容器的额外真实 trait 求值仍有明确性能代价，不能用 Unknown 或名称兜底换取耗时下降。
-
-将 constructible、函数对象调用和选中调用的 noexcept 改为结构化求值后，三次逐场景中位数为：GCC 容器/算法 **0.379/0.662 ms**，libc++ **0.174/0.464 ms**。GCC `unordered_map.find_second` 为 **1.694 ms**，libc++ 同项降至 **2.637 ms**。普通场景中位数略有改善，但最慢项并非在各库上一致受益；保留该修改的依据是消除无意义的字符串化和重复语法分析，而不是宣称所有场景都提速。
-
-独立修正常量 alias 的逐层实参与环境后，三次逐场景中位数为 GCC 容器/算法 **0.379/0.694 ms**、libc++ **0.183/0.458 ms**，`unordered_map.find_second` 分别为 **1.420/2.725 ms**。普通场景基本不变，GCC 最慢项改善；保留的主要依据是嵌套 alias 的正确实参/词法环境传递，以及消除了未完成环境中的无效重复解析，而不只是单点耗时。
-
-libc++ 热点分析显示，`unordered_map.find_second` 的 resolved-type trace 有 **229 次 miss、56 次 hit**，主要集中在 `_Tp`、`_Types`、`_Hash`、`_Key`。完整缓存键进一步证明，许多 miss 来自不同语义环境，但“环境不同”不等于工作必要：`hash<variant>`、`hash<unique_ptr>` 等无关偏特化会在结构不匹配前展开 alias 并求值约束，派生出大量实际不需要的环境。优化重点应是候选匹配的结构性预筛选和延迟约束，而不是继续增加缓存。
-
-同场景的缓存开关对照为：默认约 **3.32 ms**；关闭 resolved-type **5.59 ms**，specialization **4.38 ms**，binding-frame **43.80 ms**；关闭全部缓存约 **124 ms** 且求值失败。现有缓存是正确终止和性能的基础，不得以关闭缓存或减少必要绑定来换取表面热点下降。
-
-改为 alias/typedef 的纯语法结构替换后，`unordered_map.find_second` 的 resolved-type 尝试从 **302** 降为 **136**，偏特化候选尝试从 **69** 降为 **39**。三次逐场景中位数为 GCC 容器/算法 **0.367/0.682 ms**、libc++ **0.176/0.451 ms**；该单点分别为 **1.472/1.507 ms**。两套真实库均保持全部场景有效，收益来自避免无关候选的约束展开，而不是假设两套库具有相同 alias 结构。
-
-对照实验：把固定分隔符集合改为静态 QSet，并把 `readBalancedToken()` 的开闭符号参数改为 QStringView，无插桩第二次完整解析为 1080 ms，与 1082 ms 基线相比没有可见收益；模板原文读取仅由 14.08 ms 降至 13.69 ms。两项修改已撤回，不作为性能优化保留。原因是临时 QSet 按表达式创建、balanced-token 参数按括号区域构造，调用频率远低于每个 token 在多个文法层级反复调用的 `TokenCursor::consume()`；局部分配消除必须结合调用规模评估，不能类推高频匹配优化的收益。
-
-基类列表已由 `readBaseClasses()` 在当前 token 流中一次完成切分：顶层逗号分段，配对括号通过 matchIndex 整体消费，并保留 `<`、`>`、`>>` 的模板深度处理；不再先由 `readUntil()` 拼接、再由 `splitTopLevel()` 二次 tokenize。嵌套模板逗号、函数指针参数逗号和多行基类列表均有行为测试。
-
-该修改的详细 profile 中，identifier 读取由 332,140 次降为 328,735 次，addToken 由 368,323 次降为 365,369 次，advance 由 5,650,510 次降为 5,617,553 次，证明基类列表的重复词法处理已消除。无插桩第二次完整解析为 1089 ms，与 1082 ms 基线相比没有可见收益；修改仍予保留，因为它消除了确定冗余并统一了单遍 token 处理路径，而不是以总体耗时作为唯一保留依据。
-
-标识符、运算符和空白批量推进后，`advance()` 调用量进一步由 5,617,553 次降为 **2,083,831 次**；详细 identifier 读取由约 96 ms 降至 21 ms，operator 由约 34 ms 降至 20 ms，Tokenizer 阶段由约 352 ms 降至 255 ms。单纯内联 `advance()` 没有明确收益，已撤回；有效修改是直接减少逐字符调用及行列更新次数，而非只消除函数调用。
-
-`addToken()` 改为移动文本和 Token，并将 Token 声明为可重定位类型后，其详细耗时由约 64.5 ms 降至 **43 ms**，Tokenizer 阶段进一步降至约 232 ms。盲目 reserve 未采用：可重定位扩容已经消除了主要复制成本，而按字符数预留容易过度分配内存。
-
-声明解析 self-time 表明 simple 外层自身不是热点，主要成本在 decl-specifier、declarator 和构造函数识别。`parseDeclSpecifierSeq()` 现在复用循环中已得到的构造函数识别结果，不再在结束时对同一游标重复识别。`isConstructorDeclaration()` 不再创建 QStringList 并线性查找 operator，而是只保存 operator 标志、名称数量及最后两个名称；约 12.5 万次调用中，`constructorCheck` 由约 24 ms 降至 **14.4 ms**。
-
-## cppreference 语法覆盖测试
-
-测试资源位于 `RedPandaIDE/test/resources/syntax/`，文件内记录来源链接。默认测试不依赖外部标准库文件。
-
-- `test_cppreference_declarator_syntax`：多 declarator、指针、函数指针、复杂参数、trailing return、noexcept 和可变参数。
-- `test_cppreference_function_syntax`：函数声明/定义、默认参数、函数返回函数指针、局部函数声明、函数 try block 和 delete。
-- `test_cppreference_class_syntax`：数据成员、成员函数、嵌套类型、枚举、typedef、继承、using 和成员模板。
-- `test_cppreference_template_syntax`：类/函数/别名模板、全特化、模板模板及非类型参数、parameter pack。
-- `test_cppreference_enum_syntax`：scoped/unscoped enum、底层类型、枚举值求值、匿名 enum 和 using enum。
-- `test_cppreference_namespace_syntax`：namespace 重开、外部定义、嵌套/inline/匿名 namespace 和全特化。
-- `test_cppreference_lambda_syntax`：捕获、默认参数、递归、显式模板参数和 init-capture。
-- `test_cppreference_structured_binding_syntax`：if 条件绑定、bit-field 绑定、lambda 初始化和引用绑定。
-- `test_cppreference_range_for_syntax`：容器、数组、引用、属性、init-statement、typedef/using。
-- `test_cppreference_ranges_syntax`：iota/filter/transform/join 管道及 range-for。
-
-当前实现由此确认的覆盖缺口：
-
-- 同一声明中的多个成员函数 declarator，例如 `virtual int f(char) const, g(int) &&`；
-- trailing return 的函数指针声明，例如 `auto fp11() -> void(*)(const std::string&)`；
-- `operator()` 成员函数；
-- 模板类中的成员函数，例如 `A<T>::f`；
-- namespace 成员函数体内的 `extern` 声明归属，例如 `Q::V::h`；
-- if 条件中的结构化绑定，例如 `if (auto [iter, success] = ...; success)`；
-- range-for 中 `char const c` 形式的循环变量；
-
-这些场景的预期以保持 C++ 声明结构为准，不根据当前实现的错误结果修改测试。
+新增语法场景必须同时更新资源、正式断言和覆盖表；不得把已经修复的场景继续列为当前缺口。
 
 ### 函数局部预定义标识符 `__func__`
 
@@ -393,12 +293,12 @@ libc++ 热点分析显示，`unordered_map.find_second` 的 resolved-type trace 
 
 ## IDE 查询与重命名约定
 
-`getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。namespace 补全使用 includeInline 时返回索引中的全部关联节点，包括没有 Inline 标记的重开 namespace；不能只保留带标记的节点，否则会丢失其实际成员。
+`getIncludedFiles()` 只返回 include 依赖文件，不包含关系起点。补全所需的是“当前文件可见的源码文件集合”，由 `CodeCompletionPopup::prepareSearch()` 在依赖集合上另外加入当前文件，不能改变 Parser 接口的依赖语义。namespace 补全读取唯一实体的直接 children，并解析其中的 InlineAlias；命名 namespace 重开不会产生另一组需要单独收集的节点。
 
 普通补全不展示 OverloadedOperator 或 LiteralOperator，也不展示 command 为空的匿名 namespace 等无效候选项。现有 LiteralOperators 专用补全在字符串、字符和数字后缀输入语境中单独提供候选，不经普通补全的过滤器，不能因专用能力而让重载运算符泄漏到普通列表。变量及图标类别按 StatementScope 的 global/local/class-local 判定，不能用是否存在 parentScope 区分全局变量与类成员，否则 namespace 变量会被误标为 private。
 
 `gotoDeclaration`/`gotoDefinition` 只要求鼠标位于标识符上时正确跳转，目标位置使用 occurrence 的 `range.start.line` 和 `range.start.ch`，不能只跳到行首。函数提示分两条路径：输入调用参数时，光标位于 `()` 内展示被调用函数的声明；`getParserHint` 用于鼠标悬停在函数标识符上时显示声明。类名与构造函数同名时，类声明位置必须选择 Class，构造函数调用位置仍按实际语义选择 Constructor 或 Class。
 
-重命名按 syntax token 工作：只处理 `TokenType::Identifier`，用该位置表达式查找 Statement，并比较声明文件与声明位置，不能只按文本相同替换。`findOccurenceInFile` 和 `renameSymbolInEditor` 都采用该规则。`renameSymbol` 只允许声明和定义位于当前文件的符号，私有实现直接操作传入的当前 Editor，不再通过 MainWindow 二次查找，也不处理未打开文件。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
+重命名按 syntax token 和语义 Statement 身份工作，只处理标识符，不按文本相同替换。非项目文件的 Rename 仍限当前文件；项目中的 Rename 可以跨文件，但相关目标的声明、定义和引用不得超出项目允许边界。项目查找由 CppRefactor 逐 TU 重新识别目标并累积结果，open Editor 的内容和 Undo/Redo 按当前 Editor 接口处理。`getWordForCompletionSearch` 只面向补全光标前文本，不能作为通用标识符提取 API。
 
-class 补全使用临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。Class Browser 从当前 FileInfo（项目模式为所有项目 FileInfo）的 statements 及其祖先建立身份集合，再沿直接 children 生成树；祖先节点仅用于组织当前集合中的声明和定义，不引入其它文件成员。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。goto 测试覆盖变量、typedef/using/namespace 别名、枚举值、参数、标签、宏、普通及 `=default` 函数，以及 extern、前置声明和 `=delete` 等无定义的拒绝路径。
+class 补全使用临时继承成员列表，derived 直接成员优先，基类递归补充；继承访问级别按路径计算，不修改原 Statement。Class Browser 只从当前文件的 FileInfo 收集 statements 及其祖先，再沿直接 children 生成树；即使文件属于项目，也不收集其它项目 FileInfo。祖先节点仅用于组织当前集合中的声明和定义，不引入其它文件成员。widgets 测试使用独立 `test-widgets` 目标，不依赖 Editor 测试类，覆盖所有 `CodeCompletionType`、继承访问、类浏览器、goto、function tips 和 rename。goto 测试覆盖变量、typedef/using/namespace 别名、枚举值、参数、标签、宏、普通及 `=default` 函数，以及 extern、前置声明和 `=delete` 等无定义的拒绝路径。

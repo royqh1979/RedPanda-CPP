@@ -30,7 +30,7 @@ R:/build-redpanda-public-api/RedPandaIDE/test-cppparser.exe \
   --suite=TestCppParserPublicApiBaseline
 ```
 
-`REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST` 默认 `OFF`，仅在 Parser 改动或 profile 时开启。设计、过滤规则和覆盖边界见 `docs/design/parser/cpp-public-api-baseline.md`。
+`REDPANDA_PARSER_PUBLIC_API_BASELINE_TEST` 默认 `OFF`，仅在 Parser 改动或 profile 时开启。设计、过滤规则和覆盖边界见 `docs/design/parser/testing/public-api-baseline.md`。
 
 `compare_parse_baseline.py` 用于比较多次 `test_standard_library_parse_baseline` 日志，计算完整 Parse 的中位耗时和 Statement 变化，只依赖 Python 标准库：
 

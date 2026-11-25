@@ -162,7 +162,7 @@ D 中记录的传递 include 闭包已覆盖直接和间接包含者，无需递
 - 有序前缀捕获系统头生效顺序的差异；即使某个头未改变宏表，也不能省略顺序校验。
 - 文件内容变化通过编辑失效或 mtime/size 级联失效处理。
 - 两个共享 Parser 的根文件以相反顺序包含相同系统头时，切换根文件会重扫相关记录。这是保证正确性的预期代价。
-- 多 root 复用以切换时保留并共享 Parser 为前提。IDE 默认启用“编辑器隐藏时自动清空 Parser”时，隐藏编辑器会同时清空 Registry；切回后的完整重扫是该设置的正常结果，不属于 replay 未命中。
+- 多 root 复用以切换时保留并共享 Parser 为前提。Editor 隐藏只停止当前解析，不清空 Registry；显示后按需重解析。
 - 跨 TU 的全局 Registry 可能保留由另一 TU 引入的宏和文件记录。它只用于复用可校验的扫描结果，不代表各 TU 的宏集合天然隔离。
 - 对普通库用户，优先保证公开接口在 StatementMap 中完整可见；不能为了命中率接受符号丢失。
 
@@ -179,11 +179,11 @@ Replay 正确后再处理其它缓存：
 - **条件表达式求值**：`#if`/`#elif` 与宏展开共用 PpTokenizer/PpExpander；PpTokenizer 对 `==`、`&&`、移位等运算符采用最长匹配，求值器不重新拼接字符。展开后的 PpToken 序列直接交给 PpConditionEvaluator 按优先级递归求值，不再拼回 QString 后做第二遍字符扫描。运算符匹配使用无分配的 Latin-1 比较和枚举分支，不构造候选字符串列表或以 QString 保存运算符；数字后缀使用 Latin-1 比较，数值转换直接使用 Qt 的整数转换方法。内部 `evaluate` 参数区分计算与仅推进：`0 && rhs`、`1 || rhs` 以及 `?:` 的未选分支以 `false` 递归，从而定位外层运算符但不执行算术、位运算、比较或逻辑计算。`#if` 条件块本身的跳过由 `#else`/`#elif`/`#endif` 处理，与表达式内部短路无关。
 - 性能验收记录首扫、reparse 和缓存命中。正确性测试失败时不得以性能数据替代验收。preprocessor 和完整 parse 的性能测量以独立新进程连续运行两次并采用第二次结果，排除系统文件缓存 miss；同一进程内的 reparse 只用于测量 Parser 自身缓存行为，不能替代该基线。
 
-当前 GCC 15.3、C++17、`bits/stdc++.h` 基线：无插桩第二次完整解析为 **1027 ms**；详细插桩中 `evaluateIf` 为 **54.12 ms**，其中条件展开 **37.27 ms**、token 求值 **13.44 ms**。对象宏 value 缓存使展开阶段的重复 tokenize 从 **29,981 次降为 0 次**。展开帧 token 移动后的六轮无插桩结果为 1048、1062、1064、1065、1073、1083 ms，中位数约 1064 ms，相比此前 1089 ms 基线减少约 25 ms。系统头判断去重使 `openInclude` 由约 88.16 ms 降至 78.15 ms；其它阶段的正常波动会掩盖这部分整体收益，因此同时保留阶段计时作为验收依据。求值器不得引入逐文法层的临时 QString 构造或候选运算符循环；这类实现曾使 token 求值升至 86.62 ms，并令无插桩完整解析回退至 1240 ms。
+正式基线、逐轮对照和优化结果统一由 `docs/profile/README.md` 索引，不在本文复制性能数字。性能比较必须保持相同工具链和输入，并同时验证缓存命中、Statement 数量及公开接口完整性。
 
 ## 8. 验证
 
-- 场景和正确性证明见 `cpppreprocessor-replay-scenarios.md`。
+- 场景和正确性证明见 `testing/replay-scenarios.md`。
 - 每个场景同时检查预处理结果、defines、StatementMap 和 scan/replay/skip/invalidate 计数。
 - 分别构造边界外文件、跨边界入口及其边界内子文件，逐文件验证 include 列表与闭包、statement、scope、using、分支和文件元数据；不得再把子文件信息并入 boundary FileInfo。
 - 对每个 replay 根验证用户宏快照、有序跨边界前缀、聚合 define/undef 和 replay 恢复结果；ReplayRecord 不重复保存 include 闭包，Registry 不重复维护 replay 根集合或文件元数据索引。

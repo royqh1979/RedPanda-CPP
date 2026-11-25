@@ -43,21 +43,19 @@
 
 ### Parser / C++ 语义
 
-- `parser/cppparser-design.md` — CppParser、Tokenizer、类型推导与 IDE 查询。
-- `parser/parser-state-lifecycle-design.md` — Configuration、Session、Registry 生命周期及清理接口命名。
-- `parser/parser-reparse-modes.md` — force/non-force 重解析语义、文件变化检查与排队请求去重。
-- `parser/cpp-expression-lambda-design.md` — 函数体普通表达式中 lambda 的作用域与导航建模。
-- `parser/parser-concurrency-review.md` — Parser 并发约定。
-- `parser/shutdown-lifecycle-design.md` — 应用退出、Close All 与单 Editor 关闭的 Parser 生命周期。
-- `parser/cpptemplate-evaluation-design.md` — 有限模板实例化。
-- `parser/cpppreprocessor-optimization.md` — 预处理 replay、Session/Registry 与缓存。
-- `parser/cpppreprocessor-replay-scenarios.md` — replay 场景和测试清单。
-- `parser/cpp17-support-plan.md` — C++17 支持计划。
-- `parser/cpp-public-api-baseline.md` — C/C++ 公开接口独立基准、可选验证与 eval profile。
-- `parser/parse-time-declaration-merge.md` — Parse 阶段声明/定义合并实验、模板形参边界与 profile 验收。
-- `parser/cppnamespace-entity-using-design.md` — namespace、InlineAliasStatement 与 StatementFactory。
-- `parser/cppnamespace-transparency-design.md` — namespace transparency。
-- `parser/parser-rewrite-handoff.md` — Parser 重写交接说明。
+总入口与阅读顺序见 `parser/README.md`。
+
+- `parser/cppparser-design.md` — 声明解析、Statement、作用域、导航与逐 TU 查询。
+- `parser/cpppreprocessor-design.md` — 预处理、边界、ReplayRecord、失效与缓存。
+- `parser/cpptype-evaluation-design.md` — 类型推导、模板绑定与表达式求值。
+- `parser/statement-design.md` — Statement 类系、所有权、occurrence、失效、namespace 与可见性。
+- `parser/parser-lifecycle-design.md` — 状态分类、并发、所有权、Editor 关闭和应用退出。
+- `parser/implementation-review.md` — 已核实的文档/实现不一致及待讨论项。
+- `parser/testing/syntax-coverage.md` — 语法支持状态、限制与测试证据。
+- `parser/testing/replay-scenarios.md` — Replay 与失效场景清单。
+- `parser/testing/public-api-baseline.md` — C/C++ 公开接口独立基准与 eval profile。
+- `parser/proposals/` — 尚未成为现状实现的方案与后续计划。
+- `parser/history/` — 已完成实验和历史交接材料。
 
 ### 搜索与重构
 

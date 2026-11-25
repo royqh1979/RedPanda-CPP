@@ -23,7 +23,7 @@
 设计说明位于：
 
 - `docs/design/parser/cppparser-design.md`
-- `docs/design/parser/parser-concurrency-review.md`
+- `docs/design/parser/parser-lifecycle-design.md`
 
 Macro Statement 来自预处理输出 token，不是 `ParsedFileInfo::defines()`；后者没有行列位置。
 
@@ -75,7 +75,7 @@ Direct Release、设置 `QT_FORCE_STDERR_LOGGING=1`、未启用详细 profile �
 ## 后续顺序
 
 1. 继续分析 Static Release 完整公开接口验收的剩余性能回退，优先分解普通行宏展开、条件求值和 directive 分发，其次分析 parseDeclarations；文件读取、include 管理、对象宏重复切分、tokenize、merge 和模板拼接已不是当前优先方向。
-2. 逐项审查 `docs/design/parser/parser-concurrency-review.md`：`mParsing` 读取必须持锁，但是否需要读取及如何判断逐场景分析；修改标志的临界区尽量小。
+2. 逐项审查 `docs/design/parser/parser-lifecycle-design.md`：`mParsing` 读取必须持锁，但是否需要读取及如何判断逐场景分析；修改标志的临界区尽量小。
 3. 单独分析活动引用接口（尤其 `statementList()`）的合法使用时限，不能用一次入口加锁掩盖引用生命周期问题。
 4. 评估普通嵌套 Block 的既有问题：`void f() { int local; { int inner; } }` 中局部声明后的 `{` 可能被当作前一声明 body。不要与其他修复混合。
 5. 继续模板、表达式和标准库 container/iterator/algorithm/range 的实际验收；CTAD 和 deduction guides 只按文档中的后续可选设计评估，不提前实现。
