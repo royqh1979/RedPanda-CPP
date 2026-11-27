@@ -25,14 +25,14 @@
     },
     {
         "header": "ege.h",
-        "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
+        "links": "-lgraphics -lgdi32 -lgdiplus"
     },
     {
         "header": "easyx.h",
         "links": "-leasyx"
     },    
     {
-		"execUseUTF8": true,
+        "execUseUTF8": true,
         "header": "fmt/core.h",
         "links": "-lfmt"
     },
